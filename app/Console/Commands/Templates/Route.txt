@@ -1,0 +1,7 @@
+<?php 
+
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('{module}')->name('{module}.')->group(function () {
+   //Route here
+});
