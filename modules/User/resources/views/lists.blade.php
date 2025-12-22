@@ -1,6 +1,9 @@
 @extends('layouts.backend')
 @section('content')
     <p class="text-end"><a href="{{ route('user.add') }}" class="btn btn-primary">Thêm mới</a></p>
+    @if(session('msg'))
+        <div class="alert alert-success">{{ session('msg') }}</div>
+    @endif
     <table id="datatablesSimple">
         <thead>
             <tr>
