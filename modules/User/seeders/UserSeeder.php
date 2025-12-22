@@ -2,6 +2,7 @@
 
 namespace Modules\User\seeders;
 
+use Faker\Factory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -15,11 +16,14 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = new User();
-        $user->name = 'BigK';
-        $user->email = 'khanhbeotixiu9x@gmail.com';
-        $user->password = Hash::make('123456');
-        $user->group_id = 1;
-        $user->save();
+        $faker = Factory::create();
+        for ($index = 1; $index <=30; $index++){
+            $user = new User();
+            $user->name = $faker->name;
+            $user->email = $faker->email;
+            $user->password = Hash::make('123456');
+            $user->group_id = 1;
+            $user->save();
+        }
     }
 }

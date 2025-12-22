@@ -21,16 +21,26 @@ class UserRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $id = $this->route()->user;
+        $rules = [
             'name' => 'required|max:225',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
-            'group_id'=> ['required','integer',function($attribute,$value,$fail){
-                if($value == 0 ){
+            'group_id' => ['required', 'integer', function ($attribute, $value, $fail) {
+                if ($value == 0) {
                     $fail(__('user::validation.select'));
                 }
             }],
         ];
+        if($id){
+            $rules['email'] = 'required|email|unique:users,email,'.$id;
+            if($this->password){
+                $rules['password'] = 'min:6';
+            }else{
+                unset($rules['password']);
+            }
+        }
+        return $rules;
     }
 
     public function messages()

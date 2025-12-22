@@ -197,10 +197,10 @@ return [
         App\Providers\RouteServiceProvider::class,
         
         Modules\ModuleServiceProvider::class,
+        Yajra\DataTables\DataTablesServiceProvider::class,
 
-
-        // Barryvdh\Debugbar\ServiceProvider::class,
-
+        //File debug tắt khi hoàn thiện dự án
+        Barryvdh\Debugbar\ServiceProvider::class,
     ],
 
     /*
