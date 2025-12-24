@@ -30,7 +30,7 @@
             <div class="col-6">
                 <div class="mb-3">
                     <label for="">Nhóm</label>
-                    <select name="group_id" id="" class="form-select{{ $errors->has('email')?' is-invalid':'' }}">
+                    <select name="group_id" id="" class="form-select{{ $errors->has('group_id')?' is-invalid':'' }}">
                         <option value="0">Chọn nhóm</option>
                         <option value="1">Test</option>
                     </select>
