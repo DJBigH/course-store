@@ -19,18 +19,23 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
         return $this->model->paginate($limit);
     }
 
-    public function setPassword($password,$id)
+    public function getAllUser()
     {
-        return $this->update($id, ['password'=>Hash::make($password)]);
+        return $this->model->select(['id','name', 'email', 'group_id', 'created_at'])->latest();
+    }
+
+    public function setPassword($password, $id)
+    {
+        return $this->update($id, ['password' => Hash::make($password)]);
     }
 
     public function checkPassword($password, $id)
     {
         $user = $this->find($id);
-        if(!empty($user)){
-           $hashPassword = $user->password;
-           return Hash::check($password,$hashPassword);
-        }else{
+        if (!empty($user)) {
+            $hashPassword = $user->password;
+            return Hash::check($password, $hashPassword);
+        } else {
             return 'Tài khoản mật khẩu không tồn tại!';
         }
     }
