@@ -40,8 +40,14 @@
                     <label for="">Giảng viên</label>
                     <select name="teacher_id" id=""
                         class="form-select{{ $errors->has('teacher_id') ? ' is-invalid' : '' }}">
-                        <option value="0" {{ old('is_document' == 0 ? 'selected' : false) }}>Chọn giảng viên</option>
-                        <option value="1" {{ old('is_document' == 1 ? 'selected' : false) }}>Duy Khánh</option>
+                        <option value="0">Chọn giảng viên</option>
+                        @if ($teacher)
+                            @foreach ($teacher as $t)
+                                <option value="{{ $t->id }}"
+                                    {{ old('teacher_id') == $t->id || $courses->teacher_id == $t->id ? 'selected' : '' }}>
+                                    {{ $t->name }}</option>
+                            @endforeach
+                        @endif
                     </select>
                     @error('teacher_id')
                         <div class="invalid-feedback">

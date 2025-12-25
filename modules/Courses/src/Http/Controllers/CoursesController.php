@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 use Modules\Categories\src\Repositories\CategoriesRepository;
 use Modules\Courses\Src\Http\Requests\CoursesRequest;
 use Modules\Courses\src\Repositories\CoursesRepository;
+use Modules\Teacher\src\Repositories\TeacherRepository;
 use Yajra\DataTables\Facades\DataTables;
 
 class CoursesController extends Controller
@@ -14,10 +15,13 @@ class CoursesController extends Controller
     protected $courseRepository;
 
     protected $categoriesRepository;
-    public function __construct(CoursesRepository $courseRepository, CategoriesRepository $categoriesRepository)
+
+    protected $teacherRepository;
+    public function __construct(CoursesRepository $courseRepository, CategoriesRepository $categoriesRepository, TeacherRepository $teacherRepository)
     {
         $this->courseRepository = $courseRepository;
         $this->categoriesRepository = $categoriesRepository;
+        $this->teacherRepository = $teacherRepository;
     }
     public function index()
     {
@@ -64,7 +68,9 @@ class CoursesController extends Controller
 
         $categories = $this->categoriesRepository->getAllCategories();
 
-        return view('courses::create', compact('pageTitle', 'categories'));
+        $teacher = $this->teacherRepository->getAllTeacher()->get();
+
+        return view('courses::create', compact('pageTitle', 'categories', 'teacher'));
     }
 
     public function store(CoursesRequest $request)
@@ -77,9 +83,9 @@ class CoursesController extends Controller
         if (!$courses['price']) {
             $courses['price'] = 0;
         }
-        if($courses['price'] == 0){
+        if ($courses['price'] == 0) {
             $courses['sale_price'] = 0;
-            return back()->with('msg_danger','Khi giá = 0 thì không có khuyến mãi');
+            return back()->with('msg_danger', 'Khi giá = 0 thì không có khuyến mãi');
         }
         $course = $this->courseRepository->create($courses);
         $categories = $this->getCategories($courses);
@@ -93,10 +99,17 @@ class CoursesController extends Controller
         $courses = $this->courseRepository->find($id);
         $categoriesId = $this->courseRepository->getRelatedCategories($courses);
         $categories = $this->categoriesRepository->getAllCategories();
-        if (empty($courses)) {
+        $teacher = $this->teacherRepository->getAllTeacher()->get();
+        if (
+            empty($courses) ||
+            empty($categoriesId) ||
+            empty($categories) ||
+            empty($teacher)
+        ) {
             abort(404);
         }
-        return view('courses::edit', compact('courses', 'pageTitle', 'categories', 'categoriesId'));
+
+        return view('courses::edit', compact('courses', 'pageTitle', 'categories', 'categoriesId', 'teacher'));
     }
 
     public function update(CoursesRequest $request, $id)
@@ -110,14 +123,14 @@ class CoursesController extends Controller
             $courses['price'] = 0;
         }
 
-        if($courses['price'] == 0){
+        if ($courses['price'] == 0) {
             $courses['sale_price'] = 0;
-            return back()->with('msg_danger','Khi giá = 0 thì không có khuyến mãi');
+            return back()->with('msg_danger', 'Khi giá = 0 thì không có khuyến mãi');
         }
         $this->courseRepository->update($id, $courses);
         $categories = $this->getCategories($courses);
         $courses = $this->courseRepository->find($id);
-        $data=$this->courseRepository->updateCoursesCategories($courses, $categories);
+        $data = $this->courseRepository->updateCoursesCategories($courses, $categories);
         return back()->with('msg', __('courses::messages.update.success'));
     }
 
@@ -136,8 +149,11 @@ class CoursesController extends Controller
         if (empty($courses)) {
             abort(404);
         }
-        $this->courseRepository->deleteCoursesCategories($courses);
-        $this->courseRepository->delete($id);
+        // $this->courseRepository->deleteCoursesCategories($courses);
+        $status = $this->courseRepository->delete($id);
+        if($status){
+            deleteFileStorage($courses->thumbnail);
+        }
         return back()->with('msg', __('courses::messages.delete.success'));
     }
 }

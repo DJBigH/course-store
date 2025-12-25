@@ -37,8 +37,12 @@
                     <label for="">Giảng viên</label>
                     <select name="teacher_id" id=""
                         class="form-select{{ $errors->has('teacher_id') ? ' is-invalid' : '' }}">
-                        <option value="0" {{ old('is_document' == 0 ? 'selected' : false) }}>Chọn giảng viên</option>
-                        <option value="1" {{ old('is_document' == 1 ? 'selected' : false) }}>Duy Khánh</option>
+                        <option value="0">Chọn giảng viên</option>
+                        @if ($teacher)
+                            @foreach ($teacher as $t)
+                                <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                            @endforeach
+                        @endif
                     </select>
                     @error('teacher_id')
                         <div class="invalid-feedback">
@@ -144,7 +148,7 @@
                 <div class="mb-3">
                     <label for="">Nội dung</label>
                     <textarea name="detail" class="form-control ckeditor {{ $errors->has('detail') ? ' is-invalid' : '' }}" cols="30"
-                        rows="10" placeholder="Hỗ trợ...">{{ old('supports') }}</textarea>
+                        rows="10" placeholder="Nội dung...">{{ old('detail') }}</textarea>
                     @error('detail')
                         <div class="invalid-feedback">
                             {{ $message }}
