@@ -1,7 +1,12 @@
 @extends('layouts.backend')
 @section('content')
-@if (session('msg_danger'))
+    @if (session('msg_danger'))
         <div class="alert alert-danger">{{ session('msg_danger') }}</div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            Vui lòng kiểm tra lại dữ liệu đã nhập.
+        </div>
     @endif
     <form action="" method="post">
         @csrf
@@ -40,7 +45,8 @@
                         <option value="0">Chọn giảng viên</option>
                         @if ($teacher)
                             @foreach ($teacher as $t)
-                                <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                                <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>
+                                    {{ $t->name }}</option>
                             @endforeach
                         @endif
                     </select>

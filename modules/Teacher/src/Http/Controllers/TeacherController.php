@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use Modules\Teacher\Src\Http\Requests\TeacherRequest;
 use Modules\Teacher\src\Repositories\TeacherRepository;
+use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
 
 class TeacherController extends Controller
@@ -14,7 +15,7 @@ class TeacherController extends Controller
 
     protected $teacherRepository;
 
-    public function __construct(TeacherRepository $teacherRepository)
+    public function __construct(TeacherRepositoryInterface $teacherRepository)
     {
         $this->teacherRepository = $teacherRepository;
     }

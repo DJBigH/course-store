@@ -6,6 +6,11 @@
     @if (session('msg_danger'))
         <div class="alert alert-danger">{{ session('msg_danger') }}</div>
     @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            Vui lòng kiểm tra lại dữ liệu đã nhập.
+        </div>
+    @endif
     <form action="" method="post">
         @csrf
         <div class="row">
@@ -41,7 +46,7 @@
                     <select name="parent_id" id=""
                         class="form-select{{ $errors->has('parent_id') ? ' is-invalid' : '' }}">
                         <option value="0">Không có</option>
-                        {{ getCategories($categories, old('parent_id') ?? $category->parent_id)}}
+                        {{ getCategories($categories, old('parent_id') ?? $category->parent_id) }}
                     </select>
                     @error('parent_id')
                         <div class="invalid-feedback">

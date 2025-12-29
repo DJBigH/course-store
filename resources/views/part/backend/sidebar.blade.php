@@ -14,8 +14,10 @@
              </div>
              </div>
              <div class="sb-sidenav-footer">
-                 <div class="small">Logged in as:</div>
-                 Start Bootstrap
+                 <div class="small">Đăng nhập:</div>
+                 @if (!empty(Auth::user()))
+                     {{ Auth::user()->name }}
+                 @endif
              </div>
      </nav>
  </div>

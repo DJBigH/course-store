@@ -1,5 +1,10 @@
 @extends('layouts.backend')
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            Vui lòng kiểm tra lại dữ liệu đã nhập.
+        </div>
+    @endif
     <form action="" method="post">
         @csrf
         <div class="row">
@@ -32,8 +37,8 @@
             <div class="col-12">
                 <div class="mb-3">
                     <label for="">Kinh nghiệm</label>
-                    <input type="number" class="form-control {{ $errors->has('exp') ? ' is-invalid' : '' }}"
-                        name="exp" placeholder="Kinh nghiệm..." value="{{ old('exp') }}">
+                    <input type="number" class="form-control {{ $errors->has('exp') ? ' is-invalid' : '' }}" name="exp"
+                        placeholder="Kinh nghiệm..." value="{{ old('exp') }}">
                     @error('exp')
                         <div class="invalid-feedback">
                             {{ $message }}
@@ -45,8 +50,8 @@
             <div class="col-12">
                 <div class="mb-3">
                     <label for="">Mô tả</label>
-                    <textarea name="description" class="form-control ckeditor {{ $errors->has('description') ? ' is-invalid' : '' }}" cols="30"
-                        rows="10" placeholder="Hỗ trợ...">{{ old('description') }}</textarea>
+                    <textarea name="description" class="form-control ckeditor {{ $errors->has('description') ? ' is-invalid' : '' }}"
+                        cols="30" rows="10" placeholder="Hỗ trợ...">{{ old('description') }}</textarea>
                     @error('description')
                         <div class="invalid-feedback">
                             {{ $message }}
@@ -60,9 +65,8 @@
                     <div class="row {{ $errors->has('image') ? 'g-2 align-items-center' : 'g-2 align-items-end' }}">
                         <label class="form-label">Hình ảnh</label>
                         <div class="col-7 position-relative">
-                            <input type="text"
-                                class="form-control{{ $errors->has('image') ? ' is-invalid' : '' }}" name="image"
-                                placeholder="Ảnh đại diện..." id="image" value="{{ old('image') }}">
+                            <input type="text" class="form-control{{ $errors->has('image') ? ' is-invalid' : '' }}"
+                                name="image" placeholder="Ảnh đại diện..." id="image" value="{{ old('image') }}">
 
                             @error('image')
                                 <div class="invalid-feedback position-absolute">
