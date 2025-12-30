@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Categories\Seeders;
+namespace Modules\Categories\seeders;
 
 use Faker\Factory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Modules\Categories\Src\Models\Category;
+use Modules\Categories\src\Models\Category;
 
 class CategoriesSeeder extends Seeder
 {

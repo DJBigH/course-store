@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Categories\Src\Http\Controllers;
+namespace Modules\Categories\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Modules\Categories\src\Repositories\CategoriesRepository;
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 use Modules\Categories\src\Repositories\CategoriesRepositoryInterface;
-use Modules\Categories\Src\Requests\CategoriesRequest;
+use Modules\Categories\src\Requests\CategoriesRequest;
 
 class CategoriesController extends Controller
 {

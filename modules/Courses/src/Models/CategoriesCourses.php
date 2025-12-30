@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Courses\Src\Models;
+namespace Modules\Courses\src\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Modules\Categories\Src\Models\Category;

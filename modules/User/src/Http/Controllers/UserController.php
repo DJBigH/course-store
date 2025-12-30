@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\User\Src\Http\Controllers;
+namespace Modules\User\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
-use Modules\User\Src\Http\Requests\UserRequest;
+use Modules\User\src\Http\Requests\UserRequest;
 use Modules\User\src\Repositories\UserRepository;
 use Modules\User\src\Repositories\UserRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;

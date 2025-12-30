@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Modules\Categories\Seeders\CategoriesSeeder;
-use Modules\Courses\Seeders\CoursesSeeder;
-use Modules\Teacher\Seeders\TeacherSeeder;
+use Modules\Categories\seeders\CategoriesSeeder;
+use Modules\Courses\seeders\CoursesSeeder;
+use Modules\Teacher\seeders\TeacherSeeder;
 use Modules\User\seeders\UserSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -24,9 +24,9 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call([
             UserSeeder::class,
+            TeacherSeeder::class,
             CategoriesSeeder::class,
             CoursesSeeder::class,
-            TeacherSeeder::class,
         ]);
     }
 }

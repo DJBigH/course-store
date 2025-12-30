@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Courses\Seeders;
+namespace Modules\Courses\seeders;
 
 use Faker\Factory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Modules\Courses\Src\Models\Courses;
+use Modules\Courses\src\Models\Courses;
 
 class CoursesSeeder extends Seeder
 {
