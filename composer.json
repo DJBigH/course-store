@@ -13,6 +13,7 @@
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
+        "laravel/ui": "^4.6",
         "unisharp/laravel-filemanager": "^2.12",
         "yajra/laravel-datatables-oracle": "10.3.1"
     },
@@ -34,6 +35,9 @@
         "classmap": [
             "database/seeders",
             "database/migrations"
+        ],
+        "files": [
+            "app/Helpers/functions.php"
         ]
     },
     "autoload-dev": {

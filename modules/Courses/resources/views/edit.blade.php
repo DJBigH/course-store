@@ -6,6 +6,11 @@
     @if (session('msg_danger'))
         <div class="alert alert-danger">{{ session('msg_danger') }}</div>
     @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            Vui lòng kiểm tra lại dữ liệu đã nhập.
+        </div>
+    @endif
     <form action="" method="post">
         @csrf
         <div class="row">
@@ -40,8 +45,14 @@
                     <label for="">Giảng viên</label>
                     <select name="teacher_id" id=""
                         class="form-select{{ $errors->has('teacher_id') ? ' is-invalid' : '' }}">
-                        <option value="0" {{ old('is_document' == 0 ? 'selected' : false) }}>Chọn giảng viên</option>
-                        <option value="1" {{ old('is_document' == 1 ? 'selected' : false) }}>Duy Khánh</option>
+                        <option value="0">Chọn giảng viên</option>
+                        @if ($teacher)
+                            @foreach ($teacher as $t)
+                                <option value="{{ $t->id }}"
+                                    {{ old('teacher_id') == $t->id || $courses->teacher_id == $t->id ? 'selected' : '' }}>
+                                    {{ $t->name }}</option>
+                            @endforeach
+                        @endif
                     </select>
                     @error('teacher_id')
                         <div class="invalid-feedback">

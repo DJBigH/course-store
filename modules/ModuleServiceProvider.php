@@ -46,6 +46,24 @@ class ModuleServiceProvider extends ServiceProvider
             UserRepositoryInterface::class,
             UserRepository::class
         );
+
+        //Categories Repository
+        $this->app->singleton(
+            CategoriesRepositoryInterface::class,
+            CategoriesRepository::class
+        );
+
+        //Courses Repository
+        $this->app->singleton(
+            CoursesRepositoryInterface::class,
+            CoursesRepository::class
+        );
+
+        //Teacher Repository
+        $this->app->singleton(
+            TeacherRepositoryInterface::class,
+            TeacherRepository::class
+        );
     }
 
     public function boot()

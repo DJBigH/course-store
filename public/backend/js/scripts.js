@@ -109,4 +109,27 @@ window.addEventListener("DOMContentLoaded", (event) => {
             isChangeSlug = true;
         });
     }
+
+    const logoutAction = document.querySelector(".logout-action");
+    const formLogout = document.querySelector(".form-logout");
+    if (logoutAction && formLogout) {
+        logoutAction.addEventListener("click", (e) => {
+            e.preventDefault();
+            Swal.fire({
+                title: "Đăng xuất?",
+                text: "Bạn chắc chắn muốn đăng xuất khỏi hệ thống?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Đăng xuất",
+                cancelButtonText: "Hủy",
+                confirmButtonColor: "#d33",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const action = e.target.href;
+                    formLogout.action = action;
+                    formLogout.submit();
+                }
+            });
+        });
+    }
 });

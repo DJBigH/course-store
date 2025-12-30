@@ -6,6 +6,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Modules\Categories\Seeders\CategoriesSeeder;
 use Modules\Courses\Seeders\CoursesSeeder;
+use Modules\Teacher\Seeders\TeacherSeeder;
 use Modules\User\seeders\UserSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -25,6 +26,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             CategoriesSeeder::class,
             CoursesSeeder::class,
+            TeacherSeeder::class,
         ]);
     }
 }

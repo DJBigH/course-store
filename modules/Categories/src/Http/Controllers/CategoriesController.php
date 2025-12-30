@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Modules\Categories\src\Repositories\CategoriesRepository;
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
+use Modules\Categories\src\Repositories\CategoriesRepositoryInterface;
 use Modules\Categories\Src\Requests\CategoriesRequest;
 
 class CategoriesController extends Controller
@@ -13,7 +14,7 @@ class CategoriesController extends Controller
 
     protected $category;
 
-    public function __construct(CategoriesRepository $categoriesRepository)
+    public function __construct(CategoriesRepositoryInterface $categoriesRepository)
     {
         $this->category = $categoriesRepository;
     }

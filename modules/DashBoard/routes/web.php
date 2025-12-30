@@ -3,6 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Modules\DashBoard\src\Http\Controllers\DashboardController;
 
-Route::prefix('admin')->group(function () {
-      Route::get('/', [DashboardController::class, 'index'])->name('index');
+Route::prefix('admin')->name('admin.')->group(function () {
+      Route::get('/', 'DashboardController@index')->name('index');
 });
