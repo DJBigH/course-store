@@ -3,7 +3,7 @@
 namespace Modules\Courses\src\Repositories;
 
 use App\Repositories\BaseRepository;
-use Modules\Courses\Src\Models\Courses;
+use Modules\Courses\src\Models\Courses;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 
 class CoursesRepository extends BaseRepository implements CoursesRepositoryInterface

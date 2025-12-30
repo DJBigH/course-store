@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Teacher\Src\Http\Controllers;
+namespace Modules\Teacher\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
-use Modules\Teacher\Src\Http\Requests\TeacherRequest;
+use Modules\Teacher\src\Http\Requests\TeacherRequest;
 use Modules\Teacher\src\Repositories\TeacherRepository;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;

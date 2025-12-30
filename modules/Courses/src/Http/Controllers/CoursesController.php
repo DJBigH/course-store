@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Courses\Src\Http\Controllers;
+namespace Modules\Courses\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Carbon;
 use Modules\Categories\src\Repositories\CategoriesRepository;
 use Modules\Categories\src\Repositories\CategoriesRepositoryInterface;
-use Modules\Courses\Src\Http\Requests\CoursesRequest;
+use Modules\Courses\src\Http\Requests\CoursesRequest;
 use Modules\Courses\src\Repositories\CoursesRepository;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Teacher\src\Repositories\TeacherRepository;

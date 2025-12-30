@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Teacher\Seeders;
+namespace Modules\Teacher\seeders;
 
 use Faker\Factory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Modules\Teacher\Src\Models\Teacher;
+use Modules\Teacher\src\Models\Teacher;
 
 class TeacherSeeder extends Seeder
 {
