@@ -64,6 +64,30 @@ class ModuleServiceProvider extends ServiceProvider
             TeacherRepositoryInterface::class,
             TeacherRepository::class
         );
+
+        //Video Repository
+        $this->app->singleton(
+            VideoRepositoryInterface::class,
+            VideoRepository::class
+        );
+
+        //Document Repository
+        $this->app->singleton(
+            DocumentRepositoryInterface::class,
+            DocumentRepository::class
+        );
+
+        //Lessons Repository
+        $this->app->singleton(
+            LessonsRepositoryInterface::class,
+            LessonsRepository::class
+        );
+
+        //Students Repository
+        $this->app->singleton(
+            StudentsRepositoryInterface::class,
+            StudentsRepository::class
+        );
     }
 
     public function boot()
@@ -77,10 +101,10 @@ class ModuleServiceProvider extends ServiceProvider
 
         Paginator::useBootstrapFive();
 
-        // $request = request();
-        // if ($request->is('admin') || $request->is('admin/*')) {
-        //     $this->app['router']->pushMiddlewareToGroup('web', 'auth');
-        // }
+        $request = request();
+        if ($request->is('admin') || $request->is('admin/*')) {
+            $this->app['router']->pushMiddlewareToGroup('web', 'auth');
+        }
     }
 
     public function register()
