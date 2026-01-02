@@ -39,7 +39,7 @@ class Handler extends ExceptionHandler
             }
 
             return response()
-                ->view('errors.client.404', [], 404);
+                ->view('errors.clients.404', [], 404);
         }
 
         return parent::render($request, $e);
