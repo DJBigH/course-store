@@ -37,6 +37,9 @@ class CoursesController extends Controller
         $courses = $this->courseRepository->getAllCourses();
 
         return DataTables::of($courses)
+            ->addColumn('lessions', function ($courses) {
+                return '<a href="'.route('lessons.index',$courses->id).'" class="btn btn-primary">Bài giảng</a>';
+            })
             ->addColumn('edit', function ($courses) {
                 return '<a href="' . route('courses.edit', $courses->id) . '" class="btn btn-warning">Sửa</a>';
             })
@@ -61,7 +64,7 @@ class CoursesController extends Controller
                 }
                 return $price;
             })
-            ->rawColumns(['edit', 'delete', 'status'])
+            ->rawColumns(['edit', 'delete', 'status','lessions'])
             ->toJson();
     }
 
@@ -154,7 +157,7 @@ class CoursesController extends Controller
         }
         // $this->courseRepository->deleteCoursesCategories($courses);
         $status = $this->courseRepository->delete($id);
-        if($status){
+        if ($status) {
             deleteFileStorage($courses->thumbnail);
         }
         return back()->with('msg', __('courses::messages.delete.success'));

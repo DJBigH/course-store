@@ -5,56 +5,32 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="csrf_token" content="{{ csrf_token() }}" />
-    <title>{{ $pageTitle }} - Unicode Academy</title>
-    <link href="https://unpkg.com/gijgo@1.9.14/css/gijgo.min.css" rel="stylesheet" type="text/css" />
-    @vite(['resources/sass/app.scss'])
+    <title>{{ $pageTitle ?? 'Không tìm thấy trang' }} - BigK</title>
+    <link rel="stylesheet" href="{{ asset('clients/css/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('clients/css/slick.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
+    <link rel="shortcut icon" href="{{ asset('clients/assets/LOGO-DSCONS-FAVICON.png') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ asset('clients/css/reset.css') }}" />
+    <link rel="stylesheet" href="{{ asset('clients/css/header.css') }}" />
+    <link rel="stylesheet" href="{{ asset('clients/css/home.css') }}" />
+    <link rel="stylesheet" href="{{ asset('clients/css/footer.css') }}" />
     @yield('stylesheets')
 </head>
 
 <body>
-    @include ('parts.clients.header')
+    @include ('part.clients.header')
     <main>
         @yield('content')
     </main>
-    @include ('parts.clients.footer')
+    @include ('part.clients.footer')
     @yield('scripts')
-    <div class="modal fade" id="modal">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title fs-5" id="exampleModalLabel"></h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
-<script>
-    var trialUrl = `{{ route('courses.data.trial') }}`;
-</script>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://unpkg.com/gijgo@1.9.14/js/gijgo.min.js"></script>
-<script>
-    //Datepicker
-    $(".datepicker-1").datepicker({
-        uiLibrary: "bootstrap5",
-    });
-    $(".datepicker-2").datepicker({
-        uiLibrary: "bootstrap5",
-    });
-</script>
-@if (\Request::route()->getName() === 'students.account.checkout')
-    <script>
-        let paymentDate = '{{ getCurrentPaymentDate() }}';
-        let checkoutCountdown = `{{ config('checkout.checkout_countdown') }}`;
-        let orderId = {{ request()->route()->id }};
-    </script>
-@endif
-@vite(['resources/js/app.js'])
-@yield('scripts')
+	<script src="{{ asset('clients/js/bootstrap.min.js') }}"></script>
+	<script src="{{ asset('clients/js/jquery.min.js') }}"></script>
+	<script src="{{ asset('clients/js/jquery-migrate-1.2.1.min.js') }}"></script>
+	<script src="{{ asset('clients/js/slick.min.js') }}"></script>
+	<script src="{{ asset('clients/js/slider-home.js') }}"></script>
+	<script src="{{ asset('clients/js/home.js') }}"></script>
+</html>
 
 </html>

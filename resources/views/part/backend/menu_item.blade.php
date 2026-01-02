@@ -4,11 +4,13 @@
     {{ $title }}
     <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
 </a>
-<div class="collapse {{ request()->routeIs($name . '.*') ? 'show' : '' }}" id="collapse{{ $name }}"
-    data-bs-parent="#sidenavAccordion">
 
+<div class="collapse {{ activeSidebar($name, $includes ?? []) ? 'show' : false }}" id="collapse{{ $name }}"
+    aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
     <nav class="sb-sidenav-menu-nested nav">
-        <a class="nav-link" href="{{ route($name . '.index') }}">Danh sách</a>
-        <a class="nav-link" href="{{ route($name . '.add') }}">Thêm mới</a>
+        <a class="nav-link {{ activeMenu($name . '.index') ? 'active' : '' }}"
+            href="{{ route($name . '.index') }}">Danh sách</a>
+        <a class="nav-link {{ activeMenu($name . '.add') ? 'active' : '' }}"
+            href="{{ route($name . '.add') }}">Thêm mới</a>
     </nav>
 </div>
