@@ -8,19 +8,19 @@
                         <li>
                             <a href="#">
                                 <i class="fa-solid fa-mobile"></i>
-                                0989341634
+                                0123456789
                             </a>
                         </li>
                         <li>
                             <a href="#">
                                 <i class="fa-solid fa-envelope"></i>
-                                ngocnguyenchi1507@gmail.com
+                                BigK@gmail.com
                             </a>
                         </li>
                         <li>
                             <a href="#">
                                 <i class="fa-solid fa-house"></i>
-                                9c9, Trần Quốc Hoàn, Cầu Giấy, Hà Nội
+                               Hà Nội, Việt Nam
                             </a>
                         </li>
                     </ul>
@@ -65,6 +65,6 @@
         <span>
             <i class="fa-solid fa-heart"></i>
         </span>
-        by Chí Ngọc
+        by BigK
     </p>
 </footer>

@@ -14,6 +14,10 @@ Route::prefix('admin')->group(function () {
    });
 });
 
- Route::group(['prefix' => 'filemanager', 'middleware' => ['web']], function () {
-     \UniSharp\LaravelFilemanager\Lfm::routes();
- });
+Route::group(['prefix' => 'filemanager', 'middleware' => ['web']], function () {
+   \UniSharp\LaravelFilemanager\Lfm::routes();
+});
+
+Route::group(['as' => 'courses.'], function () {
+   Route::get('/khoa-hoc', 'Clients\CoursesController@index')->name('home');
+});
