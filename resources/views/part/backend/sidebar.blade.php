@@ -29,6 +29,11 @@
                     'name' => 'user',
                 ])
 
+                @include('part.backend.menu_item', [
+                    'title' => 'Học viên',
+                    'name' => 'students',
+                ])
+
             </div>
         </div>
         <div class="sb-sidenav-footer">

@@ -16,3 +16,7 @@ Route::prefix('admin')->group(function () {
       Route::delete('/delete/{lessonId}', 'LessonController@delete')->name('delete');
    });
 });
+
+Route::group(['as' => 'lessons.'], function () {
+   Route::get('/bai-hoc/{slug}', 'Clients\LessonController@index')->name('home');
+});

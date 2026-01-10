@@ -118,9 +118,9 @@
                     <select name="is_document" id=""
                         class="form-select{{ $errors->has('is_document') ? ' is-invalid' : '' }}">
                         <option value="0"
-                            {{ old('is_document' == 0 || $courses->is_document == 0 ? 'selected' : false) }}>Không</option>
+                            {{ old('is_document' == 0, $courses->is_document == 0 ? 'selected' : false) }}>Không</option>
                         <option value="1"
-                            {{ old('is_document' == 1 || $courses->is_document == 1 ? 'selected' : false) }}>Có</option>
+                            {{ old('is_document' == 1, $courses->is_document == 1 ? 'selected' : false) }}>Có</option>
                     </select>
                     @error('is_document')
                         <div class="invalid-feedback">

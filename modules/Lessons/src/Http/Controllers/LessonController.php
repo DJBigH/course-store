@@ -30,11 +30,13 @@ class LessonController extends Controller
 
     public function index($courseId)
     {
-        $courses = $this->courseRepository->find($courseId);
+        $courses = $this->courseRepository->getCourse($courseId);
         if (!$courses) {
             abort(404);
         }
         $pageTitle = !empty($courses) ? 'Bải giảng: ' . $courses->name : 'Bài giảng: ';
+
+        $this->updateDurations($courseId);
         return view('lessons::lists', compact('pageTitle', 'courses'));
     }
 
@@ -104,7 +106,7 @@ class LessonController extends Controller
     {
         $pageTitle = 'Thêm bài giảng';
         $position = $this->lessonRepository->getPosition($courseId);
-        $lessons = $this->lessonRepository->getAllLessions();
+        $lessons = $this->lessonRepository->getAllLessions($courseId);
         return view('lessons::create', compact('pageTitle', 'courseId', 'position', 'lessons'));
     }
 
@@ -157,7 +159,7 @@ class LessonController extends Controller
             'durations' => $videoInfo['playtime_seconds'] ?? 0,
             'description' => $description,
         ]);
-
+        $this->updateDurations($courseId);
         return redirect()->route('lessons.index', $courseId)->with('msg', __('lessons::messages.create.success'));
     }
 
@@ -165,8 +167,8 @@ class LessonController extends Controller
     {
         $pageTitle = 'Cập nhập bài học';
         // $position = $this->lessonRepository->getPosition($courseId);
-        $lessons = $this->lessonRepository->getAllLessions();
         $lesson = $this->lessonRepository->find($lessonId);
+        $lessons = $this->lessonRepository->getAllLessions($lesson->course_id);
         $lesson->video = $lesson->video?->url;
         $lesson->document = $lesson->document?->url;
         if (!$lesson) {
@@ -224,7 +226,8 @@ class LessonController extends Controller
             'durations' => $videoInfo['playtime_seconds'] ?? 0,
             'description' => $description,
         ]);
-
+        $lesson = $this->lessonRepository->find($lessonId);
+        $this->updateDurations($lesson->course_id);
         return redirect()->route('lessons.edit', $lessonId)->with('msg', __('lessons::messages.update.success'));
     }
 
@@ -235,6 +238,17 @@ class LessonController extends Controller
             abort(404);
         }
         $this->lessonRepository->delete($lessonId);
+        $this->updateDurations($lesson->course_id);
         return redirect()->route('lessons.index', $lesson->course_id)->with('msg', __('lessons::messages.delete.success'));
+    }
+
+    private function updateDurations($courseId){
+        $lessons = $this->lessonRepository->getAllLessions($courseId);
+
+        $durations = $lessons->reduce(function ($prev, $item){
+            return $prev + $item->durations;
+        },0);
+
+        $this->courseRepository->updateCourse($courseId,['durations' => $durations]); 
     }
 }

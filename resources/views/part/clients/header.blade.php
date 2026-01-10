@@ -4,7 +4,7 @@
             <div class="row align-items-center">
                 <div class="d-none d-lg-block col-lg-2">
                     <form>
-                        <input type="text" placeholder="Bạn tìm gì" />
+                        <input type="text" placeholder="Bạn tìm gì..." />
                         <button type="submit" class="btn btn-primary">Tìm</button>
                     </form>
                 </div>
@@ -12,11 +12,11 @@
                     <div class="d-flex">
                         <p class="slogan">
                             <i class="fas fa-phone"></i>Tư vấn & hỗ trợ:
-                            <a href="#">0989341634</a>
+                            <a href="#">0123456789</a>
                         </p>
                         <p class="mail">
                             <i class="far fa-envelope"></i>
-                            <a href="#">ngocnguyenchi1507@gmail.com</a>
+                            <a href="#">BigK@gmail.com</a>
                         </p>
                     </div>
                 </div>
@@ -35,7 +35,7 @@
     </div>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="{{ route('home') }}">
                 <img src="{{ asset('clients/assets/logo.png') }}" alt="" />
             </a>
             <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"

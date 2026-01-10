@@ -23,7 +23,7 @@
                         <i class="fas fa-arrow-left"></i> Quay lại
                     </a>
 
-                    <a href="{{ route('index') }}" class="btn btn-primary">
+                    <a href="{{ route('home') }}" class="btn btn-primary">
                         <i class="fas fa-home"></i> Trang chủ
                     </a>
                 </div>

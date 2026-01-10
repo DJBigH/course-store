@@ -2,6 +2,7 @@
 
 namespace Modules\Courses\src\Repositories;
 
+use App\Models\Scopes\ActiveScope;
 use App\Repositories\BaseRepository;
 use Modules\Courses\src\Models\Courses;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
@@ -15,7 +16,17 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
     public function getAllCourses()
     {
-        return $this->model->select(['id', 'name', 'price', 'status', 'sale_price', 'created_at'])->latest();
+        return $this->model->withoutGlobalScope(ActiveScope::class)->select(['id', 'name', 'price', 'status', 'sale_price', 'created_at'])->latest();
+    }
+
+    public function getCourse($id)
+    {
+        return $this->model->withoutGlobalScope(ActiveScope::class)->find($id);
+    }
+
+    public function getCourseActive($slug)
+    {
+        return $this->model->whereSlug($slug)->first();
     }
 
     public function createCoursesCategory($course, $data = [])
@@ -28,7 +39,8 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
         return $course->categories()->sync($data);
     }
 
-    public function deleteCoursesCategories($course){
+    public function deleteCoursesCategories($course)
+    {
         return $course->categories()->detach();
     }
 
@@ -38,5 +50,22 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
         return $categoryId;
     }
 
-    
+    public function getCourses($limit)
+    {
+        return $this->model->limit($limit)->latest()->paginate($limit);
+    }
+
+    public function updateCourse($id, $data = [])
+    {
+        $result = $this->getCourse($id);
+        if($result){
+            return $result->update($data);
+        }
+        return false;
+    }
+
+    public function deleteCourse($id)
+    {
+        return $this->model->withoutGlobalScope(ActiveScope::class)->where('id',$id)->delete($id);
+    }
 }

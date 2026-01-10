@@ -89,10 +89,10 @@ class CoursesController extends Controller
         if (!$courses['price']) {
             $courses['price'] = 0;
         }
-        if ($courses['price'] == 0) {
-            $courses['sale_price'] = 0;
-            return back()->with('msg_danger', 'Khi giá = 0 thì không có khuyến mãi');
-        }
+        // if ($courses['price'] == 0) {
+        //     $courses['sale_price'] = 0;
+        //     return back()->with('msg_danger', 'Khi giá = 0 thì không có khuyến mãi');
+        // }
         $course = $this->courseRepository->create($courses);
         $categories = $this->getCategories($courses);
         $this->courseRepository->createCoursesCategory($course, $categories);
@@ -102,7 +102,7 @@ class CoursesController extends Controller
     public function edit($id)
     {
         $pageTitle = 'Cập nhập khóa học';
-        $courses = $this->courseRepository->find($id);
+        $courses = $this->courseRepository->getCourse($id);
         $categoriesId = $this->courseRepository->getRelatedCategories($courses);
         $categories = $this->categoriesRepository->getAllCategories();
         $teacher = $this->teacherRepository->getAllTeacher()->get();
@@ -129,13 +129,13 @@ class CoursesController extends Controller
             $courses['price'] = 0;
         }
 
-        if ($courses['price'] == 0) {
-            $courses['sale_price'] = 0;
-            return back()->with('msg_danger', 'Khi giá = 0 thì không có khuyến mãi');
-        }
-        $this->courseRepository->update($id, $courses);
+        // if ($courses['price'] == 0) {
+        //     $courses['sale_price'] != 0;
+        //     return back()->with('msg_danger', 'Khi giá = 0 thì không có khuyến mãi');
+        // }
+        $this->courseRepository->updateCourse($id, $courses);
         $categories = $this->getCategories($courses);
-        $courses = $this->courseRepository->find($id);
+        $courses = $this->courseRepository->getCourse($id);
         $data = $this->courseRepository->updateCoursesCategories($courses, $categories);
         return back()->with('msg', __('courses::messages.update.success'));
     }
@@ -151,12 +151,12 @@ class CoursesController extends Controller
 
     public function delete($id)
     {
-        $courses = $this->courseRepository->find($id);
+        $courses = $this->courseRepository->getCourse($id);
         if (empty($courses)) {
             abort(404);
         }
         // $this->courseRepository->deleteCoursesCategories($courses);
-        $status = $this->courseRepository->delete($id);
+        $status = $this->courseRepository->deleteCourse($id);
         if ($status) {
             deleteFileStorage($courses->thumbnail);
         }

@@ -1,5 +1,8 @@
 <?php
 
+use Modules\Lessons\src\Repositories\LessonsRepository;
+use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
+
 function getLessons($lessons, $old = '', $parentId = 0, $char = '')
 {
     $id = request()->route()->lessonId;
@@ -20,7 +23,7 @@ function getLessons($lessons, $old = '', $parentId = 0, $char = '')
 
 
 function getTime($totalSeconds)
-{  
+{
     $hours = floor($totalSeconds / 3600);
     $minutes = floor(($totalSeconds % 3600) / 60);
     $seconds = $totalSeconds % 60;
@@ -37,4 +40,22 @@ function getTime($totalSeconds)
 
     // >= 1 tiếng
     return sprintf('%02d:%02d:%02d tiếng', $hours, $minutes, $seconds);
+}
+
+function getLessonCount($course)
+{
+    $lessonRepository = app(LessonsRepositoryInterface::class);
+    return $lessonRepository->getLessonCount($course);
+}
+
+function getModuleByPosition($course)
+{
+    $lessonRepository = app(LessonsRepositoryInterface::class);
+    return $lessonRepository->getModuleByPosition($course);
+}
+
+function getLessonByPosition($course,$moduleId)
+{
+    $lessonRepository = app(LessonsRepositoryInterface::class);
+    return $lessonRepository->getLessonByPosition($course,$moduleId);
 }
