@@ -30,7 +30,7 @@
                                     <div class="descreption-teacher">
                                         <img src="{{ $course->teacher?->image }}" alt="{{ $course->teacher?->name }}" />
                                         <span>
-                                            <strong>Giảng viên:</strong>
+                                            <strong style="font-weight: bold">Giảng viên:</strong>
                                             {{ $course->teacher?->name }}
                                         </span>
                                     </div>

@@ -24,6 +24,11 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
         return $this->model->withoutGlobalScope(ActiveScope::class)->find($id);
     }
 
+    public function getCourseActive($slug)
+    {
+        return $this->model->whereSlug($slug)->first();
+    }
+
     public function createCoursesCategory($course, $data = [])
     {
         return $course->categories()->attach($data);

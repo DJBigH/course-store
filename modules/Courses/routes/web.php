@@ -20,4 +20,9 @@ Route::group(['prefix' => 'filemanager', 'middleware' => ['web']], function () {
 
 Route::group(['as' => 'courses.'], function () {
    Route::get('/khoa-hoc', 'Clients\CoursesController@index')->name('home');
+   Route::get('/khoa-hoc/{slug}', 'Clients\CoursesController@detail')->name('detail');
+   Route::prefix('data')->name('data.')->group(function () {
+      Route::get('/trial/{lessonId?}', 'Clients\CoursesController@getTrialVideo')->name('trial');
+      Route::get('/stream', 'Clients\CoursesController@streamVideo')->name('stream');
+   });
 });
