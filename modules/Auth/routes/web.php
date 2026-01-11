@@ -10,4 +10,7 @@ Route::get('/login',"Admin\LoginController@showLoginForm")->middleware('web')->n
 Route::post('/login',"Admin\LoginController@login")->middleware('web')->name('login');
 Route::post('/logout',"Admin\LoginController@logout")->middleware('web')->name('logout');
 
+Route::get('/dang-nhap','Clients\LoginController@showLoginForm')->name('clients-login');
+Route::get('/dang-ky','Clients\RegisterController@showRegistrationForm')->name('clients-register');
+
 

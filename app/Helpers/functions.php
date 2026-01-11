@@ -32,11 +32,35 @@ function activeMenu($name)
     return request()->is(trim(route($name, [], false), '/'));
 }
 
-function money($number, $currency = 'đ'){
-    return !empty($number) ? number_format($number).' '.$currency: "Miễn phí";
+function money($number, $currency = 'đ')
+{
+    return !empty($number) ? number_format($number) . ' ' . $currency : "Miễn phí";
 }
 
-function getHour($secounds){
+function getHour($secounds)
+{
     $value = round($secounds / 60, 1);
     return $value . 'h';
+}
+
+function getSize($bytes, $precision = 2)
+{
+    if ($bytes <= 0) return '0 B';
+
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $power = floor(log($bytes, 1024));
+    $power = min($power, count($units) - 1);
+
+    $value = $bytes / pow(1024, $power);
+
+    return round($value, $precision) . ' ' . $units[$power];
+}
+
+function queryActive($query)
+{
+    return $query->where('status', 1);
+}
+
+function queryPosition($query){
+     $query->orderBy('position');
 }

@@ -1,8 +1,13 @@
-// Fonts
-@import url('https://fonts.bunny.net/css?family=Nunito');
-
-// Variables
-@import 'variables';
-
-// Bootstrap
-@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap.min';
+@import 'slick';
+@import 'all.min';
+@import 'reset';
+@import 'header';
+@import 'home';
+@import 'course';
+@import 'course-detail';
+@import 'video-detail';
+@import 'footer';
+@import 'video-js';
+@import 'sign-in';
+@import 'sign-up';

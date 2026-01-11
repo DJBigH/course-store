@@ -54,8 +54,8 @@ function getModuleByPosition($course)
     return $lessonRepository->getModuleByPosition($course);
 }
 
-function getLessonByPosition($course,$moduleId)
+function getLessonByPosition($course, $moduleId = null, $isDocument = false)
 {
     $lessonRepository = app(LessonsRepositoryInterface::class);
-    return $lessonRepository->getLessonByPosition($course,$moduleId);
+    return $lessonRepository->getLessonByPosition($course, $moduleId, $isDocument);
 }

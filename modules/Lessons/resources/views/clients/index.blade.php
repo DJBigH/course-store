@@ -15,10 +15,26 @@
                             </p>
                         </video>
                     </div>
-                    <div class="d-flex justify-content-between mt-3">
-                        <p class="prev">Quay lại</p>
-                        <p class="next">Tiếp theo</p>
+                    <div class="lesson-nav d-flex justify-content-between mt-4">
+                        <div>
+                            @if ($prevLesson)
+                                <a href="{{ route('lessons.home', $prevLesson->slug) }}" class="btn-lesson btn-prev">
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    <span>Quay lại</span>
+                                </a>
+                            @endif
+                        </div>
+
+                        <div>
+                            @if ($nextLesson)
+                                <a href="{{ route('lessons.home', $nextLesson->slug) }}" class="btn-lesson btn-next">
+                                    <span>Tiếp theo</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            @endif
+                        </div>
                     </div>
+
                 </div>
                 <div class="col-12 col-lg-4">
                     <div class="nav flex">
@@ -27,125 +43,10 @@
                     </div>
                     <div class="group">
                         <div class="accordion active title">
-                            <div class="accordion-group">
-                                <h4 class="accordion-title">Section 1</h4>
-                                <div class="accordion-detail">
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 1: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 2: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 3: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="accordion-group">
-                                <h4 class="accordion-title">Section 2</h4>
-                                <div class="accordion-detail">
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 1: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 2: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 3: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="accordion-group">
-                                <h4 class="accordion-title">Section 3</h4>
-                                <div class="accordion-detail">
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 1: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 2: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 3: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="accordion-group">
-                                <h4 class="accordion-title">Section 4</h4>
-                                <div class="accordion-detail">
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 1: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 2: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                    <div class="card-accordion">
-                                        <div>
-                                            <i class="fa-brands fa-youtube"></i>
-                                            <p>học thử</p>
-                                            Bài 3: title
-                                            <span>time</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            @include('lessons::clients.lesson')
                         </div>
                         <div class="document-title title">
-                            <p>tài liệu</p>
+                            @include('lessons::clients.document')
                         </div>
                     </div>
                 </div>

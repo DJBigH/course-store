@@ -130,6 +130,21 @@
                 </div>
             </div>
 
+            <div class="col-12">
+                <div class="mb-3">
+                    <label>Trạng thái</label>
+                    <label class="d-block">
+                        <input type="checkbox" name="status" value="1"
+                            {{ old('status', $lesson->status) ? 'checked' : '' }}> Kích
+                        hoạt
+                    </label>
+                    @error('status')
+                        <div class="invalid-feedback">
+                            {{ $message }}
+                        </div>
+                    @enderror
+                </div>
+            </div>
 
             <div class="col-12 text-end">
                 <button type="submit" class="btn btn-success">Lưu</button>

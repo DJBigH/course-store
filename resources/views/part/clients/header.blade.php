@@ -23,10 +23,10 @@
                 <div class="col-lg-3">
                     <div class="social">
                         <button class="btn btn-primary">
-                            <i class="fas fa-user"></i> Đăng ký
+                            <a href="{{ route('clients-register') }}" class="text-white" style="text-decoration: none !important"><i class="fas fa-user"></i> Đăng ký</a>
                         </button>
                         <button class="btn btn-primary">
-                            <i class="fas fa-key"></i> Đăng nhập
+                            <a href="{{ route('clients-login') }}" class="text-white" style="text-decoration: none !important"><i class="fas fa-key"></i> Đăng nhập</a>
                         </button>
                     </div>
                 </div>
@@ -46,13 +46,13 @@
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">
+                        <a class="nav-link active" aria-current="page" href="{{ route('home') }}">
                             <i class="fas fa-home"></i>
                             Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="{{ route('courses.home') }}">
                             <i class="fas fa-tv"></i>
                             Khóa học
                         </a>
