@@ -2,12 +2,17 @@
 
 namespace Modules\Students\src\Models;
 
+use App\Notifications\EmailVerifyQueued;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Student extends Model
+class Student extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory;
+    use Notifiable;
 
     protected $table = 'students';
 
@@ -17,6 +22,13 @@ class Student extends Model
         'password',
         'status',
         'address',
-        'phone'
+        'phone',
+        'remember_token',
+        'email_verified_at'
     ];
+
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new EmailVerifyQueued);
+    }
 }

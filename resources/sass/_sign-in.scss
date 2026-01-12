@@ -31,7 +31,7 @@
 	flex-flow: column;
 }
 .sign-in input {
-	margin-bottom: 15px;
+	margin-bottom: 5px;
 	padding: 10px 20px;
 	border: 1px solid #ebebeb;
 	border-radius: 99px;
@@ -181,8 +181,8 @@ a {
     color: #374151;
 }
 
-.sign-up a {
-    color: #2563eb;
+.register a {
+    color: #2563eb !important;
     font-weight: 500;
 }
 

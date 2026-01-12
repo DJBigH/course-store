@@ -33,7 +33,7 @@ use Modules\Categories\src\Repositories\CategoriesRepositoryInterface;
 class ModuleServiceProvider extends ServiceProvider
 {
     private $middlewares = [
-        // 'user.block' => BlockUserMiddleware::class
+        'user.block' => BlockUserMiddleware::class
     ];
 
     private $commands = [];

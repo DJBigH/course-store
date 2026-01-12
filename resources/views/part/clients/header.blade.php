@@ -22,12 +22,37 @@
                 </div>
                 <div class="col-lg-3">
                     <div class="social">
-                        <button class="btn btn-primary">
-                            <a href="{{ route('clients-register') }}" class="text-white" style="text-decoration: none !important"><i class="fas fa-user"></i> Đăng ký</a>
-                        </button>
-                        <button class="btn btn-primary">
-                            <a href="{{ route('clients-login') }}" class="text-white" style="text-decoration: none !important"><i class="fas fa-key"></i> Đăng nhập</a>
-                        </button>
+                        @if (auth('students')->check())
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2"
+                                    type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>{{ auth('students')->user()->name }}</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                                            <i class="fas fa-user"></i> Tài khoản
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2 text-danger"
+                                            href="#" onclick="document['form-logout'].submit(); return false;">
+                                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        @else
+                            <button class="btn btn-primary">
+                                <a href="{{ route('clients-register') }}" class="text-white"
+                                    style="text-decoration: none !important"><i class="fas fa-user"></i> Đăng ký</a>
+                            </button>
+                            <button class="btn btn-primary">
+                                <a href="{{ route('clients-login') }}" class="text-white"
+                                    style="text-decoration: none !important"><i class="fas fa-key"></i> Đăng nhập</a>
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -95,3 +120,4 @@
         </div>
     </nav>
 </header>
+<form action="{{ route('clients-logout') }}" method="post" name="form-logout">@csrf</form>

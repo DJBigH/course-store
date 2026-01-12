@@ -38,9 +38,9 @@ class StudentController extends Controller
                 return Carbon::parse($students->created_at)->format('d/m/Y H:i:s');
             })
             ->editColumn('status', function ($students) {
-                return $students->status == 1 ? '<span class="badge bg-success">Kích hoạt</span>' : '<span class="badge bg-danger">Chưa kích hoạt</span>';
+                return $students->status == 1 ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>' : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
             })
-            ->rawColumns(['edit', 'delete','status'])
+            ->rawColumns(['edit', 'delete', 'status'])
             ->toJson();
     }
 
