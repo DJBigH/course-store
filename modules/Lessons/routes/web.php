@@ -17,6 +17,6 @@ Route::prefix('admin')->group(function () {
    });
 });
 
-Route::group(['as' => 'lessons.'], function () {
+Route::group(['as' => 'lessons.', 'middleware' => ['auth:students','verified','user.block']], function () {
    Route::get('/bai-hoc/{slug}', 'Clients\LessonController@index')->name('home');
 });

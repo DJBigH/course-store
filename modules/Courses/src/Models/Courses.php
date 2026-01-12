@@ -31,7 +31,7 @@ class Courses extends Model
         'updated_at',
     ];
 
-    protected $with = ['teacher','lessons'];
+    protected $with = ['teacher'];
 
     protected static function booted()
     {

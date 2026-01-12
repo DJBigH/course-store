@@ -24,6 +24,28 @@ class LessonController extends Controller
         }
         $pageTitle = $lesson->name;
         $pageName = $lesson->name;
-        return view('lessons::clients.index', compact('pageTitle', 'pageName','lesson'));
+        $course = $lesson->course;
+        $index = 0;
+
+        $lessons = $this->lessonRepository->getLessonByPosition($course);
+        $currentLessonIndex = null;
+        foreach($lessons as $key => $item){
+            if($item->id == $lesson->id){
+                $currentLessonIndex = $key;
+                break;
+            }
+        }
+        $nextLesson = null;
+        $prevLesson = null;
+        if(!empty($lessons[$currentLessonIndex+1])){
+            $nextLesson = $lessons[$currentLessonIndex+1];
+        }
+
+        if(!empty($lessons[$currentLessonIndex-1])){
+            $prevLesson = $lessons[$currentLessonIndex-1];
+        }
+
+
+        return view('lessons::clients.index', compact('pageTitle', 'pageName','lesson','course','index','nextLesson','prevLesson'));
     }
 }

@@ -44,13 +44,14 @@ class LessonController extends Controller
     {
         $pageTitle = 'Sắp xếp bài giảng';
         $modules = $this->lessonRepository->getLessons($courseId)->with('children')->get();
-        return view('lessons::sort', compact('pageTitle', 'courseId','modules'));
+        return view('lessons::sort', compact('pageTitle', 'courseId', 'modules'));
     }
 
-    public function handleSort(Request $request, $courseId){
+    public function handleSort(Request $request, $courseId)
+    {
         $lessons = $request->lesson;
-        if($lessons){
-            foreach($lessons as $index => $lessonsId){
+        if ($lessons) {
+            foreach ($lessons as $index => $lessonsId) {
                 $this->lessonRepository->update($lessonsId, [
                     'position' => $index
                 ]);
@@ -76,15 +77,24 @@ class LessonController extends Controller
                 $row['name'] = $char . $lesson['name'];
                 if ($row['parent_id'] == null) {
                     $row['is_trial'] = '';
+                    $row['document_id'] = $row['document_id'] != null ? 'Có' : 'Không';
                     $row['view'] = '';
                     $row['durations'] = '';
+                    $row['status'] = $row['status'] == 1
+                        ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>'
+                        : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
+
                     $row['add'] = '<a href="' . route('lessons.add', $row['course_id']) . '?module=' . $row['id'] . '" class="btn btn-primary btn-sm">Thêm bài</a>';
                     $row['edit'] = '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>';
                     $row['delete'] = '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa</a>';
                 } else {
                     $row['is_trial'] = $row['is_trial'] == 1 ? 'Có' : 'Không';
+                    $row['document_id'] = $row['document_id']  != null ? 'Có' : 'Không';
                     $row['view'] = $lesson['view'];
                     $row['durations'] = getTime($row['durations']);
+                    $row['status'] = $row['status'] == 1
+                        ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>'
+                        : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
                     $row['add'] = '';
                     $row['edit'] = '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>';
                     $row['delete'] = '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa</a>';
@@ -120,6 +130,7 @@ class LessonController extends Controller
         $is_trial = $request->is_trial;
         $position = $request->position;
         $description = $request->description;
+        $status = $request->status ?? 0;
         $document_id = null;
         $video_id = null;
         if (!empty($document)) {
@@ -158,6 +169,7 @@ class LessonController extends Controller
             'position' => $position,
             'durations' => $videoInfo['playtime_seconds'] ?? 0,
             'description' => $description,
+            'status' => $status,
         ]);
         $this->updateDurations($courseId);
         return redirect()->route('lessons.index', $courseId)->with('msg', __('lessons::messages.create.success'));
@@ -188,6 +200,7 @@ class LessonController extends Controller
         $is_trial = $request->is_trial;
         $position = $request->position;
         $description = $request->description;
+        $status = $request->status ?? 0;
         $document_id = null;
         $video_id = null;
         if (!empty($document)) {
@@ -225,6 +238,7 @@ class LessonController extends Controller
             'position' => $position,
             'durations' => $videoInfo['playtime_seconds'] ?? 0,
             'description' => $description,
+            'status' => $status,
         ]);
         $lesson = $this->lessonRepository->find($lessonId);
         $this->updateDurations($lesson->course_id);
@@ -242,13 +256,14 @@ class LessonController extends Controller
         return redirect()->route('lessons.index', $lesson->course_id)->with('msg', __('lessons::messages.delete.success'));
     }
 
-    private function updateDurations($courseId){
+    private function updateDurations($courseId)
+    {
         $lessons = $this->lessonRepository->getAllLessions($courseId);
 
-        $durations = $lessons->reduce(function ($prev, $item){
+        $durations = $lessons->reduce(function ($prev, $item) {
             return $prev + $item->durations;
-        },0);
+        }, 0);
 
-        $this->courseRepository->updateCourse($courseId,['durations' => $durations]); 
+        $this->courseRepository->updateCourse($courseId, ['durations' => $durations]);
     }
 }

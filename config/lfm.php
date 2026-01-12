@@ -85,7 +85,7 @@ return [
         'video'  => [
             'folder_name'  => 'videos',
             'startup_view' => 'list',
-            'max_size'     => 1048576, // size in KB
+            'max_size'     => 5242880, // size in KB
             'thumb' => true,
             'thumb_width' => 500,
             'thumb_height' => 500,

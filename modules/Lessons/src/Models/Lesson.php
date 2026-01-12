@@ -2,9 +2,11 @@
 
 namespace Modules\Lessons\src\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Categories\src\Models\Category;
+use Modules\Courses\src\Models\Courses;
 use Modules\Document\src\Models\Document;
 use Modules\Video\src\Models\Video;
 
@@ -28,23 +30,38 @@ class Lesson extends Model
         'status',
     ];
 
-    protected $with = ['video'];
+    protected $with = ['video','document'];
 
-     public function children()
+    public function children()
     {
         return $this->hasMany(Lesson::class, 'parent_id');
     }
 
     public function subLessons()
     {
-        return $this->children()->orderBy('position','asc')->with('subLessons');
+        return $this->children()->orderBy('position', 'asc')->with('subLessons');
     }
 
-    public function video(){
-        return $this->belongsTo(Video::class,'video_id','id');
+    public function video()
+    {
+        return $this->belongsTo(Video::class, 'video_id', 'id');
     }
 
-    public function document(){
-        return $this->belongsTo(Document::class,'document_id','id');
+    public function document()
+    {
+        return $this->belongsTo(Document::class, 'document_id', 'id');
+    }
+
+    public function course()
+    {
+        return $this->belongsTo(Courses::class, 'course_id', 'id');
+    }
+
+    public function scopeActive(Builder $query){
+        queryActive($query);
+    }
+
+     public function scopePosition(Builder $query){
+        queryPosition($query);
     }
 }

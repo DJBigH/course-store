@@ -13,8 +13,10 @@
             <tr>
                 <th>Tên</th>
                 <th>Học thử</th>
+                <th>Tài liệu</th>
                 <th>Lượt xem</th>
                 <th>Thời lượng</th>
+                <th>Trạng thái</th>
                 <th>Thêm</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
@@ -24,8 +26,10 @@
             <tr>
                 <th>Tên</th>
                 <th>Học thử</th>
+                <th>Tài liệu</th>
                 <th>Lượt xem</th>
                 <th>Thời lượng</th>
+                <th>Trạng thái</th>
                 <th>Thêm</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
@@ -52,10 +56,16 @@
                         data: 'is_trial',
                     },
                     {
+                        data: 'document_id',
+                    },
+                    {
                         data: 'view',
                     },
                     {
                         data: 'durations',
+                    },
+                    {
+                        data: 'status',
                     },
                     {
                         data: 'add',

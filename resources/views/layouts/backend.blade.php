@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>{{ $pageTitle ?? 'Không tìm thấy trang' }} - BigK</title>
+    <title>{{ $pageTitle ?? 'Không tìm thấy trang' }} - BigK Udemy</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/v/bs5/dt-2.3.5/datatables.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
     <link href="{{ asset('backend/css/styles.css') }}" rel="stylesheet" />
