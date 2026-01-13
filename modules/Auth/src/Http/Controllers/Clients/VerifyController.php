@@ -10,10 +10,10 @@ class VerifyController extends Controller
 {
     public function index(Request $request)
     {
-        // $user = $request->user();
-        // if($user->status){
-        //     return redirect()->route('home');
-        // }
+        $user = $request->user();
+        if($user->hasVerifiedEmail()){
+            return redirect()->route('home');
+        }
         $pageTitle = 'Kích hoạt tài khoản';
         return view('auth::clients.verify', compact('pageTitle'));
     }

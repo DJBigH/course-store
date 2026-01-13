@@ -31,8 +31,8 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center gap-2" href="#">
-                                            <i class="fas fa-user"></i> Tài khoản
+                                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('students.account.index') }}">
+                                            <i class="fas fa-user"></i> Thông tin cá nhân
                                         </a>
                                     </li>
                                     <li>
