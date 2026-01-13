@@ -13,3 +13,13 @@ Route::prefix('admin')->group(function () {
       Route::delete('/delete/{student}', 'StudentController@delete')->name('delete');
    });
 });
+
+Route::group(['as' => 'students.'], function () {
+   Route::group(['prefix' => 'tai-khoan', 'as' => 'account.', 'middleware' => ['auth:students','verified','user.block']], function () {
+      Route::get('/tai-khoan', 'Clients\AccountController@index')->name('index');
+      Route::get('/tai-khoan/thong-tin', 'Clients\AccountController@profile')->name('profile');
+      Route::get('/tai-khoan/khoa-hoc', 'Clients\AccountController@myCourse')->name('my-courses');
+      Route::get('/tai-khoan/don-hang', 'Clients\AccountController@myOrder')->name('my-order');
+      Route::get('/tai-khoan/doi-mat-khau', 'Clients\AccountController@changePassword')->name('change-password');
+   });
+});

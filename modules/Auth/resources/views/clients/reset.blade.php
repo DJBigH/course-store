@@ -9,8 +9,8 @@
                 Về trang chủ
             </a>
         </div>
-        <div class="sign-in">
-            <h3>Đăng nhập</h3>
+        <div class="sign-up">
+            <h3>Đặt lại mật khẩu</h3>
             @if ($errors->any())
                 <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
                     <i class="fa-solid fa-circle-exclamation"></i>
@@ -31,27 +31,26 @@
                     <span><strong>Lỗi!</strong> {{ session('msg_danger') }}</span>
                 </div>
             @endif
-
-            <form action="" method="POST">
-                <input type="text" name="email" placeholder="Email..." />
-                @error('email')
-                    <span class="text-start text-danger">{{ $message }}</span>
-                @enderror
+            <form action="{{ route('clients.update.password') }}" method="POST">
+                @csrf
                 <input type="password" name="password" placeholder="Mật khẩu..." />
                 @error('password')
                     <span class="text-start text-danger">{{ $message }}</span>
                 @enderror
-                <div class="checker">
-                    <input type="checkbox" name="remember" value="1"/>
-                    <span>Tự động đăng nhập</span>
-                </div>
-                <p class="forgot-password"><a href="{{ route('clients-forgot') }}" style="color: rgb(81, 81, 81); font-weight: normal; ">Quên mật khẩu đăng nhập</a></p>
-                <button type="submit">Đăng nhập</button>
-                @csrf
+                <input type="password" name="confirm_password" placeholder="Xác nhận mật khẩu..." />
+                @error('confirm_password')
+                    <span class="text-start text-danger">{{ $message }}</span>
+                @enderror
+                <input type="hidden" name="token" value="{{ $token }}">
+                <input type="hidden" name="email" value="{{ request()->email }}">
+                <button type="submit">
+                    <i class="fa-solid fa-user"></i>
+                    Xác nhận
+                </button>
             </form>
-            <p class="sign-up register">
-                Bạn chưa có tài khoản?
-                <a href="{{ route('clients-register') }}">Đăng kí ngay</a>
+            <p class="sign-in login">
+                Quay lại đăng nhập?
+                <a href="{{ route('clients-login') }}">Đăng nhập</a>
             </p>
         </div>
     </div>
