@@ -26,4 +26,9 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     return redirect()->route('home');
 })->middleware(['auth:students', 'signed'])->name('verification.verify');
 
-Route::post('/email/verification-notification','Clients\VerifyController@resend')->middleware(['auth:students', 'throttle:6,1'])->name('verification.send');
+Route::post('/email/verification-notification', 'Clients\VerifyController@resend')->middleware(['auth:students', 'throttle:1,1'])->name('verification.send');
+
+Route::get('/quen-mat-khau', 'Clients\LoginController@showFormForgot')->middleware('guest:students')->name('clients-forgot');
+Route::post('/quen-mat-khau', 'Clients\LoginController@handleSendForgotLink')->middleware('guest:students')->name('clients-postforgot');
+Route::get('/dat-lai-mat-khau/{token}', 'Clients\LoginController@showFormReset')->middleware('guest:students')->name('password.reset');
+Route::post('/dat-lai-mat-khau', 'Clients\LoginController@updatePassword')->middleware('guest:students')->name('clients.update.password');

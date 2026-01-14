@@ -10,7 +10,8 @@
             </a>
         </div>
         <div class="sign-in">
-            <h3>Đăng nhập</h3>
+            <h3>Quên mật khẩu</h3>
+            <p class="mb-3">Vui lòng nhập email để đặt lại mật khẩu</p>
             @if ($errors->any())
                 <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
                     <i class="fa-solid fa-circle-exclamation"></i>
@@ -37,21 +38,12 @@
                 @error('email')
                     <span class="text-start text-danger">{{ $message }}</span>
                 @enderror
-                <input type="password" name="password" placeholder="Mật khẩu..." />
-                @error('password')
-                    <span class="text-start text-danger">{{ $message }}</span>
-                @enderror
-                <div class="checker">
-                    <input type="checkbox" name="remember" value="1"/>
-                    <span>Tự động đăng nhập</span>
-                </div>
-                <p class="forgot-password"><a href="{{ route('clients-forgot') }}" style="color: rgb(81, 81, 81); font-weight: normal; ">Quên mật khẩu đăng nhập</a></p>
-                <button type="submit">Đăng nhập</button>
+                <button type="submit">Xác nhận</button>
                 @csrf
             </form>
             <p class="sign-up register">
-                Bạn chưa có tài khoản?
-                <a href="{{ route('clients-register') }}">Đăng kí ngay</a>
+                Quay lại đăng nhập?
+                <a href="{{ route('clients-login') }}">Đăng nhập</a>
             </p>
         </div>
     </div>
