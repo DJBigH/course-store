@@ -26,4 +26,4 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     return redirect()->route('home');
 })->middleware(['auth:students', 'signed'])->name('verification.verify');
 
-Route::post('/email/verification-notification','Clients\VerifyController@resend')->middleware(['auth:students', 'throttle:1,1'])->name('verification.send');
+Route::post('/email/verification-notification','Clients\VerifyController@resend')->middleware(['auth:students', 'throttle:6,1'])->name('verification.send');
