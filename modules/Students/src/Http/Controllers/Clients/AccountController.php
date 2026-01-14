@@ -4,6 +4,7 @@ namespace Modules\Students\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Modules\Students\src\Http\Requests\studentRequest;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
 
@@ -18,32 +19,39 @@ class AccountController extends Controller
     }
     public function index()
     {
-       $pageTitle = 'Thông tin tài khoản';
-       $pageName = 'Thông tin tài khoản';
-        return view('students::clients.account', compact('pageTitle','pageName'));
+        $pageTitle = 'Thông tin tài khoản';
+        $pageName = 'Thông tin tài khoản';
+        return view('students::clients.account', compact('pageTitle', 'pageName'));
     }
 
-    public function profile(){
+    public function profile()
+    {
         $pageTitle = 'Thông tin cá nhân';
-       $pageName = 'Thông tin cá nhân';
-        return view('students::clients.profile', compact('pageTitle','pageName'));
+        $pageName = 'Thông tin cá nhân';
+
+        $student = Auth::guard('students')->user();
+
+        return view('students::clients.profile', compact('pageTitle', 'pageName', 'student'));
     }
 
-    public function myCourse(){
+    public function myCourse()
+    {
         $pageTitle = 'Khóa học của tôi';
-       $pageName = 'Khóa học của tôi';
-        return view('students::clients.my_courses', compact('pageTitle','pageName'));
+        $pageName = 'Khóa học của tôi';
+        return view('students::clients.my_courses', compact('pageTitle', 'pageName'));
     }
 
-    public function myOrder(){
+    public function myOrder()
+    {
         $pageTitle = 'Đơn hàng';
-       $pageName = 'Đơn hàng';
-        return view('students::clients.my_order', compact('pageTitle','pageName'));
+        $pageName = 'Đơn hàng';
+        return view('students::clients.my_order', compact('pageTitle', 'pageName'));
     }
 
-    public function changePassword(){
+    public function changePassword()
+    {
         $pageTitle = 'Đổi mật khẩu';
-       $pageName = 'Đổi mật khẩu';
-        return view('students::clients.change_password', compact('pageTitle','pageName'));
+        $pageName = 'Đổi mật khẩu';
+        return view('students::clients.change_password', compact('pageTitle', 'pageName'));
     }
 }
