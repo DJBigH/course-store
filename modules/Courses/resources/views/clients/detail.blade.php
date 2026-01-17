@@ -63,14 +63,21 @@
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <p class="text-muted mb-1">Giảng viên</p>
+                                    <p class="text-muted mb-1 small">Giảng viên</p>
 
-                                    <h4 class="instructor-name mb-1">
-                                        <a href="/giang-vien/{{ $course->teacher->slug }}">
+                                    <h5 class="instructor-name mb-1 fw-semibold">
+                                        <a href="/giang-vien/{{ $course->teacher->slug }}"
+                                            class="text-decoration-none text-dark hover-primary">
                                             {{ $course->teacher->name }}
                                         </a>
-                                    </h4>
+                                    </h5>
+
+                                    <div class="d-flex align-items-center gap-2 text-muted">
+                                        <i class="bi bi-mortarboard"></i>
+                                        <span>{{ $course->teacher->exp }} năm kinh nghiệm</span>
+                                    </div>
                                 </div>
+
                             </div>
 
                             <hr>
@@ -133,6 +140,20 @@
                                     <strong>{{ getTime($course->durations) }}</strong>
                                 </li>
 
+                                {{-- ✅ THÊM: Cập nhật gần nhất --}}
+                                <li>
+                                    <i class="fa-solid fa-calendar-check text-secondary"></i>
+                                    <span>Cập nhật:</span>
+                                    <strong>{{ format_date_dmy($course->updated_at) }}</strong>
+                                </li>
+
+                                {{-- ✅ THÊM: Tổng số học viên --}}
+                                <li>
+                                    <i class="fa-solid fa-users text-info"></i>
+                                    <span>Học viên:</span>
+                                    <strong>{{ number_format($course->students_count ?? 0) }}</strong>
+                                </li>
+
                                 <li>
                                     <i class="fa-solid fa-headset text-info"></i>
                                     <span>Hỗ trợ:</span>
@@ -153,8 +174,8 @@
                                         </span>
                                     @endif
                                 </li>
-
                             </ul>
+
 
                             <!-- Button -->
                             <button class="btn btn-primary w-100 fw-semibold payment">

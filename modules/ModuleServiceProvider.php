@@ -88,6 +88,18 @@ class ModuleServiceProvider extends ServiceProvider
             StudentsRepositoryInterface::class,
             StudentsRepository::class
         );
+
+        //Oders Repository
+        $this->app->singleton(
+            OrdersRepositoryInterface::class,
+            OrdersRepository::class
+        );
+
+        //Oders Repository
+        $this->app->singleton(
+            OrdersStatusRepositoryInterface::class,
+            OrdersStatusRepository::class
+        );
     }
 
     public function boot()

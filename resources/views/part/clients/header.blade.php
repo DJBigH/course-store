@@ -32,7 +32,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                     <li>
                                         <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('students.account.index') }}">
-                                            <i class="fas fa-user"></i> Thông tin cá nhân
+                                            <i class="fas fa-user-circle"></i> Tài khoản của tôi
                                         </a>
                                     </li>
                                     <li>

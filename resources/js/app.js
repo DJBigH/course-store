@@ -9,3 +9,4 @@ import "./accordion.js";
 import "./home.js";
 import "./tab.js";
 import "./video.min.js";
+import "./account.js";

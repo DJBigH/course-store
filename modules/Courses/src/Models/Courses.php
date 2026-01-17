@@ -6,6 +6,7 @@ use App\Models\Scopes\ActiveScope;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Categories\Src\Models\Category;
 use Modules\Lessons\src\Models\Lesson;
+use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Models\Teacher;
 
 class Courses extends Model
@@ -43,12 +44,24 @@ class Courses extends Model
         return $this->belongsToMany(Category::class, 'categories_courses');
     }
 
-    public function teacher(){
-        return $this->belongsTo(Teacher::class, 'teacher_id','id');
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
     }
 
-    public function lessons(){
-        return $this->hasMany(Lesson::class,'course_id','id');
+    public function lessons()
+    {
+        return $this->hasMany(Lesson::class, 'course_id', 'id');
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(
+            Student::class,
+            'students_courses',
+            'course_id',   // FK của Course trong pivot
+            'student_id',
+            'id'
+        );
     }
 }
-

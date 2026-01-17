@@ -130,3 +130,21 @@
     height: 100%;
 }
 
+.descreption-meta {
+    display: flex;
+    gap: 15px;
+    font-size: 14px;
+    color: #6c757d;
+    margin: 6px 0;
+}
+
+.descreption-meta i {
+    margin-right: 4px;
+    color: #6b7280;
+}
+
+.descreption-meta span{
+    font-size: 12px;
+}
+
+

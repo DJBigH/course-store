@@ -7,4 +7,5 @@ use App\Repositories\RepositoryInterface;
 interface TeacherRepositoryInterface extends RepositoryInterface
 {
     public function getAllTeacher();
+    public function getTeachers();
 }

@@ -1,0 +1,87 @@
+.account-profile .profile-item {
+    display: none;
+}
+
+/* table */
+.account-profile table.profile-item.active {
+    display: table;
+}
+
+/* form */
+.account-profile form.profile-item.active {
+    display: block;
+}
+
+// .profile-form {
+//     max-width: 700px;
+// }
+
+.profile-form .card {
+    border-radius: 10px;
+}
+
+.profile-form .card-header {
+    font-size: 16px;
+}
+
+.profile-form label {
+    font-weight: 500;
+}
+
+.profile-form .form-control {
+    border-radius: 6px;
+}
+
+.profile-form .btn {
+    border-radius: 6px;
+}
+
+/* Ẩn / hiện profile */
+.account-profile .profile-item {
+    display: none;
+}
+
+.account-profile table.profile-item.active {
+    display: table;
+}
+
+.account-profile form.profile-item.active {
+    display: block;
+}
+
+/* ===== TABLE STYLE ===== */
+.table-profile {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-profile th {
+    width: 220px;
+    background: #f8f9fa;
+    font-weight: 500;
+}
+
+.table-profile td {
+    background: #fff;
+}
+
+/* ===== BUTTON FIX ===== */
+.js-profile-btn {
+    white-space: nowrap;
+}
+
+/* ===== SMOOTH TOGGLE ===== */
+.profile-item {
+    animation: fadeUp 0.25s ease-in-out;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

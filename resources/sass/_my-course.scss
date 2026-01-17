@@ -1,0 +1,17 @@
+/* Fix chiều cao Select2 giống Bootstrap input */
+.select2-container--default .select2-selection {
+    min-height: 38px;
+    padding: 5px;
+    // display: flex;
+    align-items: center;
+}
+
+/* Fix mũi tên dropdown */
+.select2-container--default .select2-selection__arrow {
+    height: 100%;
+}
+
+/* Fix text không bị lệch */
+.select2-container--default .select2-selection__rendered {
+    line-height: 1.5;
+}
