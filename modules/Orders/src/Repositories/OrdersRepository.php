@@ -15,7 +15,7 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
 
     public function getOrdersByStudent($studentId, $filters = [], $limit)
     {
-        @['status_id' => $statusId, 'start_date' => $startDate, 'end_date' => $endDate, 'total' => $total] = $filters;
+        @['status_id' => $statusId, 'start_date' => $startDate, 'end_date' => $endDate, 'total' => $total, 'code' => $code] = $filters;
         $query = $this->model->with('status')->where('student_id', $studentId)->latest();
         if ($statusId) {
             $query->where('status_id', $statusId);
@@ -31,6 +31,16 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
         if ($total && $total >= 0) {
             $query->where('orders.total', '>=', $total);
         }
+
+        if (!empty($code)) {
+            $query->where('code', 'like', '%' . $code . '%');
+        }
         return $query->paginate($limit)->withQueryString();
     }
+
+
+    public function getOrder($orderId){
+        return $this->model->with('detail')->find($orderId);
+    }
+
 }

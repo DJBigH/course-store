@@ -3,6 +3,8 @@ import $ from "jquery";
 import select2 from "select2";
 select2();
 import { showMessage } from "./message";
+import html2canvas from "html2canvas-pro";
+import { jsPDF } from "jspdf";
 const profileBtn = document.querySelector(".js-profile-btn");
 if (profileBtn) {
     let status = "table";
@@ -91,3 +93,37 @@ if (profileForm) {
 
 //Select2
 $(".js-select2").select2();
+
+//Đơn hàng
+const downloadBtn = document.querySelector(".download-btn");
+
+if (downloadBtn) {
+    downloadBtn.addEventListener("click", async () => {
+        const orderDetailEl = document.querySelector(".order-detail");
+
+        if (!orderDetailEl) return;
+
+        const canvas = await html2canvas(orderDetailEl, {
+            scale: 2, // nét hơn
+            useCORS: true,
+            backgroundColor: "#ffffff",
+        });
+
+        const image = canvas.toDataURL("image/png");
+
+        const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        pdf.addImage(image, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+        pdf.save(`don-hang-${Date.now()}.pdf`);
+    });
+
+    
+}

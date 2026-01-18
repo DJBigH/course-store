@@ -1,0 +1,238 @@
+@extends('layouts.client')
+
+@section('content')
+    @include('part.clients.page_title')
+
+    <section class="account-page py-5 bg-light checkout-page">
+        <div class="container">
+
+            {{-- Header --}}
+            <div class="mb-4">
+                <h2 class="fw-bold">
+                    Thanh toán đơn hàng
+                    <span class="text-primary"><a
+                            href="{{ route('students.account.order-detail', $order->id) }}">#{{ $order->code }}</a></span>
+                    <span class="countdown">
+                        <span class="cd-minute">00</span>
+                        :
+                        <span class="cd-second">00</span>
+                    </span>
+                </h2>
+                <p class="text-muted mb-0">
+                    Vui lòng hoàn tất thanh toán để kích hoạt khóa học
+                </p>
+            </div>
+
+            <div class="row g-4">
+
+                {{-- LEFT: ORDER INFO --}}
+                <div class="col-lg-7">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body p-4">
+
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-receipt me-1 text-primary"></i>
+                                Thông tin đơn hàng
+                            </h5>
+
+                            <table class="table table-bordered align-middle mb-4">
+                                <tbody>
+                                    <tr>
+                                        <th width="30%" class="bg-light">Mã đơn hàng</th>
+                                        <td>#{{ $order->code }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Tổng tiền</th>
+                                        <td class="fw-bold text-danger fs-5">
+                                            {{ money($order->total) }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Thời gian đặt</th>
+                                        <td>{{ format_date_dmy($order->created_at) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-light">Trạng thái</th>
+                                        <td>
+                                            <span class="badge bg-{{ $order->status->color }} px-3 py-2">
+                                                {{ $order->status->name }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-journal-text me-1 text-success"></i>
+                                Chi tiết khóa học
+                            </h5>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Khóa học</th>
+                                            <th class="text-end">Giá</th>
+                                            <th>Giảng viên</th>
+                                            <th class="text-center">Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($order->detail as $key => $item)
+                                            <tr>
+                                                <td class="text-muted">{{ $key + 1 }}</td>
+                                                <td class="fw-semibold">
+                                                    {{ $item?->courses?->name }}
+                                                </td>
+                                                <td class="text-end text-danger fw-semibold">
+                                                    {{ money($item?->courses?->price) }}
+                                                </td>
+                                                <td>
+                                                    {{ $item?->courses?->teacher?->name }}
+                                                </td>
+                                                <td class="text-center">
+                                                    <span
+                                                        class="badge bg-{{ $item?->courses?->status ? 'success' : 'danger' }}-subtle 
+                                                    text-{{ $item?->courses?->status ? 'success' : 'danger' }}">
+                                                        {{ $item?->courses?->status ? 'Đang hoạt động' : 'Dừng' }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    <a href="#" class="btn btn-outline-primary btn-sm px-3 d-flex align-items-center">
+                                        <i class="bi bi-arrow-left me-1"></i>
+                                        Quay lại giỏ hàng
+                                    </a>
+
+                                    <a href="{{ route('courses.home') }}"
+                                        class="btn btn-success btn-sm px-3 d-flex align-items-center">
+                                        <i class="bi bi-plus-circle me-1"></i>
+                                        Mua thêm khóa học
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                {{-- RIGHT: PAYMENT --}}
+                <div class="col-lg-5">
+                    <div class="card shadow border-0 sticky-top" style="top:90px">
+                        <div class="card-body p-4">
+
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-credit-card me-1 text-success"></i>
+                                Thanh toán chuyển khoản
+                            </h5>
+
+                            <ul class="list-unstyled small mb-3">
+                                <li>🏦 <strong>Ngân hàng:</strong> Techcombank</li>
+                                <li>
+                                    🔢 <strong>STK:</strong>
+                                    <span class="copy-text" data-copy="61043040524">61043040524</span>
+                                    <i class="bank-copy fa-regular fa-copy"></i>
+                                </li>
+                                <li>👤 <strong>Chủ TK:</strong> Nguyễn Duy Khánh</li>
+                                <li>💰 <strong>Số tiền:</strong>
+                                    <span class="text-danger fw-bold">{{ money($order->total) }}</span>
+                                </li>
+                                <li>
+                                    📝 <strong>Nội dung:</strong>
+                                    <span class="copy-text" data-copy="Thanh toan don {{ $order->code }}">
+                                        Thanh toan don {{ $order->code }}
+                                    </span>
+                                    <i class="bank-copy fa-regular fa-copy"></i>
+                                </li>
+                            </ul>
+
+                            {{-- QR --}}
+                            {{-- QR --}}
+                            <div class="text-center my-4">
+                                <div class="border rounded-3 p-3 bg-light d-inline-block">
+                                    <img id="vietqr-img"
+                                        src="https://img.vietqr.io/image/techcombank-61043040524-compact2.jpg?amount={{ $order->total }}&addInfo={{ rawurlencode('Thanh toan don ' . $order->code) }}"
+                                        class="img-fluid mb-2" style="max-width: 220px" alt="VietQR">
+                                    <div>
+                                        <button type="button" class="btn btn-outline-primary btn-sm download-qr">
+                                            <i class="bi bi-download me-1"></i>
+                                            Tải QR
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- NOTE --}}
+                            <div class="alert alert-warning small">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Sau khi chuyển khoản thành công, vui lòng nhấn
+                                <strong>“Tôi đã thanh toán”</strong> để hoàn tất đơn hàng.
+                            </div>
+
+                            {{-- BUTTON --}}
+                            <form method="POST" action="">
+                                @csrf
+                                <button class="btn btn-success w-100 py-2 fw-semibold">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Tôi đã thanh toán
+                                </button>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+@endsection
+
+@section('stylesheets')
+    <style>
+        .list-unstyled i {
+            cursor: pointer;
+        }
+
+        .countdown {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .countdown .cd-minute,
+        .countdown .cd-second {
+            min-width: 44px;
+            padding: 6px 10px;
+            text-align: center;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #dc3545, #ff6b6b);
+            color: #fff;
+            box-shadow: 0 4px 8px rgba(25, 135, 84, 0.25);
+            transition: all 0.3s ease;
+        }
+
+        /* dấu : */
+        .countdown {
+            color: #198754;
+        }
+
+        /* gần hết giờ → đổi màu cảnh báo */
+        .countdown.warning .cd-minute,
+        .countdown.warning .cd-second {
+            background: linear-gradient(135deg, #ffc107, #ffdd57);
+            color: #000;
+        }
+
+        /* hết giờ */
+        .countdown.expired .cd-minute,
+        .countdown.expired .cd-second {
+            background: linear-gradient(135deg, #dc3545, #ff6b6b);
+        }
+    </style>
+@endsection

@@ -48,6 +48,16 @@
                                                 </select>
                                             </div>
 
+                                            <!-- Mã đơn hàng -->
+                                            <div class="col-lg-3 col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-upc-scan me-1 text-info"></i> Mã đơn hàng
+                                                </label>
+                                                <input type="text" name="code" class="form-control"
+                                                    placeholder="Nhập mã đơn hàng..." value="{{ request()->code }}">
+                                            </div>
+
+
                                             <!-- Thời gian bắt đầu -->
                                             <div class="col-lg-3 col-md-6">
                                                 <label class="form-label fw-semibold">
@@ -117,7 +127,7 @@
                                                 </td>
 
                                                 <td class="fw-semibold text-primary">
-                                                    {{ $item->code }}
+                                                    #{{ $item->code }}
                                                 </td>
 
                                                 <td class="text-end fw-semibold text-success">
@@ -129,19 +139,6 @@
                                                         class="badge bg-{{ $item->status->color }}-subtle text-{{ $item->status->color }} px-3">
                                                         {{ $item->status->name }}
                                                     </span>
-                                                    {{-- @if ($item->status == 'paid')
-                                                        <span class="badge bg-success-subtle text-success px-3">
-                                                            Đã thanh toán
-                                                        </span>
-                                                    @elseif ($item->status == 'pending')
-                                                        <span class="badge bg-warning-subtle text-warning px-3">
-                                                            Chờ xử lý
-                                                        </span>
-                                                    @else
-                                                        <span class="badge bg-danger-subtle text-danger px-3">
-                                                            Đã hủy
-                                                        </span>
-                                                    @endif --}}
                                                 </td>
 
                                                 <td class="text-center text-muted small">
@@ -149,7 +146,7 @@
                                                 </td>
 
                                                 <td class="text-center">
-                                                    <a href="#" class="btn btn-outline-primary btn-sm px-3">
+                                                    <a href="{{ route('students.account.order-detail',$item->id) }}" class="btn btn-outline-primary btn-sm px-3">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                 </td>

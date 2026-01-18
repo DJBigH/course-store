@@ -10,3 +10,4 @@ import "./home.js";
 import "./tab.js";
 import "./video.min.js";
 import "./account.js";
+import "./checkout.js";

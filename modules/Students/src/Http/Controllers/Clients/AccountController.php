@@ -101,11 +101,23 @@ class AccountController extends Controller
             $filters['total'] = $request->total;
         }
 
+        if ($request->code) {
+            $filters['code'] = $request->code;
+        }
+
         $studentId = Auth::guard('students')->user()->id;
         $orders = $this->orderRepository->getOrdersByStudent($studentId, $filters, config('pagination.orders_limit'));
         $ordersStatus = $this->ordersStatusRepository->getOrdersStatus();
 
         return view('students::clients.my_order', compact('pageTitle', 'pageName', 'orders', 'ordersStatus'));
+    }
+
+    public function orderDetail($orderId)
+    {
+        $pageTitle = 'Chi tiết đơn hàng';
+        $pageName = 'Chi tiết đơn hàng';
+        $order = $this->orderRepository->getOrder($orderId);
+        return view('students::clients.order_detail', compact('pageTitle', 'pageName','order'));
     }
 
     public function changePassword()
