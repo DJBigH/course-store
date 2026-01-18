@@ -6,6 +6,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Modules\Categories\seeders\CategoriesSeeder;
 use Modules\Courses\seeders\CoursesSeeder;
+use Modules\Orders\src\Models\OrderStatus;
 use Modules\Teacher\seeders\TeacherSeeder;
 use Modules\User\seeders\UserSeeder;
 
@@ -25,6 +26,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             TeacherSeeder::class,
+            OrderStatus::class,
             // CategoriesSeeder::class,
             // CoursesSeeder::class,
         ]);

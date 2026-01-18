@@ -18,8 +18,22 @@
                                         <p><i class="fa-solid fa-video"></i> {{ getLessonCount($course)->module }}
                                             phần/{{ getLessonCount($course)->lessons }} bài</p>
                                         <p><i class="fa-solid fa-eye"></i>
-                                            {{ $course->view ? number_format($course->view) : 0 }}</p>
+                                            {{ $course->view ? number_format($course->view) : 0 }} lượt xem</p>
                                     </div>
+
+                                    <div class="descreption-meta">
+                                        <p>
+                                            <i class="fa-solid fa-calendar-check"></i>
+                                            Cập nhật:
+                                            <span>{{ format_date_dmy($course->updated_at) }}</span>
+                                        </p>
+
+                                        <p>
+                                            <i class="fa-solid fa-users"></i>
+                                            {{ number_format($course->students_count ?? 0) }} học viên
+                                        </p>
+                                    </div>
+
 
                                     <h5 class="descreption-title">
                                         <a href="/khoa-hoc/{{ $course->slug }}">
@@ -43,13 +57,14 @@
                                             <span>{{ money($course->price) }}</span>
                                         @endif
                                     </p>
+
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
                 <div class="mt-3">
-                {{ $courses->links() }}
+                    {{ $courses->links() }}
                 </div>
             @endif
         </div>

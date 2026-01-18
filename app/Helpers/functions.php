@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 
 function deleteFileStorage($image)
@@ -58,9 +59,26 @@ function getSize($bytes, $precision = 2)
 
 function queryActive($query)
 {
-    return $query->where('status', 1);
+    $tableName = $query->getModel()->getTable();
+    return $query->where($tableName . '.status', 1);
 }
 
-function queryPosition($query){
-     $query->orderBy('position');
+function queryPosition($query)
+{
+    $query->orderBy('position');
+}
+
+if (!function_exists('format_date_dmy')) {
+    function format_date_dmy($date)
+    {
+        if (empty($date)) {
+            return '';
+        }
+
+        try {
+            return Carbon::parse($date)->format('j/n/Y');
+        } catch (\Exception $e) {
+            return '';
+        }
+    }
 }

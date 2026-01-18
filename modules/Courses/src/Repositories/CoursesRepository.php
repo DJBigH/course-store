@@ -26,7 +26,7 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
     public function getCourseActive($slug)
     {
-        return $this->model->whereSlug($slug)->first();
+        return $this->model->withCount('students')->whereSlug($slug)->first();
     }
 
     public function createCoursesCategory($course, $data = [])
@@ -52,13 +52,13 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
     public function getCourses($limit)
     {
-        return $this->model->limit($limit)->latest()->paginate($limit);
+        return $this->model->withCount('students')->limit($limit)->latest()->paginate($limit);
     }
 
     public function updateCourse($id, $data = [])
     {
         $result = $this->getCourse($id);
-        if($result){
+        if ($result) {
             return $result->update($data);
         }
         return false;
@@ -66,6 +66,6 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
     public function deleteCourse($id)
     {
-        return $this->model->withoutGlobalScope(ActiveScope::class)->where('id',$id)->delete($id);
+        return $this->model->withoutGlobalScope(ActiveScope::class)->where('id', $id)->delete($id);
     }
 }

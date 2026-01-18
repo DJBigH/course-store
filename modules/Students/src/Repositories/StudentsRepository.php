@@ -21,7 +21,7 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
 
     public function getAllStudents()
     {
-        return $this->model->select(['id','name', 'email', 'status', 'created_at'])->latest();
+        return $this->model->select(['id', 'name', 'email', 'status', 'created_at'])->latest();
     }
 
     public function setPassword($password, $id)
@@ -38,5 +38,21 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
         } else {
             return 'Tài khoản mật khẩu không tồn tại!';
         }
+    }
+
+    public function getCourses($studentId, $filters = [], $limit)
+    {
+        extract($filters); 
+        $query = $this->find($studentId)->courses();
+        if (!empty($teacher_id)) {
+            $query->where('teacher_id', $teacher_id);
+        }
+        if (!empty($keyword)) {
+            $query->where(function ($builder) use ($keyword) {
+                $builder->where('name', 'like', '%' . $keyword . '%');
+                $builder->orWhere('detail', 'like', '%' . $keyword . '%');
+            });
+        }
+        return $query->paginate($limit)->withQueryString();
     }
 }

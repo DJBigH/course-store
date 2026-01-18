@@ -6,7 +6,7 @@
     background: #fff;
     border-radius: 14px;
     padding: 20px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.06);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
 }
 
 .account-sidebar .nav-link {
@@ -17,7 +17,7 @@
     border-radius: 10px;
     color: #374151;
     font-weight: 500;
-    transition: .2s;
+    transition: 0.2s;
 }
 
 .account-sidebar .nav-link i {
@@ -39,7 +39,7 @@
     background: #fff;
     border-radius: 14px;
     padding: 30px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.06);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
 }
 
 .overview-card {
@@ -47,7 +47,7 @@
     border-radius: 14px;
     padding: 25px;
     text-align: center;
-    transition: .2s;
+    transition: 0.2s;
 }
 
 .overview-card i {
@@ -69,3 +69,5 @@
 .overview-card:hover {
     background: #eef2ff;
 }
+
+

@@ -7,10 +7,14 @@ return [
     'min' => ':attribute phải từ :min ký tự',
     'integer' => ':attribute phải là số',
     'select' => ':attribute bắt buộc phải chọn',
+    'regex' => ':attribute không đúng định dạng',
+    'password-invalid' => 'Mật khẩu cũ không hợp lệ',
     'attributes' => [
         'name' => 'Tên',
         'email' => 'Email',
         'password' => 'Mật khẩu',
-        'status' => 'Trạng thái'
+        'phone' => 'Số điện thoại',
+        'confirm_password' => 'Nhập lại mật khẩu',
+        'old_password' => 'Mật khẩu cũ',
     ]
 ];
