@@ -15,6 +15,8 @@ class Order extends Model
         'student_id',
         'total',
         'status_id',
+        'payment_date',
+        'payment_complete_date',
         'created_at',
         'updated_at',
     ];

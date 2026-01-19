@@ -5,18 +5,15 @@
 
     <section class="account-page py-5 bg-light checkout-page">
         <div class="container">
-
             {{-- Header --}}
             <div class="mb-4">
                 <h2 class="fw-bold">
                     Thanh toán đơn hàng
                     <span class="text-primary"><a
                             href="{{ route('students.account.order-detail', $order->id) }}">#{{ $order->code }}</a></span>
-                    <span class="countdown">
-                        <span class="cd-minute">00</span>
-                        :
-                        <span class="cd-second">00</span>
-                    </span>
+                    @if (config('checkout.checkout_countdown') > 0)
+                        <span class="countdown"><span class="cd-minute">00</span>:<span class="cd-second">00</span>
+                    @endif
                 </h2>
                 <p class="text-muted mb-0">
                     Vui lòng hoàn tất thanh toán để kích hoạt khóa học
@@ -129,7 +126,7 @@
                                 <i class="bi bi-credit-card me-1 text-success"></i>
                                 Thanh toán chuyển khoản
                             </h5>
-
+                            @include('students::clients.partials.coupons')
                             <ul class="list-unstyled small mb-3">
                                 <li>🏦 <strong>Ngân hàng:</strong> Techcombank</li>
                                 <li>

@@ -44,7 +44,11 @@ if (checkoutPageEl) {
         }
     }
 
-    const expire = new Date("2026-01-18 09:30:00").getTime();
+    const expireObj = new Date(paymentDate);
+    expireObj.setTime(
+        expireObj.getTimezoneOffset() * 60 * 1000 + expireObj.getTime(),
+    );
+    const expire = expireObj.getTime() + checkoutCountdown * 60 * 1000;
     const countdownEl = checkoutPageEl.querySelector(".countdown");
     const calculatorTimer = () => {
         const d = new Date();
@@ -63,6 +67,46 @@ if (checkoutPageEl) {
             seconds < 10 ? "0" + seconds : seconds
         }`;
     };
-    
     setInterval(calculatorTimer, 1000);
+
+    //Coupons
+
+    const couponsForm = checkoutPageEl.querySelector(".coupon-form");
+    if (couponsForm) {
+        couponsForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const couponsEl = couponsForm.querySelector("input");
+            const fieldset = couponsEl.closest("fieldset");
+            const coupon = couponsEl.value;
+            const error = couponsForm.querySelector(".error");
+            const csrfToken =
+                document.head.querySelector(`[name="csrf_token"]`).content;
+            error.innerText = "";
+            if (!coupon) {
+                error.innerText = "Vui lòng nhập mã giảm giá";
+                couponsEl.focus();
+                return;
+            }
+
+            const verifyCoupon = async () => {
+                fieldset.disabled = true;
+                //Call Api
+                const response = await fetch(`/tai-khoan/coupons/verify`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": csrfToken,
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                    },
+                    body: JSON.stringify({
+                        coupon,
+                    }),
+                });
+                const data = await response.json();
+                fieldset.disabled = false;
+                console.log(data);
+            };
+            verifyCoupon();
+        });
+    }
 }

@@ -63,7 +63,12 @@
                                                         {{ $order->status->name }}
                                                     </span>
                                                     @if ($order->status->is_success == 0)
-                                                    <a  href="{{ route('students.account.checkout',$order->id) }}" class="btn btn-success btn-sm">Thanh toán</a>
+                                                        @if ($order->expired && !$order->payment_date == null)
+                                                            <span class="badge bg-danger">Hết hạn thanh toán</span>
+                                                        @else
+                                                            <a href="{{ route('students.account.checkout', $order->id) }}"
+                                                                class="btn btn-success btn-sm">Thanh toán</a>
+                                                        @endif
                                                     @endif
                                                 </td>
                                             </tr>
