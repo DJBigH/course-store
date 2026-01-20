@@ -1,3 +1,4 @@
+import { showMessage } from "./utils";
 const checkoutPageEl = document.querySelector(".checkout-page");
 
 if (checkoutPageEl) {
@@ -70,28 +71,79 @@ if (checkoutPageEl) {
     setInterval(calculatorTimer, 1000);
 
     //Coupons
-
     const couponsForm = checkoutPageEl.querySelector(".coupon-form");
-    if (couponsForm) {
+    const couponUsage = checkoutPageEl.querySelector(".coupon-usage");
+    const csrfToken =
+        document.head.querySelector(`[name="csrf_token"]`).content;
+    const discountValueEl = checkoutPageEl.querySelector(".discount-value");
+    const totalValueList = checkoutPageEl.querySelectorAll(`.total_value`);
+    const qrImgEl = checkoutPageEl.querySelector(".qr-image");
+    let qrUrl = qrImgEl.src;
+    if (couponsForm && couponUsage) {
         couponsForm.addEventListener("submit", (e) => {
             e.preventDefault();
             const couponsEl = couponsForm.querySelector("input");
             const fieldset = couponsEl.closest("fieldset");
             const coupon = couponsEl.value;
             const error = couponsForm.querySelector(".error");
-            const csrfToken =
-                document.head.querySelector(`[name="csrf_token"]`).content;
             error.innerText = "";
-            if (!coupon) {
-                error.innerText = "Vui lòng nhập mã giảm giá";
-                couponsEl.focus();
-                return;
-            }
+            // if (!coupon) {
+            //     error.innerText = "Vui lòng nhập mã giảm giá";
+            //     couponsEl.focus();
+            //     return;
+            // }
 
             const verifyCoupon = async () => {
-                fieldset.disabled = true;
-                //Call Api
-                const response = await fetch(`/tai-khoan/coupons/verify`, {
+                try {
+                    fieldset.disabled = true;
+                    //Call Api
+                    const response = await fetch(`/tai-khoan/coupons/verify`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": csrfToken,
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        body: JSON.stringify({
+                            coupon,
+                            orderId,
+                        }),
+                    });
+                    const { success, errors, data } = await response.json();
+                    if (!success) {
+                        throw new Error(errors);
+                    }
+                    showMessage("Áp mã giảm giá thành công");
+                    couponsForm.reset();
+                    couponsForm.classList.add("d-none");
+                    couponUsage.classList.remove("d-none");
+
+                    couponUsage.querySelector(".coupon-value").innerText =
+                        coupon;
+
+                    discountValueEl.innerText =
+                        "-" + data.discount.toLocaleString() + " đ";
+                    totalValueList.forEach((el) => {
+                        el.innerText =
+                            data.total_after_discount.toLocaleString() + " đ";
+                    });
+                    qrUrl = qrUrl.replace(
+                        /amount=(\d+)/,
+                        "amount=" + data.total_after_discount
+                    );
+                    qrImgEl.src = qrUrl;
+                } catch (errors) {
+                    error.innerText = errors.message;
+                } finally {
+                    fieldset.disabled = false;
+                }
+            };
+            verifyCoupon();
+        });
+        const removeCouponEl = couponUsage.querySelector(".js-remove-coupon");
+        removeCouponEl.addEventListener("click", () => {
+            const removeCoupon = async () => {
+                const response = await fetch(`/tai-khoan/coupons/remove`, {
                     method: "POST",
                     headers: {
                         "X-CSRF-TOKEN": csrfToken,
@@ -99,14 +151,28 @@ if (checkoutPageEl) {
                         Accept: "application/json",
                     },
                     body: JSON.stringify({
-                        coupon,
+                        orderId,
                     }),
                 });
-                const data = await response.json();
-                fieldset.disabled = false;
-                console.log(data);
+                const { success, data } = await response.json();
+                if (!success) {
+                    return showMessage("Xóa mã giảm giá không thành công");
+                }
+                couponUsage.classList.add("d-none");
+                couponsForm.classList.remove("d-none");
+                showMessage("Xóa mã giảm giá thành công");
+
+                discountValueEl.innerText = "-0 đ";
+                totalValueList.forEach((el) => {
+                    el.innerText = data.total.toLocaleString() + " đ";
+                });
+                 qrUrl = qrUrl.replace(
+                        /amount=(\d+)/,
+                        "amount=" + data.total,
+                    );
+                    qrImgEl.src = qrUrl;
             };
-            verifyCoupon();
+            removeCoupon();
         });
     }
 }

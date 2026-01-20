@@ -33,9 +33,9 @@ function activeMenu($name)
     return request()->is(trim(route($name, [], false), '/'));
 }
 
-function money($number, $currency = 'đ')
+function money($number, $currency = 'đ', $freeText = 'Miễn phí')
 {
-    return !empty($number) ? number_format($number) . ' ' . $currency : "Miễn phí";
+    return !empty($number) ? number_format($number) . ' ' . $currency : $freeText;
 }
 
 function getHour($secounds)

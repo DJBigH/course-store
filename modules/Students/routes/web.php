@@ -28,6 +28,7 @@ Route::group(['as' => 'students.'], function () {
 
       Route::prefix('coupons')->group(function () {
           Route::post('/verify','Clients\CouponsController@verify')->name('coupons');
+          Route::post('/remove','Clients\CouponsController@remove')->name('coupons-remove');
       });
    });
 });

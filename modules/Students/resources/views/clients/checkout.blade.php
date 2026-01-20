@@ -38,16 +38,28 @@
                                         <th width="30%" class="bg-light">Mã đơn hàng</th>
                                         <td>#{{ $order->code }}</td>
                                     </tr>
+
                                     <tr>
-                                        <th class="bg-light">Tổng tiền</th>
-                                        <td class="fw-bold text-danger fs-5">
+                                        <th class="bg-light">Tổng đơn hàng</th>
+                                        <td class="fw-semibold">
                                             {{ money($order->total) }}
                                         </td>
                                     </tr>
+
+                                    <tr>
+                                        <th class="bg-light text-success">
+                                            Giảm giá
+                                        </th>
+                                        <td class="text-success fw-medium discount-value">
+                                            - {{ money($order->discount, freeText: '0 đ') }}
+                                        </td>
+                                    </tr>
+
                                     <tr>
                                         <th class="bg-light">Thời gian đặt</th>
                                         <td>{{ format_date_dmy($order->created_at) }}</td>
                                     </tr>
+
                                     <tr>
                                         <th class="bg-light">Trạng thái</th>
                                         <td>
@@ -56,8 +68,17 @@
                                             </span>
                                         </td>
                                     </tr>
+
+                                    {{-- Divider --}}
+                                    <tr class="table-secondary">
+                                        <th class="fw-bold">Tổng thanh toán</th>
+                                        <td class="fw-bold text-danger fs-4 total_value">
+                                            {{ money($order->total - $order->discount) }}
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
+
 
                             <h5 class="fw-bold mb-3">
                                 <i class="bi bi-journal-text me-1 text-success"></i>
@@ -100,7 +121,8 @@
                                     </tbody>
                                 </table>
                                 <div class="d-flex flex-wrap gap-2 mt-3">
-                                    <a href="{{ route('home') }}" class="btn btn-outline-primary btn-sm px-3 d-flex align-items-center">
+                                    <a href="{{ route('home') }}"
+                                        class="btn btn-outline-primary btn-sm px-3 d-flex align-items-center">
                                         <i class="bi bi-arrow-left me-1"></i>
                                         Quay lại trang chủ
                                     </a>
@@ -116,7 +138,7 @@
                             <hr>
                             <div class="mb-4">
                                 <label class="form-label fw-semibold">Chọn hình thức thanh toán</label>
-        
+
                                 <div class="form-check mb-2">
                                     <input class="form-check-input payment-method" type="radio" name="payment_method"
                                         value="bank" checked>
@@ -124,27 +146,27 @@
                                         Chuyển khoản QR
                                     </label>
                                 </div>
-        
+
                                 <div class="form-check mb-2">
                                     <input class="form-check-input payment-method" type="radio" name="payment_method"
                                         value="vnpay">
-                                        <img src="{{ asset('clients/assets/vnpay.png') }}" alt="" style="width: 40px;">
+                                    <img src="{{ asset('clients/assets/vnpay.png') }}" alt="" style="width: 40px;">
                                     <label class="form-check-label">
-                                        VNPay
+                                        VNPay <strong style="color: red">(Bảo trì)</strong>
                                     </label>
                                 </div>
-        
+
                                 <div class="form-check">
                                     <input class="form-check-input payment-method" type="radio" name="payment_method"
                                         value="momo">
-                                        <img src="{{ asset('clients/assets/momo.png') }}" alt="" style="width: 30px;">
+                                    <img src="{{ asset('clients/assets/momo.png') }}" alt="" style="width: 30px;">
                                     <label class="form-check-label">
-                                        MoMo
+                                        MoMo <strong style="color: red">(Bảo trì)</strong>
                                     </label>
                                 </div>
                             </div>
                         </div>
-                        </div>
+                    </div>
                 </div>
 
                 {{-- RIGHT: PAYMENT --}}
@@ -168,7 +190,8 @@
                                     </li>
                                     <li>👤 <strong>Chủ TK:</strong> Nguyễn Duy Khánh</li>
                                     <li>💰 <strong>Số tiền:</strong>
-                                        <span class="text-danger fw-bold">{{ money($order->total) }}</span>
+                                        <span
+                                            class="text-danger fw-bold total_value">{{ money($order->total - $order->discount) }}</span>
                                     </li>
                                     <li>
                                         📝 <strong>Nội dung:</strong>
@@ -184,8 +207,8 @@
                                 <div class="text-center my-4">
                                     <div class="border rounded-3 p-3 bg-light d-inline-block">
                                         <img id="vietqr-img"
-                                            src="https://img.vietqr.io/image/techcombank-61043040524-compact2.jpg?amount={{ $order->total }}&addInfo={{ rawurlencode('Thanh toan don ' . $order->code) }}"
-                                            class="img-fluid mb-2" style="max-width: 220px" alt="VietQR">
+                                            src="https://img.vietqr.io/image/techcombank-61043040524-compact2.jpg?amount={{ $order->total - $order->discount }}&addInfo={{ rawurlencode('Thanh toan don ' . $order->code) }}"
+                                            class="img-fluid mb-2 qr-image" style="max-width: 220px" alt="VietQR">
                                         <div>
                                             <button type="button" class="btn btn-outline-primary btn-sm download-qr">
                                                 <i class="bi bi-download me-1"></i>
@@ -213,6 +236,7 @@
                             </div>
 
                             <div id="payment-vnpay" class="d-none">
+                                @include('students::clients.partials.coupons')
                                 <p class="text-muted small">
                                     Bạn sẽ được chuyển đến cổng thanh toán VNPay để hoàn tất giao dịch.
                                 </p>
@@ -220,12 +244,13 @@
                                 <form method="POST" action="#">
                                     @csrf
                                     <button class="btn btn-primary w-100">
-                                        Thanh toán bằng VNPay
+                                        Thanh toán bằng VNPay (Bảo trì)
                                     </button>
                                 </form>
                             </div>
 
                             <div id="payment-momo" class="d-none">
+                                @include('students::clients.partials.coupons')
                                 <p class="text-muted small">
                                     Bạn sẽ được chuyển đến cổng thanh toán MoMo để hoàn tất giao dịch.
                                 </p>
@@ -233,7 +258,7 @@
                                 <form method="POST" action="#">
                                     @csrf
                                     <button class="btn btn-danger w-100">
-                                        Thanh toán bằng MoMo
+                                        Thanh toán bằng MoMo (Bảo trì)
                                     </button>
                                 </form>
                             </div>
