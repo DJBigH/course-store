@@ -25,5 +25,10 @@ Route::group(['as' => 'students.'], function () {
       Route::get('/doi-mat-khau', 'Clients\AccountController@changePassword')->name('change-password');
       Route::post('/doi-mat-khau', 'Clients\AccountController@updatePassword')->name('change-postpassword');
       Route::get('/thanh-toan/{id}', 'Clients\CheckoutController@index')->name('checkout');
+
+      Route::prefix('coupons')->group(function () {
+          Route::post('/verify','Clients\CouponsController@verify')->name('coupons');
+          Route::post('/remove','Clients\CouponsController@remove')->name('coupons-remove');
+      });
    });
 });

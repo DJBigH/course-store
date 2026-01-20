@@ -11,7 +11,7 @@ class OrderDetail extends Model
     use HasFactory;
 
     protected $table = 'orders_detail';
-
+    protected $with = ['order'];
     protected $fillable = [
         'id',
         'order_id',
@@ -23,5 +23,9 @@ class OrderDetail extends Model
 
     public function courses(){
         return $this->belongsTo(Courses::class,'course_id','id')->withoutGlobalScopes();
+    }
+
+    public function order(){
+        return $this->belongsTo(Order::class,'order_id','id');
     }
 }

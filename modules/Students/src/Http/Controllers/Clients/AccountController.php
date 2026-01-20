@@ -117,6 +117,12 @@ class AccountController extends Controller
         $pageTitle = 'Chi tiết đơn hàng';
         $pageName = 'Chi tiết đơn hàng';
         $order = $this->orderRepository->getOrder($orderId);
+        $now = strtotime(date('Y-m-d H:i:s'));
+        $paymentDate = strtotime($order->payment_date);
+        $driff = $now - $paymentDate;
+        if($driff > 30){
+                $order->expired = true;
+        }
         return view('students::clients.order_detail', compact('pageTitle', 'pageName','order'));
     }
 

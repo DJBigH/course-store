@@ -23,11 +23,13 @@
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <div class="overview-card">
+                                <a href="{{ route('students.account.my-courses') }}">
+                                    <div class="overview-card">
                                     <i class="fa-solid fa-book"></i>
                                     <h5>Khóa học</h5>
                                     <span>5 khóa</span>
                                 </div>
+                                </a>
                             </div>
 
                             <div class="col-md-4 mb-3">
@@ -39,11 +41,13 @@
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <div class="overview-card">
+                                <a href="{{ route('students.account.my-order') }}">
+                                    <div class="overview-card">
                                     <i class="fa-solid fa-cart-shopping"></i>
                                     <h5>Đơn hàng</h5>
                                     <span>3 đơn</span>
                                 </div>
+                                </a>
                             </div>
                         </div>
 

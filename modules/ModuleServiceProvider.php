@@ -29,6 +29,8 @@ use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersStatusRepositoryInterface;
 use Modules\Categories\src\Repositories\CategoriesRepositoryInterface;
+use Modules\Students\src\Repositories\CouponsRepository;
+use Modules\Students\src\Repositories\CouponsRepositoryInterface;
 
 class ModuleServiceProvider extends ServiceProvider
 {
@@ -95,10 +97,16 @@ class ModuleServiceProvider extends ServiceProvider
             OrdersRepository::class
         );
 
-        //Oders Repository
+        //Oders Status Repository
         $this->app->singleton(
             OrdersStatusRepositoryInterface::class,
             OrdersStatusRepository::class
+        );
+
+         //Coupons Repository
+        $this->app->singleton(
+            CouponsRepositoryInterface::class,
+            CouponsRepository::class
         );
     }
 

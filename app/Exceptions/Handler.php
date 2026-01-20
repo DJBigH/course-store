@@ -6,6 +6,8 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+
 class Handler extends ExceptionHandler
 {
     /**
@@ -41,6 +43,17 @@ class Handler extends ExceptionHandler
             return response()
                 ->view('errors.clients.404', [], 404);
         }
+
+         if ($e instanceof BadRequestHttpException) {
+
+        if ($request->is('admin/*')) {
+            return response()
+                ->view('errors.admin.400', [], 400);
+        }
+
+        return response()
+            ->view('errors.clients.400', [], 400);
+    }
 
         return parent::render($request, $e);
     }
