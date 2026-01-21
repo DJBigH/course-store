@@ -8,6 +8,7 @@
     <meta name="csrf_token" content="{{ csrf_token() }}" />
     <title>{{ $pageTitle ?? 'Không tìm thấy trang' }} - BigK Udemy</title>
     <link rel="shortcut icon" href="{{ asset('clients/assets/LOGO-DSCONS-FAVICON.png') }}" type="image/x-icon">
+    <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     @vite(['resources/sass/app.scss'])
     @yield('stylesheets')
@@ -19,7 +20,6 @@
         @yield('content')
     </main>
     @include ('part.clients.footer')
-    @yield('scripts')
     <div class="modal fade" id="modal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -33,6 +33,7 @@
         </div>
     </div>
 </body>
+<script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
 @if (\Request::route()->getName() === 'students.account.checkout')
     <script>
         let paymentDate = '{{ getCurrentPaymentDate() }}';

@@ -226,13 +226,27 @@
                                 </div>
 
                                 {{-- BUTTON --}}
-                                <form method="POST" action="">
+                                <form method="POST"
+                                    action="{{ route('students.account.checkout-payment', $order->id) }}">
                                     @csrf
                                     <button class="btn btn-success w-100 py-2 fw-semibold">
                                         <i class="bi bi-check-circle me-1"></i>
                                         Tôi đã thanh toán
                                     </button>
                                 </form>
+
+                                {{-- NÚT HỦY ĐƠN --}}
+                                @if (!$order->status->is_success == 1)
+                                    <form method="POST" class="mt-2"
+                                        action="{{ route('students.account.checkout-cancel', $order->id) }}"
+                                        onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')">
+                                        @csrf
+                                        <button class="btn btn-outline-danger w-100 py-2 fw-semibold">
+                                            <i class="bi bi-x-circle me-1" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')"></i>
+                                            Hủy đơn hàng
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
 
                             <div id="payment-vnpay" class="d-none">

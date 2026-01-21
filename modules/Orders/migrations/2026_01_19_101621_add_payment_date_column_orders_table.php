@@ -26,8 +26,10 @@ return new class () extends Migration {
     public function down()
     {
         Schema::table('orders', function(Blueprint $table) {
-            $table->dropColumn('payment_date')->nullable();
-            $table->dropColumn('payment_complete')->nullable();
+            $table->dropColumn([
+            'payment_date',
+            'payment_complete_date',
+        ]);
         });
     }
 };

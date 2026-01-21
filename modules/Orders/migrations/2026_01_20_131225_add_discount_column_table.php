@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class () extends Migration {
+return new class() extends Migration {
     /**
      * Run the migrations.
      *
@@ -12,9 +12,9 @@ return new class () extends Migration {
      */
     public function up()
     {
-        Schema::table('orders', function(Blueprint $table) {
-            $table->integer('discount')->default(0)->after('total');            
-            $table->string('coupon')->nullable()->after('discount');            
+        Schema::table('orders', function (Blueprint $table) {
+            $table->integer('discount')->default(0)->after('total');
+            $table->string('coupon')->nullable()->after('discount');
         });
     }
 
@@ -25,9 +25,8 @@ return new class () extends Migration {
      */
     public function down()
     {
-        Schema::table('orders', function(Blueprint $table) {
-            $table->dropColumn('discount')->default(0)->after('total');       
-            $table->dropColumn('coupon')->nullable->after('discount');            
+        Schema::table('orders', function (Blueprint $table) {
+            $table->dropColumn(['discount', 'coupon']);
         });
     }
 };

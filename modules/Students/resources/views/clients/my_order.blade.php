@@ -20,7 +20,7 @@
 
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <h2 class="fw-semibold mb-0">
-                                    Khóa học của tôi
+                                    Đơn hàng của tôi
                                 </h2>
                             </div>
 

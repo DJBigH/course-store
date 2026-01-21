@@ -9,6 +9,7 @@ use Modules\Courses\seeders\CoursesSeeder;
 use Modules\Orders\src\Models\OrderStatus;
 use Modules\Teacher\seeders\TeacherSeeder;
 use Modules\User\seeders\UserSeeder;
+use Modules\Orders\seeders\OrderStatusSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -26,7 +27,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             TeacherSeeder::class,
-            OrderStatus::class,
+            OrderStatusSeeder::class,
             // CategoriesSeeder::class,
             // CoursesSeeder::class,
         ]);

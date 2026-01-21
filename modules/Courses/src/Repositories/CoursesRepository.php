@@ -68,4 +68,9 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
     {
         return $this->model->withoutGlobalScope(ActiveScope::class)->where('id', $id)->delete($id);
     }
+
+    public function createOrder($data = [])
+    {
+        return $this->model->orders()->create($data);
+    }
 }

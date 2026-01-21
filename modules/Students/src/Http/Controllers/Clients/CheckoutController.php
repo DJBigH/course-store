@@ -3,6 +3,7 @@
 namespace Modules\Students\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
+use Modules\Orders\src\Models\Order;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 
 class CheckoutController extends Controller
@@ -17,13 +18,13 @@ class CheckoutController extends Controller
 
     public function index($id)
     {
-        $pageTitle = 'Thanh toán';
+        $pageTitle = 'Thanh toán đơn hàng';
         $pageName = 'Thanh toán';
         $order = $this->orderRepository->getOrder($id);
         if (!$order || $order->status->is_success == 1) {
             abort(404);
         }
-        $this->orderRepository->updateDiscount($id,0,null);
+        $this->orderRepository->updateDiscount($id, 0, null);
         $order->discount = 0;
         $order->coupon = null;
         $this->orderRepository->updatePaymentDate($id);
@@ -38,5 +39,44 @@ class CheckoutController extends Controller
             }
         }
         return view('students::clients.checkout', compact('pageTitle', 'pageName', 'order'));
+    }
+
+    public function complete($orderId)
+    {
+        $order = $this->orderRepository->getOrder($orderId);
+
+        if (!$order) {
+            abort(404);
+        }
+
+        $this->orderRepository->completePayment($order);
+
+        return redirect()->route('students.account.checkout-thankyou', [
+            'id' => $order->id
+        ]);
+    }
+
+    public function cancel($id)
+    {
+        $order = $this->orderRepository->getOrder($id);
+
+        if (!$order || $order->status->is_success) {
+            abort(404);
+        }
+
+        $this->orderRepository->cancelOrder($order);
+
+        return redirect()
+            ->route('students.account.order-detail',$order->id);
+    }
+
+
+
+    public function thankyou($orderId)
+    {
+        $order = $this->orderRepository->getOrder($orderId);
+        $pageTitle = 'Cảm ơn bạn đã đặt hàng';
+        $pageName = 'Cảm ơn bạn đã đặt hàng';
+        return view('students::clients.thanksyou', compact('pageTitle', 'pageName', 'order'));
     }
 }
