@@ -39,10 +39,6 @@ class OrderStatusSeeder extends Seeder
         'is_success' => false,
 
       ],
-
-      [
-        'created_at' => now()
-      ]
     ];
     OrderStatus::insert($data);
   }

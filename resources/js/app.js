@@ -8,6 +8,6 @@ import "./slider-home.js";
 import "./accordion.js";
 import "./home.js";
 import "./tab.js";
-import "./video.min.js";
+// import "./video.min.js";
 import "./account.js";
 import "./checkout.js";

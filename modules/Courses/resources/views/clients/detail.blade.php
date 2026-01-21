@@ -177,11 +177,32 @@
                             </ul>
 
 
-                            <!-- Button -->
-                            <button class="btn btn-primary w-100 fw-semibold payment">
-                                <i class="fa-solid fa-cart-shopping me-1"></i>
-                                Đặt mua khóa học
-                            </button>
+                            @php
+                                $student = Auth::guard('students')->user();
+                                $hasCourse = $student
+                                    ? $student->courses()->where('courses.id', $course->id)->exists()
+                                    : false;
+                                $firstLesson = $course->lessons->whereNotNull('parent_id')->first();
+                            @endphp
+
+                            @if ($hasCourse)
+                                <a href="{{ route('lessons.home', $firstLesson->slug) }}"
+                                    class="btn btn-success w-100 fw-semibold">
+                                    <i class="fa-solid fa-play me-1"></i>
+                                    Vào học
+                                </a>
+                            @else
+                                <form action="{{ route('courses.create') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="course_id" value="{{ $course->id }}">
+
+                                    <button class="btn btn-primary w-100 fw-semibold payment">
+                                        <i class="fa-solid fa-cart-shopping me-1"></i>
+                                        Đặt mua khóa học
+                                    </button>
+                                </form>
+                            @endif
+
                         </div>
                     </div>
                 </div>

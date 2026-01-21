@@ -29,7 +29,6 @@ class LessonRequest extends FormRequest
             'parent_id' => 'required|integer',
             'is_trial' => 'required|integer',
             'position' => 'required|integer',
-            'video' => 'required',
             'description' => 'required',
 
         ];

@@ -77,17 +77,27 @@ class CouponsController extends Controller
         }
     }
 
-    public function pollingCoupon()
+    public function pollingCoupon(Request $request)
     {
-        $count = 0;
+        set_time_limit(0);
+        ignore_user_abort(enable: false);
         while (true) {
-            $count++;
-            if($count == 5){
+            echo '\n';
+            ob_flush();
+            flush();
+            if (connection_aborted()) {
+                return;
+            }
+            $data =  $this->verify($request);
+            $data = json_decode($data->getContent());
+            if (!$data->success) {
                 break;
             }
             sleep(1);
         }
-        return ['success' => true];
+        return response()->json([
+            'success' => false,
+        ], 500);
     }
 
     public function remove(Request $request)

@@ -4,6 +4,7 @@ namespace Modules\Orders\src\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Students\src\Models\Coupons;
 
 class Order extends Model
 {
@@ -12,6 +13,7 @@ class Order extends Model
 
     protected $fillable = [
         'id',
+        'code',
         'student_id',
         'total',
         'discount',
@@ -29,5 +31,9 @@ class Order extends Model
 
     public function detail(){
         return $this->hasMany(OrderDetail::class, 'order_id','id');
+    }
+    
+    public function coupon(){
+        return $this->belongsTo(Coupons::class,'coupon','id');
     }
 }

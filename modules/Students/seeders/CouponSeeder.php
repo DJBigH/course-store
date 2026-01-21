@@ -13,7 +13,7 @@ class CouponSeeder extends Seeder
      */
     public function run(): void
     {
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 5; $i++) {
             $coupons = new Coupons;
             $coupons->code = generateUniqueCouponCode();
             $coupons->discount_type = rand(0, 1) ? 'percent' : 'value';
@@ -22,6 +22,8 @@ class CouponSeeder extends Seeder
             } else {
                 $coupons->discount_value = rand(100000, 300000);
             }
+            $coupons->total_condition = rand(500000, 1000000);
+            $coupons->count = rand(10, 50);
             $coupons->save();
         }
     }
