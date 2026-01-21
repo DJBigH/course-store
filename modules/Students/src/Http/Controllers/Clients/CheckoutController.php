@@ -23,6 +23,9 @@ class CheckoutController extends Controller
         if (!$order || $order->status->is_success == 1) {
             abort(404);
         }
+        $this->orderRepository->updateDiscount($id,0,null);
+        $order->discount = 0;
+        $order->coupon = null;
         $this->orderRepository->updatePaymentDate($id);
         if (config('checkout.checkout_countdown') > 0) {
 

@@ -26,14 +26,15 @@ class CouponsController extends Controller
             if (!$coupon) {
                 throw new \Exception("Mã giảm giá bắt buộc phải nhập", 400);
             }
-            $coupon = $this->couponRepository->verifyCoupon($coupon, $request->orderId);
+            $order = $this->orderRepository->getOrder($request->orderId);
+            $coupon = $this->couponRepository->verifyCoupon($coupon, $order);
             if (!$coupon) {
                 throw new \Exception("Mã giảm giá không hợp lệ hoặc đã hết hạn", 400);
             }
 
             //Tính toán mã giảm giá
             $discount = 0;
-            $order = $this->orderRepository->getOrder($request->orderId);
+
             if (
                 $coupon->discount_type === 'percent' && $request->orderId && $order
             ) {
@@ -43,6 +44,16 @@ class CouponsController extends Controller
 
             if ($coupon->discount_type == 'value') {
                 $discount = $coupon->discount_value;
+            }
+            if ($this->couponRepository->isCourseCoupon($coupon)) {
+                $courses = $this->couponRepository->getCourses($coupon, $request->orderId)->pluck('id')->toArray();
+                if ($coupon->discount_type === 'percent') {
+                    $discount = $order->detail()->whereIn('course_id', $courses)->sum('price') * $coupon->discount_value / 100;
+                }
+
+                if ($coupon->discount_type === 'value') {
+                    $discount = $order->detail()->whereIn('course_id', $courses)->sum('price') * $coupon->discount_value / 100;
+                }
             }
             //Cập nhập mã giảm giá
             $this->orderRepository->updateDiscount($request->orderId, $discount, $coupon->code);
@@ -64,6 +75,19 @@ class CouponsController extends Controller
                 ], $code ? $code : 500);
             }
         }
+    }
+
+    public function pollingCoupon()
+    {
+        $count = 0;
+        while (true) {
+            $count++;
+            if($count == 5){
+                break;
+            }
+            sleep(1);
+        }
+        return ['success' => true];
     }
 
     public function remove(Request $request)
