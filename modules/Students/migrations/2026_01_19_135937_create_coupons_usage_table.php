@@ -16,9 +16,11 @@ return new class () extends Migration {
             $table->increments('id');
             $table->integer('coupon_id')->nullable()->unsigned();
             $table->integer('order_id')->nullable()->unsigned();
+            $table->integer('student_id')->nullable()->unsigned();
             $table->timestamps();
             $table->foreign('coupon_id')->references('id')->on('coupons')->onDelete('cascade');
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
         });
     }
 
