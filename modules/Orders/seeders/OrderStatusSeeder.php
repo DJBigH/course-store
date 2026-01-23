@@ -18,26 +18,32 @@ class OrderStatusSeeder extends Seeder
         'name' => 'Chờ thanh toán',
         'color' => 'warning',
         'is_success' => false,
+        'created_at' => now(),
+        'updated_at' => now(),
       ],
 
       [
         'name' => 'Đã thanh toán',
         'color' => 'success',
         'is_success' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
       ],
 
       [
         'name' => 'Thanh toán thất bại',
         'color' => 'danger',
         'is_success' => false,
-
+        'created_at' => now(),
+        'updated_at' => now(),
       ],
 
       [
         'name' => 'Hủy thanh toán',
         'color' => 'danger',
         'is_success' => false,
-
+        'created_at' => now(),
+        'updated_at' => now(),
       ],
     ];
     OrderStatus::insert($data);

@@ -5,6 +5,7 @@ namespace Modules\Orders\src\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Students\src\Models\Coupons;
+use Modules\Students\src\Models\Student;
 
 class Order extends Model
 {
@@ -35,5 +36,9 @@ class Order extends Model
     
     public function coupon(){
         return $this->belongsTo(Coupons::class,'coupon','id');
+    }
+
+    public function students(){
+        return $this->belongsTo(Student::class,'student_id','id');
     }
 }

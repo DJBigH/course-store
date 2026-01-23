@@ -12,6 +12,16 @@ Route::prefix('admin')->group(function () {
       Route::post('/edit/{student}', 'StudentController@update')->name('post-edit');
       Route::delete('/delete/{student}', 'StudentController@delete')->name('delete');
    });
+
+   Route::prefix('students')->name('students.')->group(function () {
+      Route::get('/coupons', 'CouponController@index')->name('coupons.index');
+      // Route::get('/coupons/data', 'CouponController@data')->name('coupons.data');
+      // Route::get('/coupons/create', 'CouponController@create')->name('coupons.create');
+      // Route::post('/coupons/create', 'CouponController@store')->name('coupons.store');
+      // Route::get('/coupons/edit/{coupon}', 'CouponController@edit')->name('coupons.edit');
+      // Route::post('/coupons/edit/{coupon}', 'CouponController@update')->name('coupons.update');
+      // Route::delete('/coupons/delete/{coupon}', 'CouponController@delete')->name('coupons.delete');
+   });
 });
 
 Route::group(['as' => 'students.'], function () {

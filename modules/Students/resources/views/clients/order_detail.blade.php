@@ -43,37 +43,71 @@
                                     <table class="table table-bordered align-middle mb-0">
                                         <tbody>
                                             <tr>
-                                                <th width="25%" class="bg-light">Mã đơn hàng</th>
+                                                <th width="30%" class="bg-light">Mã đơn hàng</th>
                                                 <td>#{{ $order->code }}</td>
                                             </tr>
+
                                             <tr>
-                                                <th class="bg-light">Tổng tiền</th>
-                                                <td class="fw-semibold text-success">
-                                                    {{ money($order->total) }}
+                                                <th class="bg-light">Tạm tính</th>
+                                                <td>
+                                                    <span class="fw-semibold">
+                                                        {{ money($order->total) }}
+                                                    </span>
                                                 </td>
                                             </tr>
+
+                                            <tr>
+                                                <th class="bg-light">
+                                                    Giảm giá mã khuyến mãi
+                                                </th>
+                                                <td class="text-danger fw-semibold">
+                                                    -{{ money($order->discount ?? 0) }}
+                                                </td>
+                                            </tr>
+
+                                            <tr class="table-success">
+                                                <th class="fw-bold">Tổng thanh toán</th>
+                                                <td class="fw-bold fs-5 text-success">
+                                                    {{ money($order->total - ($order->discount ?? 0)) }}
+                                                </td>
+                                            </tr>
+
                                             <tr>
                                                 <th class="bg-light">Thời gian đặt</th>
                                                 <td>{{ format_date_dmy($order->created_at) }}</td>
                                             </tr>
+
                                             <tr>
                                                 <th class="bg-light">Trạng thái</th>
                                                 <td>
                                                     <span class="badge bg-{{ $order->status->color }}">
                                                         {{ $order->status->name }}
                                                     </span>
+
                                                     @if ($order->status->is_success == 0)
-                                                        @if ($order->expired && !$order->payment_date == null)
-                                                            <span class="badge bg-danger">Hết hạn thanh toán</span>
+                                                        @if ($order->expired && !$order->payment_date)
+                                                            <span class="badge bg-danger ms-1">Hết hạn thanh toán</span>
                                                         @else
                                                             <a href="{{ route('students.account.checkout', $order->id) }}"
-                                                                class="btn btn-success btn-sm">Thanh toán</a>
+                                                                class="btn btn-success btn-sm ms-2">
+                                                                Thanh toán
+                                                            </a>
                                                         @endif
                                                     @endif
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
+                                    @if ($order->discount)
+                                        <div class="alert alert-success d-flex align-items-center mt-3">
+                                            <i class="bi bi-ticket-perforated me-2 fs-5"></i>
+                                            <div>
+                                                <strong>Đã áp dụng mã khuyến mãi</strong><br>
+                                                Giảm {{ money($order->discount) }} cho đơn hàng
+                                            </div>
+                                        </div>
+                                    @endif
+
                                 </div>
                             </div>
 
@@ -94,6 +128,7 @@
                                                 <th class="text-center">Trạng thái</th>
                                             </tr>
                                         </thead>
+
                                         <tbody>
                                             @forelse ($order->detail as $key => $item)
                                                 <tr>
@@ -102,9 +137,20 @@
                                                         {{ $item?->courses?->name }}
                                                     </td>
                                                     <td class="text-end">
-                                                        <strong
-                                                            style="color: red">{{ money($item?->courses?->price) }}</strong>
+                                                        @if ($item->courses?->sale_price)
+                                                            <div class="text-muted text-decoration-line-through small">
+                                                                {{ money($item->courses->price) }}
+                                                            </div>
+                                                            <div class="fw-bold text-danger">
+                                                                {{ money($item->courses->sale_price) }}
+                                                            </div>
+                                                        @else
+                                                            <div class="fw-bold">
+                                                                {{ money($item->courses->price) }}
+                                                            </div>
+                                                        @endif
                                                     </td>
+
                                                     <td>
                                                         {{ $item?->courses?->teacher?->name }}
                                                     </td>
@@ -172,6 +218,23 @@
             .btn {
                 display: none !important;
             }
+        }
+
+        .order-detail table th {
+            background: #f8f9fa;
+        }
+
+        .order-detail .table td,
+        .order-detail .table th {
+            vertical-align: middle;
+        }
+
+        .order-detail .badge {
+            font-size: 0.85rem;
+        }
+
+        .order-detail .table-success {
+            --bs-table-bg: #e9f7ef;
         }
     </style>
 @endsection
