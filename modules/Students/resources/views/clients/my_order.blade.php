@@ -129,11 +129,15 @@
                                                 <td class="fw-semibold text-primary">
                                                     #{{ $item->code }}
                                                 </td>
-
-                                                <td class="text-end fw-semibold text-success">
-                                                    {{ money($item->total) }}
-                                                </td>
-
+                                                @if($item->discount)
+                                                    <td class="text-end fw-semibold text-danger">
+                                                        {{ money($item->total - $item->discount) }}
+                                                    </td>
+                                                @else
+                                                    <td class="text-end fw-semibold text-success">
+                                                        {{ money($item->total) }}
+                                                    </td>
+                                                @endif
                                                 <td class="text-center">
                                                     <span
                                                         class="badge bg-{{ $item->status->color }}-subtle text-{{ $item->status->color }} px-3">

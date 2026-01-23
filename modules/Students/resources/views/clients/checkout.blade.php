@@ -40,7 +40,7 @@
                                     </tr>
 
                                     <tr>
-                                        <th class="bg-light">Tổng đơn hàng</th>
+                                        <th class="bg-light">Tạm tính</th>
                                         <td class="fw-semibold">
                                             {{ money($order->total) }}
                                         </td>
@@ -103,9 +103,15 @@
                                                 <td class="fw-semibold">
                                                     {{ $item?->courses?->name }}
                                                 </td>
+                                                @if($item?->courses?->sale_price)
+                                                <td class="text-end text-danger fw-semibold">
+                                                    {{ money($item?->courses?->sale_price) }}
+                                                </td>
+                                                @else
                                                 <td class="text-end text-danger fw-semibold">
                                                     {{ money($item?->courses?->price) }}
                                                 </td>
+                                                @endif
                                                 <td>
                                                     {{ $item?->courses?->teacher?->name }}
                                                 </td>

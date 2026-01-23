@@ -15,4 +15,5 @@ interface OrdersRepositoryInterface extends RepositoryInterface
     public function createOrderWithDetail(array $orderData, array $detailData);
     public function completePayment(Order $order);
     public function cancelOrder(Order $order);
+    public function getCategories();
 }

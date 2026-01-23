@@ -8,6 +8,9 @@ function getCurrentPaymentDate()
     $orderRepository = app(OrdersRepositoryInterface::class);
 
     $order = $orderRepository->getOrder($orderId);
+    if (!$order) {
+        abort(404);
+    }
     return $order->payment_date;
 }
 

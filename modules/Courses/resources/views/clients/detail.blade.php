@@ -180,7 +180,7 @@
                             @php
                                 $student = Auth::guard('students')->user();
                                 $hasCourse = $student
-                                    ? $student->courses()->where('courses.id', $course->id)->exists()
+                                    ? $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists()
                                     : false;
                                 $firstLesson = $course->lessons->whereNotNull('parent_id')->first();
                             @endphp

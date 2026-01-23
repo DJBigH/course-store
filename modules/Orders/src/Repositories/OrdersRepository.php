@@ -47,7 +47,7 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
 
     public function getOrder($orderId)
     {
-        return $this->model->with('detail')->find($orderId);
+        return $this->model->with(['detail', 'students'])->find($orderId);
     }
 
     public function updatePaymentDate($orderId, $atributes = [])
@@ -144,5 +144,10 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
             ]);
             return true;
         });
+    }
+
+    public function getCategories()
+    {
+        return $this->model->with(['detail', 'status'])->select(['id', 'code', 'total', 'discount', 'coupon', 'status_id', 'created_at'])->latest();
     }
 }

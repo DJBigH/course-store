@@ -34,11 +34,20 @@
                     'name' => 'students',
                 ])
 
+                @include('part.backend.menu_item', [
+                    'title' => 'Đơn hàng',
+                    'name' => 'orders',
+                ])
+
+                @include('part.backend.menu_item', [
+                    'title' => 'Mã giảm giá',
+                    'name' => 'coupons',
+                ])
             </div>
         </div>
         <div class="sb-sidenav-footer">
             <div class="small">Đăng nhập:</div>
-            {{ Auth::user()->name }}
+            {{ Auth::user()->name ?? 'Admin' }}
         </div>
     </nav>
 </div>
