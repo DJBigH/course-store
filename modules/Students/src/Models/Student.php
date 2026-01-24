@@ -49,4 +49,14 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
             'course_id'
         )->withPivot('status');
     }
+
+    public function coupons()
+    {
+        return $this->belongsToMany(
+            Coupons::class,
+            'coupons_students', // bảng pivot
+            'student_id',
+            'coupon_id'
+        )->withPivot('created_at')->withTimestamps();
+    }
 }

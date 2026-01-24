@@ -79,6 +79,16 @@ class AccountController extends Controller
         return view('students::clients.my_courses', compact('pageTitle', 'pageName', 'courses', 'teacher'));
     }
 
+    public function myCoupon(Request $request)
+    {
+        $pageTitle = 'Khóa học của tôi';
+        $pageName = 'Khóa học của tôi';
+        $filters = [];
+        $studentId = Auth::guard('students')->user()->id;
+        $coupon = $this->studentRepository->getCoupons($studentId, $filters, config('paginate.coupon_limit'));
+        return view('students::clients.my_coupons', compact('pageName', 'pageTitle','coupon'));
+    }
+
     public function myOrder(Request $request)
     {
         $pageTitle = 'Đơn hàng';
@@ -117,16 +127,16 @@ class AccountController extends Controller
         $pageTitle = 'Chi tiết đơn hàng';
         $pageName = 'Chi tiết đơn hàng';
         $order = $this->orderRepository->getOrder($orderId);
-        if(!$order){
+        if (!$order) {
             abort(404);
         }
         $now = strtotime(date('Y-m-d H:i:s'));
         $paymentDate = strtotime($order->payment_date);
         $driff = $now - $paymentDate;
-        if($driff > 30){
-                $order->expired = true;
+        if ($driff > 30) {
+            $order->expired = true;
         }
-        return view('students::clients.order_detail', compact('pageTitle', 'pageName','order'));
+        return view('students::clients.order_detail', compact('pageTitle', 'pageName', 'order'));
     }
 
     public function changePassword()

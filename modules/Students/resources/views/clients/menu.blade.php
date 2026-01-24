@@ -21,6 +21,13 @@
         </a>
     </li>
     <li class="nav-item">
+        <a href="{{ route('students.account.my-coupon') }}"
+            class="nav-link {{ activeMenu('students.account.my-coupon') ? 'active' : '' }}">
+            <i class="fa-solid fa-ticket-alt"></i>
+            Mã giảm giá
+        </a>
+    </li>
+    <li class="nav-item">
         <a href="{{ route('students.account.my-order') }}"
             class="nav-link {{ activeMenu('students.account.my-order') ? 'active' : '' }}">
             <i class="fa-solid fa-receipt"></i>

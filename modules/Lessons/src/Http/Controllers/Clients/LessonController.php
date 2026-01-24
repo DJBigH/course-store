@@ -28,6 +28,9 @@ class LessonController extends Controller
         $index = 0;
 
         $lessons = $this->lessonRepository->getLessonByPosition($course);
+        if(!$lessons){
+            abort(404);
+        }
         $currentLessonIndex = null;
         foreach($lessons as $key => $item){
             if($item->id == $lesson->id){

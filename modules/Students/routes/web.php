@@ -11,16 +11,8 @@ Route::prefix('admin')->group(function () {
       Route::get('/edit/{student}', 'StudentController@edit')->name('edit');
       Route::post('/edit/{student}', 'StudentController@update')->name('post-edit');
       Route::delete('/delete/{student}', 'StudentController@delete')->name('delete');
-   });
-
-   Route::prefix('students')->name('students.')->group(function () {
-      Route::get('/coupons', 'CouponController@index')->name('coupons.index');
-      // Route::get('/coupons/data', 'CouponController@data')->name('coupons.data');
-      // Route::get('/coupons/create', 'CouponController@create')->name('coupons.create');
-      // Route::post('/coupons/create', 'CouponController@store')->name('coupons.store');
-      // Route::get('/coupons/edit/{coupon}', 'CouponController@edit')->name('coupons.edit');
-      // Route::post('/coupons/edit/{coupon}', 'CouponController@update')->name('coupons.update');
-      // Route::delete('/coupons/delete/{coupon}', 'CouponController@delete')->name('coupons.delete');
+      Route::get('students/{id}/coupon-history', 'StudentController@CouponHistory')->name('coupon-history');
+      Route::get('students/{id}/purchased-courses', 'StudentController@purchasedCourses')->name('purchased-courses');
    });
 });
 
@@ -30,6 +22,7 @@ Route::group(['as' => 'students.'], function () {
       Route::get('/thong-tin', 'Clients\AccountController@profile')->name('profile');
       Route::post('/thong-tin', 'Clients\AccountController@updateProfile')->name('client-updateprofile');
       Route::get('/khoa-hoc', 'Clients\AccountController@myCourse')->name('my-courses');
+      Route::get('/ma-giam-gia', 'Clients\AccountController@myCoupon')->name('my-coupon');
       Route::get('/don-hang', 'Clients\AccountController@myOrder')->name('my-order');
       Route::get('/don-hang/{id}', 'Clients\AccountController@orderDetail')->name('order-detail');
       Route::get('/doi-mat-khau', 'Clients\AccountController@changePassword')->name('change-password');

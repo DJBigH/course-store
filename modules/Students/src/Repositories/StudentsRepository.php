@@ -42,7 +42,7 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
 
     public function getCourses($studentId, $filters = [], $limit)
     {
-        extract($filters); 
+        extract($filters);
         $query = $this->find($studentId)->courses();
         if (!empty($teacher_id)) {
             $query->where('teacher_id', $teacher_id);
@@ -54,5 +54,24 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
             });
         }
         return $query->paginate($limit)->withQueryString();
+    }
+
+    public function getCoupons($studentId, $filters = [], $limit)
+    {
+        extract($filters);
+        $query = $this->find($studentId)->coupons();
+        return $query->paginate($limit)->withQueryString();
+    }
+
+    public function getPurchasedCourses(int $studentId)
+    {
+        return Student::query()
+            ->with([
+                'courses' => function ($q) {
+                    // nếu status = paid / active mới tính là đã mua
+                    $q->wherePivot('status', '1');
+                }
+            ])
+            ->findOrFail($studentId);
     }
 }

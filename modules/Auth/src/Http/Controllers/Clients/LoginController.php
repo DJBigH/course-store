@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Modules\Auth\src\Http\Requests\LoginRequest;
 use Modules\Students\src\Models\Student;
+use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
 {
@@ -35,14 +36,28 @@ class LoginController extends Controller
             'email' => $request->email,
             'password' => $request->password,
         ];
-        $status = Auth::guard('students')->attempt($dataLogin, $request->remember == 1 ? true : false);
 
-        if ($status) {
-            return redirect('/');
-        } else {
+        if (!Auth::guard('students')->attempt($dataLogin, $request->remember == 1)) {
             return back()->with('msg_danger', __('auth::messages.login.failure'));
         }
+
+        $studentId  = Auth::guard('students')->id();
+        $maxDevices = config('auth.max_devices', 1);
+
+        $activeSessions = DB::table('sessions')
+            ->where('user_id', $studentId)
+            ->count();
+
+        if ($activeSessions > $maxDevices) {
+
+            Auth::guard('students')->logout();
+
+            abort(403, 'Tài khoản đã đăng nhập trên thiết bị khác');
+        }
+
+        return redirect()->intended('/');
     }
+
 
     public function logout()
     {

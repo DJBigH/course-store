@@ -5,6 +5,8 @@ namespace Modules\Students\src\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Modules\Students\src\Http\Requests\studentRequest;
+use Modules\Students\src\Models\CouponUsage;
+use Modules\Students\src\Models\Student;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -28,6 +30,12 @@ class StudentController extends Controller
         $students = $this->studentRepository->getAllStudents();
 
         return DataTables::of($students)
+            ->addColumn('courses', function ($student) {
+                return '<a href="' . route('students.purchased-courses', $student->id) . '" class="btn btn-info">Xem khóa học</a>';
+            })
+            ->addColumn('link', function ($student) {
+                return '<a href="' . route('students.coupon-history', $student->id) . '" class="btn btn-primary">Lịch sử cấp mã</a>';
+            })
             ->addColumn('edit', function ($student) {
                 return '<a href="' . route('students.edit', $student->id) . '" class="btn btn-warning">Sửa</a>';
             })
@@ -40,7 +48,7 @@ class StudentController extends Controller
             ->editColumn('status', function ($students) {
                 return $students->status == 1 ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>' : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
             })
-            ->rawColumns(['edit', 'delete', 'status'])
+            ->rawColumns(['edit', 'delete', 'status', 'link', 'courses'])
             ->toJson();
     }
 
@@ -100,5 +108,30 @@ class StudentController extends Controller
         }
         $this->studentRepository->delete($id);
         return back()->with('msg', __('students::messages.delete.success'));
+    }
+
+    public function CouponHistory($id)
+    {
+        $pageTitle = 'Cập nhập học viên';
+
+        $student = Student::with([
+            'coupons'
+        ])->findOrFail($id);
+        return view(
+            'students::coupon_history',
+            compact('student', 'pageTitle')
+        );
+    }
+
+    public function purchasedCourses($id)
+    {
+        $pageTitle = 'Khóa học đã mua';
+
+        $student = $this->studentRepository->getPurchasedCourses($id);
+
+        return view(
+            'students::course_student',
+            compact('student', 'pageTitle')
+        );
     }
 }

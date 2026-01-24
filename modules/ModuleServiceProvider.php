@@ -16,6 +16,8 @@ use Modules\Teacher\src\Repositories\TeacherRepository;
 use Modules\Document\src\Repositories\DocumentRepository;
 use Modules\Students\src\Repositories\StudentsRepository;
 use Modules\Auth\src\Http\Middlewares\BlockUserMiddleware;
+use Modules\Auth\src\Http\Middlewares\DeviceLoginService;
+use Modules\Auth\src\Http\Middlewares\LimitDeviceLogin;
 use Modules\User\src\Repositories\UserRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersStatusRepository;
 use Modules\Video\src\Repositories\VideoRepositoryInterface;
@@ -37,7 +39,9 @@ use Modules\Students\src\Repositories\CouponsRepositoryInterface;
 class ModuleServiceProvider extends ServiceProvider
 {
     private $middlewares = [
-        'user.block' => BlockUserMiddleware::class
+        'user.block' => BlockUserMiddleware::class,
+        'user.limit_devices' => LimitDeviceLogin::class,
+        'user.limit_service' => DeviceLoginService::class,
     ];
 
     private $commands = [];

@@ -24,6 +24,7 @@
                 <th>Số lượng</th>
                 <th>Thời gian</th>
                 <th>Tối thiểu</th>
+                <th>Cấp mã</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -37,6 +38,7 @@
                 <th>Số lượng</th>
                 <th>Thời gian</th>
                 <th>Tối thiểu</th>
+                <th>Cấp mã</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -72,6 +74,9 @@
                     },
                     {
                         data: 'total_condition'
+                    },
+                    {
+                        data: 'bindings'
                     },
                     {
                         data: 'edit'

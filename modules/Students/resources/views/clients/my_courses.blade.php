@@ -108,22 +108,18 @@
                                                     @else
                                                         <span class="badge bg-danger-subtle text-danger px-3 py-2">
                                                             <i class="bi bi-x-circle me-1"></i>
-                                                            Bị khóa
+                                                            Dừng hoạt động
                                                         </span>
                                                     @endif
                                                 </td>
 
-                                                @if ($course->pivot->status == 1)
-                                                    <td class="text-center">
-                                                        <a href="{{ route('courses.detail', $course->slug) }}"
-                                                            class="btn btn-primary btn-sm px-3">
-                                                            <i class="bi bi-play-circle me-1"></i>
-                                                            Vào học
-                                                        </a>
-                                                    </td>
-                                                @else
-                                                    <td></td>
-                                                @endif
+                                                <td class="text-center">
+                                                    <a href="{{ route('courses.detail', $course->slug) }}"
+                                                        class="btn btn-primary btn-sm px-3">
+                                                        <i class="bi bi-play-circle me-1"></i>
+                                                        Vào học
+                                                    </a>
+                                                </td>
                                             </tr>
                                         @empty
                                             <tr>
