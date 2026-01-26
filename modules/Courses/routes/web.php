@@ -18,12 +18,12 @@ Route::group(['prefix' => 'filemanager', 'middleware' => ['web']], function () {
    \UniSharp\LaravelFilemanager\Lfm::routes();
 });
 
-Route::group(['as' => 'courses.','middleware' => ['auth:students','verified']], function () {
+Route::group(['as' => 'courses.'], function () {
    Route::get('/khoa-hoc', 'Clients\CoursesController@index')->name('home');
    Route::get('/khoa-hoc/{slug}', 'Clients\CoursesController@detail')->name('detail');
    Route::prefix('data')->name('data.')->group(function () {
       Route::get('/trial/{lessonId?}', 'Clients\CoursesController@getTrialVideo')->name('trial');
       Route::get('/stream', 'Clients\CoursesController@streamVideo')->name('stream');
    });
-   Route::post('/tao-don', 'Clients\CoursesController@create')->name('create');
+   Route::post('/tao-don', 'Clients\CoursesController@create')->middleware(['auth:students', 'verified', 'user.block'])->name('create');
 });

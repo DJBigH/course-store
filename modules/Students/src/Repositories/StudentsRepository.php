@@ -3,6 +3,7 @@
 namespace Modules\Students\src\Repositories;
 
 use App\Repositories\BaseRepository;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Modules\Students\src\Models\Student;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
@@ -63,15 +64,9 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
         return $query->paginate($limit)->withQueryString();
     }
 
-    public function getPurchasedCourses(int $studentId)
+    public function getPurchasedCourses(int $studentId, $limit)
     {
-        return Student::query()
-            ->with([
-                'courses' => function ($q) {
-                    // nếu status = paid / active mới tính là đã mua
-                    $q->wherePivot('status', '1');
-                }
-            ])
-            ->findOrFail($studentId);
+        return $this->find($studentId)->courses()->paginate($limit)->withQueryString();
     }
+    
 }

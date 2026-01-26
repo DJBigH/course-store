@@ -431,13 +431,16 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm thêm cái options thiết lập cấu hình cho website
 - Trong khóa học project này nếu không dạy đổi giao diện email thì hay làm lại giao diện đó việt hóa nó
 - cái sắp xếp bài giảng chưa kéo được bài giảng ở module dưới lên module trên ( có j check lại hoặc note là chỉ kéo được bài giảng của module đó )
-
+- Làm cái ngẫu nhiên code ở khóa học
+- Làm trang quản lý liên hệ
     Clients:
 
 - Làm trang tổng quan cho cả clients và admin
 - Giới hạn mã khuyến mãi cho học viên ( Done )
 - Từ làm nốt chức năng thanh toán ( Vì trong khóa học dạy thanh toán trực tiếp ) ( Done )
 - Cập nhập lại quyền khi học viên đã mua khóa học ( Done )
-- Làm trang chủ giống unicode
-- chức năng khóa học đã mua của học viên nên dùng trang bờ lóc tạm thời hẹ hẹ
+- Làm trang chủ giống unicode (Done có biến tấu thêm 1 chút ở dưới)
+- chức năng khóa học đã mua của học viên nên dùng trang bờ lóc tạm thời hẹ hẹ ( Hình như xử lý rồi )
 - bên clients thiếu mấy trang nếu được cố code html css
+- Làm cái lọc theo danh mục ở phần khóa học
+- Làm trang liên hệ

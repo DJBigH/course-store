@@ -14,6 +14,6 @@ interface StudentsRepositoryInterface extends RepositoryInterface
 
     public function checkPassword($password, $id);
     public function getCourses($studentId, $filters = [], $limit);
-    public function getPurchasedCourses(int $studentId);
+    public function getPurchasedCourses(int $studentId,$limit);
     public function getCoupons($studentId, $filters = [], $limit);
 }
