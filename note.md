@@ -443,4 +443,4 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - chức năng khóa học đã mua của học viên nên dùng trang bờ lóc tạm thời hẹ hẹ ( Hình như xử lý rồi )
 - bên clients thiếu mấy trang nếu được cố code html css
 - Làm cái lọc theo danh mục ở phần khóa học
-- Làm trang liên hệ
+- Làm trang liên hệ (Done)
