@@ -34,4 +34,8 @@ class Coupons extends Model
     {
         return $this->belongsToMany(Order::class, 'coupons_usage', 'coupon_id', 'order_id');
     }
+
+    public function usagescoupon(){
+            return $this->hasMany(CouponUsage::class, 'coupon_id');
+    }
 }

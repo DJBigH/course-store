@@ -11,6 +11,8 @@
                 <th>Email</th>
                 <th>Trạng thái</th>
                 <th>Thời gian</th>
+                <th>Khóa học</th>
+                <th>Lịch sử mã</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -21,6 +23,8 @@
                 <th>Email</th>
                 <th>Trạng thái</th>
                 <th>Thời gian</th>
+                <th>Khóa học</th>
+                <th>Lịch sử mã</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -51,6 +55,12 @@
             },
             {
                 data: 'created_at',
+            },
+            {
+                data: 'courses',
+            },
+            {
+                data: 'link',
             },
             {
                 data: 'edit',

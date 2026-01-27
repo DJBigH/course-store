@@ -156,7 +156,7 @@
 
                                 @if ($order->discount > 0)
                                     <tr>
-                                        <th>Giảm giá</th>
+                                        <th class="text-danger">Áp mã giảm giá</th>
                                         <td class="text-end text-danger">
                                             -{{ money($order->discount) }}
                                         </td>

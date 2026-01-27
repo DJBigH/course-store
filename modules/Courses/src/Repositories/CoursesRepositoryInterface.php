@@ -26,4 +26,9 @@ interface CoursesRepositoryInterface extends RepositoryInterface
     public function getCourses($limit);
     public function getCourseActive($slug);
     public function createOrder($data = []);
+    public function getCourseFree();
+    public function getCourseView();
+    public function getCourseCreateUpdate();
+    public function getAllCoursesHome();
+    public function getCourseForYou($studentId);
 }

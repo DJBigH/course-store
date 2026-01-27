@@ -23,7 +23,7 @@ class CouponRequest extends FormRequest
      */
     public function rules()
     {
-        $id = $this->route('coupon') ? $this->route('coupon')->id : null;
+        $id = $this->route('id');
 
         return [
             'code' => 'required|unique:coupons,code,' . $id,

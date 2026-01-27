@@ -100,7 +100,7 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
 
     public function getAllCoupons()
     {
-        return $this->model->with(['usages', 'students', 'courses'])->select('id', 'code', 'discount_type', 'discount_value', 'total_condition', 'count', 'start_date', 'end_date')->latest();
+        return $this->model->with(['usages', 'students', 'courses'])->withCount('usagescoupon')->select('id', 'code', 'discount_type', 'discount_value', 'total_condition', 'count', 'start_date', 'end_date')->latest();
     }
 
     public function createCouponsStudent($coupon, $students)

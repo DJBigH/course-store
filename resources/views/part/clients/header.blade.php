@@ -31,7 +31,8 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                     <li>
-                                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('students.account.index') }}">
+                                        <a class="dropdown-item d-flex align-items-center gap-2"
+                                            href="{{ route('students.account.index') }}">
                                             <i class="fas fa-user-circle"></i> Tài khoản của tôi
                                         </a>
                                     </li>
@@ -60,64 +61,58 @@
     </div>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
+
+            {{-- Logo --}}
             <a class="navbar-brand" href="{{ route('home') }}">
-                <img src="{{ asset('clients/assets/logo.png') }}" alt="" />
+                <img src="{{ asset('clients/assets/logo.png') }}" alt="Logo" />
             </a>
+
+            {{-- Toggle mobile --}}
             <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
                 aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
+            {{-- Menu --}}
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav me-auto">
+
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="{{ route('home') }}">
+                        <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
                             <i class="fas fa-home"></i>
                             Home
                         </a>
                     </li>
+
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('courses.home') }}">
+                        <a class="nav-link {{ request()->routeIs('courses.*') ? 'active' : '' }}"
+                            href="{{ route('courses.home') }}">
                             <i class="fas fa-tv"></i>
                             Khóa học
                         </a>
                     </li>
+
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-route"></i>
-                            Lộ trình
+                        <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
+                            href="{{ route('coupons.home') }}">
+                            <i class="fas fa-ticket-alt"></i>
+                            Mã giảm giá
                         </a>
                     </li>
+
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-globe-europe"></i>
-                            Kiến thức
+                        <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
+                            href="{{ route('contacts.index') }}">
+                            <i class="fas fa-phone-alt"></i>
+                            Liên hệ
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-star"></i>
-                            Tuyển dụng
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-broadcast-tower"></i>
-                            CTV
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-user"></i>
-                            DSCons
-                        </a>
-                    </li>
+
                 </ul>
             </div>
-            <p class="cart">
-                <i class="fas fa-shopping-cart"></i>
-            </p>
         </div>
     </nav>
+
 </header>
 <form action="{{ route('clients-logout') }}" method="post" name="form-logout">@csrf</form>

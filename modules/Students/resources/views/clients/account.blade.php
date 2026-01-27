@@ -33,11 +33,13 @@
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <div class="overview-card">
-                                    <i class="fa-solid fa-clock"></i>
-                                    <h5>Thời gian học</h5>
-                                    <span>12 giờ</span>
+                                <a href="{{ route('students.account.my-coupon') }}">
+                                    <div class="overview-card">
+                                    <i class="fa-solid fa-ticket"></i>
+                                    <h5>Mã giảm giá</h5>
+                                    <span>12 mã</span>
                                 </div>
+                                </a>
                             </div>
 
                             <div class="col-md-4 mb-3">

@@ -73,4 +73,36 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
     {
         return $this->model->orders()->create($data);
     }
+
+    public function getCourseFree()
+    {
+        return $this->model->where('price', 0)->where('sale_price', 0)->where('status', 1)->limit(5)->get();
+    }
+
+    public function getCourseView()
+    {
+        return $this->model->orderBy('view', 'DESC')->where('status', 1)->limit(5)->get();
+    }
+
+    public function getCourseCreateUpdate()
+    {
+        return $this->model->orderBy('created_at', 'DESC')->orderBy('updated_at', 'DESC')->where('status', 1)->limit(5)->get();
+    }
+
+    public function getAllCoursesHome()
+    {
+        return $this->model->where('status', 1)->get();
+    }
+
+    public function getCourseForYou($studentId)
+    {
+        return $this->model
+        ->where('status', 1)
+        ->when($studentId, function ($query) use ($studentId) {
+            $query->whereDoesntHave('students', function ($q) use ($studentId) {
+                $q->where('student_id', $studentId);
+            });
+        })
+        ->get();
+    }
 }

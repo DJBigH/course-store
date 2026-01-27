@@ -25,5 +25,5 @@ Route::group(['as' => 'courses.'], function () {
       Route::get('/trial/{lessonId?}', 'Clients\CoursesController@getTrialVideo')->name('trial');
       Route::get('/stream', 'Clients\CoursesController@streamVideo')->name('stream');
    });
-   Route::post('/tao-don', 'Clients\CoursesController@create')->name('create');
+   Route::post('/tao-don', 'Clients\CoursesController@create')->middleware(['auth:students', 'verified', 'user.block'])->name('create');
 });

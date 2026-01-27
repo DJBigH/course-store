@@ -21,4 +21,12 @@ class CouponUsage extends Model
     {
         return $this->belongsTo(Order::class, 'order_id', 'id');
     }
+
+    public function students(){
+        return $this->belongsTo(Student::class, 'student_id', 'id');
+    }
+
+    public function coupon(){
+        return $this->belongsTo(Coupons::class, 'coupon_id', 'id');
+    }
 }
