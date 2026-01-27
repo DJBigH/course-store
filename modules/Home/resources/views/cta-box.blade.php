@@ -12,7 +12,7 @@
         </p>
 
         <div class="cta-actions">
-            <a href="#" class="cta-btn primary">
+            <a href="{{ route('contacts.home') }}" class="cta-btn primary">
                 🚀 Đăng ký tư vấn miễn phí
             </a>
             <a href="#" class="cta-btn outline">

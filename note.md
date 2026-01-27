@@ -433,6 +433,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - cái sắp xếp bài giảng chưa kéo được bài giảng ở module dưới lên module trên ( có j check lại hoặc note là chỉ kéo được bài giảng của module đó )
 - Làm cái ngẫu nhiên code ở khóa học
 - Làm trang quản lý liên hệ
+- Với cấp mã khuyến mãi thì nếu đó có giá trị thời gian thì check là nếu nó hết time rồi thì không cho áp mã
     Clients:
 
 - Làm trang tổng quan cho cả clients và admin
