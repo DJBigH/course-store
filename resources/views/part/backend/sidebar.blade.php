@@ -47,6 +47,11 @@
                     'title' => 'Mã giảm giá',
                     'name' => 'coupons',
                 ])
+
+                @include('part.backend.menu_item', [
+                    'title' => 'Liên hệ',
+                    'name' => 'contacts',
+                ])
             </div>
         </div>
         <div class="sb-sidenav-footer">

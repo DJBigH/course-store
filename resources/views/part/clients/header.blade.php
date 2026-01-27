@@ -103,7 +103,7 @@
 
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
-                            href="{{ route('contacts.index') }}">
+                            href="{{ route('contacts.home') }}">
                             <i class="fas fa-phone-alt"></i>
                             Liên hệ
                         </a>

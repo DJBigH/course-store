@@ -191,9 +191,6 @@ class CouponController extends Controller
             ];
         }
 
-        // Đồng bộ:
-        // ✔ Thêm mới
-        // ✔ Xóa những học viên bỏ tick
         $coupon->students()->sync($syncData);
 
         return redirect()
@@ -242,7 +239,7 @@ class CouponController extends Controller
         $coupon->courses()->sync($syncData);
 
         return redirect()
-            ->route('coupons.courses', $id)
+            ->route('coupons.coupons-course', $id)
             ->with('msg', 'Cập nhật khóa học áp dụng mã thành công');
     }
 
