@@ -12,4 +12,9 @@ class ContactsRepository extends BaseRepository implements ContactsRepositoryInt
     {
         return Contacts::class;
     }
+
+    public function getContacts()
+    {
+        return $this->model->select(['id', 'name', 'phone', 'email','message','status', 'created_at'])->latest();
+    }
 }

@@ -445,3 +445,5 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - bên clients thiếu mấy trang nếu được cố code html css
 - Làm cái lọc theo danh mục ở phần khóa học
 - Làm trang liên hệ (Done)
+- Làm thanh toán = vnpay, momo
+- Làm lượt xem khi ấn vào khóa học +1 lượt xem

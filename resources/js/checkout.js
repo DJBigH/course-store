@@ -99,7 +99,7 @@ if (checkoutPageEl) {
                 try {
                     fieldset.disabled = true;
                     //Call Api
-                    const response = await fetch(`/tai-khoan/coupons/verify`, {
+                    const response = await fetch("/tai-khoan/coupons/verify", {
                         method: "POST",
                         headers: {
                             "X-CSRF-TOKEN": csrfToken,
@@ -111,7 +111,9 @@ if (checkoutPageEl) {
                             orderId,
                         }),
                     });
+
                     const { success, errors, data } = await response.json();
+
                     if (!success) {
                         throw new Error(errors);
                     }
@@ -134,8 +136,6 @@ if (checkoutPageEl) {
                         "amount=" + data.total_after_discount,
                     );
                     qrImgEl.src = qrUrl;
-                    // controller.signal();
-                    pollingCoupon();
                 } catch (errors) {
                     error.innerText = errors.message;
                 } finally {
@@ -143,38 +143,6 @@ if (checkoutPageEl) {
                 }
             };
             verifyCoupon();
-
-            // const pollingCoupon = async () => {
-            //     const response = await fetch(`/tai-khoan/coupons/polling`, {
-            //         method: "POST",
-            //         headers: {
-            //             "X-CSRF-TOKEN": csrfToken,
-            //             "Content-Type": "application/json",
-            //             Accept: "application/json",
-            //         },
-            //         body: JSON.stringify({
-            //             coupon,
-            //             orderId,
-            //         }),
-            //         signal: controller.signal,
-            //     });
-            //     const data = await response.json();
-            //     if (data && !data.success) {
-            //         couponUsage.classList.add("d-none");
-            //         couponsForm.classList.remove("d-none");
-            //         showMessage("Xóa mã giảm giá thành công");
-
-            //         discountValueEl.innerText = "-0 đ";
-            //         totalValueList.forEach((el) => {
-            //             el.innerText = data.total.toLocaleString() + " đ";
-            //         });
-            //         qrUrl = qrUrl.replace(
-            //             /amount=(\d+)/,
-            //             "amount=" + data.total,
-            //         );
-            //         qrImgEl.src = qrUrl;
-            //     }
-            // };
         });
         const removeCouponEl = couponUsage.querySelector(".js-remove-coupon");
         removeCouponEl.addEventListener("click", () => {
@@ -205,7 +173,6 @@ if (checkoutPageEl) {
                 });
                 qrUrl = qrUrl.replace(/amount=(\d+)/, "amount=" + data.total);
                 qrImgEl.src = qrUrl;
-                    // pollingCoupon();
             };
             removeCoupon();
         });
