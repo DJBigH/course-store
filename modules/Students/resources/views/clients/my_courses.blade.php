@@ -108,7 +108,7 @@
                                                     @else
                                                         <span class="badge bg-danger-subtle text-danger px-3 py-2">
                                                             <i class="bi bi-x-circle me-1"></i>
-                                                            Dừng hoạt động
+                                                            Dừng cập nhập
                                                         </span>
                                                     @endif
                                                 </td>

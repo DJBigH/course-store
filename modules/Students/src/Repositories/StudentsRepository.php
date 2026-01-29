@@ -2,6 +2,7 @@
 
 namespace Modules\Students\src\Repositories;
 
+use App\Models\Scopes\ActiveScope;
 use App\Repositories\BaseRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -54,7 +55,7 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
                 $builder->orWhere('detail', 'like', '%' . $keyword . '%');
             });
         }
-        return $query->paginate($limit)->withQueryString();
+        return $query->withoutGlobalScope(ActiveScope::class)->paginate($limit)->withQueryString();
     }
 
     public function getCoupons($studentId, $filters = [], $limit)
@@ -66,7 +67,7 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
 
     public function getPurchasedCourses(int $studentId, $limit)
     {
-        return $this->find($studentId)->courses()->paginate($limit)->withQueryString();
+        return $this->find($studentId)->courses()->withoutGlobalScope(ActiveScope::class)->paginate($limit)->withQueryString();
     }
     
 }

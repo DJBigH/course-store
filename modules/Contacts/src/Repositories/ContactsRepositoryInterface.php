@@ -6,5 +6,5 @@ use App\Repositories\RepositoryInterface;
 
 interface ContactsRepositoryInterface extends RepositoryInterface
 {
-    
+    public function getContacts();
 }

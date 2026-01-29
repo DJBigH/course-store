@@ -8,8 +8,9 @@
         <thead>
             <tr>
                 <th>Tên</th>
+                <th>Số điện thoại</th>
                 <th>Email</th>
-                <th>Nhóm</th>
+                <th>Trạng thái</th>
                 <th>Thời gian</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
@@ -18,8 +19,9 @@
         <tfoot>
             <tr>
                 <th>Tên</th>
+                <th>Số điện thoại</th>
                 <th>Email</th>
-                <th>Nhóm</th>
+                <th>Trạng thái</th>
                 <th>Thời gian</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
@@ -38,22 +40,25 @@
         serverSide: true,
         pageLength: 5,
         lengthMenu: [5, 10, 25, 50],
-        ajax: "{{route('user.data')}}",
+        ajax: "{{route('contacts.data')}}",
         columns: [
             {
                 data: 'name',
             },
             {
+                data: 'phone',
+            },
+            {
                 data: 'email',
             },
             {
-                data: 'group_id',
+                data: 'status',
             },
             {
                 data: 'created_at',
             },
             {
-                data: 'edit',
+                data: 'view',
             },
             {
                 data: 'delete',
