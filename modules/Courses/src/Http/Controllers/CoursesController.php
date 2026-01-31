@@ -3,12 +3,14 @@
 namespace Modules\Courses\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\StudentNotification;
 use Illuminate\Support\Carbon;
 use Modules\Categories\src\Repositories\CategoriesRepository;
 use Modules\Categories\src\Repositories\CategoriesRepositoryInterface;
 use Modules\Courses\src\Http\Requests\CoursesRequest;
 use Modules\Courses\src\Repositories\CoursesRepository;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
+use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Repositories\TeacherRepository;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
@@ -38,7 +40,7 @@ class CoursesController extends Controller
 
         return DataTables::of($courses)
             ->addColumn('lessions', function ($courses) {
-                return '<a href="'.route('lessons.index',$courses->id).'" class="btn btn-primary">Bài giảng</a>';
+                return '<a href="' . route('lessons.index', $courses->id) . '" class="btn btn-primary">Bài giảng</a>';
             })
             ->addColumn('edit', function ($courses) {
                 return '<a href="' . route('courses.edit', $courses->id) . '" class="btn btn-warning">Sửa</a>';
@@ -64,7 +66,7 @@ class CoursesController extends Controller
                 }
                 return $price;
             })
-            ->rawColumns(['edit', 'delete', 'status','lessions'])
+            ->rawColumns(['edit', 'delete', 'status', 'lessions'])
             ->toJson();
     }
 
@@ -89,13 +91,21 @@ class CoursesController extends Controller
         if (!$courses['price']) {
             $courses['price'] = 0;
         }
-        // if ($courses['price'] == 0) {
-        //     $courses['sale_price'] = 0;
-        //     return back()->with('msg_danger', 'Khi giá = 0 thì không có khuyến mãi');
-        // }
+
         $course = $this->courseRepository->create($courses);
         $categories = $this->getCategories($courses);
         $this->courseRepository->createCoursesCategory($course, $categories);
+
+        // 🔔 Gửi thông báo cho tất cả học viên
+        Student::chunk(100, function ($students) use ($course) {
+            foreach ($students as $student) {
+                $student->notify(new StudentNotification([
+                    'title' => 'Khóa học mới',
+                    'message' => 'Khóa học ' . $course->name . ' vừa được đăng',
+                    'url' => route('courses.detail', $course->slug),
+                ]));
+            }
+        });
         return redirect()->route('courses.index')->with('msg', __('courses::messages.create.success'));
     }
 

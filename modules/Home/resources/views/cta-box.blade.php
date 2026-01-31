@@ -16,7 +16,7 @@
                 🚀 Đăng ký tư vấn miễn phí
             </a>
             <a href="#" class="cta-btn outline">
-                📞 Gọi ngay 012345678
+                📞 Gọi ngay {{ setting('phone', '012345678') }}
             </a>
         </div>
 

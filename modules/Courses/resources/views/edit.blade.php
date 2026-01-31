@@ -244,3 +244,13 @@
         }
     </style>
 @endsection
+
+@section('scripts')
+    <script>
+        document.getElementById('randomCode').addEventListener('click', function() {
+            const prefix = 'KH';
+            const random = Math.floor(100000 + Math.random() * 900000);
+            document.getElementById('course_code').value = prefix + random;
+        });
+    </script>
+@endsection
