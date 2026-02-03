@@ -1,8 +1,9 @@
 @php
     $student = auth('students')->user();
-    $unreadCount = $student->unreadNotifications->count();
-    $notifications = $student->notifications()->latest()->take(5)->get();
+    $unreadCount = $student?->unreadNotifications()->count() ?? 0;
+    $notifications = $student ? $student->notifications()->latest()->take(10)->get() : collect();
 @endphp
+
 <header class="header">
     <div class="action-bar">
         <div class="container">
@@ -148,13 +149,34 @@
                         </a>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('courses.*') ? 'active' : '' }}"
-                            href="{{ route('courses.home') }}">
+                    <li class="nav-item dropdown dropdown-hover">
+                        <a class="nav-link
+        {{ request()->routeIs('courses.*') ? 'active' : '' }}"
+                            href="#" id="coursesDropdown" role="button">
                             <i class="fas fa-tv"></i>
-                            Khóa học
+                            Danh mục khóa học
                         </a>
+
+                        <ul class="dropdown-menu">
+                            @foreach ($courseCategories as $category)
+                                <li class="dropdown-submenu">
+                                    <a class="dropdown-item" href="{{ route('categories.category', $category->slug) }}">
+                                        {{ $category->name }}
+                                    </a>
+                                    {{-- <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="{{ route('courses.category', $category->slug) }}">
+                                                {{ $category->name }} ({{ $category->courses_count }})
+                                            </a>
+                                        </li>
+                                    </ul> --}}
+                                </li>
+                            @endforeach
+
+                        </ul>
                     </li>
+
 
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"

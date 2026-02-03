@@ -34,7 +34,7 @@
                 autoWidth: false,
                 processing: true,
                 serverSide: true,
-                pageLength: 2,
+                pageLength: 5,
                 lengthMenu: [2,5, 10, 25, 50],
                 ajax: "{{ route('categories.data') }}",
                 columns: [{

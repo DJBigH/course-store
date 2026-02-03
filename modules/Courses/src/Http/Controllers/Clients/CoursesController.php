@@ -5,7 +5,9 @@ namespace Modules\Courses\src\Http\Controllers\Clients;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Iman\Streamer\VideoStreamer;
+use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
@@ -37,6 +39,12 @@ class CoursesController extends Controller
     public function detail($slug)
     {
         $course = $this->courseRepository->getCourseActive($slug);
+        $cacheKey = 'course_view_' . $course->id . '_' . request()->ip();
+
+        if (!Cache::has($cacheKey)) {
+            $course->increment('view');
+            Cache::put($cacheKey, true, now()->addMinutes(30));
+        }
         if (!$course) {
             abort(404);
         }
@@ -94,5 +102,20 @@ class CoursesController extends Controller
             ->createOrderWithDetail($orderData, $detailData);
 
         return redirect()->route('students.account.checkout', $order->id);
+    }
+
+    public function category($slug)
+    {
+        $pageTitle = 'Khóa học theo danh mục ' . $slug;
+        $pageName = 'Khóa học theo danh mục ' . $slug;
+        $category = Category::where('slug', $slug)->firstOrFail();
+        if (!$category) {
+            abort(404);
+        }
+        $courses = $category->courses()
+            ->where('status', 1)
+            ->paginate(config('paginate.limit'));
+
+        return view('courses::clients.index', compact('category', 'courses', 'pageTitle', 'pageName'));
     }
 }

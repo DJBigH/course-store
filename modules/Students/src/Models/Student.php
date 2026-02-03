@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Courses\src\Models\Courses;
+use Modules\Orders\src\Models\Order;
 
 class Student extends Authenticatable implements MustVerifyEmail, CanResetPassword
 {
@@ -58,5 +59,10 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
             'student_id',
             'coupon_id'
         )->withPivot('created_at')->withTimestamps();
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'student_id', 'id');
     }
 }

@@ -13,7 +13,8 @@
                             <span
                                 class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10"
                                 style="width: 110px; height: 110px;">
-                                <i class="fa-solid fa-check text-success fa-3x"></i>
+                                {{-- <img src="{{ asset('clients/assets/success.webm') }}" alt="" class="img-fluid" /> --}}
+                                <video src="{{ asset('clients/assets/success.webm') }}" autoplay loop muted class="img-fluid"></video>
                             </span>
                         </div>
 
