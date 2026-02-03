@@ -434,16 +434,19 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm cái ngẫu nhiên code ở khóa học
 - Làm trang quản lý liên hệ (Done)
 - Với cấp mã khuyến mãi thì nếu đó có giá trị thời gian thì check là nếu nó hết time rồi thì không cho áp mã
+- Làm trang thông tin cá nhân ở bên admin
+
     Clients:
 
-- Làm trang tổng quan cho cả clients và admin
+- Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
 - Từ làm nốt chức năng thanh toán ( Vì trong khóa học dạy thanh toán trực tiếp ) ( Done )
 - Cập nhập lại quyền khi học viên đã mua khóa học ( Done )
 - Làm trang chủ giống unicode (Done có biến tấu thêm 1 chút ở dưới)
 - chức năng khóa học đã mua của học viên nên dùng trang bờ lóc tạm thời hẹ hẹ ( Hình như xử lý rồi )
 - bên clients thiếu mấy trang nếu được cố code html css
-- Làm cái lọc theo danh mục ở phần khóa học
+- Làm cái lọc theo danh mục ở trên menu ( Done )
 - Làm trang liên hệ (Done)
 - Làm thanh toán = vnpay, momo
-- Làm lượt xem khi ấn vào khóa học +1 lượt xem
+- Làm lượt xem khi ấn vào khóa học +1 lượt xem (Done)
+- Thêm cái setting sửa banner (Yêu cầu 3 ảnh nếu sửa 1 thì chỉ cập nhập 1, 3 cái sub banner)

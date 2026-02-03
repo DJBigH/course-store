@@ -3,7 +3,7 @@
 namespace Modules\Categories\src\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Modules\Courses\Src\Models\Courses;
+use Modules\Courses\src\Models\Courses;
 
 class Category extends Model
 {

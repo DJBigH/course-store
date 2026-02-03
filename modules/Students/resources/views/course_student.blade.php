@@ -8,7 +8,7 @@
                 <span class="text-primary">{{ $student->name }}</span>
 
                 <span class="badge bg-info ms-2">
-                    {{ $student->courses->count() }} khóa học
+                    {{ $courses->total() }} khóa học
                 </span>
             </h5>
             <a href="{{ route('students.index') }}" class="btn btn-sm btn-secondary">
@@ -27,23 +27,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($student->courses as $course)
+                    @forelse ($courses as $course)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $course->name }}</td>
                             <td>
                                 @if ($course->pivot->status == 1)
-                                    <span class="badge bg-success">
-                                        Hoạt động
-                                    </span>
+                                    <span class="badge bg-success">Hoạt động</span>
                                 @else
-                                    <span class="badge bg-danger">
-                                        Dừng hoạt động
-                                    </span>
+                                    <span class="badge bg-danger">Dừng hoạt động</span>
                                 @endif
                             </td>
                             <td>
-                                {{ $course->created_at->format('d/m/Y H:i') }}
+                                {{ $course->pivot->created_at?->format('d/m/Y H:i') }}
                             </td>
                         </tr>
                     @empty
@@ -54,6 +50,7 @@
                         </tr>
                     @endforelse
                 </tbody>
+
             </table>
         </div>
     </div>

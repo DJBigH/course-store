@@ -66,8 +66,51 @@
                 <div class="mt-3">
                     {{ $courses->links() }}
                 </div>
+            @else
+                <div class="empty-course text-center py-5">
+                    {{-- <img src="{{ asset('clients/assets/empty.webm') }}" alt="Không có khóa học" class="mb-4"
+                        width="220"> --}}
+                        <video src="{{ asset('clients/assets/empty.webm') }}" autoplay loop muted class="mb-4"
+                            width="220"></video>
+
+                    <h4 class="fw-bold mb-2">Chưa có khóa học nào</h4>
+
+                    <p class="text-muted mb-4">
+                        Hiện tại danh mục này chưa có khóa học.
+                        <br>
+                        Bạn có thể khám phá các khóa học khác phù hợp với mình 🚀
+                    </p>
+
+                    <a href="{{ route('home') }}" class="btn btn-primary px-4">
+                        <i class="fa-solid fa-book-open me-1"></i>
+                        Khám phá khóa học
+                    </a>
+                </div>
             @endif
         </div>
     </section>
 
+@endsection
+
+@section('stylesheet')
+    <style>
+        .empty-course {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 60px 20px;
+            box-shadow: inset 0 0 0 1px #e5e7eb;
+        }
+
+        .empty-course img {
+            opacity: 0.9;
+        }
+
+        .empty-course h4 {
+            color: #111827;
+        }
+
+        .empty-course p {
+            font-size: 15px;
+        }
+    </style>
 @endsection

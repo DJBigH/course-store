@@ -127,11 +127,14 @@ class StudentController extends Controller
     {
         $pageTitle = 'Khóa học đã mua';
 
-        $student = $this->studentRepository->getPurchasedCourses($id);
+        $student = $this->studentRepository->find($id);
+
+        $courses = $this->studentRepository
+            ->getPurchasedCourses($id, config('paginate.limit'));
 
         return view(
             'students::course_student',
-            compact('student', 'pageTitle')
+            compact('student', 'courses', 'pageTitle')
         );
     }
 }

@@ -66,3 +66,25 @@
 .navbar .navbar-nav .nav-item {
 	padding: 0 10px;
 }
+
+/* Hover dropdown cấp 1 */
+.dropdown-hover:hover > .dropdown-menu {
+    display: block;
+}
+
+/* Dropdown đa cấp */
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-left: .1rem;
+    display: none;
+}
+
+.dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+}
+

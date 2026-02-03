@@ -33,7 +33,24 @@ class AccountController extends Controller
     {
         $pageTitle = 'Thông tin tài khoản';
         $pageName = 'Thông tin tài khoản';
-        return view('students::clients.account', compact('pageTitle', 'pageName'));
+        $student = Auth::guard('students')->user();
+
+        // 1. Tổng số khóa học đã mua
+        $totalCourses = $student->courses()->count();
+
+        // 2. Tổng số mã giảm giá
+        $totalCoupons = $student->coupons()->count();
+
+        // 3. Tổng số đơn hàng
+        $totalOrders = $student->orders()->count();
+
+        // (Nâng cao) Khóa học gần nhất
+        $recentCourses = $student->courses()
+            ->latest('created_at')
+            ->take(3)
+            ->get();
+
+        return view('students::clients.account', compact('pageTitle', 'pageName', 'totalCoupons', 'totalCourses', 'totalOrders', 'recentCourses'));
     }
 
     public function profile()
@@ -86,7 +103,7 @@ class AccountController extends Controller
         $filters = [];
         $studentId = Auth::guard('students')->user()->id;
         $coupon = $this->studentRepository->getCoupons($studentId, $filters, config('paginate.coupon_limit'));
-        return view('students::clients.my_coupons', compact('pageName', 'pageTitle','coupon'));
+        return view('students::clients.my_coupons', compact('pageName', 'pageTitle', 'coupon'));
     }
 
     public function myOrder(Request $request)
