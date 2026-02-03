@@ -3,14 +3,18 @@
 namespace Modules\Lessons\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\NewLessonNotification;
+use App\Notifications\StudentNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Modules\Courses\src\Models\Courses;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Modules\Lessons\src\Http\Requests\LessonRequest;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
+use Modules\Students\src\Models\Student;
 use Modules\Video\src\Repositories\VideoRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -158,7 +162,7 @@ class LessonController extends Controller
             );
             $video_id = $video ? $video->id : null;
         }
-        $this->lessonRepository->create([
+        $lesson = $this->lessonRepository->create([
             'name' => $name,
             'slug' => $slug,
             'video_id' => $video_id,
@@ -171,6 +175,16 @@ class LessonController extends Controller
             'description' => $description,
             'status' => $status,
         ]);
+        Student::chunk(100, function ($students) use ($lesson) {
+            foreach ($students as $student) {
+                $student->notify(new StudentNotification([
+                    'title' => 'Bài học mới',
+                    'message' => $lesson->name . ' vừa được thêm vào',
+                    'url' => route('lessons.home',$lesson->slug),
+                ]));
+            }
+        });
+
         $this->updateDurations($courseId);
         return redirect()->route('lessons.index', $courseId)->with('msg', __('lessons::messages.create.success'));
     }

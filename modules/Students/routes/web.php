@@ -29,7 +29,9 @@ Route::group(['as' => 'students.'], function () {
       Route::post('/doi-mat-khau', 'Clients\AccountController@updatePassword')->name('change-postpassword');
       Route::get('/thanh-toan/{id}', 'Clients\CheckoutController@index')->name('checkout');
       Route::post('/thanh-toan/{id}/hoan-tat', 'Clients\CheckoutController@complete')->name('checkout-payment');
-      Route::post('/thanh-toan/{id}/huy','Clients\CheckoutController@cancel')->name('checkout-cancel');
+      Route::post('/thanh-toan/{id}/huy', 'Clients\CheckoutController@cancel')->name('checkout-cancel');
+
+
 
       Route::prefix('coupons')->group(function () {
          Route::post('/verify', 'Clients\CouponsController@verify')->name('coupons');
@@ -42,3 +44,19 @@ Route::group(['as' => 'students.'], function () {
       });
    });
 });
+
+Route::get('students/notifications/read/{id}', function ($id) {
+   $notification = auth('students')->user()
+      ->notifications()
+      ->where('id', $id)
+      ->firstOrFail();
+
+   $notification->markAsRead();
+
+   return redirect($notification->data['url'] ?? '/');
+})->name('students.notifications.read');
+Route::get('students/notifications', function () {
+   return view('students.notifications.index', [
+      'notifications' => auth('students')->user()->notifications()->latest()->paginate(100)
+   ]);
+})->name('students.notifications.index');

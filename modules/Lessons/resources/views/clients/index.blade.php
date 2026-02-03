@@ -7,13 +7,19 @@
             <div class="row">
                 <div class="col-12 col-lg-8">
                     <div class="video-detail">
-                        <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
-                            <source src="/data/stream?video={{ $lesson->video->url }}" type="video/mp4" />
-                            <p class="vjs-no-js">
-                                To view this video please enable JavaScript, and consider upgrading to a
-                                web browser that
-                            </p>
-                        </video>
+                        @if ($lesson->video?->url)
+                            <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
+                                <source src="/data/stream?video={{ $lesson->video->url }}" type="video/mp4" />
+                                <p class="vjs-no-js">
+                                    To view this video please enable JavaScript, and consider upgrading to a web browser
+                                    that
+                                </p>
+                            </video>
+                        @else
+                            <div class="alert alert-warning">
+                                Bài học này chưa có video
+                            </div>
+                        @endif
                     </div>
                     <div class="lesson-nav d-flex justify-content-between mt-4">
                         <div>

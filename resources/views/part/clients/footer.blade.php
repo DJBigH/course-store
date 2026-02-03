@@ -8,19 +8,19 @@
                         <li>
                             <a href="#">
                                 <i class="fa-solid fa-mobile"></i>
-                                0123456789
+                                {{ setting('phone','012345678') }}
                             </a>
                         </li>
                         <li>
                             <a href="#">
                                 <i class="fa-solid fa-envelope"></i>
-                                BigK@gmail.com
+                                {{ setting('email','bigk@gmail.com') }}
                             </a>
                         </li>
                         <li>
                             <a href="#">
                                 <i class="fa-solid fa-house"></i>
-                               Hà Nội, Việt Nam
+                               {{ setting('address','Việt Nam') }}
                             </a>
                         </li>
                     </ul>

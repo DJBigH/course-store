@@ -2,7 +2,7 @@
         <div class="container">
             <div class="sub-title">
                 <p>
-                    <a href="/">Trang chủ</a>
+                    <a href="{{ route('home') }}">Trang chủ</a>
                     <i class="fa-solid fa-angle-right"></i>
                     {{ $pageName ?? 'Không có dữ liệu' }}
                 </p>

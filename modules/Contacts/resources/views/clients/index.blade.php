@@ -20,7 +20,7 @@
                             <i class="fas fa-phone-alt"></i>
                             <div>
                                 <span>Hotline</span>
-                                <strong>0988 888 888</strong>
+                                <strong>{{ setting('phone', '012345678') }}</strong>
                             </div>
                         </div>
 
@@ -28,7 +28,7 @@
                             <i class="fas fa-envelope"></i>
                             <div>
                                 <span>Email</span>
-                                <strong>support@bigk-udemy.com</strong>
+                                <strong>{{ setting('email', 'bigk@gmail.com') }}</strong>
                             </div>
                         </div>
 
@@ -36,15 +36,19 @@
                             <i class="fas fa-map-marker-alt"></i>
                             <div>
                                 <span>Địa chỉ</span>
-                                <strong>Hà Nội, Việt Nam</strong>
+                                <strong>{{ setting('address', 'Việt Nam') }}</strong>
                             </div>
                         </div>
 
                         <div class="contact-social">
-                            <a href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#"><i class="fab fa-instagram"></i></a>
-                            <a href="#"><i class="fab fa-youtube"></i></a>
-                            <a href="#"><i class="fab fa-tiktok"></i></a>
+                            <a href="{{ setting_url('facebook') }}" {!! setting_target('facebook') !!}><i
+                                    class="fab fa-facebook-f"></i></a>
+                            <a href="{{ setting_url('instagram') }}" {!! setting_target('instagram') !!}><i
+                                    class="fab fa-instagram"></i></a>
+                            <a href="{{ setting_url('youtube') }}" {!! setting_target('youtube') !!}><i
+                                    class="fab fa-youtube"></i></a>
+                            <a href="{{ setting_url('tiktok') }}" {!! setting_target('tiktok') !!}>
+                                <i class="fab fa-tiktok"></i></a>
                         </div>
                     </div>
                 </div>

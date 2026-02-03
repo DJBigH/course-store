@@ -35,6 +35,8 @@ use Modules\Contacts\src\Repositories\ContactsRepository;
 use Modules\Contacts\src\Repositories\ContactsRepositoryInterface;
 use Modules\Coupons\src\Repositories\CouponsRepository as RepositoriesCouponsRepository;
 use Modules\Coupons\src\Repositories\CouponsRepositoryInterface as RepositoriesCouponsRepositoryInterface;
+use Modules\Settings\src\Repositories\SettingsRepository;
+use Modules\Settings\src\Repositories\SettingsRepositoryInterface;
 use Modules\Students\src\Repositories\CouponsRepository;
 use Modules\Students\src\Repositories\CouponsRepositoryInterface;
 
@@ -121,6 +123,12 @@ class ModuleServiceProvider extends ServiceProvider
         $this->app->singleton(
             ContactsRepositoryInterface::class,
             ContactsRepository::class
+        );
+
+        //Setting Repository
+        $this->app->singleton(
+            SettingsRepositoryInterface::class,
+            SettingsRepository::class
         );
     }
 

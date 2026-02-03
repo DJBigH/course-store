@@ -52,6 +52,11 @@
                     'title' => 'Liên hệ',
                     'name' => 'contacts',
                 ])
+
+                @include('part.backend.menu_item', [
+                    'title' => 'Cấu hình Website',
+                    'name' => 'settings',
+                ])
             </div>
         </div>
         <div class="sb-sidenav-footer">

@@ -428,11 +428,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - trang lịch sử nhập mã khuyến mãi ( Done )
 - Notification
 - Làm trang tổng quan
-- Làm thêm cái options thiết lập cấu hình cho website
+- Làm thêm cái options thiết lập cấu hình cho website (Done)
 - Trong khóa học project này nếu không dạy đổi giao diện email thì hay làm lại giao diện đó việt hóa nó
 - cái sắp xếp bài giảng chưa kéo được bài giảng ở module dưới lên module trên ( có j check lại hoặc note là chỉ kéo được bài giảng của module đó )
 - Làm cái ngẫu nhiên code ở khóa học
-- Làm trang quản lý liên hệ
+- Làm trang quản lý liên hệ (Done)
 - Với cấp mã khuyến mãi thì nếu đó có giá trị thời gian thì check là nếu nó hết time rồi thì không cho áp mã
     Clients:
 
