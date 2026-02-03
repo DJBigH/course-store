@@ -3,6 +3,7 @@
 namespace Modules\Home\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
@@ -17,7 +18,7 @@ class HomeController extends Controller
         $this->studentRepository = $studentsRepository;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $pageTitle  = 'Trang chủ';
         $courseFree = $this->courseRepository->getCourseFree();
@@ -25,16 +26,26 @@ class HomeController extends Controller
         $courseNew  = $this->courseRepository->getCourseCreateUpdate();
 
         $studentId = Auth::guard('students')->id();
-        $myCourse  = collect();
+        $myCourse = collect();
 
         if ($studentId) {
-            $myCourse = $this->studentRepository->getPurchasedCourses($studentId, config('paginate.home_mycourse_limit'));
+            $myCourse = $this->studentRepository
+                ->getPurchasedCourses($studentId, config('paginate.home_mycourse_limit'));
         }
-        
+
+        if ($request->ajax()) {
+            return view('home::my_course_home', compact('myCourse'))->render();
+        }
+
         $courseAll = $this->courseRepository->getCourseForYou($studentId);
-        return view(
-            'home::index',
-            compact('pageTitle', 'courseFree', 'courseView', 'courseNew', 'myCourse', 'courseAll')
-        );
+
+        return view('home::index', compact(
+            'pageTitle',
+            'courseFree',
+            'courseView',
+            'courseNew',
+            'myCourse',
+            'courseAll'
+        ));
     }
 }

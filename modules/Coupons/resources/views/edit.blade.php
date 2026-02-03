@@ -91,7 +91,7 @@
                     {{-- Ngày bắt đầu --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Ngày bắt đầu</label>
-                        <input type="text"
+                        <input type="date"
                             class="form-control datepicker {{ $errors->has('start_date') ? 'is-invalid' : '' }}"
                             name="start_date" placeholder="dd/mm/yyyy" value="{{ old('start_date',$coupon->start_date) }}">
                         @error('start_date')
@@ -102,7 +102,7 @@
                     {{-- Ngày kết thúc --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Ngày kết thúc</label>
-                        <input type="text"
+                        <input type="date"
                             class="form-control datepicker {{ $errors->has('end_date') ? 'is-invalid' : '' }}"
                             name="end_date" placeholder="dd/mm/yyyy" value="{{ old('end_date',$coupon->end_date) }}">
                         @error('end_date')

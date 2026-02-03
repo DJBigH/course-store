@@ -1,64 +1,59 @@
 @auth('students')
     <section class="foundation-course">
         <div class="container py-5">
-            <h3 class="section-title mb-4 text-success">🎓 Khóa học của bạn</h3>
-
-            <div class="row g-4">
-                @if (!empty($myCourse))
-                    @foreach ($myCourse as $item)
-                        <div class="col-12 col-lg-6">
-                            <div class="course-card d-flex">
-                                <div class="course-thumb">
-                                    <a href="{{ $item->teacher->image }}"><img src="{{ asset($item->thumbnail) }}"
-                                            alt="Course banner"></a>
-                                </div>
-
-                                <div class="course-content">
-                                    <div class="course-meta">
-                                        <span><i class="fa-solid fa-clock"></i> {{ getTime($item->durations) }}</span>
-                                        <span><i class="fa-solid fa-video"></i> {{ getLessonCount($item)->module }}
-                                            phần/{{ getLessonCount($item)->lessons }} bài</span>
-                                        <span><i class="fa-solid fa-eye"></i>
-                                            {{ $item->view ? number_format($item->view) : 0 }} lượt xem</span>
+            
+            <div id="my-course-wrapper">
+                <h3 class="section-title mb-4 text-success">🎓 Khóa học của bạn</h3>
+                <div class="row g-4">
+                    @if ($myCourse->count())
+                        @foreach ($myCourse as $item)
+                            <div class="col-12 col-lg-6">
+                                <div class="course-card d-flex">
+                                    <div class="course-thumb">
+                                        <img src="{{ asset($item->thumbnail) }}" alt="">
                                     </div>
 
-                                    <h5 class="course-title">
-                                        <a href="{{ route('courses.detail', $item->slug) }}">
-                                            {{ $item->name }}
-                                        </a>
-                                    </h5>
+                                    <div class="course-content">
+                                        <div class="course-meta">
+                                            <span><i class="fa-solid fa-clock"></i> {{ getTime($item->durations) }}</span>
+                                            <span>
+                                                <i class="fa-solid fa-video"></i>
+                                                {{ getLessonCount($item)->module }} phần /
+                                                {{ getLessonCount($item)->lessons }} bài
+                                            </span>
+                                        </div>
 
-                                    <div class="course-teacher">
-                                        <img src="{{ $item->teacher->image }}" alt="">
-                                        <span>{{ $item->teacher->name }}</span>
-                                    </div>
+                                        <h5 class="course-title">
+                                            <a href="{{ route('courses.detail', $item->slug) }}">
+                                                {{ $item->name }}
+                                            </a>
+                                        </h5>
 
-                                    <div class="course-price">
-                                        <span class="price-old">{{ money($item->price) }}</span>
-                                        <span class="price-new">{{ money($item->sale_price) }}</span>
+                                        <div class="course-teacher">
+                                            <img src="{{ $item->teacher->image }}" alt="">
+                                            <span>{{ $item->teacher->name }}</span>
+                                        </div>
+
+                                        <div class="course-price">
+                                            <span class="price-old">{{ money($item->price) }}</span>
+                                            <span class="price-new">{{ money($item->sale_price) }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        @endforeach
+                    @else
+                        <div class="col-12 text-center py-5">
+                            <p class="text-muted">Bạn chưa có khóa học nào</p>
                         </div>
-                    @endforeach
-                @else
-                    <div class="col-12">
-                        <div class="empty-course text-center p-5">
-                            <img src="/clients/assets/empty-course.png" alt="No course" class="mb-3" width="160">
-                            <h5 class="fw-bold">Bạn chưa có khóa học nào</h5>
-                            <p class="text-muted mb-3">
-                                Hãy đăng ký khóa học đầu tiên để bắt đầu hành trình học tập của bạn 🚀
-                            </p>
-                            <a href="{{ route('courses.index') }}" class="btn btn-primary px-4">
-                                Khám phá khóa học
-                            </a>
-                        </div>
-                    </div>
-                @endif
+                    @endif
+                </div>
+
+                <div class="mt-3">
+                    {{ $myCourse->links() }}
+                </div>
             </div>
-            <div class="mt-2">
-                {{ $myCourse->links() }}
-            </div>
+
         </div>
     </section>
     </section>

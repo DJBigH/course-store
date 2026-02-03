@@ -60,25 +60,25 @@
                             <div class="mb-3">
                                 <label class="form-label">Facebook</label>
                                 <input type="text" name="facebook" class="form-control"
-                                    value="{{ old('facebook',$settings['facebook'] ?? '') }}">
+                                    value="{{ old('facebook', $settings['facebook'] ?? '') }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Instagram</label>
                                 <input type="text" name="instagram" class="form-control"
-                                    value="{{ old('instagram',$settings['instagram'] ?? '') }}">
+                                    value="{{ old('instagram', $settings['instagram'] ?? '') }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Youtube</label>
                                 <input type="text" name="youtube" class="form-control"
-                                    value="{{ old('youtube',$settings['youtube'] ?? '') }}">
+                                    value="{{ old('youtube', $settings['youtube'] ?? '') }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">TikTok</label>
                                 <input type="text" name="tiktok" class="form-control"
-                                    value="{{ old('',$settings['tiktok'] ?? '') }}">
+                                    value="{{ old('', $settings['tiktok'] ?? '') }}">
                             </div>
 
                         </div>
@@ -86,26 +86,68 @@
                 </div>
             </div>
 
-            {{-- SEO --}}
+            {{-- Banner --}}
             <div class="card mt-3">
                 <div class="card-header fw-bold">
-                    Cấu hình SEO
+                    Banner trang chủ
                 </div>
+
                 <div class="card-body">
 
                     <div class="mb-3">
-                        <label class="form-label">Mô tả website</label>
-                        <textarea name="seo_description" class="form-control" rows="3">{{ $settings['seo_description'] ?? '' }}</textarea>
+                        <label class="form-label">Logo</label>
+                        <input type="file" name="logo" class="form-control">
+
+                        @if (!empty($settings['logo']))
+                            <div class="mt-2">
+                                <img src="{{ asset('storage/' . $settings['logo']) }}" height="80">
+                            </div>
+                        @endif
                     </div>
 
+                    {{-- Banner slider --}}
                     <div class="mb-3">
-                        <label class="form-label">Từ khóa (SEO)</label>
-                        <input type="text" name="seo_keywords" class="form-control"
-                            value="{{ $settings['seo_keywords'] ?? '' }}">
+                        <label class="form-label">Banner Slider (Nhiều ảnh)</label>
+                        <input type="file" name="banner_slider[]" class="form-control" multiple>
+
+                        @if (!empty($settings['banner_slider']))
+                            <div class="d-flex gap-2 mt-2">
+                                @foreach (json_decode($settings['banner_slider'], true) as $img)
+                                    <img src="{{ asset('storage/' . $img) }}" height="60">
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Banner phải --}}
+                    <div class="mb-3">
+                        <label class="form-label">Banner bên phải (Tối đa 3 ảnh)</label>
+                        <input type="file" name="banner_right[]" class="form-control" multiple>
+
+                        @if (!empty($settings['banner_right']))
+                            <div class="d-flex gap-2 mt-2">
+                                @foreach (json_decode($settings['banner_right'], true) as $img)
+                                    <img src="{{ asset('storage/' . $img) }}" height="60">
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Banner full --}}
+                    <div class="mb-3">
+                        <label class="form-label">Banner full width</label>
+                        <input type="file" name="banner_full" class="form-control">
+
+                        @if (!empty($settings['banner_full']))
+                            <div class="mt-2">
+                                <img src="{{ asset('storage/' . $settings['banner_full']) }}" height="80">
+                            </div>
+                        @endif
                     </div>
 
                 </div>
             </div>
+
 
             {{-- Nút lưu --}}
             <div class="text-end mt-3">

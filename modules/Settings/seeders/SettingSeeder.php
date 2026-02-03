@@ -22,8 +22,6 @@ class SettingSeeder extends Seeder
             ['key' => 'instagram', 'value' => '#'],
             ['key' => 'youtube', 'value' => '#'],
             ['key' => 'tiktok', 'value' => '#'],
-            ['key' => 'seo_description', 'value' => null],
-            ['key' => 'seo_keywords', 'value' => null],
         ]);
     }
 }

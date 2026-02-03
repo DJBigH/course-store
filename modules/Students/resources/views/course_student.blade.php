@@ -39,7 +39,7 @@
                                 @endif
                             </td>
                             <td>
-                                {{ $course->pivot->created_at?->format('d/m/Y H:i') }}
+                                {{ $course->created_at?->format('d/m/Y H:i') }}
                             </td>
                         </tr>
                     @empty

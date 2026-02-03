@@ -106,9 +106,9 @@ class CoursesController extends Controller
 
     public function category($slug)
     {
-        $pageTitle = 'Khóa học theo danh mục ' . $slug;
-        $pageName = 'Khóa học theo danh mục ' . $slug;
         $category = Category::where('slug', $slug)->firstOrFail();
+        $pageTitle = 'Khóa học theo chuyên mục ' . $category->name;
+        $pageName = 'Khóa học theo chuyên mục ' . $category->name;
         if (!$category) {
             abort(404);
         }

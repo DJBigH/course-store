@@ -11,8 +11,8 @@ Route::prefix('admin')->group(function () {
       Route::get('/edit/{student}', 'StudentController@edit')->name('edit');
       Route::post('/edit/{student}', 'StudentController@update')->name('post-edit');
       Route::delete('/delete/{student}', 'StudentController@delete')->name('delete');
-      Route::get('students/{id}/coupon-history', 'StudentController@CouponHistory')->name('coupon-history');
-      Route::get('students/{id}/purchased-courses', 'StudentController@purchasedCourses')->name('purchased-courses');
+      Route::get('/{id}/coupon-history', 'StudentController@CouponHistory')->name('coupon-history');
+      Route::get('/{id}/purchased-courses', 'StudentController@purchasedCourses')->name('purchased-courses');
    });
 });
 

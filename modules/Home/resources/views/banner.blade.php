@@ -8,7 +8,7 @@
                         @if (!empty($courseFree))
                             @foreach ($courseFree as $item)
                                 <ul>
-                                    <li><a href="{{ route('courses.detail',$item->slug) }}">{{ $item->name }}</a></li>
+                                    <li><a href="{{ route('courses.detail', $item->slug) }}">{{ $item->name }}</a></li>
                                 </ul>
                             @endforeach
                         @else
@@ -20,10 +20,11 @@
                     </div>
                     <div class="course-group pt-3">
                         <p>khoá học nổi bật</p>
-                         @if (!empty($courseView))
+                        @if (!empty($courseView))
                             @foreach ($courseView as $item)
                                 <ul>
-                                    <li><a href="{{ route('courses.detail',$item->slug) }}">{{ $item->name }}</a></li>
+                                    <li><a href="{{ route('courses.detail', $item->slug) }}">{{ $item->name }}</a>
+                                    </li>
                                 </ul>
                             @endforeach
                         @else
@@ -35,10 +36,11 @@
 
                     <div class="course-group pt-3">
                         <p>khoá học mới</p>
-                         @if (!empty($courseNew))
+                        @if (!empty($courseNew))
                             @foreach ($courseNew as $item)
                                 <ul>
-                                    <li><a href="{{ route('courses.detail',$item->slug) }}">{{ $item->name }}</a></li>
+                                    <li><a href="{{ route('courses.detail', $item->slug) }}">{{ $item->name }}</a>
+                                    </li>
                                 </ul>
                             @endforeach
                         @else
@@ -52,32 +54,48 @@
 
             <div class="col-12 col-md-8 col-lg-6">
                 <div class="banner-slider">
-                    <div class="banner-slider-inner">
-                        <img src="/clients/assets/slider-1.jpeg" alt="" />
-                    </div>
-                    <div class="banner-slider-inner">
-                        <img src="/clients/assets/slider-2.jpeg" alt="" />
-                    </div>
-                    <div class="banner-slider-inner">
-                        <img src="/clients/assets/slider-3.jpeg" alt="" />
-                    </div>
+                    @if (!empty(json_decode(setting('banner_slider'), true)))
+                        @foreach (json_decode(setting('banner_slider'), true) ?? [] as $img)
+                            <img src="{{ asset('storage/' . $img) }}">
+                        @endforeach
+                    @else
+                        <div class="banner-slider-inner">
+                            <img src="/clients/assets/slider-1.jpeg" alt="" />
+                        </div>
+                        <div class="banner-slider-inner">
+                            <img src="/clients/assets/slider-2.jpeg" alt="" />
+                        </div>
+                        <div class="banner-slider-inner">
+                            <img src="/clients/assets/slider-3.jpeg" alt="" />
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="d-none d-lg-block col-lg-3">
                 <div class="banner-right">
-                    <div class="banner-right__img">
-                        <img src="/clients/assets/banner.png" alt="" />
-                    </div>
-                    <div class="banner-right__img">
-                        <img src="/clients/assets/banner.png" alt="" />
-                    </div>
-                    <div class="banner-right__img">
-                        <img src="/clients/assets/banner.png" alt="" />
-                    </div>
+                    @if (!empty(json_decode(setting('banner_right'), true)))
+                        @foreach (json_decode(setting('banner_right'), true) ?? [] as $img)
+                            <img src="{{ asset('storage/' . $img) }}">
+                        @endforeach
+                    @else
+                        <div class="banner-right__img">
+                            <img src="/clients/assets/banner.png" alt="" />
+                        </div>
+                        <div class="banner-right__img">
+                            <img src="/clients/assets/banner.png" alt="" />
+                        </div>
+                        <div class="banner-right__img">
+                            <img src="/clients/assets/banner.png" alt="" />
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="banner-full">
-                <img src="/clients/assets/banner-full.jpeg" alt="" />
+                @if (setting('banner_full'))
+                    <img src="{{ asset('storage/' . setting('banner_full')) }}" alt="">
+                @else
+                    <img src="{{ asset('clients/assets/banner-full.jpeg') }}" alt="">
+                @endif
             </div>
         </div>
     </div>

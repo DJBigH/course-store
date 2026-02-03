@@ -435,7 +435,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm trang quản lý liên hệ (Done)
 - Với cấp mã khuyến mãi thì nếu đó có giá trị thời gian thì check là nếu nó hết time rồi thì không cho áp mã
 - Làm trang thông tin cá nhân ở bên admin
-
+- Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db
+- Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa )
+- Phân quyền admin/giáo viên
+- Import, Export cho toàn bộ
+- Suy nghĩ xem có cách nào liên kết được bảng user với teacher để phân quyền ko
     Clients:
 
 - Làm trang tổng quan cho cả clients ( Done )
@@ -450,3 +454,4 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm thanh toán = vnpay, momo
 - Làm lượt xem khi ấn vào khóa học +1 lượt xem (Done)
 - Thêm cái setting sửa banner (Yêu cầu 3 ảnh nếu sửa 1 thì chỉ cập nhập 1, 3 cái sub banner)
+- Notification clients (Done)

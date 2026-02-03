@@ -21,7 +21,7 @@ class CategoriesController extends Controller
 
     public function index()
     {
-        $pageTitle = 'Quản lý danh mục';
+        $pageTitle = 'Quản lý chuyên mục';
 
         return view('categories::lists', compact('pageTitle'));
     }
@@ -72,7 +72,7 @@ class CategoriesController extends Controller
 
     public function create()
     {
-        $pageTitle = 'Thêm mới danh mục';
+        $pageTitle = 'Thêm mới chuyên mục';
         $categories = $this->category->getAllCategories();
         return view('categories::create', compact('pageTitle', 'categories'));
     }
@@ -91,7 +91,7 @@ class CategoriesController extends Controller
 
     public function edit($id)
     {
-        $pageTitle = 'Cập nhập danh mục';
+        $pageTitle = 'Cập nhập chuyên mục';
         $category = $this->category->find($id);
         $categories = $this->category->getAllCategories();
         if (empty($category)) {
