@@ -440,6 +440,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Phân quyền admin/giáo viên
 - Import, Export cho toàn bộ
 - Suy nghĩ xem có cách nào liên kết được bảng user với teacher để phân quyền ko
+- Xóa đơn hàng thì xóa luôn khóa học mà học viên đã mua
     Clients:
 
 - Làm trang tổng quan cho cả clients ( Done )

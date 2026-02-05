@@ -140,7 +140,7 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
         return DB::transaction(function () use ($order) {
 
             $order->update([
-                'status_id' => 4, // ví dụ = 3
+                'status_id' => 4,
             ]);
             return true;
         });

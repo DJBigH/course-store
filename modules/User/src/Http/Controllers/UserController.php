@@ -4,6 +4,7 @@ namespace Modules\User\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Modules\User\src\Http\Requests\UpdateProfileRequest;
 use Modules\User\src\Http\Requests\UserRequest;
 use Modules\User\src\Repositories\UserRepository;
 use Modules\User\src\Repositories\UserRepositoryInterface;
@@ -96,5 +97,27 @@ class UserController extends Controller
         }
         $this->userRepository->delete($id);
         return back()->with('msg', __('user::messages.delete.success'));
+    }
+
+    public function show()
+    {
+        $pageTitle = 'Thông tin người dùng';
+        $user = auth()->user();
+
+        return view('user::show', compact('pageTitle', 'user'));
+    }
+
+    public function showUpdate(UpdateProfileRequest $request)
+    {
+        $userId = auth()->id();
+
+        $data = $request->except('_token', 'password');
+
+        if ($request->filled('password')) {
+            $data['password'] = bcrypt($request->password);
+        }
+
+        $status =  $this->userRepository->update($userId, $data);
+        return back()->with('msg', __('user::messages.update.success'));
     }
 }

@@ -11783,3 +11783,44 @@ body {
     font-size: 11px;
     color: #adb5bd;
 }
+
+/* Notification dropdown */
+.notification-list {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+/* Item */
+.notification-item {
+    text-decoration: none;
+    color: #212529;
+    border-bottom: 1px solid #f1f1f1;
+    transition: background 0.2s;
+}
+
+.notification-item:hover {
+    background: #f8f9fa;
+}
+
+/* Chưa đọc */
+.notification-item.unread .notification-text {
+    font-weight: 600;
+}
+
+/* Text wrap – KHÔNG VỠ */
+.notification-text {
+    font-size: 14px;
+    line-height: 1.4;
+    word-break: break-word;
+    white-space: normal;
+}
+
+/* Scroll đẹp */
+.notification-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+    background: #ced4da;
+    border-radius: 10px;
+}

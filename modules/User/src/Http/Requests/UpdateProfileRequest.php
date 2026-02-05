@@ -4,7 +4,7 @@ namespace Modules\User\src\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UserRequest extends FormRequest
+class UpdateProfileRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,26 +21,13 @@ class UserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route()->user;
-        $rules = [
+        $userId = auth()->id();
+
+        return [
             'name' => 'required|max:225',
-            'email' => 'required|email|unique:users,email,'.$id,
-            'password' => 'required|min:6',
-            'group_id' => ['integer', function ($attribute, $value, $fail) {
-                if ($value == 0) {
-                    $fail(__('user::validation.select'));
-                }
-            }],
+            'email' => 'nullable|email|unique:users,email,' . $userId,
+            'password' => 'nullable|min:6',
         ];
-        if($id){
-            $rules['email'] = 'required|email|unique:users,email,'.$id;
-            if($this->password){
-                $rules['password'] = 'min:6';
-            }else{
-                unset($rules['password']);
-            }
-        }
-        return $rules;
     }
 
     public function messages()
