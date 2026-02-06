@@ -1,6 +1,5 @@
 @extends('layouts.backend')
 @section('content')
-    <p class="text-end"><a href="{{ route('user.add') }}" class="btn btn-primary">Thêm mới</a></p>
     @if (session('msg'))
         <div class="alert alert-success">{{ session('msg') }}</div>
     @endif
@@ -12,6 +11,7 @@
                 <th>Email</th>
                 <th>Trạng thái</th>
                 <th>Thời gian</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -23,6 +23,7 @@
                 <th>Email</th>
                 <th>Trạng thái</th>
                 <th>Thời gian</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -56,6 +57,9 @@
             },
             {
                 data: 'created_at',
+            },
+            {
+                data: 'logs',
             },
             {
                 data: 'view',

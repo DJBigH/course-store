@@ -12,6 +12,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/edit/{category}', 'CategoriesController@edit')->name('edit');
     Route::post('/edit/{category}', 'CategoriesController@update')->name('post-edit');
     Route::delete('/delete/{category}', 'CategoriesController@delete')->name('delete');
+    Route::get('logs/{category}', 'CategoriesController@logs')->name('logs');
   });
 });
 

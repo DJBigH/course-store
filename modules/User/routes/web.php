@@ -13,6 +13,7 @@ Route::prefix('admin')->group(function () {
       Route::delete('/delete/{user}', 'UserController@delete')->name('delete');
       Route::get('/show', 'UserController@show')->name('show');
       Route::post('/show', 'UserController@showUpdate')->name('post-show');
+      Route::get('logs/{user}', 'UserController@logs')->name('logs');
    });
 });
 Route::get('admin/notifications/read/{id}', function ($id) {

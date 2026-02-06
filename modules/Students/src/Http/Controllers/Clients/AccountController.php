@@ -98,8 +98,8 @@ class AccountController extends Controller
 
     public function myCoupon(Request $request)
     {
-        $pageTitle = 'Khóa học của tôi';
-        $pageName = 'Khóa học của tôi';
+        $pageTitle = 'Mã giảm giá của tôi';
+        $pageName = 'Mã giảm giá của tôi';
         $filters = [];
         $studentId = Auth::guard('students')->user()->id;
         $coupon = $this->studentRepository->getCoupons($studentId, $filters, config('paginate.coupon_limit'));

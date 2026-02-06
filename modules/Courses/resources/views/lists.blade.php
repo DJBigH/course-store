@@ -11,6 +11,7 @@
                 <th>Giá</th>
                 <th>Trạng thái</th>
                 <th>Thời gian</th>
+                <th>Lịch sử</th>
                 <th>Bài giảng</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
@@ -22,6 +23,7 @@
                 <th>Giá</th>
                 <th>Trạng thái</th>
                 <th>Thời gian</th>
+                <th>Lịch sử</th>
                 <th>Bài giảng</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
@@ -52,6 +54,9 @@
                     },
                     {
                         data: 'created_at',
+                    },
+                    {
+                        data: 'logs',
                     },
                     {
                         data: 'lessions',

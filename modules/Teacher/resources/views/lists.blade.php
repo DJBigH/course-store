@@ -11,6 +11,7 @@
                 <th>Tên</th>
                 <th>Kinh nghiệm</th>
                 <th>Thời gian</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -21,6 +22,7 @@
                 <th>Tên</th>
                 <th>Kinh nghiệm</th>
                 <th>Thời gian</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -50,6 +52,9 @@
                     },
                     {
                         data: 'created_at',
+                    },
+                    {
+                        data: 'logs',
                     },
                     {
                         data: 'edit',

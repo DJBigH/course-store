@@ -13,6 +13,7 @@ Route::prefix('admin')->group(function () {
       Route::delete('/delete/{student}', 'StudentController@delete')->name('delete');
       Route::get('/{id}/coupon-history', 'StudentController@CouponHistory')->name('coupon-history');
       Route::get('/{id}/purchased-courses', 'StudentController@purchasedCourses')->name('purchased-courses');
+      Route::get('logs/{student}', 'StudentController@logs')->name('logs');
    });
 });
 

@@ -151,6 +151,7 @@
 
             {{-- Nút lưu --}}
             <div class="text-end mt-3">
+                <a href="{{ route('settings.logs') }}" class="btn btn-warning">Lịch sử</a>
                 <button type="submit" class="btn btn-primary">
                     Lưu cấu hình
                 </button>

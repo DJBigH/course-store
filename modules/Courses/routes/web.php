@@ -11,6 +11,7 @@ Route::prefix('admin')->group(function () {
       Route::get('/edit/{courses}', 'CoursesController@edit')->name('edit');
       Route::post('/edit/{courses}', 'CoursesController@update')->name('post-edit');
       Route::delete('/delete/{courses}', 'CoursesController@delete')->name('delete');
+      Route::get('logs/{courses}', 'CoursesController@logs')->name('logs');
    });
 });
 

@@ -10,6 +10,7 @@ Route::prefix('admin')->group(function () {
       Route::get('/{id}','ContactController@show')->name('show');
       Route::post('accpect/{id}','ContactController@accept')->name('accept');
       Route::delete('delete/{id}','ContactController@delete')->name('delete');
+      Route::get('logs/{id}', 'ContactController@logs')->name('logs');
    });
 });
 Route::group(['as' => 'contacts.'], function () {

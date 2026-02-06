@@ -61,13 +61,17 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
     public function getCoupons($studentId, $filters = [], $limit)
     {
         extract($filters);
+
         $query = $this->find($studentId)->coupons();
-        return $query->paginate($limit)->withQueryString();
+
+        return $query->orderBy('coupons_students.created_at', 'desc')
+            ->paginate($limit)
+            ->withQueryString();
     }
+
 
     public function getPurchasedCourses(int $studentId, $limit)
     {
         return $this->find($studentId)->courses()->withoutGlobalScope(ActiveScope::class)->paginate($limit)->withQueryString();
     }
-    
 }

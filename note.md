@@ -424,23 +424,24 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 
 - Bên admin chưa có chức năng quản lý đơn hàng, quản lý mã khuyến mại ( Tự làm vì trong khóa không dạy)
 - phần trang block = status của học viên có thể đổi lại thành không có quyền hạn vào xem hoặc j đó nếu vì chưa phát triền xong
-- Làm trang lịch sử hoạt động
 - trang lịch sử nhập mã khuyến mãi ( Done )
-- Notification
+- Notification (Done và có thể thêm nữa trong tl)
 - Làm trang tổng quan
 - Làm thêm cái options thiết lập cấu hình cho website (Done)
-- Trong khóa học project này nếu không dạy đổi giao diện email thì hay làm lại giao diện đó việt hóa nó
+- Trong khóa học project này nếu không dạy đổi giao diện email thì hay làm lại giao diện đó việt hóa nó (Done)
 - cái sắp xếp bài giảng chưa kéo được bài giảng ở module dưới lên module trên ( có j check lại hoặc note là chỉ kéo được bài giảng của module đó )
-- Làm cái ngẫu nhiên code ở khóa học
+- Làm cái ngẫu nhiên code ở khóa học (Done)
 - Làm trang quản lý liên hệ (Done)
-- Với cấp mã khuyến mãi thì nếu đó có giá trị thời gian thì check là nếu nó hết time rồi thì không cho áp mã
-- Làm trang thông tin cá nhân ở bên admin
+- Với cấp mã khuyến mãi thì nếu đó có giá trị thời gian thì check là nếu nó hết time rồi thì không cho áp mã (Done)
+- Làm trang thông tin cá nhân ở bên admin (Done)
 - Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db
 - Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa )
 - Phân quyền admin/giáo viên
 - Import, Export cho toàn bộ
 - Suy nghĩ xem có cách nào liên kết được bảng user với teacher để phân quyền ko
 - Xóa đơn hàng thì xóa luôn khóa học mà học viên đã mua
+- Làm 1 trang log tổng dành cho super admin
+- Làm trang lịch sử hoạt động (Course (Done), User (Done), Cate, Lesson, Teacher, Students, Order, Copouns, Contact, Config)
     Clients:
 
 - Làm trang tổng quan cho cả clients ( Done )

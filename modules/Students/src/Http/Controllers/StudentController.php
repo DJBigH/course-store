@@ -4,6 +4,8 @@ namespace Modules\Students\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Students\src\Http\Requests\studentRequest;
 use Modules\Students\src\Models\CouponUsage;
 use Modules\Students\src\Models\Student;
@@ -30,6 +32,10 @@ class StudentController extends Controller
         $students = $this->studentRepository->getAllStudents();
 
         return DataTables::of($students)
+            ->addColumn('logs', function ($student) {
+                return '<a href="' . route('students.logs', $student->id) . '" class="btn btn-info">Lịch sử</a>';
+            })
+
             ->addColumn('courses', function ($student) {
                 return '<a href="' . route('students.purchased-courses', $student->id) . '" class="btn btn-info">Xem khóa học</a>';
             })
@@ -48,7 +54,7 @@ class StudentController extends Controller
             ->editColumn('status', function ($students) {
                 return $students->status == 1 ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>' : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
             })
-            ->rawColumns(['edit', 'delete', 'status', 'link', 'courses'])
+            ->rawColumns(['edit', 'delete', 'status', 'link', 'courses', 'logs'])
             ->toJson();
     }
 
@@ -61,17 +67,29 @@ class StudentController extends Controller
     public function store(studentRequest $request)
     {
         $dataInsert = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'status' => $request->status,
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'status'   => $request->status,
             'password' => bcrypt($request->password),
-            'address' => $request->address,
-            'phone' => $request->phone
+            'address'  => $request->address,
+            'phone'    => $request->phone,
         ];
-        $this->studentRepository->create($dataInsert);
+
+        $student = $this->studentRepository->create($dataInsert); // ✅ nên return model
+
+        activity_log(
+            action: 'create',
+            subject: $student,
+            properties: [
+                'data' => array_diff_key($dataInsert, array_flip(['password'])),
+            ],
+            logName: 'Thêm mới',
+            description: 'Tạo mới học viên'
+        );
 
         return redirect()->route('students.index')->with('msg', __('students::messages.create.success'));
     }
+
 
     public function edit($id)
     {
@@ -86,33 +104,74 @@ class StudentController extends Controller
 
     public function update(studentRequest $request, $id)
     {
+        $studentModel = $this->studentRepository->find($id);
+        if (empty($studentModel)) abort(404);
+
+        $old = $studentModel->toArray();
+        unset($old['password']);
+
         $data = $request->except('_token', 'password');
 
-        if ($request->password) {
+        if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
         }
 
         $status = $this->studentRepository->update($id, $data);
+
         if (!empty($status)) {
+            $studentFresh = $this->studentRepository->find($id);
+            $new = $studentFresh ? $studentFresh->toArray() : [];
+            unset($new['password']);
+
+            activity_log(
+                action: 'update',
+                subject: $studentFresh ?? $studentModel,
+                properties: [
+                    'old' => $old,
+                    'new' => $new,
+                ],
+                logName: 'Cập nhập',
+                description: 'Cập nhật học viên'
+            );
+
             return back()->with('msg', __('students::messages.update.success'));
-        } else {
-            return back()->with('msg_danger', __('students::messages.update.failure'));
         }
+
+        return back()->with('msg_danger', __('students::messages.update.failure'));
     }
+
 
     public function delete($id)
     {
-        $students = $this->studentRepository->find($id);
-        if (empty($students)) {
-            abort(404);
+        $student = $this->studentRepository->find($id);
+        if (empty($student)) abort(404);
+
+        $snapshot = $student->toArray();
+        unset($snapshot['password']);
+
+        $status = $this->studentRepository->delete($id);
+
+        if ($status) {
+            activity_log(
+                action: 'delete',
+                subject: $student,
+                properties: [
+                    'data' => $snapshot,
+                ],
+                logName: 'Xóa',
+                description: 'Xóa học viên'
+            );
+
+            return back()->with('msg', __('students::messages.delete.success'));
         }
-        $this->studentRepository->delete($id);
-        return back()->with('msg', __('students::messages.delete.success'));
+
+        return back()->with('msg_danger', 'Xóa thất bại');
     }
+
 
     public function CouponHistory($id)
     {
-        $pageTitle = 'Cập nhập học viên';
+        $pageTitle = 'Lịch sử mã giảm giá học viên';
 
         $student = Student::with([
             'coupons'
@@ -136,5 +195,47 @@ class StudentController extends Controller
             'students::course_student',
             compact('student', 'courses', 'pageTitle')
         );
+    }
+
+    public function logs(Request $request, $id)
+    {
+        $student = $this->studentRepository->find($id);
+        if (empty($student)) abort(404);
+
+        $pageTitle = "Lịch sử: {$student->name}";
+
+        $query = ActiveLog::query()
+            ->where('subject_type', get_class($student))
+            ->where('subject_id', $student->id)->withoutGlobalScopes();
+
+        // 🔹 Filter theo action
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        // 🔹 Filter theo khoảng thời gian
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->to);
+        }
+
+        // 🔹 Filter theo keyword (description hoặc log_name)
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('description', 'like', "%{$q}%")
+                    ->orWhere('log_name', 'like', "%{$q}%");
+            });
+        }
+
+        $logs = $query
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('students::logs', compact('pageTitle', 'student', 'logs'));
     }
 }
