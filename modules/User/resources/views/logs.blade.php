@@ -105,6 +105,7 @@
                                 <th style="width: 160px;">Hành động</th>
                                 <th style="width: 220px;">Người thực hiện</th>
                                 <th>Mô tả</th>
+                                <th>Module</th>
                                 <th style="width: 140px;">Dữ liệu</th>
                             </tr>
                         </thead>
@@ -140,6 +141,9 @@
                                         <div class="text-muted" style="font-size: 13px;">
                                             IP: {{ $log->ip ?? '-' }}
                                         </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ subjectLabel($log->subject_type) }}</div>
                                     </td>
                                     <td>
                                         @if (!empty($props))

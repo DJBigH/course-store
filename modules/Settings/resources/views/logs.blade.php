@@ -70,6 +70,7 @@
                                 <th style="width: 140px">Hành động</th>
                                 <th style="width: 160px">Người thực hiện</th>
                                 <th>Mô tả</th>
+                                <th>Module</th>
                                 <th style="width: 120px" class="text-end">Dữ liệu</th>
                             </tr>
                         </thead>
@@ -83,6 +84,9 @@
                                     </td>
                                     <td>{{ $log->causer_type ?? 'System' }}</td>
                                     <td>{{ $log->description }}</td>
+                                    <td>
+                                        <div class="fw-bold">{{ subjectLabel($log->subject_type) }}</div>
+                                    </td>
                                     <td class="text-end">
                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
                                             data-bs-target="#propsModal{{ $log->id }}">

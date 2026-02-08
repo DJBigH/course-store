@@ -441,7 +441,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Suy nghĩ xem có cách nào liên kết được bảng user với teacher để phân quyền ko
 - Xóa đơn hàng thì xóa luôn khóa học mà học viên đã mua
 - Làm 1 trang log tổng dành cho super admin
-- Làm trang lịch sử hoạt động (Course (Done), User (Done), Cate, Lesson, Teacher, Students, Order, Copouns, Contact, Config)
+- Làm trang lịch sử hoạt động (Course (Done), User (Done), Cate (Done), Lesson (Hình như chưa làm), Teacher (Done), Students (Done), Order, Copouns (Done), Contact (Done), Config (subject id == null))
+- Thêm cái setting sửa banner (Yêu cầu 3 ảnh nếu sửa 1 thì chỉ cập nhập 1, 3 cái sub banner) (DOne)
     Clients:
 
 - Làm trang tổng quan cho cả clients ( Done )
@@ -455,5 +456,4 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm trang liên hệ (Done)
 - Làm thanh toán = vnpay, momo
 - Làm lượt xem khi ấn vào khóa học +1 lượt xem (Done)
-- Thêm cái setting sửa banner (Yêu cầu 3 ảnh nếu sửa 1 thì chỉ cập nhập 1, 3 cái sub banner)
 - Notification clients (Done)

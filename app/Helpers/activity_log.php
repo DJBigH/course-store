@@ -290,3 +290,13 @@ if (!function_exists('formatHtmlForLog')) {
         return $text;
     }
 }
+
+if (!function_exists('subjectLabel')) {
+    function subjectLabel($subjectType): string
+    {
+        if (!$subjectType) return '—';
+
+        return config('activity-log.subjects')[$subjectType]
+            ?? class_basename($subjectType);
+    }
+}

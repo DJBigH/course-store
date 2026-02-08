@@ -6,6 +6,8 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\ActiveLogs\src\Repositories\ActiveLogsRepository;
+use Modules\ActiveLogs\src\Repositories\ActiveLogsRepositoryInterface;
 use Modules\User\src\Repositories\UserRepository;
 use Modules\Video\src\Repositories\VideoRepository;
 use Modules\Orders\src\Repositories\OrdersRepository;
@@ -129,6 +131,12 @@ class ModuleServiceProvider extends ServiceProvider
         $this->app->singleton(
             SettingsRepositoryInterface::class,
             SettingsRepository::class
+        );
+
+        //Setting Repository
+        $this->app->singleton(
+            ActiveLogsRepositoryInterface::class,
+            ActiveLogsRepository::class
         );
     }
 
