@@ -198,7 +198,7 @@ class ContactController extends Controller
 
         $logs = $query
             ->latest()
-            ->paginate(20)
+            ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
         return view('contacts::logs', compact('pageTitle', 'contacts', 'logs'));

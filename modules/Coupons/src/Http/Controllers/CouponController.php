@@ -501,7 +501,7 @@ class CouponController extends Controller
 
         $logs = $query
             ->latest()
-            ->paginate(20)
+            ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
         return view('coupons::logs', compact('pageTitle', 'coupons', 'logs'));

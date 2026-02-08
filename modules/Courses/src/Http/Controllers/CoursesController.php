@@ -12,6 +12,7 @@ use Modules\Categories\src\Repositories\CategoriesRepositoryInterface;
 use Modules\Courses\src\Http\Requests\CoursesRequest;
 use Modules\Courses\src\Repositories\CoursesRepository;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
+use Modules\Lessons\src\Models\Lesson;
 use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Repositories\TeacherRepository;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
@@ -105,7 +106,7 @@ class CoursesController extends Controller
                 'data' => $payload,
                 'categories' => array_keys($categories),
             ],
-            logName: 'course',
+            logName: 'Thêm mới',
             description: 'Tạo mới khóa học'
         );
 
@@ -184,7 +185,7 @@ class CoursesController extends Controller
                 'categories_old' => $oldCategoryIds,
                 'categories_new' => $newCategoryIds,
             ],
-            logName: 'course',
+            logName: 'Cập nhập',
             description: 'Cập nhật khóa học'
         );
 
@@ -219,7 +220,7 @@ class CoursesController extends Controller
                 properties: [
                     'data' => $snapshot,
                 ],
-                logName: 'course',
+                logName: 'Xóa',
                 description: 'Xóa khóa học'
             );
 
@@ -237,8 +238,24 @@ class CoursesController extends Controller
         $pageTitle = "Lịch sử: {$course->name}";
 
         $query = ActiveLog::query()
-            ->where('subject_type', get_class($course))
-            ->where('subject_id', $course->id)->withoutGlobalScopes();
+            ->withoutGlobalScopes()
+            ->where(function ($q) use ($course) {
+                $q->where(function ($qq) use ($course) {
+                    $qq->where('subject_type', get_class($course))
+                        ->where('subject_id', $course->id);
+                });
+
+                $q->orWhere(function ($qq) use ($course) {
+                    $qq->where('subject_type', Lesson::class)
+                        ->where('properties->course_id', $course->id);
+                });
+
+                $q->orWhere(function ($qq) use ($course) {
+                    $qq->whereNull('subject_type')
+                        ->where('action', 'sort_lessons')
+                        ->where('properties->course_id', $course->id);
+                });
+            });
 
         // 🔹 Filter theo action
         if ($request->filled('action')) {
@@ -265,7 +282,7 @@ class CoursesController extends Controller
 
         $logs = $query
             ->latest()
-            ->paginate(20)
+            ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
         return view('courses::logs', compact('pageTitle', 'course', 'logs'));

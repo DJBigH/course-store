@@ -233,7 +233,7 @@ class StudentController extends Controller
 
         $logs = $query
             ->latest()
-            ->paginate(20)
+            ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
         return view('students::logs', compact('pageTitle', 'student', 'logs'));

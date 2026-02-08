@@ -216,7 +216,7 @@ class CategoriesController extends Controller
 
         $logs = $query
             ->latest()
-            ->paginate(20)
+            ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
         return view('categories::logs', compact('pageTitle', 'cate', 'logs'));

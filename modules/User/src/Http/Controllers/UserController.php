@@ -193,7 +193,7 @@ class UserController extends Controller
 
         $logs = $query
             ->latest()
-            ->paginate(20)
+            ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
         return view('user::logs', compact('pageTitle', 'user', 'logs'));

@@ -130,7 +130,7 @@ class SettingController extends Controller
             });
         }
 
-        $logs = $query->latest()->paginate(20)->withQueryString();
+        $logs = $query->latest()->paginate(config('paginate.log_limit'))->withQueryString();
 
         return view('settings::logs', compact('pageTitle', 'logs'));
     }

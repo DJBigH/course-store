@@ -204,7 +204,7 @@ class TeacherController extends Controller
 
         $logs = $query
             ->latest()
-            ->paginate(20)
+            ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
         return view('teacher::logs', compact('pageTitle', 'teacher', 'logs'));

@@ -439,10 +439,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Phân quyền admin/giáo viên
 - Import, Export cho toàn bộ
 - Suy nghĩ xem có cách nào liên kết được bảng user với teacher để phân quyền ko
-- Xóa đơn hàng thì xóa luôn khóa học mà học viên đã mua
-- Làm 1 trang log tổng dành cho super admin
-- Làm trang lịch sử hoạt động (Course (Done), User (Done), Cate (Done), Lesson (Hình như chưa làm), Teacher (Done), Students (Done), Order, Copouns (Done), Contact (Done), Config (subject id == null))
+- Xóa đơn hàng thì xóa luôn khóa học mà học viên đã mua (Cái này note lại lúc nào thấy cấn thì làm còn đâu làm thế kia vẫn ổn)
+- Làm 1 trang log tổng dành cho super admin (Done)
+- Làm trang lịch sử hoạt động (Course (Done), User (Done), Cate (Done), Lesson (Done), Teacher (Done), Students (Done), Order, Copouns (Done), Contact (Done), Config (subject id == null))
 - Thêm cái setting sửa banner (Yêu cầu 3 ảnh nếu sửa 1 thì chỉ cập nhập 1, 3 cái sub banner) (DOne)
+- Tạo thêm 1 nơi để setting phân trang được
     Clients:
 
 - Làm trang tổng quan cho cả clients ( Done )

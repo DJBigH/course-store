@@ -46,6 +46,10 @@ if (!function_exists('presentLogProperties')) {
             'is_document' => 'Tài liệu',
             'created_at' => 'Thời gian tạo',
             'updated_at' => 'Thời gian cập nhập',
+            'durations' => 'Thời lượng',
+            'position' => 'Thứ tự',
+            'document' => 'Tài liệu'
+
         ];
 
         // === UPDATE ===
@@ -153,6 +157,22 @@ if (!function_exists('presentLogProperties')) {
         if ($log->action === 'view') {
             return 'Xem chi tiết liên hệ';
         }
+
+        // ===== LESSON =====
+        if (
+            $log->action === 'update'
+            && isset($p['old']['is_trial'], $p['new']['is_trial'])
+            && $p['old']['is_trial'] != $p['new']['is_trial']
+        ) {
+            $old = $p['old']['is_trial'];
+            $new = $p['new']['is_trial'];
+
+            $oldText = ((int)$old === 1) ? 'Có học thử' : 'Không có học thử';
+            $newText = ((int)$new === 1) ? 'Có học thử' : 'Không có học thử';
+
+            return "Học thử: {$oldText} → {$newText}";
+        }
+
 
         // ===== SETTINGS =====
         if ($log->action === 'update_settings' && isset($p['old'], $p['new'])) {
