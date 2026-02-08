@@ -13,6 +13,7 @@
                 <th>Thời gian</th>
                 <th>Khóa học</th>
                 <th>Lịch sử mã</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -25,6 +26,7 @@
                 <th>Thời gian</th>
                 <th>Khóa học</th>
                 <th>Lịch sử mã</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -61,6 +63,9 @@
             },
             {
                 data: 'link',
+            },
+            {
+                data: 'logs',
             },
             {
                 data: 'edit',

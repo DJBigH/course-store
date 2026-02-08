@@ -3,14 +3,17 @@
 namespace Modules\Contacts\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\NewContactNotification;
 use Illuminate\Support\Facades\Auth;
 use Modules\Contacts\src\Http\Requests\ContactRequest;
 use Modules\Contacts\src\Repositories\ContactsRepositoryInterface;
+use Modules\User\src\Models\User;
 
 class ContactController extends Controller
 {
     protected $contactrepository;
-    public function __construct(ContactsRepositoryInterface $contactsRepository) {
+    public function __construct(ContactsRepositoryInterface $contactsRepository)
+    {
         $this->contactrepository = $contactsRepository;
     }
 
@@ -26,6 +29,11 @@ class ContactController extends Controller
     {
         $contacts = $request->except(['_token']);
         $contacts = $this->contactrepository->create($contacts);
-        return back()->with('msg','Bạn đã gửi yêu cầu tư vấn thành công');
+        $admins = User::where('group_id', 1)->get();
+
+        foreach ($admins as $admin) {
+            $admin->notify(new NewContactNotification($contacts));
+        }
+        return back()->with('msg', 'Bạn đã gửi yêu cầu tư vấn thành công');
     }
 }

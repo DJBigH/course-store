@@ -11,6 +11,7 @@
                 <th>Email</th>
                 <th>Nhóm</th>
                 <th>Thời gian</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -21,6 +22,7 @@
                 <th>Email</th>
                 <th>Nhóm</th>
                 <th>Thời gian</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -51,6 +53,9 @@
             },
             {
                 data: 'created_at',
+            },
+            {
+                data: 'logs',
             },
             {
                 data: 'edit',

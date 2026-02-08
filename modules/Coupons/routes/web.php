@@ -17,6 +17,9 @@ Route::prefix('admin')->group(function () {
       Route::get('/coupons-course/{id}', 'CouponController@CouponCourse')->name('coupons-course');
       Route::post('/coupons-course/{id}', 'CouponController@AssignCouponCourse')->name('postcoupons-course');
       Route::get('/coupons-usages/{id}', 'CouponController@CouponHistory')->name('coupons-history');
+
+      Route::get('logs/{student}', 'CouponController@logs')->name('logs');
+
    });
 });
 

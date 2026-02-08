@@ -22,7 +22,7 @@
                                         {{ getLessonCount($item)->lessons }} bài
                                     </span>
                                     <span><i class="fa-solid fa-eye"></i>
-                                        {{ number_format($item->view ?? 0) }}
+                                        {{ number_format($item->view ?? 0) }} lượt xem
                                     </span>
                                 </div>
 

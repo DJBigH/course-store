@@ -25,6 +25,7 @@
                 <th>Thời gian</th>
                 <th>Tối thiểu</th>
                 <th>Cấp mã</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -39,6 +40,7 @@
                 <th>Thời gian</th>
                 <th>Tối thiểu</th>
                 <th>Cấp mã</th>
+                <th>Lịch sử</th>
                 <th>Sửa</th>
                 <th>Xóa</th>
             </tr>
@@ -77,6 +79,9 @@
                     },
                     {
                         data: 'bindings'
+                    },
+                    {
+                        data: 'logs'
                     },
                     {
                         data: 'edit'

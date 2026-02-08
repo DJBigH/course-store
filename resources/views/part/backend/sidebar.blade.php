@@ -57,6 +57,11 @@
                     'title' => 'Cấu hình Website',
                     'name' => 'settings',
                 ])
+
+                @include('part.backend.menu_item', [
+                    'title' => 'Logs',
+                    'name' => 'activelogs',
+                ])
             </div>
         </div>
         <div class="sb-sidenav-footer">

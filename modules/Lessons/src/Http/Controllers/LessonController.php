@@ -9,10 +9,12 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Courses\src\Models\Courses;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Modules\Lessons\src\Http\Requests\LessonRequest;
+use Modules\Lessons\src\Models\Lesson;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Students\src\Models\Student;
 use Modules\Video\src\Repositories\VideoRepositoryInterface;
@@ -54,15 +56,27 @@ class LessonController extends Controller
     public function handleSort(Request $request, $courseId)
     {
         $lessons = $request->lesson;
+
         if ($lessons) {
             foreach ($lessons as $index => $lessonsId) {
-                $this->lessonRepository->update($lessonsId, [
-                    'position' => $index
-                ]);
+                $this->lessonRepository->update($lessonsId, ['position' => $index]);
             }
+
+            activity_log(
+                action: 'sort_lessons',
+                subject: null,
+                properties: [
+                    'course_id' => $courseId,
+                    'lesson_ids' => $lessons,
+                ],
+                logName: 'lesson',
+                description: 'Sắp xếp bài giảng'
+            );
         }
+
         return redirect()->route('lessons.sort', $courseId)->with('msg', __('lessons::messages.update.success'));
     }
+
 
     public function data($courseId)
     {
@@ -175,16 +189,35 @@ class LessonController extends Controller
             'description' => $description,
             'status' => $status,
         ]);
+        activity_log(
+            action: 'create',
+            subject: $lesson,
+            properties: [
+                'course_id' => $courseId,
+                'data' => [
+                    'name' => $lesson->name,
+                    'slug' => $lesson->slug,
+                    'parent_id' => $lesson->parent_id,
+                    'is_trial' => $lesson->is_trial,
+                    'position' => $lesson->position,
+                    'status' => $lesson->status,
+                    'video_id' => $lesson->video_id,
+                    'document_id' => $lesson->document_id,
+                ],
+            ],
+            logName: 'Thêm mới',
+            description: 'Tạo mới bài giảng'
+        );
+
         Student::chunk(100, function ($students) use ($lesson) {
             foreach ($students as $student) {
                 $student->notify(new StudentNotification([
                     'title' => 'Bài học mới',
                     'message' => $lesson->name . ' vừa được thêm vào',
-                    'url' => route('lessons.home',$lesson->slug),
+                    'url' => route('lessons.home', $lesson->slug),
                 ]));
             }
         });
-
         $this->updateDurations($courseId);
         return redirect()->route('lessons.index', $courseId)->with('msg', __('lessons::messages.create.success'));
     }
@@ -242,6 +275,9 @@ class LessonController extends Controller
             );
             $video_id = $video ? $video->id : null;
         }
+        $lessonOld = $this->lessonRepository->find($lessonId);
+        $old = $lessonOld ? $lessonOld->toArray() : [];
+
         $this->lessonRepository->update($lessonId, [
             'name' => $name,
             'slug' => $slug,
@@ -254,6 +290,20 @@ class LessonController extends Controller
             'description' => $description,
             'status' => $status,
         ]);
+        $lessonFresh = $this->lessonRepository->find($lessonId);
+        $new = $lessonFresh ? $lessonFresh->toArray() : [];
+
+        activity_log(
+            action: 'update',
+            subject: $lessonFresh ?? $lessonOld,
+            properties: [
+                'course_id' => $lessonFresh?->course_id ?? $lessonOld?->course_id,
+                'old' => $old,
+                'new' => $new,
+            ],
+            logName: 'Cập nhập',
+            description: 'Cập nhật bài giảng'
+        );
         $lesson = $this->lessonRepository->find($lessonId);
         $this->updateDurations($lesson->course_id);
         return redirect()->route('lessons.edit', $lessonId)->with('msg', __('lessons::messages.update.success'));
@@ -262,10 +312,28 @@ class LessonController extends Controller
     public function delete(Request $request, $lessonId)
     {
         $lesson = $this->lessonRepository->find($lessonId);
-        if (!$lessonId) {
-            abort(404);
-        }
+        if (!$lesson) abort(404);
+
+        $snapshot = $lesson->toArray();
+        $courseId = $lesson->course_id;
+
         $this->lessonRepository->delete($lessonId);
+
+        activity_log(
+            action: 'delete',
+            subject: $lesson,
+            properties: [
+                'course_id' => $courseId,
+                'data' => [
+                    'id' => $snapshot['id'] ?? null,
+                    'name' => $snapshot['name'] ?? null,
+                    'slug' => $snapshot['slug'] ?? null,
+                    'parent_id' => $snapshot['parent_id'] ?? null,
+                ],
+            ],
+            logName: 'Xóa',
+            description: 'Xóa bài giảng'
+        );
         $this->updateDurations($lesson->course_id);
         return redirect()->route('lessons.index', $lesson->course_id)->with('msg', __('lessons::messages.delete.success'));
     }
@@ -279,5 +347,34 @@ class LessonController extends Controller
         }, 0);
 
         $this->courseRepository->updateCourse($courseId, ['durations' => $durations]);
+    }
+
+    public function logs(Request $request, $lessonId)
+    {
+        $lesson = $this->lessonRepository->find($lessonId);
+        if (!$lesson) abort(404);
+
+        $pageTitle = "Lịch sử bài giảng: {$lesson->name}";
+
+        $query = ActiveLog::query()
+            ->withoutGlobalScopes()
+            ->where('subject_type', Lesson::class)
+            ->where('subject_id', $lesson->id);
+
+        // filter giống bạn đang làm
+        if ($request->filled('action')) $query->where('action', $request->action);
+        if ($request->filled('from')) $query->whereDate('created_at', '>=', $request->from);
+        if ($request->filled('to')) $query->whereDate('created_at', '<=', $request->to);
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('description', 'like', "%{$q}%")
+                    ->orWhere('log_name', 'like', "%{$q}%");
+            });
+        }
+
+        $logs = $query->latest()->paginate(config('paginate.log_limit'))->withQueryString();
+
+        return view('courses::logs', compact('pageTitle', 'lesson', 'logs'));
     }
 }

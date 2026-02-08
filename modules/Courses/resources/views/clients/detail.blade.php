@@ -157,7 +157,7 @@
                                 <li>
                                     <i class="fa-solid fa-headset text-info"></i>
                                     <span>Hỗ trợ:</span>
-                                    <strong>{{ $course->supports }}</strong>
+                                    <strong>{!! $course->supports !!}</strong>
                                 </li>
 
                                 <li class="d-flex align-items-center gap-2">
@@ -180,17 +180,26 @@
                             @php
                                 $student = Auth::guard('students')->user();
                                 $hasCourse = $student
-                                    ? $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists()
+                                    ? $student
+                                        ->courses()
+                                        ->where('courses.id', $course->id)
+                                        ->wherePivot('status', 1)
+                                        ->exists()
                                     : false;
                                 $firstLesson = $course->lessons->whereNotNull('parent_id')->first();
                             @endphp
 
-                            @if ($hasCourse)
+                            @if ($hasCourse && $firstLesson)
                                 <a href="{{ route('lessons.home', $firstLesson->slug) }}"
                                     class="btn btn-success w-100 fw-semibold">
                                     <i class="fa-solid fa-play me-1"></i>
                                     Vào học
                                 </a>
+                            @elseif ($hasCourse)
+                                <button class="btn btn-secondary w-100" disabled>
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    Khóa học chưa có bài giảng
+                                </button>
                             @else
                                 <form action="{{ route('courses.create') }}" method="POST">
                                     @csrf

@@ -39,7 +39,8 @@
             "database/migrations"
         ],
         "files": [
-            "app/Helpers/functions.php"
+            "app/Helpers/functions.php",
+            "app/Helpers/activity_log.php"
         ]
     },
     "autoload-dev": {

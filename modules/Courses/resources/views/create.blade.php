@@ -140,7 +140,7 @@
             <div class="col-12">
                 <div class="mb-3">
                     <label for="">Hỗ trợ</label>
-                    <textarea name="supports" class="form-control{{ $errors->has('supports') ? ' is-invalid' : '' }}" cols="30"
+                    <textarea name="supports" class="form-control ckeditor {{ $errors->has('supports') ? ' is-invalid' : '' }}" cols="30"
                         rows="10" placeholder="Hỗ trợ...">{{ old('supports') }}</textarea>
                     @error('supports')
                         <div class="invalid-feedback">

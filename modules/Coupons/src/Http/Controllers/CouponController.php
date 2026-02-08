@@ -3,15 +3,18 @@
 namespace Modules\Coupons\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\CouponStudentNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Coupons\src\Http\Requests\CouponRequest;
 use Modules\Courses\src\Models\Courses;
 use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\CouponUsage;
 use Modules\Students\src\Models\Student;
 use Modules\Students\src\Repositories\CouponsRepositoryInterface;
+use Modules\User\src\Models\User;
 
 class CouponController extends Controller
 {
@@ -31,6 +34,11 @@ class CouponController extends Controller
     {
         $coupons = $this->couponRepository->getAllCoupons();
         return datatables()->of($coupons)
+            ->addColumn('logs', function ($coupon) {
+                return '<a href="' . route('coupons.logs', $coupon->id) . '" class="btn btn-sm btn-secondary">
+                <i class="fas fa-clock"></i>
+            </a>';
+            })
             ->addColumn('discount_type', function ($coupon) {
                 return $coupon->discount_type === 'percent'
                     ? '<span class="badge bg-info">%</span>'
@@ -100,7 +108,7 @@ class CouponController extends Controller
                         </a>
                     ';
             })
-            ->rawColumns(['edit', 'delete', 'discount_type', 'discount_value', 'time', 'bindings', 'count'])
+            ->rawColumns(['edit', 'delete', 'discount_type', 'discount_value', 'time', 'bindings', 'count', 'logs'])
             ->make(true);
     }
 
@@ -112,13 +120,22 @@ class CouponController extends Controller
 
     public function store(CouponRequest $request)
     {
-        $coupons = $request->except(['_token']);
-        $coupon = $this->couponRepository->create($coupons);
-        if (!$coupon) {
-            abort(404);
-        }
+        $data = $request->except(['_token']);
+
+        $coupon = $this->couponRepository->create($data);
+        if (!$coupon) abort(404);
+
+        activity_log(
+            action: 'create',
+            subject: $coupon,
+            properties: ['data' => $data],
+            logName: 'Thêm mới',
+            description: 'Tạo mới mã giảm giá'
+        );
+
         return redirect()->route('coupons.index')->with('msg', __('coupons::messages.create.success'));
     }
+
 
     public function edit($id)
     {
@@ -129,20 +146,52 @@ class CouponController extends Controller
 
     public function update(CouponRequest $request, $id)
     {
-        $coupons = $request->except(['_token']);
-        $this->couponRepository->update($id, $coupons);
+        $coupon = $this->couponRepository->find($id);
+        if (!$coupon) abort(404);
+
+        $old = $coupon->toArray();
+
+        $data = $request->except(['_token']);
+        $this->couponRepository->update($id, $data);
+
+        $fresh = $this->couponRepository->find($id);
+        $new = $fresh ? $fresh->toArray() : [];
+
+        \activity_log(
+            action: 'update',
+            subject: $fresh ?? $coupon,
+            properties: [
+                'old' => $old,
+                'new' => $new,
+            ],
+            logName: 'Cập nhập',
+            description: 'Cập nhật mã giảm giá'
+        );
+
         return redirect()->route('coupons.index')->with('msg', __('coupons::messages.update.success'));
     }
+
 
     public function delete($id)
     {
         $coupon = $this->couponRepository->find($id);
-        if (!$coupon) {
-            abort(404);
-        }
+        if (!$coupon) abort(404);
+
+        $snapshot = $coupon->toArray();
+
         $this->couponRepository->delete($id);
+
+        activity_log(
+            action: 'delete',
+            subject: $coupon,
+            properties: ['data' => $snapshot],
+            logName: 'Xóa',
+            description: 'Xóa mã giảm giá'
+        );
+
         return back()->with('msg', __('coupons::messages.delete.success'));
     }
+
 
     public function CouponStudent($id)
     {
@@ -175,10 +224,22 @@ class CouponController extends Controller
         if (!$coupon) {
             abort(404);
         }
-        // Danh sách học viên được chọn
+
+        // ✅ Check hiệu lực coupon
+        $now = now();
+
+        // Nếu start_date có thể null (cho dùng ngay) thì xử lý mềm:
+        if ($coupon->start_date && Carbon::parse($coupon->start_date)->gt($now)) {
+            return back()->with('msg_danger', 'Mã giảm giá chưa tới thời gian hiệu lực');
+        }
+
+        // Nếu end_date có thể null (không hết hạn) thì xử lý mềm:
+        if ($coupon->end_date && Carbon::parse($coupon->end_date)->lt($now)) {
+            return back()->with('msg_danger', 'Mã giảm giá đã hết hạn, không thể gán cho học viên');
+        }
+
         $studentIds = $request->input('students', []);
 
-        // Validate (tùy chọn nhưng nên có)
         if (!is_array($studentIds)) {
             return back()->with('msg_danger', 'Dữ liệu không hợp lệ');
         }
@@ -186,16 +247,106 @@ class CouponController extends Controller
         $syncData = [];
         foreach ($studentIds as $studentId) {
             $syncData[$studentId] = [
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
         }
 
-        $coupon->students()->sync($syncData);
+        $result = $coupon->students()->sync($syncData);
+
+        $attachedStudentIds = $result['attached'] ?? [];
+        $detachedStudentIds = $result['detached'] ?? [];
+
+        if (!empty($attachedStudentIds)) {
+            $students = Student::select('id', 'name', 'email')
+                ->whereIn('id', $attachedStudentIds)
+                ->get();
+
+            // ✅ LOG trên COUPON (1 dòng log cho coupon)
+            activity_log(
+                action: 'assign_students',
+                subject: $coupon,
+                properties: [
+                    'coupon_id'   => $coupon->id,
+                    'coupon_code' => $coupon->code ?? $coupon->name ?? null,
+                    'students'    => $students->map(fn($s) => [
+                        'id' => $s->id,
+                        'name' => $s->name,
+                        'email' => $s->email,
+                    ])->values()->all(),
+                ],
+                logName: 'Gán mã',
+                description: 'Gán mã giảm giá cho học viên'
+            );
+
+            // ✅ LOG trên từng STUDENT (mỗi học viên 1 log)
+            foreach ($students as $student) {
+                activity_log(
+                    action: 'assigned_coupon',
+                    subject: $student,
+                    properties: [
+                        'coupon_id'   => $coupon->id,
+                        'coupon_code' => $coupon->code ?? $coupon->name ?? null,
+                        'coupon_name' => $coupon->name ?? null,
+                    ],
+                    logName: 'Gán mã',
+                    description: 'Được gán mã giảm giá'
+                );
+            }
+        }
+
+        if (!empty($detachedStudentIds)) {
+            $students = Student::select('id', 'name', 'email')
+                ->whereIn('id', $detachedStudentIds)
+                ->get();
+
+            // ✅ LOG trên COUPON
+            activity_log(
+                action: 'revoke_students',
+                subject: $coupon,
+                properties: [
+                    'coupon_id'   => $coupon->id,
+                    'coupon_code' => $coupon->code ?? $coupon->name ?? null,
+                    'students'    => $students->map(fn($s) => [
+                        'id' => $s->id,
+                        'name' => $s->name,
+                        'email' => $s->email,
+                    ])->values()->all(),
+                ],
+                logName: 'Hủy mã',
+                description: 'Hủy gán mã khỏi học viên'
+            );
+
+            // ✅ LOG trên từng STUDENT
+            foreach ($students as $student) {
+                activity_log(
+                    action: 'revoked_coupon',
+                    subject: $student,
+                    properties: [
+                        'coupon_id'   => $coupon->id,
+                        'coupon_code' => $coupon->code ?? $coupon->name ?? null,
+                        'coupon_name' => $coupon->name ?? null,
+                    ],
+                    logName: 'Hủy mã',
+                    description: 'Bị hủy mã giảm giá'
+                );
+            }
+        }
+
+        // ✅ Chỉ gửi noti cho học viên được gán mới
+        $attachedStudentIds = $result['attached'] ?? [];
+        if (!empty($attachedStudentIds)) {
+            Student::whereIn('id', $attachedStudentIds)
+                ->chunk(100, function ($students) use ($coupon) {
+                    foreach ($students as $student) {
+                        $student->notify(new CouponStudentNotification($coupon));
+                    }
+                });
+        }
 
         return redirect()
             ->route('coupons.coupons-student', $id)
-            ->with('msg', 'Cấp mã cho học viên thành công');
+            ->with('msg', 'Cập nhật học viên thành công');
     }
 
     public function CouponCourse($id)
@@ -236,7 +387,32 @@ class CouponController extends Controller
             ];
         }
 
-        $coupon->courses()->sync($syncData);
+        $result = $coupon->courses()->sync($syncData);
+
+        $attachedCourseIds = $result['attached'] ?? [];
+        $detachedCourseIds = $result['detached'] ?? [];
+        $updatedCourseIds  = $result['updated'] ?? [];
+
+        if (!empty($attachedCourseIds)) {
+            activity_log(
+                action: 'assign_courses',
+                subject: $coupon,
+                properties: ['course_ids' => $attachedCourseIds],
+                logName: 'Gán mã',
+                description: 'Gán mã cho khóa học'
+            );
+        }
+
+        if (!empty($detachedCourseIds)) {
+            activity_log(
+                action: 'revoke_courses',
+                subject: $coupon,
+                properties: ['course_ids' => $detachedCourseIds],
+                logName: 'Hủy gán mã',
+                description: 'Hủy mã khỏi khóa học'
+            );
+        }
+
 
         return redirect()
             ->route('coupons.coupons-course', $id)
@@ -263,20 +439,23 @@ class CouponController extends Controller
     public function CouponClient()
     {
         $pageTitle = 'Mã giảm giá';
-        $pageName = 'Mã giảm giá';
+        $pageName  = 'Mã giảm giá';
+
         $student = Auth::guard('students')->user();
+
         $myCoupons = $student
-            ? $student->coupons()->paginate(config('paginate.mycoupon_limit'))
-            : collect();
+            ? $student->coupons()->paginate(config('paginate.mycoupon_limit'), ['*'], 'my_page')
+            : null;
 
         $courseCoupons = Coupons::whereHas('courses')
             ->with('courses')
-            ->paginate(config('paginate.mycoupon_limit'));
+            ->paginate(config('paginate.mycoupon_limit'), ['*'], 'course_page');
 
         $publicCoupons = Coupons::query()
             ->whereDoesntHave('students')
             ->whereDoesntHave('courses')
-            ->paginate(config('paginate.mycoupon_limit'));
+            ->paginate(config('paginate.mycoupon_limit'), ['*'], 'public_page');
+
         return view('coupons::Clients.coupon', compact(
             'pageName',
             'pageTitle',
@@ -284,5 +463,47 @@ class CouponController extends Controller
             'courseCoupons',
             'publicCoupons'
         ));
+    }
+
+    public function logs(Request $request, $id)
+    {
+        $coupons = $this->couponRepository->find($id);
+        if (empty($coupons)) abort(404);
+
+        $pageTitle = "Lịch sử: {$coupons->code}";
+
+        $query = ActiveLog::query()
+            ->where('subject_type', get_class($coupons))
+            ->where('subject_id', $coupons->id)->withoutGlobalScopes();
+
+        // 🔹 Filter theo action
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        // 🔹 Filter theo khoảng thời gian
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->to);
+        }
+
+        // 🔹 Filter theo keyword (description hoặc log_name)
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($sub) use ($q) {
+                $sub->where('description', 'like', "%{$q}%")
+                    ->orWhere('log_name', 'like', "%{$q}%");
+            });
+        }
+
+        $logs = $query
+            ->latest()
+            ->paginate(config('paginate.log_limit'))
+            ->withQueryString();
+
+        return view('coupons::logs', compact('pageTitle', 'coupons', 'logs'));
     }
 }

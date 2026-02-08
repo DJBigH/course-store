@@ -1,7 +1,7 @@
 @php
     $student = auth('students')->user();
     $unreadCount = $student?->unreadNotifications()->count() ?? 0;
-    $notifications = $student ? $student->notifications()->latest()->take(10)->get() : collect();
+    $notifications = $student ? $student->notifications()->latest()->take(20)->get() : collect();
 @endphp
 
 <header class="header">
@@ -32,9 +32,11 @@
                             <div class="d-flex align-items-center gap-3">
 
                                 {{-- 🔔 Chuông thông báo --}}
-                                <div class="dropdown">
-                                    <button class="btn btn-light position-relative" type="button"
-                                        id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="nav-item dropdown notification-hover position-relative">
+
+                                    <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown"
+                                        role="button">
+
                                         <i class="fas fa-bell"></i>
 
                                         {{-- Badge số thông báo --}}
@@ -44,10 +46,10 @@
                                                 {{ $unreadCount }}
                                             </span>
                                         @endif
-                                    </button>
+                                    </a>
 
                                     <ul class="dropdown-menu dropdown-menu-end notification-dropdown"
-                                        aria-labelledby="notificationDropdown" style="width: 320px;">
+                                        aria-labelledby="notificationDropdown">
 
                                         <li class="dropdown-header fw-bold">
                                             Thông báo
@@ -55,20 +57,23 @@
 
                                         @forelse($notifications as $notification)
                                             <li>
-                                                <a class="dropdown-item notification-item {{ is_null($notification->read_at) ? 'fw-bold' : '' }}"
+                                                <a class="dropdown-item notification-item {{ is_null($notification->read_at) ? 'unread' : '' }}"
                                                     href="{{ route('students.notifications.read', $notification->id) }}">
 
-                                                    <div class="notification-title">
-                                                        {{ $notification->data['title'] ?? 'Thông báo' }}
+                                                    <div class="notification-content">
+                                                        <div class="notification-title">
+                                                            {{ $notification->data['title'] ?? 'Thông báo' }}
+                                                        </div>
+
+                                                        <div class="notification-message">
+                                                            {{ $notification->data['message'] ?? '' }}
+                                                        </div>
+
+                                                        <div class="notification-time">
+                                                            {{ $notification->created_at->diffForHumans() }}
+                                                        </div>
                                                     </div>
 
-                                                    <div class="notification-message">
-                                                        {{ $notification->data['message'] ?? '' }}
-                                                    </div>
-
-                                                    <div class="notification-time">
-                                                        {{ $notification->created_at->diffForHumans() }}
-                                                    </div>
                                                 </a>
                                             </li>
                                         @empty
@@ -79,7 +84,6 @@
 
                                     </ul>
                                 </div>
-
                                 {{-- 👤 User dropdown --}}
                                 <div class="dropdown">
                                     <button class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2"
@@ -127,8 +131,10 @@
 
             {{-- Logo --}}
             <a class="navbar-brand" href="{{ route('home') }}">
-                <img src="{{ asset('clients/assets/logo.png') }}" alt="Logo" />
+                <img src="{{ setting('logo') ? asset('storage/' . setting('logo')) : asset('clients/assets/logo.png') }}"
+                    alt="Logo" width="20px">
             </a>
+
 
             {{-- Toggle mobile --}}
             <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
@@ -160,7 +166,8 @@
                         <ul class="dropdown-menu">
                             @foreach ($courseCategories as $category)
                                 <li class="dropdown-submenu">
-                                    <a class="dropdown-item" href="{{ route('categories.category', $category->slug) }}">
+                                    <a class="dropdown-item"
+                                        href="{{ route('categories.category', $category->slug) }}">
                                         {{ $category->name }}
                                     </a>
                                     {{-- <ul class="dropdown-menu">

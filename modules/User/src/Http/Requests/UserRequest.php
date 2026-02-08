@@ -24,9 +24,9 @@ class UserRequest extends FormRequest
         $id = $this->route()->user;
         $rules = [
             'name' => 'required|max:225',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|unique:users,email,'.$id,
             'password' => 'required|min:6',
-            'group_id' => ['required', 'integer', function ($attribute, $value, $fail) {
+            'group_id' => ['integer', function ($attribute, $value, $fail) {
                 if ($value == 0) {
                     $fail(__('user::validation.select'));
                 }

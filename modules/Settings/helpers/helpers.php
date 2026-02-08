@@ -5,7 +5,7 @@ use Modules\Settings\src\Models\Setting;
 function setting($key,$defaul='')
 {
     $value = Setting::getValue($key);
-    return $value ?? $key;
+    return $value ?? $defaul;
 }
 
 function setting_url($key)
