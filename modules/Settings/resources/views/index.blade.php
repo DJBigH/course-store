@@ -148,6 +148,60 @@
                 </div>
             </div>
 
+            <div class="row">
+                {{-- Cột trái --}}
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header fw-bold">
+                            Thông tin chung
+                        </div>
+                        <div class="card-body">
+
+                            <div class="mb-3">
+                                <label class="form-label">Tên website</label>
+                                <input type="text" name="site_name" class="form-control"
+                                    value="{{ old('site_name', $settings['site_name'] ?? '') }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control"
+                                    value="{{ old('email', $settings['email'] ?? '') }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="text" name="phone" class="form-control"
+                                    value="{{ old('phone', $settings['phone'] ?? '') }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Địa chỉ</label>
+                                <textarea name="address" class="form-control" rows="2">{{ old('address', $settings['address'] ?? '') }}</textarea>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Cột phải --}}
+                {{-- <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header fw-bold">
+                            Cấu hình chung
+                        </div>
+                        <div class="card-body">
+
+                            <div class="mb-3">
+                                <label class="form-label">Tỷ giá USD/VND</label>
+                                <input type="text" name="currency" class="form-control"
+                                    value="{{ old('currency', $settings['currency'] ?? '') }}">
+                            </div>
+
+                        </div>
+                    </div>
+                </div> --}}
+            </div>
 
             {{-- Nút lưu --}}
             <div class="text-end mt-3">

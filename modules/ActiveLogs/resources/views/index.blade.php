@@ -9,7 +9,7 @@
                 <form method="GET" action="{{ route('activelogs.index') }}">
                     <div class="row g-2">
                         <div class="col-md-3">
-                            <label class="form-label">Module (log_name)</label>
+                            <label class="form-label">Tên (log_name)</label>
                             <select name="log_name" class="form-select">
                                 <option value="">-- Tất cả --</option>
                                 @foreach ($logNames as $name)

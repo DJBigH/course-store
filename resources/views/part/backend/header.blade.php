@@ -6,7 +6,7 @@
             class="fas fa-bars"></i></button>
     <!-- Navbar Search-->
     <div class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-        <a href="{{ route('home') }}" target="_blank" class="text-white">Xem website</a>
+        <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" target="_blank" class="text-white">Xem website</a>
     </div>
     <!-- Navbar-->
     <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 align-items-center">

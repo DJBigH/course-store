@@ -31,7 +31,7 @@
 
             {{-- Primary actions --}}
             <div class="d-flex flex-column flex-sm-row justify-content-center gap-3 mt-2">
-                <a href="{{ route('home') }}" class="btn btn-outline-secondary px-4">
+                <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-secondary px-4">
                     <i class="fa-solid fa-arrow-left me-1"></i>
                     Trang chủ
                 </a>

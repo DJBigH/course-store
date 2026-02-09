@@ -55,14 +55,14 @@ class LoginController extends Controller
             abort(403, 'Tài khoản đã đăng nhập trên thiết bị khác');
         }
 
-        return redirect()->intended('/');
+        return redirect()->route('home', ['locale' => app()->getLocale()]);
     }
 
 
     public function logout()
     {
         Auth::guard('students')->logout();
-        return redirect()->route('home');
+        return redirect()->route('home', ['locale' => app()->getLocale()]);
     }
 
     public function showFormForgot()

@@ -2,7 +2,7 @@
 @section('content')
     <div class="container">
         <div class="home-back">
-            <a href="{{ route('home') }}">
+            <a href="{{ route('home', ['locale' => app()->getLocale()]) }}">
                 <span>
                     <i class="fa-solid fa-arrow-left"></i>
                 </span>

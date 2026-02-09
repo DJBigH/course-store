@@ -24,8 +24,8 @@
                             ← Quay lại
                         </a>
 
-                        <a href="{{ route('home') }}" class="btn btn-primary">
-                            🏠 Trang chủ
+                        <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary">
+                            🏠 T{{ __('common.home') }}
                         </a>
                     </div>
 

@@ -14,7 +14,8 @@
                                 class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10"
                                 style="width: 110px; height: 110px;">
                                 {{-- <img src="{{ asset('clients/assets/success.webm') }}" alt="" class="img-fluid" /> --}}
-                                <video src="{{ asset('clients/assets/success.webm') }}" autoplay loop muted class="img-fluid"></video>
+                                <video src="{{ asset('clients/assets/success.webm') }}" autoplay loop muted
+                                    class="img-fluid"></video>
                             </span>
                         </div>
 
@@ -35,13 +36,20 @@
                         @endisset
 
                         <div class="d-flex justify-content-center gap-3 mt-4">
-                            <a href="{{ route('home') }}" class="btn btn-primary px-4">
+                            <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary px-4">
                                 <i class="fa-solid fa-house me-1"></i> Trang chủ
                             </a>
 
-                            <a href="{{ route('students.account.order-detail', $order->id) }}" class="btn btn-outline-secondary px-4">
-                                <i class="fa-solid fa-receipt me-1"></i> Xem đơn hàng
-                            </a>
+                            @if (!empty($order))
+                                <a href="{{ route('students.account.order-detail', [
+                                    'locale' => app()->getLocale(),
+                                    'id' => $order->id,
+                                ]) }}"
+                                    class="btn btn-outline-secondary px-4">
+                                    <i class="fa-solid fa-receipt me-1"></i> Xem đơn hàng
+                                </a>
+                            @endif
+
                         </div>
 
                     </div>

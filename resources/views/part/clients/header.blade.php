@@ -2,6 +2,34 @@
     $student = auth('students')->user();
     $unreadCount = $student?->unreadNotifications()->count() ?? 0;
     $notifications = $student ? $student->notifications()->latest()->take(20)->get() : collect();
+
+    $supportedLocales = ['vi', 'en'];
+
+    $currentLocale = app()->getLocale();
+    if (!in_array($currentLocale, $supportedLocales)) {
+        $currentLocale = 'vi';
+    }
+
+    // path hiện tại (không có domain), ví dụ: "vi/courses/abc"
+    $path = trim(request()->path(), '/');
+    $segments = $path === '' ? [] : explode('/', $path);
+
+    // nếu segment đầu là locale thì bỏ ra
+    if (!empty($segments) && in_array($segments[0], $supportedLocales)) {
+        array_shift($segments);
+    }
+
+    $restPath = implode('/', $segments); // ví dụ: "courses/abc"
+
+    $viUrl = url('vi' . ($restPath ? '/' . $restPath : ''));
+    $enUrl = url('en' . ($restPath ? '/' . $restPath : ''));
+
+    // giữ query string ?page=2...
+    $qs = request()->getQueryString();
+    if ($qs) {
+        $viUrl .= '?' . $qs;
+        $enUrl .= '?' . $qs;
+    }
 @endphp
 
 <header class="header">
@@ -10,14 +38,14 @@
             <div class="row align-items-center">
                 <div class="d-none d-lg-block col-lg-2">
                     <form>
-                        <input type="text" placeholder="Bạn tìm gì..." />
-                        <button type="submit" class="btn btn-primary">Tìm</button>
+                        <input type="text" placeholder="{{ __('common.search_placeholder') }}" />
+                        <button type="submit" class="btn btn-primary">{{ __('common.search') }}</button>
                     </form>
                 </div>
                 <div class="d-none d-lg-block col-lg-7">
                     <div class="d-flex">
                         <p class="slogan">
-                            <i class="fas fa-phone"></i>Tư vấn & hỗ trợ:
+                            <i class="fas fa-phone"></i>{{ __('common.support') }}
                             <a href="#">{{ setting('phone', '012345678') }}</a>
                         </p>
                         <p class="mail">
@@ -27,7 +55,35 @@
                     </div>
                 </div>
                 <div class="col-lg-3">
-                    <div class="social">
+                    <div class="social d-flex align-items-center justify-content-end gap-2">
+
+                        {{-- 🌐 LANGUAGE SWITCH --}}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2"
+                                data-bs-toggle="dropdown">
+                                @if ($currentLocale === 'vi')
+                                    <span>🇻🇳</span> VI
+                                @else
+                                    <span>🇺🇸</span> EN
+                                @endif
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item d-flex gap-2 {{ $currentLocale === 'vi' ? 'active' : '' }}"
+                                        href="{{ $viUrl }}">
+                                        🇻🇳 Tiếng Việt
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex gap-2 {{ $currentLocale === 'en' ? 'active' : '' }}"
+                                        href="{{ $enUrl }}">
+                                        🇺🇸 English
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
                         @if (auth('students')->check())
                             <div class="d-flex align-items-center gap-3">
 
@@ -52,7 +108,7 @@
                                         aria-labelledby="notificationDropdown">
 
                                         <li class="dropdown-header fw-bold">
-                                            Thông báo
+                                            {{ __('common.notifications') }}
                                         </li>
 
                                         @forelse($notifications as $notification)
@@ -62,7 +118,7 @@
 
                                                     <div class="notification-content">
                                                         <div class="notification-title">
-                                                            {{ $notification->data['title'] ?? 'Thông báo' }}
+                                                            {{ $notification->data['title'] ?? __('common.notifications') }}
                                                         </div>
 
                                                         <div class="notification-message">
@@ -78,7 +134,7 @@
                                             </li>
                                         @empty
                                             <li class="dropdown-item text-muted small">
-                                                Không có thông báo
+                                                {{ __('common.no_notifications') }}
                                             </li>
                                         @endforelse
 
@@ -97,14 +153,14 @@
                                         <li>
                                             <a class="dropdown-item d-flex align-items-center gap-2"
                                                 href="{{ route('students.account.index') }}">
-                                                <i class="fas fa-user-circle"></i> Tài khoản của tôi
+                                                <i class="fas fa-user-circle"></i> {{ __('common.my_account') }}
                                             </a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item d-flex align-items-center gap-2 text-danger"
                                                 href="#"
                                                 onclick="document['form-logout'].submit(); return false;">
-                                                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                                <i class="fas fa-sign-out-alt"></i> {{ __('common.logout') }}
                                             </a>
                                         </li>
                                     </ul>
@@ -114,13 +170,14 @@
                         @else
                             <button class="btn btn-primary">
                                 <a href="{{ route('clients-register') }}" class="text-white"
-                                    style="text-decoration: none !important"><i class="fas fa-user"></i> Đăng ký</a>
+                                    style="text-decoration: none !important"><i class="fas fa-user"></i> {{ __('common.register') }}</a>
                             </button>
                             <button class="btn btn-primary">
                                 <a href="{{ route('clients-login') }}" class="text-white"
-                                    style="text-decoration: none !important"><i class="fas fa-key"></i> Đăng nhập</a>
+                                    style="text-decoration: none !important"><i class="fas fa-key"></i> {{ __('common.login') }}</a>
                             </button>
                         @endif
+
                     </div>
                 </div>
             </div>
@@ -130,7 +187,7 @@
         <div class="container">
 
             {{-- Logo --}}
-            <a class="navbar-brand" href="{{ route('home') }}">
+            <a class="navbar-brand" href="{{ route('home', ['locale' => app()->getLocale()]) }}">
                 <img src="{{ setting('logo') ? asset('storage/' . setting('logo')) : asset('clients/assets/logo.png') }}"
                     alt="Logo" width="20px">
             </a>
@@ -149,9 +206,9 @@
 
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}"
-                            href="{{ route('home') }}">
+                            href="{{ route('home', ['locale' => app()->getLocale()]) }}">
                             <i class="fas fa-home"></i>
-                            Home
+                            {{ __('common.home') }}
                         </a>
                     </li>
 
@@ -160,7 +217,7 @@
         {{ request()->routeIs('courses.*') ? 'active' : '' }}"
                             href="#" id="coursesDropdown" role="button">
                             <i class="fas fa-tv"></i>
-                            Danh mục khóa học
+                            {{ __('common.course_categories') }}
                         </a>
 
                         <ul class="dropdown-menu">
@@ -189,7 +246,7 @@
                         <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
                             href="{{ route('coupons.home') }}">
                             <i class="fas fa-ticket-alt"></i>
-                            Mã giảm giá
+                            {{ __('common.coupons') }}
                         </a>
                     </li>
 
@@ -197,7 +254,7 @@
                         <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
                             href="{{ route('contacts.home') }}">
                             <i class="fas fa-phone-alt"></i>
-                            Liên hệ
+                            {{ __('common.contact') }}
                         </a>
                     </li>
 

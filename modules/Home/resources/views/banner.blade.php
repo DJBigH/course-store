@@ -4,7 +4,7 @@
             <div class="d-none d-md-block col-md-4 col-lg-3">
                 <div class="banner-left">
                     <div class="course-group">
-                        <p>khoá học free</p>
+                        <p>{{ __('home::common.free_course') }}</p>
                         @if (!empty($courseFree))
                             @foreach ($courseFree as $item)
                                 <ul>
@@ -13,13 +13,13 @@
                             @endforeach
                         @else
                             <ul>
-                                <li><a href="#" class="text-muted">Không có khóa học nào miễn phí</a></li>
+                                <li><a href="#" class="text-muted">{{ __('home::common.no_course_free') }}</a></li>
                             </ul>
                         @endif
 
                     </div>
                     <div class="course-group pt-3">
-                        <p>khoá học nổi bật</p>
+                        <p>{{ __('home::common.course_view') }}</p>
                         @if (!empty($courseView))
                             @foreach ($courseView as $item)
                                 <ul>
@@ -29,13 +29,13 @@
                             @endforeach
                         @else
                             <ul>
-                                <li><a href="#" class="text-muted">Không có khóa học nào nổi bật</a></li>
+                                <li><a href="#" class="text-muted">{{ __('home::common.no_course_view') }}</a></li>
                             </ul>
                         @endif
                     </div>
 
                     <div class="course-group pt-3">
-                        <p>khoá học mới</p>
+                        <p>{{ __('home::common.course_new') }}</p>
                         @if (!empty($courseNew))
                             @foreach ($courseNew as $item)
                                 <ul>
@@ -45,7 +45,7 @@
                             @endforeach
                         @else
                             <ul>
-                                <li><a href="#" class="text-muted">Không có khóa học nào mới</a></li>
+                                <li><a href="#" class="text-muted">{{ __('home::common.no_course_new') }}</a></li>
                             </ul>
                         @endif
                     </div>

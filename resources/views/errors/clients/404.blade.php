@@ -23,9 +23,10 @@
                         <i class="fas fa-arrow-left"></i> Quay lại
                     </a>
 
-                    <a href="{{ route('home') }}" class="btn btn-primary">
-                        <i class="fas fa-home"></i> Trang chủ
+                    <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary">
+                        <i class="fas fa-home"></i> {{ __('common.home') }}
                     </a>
+
                 </div>
 
             </div>

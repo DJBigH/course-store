@@ -40,8 +40,16 @@ Route::group(['as' => 'students.'], function () {
          Route::post('/polling', 'Clients\CouponsController@pollingCoupon')->name('coupons-pollingCoupon');
       });
 
-      Route::prefix('checkout')->group(function () {
-         Route::get('/cam-on/{id}', 'Clients\CheckoutController@thankyou')->name('checkout-thankyou');
+      Route::group([
+         'prefix' => '{locale}',
+         'where' => ['locale' => 'vi|en'],
+         'middleware' => 'setLocale',
+      ], function () {
+
+         Route::prefix('checkout')->group(function () {
+            Route::get('/cam-on/{id}', 'Clients\CheckoutController@thankyou')
+               ->name('checkout-thankyou');
+         });
       });
    });
 });

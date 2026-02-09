@@ -2,7 +2,10 @@
     <div class="container py-5">
 
         <h3 class="section-title mb-4 text-danger">
-            {{ auth('students')->check() ? '🎓 Khóa học dành cho bạn' : '📚 Tất cả khóa học' }}
+            {{ auth('students')->check()
+                ? '🎓 ' . __('home::common.all_course_for_you')
+                : '📚 ' . __('home::common.all_course_home') }}
+
         </h3>
 
         <div class="row g-4">
@@ -18,11 +21,11 @@
                                 <div class="course-meta">
                                     <span><i class="fa-solid fa-clock"></i> {{ getTime($item->durations) }}</span>
                                     <span><i class="fa-solid fa-video"></i>
-                                        {{ getLessonCount($item)->module }} phần /
-                                        {{ getLessonCount($item)->lessons }} bài
+                                        {{ getLessonCount($item)->module }} {{ __('home::common.portion') }} /
+                                        {{ getLessonCount($item)->lessons }} {{ __('home::common.lesson') }}
                                     </span>
                                     <span><i class="fa-solid fa-eye"></i>
-                                        {{ number_format($item->view ?? 0) }} lượt xem
+                                        {{ number_format($item->view ?? 0) }} {{ __('home::common.view') }}
                                     </span>
                                 </div>
 
@@ -40,12 +43,12 @@
 
                             <div class="course-bottom">
                                 <div class="course-price">
-                                    <span class="price-old">{{ money($item->price) }}</span>
-                                    <span class="price-new">{{ money($item->sale_price) }}</span>
+                                    <span class="price-old">{{ moneyLocale($item->price) }}</span>
+                                    <span class="price-new">{{ moneyLocale($item->sale_price) }}</span>
                                 </div>
 
                                 <a href="{{ route('courses.detail', $item->slug) }}" class="btn-view">
-                                    Xem chi tiết →
+                                    {{ __('home::common.detail') }} →
                                 </a>
                             </div>
                         </div>
@@ -53,7 +56,7 @@
                 </div>
             @empty
                 <div class="col-12 text-center py-5">
-                    <p>Không có khóa học</p>
+                    <p>{{ __('home::common.no_course') }}</p>
                 </div>
             @endforelse
         </div>
@@ -62,7 +65,7 @@
         @if ($courseAll instanceof \Illuminate\Pagination\AbstractPaginator && $courseAll->total() > 4)
             <div class="text-center mt-4">
                 <a href="{{ route('courses.home') }}" class="btn btn-outline-primary px-4">
-                    Xem tất cả khóa học →
+                    {{ __('home::common.all_course') }} →
                 </a>
             </div>
         @endif

@@ -20,7 +20,7 @@ class HomeController extends Controller
 
     public function index(Request $request)
     {
-        $pageTitle  = 'Trang chủ';
+        $pageTitle  = __('home::common.pageTile');
         $courseFree = $this->courseRepository->getCourseFree();
         $courseView = $this->courseRepository->getCourseView();
         $courseNew  = $this->courseRepository->getCourseCreateUpdate();

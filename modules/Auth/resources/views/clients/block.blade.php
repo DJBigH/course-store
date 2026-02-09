@@ -21,7 +21,7 @@
             </p>
 
             <div class="d-flex justify-content-center gap-3">
-                <a href="{{ route('home') }}" class="btn btn-outline-secondary">
+                <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-secondary">
                     <i class="fa-solid fa-arrow-left me-1"></i>
                     Về trang chủ
                 </a>

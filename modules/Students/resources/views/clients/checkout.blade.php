@@ -127,7 +127,7 @@
                                     </tbody>
                                 </table>
                                 <div class="d-flex flex-wrap gap-2 mt-3">
-                                    <a href="{{ route('home') }}"
+                                    <a href="{{ route('home', ['locale' => app()->getLocale()]) }}"
                                         class="btn btn-outline-primary btn-sm px-3 d-flex align-items-center">
                                         <i class="bi bi-arrow-left me-1"></i>
                                         Quay lại trang chủ

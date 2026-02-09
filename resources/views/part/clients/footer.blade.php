@@ -3,7 +3,7 @@
         <div class="row">
             <div class="col-12 col-lg-4">
                 <div class="footer-group">
-                    <h3>Liên hệ</h3>
+                    <h3>{{__('common.contact')}}</h3>
                     <ul>
                         <li>
                             <a href="#">
@@ -28,32 +28,32 @@
             </div>
             <div class="col-12 col-lg-4 mt-4 mt-lg-0">
                 <div class="footer-group">
-                    <h3>hỗ trợ học viên</h3>
+                    <h3>{{ __('common.student_support') }}</h3>
                     <ul>
                         <li>
-                            <a href="#"> Hỗ trợ học viên</a>
+                            <a href="#"> {{ __('common.student_support') }}</a>
                         </li>
                         <li>
-                            <a href="#"> Câu hỏi thường gặp</a>
+                            <a href="#"> {{ __('common.question') }}</a>
                         </li>
                         <li>
-                            <a href="#"> Cảm nhận học viên</a>
+                            <a href="#"> {{ __('common.feel_student') }}</a>
                         </li>
                     </ul>
                 </div>
             </div>
             <div class="col-12 col-lg-4 mt-4 mt-lg-0">
                 <div class="footer-group">
-                    <h3>Chính sách điều khoản</h3>
+                    <h3>{{ __('common.terms_and_conditions') }}</h3>
                     <ul>
                         <li>
-                            <a href="#"> Chương trình Affiliate</a>
+                            <a href="#"> {{ __('common.affiliate') }}</a>
                         </li>
                         <li>
-                            <a href="#"> Điều khoản dịch vụ</a>
+                            <a href="#"> {{ __('common.terms_of_service') }}</a>
                         </li>
                         <li>
-                            <a href="#"> Chính sách bảo mật</a>
+                            <a href="#"> {{ __('common.privacy_policy') }}</a>
                         </li>
                     </ul>
                 </div>

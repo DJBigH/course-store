@@ -81,7 +81,7 @@
                         Bạn có thể khám phá các khóa học khác phù hợp với mình 🚀
                     </p>
 
-                    <a href="{{ route('home') }}" class="btn btn-primary px-4">
+                    <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary px-4">
                         <i class="fa-solid fa-book-open me-1"></i>
                         Khám phá khóa học
                     </a>

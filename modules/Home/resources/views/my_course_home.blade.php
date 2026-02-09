@@ -1,9 +1,9 @@
 @auth('students')
     <section class="foundation-course">
         <div class="container py-5">
-            
+
             <div id="my-course-wrapper">
-                <h3 class="section-title mb-4 text-success">🎓 Khóa học của bạn</h3>
+                <h3 class="section-title mb-4 text-success">🎓 {{ __('home::common.my_course') }}</h3>
                 <div class="row g-4">
                     @if ($myCourse->count())
                         @foreach ($myCourse as $item)
@@ -18,8 +18,11 @@
                                             <span><i class="fa-solid fa-clock"></i> {{ getTime($item->durations) }}</span>
                                             <span>
                                                 <i class="fa-solid fa-video"></i>
-                                                {{ getLessonCount($item)->module }} phần /
-                                                {{ getLessonCount($item)->lessons }} bài
+                                                {{ getLessonCount($item)->module }} {{ __('home::common.portion') }} /
+                                                {{ getLessonCount($item)->lessons }} {{ __('home::common.lesson') }}
+                                            </span>
+                                            <span><i class="fa-solid fa-eye"></i>
+                                                {{ number_format($item->view ?? 0) }} {{ __('home::common.view') }}
                                             </span>
                                         </div>
 
@@ -35,8 +38,9 @@
                                         </div>
 
                                         <div class="course-price">
-                                            <span class="price-old">{{ money($item->price) }}</span>
-                                            <span class="price-new">{{ money($item->sale_price) }}</span>
+                                            <a href="{{ route('courses.detail', $item->slug) }}" class="btn-view">
+                                                {{ __('home::common.detail') }} →
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -44,7 +48,7 @@
                         @endforeach
                     @else
                         <div class="col-12 text-center py-5">
-                            <p class="text-muted">Bạn chưa có khóa học nào</p>
+                            <p class="text-muted">{{ __('home::common.no_my_course') }}</p>
                         </div>
                     @endif
                 </div>

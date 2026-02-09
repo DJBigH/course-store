@@ -58,6 +58,7 @@ class CheckoutController extends Controller
             $admin->notify(new OrderPaidNotification($order));
         }
         return redirect()->route('students.account.checkout-thankyou', [
+            'locale' => app()->getLocale(),
             'id' => $order->id
         ]);
     }

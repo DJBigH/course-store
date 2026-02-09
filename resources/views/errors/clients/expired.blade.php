@@ -33,8 +33,8 @@
                         <i class="fas fa-redo"></i> Thanh toán lại
                     </a>
 
-                    <a href="{{ route('home') }}" class="btn btn-outline-secondary px-4">
-                        <i class="fas fa-home"></i> Trang chủ
+                    <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-home"></i> {{ __('common.home') }}
                     </a>
                 </div>
 
