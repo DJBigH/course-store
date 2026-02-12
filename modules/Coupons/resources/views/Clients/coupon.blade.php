@@ -10,14 +10,14 @@
             @auth('students')
                 <div class="mb-5">
                     <h4 class="mb-3">
-                        🎟 Mã khuyến mãi của tôi
+                        🎟 {{ __('coupons::clients/common.my_coupon') }}
                         <span class="badge bg-primary">{{ $myCoupons->count() }}</span>
                     </h4>
 
                     @include('coupons::Clients.lists', ['coupons' => $myCoupons])
 
                     @if ($myCoupons->isEmpty())
-                        <p class="text-muted">Bạn chưa có mã khuyến mãi riêng nào.</p>
+                        <p class="text-muted">{{ __('coupons::clients/common.no_my_coupon') }}</p>
                     @else
                         <div class="mt-3">
                             {{ $myCoupons->links('students::clients.pagination.boostrap') }}
@@ -29,14 +29,14 @@
 
             {{-- ================== 2. MÃ THEO KHÓA HỌC ================== --}}
             <div class="mb-5">
-                <h4 class="mb-3">🎓 Mã khuyến mãi theo khóa học
+                <h4 class="mb-3">🎓 {{ __('coupons::clients/common.coupon_course') }}
                     <span class="badge bg-primary">{{ $courseCoupons->count() }}</span>
                 </h4>
 
                 @include('coupons::Clients.lists', ['coupons' => $courseCoupons])
 
                 @if ($courseCoupons->isEmpty())
-                    <p class="text-muted">Hiện chưa có mã cho khóa học.</p>
+                    <p class="text-muted">{{ __('coupons::clients/common.no_coupon_course') }}</p>
                 @else
                     <div class="mt-3">
                         {{ $courseCoupons->links('students::clients.pagination.boostrap') }}
@@ -47,14 +47,14 @@
 
             {{-- ================== 3. MÃ CHUNG ================== --}}
             <div>
-                <h4 class="mb-3">🌍 Mã khuyến mãi chung
+                <h4 class="mb-3">🌍 {{ __('coupons::clients/common.all_coupon') }}
                     <span class="badge bg-primary">{{ $publicCoupons->count() }}</span>
                 </h4>
 
                 @include('coupons::Clients.lists', ['coupons' => $publicCoupons])
 
                 @if ($publicCoupons->isEmpty())
-                    <p class="text-muted">Không có mã khuyến mãi chung.</p>
+                    <p class="text-muted">{{ __('coupons::clients/common.no_coupon') }}</p>
                 @else
                     <div class="mt-3">
                         {{ $publicCoupons->links('students::clients.pagination.boostrap') }}

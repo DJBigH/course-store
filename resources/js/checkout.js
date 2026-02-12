@@ -79,6 +79,14 @@ if (checkoutPageEl) {
     const totalValueList = checkoutPageEl.querySelectorAll(`.total_value`);
     const qrImgEl = checkoutPageEl.querySelector(".qr-image");
     const controller = new AbortController();
+    const locale = document.documentElement.lang || "vi";
+    const msg = {
+        couponApplySuccess: couponsForm.dataset.msgCouponApplySuccess,
+        couponRemoveSuccess: couponsForm.dataset.msgCouponRemoveSuccess,
+        couponRemoveFailed: couponsForm.dataset.msgCouponRemoveFailed,
+        couponRequired: couponsForm.dataset.msgCouponRequired,
+    };
+
     // let isPolling = true;
     let qrUrl = qrImgEl.src;
     if (couponsForm && couponUsage) {
@@ -99,25 +107,28 @@ if (checkoutPageEl) {
                 try {
                     fieldset.disabled = true;
                     //Call Api
-                    const response = await fetch("/tai-khoan/coupons/verify", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": csrfToken,
-                            "Content-Type": "application/json",
-                            Accept: "application/json",
+                    const response = await fetch(
+                        `/${locale}/tai-khoan/coupons/verify`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                            },
+                            body: JSON.stringify({
+                                coupon,
+                                orderId,
+                            }),
                         },
-                        body: JSON.stringify({
-                            coupon,
-                            orderId,
-                        }),
-                    });
+                    );
 
                     const { success, errors, data } = await response.json();
 
                     if (!success) {
                         throw new Error(errors);
                     }
-                    showMessage("Áp mã giảm giá thành công");
+                    showMessage(msg.couponApplySuccess, "success");
                     couponsForm.reset();
                     couponsForm.classList.add("d-none");
                     couponUsage.classList.remove("d-none");
@@ -148,24 +159,27 @@ if (checkoutPageEl) {
         removeCouponEl.addEventListener("click", () => {
             controller.abort();
             const removeCoupon = async () => {
-                const response = await fetch(`/tai-khoan/coupons/remove`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": csrfToken,
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
+                const response = await fetch(
+                    `/${locale}/tai-khoan/coupons/remove`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": csrfToken,
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        body: JSON.stringify({
+                            orderId,
+                        }),
                     },
-                    body: JSON.stringify({
-                        orderId,
-                    }),
-                });
+                );
                 const { success, data } = await response.json();
                 if (!success) {
-                    return showMessage("Xóa mã giảm giá không thành công");
+                    return showMessage(msg.couponRemoveFailed, "error");
                 }
                 couponUsage.classList.add("d-none");
                 couponsForm.classList.remove("d-none");
-                showMessage("Xóa mã giảm giá thành công");
+                showMessage(msg.couponRemoveSuccess, "success");
 
                 discountValueEl.innerText = "-0 đ";
                 totalValueList.forEach((el) => {
@@ -177,4 +191,14 @@ if (checkoutPageEl) {
             removeCoupon();
         });
     }
+
+    document.addEventListener("submit", function (e) {
+        const form = e.target.closest(".js-cancel-order");
+        if (!form) return;
+
+        const msg = form.dataset.confirm;
+        if (!confirm(msg)) {
+            e.preventDefault();
+        }
+    });
 }

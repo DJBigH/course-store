@@ -11,8 +11,8 @@
             <div class="lesson-item">
                 <div class="lesson-left">
                     <i class="fa-brands fa-youtube"></i>
-                    <a href="{{ route('lessons.home', $item->slug) }}"
-                        class="lesson-title">{{ 'Bài ' . ++$index . ': ' . $item->name }}</a>
+                    <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $item->slug]) }}"
+                        class="lesson-title">{{ __('lessons::clients/common.lesson_item').' ' . ++$index . ': ' . $item->name }}</a>
                     <span class="lesson-time">{{ getTime($item->durations) }}</span>
                 </div>
             </div>

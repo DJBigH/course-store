@@ -30,8 +30,11 @@ function activeSidebar($name, $routeList)
 
 function activeMenu($name)
 {
-    return request()->is(trim(route($name, [], false), '/'));
+    $url = route($name, ['locale' => app()->getLocale()], false);
+
+    return request()->is(trim($url, '/'));
 }
+
 
 if (!function_exists('vnd_to_usd')) {
     function vnd_to_usd(int $vnd, int $precision = 2): float
@@ -116,5 +119,3 @@ if (!function_exists('format_date_dmy')) {
         }
     }
 }
-
-

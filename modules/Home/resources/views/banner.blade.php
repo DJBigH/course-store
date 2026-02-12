@@ -4,48 +4,69 @@
             <div class="d-none d-md-block col-md-4 col-lg-3">
                 <div class="banner-left">
                     <div class="course-group">
-                        <p>{{ __('home::common.free_course') }}</p>
+                        <p>{{ __('home::clients/common.free_course') }}</p>
                         @if (!empty($courseFree))
                             @foreach ($courseFree as $item)
                                 <ul>
-                                    <li><a href="{{ route('courses.detail', $item->slug) }}">{{ $item->name }}</a></li>
+                                    <li>
+                                        <a
+                                            href="{{ route('courses.detail', [
+                                                'locale' => app()->getLocale(),
+                                                'slug' => $item->slug,
+                                            ]) }}">
+                                            {{ $item->name }}
+                                        </a>
+                                    </li>
+
                                 </ul>
                             @endforeach
                         @else
                             <ul>
-                                <li><a href="#" class="text-muted">{{ __('home::common.no_course_free') }}</a></li>
+                                <li><a href="#"
+                                        class="text-muted">{{ __('home::clients/common.no_course_free') }}</a></li>
                             </ul>
                         @endif
 
                     </div>
                     <div class="course-group pt-3">
-                        <p>{{ __('home::common.course_view') }}</p>
+                        <p>{{ __('home::clients/common.course_view') }}</p>
                         @if (!empty($courseView))
                             @foreach ($courseView as $item)
                                 <ul>
-                                    <li><a href="{{ route('courses.detail', $item->slug) }}">{{ $item->name }}</a>
+                                    <li><a
+                                            href="{{ route('courses.detail', [
+                                                'locale' => app()->getLocale(),
+                                                'slug' => $item->slug,
+                                            ]) }}">{{ $item->name }}</a>
                                     </li>
                                 </ul>
                             @endforeach
                         @else
                             <ul>
-                                <li><a href="#" class="text-muted">{{ __('home::common.no_course_view') }}</a></li>
+                                <li><a href="#"
+                                        class="text-muted">{{ __('home::clients/common.no_course_view') }}</a></li>
                             </ul>
                         @endif
                     </div>
 
                     <div class="course-group pt-3">
-                        <p>{{ __('home::common.course_new') }}</p>
+                        <p>{{ __('home::clients/common.course_new') }}</p>
                         @if (!empty($courseNew))
                             @foreach ($courseNew as $item)
                                 <ul>
-                                    <li><a href="{{ route('courses.detail', $item->slug) }}">{{ $item->name }}</a>
+                                    <li><a
+                                            href="{{ route('courses.detail', [
+                                                'locale' => app()->getLocale(),
+                                                'slug' => $item->slug,
+                                            ]) }}">{{ $item->name }}</a>
+                                    </li>
                                     </li>
                                 </ul>
                             @endforeach
                         @else
                             <ul>
-                                <li><a href="#" class="text-muted">{{ __('home::common.no_course_new') }}</a></li>
+                                <li><a href="#"
+                                        class="text-muted">{{ __('home::clients/common.no_course_new') }}</a></li>
                             </ul>
                         @endif
                     </div>

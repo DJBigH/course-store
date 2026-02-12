@@ -17,53 +17,57 @@
                 <div class="col-lg-9 account-profile">
                     <div class="account-content">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h2 class="fw-semibold mb-0">Thông tin cá nhân</h2>
+                            <h2 class="fw-semibold mb-0">{{ __('students::clients/account.profile.title') }}</h2>
                             <button class="btn btn-warning js-profile-btn">
-                                Chỉnh sửa thông tin
+                                {{ __('students::clients/account.profile.edit') }}
                             </button>
                         </div>
 
                         <table class="js-profile profile-item table table-bordered table-profile active">
                             <tbody>
                                 <tr>
-                                    <th>Họ và tên</th>
+                                    <th>{{ __('students::clients/account.profile.full_name') }}</th>
                                     <td>{{ $student->name }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Email</th>
+                                    <th>{{ __('students::clients/account.profile.email') }}</th>
                                     <td>{{ $student->email }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Số điện thoại</th>
+                                    <th>{{ __('students::clients/account.profile.phone') }}</th>
                                     <td>{{ $student->phone }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Địa chỉ</th>
+                                    <th>{{ __('students::clients/account.profile.address') }}</th>
                                     <td>{{ $student->address ?? 'Chưa cập nhật' }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Trạng thái</th>
+                                    <th>{{ __('students::clients/account.profile.status') }}</th>
                                     <td>
-                                        <span class="badge bg-success">Đang hoạt động</span>
+                                        <span
+                                            class="badge bg-success">{{ __('students::clients/account.core.active') }}</span>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th>Thời gian đăng ký</th>
+                                    <th>{{ __('students::clients/account.profile.registered_at') }}</th>
                                     <td>{{ Carbon\Carbon::parse($student->created_at)->format('d/m/Y H:i:s') }}</td>
                                 </tr>
                                 <tr>
-                                    <th>Thời gian kích hoạt</th>
+                                    <th>{{ __('students::clients/account.profile.activated_at') }}</th>
                                     <td>{{ Carbon\Carbon::parse($student->email_verified_at)->format('d/m/Y H:i:s') }}</td>
                                 </tr>
                             </tbody>
                         </table>
 
 
-                        <form action="{{ route('students.account.client-updateprofile') }}"
-                            class="js-profile profile-item profile-form" method="post">
+                        <form
+                            action="{{ route('students.account.client-updateprofile', ['locale' => app()->getLocale()]) }}"
+                            class="js-profile profile-item profile-form" method="post"
+                            data-msg-success="{{ __('students::clients/messages.profile.update_success') }}"
+                            data-msg-error="{{ __('students::clients/messages.profile.update_error') }}">
                             <div class="card shadow-sm">
                                 <div class="card-header bg-light fw-bold">
-                                    Cập nhật thông tin cá nhân
+                                    {{ __('students::clients/account.profile.update_title') }}
                                     @if (session('msg'))
                                         <div class="alert alert-success">{{ session('msg') }}</div>
                                     @endif
@@ -71,36 +75,44 @@
 
                                 <div class="card-body">
                                     <div class="row mb-3">
-                                        <label class="col-md-4 col-form-label">Họ và tên</label>
+                                        <label
+                                            class="col-md-4 col-form-label">{{ __('students::clients/account.profile.full_name') }}</label>
                                         <div class="col-md-8">
-                                            <input type="text" class="form-control" placeholder="Nhập họ và tên"
+                                            <input type="text" class="form-control"
+                                                placeholder="{{ __('students::clients/account.profile.placeholder_full_name') }}"
                                                 value="{{ $student->name }}" name="name">
                                             <span class="error error-name text-danger"></span>
                                         </div>
                                     </div>
 
                                     <div class="row mb-3">
-                                        <label class="col-md-4 col-form-label">Email</label>
+                                        <label
+                                            class="col-md-4 col-form-label">{{ __('students::clients/account.profile.email') }}</label>
                                         <div class="col-md-8">
-                                            <input type="email" class="form-control" placeholder="Nhập email"
+                                            <input type="email" class="form-control"
+                                                placeholder="{{ __('students::clients/account.profile.placeholder_email') }}"
                                                 value="{{ $student->email }}" name="email">
                                             <span class="error error-email text-danger"></span>
                                         </div>
                                     </div>
 
                                     <div class="row mb-3">
-                                        <label class="col-md-4 col-form-label">Số điện thoại</label>
+                                        <label
+                                            class="col-md-4 col-form-label">{{ __('students::clients/account.profile.phone') }}</label>
                                         <div class="col-md-8">
-                                            <input type="text" class="form-control" placeholder="Nhập số điện thoại"
+                                            <input type="text" class="form-control"
+                                                placeholder="{{ __('students::clients/account.profile.placeholder_phone') }}"
                                                 value="{{ $student->phone }}" name="phone">
                                             <span class="error error-phone text-danger"></span>
                                         </div>
                                     </div>
 
                                     <div class="row">
-                                        <label class="col-md-4 col-form-label">Địa chỉ</label>
+                                        <label
+                                            class="col-md-4 col-form-label">{{ __('students::clients/account.profile.address') }}</label>
                                         <div class="col-md-8">
-                                            <input type="text" class="form-control" placeholder="Nhập địa chỉ"
+                                            <input type="text" class="form-control"
+                                                placeholder="{{ __('students::clients/account.profile.placeholder_address') }}"
                                                 value="{{ $student->address }}" name="address">
                                             <span class="error error-address text-danger"></span>
                                         </div>
@@ -109,12 +121,12 @@
 
                                 <div class="card-footer text-end">
                                     <button class="btn btn-primary px-4">
-                                        Lưu thay đổi
+                                        {{ __('students::clients/account.profile.save') }}
                                     </button>
                                 </div>
                             </div>
                             <p class="text-muted fst-italic mt-2">
-                                *Vui lòng reload hoặc nhấn F5 sau khi thay đổi thông tin
+                                {{ __('students::clients/account.profile.note_reload') }}
                             </p>
                         </form>
                     </div>
@@ -124,4 +136,12 @@
         </div>
         </div>
     </section>
+@endsection
+@section('scripts')
+    <script>
+        window.i18n = {
+            profile_edit: @json(__('students::clients/account.profile.edit')),
+            profile_cancel: @json(__('students::clients/account.profile.cancel')),
+        };
+    </script>
 @endsection

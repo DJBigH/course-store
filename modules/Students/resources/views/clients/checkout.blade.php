@@ -8,15 +8,15 @@
             {{-- Header --}}
             <div class="mb-4">
                 <h2 class="fw-bold">
-                    Thanh toán đơn hàng
+                    {{ __('students::clients/checkout.checkout.page_title') }}
                     <span class="text-primary"><a
-                            href="{{ route('students.account.order-detail', $order->id) }}">#{{ $order->code }}</a></span>
+                            href="{{ route('students.account.order-detail', ['locale' => app()->getLocale(), 'id' => $order->id]) }}">#{{ $order->code }}</a></span>
                     @if (config('checkout.checkout_countdown') > 0)
                         <span class="countdown"><span class="cd-minute">00</span>:<span class="cd-second">00</span>
                     @endif
                 </h2>
                 <p class="text-muted mb-0">
-                    Vui lòng hoàn tất thanh toán để kích hoạt khóa học
+                    {{ __('students::clients/checkout.checkout.notice_complete_payment') }}
                 </p>
             </div>
 
@@ -29,39 +29,56 @@
 
                             <h5 class="fw-bold mb-3">
                                 <i class="bi bi-receipt me-1 text-primary"></i>
-                                Thông tin đơn hàng
+                                {{ __('students::clients/checkout.checkout.order_info') }}
                             </h5>
 
                             <table class="table table-bordered align-middle mb-4">
                                 <tbody>
                                     <tr>
-                                        <th width="30%" class="bg-light">Mã đơn hàng</th>
+                                        <th width="30%" class="bg-light">
+                                            {{ __('students::clients/checkout.checkout.order_code') }}</th>
                                         <td>#{{ $order->code }}</td>
                                     </tr>
 
                                     <tr>
-                                        <th class="bg-light">Tạm tính</th>
+                                        <th class="bg-light">{{ __('students::clients/checkout.checkout.subtotal') }}</th>
                                         <td class="fw-semibold">
-                                            {{ money($order->total) }}
+                                            {{ moneyLocale($order->total) }}
                                         </td>
                                     </tr>
 
                                     <tr>
-                                        <th class="bg-light text-success">
-                                            Giảm giá
+                                        @if (!empty($order->discount))
+                                            <th class="bg-light text-success">
+                                                {{ __('students::clients/checkout.checkout.discount') }}
+                                            </th>
+                                            <td class="text-success fw-medium discount-value">
+                                                - {{ moneyLocale($order->discount) }}
+                                            </td>
+                                        @else
+                                            <th class="bg-light text-success">
+                                                {{ __('students::clients/checkout.checkout.discount') }}
+                                            </th>
+                                            <td class="text-success fw-medium discount-value">
+                                                @if ($locale = app()->getLocale())
+                                                    @if ($locale === 'en')
+                                                        -0 $
+                                                    @else
+                                                        -0 đ
+                                                    @endif
+                                                @endif
+                                            </td>
+                                        @endif
+                                    </tr>
+
+                                    <tr>
+                                        <th class="bg-light">{{ __('students::clients/checkout.checkout.order_time') }}
                                         </th>
-                                        <td class="text-success fw-medium discount-value">
-                                            - {{ money($order->discount, freeText: '0 đ') }}
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th class="bg-light">Thời gian đặt</th>
                                         <td>{{ format_date_dmy($order->created_at) }}</td>
                                     </tr>
 
                                     <tr>
-                                        <th class="bg-light">Trạng thái</th>
+                                        <th class="bg-light">{{ __('students::clients/checkout.checkout.status') }}</th>
                                         <td>
                                             <span class="badge bg-{{ $order->status->color }} px-3 py-2">
                                                 {{ $order->status->name }}
@@ -71,9 +88,10 @@
 
                                     {{-- Divider --}}
                                     <tr class="table-secondary">
-                                        <th class="fw-bold">Tổng thanh toán</th>
+                                        <th class="fw-bold">{{ __('students::clients/checkout.checkout.total_payment') }}
+                                        </th>
                                         <td class="fw-bold text-danger fs-4 total_value">
-                                            {{ money($order->total - $order->discount) }}
+                                            {{ moneyLocale($order->total - $order->discount) }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -82,7 +100,7 @@
 
                             <h5 class="fw-bold mb-3">
                                 <i class="bi bi-journal-text me-1 text-success"></i>
-                                Chi tiết khóa học
+                                {{ __('students::clients/checkout.checkout.course_details') }}
                             </h5>
 
                             <div class="table-responsive">
@@ -90,10 +108,11 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>#</th>
-                                            <th>Khóa học</th>
-                                            <th class="text-end">Giá</th>
-                                            <th>Giảng viên</th>
-                                            <th class="text-center">Trạng thái</th>
+                                            <th>{{ __('students::clients/checkout.checkout.course') }}</th>
+                                            <th class="text-end">{{ __('students::clients/checkout.checkout.price') }}</th>
+                                            <th>{{ __('students::clients/checkout.checkout.instructor') }}</th>
+                                            <th class="text-center">
+                                                {{ __('students::clients/checkout.checkout.course_status') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -103,14 +122,14 @@
                                                 <td class="fw-semibold">
                                                     {{ $item?->courses?->name }}
                                                 </td>
-                                                @if($item?->courses?->sale_price)
-                                                <td class="text-end text-danger fw-semibold">
-                                                    {{ money($item?->courses?->sale_price) }}
-                                                </td>
+                                                @if ($item?->courses?->sale_price)
+                                                    <td class="text-end text-danger fw-semibold">
+                                                        {{ moneyLocale($item?->courses?->sale_price) }}
+                                                    </td>
                                                 @else
-                                                <td class="text-end text-danger fw-semibold">
-                                                    {{ money($item?->courses?->price) }}
-                                                </td>
+                                                    <td class="text-end text-danger fw-semibold">
+                                                        {{ moneyLocale($item?->courses?->price) }}
+                                                    </td>
                                                 @endif
                                                 <td>
                                                     {{ $item?->courses?->teacher?->name }}
@@ -119,7 +138,7 @@
                                                     <span
                                                         class="badge bg-{{ $item?->courses?->status ? 'success' : 'danger' }}-subtle 
                                                     text-{{ $item?->courses?->status ? 'success' : 'danger' }}">
-                                                        {{ $item?->courses?->status ? 'Đang hoạt động' : 'Dừng' }}
+                                                        {{ $item?->courses?->status ? __('students::clients/checkout.checkout.active') : __('students::clients/checkout.checkout.inactive') }}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -130,26 +149,27 @@
                                     <a href="{{ route('home', ['locale' => app()->getLocale()]) }}"
                                         class="btn btn-outline-primary btn-sm px-3 d-flex align-items-center">
                                         <i class="bi bi-arrow-left me-1"></i>
-                                        Quay lại trang chủ
+                                        {{ __('students::clients/checkout.checkout.back_home') }}
                                     </a>
 
-                                    <a href="{{ route('courses.home') }}"
+                                    <a href="{{ route('courses.home', ['locale' => app()->getLocale()]) }}"
                                         class="btn btn-success btn-sm px-3 d-flex align-items-center">
                                         <i class="bi bi-plus-circle me-1"></i>
-                                        Mua khóa học khác
+                                        {{ __('students::clients/checkout.checkout.buy_another_course') }}
                                     </a>
                                 </div>
                             </div>
 
                             <hr>
                             <div class="mb-4">
-                                <label class="form-label fw-semibold">Chọn hình thức thanh toán</label>
+                                <label
+                                    class="form-label fw-semibold">{{ __('students::clients/checkout.checkout.choose_payment_method') }}</label>
 
                                 <div class="form-check mb-2">
                                     <input class="form-check-input payment-method" type="radio" name="payment_method"
                                         value="bank" checked>
                                     <label class="form-check-label">
-                                        Chuyển khoản QR
+                                        {{ __('students::clients/checkout.checkout.qr_transfer') }}
                                     </label>
                                 </div>
 
@@ -158,7 +178,8 @@
                                         value="vnpay">
                                     <img src="{{ asset('clients/assets/vnpay.png') }}" alt="" style="width: 40px;">
                                     <label class="form-check-label">
-                                        VNPay <strong style="color: red">(Bảo trì)</strong>
+                                        VNPay <strong
+                                            style="color: red">({{ __('students::clients/checkout.checkout.maintenance') }})</strong>
                                     </label>
                                 </div>
 
@@ -167,7 +188,8 @@
                                         value="momo">
                                     <img src="{{ asset('clients/assets/momo.png') }}" alt="" style="width: 30px;">
                                     <label class="form-check-label">
-                                        MoMo <strong style="color: red">(Bảo trì)</strong>
+                                        MoMo <strong
+                                            style="color: red">({{ __('students::clients/checkout.checkout.maintenance') }})</strong>
                                     </label>
                                 </div>
                             </div>
@@ -184,25 +206,32 @@
                             <div id="payment-bank">
                                 <h5 class="fw-bold mb-3">
                                     <i class="bi bi-credit-card me-1 text-success"></i>
-                                    Thanh toán chuyển khoản
+                                    {{ __('students::clients/checkout.checkout.bank_transfer') }}
                                 </h5>
                                 @include('students::clients.partials.coupons')
                                 <ul class="list-unstyled small mb-3">
-                                    <li>🏦 <strong>Ngân hàng:</strong> Techcombank</li>
+                                    <li>🏦 <strong>{{ __('students::clients/checkout.checkout.bank_name') }}:</strong>
+                                        Techcombank</li>
                                     <li>
-                                        🔢 <strong>STK:</strong>
+                                        🔢 <strong>{{ __('students::clients/checkout.checkout.bank_account') }}:</strong>
                                         <span class="copy-text" data-copy="61043040524">61043040524</span>
                                         <i class="bank-copy fa-regular fa-copy"></i>
                                     </li>
-                                    <li>👤 <strong>Chủ TK:</strong> Nguyễn Duy Khánh</li>
-                                    <li>💰 <strong>Số tiền:</strong>
+                                    <li>👤
+                                        <strong>{{ __('students::clients/checkout.checkout.bank_account_name') }}:</strong>
+                                        {{ __('students::clients/checkout.checkout.bank_account_name_bank') }}
+                                    </li>
+                                    <li>💰 <strong>{{ __('students::clients/checkout.checkout.amount') }}:</strong>
                                         <span
-                                            class="text-danger fw-bold total_value">{{ money($order->total - $order->discount) }}</span>
+                                            class="text-danger fw-bold total_value">{{ moneyLocale($order->total - $order->discount) }}</span>
                                     </li>
                                     <li>
-                                        📝 <strong>Nội dung:</strong>
-                                        <span class="copy-text" data-copy="Thanh toan don {{ $order->code }}">
-                                            Thanh toan don {{ $order->code }}
+                                        📝
+                                        <strong>{{ __('students::clients/checkout.checkout.transfer_content') }}:</strong>
+                                        <span class="copy-text"
+                                            data-copy="{{ __('students::clients/checkout.checkout.transfer_note_qr') }} {{ $order->code }}">
+                                            {{ __('students::clients/checkout.checkout.transfer_note_qr') }}
+                                            {{ $order->code }}
                                         </span>
                                         <i class="bank-copy fa-regular fa-copy"></i>
                                     </li>
@@ -213,12 +242,12 @@
                                 <div class="text-center my-4">
                                     <div class="border rounded-3 p-3 bg-light d-inline-block">
                                         <img id="vietqr-img"
-                                            src="https://img.vietqr.io/image/techcombank-61043040524-compact2.jpg?amount={{ $order->total - $order->discount }}&addInfo={{ rawurlencode('Thanh toan don ' . $order->code) }}"
+                                            src="https://img.vietqr.io/image/techcombank-61043040524-compact2.jpg?amount={{ $order->total - $order->discount }}&addInfo={{ rawurlencode(__('students::clients/checkout.checkout.transfer_note_qr') . ' ' . $order->code) }}"
                                             class="img-fluid mb-2 qr-image" style="max-width: 220px" alt="VietQR">
                                         <div>
                                             <button type="button" class="btn btn-outline-primary btn-sm download-qr">
                                                 <i class="bi bi-download me-1"></i>
-                                                Tải QR
+                                                {{ __('students::clients/checkout.checkout.download_qr') }}
                                             </button>
                                         </div>
                                     </div>
@@ -227,29 +256,34 @@
                                 {{-- NOTE --}}
                                 <div class="alert alert-warning small">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    Sau khi chuyển khoản thành công, vui lòng nhấn
-                                    <strong>“Tôi đã thanh toán”</strong> để hoàn tất đơn hàng.
+                                    {{ __('students::clients/checkout.checkout.after_transfer_notice') }}
+                                    <strong>{{ __('students::clients/checkout.checkout.confirm_paid') }}</strong>
+                                    {{ __('students::clients/checkout.checkout.complete_order_notice') }}
                                 </div>
 
                                 {{-- BUTTON --}}
                                 <form method="POST"
-                                    action="{{ route('students.account.checkout-payment', $order->id) }}">
+                                    action="{{ route('students.account.checkout-payment', ['locale' => app()->getLocale(), 'id' => $order->id]) }}">
                                     @csrf
                                     <button class="btn btn-success w-100 py-2 fw-semibold">
                                         <i class="bi bi-check-circle me-1"></i>
-                                        Tôi đã thanh toán
+                                        {{ __('students::clients/checkout.checkout.i_have_paid') }}
                                     </button>
                                 </form>
 
                                 {{-- NÚT HỦY ĐƠN --}}
-                                @if (!$order->status->is_success == 1)
-                                    <form method="POST" class="mt-2"
-                                        action="{{ route('students.account.checkout-cancel', $order->id) }}"
-                                        onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')">
+                                @if (!$order->status->is_success)
+                                    <form method="POST" class="mt-2 js-cancel-order"
+                                        data-confirm="{{ __('students::clients/checkout.checkout.cancel_confirm') }}"
+                                        action="{{ route('students.account.checkout-cancel', [
+                                            'locale' => app()->getLocale(),
+                                            'id' => $order->id,
+                                        ]) }}">
                                         @csrf
-                                        <button class="btn btn-outline-danger w-100 py-2 fw-semibold">
-                                            <i class="bi bi-x-circle me-1" onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')"></i>
-                                            Hủy đơn hàng
+
+                                        <button type="submit" class="btn btn-outline-danger w-100 py-2 fw-semibold">
+                                            <i class="bi bi-x-circle me-1"></i>
+                                            {{ __('students::clients/checkout.checkout.cancel_order') }}
                                         </button>
                                     </form>
                                 @endif
@@ -258,13 +292,14 @@
                             <div id="payment-vnpay" class="d-none">
                                 @include('students::clients.partials.coupons')
                                 <p class="text-muted small">
-                                    Bạn sẽ được chuyển đến cổng thanh toán VNPay để hoàn tất giao dịch.
+                                    {{ __('students::clients/checkout.checkout.vnpay_notice') }}
                                 </p>
 
                                 <form method="POST" action="#">
                                     @csrf
                                     <button class="btn btn-primary w-100">
-                                        Thanh toán bằng VNPay (Bảo trì)
+                                        {{ __('students::clients/checkout.checkout.pay_with_vnpay') }}
+                                        ({{ __('students::clients/checkout.checkout.maintenance') }})
                                     </button>
                                 </form>
                             </div>
@@ -272,18 +307,17 @@
                             <div id="payment-momo" class="d-none">
                                 @include('students::clients.partials.coupons')
                                 <p class="text-muted small">
-                                    Bạn sẽ được chuyển đến cổng thanh toán MoMo để hoàn tất giao dịch.
+                                    {{ __('students::clients/checkout.checkout.momo_notice') }}
                                 </p>
 
                                 <form method="POST" action="#">
                                     @csrf
                                     <button class="btn btn-danger w-100">
-                                        Thanh toán bằng MoMo (Bảo trì)
+                                        {{ __('students::clients/checkout.checkout.pay_with_momo') }}
+                                        ({{ __('students::clients/checkout.checkout.maintenance') }})
                                     </button>
                                 </form>
                             </div>
-
-
                         </div>
                     </div>
                 </div>

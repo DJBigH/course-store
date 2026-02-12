@@ -37,23 +37,23 @@ class StudentsRequest extends FormRequest
     public function messages()
     {
         return [
-            'required' => __('students::validation.required'),
-            'email' => __('students::validation.email'),
-            'unique' => __('students::validation.unique'),
-            'max' => __('students::validation.max'),
-            'min' => __('students::validation.min'),
-            'integer' => __('students::validation.integer'),
-            'phone.regex' => __('students::validation.regex'),
+            'required' => __('students::clients/validation.required'),
+            'email' => __('students::clients/validation.email'),
+            'unique' => __('students::clients/validation.unique'),
+            'max' => __('students::clients/validation.max'),
+            'min' => __('students::clients/validation.min'),
+            'integer' => __('students::clients/validation.integer'),
+            'phone.regex' => __('students::clients/validation.regex'),
         ];
     }
 
     public function attributes()
     {
         return [
-            'name' => __('students::validation.attributes.name'),
-            'email' => __('students::validation.attributes.email'),
-            'password' => __('students::validation.attributes.password'),
-            'phone' => __('students::validation.attributes.phone'),
+            'name' => __('students::clients/validation.attributes.name'),
+            'email' => __('students::clients/validation.attributes.email'),
+            'password' => __('students::clients/validation.attributes.password'),
+            'phone' => __('students::clients/validation.attributes.phone'),
         ];
     }
 }

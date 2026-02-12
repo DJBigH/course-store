@@ -19,10 +19,10 @@ class ContactController extends Controller
 
     public function index()
     {
-        $pageTitle = 'Liên hệ thông tin';
-        $pageName = 'Liên hệ';
+        $pageTitle = __('contacts::clients/common.pageTitle');
+        $pageName = __('contacts::clients/common.pageTitle');
         $studentData = Auth::guard('students')->user();
-        return view('contacts::clients.index', compact('pageName', 'pageTitle', 'studentData'));
+        return view('contacts::clients.index', compact('pageName','pageTitle', 'studentData'));
     }
 
     public function store(ContactRequest $request)

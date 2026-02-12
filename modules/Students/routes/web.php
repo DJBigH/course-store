@@ -18,7 +18,7 @@ Route::prefix('admin')->group(function () {
 });
 
 Route::group(['as' => 'students.'], function () {
-   Route::group(['prefix' => 'tai-khoan', 'as' => 'account.', 'middleware' => ['auth:students', 'verified', 'user.block']], function () {
+   Route::group(['prefix' => '{locale}/tai-khoan', 'where' => ['locale' => 'vi|en'], 'as' => 'account.', 'middleware' => ['setLocale','auth:students', 'verified', 'user.block']], function () {
       Route::get('/', 'Clients\AccountController@index')->name('index');
       Route::get('/thong-tin', 'Clients\AccountController@profile')->name('profile');
       Route::post('/thong-tin', 'Clients\AccountController@updateProfile')->name('client-updateprofile');
@@ -40,12 +40,7 @@ Route::group(['as' => 'students.'], function () {
          Route::post('/polling', 'Clients\CouponsController@pollingCoupon')->name('coupons-pollingCoupon');
       });
 
-      Route::group([
-         'prefix' => '{locale}',
-         'where' => ['locale' => 'vi|en'],
-         'middleware' => 'setLocale',
-      ], function () {
-
+      Route::group([], function () {
          Route::prefix('checkout')->group(function () {
             Route::get('/cam-on/{id}', 'Clients\CheckoutController@thankyou')
                ->name('checkout-thankyou');

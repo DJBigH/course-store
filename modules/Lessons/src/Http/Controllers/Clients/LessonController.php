@@ -16,7 +16,7 @@ class LessonController extends Controller
         $this->lessonRepository = $lessonRepository;
     }
 
-    public function index($slug)
+    public function index($locale,$slug)
     {
         $lesson = $this->lessonRepository->getLessonActive($slug);
         if(!$lesson){

@@ -29,7 +29,7 @@ class PasswordRequest extends FormRequest
             'old_password' => ['required', function($attribute, $value, $fail){
                 $status = Hash::check($value, Auth::guard('students')->user()->password);
                 if(!$status){
-                    $fail(__('students::validation.password-invalid'));
+                    $fail(__('students::clients/validation.password-invalid'));
                 }
             }],
             'password' => 'required|min:6',
@@ -41,22 +41,22 @@ class PasswordRequest extends FormRequest
     public function messages()
     {
         return [
-            'required' => __('students::validation.required'),
-            'email' => __('students::validation.email'),
-            'unique' => __('students::validation.unique'),
-            'max' => __('students::validation.max'),
-            'min' => __('students::validation.min'),
-            'integer' => __('students::validation.integer'),
-            'phone.regex' => __('students::validation.regex'),
+            'required' => __('students::clients/validation.required'),
+            'email' => __('students::clients/validation.email'),
+            'unique' => __('students::clients/validation.unique'),
+            'max' => __('students::clients/validation.max'),
+            'min' => __('students::clients/validation.min'),
+            'integer' => __('students::clients/validation.integer'),
+            'phone.regex' => __('students::clients/validation.regex'),
         ];
     }
 
     public function attributes()
     {
         return [
-            'password' => __('students::validation.attributes.password'),
-            'confirm_password' => __('students::validation.attributes.confirm_password'),
-            'old_password' => __('students::validation.attributes.old_password'),
+            'password' => __('students::clients/validation.attributes.password'),
+            'confirm_password' => __('students::clients/validation.attributes.confirm_password'),
+            'old_password' => __('students::clients/validation.attributes.old_password'),
         ];
     }
 }

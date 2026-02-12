@@ -32,14 +32,14 @@ class LoginRequest extends FormRequest
     public function messages()
     {
        return [
-            'required' => __('auth::validation.required'),
-            'email' => __('auth::validation.email'),
+            'required' => __('auth::clients/validation.required'),
+            'email' => __('auth::clients/validation.email'),
        ];
     }
 
     public function attributes()
     {
-        return __('auth::validation.attributes');
+        return __('auth::clients/validation.attributes');
     }
 
 }

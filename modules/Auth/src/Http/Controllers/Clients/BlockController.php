@@ -18,7 +18,7 @@ class BlockController extends Controller
         if($user->status){
             return redirect()->route('home');
         }
-        $pageTitle = 'Tài khoản đã bị khóa';
+        $pageTitle = __('auth::clients/auth.block.page_title');
         return view('auth::clients.block',compact('pageTitle'));
     }
 }

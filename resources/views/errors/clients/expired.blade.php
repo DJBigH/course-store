@@ -1,6 +1,6 @@
 @extends('layouts.client')
 
-@section('title', 'Hết hạn thanh toán')
+@section('title', __('clients/errors.expired.title'))
 
 @section('content')
     <div class="container-fluid">
@@ -13,24 +13,24 @@
 
                 {{-- Title --}}
                 <h2 class="fw-semibold mb-3 text-danger">
-                    Thời gian thanh toán đã hết
+                    {{ __('clients/errors.expired.message_1') }}
                 </h2>
 
                 {{-- Message --}}
                 <p class="lead text-muted mb-3">
-                    Đơn hàng của bạn đã quá thời gian cho phép thanh toán.<br>
-                    Vui lòng thực hiện lại quá trình thanh toán để tiếp tục.
+                    {{ __('clients/errors.expired.message_2') }}<br>
+                    {{ __('clients/errors.expired.message_3') }}
                 </p>
 
                 {{-- Note --}}
                 <div class="alert alert-warning d-inline-block mb-4">
-                    ⏱ Thời gian giữ đơn thường là <strong>{{ config('checkout.checkout_countdown') }} phút</strong>.
+                    ⏱ {{ __('clients/errors.expired.hold_time_label') }} <strong>{{ config('checkout.checkout_countdown') }} {{ __('clients/errors.expired.minutes') }}</strong>.
                 </div>
 
                 {{-- Actions --}}
                 <div class="d-flex justify-content-center gap-2 flex-wrap">
                     <a href="#" class="btn btn-warning px-4">
-                        <i class="fas fa-redo"></i> Thanh toán lại
+                        <i class="fas fa-redo"></i> {{ __('clients/errors.expired.pay_again') }}
                     </a>
 
                     <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-secondary px-4">

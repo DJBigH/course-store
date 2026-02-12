@@ -18,10 +18,10 @@ class CheckoutController extends Controller
         $this->orderRepository = $ordersRepository;
     }
 
-    public function index($id)
+    public function index($locale, $id)
     {
-        $pageTitle = 'Thanh toán đơn hàng';
-        $pageName = 'Thanh toán';
+        $pageTitle = __('students::clients/checkout.checkout.page_title');
+        $pageName = __('students::clients/checkout.checkout.page_name');
         $order = $this->orderRepository->getOrder($id);
         if (!$order || $order->status->is_success == 1) {
             abort(404);
@@ -43,7 +43,7 @@ class CheckoutController extends Controller
         return view('students::clients.checkout', compact('pageTitle', 'pageName', 'order'));
     }
 
-    public function complete($orderId)
+    public function complete($locale, $orderId)
     {
         $order = $this->orderRepository->getOrder($orderId);
 
@@ -63,7 +63,7 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function cancel($id)
+    public function cancel($locale, $id)
     {
         $order = $this->orderRepository->getOrder($id);
 
@@ -78,16 +78,19 @@ class CheckoutController extends Controller
             $admin->notify(new OrderPaidNotification($order));
         }
         return redirect()
-            ->route('students.account.order-detail', $order->id);
+            ->route('students.account.order-detail', [
+                'locale' => app()->getLocale(),
+                'id' => $order->id
+            ]);
     }
 
 
 
-    public function thankyou($orderId)
+    public function thankyou($locale, $orderId)
     {
         $order = $this->orderRepository->getOrder($orderId);
-        $pageTitle = 'Cảm ơn bạn đã đặt hàng';
-        $pageName = 'Cảm ơn bạn đã đặt hàng';
+        $pageTitle = __('students::clients/thankyou.page_title');
+        $pageName = __('students::clients/thankyou.page_title');
         return view('students::clients.thanksyou', compact('pageTitle', 'pageName', 'order'));
     }
 }

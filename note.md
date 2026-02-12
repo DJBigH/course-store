@@ -444,6 +444,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Phân quyền admin/giáo viên
 - Tạo thêm 1 nơi để setting phân trang được (Không biết có nên làm không)
 - Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa ) (Done home page)
+- Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
     Clients:
 
 - Làm trang tổng quan cho cả clients ( Done )
@@ -458,3 +459,4 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm thanh toán = vnpay, momo
 - Làm lượt xem khi ấn vào khóa học +1 lượt xem (Done)
 - Notification clients (Done)
+- Thêm email khi mua hàng

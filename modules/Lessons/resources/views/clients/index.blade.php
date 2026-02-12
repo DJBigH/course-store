@@ -9,32 +9,41 @@
                     <div class="video-detail">
                         @if ($lesson->video?->url)
                             <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
-                                <source src="/data/stream?video={{ $lesson->video->url }}" type="video/mp4" />
+                                @php
+                                    $streamUrl =
+                                        route('courses.data.stream', ['locale' => app()->getLocale()]) .
+                                        '?video=' .
+                                        urlencode(ltrim($lesson->video->url, '/'));
+                                @endphp
+
+                                <source src="{{ $streamUrl }}" type="video/mp4" />
+
                                 <p class="vjs-no-js">
-                                    To view this video please enable JavaScript, and consider upgrading to a web browser
-                                    that
+                                    {{ __('lessons::clients/common.help') }}
                                 </p>
                             </video>
                         @else
                             <div class="alert alert-warning">
-                                Bài học này chưa có video
+                                {{ __('lessons::clients/common.no_video') }}
                             </div>
                         @endif
                     </div>
                     <div class="lesson-nav d-flex justify-content-between mt-4">
                         <div>
                             @if ($prevLesson)
-                                <a href="{{ route('lessons.home', $prevLesson->slug) }}" class="btn-lesson btn-prev">
+                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $prevLesson->slug]) }}"
+                                    class="btn-lesson btn-prev">
                                     <i class="fa-solid fa-arrow-left"></i>
-                                    <span>Quay lại</span>
+                                    <span>{{ __('lessons::clients/common.back') }}</span>
                                 </a>
                             @endif
                         </div>
 
                         <div>
                             @if ($nextLesson)
-                                <a href="{{ route('lessons.home', $nextLesson->slug) }}" class="btn-lesson btn-next">
-                                    <span>Tiếp theo</span>
+                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $nextLesson->slug]) }}"
+                                    class="btn-lesson btn-next">
+                                    <span>{{ __('lessons::clients/common.next') }}</span>
                                     <i class="fa-solid fa-arrow-right"></i>
                                 </a>
                             @endif
@@ -44,8 +53,8 @@
                 </div>
                 <div class="col-12 col-lg-4">
                     <div class="nav flex">
-                        <p class="lesson active">Bài học</p>
-                        <p class="document">Tài liệu</p>
+                        <p class="lesson active">{{ __('lessons::clients/common.lesson') }}</p>
+                        <p class="document">{{ __('lessons::clients/common.document') }}</p>
                     </div>
                     <div class="group">
                         <div class="accordion active title">
@@ -65,4 +74,26 @@
         const myVideoEl = document.querySelector('#my-video');
         videojs(myVideoEl);
     </script>
+@endsection
+
+@section('stylesheets')
+    <style>
+        .group {
+            /* position: relative; */
+            display: block;
+            gap: 20px !important;
+            padding: 0px !important;
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            /* transition: all 0.35s ease; */
+            height: auto;
+        }
+
+        .group:hover {
+            border-color: #2563eb;
+            transform: translateY(0px) !important;
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.12);
+        }
+    </style>
 @endsection

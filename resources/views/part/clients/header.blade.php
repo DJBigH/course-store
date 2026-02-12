@@ -38,14 +38,14 @@
             <div class="row align-items-center">
                 <div class="d-none d-lg-block col-lg-2">
                     <form>
-                        <input type="text" placeholder="{{ __('common.search_placeholder') }}" />
-                        <button type="submit" class="btn btn-primary">{{ __('common.search') }}</button>
+                        <input type="text" placeholder="{{ __('clients/common.search_placeholder') }}" />
+                        <button type="submit" class="btn btn-primary">{{ __('clients/common.search') }}</button>
                     </form>
                 </div>
                 <div class="d-none d-lg-block col-lg-7">
                     <div class="d-flex">
                         <p class="slogan">
-                            <i class="fas fa-phone"></i>{{ __('common.support') }}
+                            <i class="fas fa-phone"></i>{{ __('clients/common.support') }}
                             <a href="#">{{ setting('phone', '012345678') }}</a>
                         </p>
                         <p class="mail">
@@ -108,7 +108,7 @@
                                         aria-labelledby="notificationDropdown">
 
                                         <li class="dropdown-header fw-bold">
-                                            {{ __('common.notifications') }}
+                                            {{ __('clients/common.notifications') }}
                                         </li>
 
                                         @forelse($notifications as $notification)
@@ -118,7 +118,7 @@
 
                                                     <div class="notification-content">
                                                         <div class="notification-title">
-                                                            {{ $notification->data['title'] ?? __('common.notifications') }}
+                                                            {{ $notification->data['title'] ?? __('clients/common.notifications') }}
                                                         </div>
 
                                                         <div class="notification-message">
@@ -134,7 +134,7 @@
                                             </li>
                                         @empty
                                             <li class="dropdown-item text-muted small">
-                                                {{ __('common.no_notifications') }}
+                                                {{ __('clients/common.no_notifications') }}
                                             </li>
                                         @endforelse
 
@@ -152,15 +152,16 @@
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                         <li>
                                             <a class="dropdown-item d-flex align-items-center gap-2"
-                                                href="{{ route('students.account.index') }}">
-                                                <i class="fas fa-user-circle"></i> {{ __('common.my_account') }}
+                                                href="{{ route('students.account.index',['locale' => app()->getLocale()]) }}">
+                                                <i class="fas fa-user-circle"></i>
+                                                {{ __('clients/common.my_account') }}
                                             </a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item d-flex align-items-center gap-2 text-danger"
                                                 href="#"
                                                 onclick="document['form-logout'].submit(); return false;">
-                                                <i class="fas fa-sign-out-alt"></i> {{ __('common.logout') }}
+                                                <i class="fas fa-sign-out-alt"></i> {{ __('clients/common.logout') }}
                                             </a>
                                         </li>
                                     </ul>
@@ -169,12 +170,14 @@
                             </div>
                         @else
                             <button class="btn btn-primary">
-                                <a href="{{ route('clients-register') }}" class="text-white"
-                                    style="text-decoration: none !important"><i class="fas fa-user"></i> {{ __('common.register') }}</a>
+                                <a href="{{ route('clients-register',['locale' => app()->getLocale()]) }}" class="text-white"
+                                    style="text-decoration: none !important"><i class="fas fa-user"></i>
+                                    {{ __('clients/common.register') }}</a>
                             </button>
                             <button class="btn btn-primary">
-                                <a href="{{ route('clients-login') }}" class="text-white"
-                                    style="text-decoration: none !important"><i class="fas fa-key"></i> {{ __('common.login') }}</a>
+                                <a href="{{ route('clients-login',['locale' => app()->getLocale()]) }}" class="text-white"
+                                    style="text-decoration: none !important"><i class="fas fa-key"></i>
+                                    {{ __('clients/common.login') }}</a>
                             </button>
                         @endif
 
@@ -208,7 +211,7 @@
                         <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}"
                             href="{{ route('home', ['locale' => app()->getLocale()]) }}">
                             <i class="fas fa-home"></i>
-                            {{ __('common.home') }}
+                            {{ __('clients/common.home') }}
                         </a>
                     </li>
 
@@ -217,14 +220,16 @@
         {{ request()->routeIs('courses.*') ? 'active' : '' }}"
                             href="#" id="coursesDropdown" role="button">
                             <i class="fas fa-tv"></i>
-                            {{ __('common.course_categories') }}
+                            {{ __('clients/common.course_categories') }}
                         </a>
 
                         <ul class="dropdown-menu">
                             @foreach ($courseCategories as $category)
                                 <li class="dropdown-submenu">
                                     <a class="dropdown-item"
-                                        href="{{ route('categories.category', $category->slug) }}">
+                                        href="{{ route('categories.category', [
+                                        'locale' => app()->getLocale(),
+                                        'slug' => $category->slug]) }}">
                                         {{ $category->name }}
                                     </a>
                                     {{-- <ul class="dropdown-menu">
@@ -244,17 +249,17 @@
 
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
-                            href="{{ route('coupons.home') }}">
+                            href="{{ route('coupons.home', ['locale' => app()->getLocale()]) }}">
                             <i class="fas fa-ticket-alt"></i>
-                            {{ __('common.coupons') }}
+                            {{ __('clients/common.coupons') }}
                         </a>
                     </li>
 
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
-                            href="{{ route('contacts.home') }}">
+                            href="{{ route('contacts.home', ['locale' => app()->getLocale()]) }}">
                             <i class="fas fa-phone-alt"></i>
-                            {{ __('common.contact') }}
+                            {{ __('clients/common.contact') }}
                         </a>
                     </li>
 
@@ -264,4 +269,4 @@
     </nav>
 
 </header>
-<form action="{{ route('clients-logout') }}" method="post" name="form-logout">@csrf</form>
+<form action="{{ route('clients-logout',['locale' => app()->getLocale()]) }}" method="post" name="form-logout">@csrf</form>

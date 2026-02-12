@@ -27,7 +27,11 @@
                                         </div>
 
                                         <h5 class="course-title">
-                                            <a href="{{ route('courses.detail', $item->slug) }}">
+                                            <a
+                                                href="{{ route('courses.detail', [
+                                                    'locale' => app()->getLocale(),
+                                                    'slug' => $item->slug,
+                                                ]) }}">
                                                 {{ $item->name }}
                                             </a>
                                         </h5>
@@ -38,7 +42,11 @@
                                         </div>
 
                                         <div class="course-price">
-                                            <a href="{{ route('courses.detail', $item->slug) }}" class="btn-view">
+                                            <a href="{{ route('courses.detail', [
+                                                'locale' => app()->getLocale(),
+                                                'slug' => $item->slug,
+                                            ]) }}"
+                                                class="btn-view">
                                                 {{ __('home::common.detail') }} →
                                             </a>
                                         </div>

@@ -20,7 +20,7 @@
                     <h5 class="text-primary">{{ $item->code }}</h5>
 
                     <p class="mb-1">
-                        Giảm:
+                        {{ __('coupons::clients/common.sale') }}:
                         <strong>
                             @if ($item->discount_type === 'percent')
                                 {{ $item->discount_value }}%
@@ -33,9 +33,10 @@
                     @if ($item->courses->isNotEmpty())
                         <p class="small text-danger mb-1">
                             <i class="fas fa-book"></i>
-                            Áp dụng cho:
+                            {{ __('coupons::clients/common.applicable_to') }}:
                             <strong>
-                                Khóa học {{ $item->courses->pluck('name')->join(', ') }}
+                                {{ __('coupons::clients/common.course') }}
+                                {{ $item->courses->pluck('name')->join(', ') }}
                             </strong>
                         </p>
                     @endif
@@ -43,32 +44,34 @@
 
                     <p class="small mb-1">
                         @if ($limited)
-                            Còn {{ $remaining }} lượt
+                            {{ __('coupons::clients/common.still') }} {{ $remaining }}
+                            {{ __('coupons::clients/common.turn') }}
                         @else
-                            Không giới hạn lượt
+                            {{ __('coupons::clients/common.no_limit') }}
                         @endif
                     </p>
 
                     <p class="small text-muted mb-2">
                         <i class="fas fa-clock"></i>
                         @if ($endAt)
-                            HSD: {{ $startAt->format('d/m/Y') }}->{{ $endAt->format('d/m/Y') }}
+                            {{ __('coupons::clients/common.expiry_date') }}
+                            : {{ $startAt->format('d/m/Y') }}->{{ $endAt->format('d/m/Y') }}
                             @if ($daysLeft >= 0)
-                                (còn {{ $daysLeft }} ngày)
+                                ({{ __('coupons::clients/common.still') }} {{ $daysLeft }} {{ __('coupons::clients/common.date') }})
                             @else
-                                (đã hết hạn)
+                                ({{ __('coupons::clients/common.end') }})
                             @endif
                         @else
-                            Không giới hạn thời gian
+                            {{ __('coupons::clients/common.no_limit_time') }}
                         @endif
                     </p>
 
                     @if ($endAt && $daysLeft < 0)
-                        <span class="badge bg-secondary">Hết hạn</span>
+                        <span class="badge bg-secondary">{{ __('coupons::clients/common.expired') }}</span>
                     @elseif ($limited && $remaining <= 0)
-                        <span class="badge bg-danger">Hết lượt</span>
+                        <span class="badge bg-danger">{{ __('coupons::clients/common.time_up') }}</span>
                     @else
-                        <span class="badge bg-success">Còn dùng</span>
+                        <span class="badge bg-success">{{ __('coupons::clients/common.still_available') }}</span>
                     @endif
                 </div>
             </div>

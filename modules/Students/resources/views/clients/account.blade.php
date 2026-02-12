@@ -16,38 +16,38 @@
                 {{-- Content --}}
                 <div class="col-lg-9">
                     <div class="account-content">
-                        <h2 class="mb-3">Tổng quan tài khoản</h2>
+                        <h2 class="mb-3">{{ __('students::clients/account.account.title') }}</h2>
                         <p class="text-muted mb-4">
-                            Chào mừng bạn quay trở lại! Dưới đây là thông tin tổng quan về tài khoản học viên của bạn.
+                            {{ __('students::clients/account.account.welcome') }}
                         </p>
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <a href="{{ route('students.account.my-courses') }}">
+                                <a href="{{ route('students.account.my-courses', ['locale' => app()->getLocale()]) }}">
                                     <div class="overview-card">
                                         <i class="fa-solid fa-book"></i>
-                                        <h5>Khóa học</h5>
-                                        <span>{{ $totalCourses }} khoá</span>
+                                        <h5>{{ __('students::clients/account.account.courses') }}</h5>
+                                        <span>{{ $totalCourses }} {{ __('students::clients/account.account.courses_unit') }}</span>
                                     </div>
                                 </a>
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <a href="{{ route('students.account.my-coupon') }}">
+                                <a href="{{ route('students.account.my-coupon', ['locale' => app()->getLocale()]) }}">
                                     <div class="overview-card">
                                         <i class="fa-solid fa-ticket"></i>
-                                        <h5>Mã giảm giá</h5>
-                                        <span>{{ $totalCoupons }} mã</span>
+                                        <h5>{{ __('students::clients/account.account.coupons') }}</h5>
+                                        <span>{{ $totalCoupons }} {{ __('students::clients/account.account.coupons_unit') }}</span>
                                     </div>
                                 </a>
                             </div>
 
                             <div class="col-md-4 mb-3">
-                                <a href="{{ route('students.account.my-order') }}">
+                                <a href="{{ route('students.account.my-order', ['locale' => app()->getLocale()]) }}">
                                     <div class="overview-card">
                                         <i class="fa-solid fa-cart-shopping"></i>
-                                        <h5>Đơn hàng</h5>
-                                        <span>{{ $totalOrders }} đơn</span>
+                                        <h5>{{ __('students::clients/account.account.orders') }}</h5>
+                                        <span>{{ $totalOrders }} {{ __('students::clients/account.account.orders_unit') }}</span>
                                     </div>
                                 </a>
                             </div>

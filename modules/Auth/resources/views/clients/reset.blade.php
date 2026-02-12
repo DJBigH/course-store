@@ -6,38 +6,38 @@
                 <span>
                     <i class="fa-solid fa-arrow-left"></i>
                 </span>
-                Về trang chủ
+                {{ __('auth::clients/auth.reset.back_home') }}
             </a>
         </div>
         <div class="sign-up">
-            <h3>Đặt lại mật khẩu</h3>
+            <h3>{{ __('auth::clients/auth.reset.title') }}</h3>
             @if ($errors->any())
                 <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
                     <i class="fa-solid fa-circle-exclamation"></i>
-                    <span><strong>Lỗi!</strong> Vui lòng kiểm tra lại dữ liệu nhập vào.</span>
+                    <span><strong>{{ __('auth::clients/auth.reset.error_title') }}</strong> {{ __('auth::clients/auth.reset.error_message') }}</span>
                 </div>
             @endif
 
             @if (session('msg'))
                 <div class="alert alert-success d-flex align-items-center gap-2 mb-3" role="alert">
                     <i class="fa-solid fa-circle-check"></i>
-                    <span><strong>Thành công!</strong> {{ session('msg') }}</span>
+                    <span><strong>{{ __('auth::clients/auth.reset.success_title') }}</strong> {{ session('msg') }}</span>
                 </div>
             @endif
 
             @if (session('msg_danger'))
                 <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
                     <i class="fa-solid fa-circle-exclamation"></i>
-                    <span><strong>Lỗi!</strong> {{ session('msg_danger') }}</span>
+                    <span><strong>{{ __('auth::clients/auth.reset.error_title') }}</strong> {{ session('msg_danger') }}</span>
                 </div>
             @endif
             <form action="{{ route('clients.update.password') }}" method="POST">
                 @csrf
-                <input type="password" name="password" placeholder="Mật khẩu..." />
+                <input type="password" name="password" placeholder="{{ __('auth::clients/auth.reset.password_placeholder') }}" />
                 @error('password')
                     <span class="text-start text-danger">{{ $message }}</span>
                 @enderror
-                <input type="password" name="confirm_password" placeholder="Xác nhận mật khẩu..." />
+                <input type="password" name="confirm_password" placeholder="{{ __('auth::clients/auth.reset.password_confirm_placeholder') }}" />
                 @error('confirm_password')
                     <span class="text-start text-danger">{{ $message }}</span>
                 @enderror
@@ -45,12 +45,12 @@
                 <input type="hidden" name="email" value="{{ request()->email }}">
                 <button type="submit">
                     <i class="fa-solid fa-user"></i>
-                    Xác nhận
+                    {{ __('auth::clients/auth.reset.submit') }}
                 </button>
             </form>
             <p class="sign-in login">
-                Quay lại đăng nhập?
-                <a href="{{ route('clients-login') }}">Đăng nhập</a>
+                {{ __('auth::clients/auth.reset.back_login') }}
+                <a href="{{ route('clients-login') }}">{{ __('auth::clients/auth.reset.login') }}</a>
             </p>
         </div>
     </div>

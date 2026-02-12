@@ -35,16 +35,16 @@ class RegisterRequest extends FormRequest
     public function messages()
     {
         return [
-            'required' => __('auth::validation.required'),
-            'email' => __('auth::validation.email'),
-            'unique' => __('auth::validation.unique'),
-            'min' => __('auth::validation.min'),
-            'same' => __('auth::validation.same'),
+            'required' => __('auth::clients/validation.required'),
+            'email' => __('auth::clients/validation.email'),
+            'unique' => __('auth::clients/validation.unique'),
+            'min' => __('auth::clients/validation.min'),
+            'same' => __('auth::clients/validation.same'),
         ];
     }
 
     public function attributes()
     {
-        return __('auth::validation.attributes');
+        return __('auth::clients/validation.attributes');
     }
 }

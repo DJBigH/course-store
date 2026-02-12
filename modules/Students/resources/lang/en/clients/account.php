@@ -1,0 +1,184 @@
+<?php
+
+return [
+    //Menu
+    'menu' => [
+        'dashbroad' => 'Dashboard',
+        'profile' => 'Personal Information',
+        'my_course' => 'My Courses',
+        'coupons' => 'Coupons',
+        'order' => 'Orders',
+        'change_password' => 'Change Password',
+        'logout' => 'Log Out',
+    ],
+    //Core (shared)
+    'core' => [
+        'status' => 'Status',
+        'action' => 'Action',
+        'filter' => 'Filter',
+        'reset' => 'Reset',
+        'all' => 'All',
+        'all_status' => 'All statuses',
+        'search' => 'Search',
+        'from_date' => 'From date',
+        'to_date' => 'To date',
+        'total' => 'Total amount',
+        'time' => 'Time',
+        'back' => 'Back',
+        'discount' => 'Discount',
+        'remaining' => 'Remaining',
+        'uses' => 'uses',
+        'days' => 'days',
+        'expired' => 'expired',
+        'no_time_limit' => 'No time limit',
+        'no_use_limit' => 'Unlimited uses',
+        'no_data' => 'No data',
+        'active' => 'Active',
+        'inactive' => 'Inactive',
+        'instructor' => 'Instructor',
+        'course' => 'Course',
+        'order' => 'Order',
+        'coupon' => 'Coupon',
+        'price' => 'Price',
+    ],
+
+    //Account (Dashboard)
+    'account' => [
+        'title' => 'Account Overview',
+        'welcome' => 'Welcome back! Here is an overview of your student account.',
+        'courses' => 'Courses',
+        'courses_unit' => 'courses',
+        'coupons' => 'Coupons',
+        'coupons_unit' => 'codes',
+        'orders' => 'Orders',
+        'orders_unit' => 'orders',
+    ],
+
+    //Profile
+    'profile' => [
+        'title' => 'Personal Information',
+        'edit' => 'Edit information',
+        'cancel' => 'Cancel',
+        'full_name' => 'Full name',
+        'email' => 'Email',
+        'phone' => 'Phone number',
+        'address' => 'Address',
+        'status' => 'Status',
+        'registered_at' => 'Registered time',
+        'activated_at' => 'Activated time',
+        'update_title' => 'Update personal information',
+
+        'placeholder_full_name' => 'Enter full name...',
+        'placeholder_email' => 'Enter email...',
+        'placeholder_phone' => 'Enter phone number...',
+        'placeholder_address' => 'Enter address...',
+
+        'save' => 'Save changes',
+        'note_reload' => '* Please reload or press F5 after updating your information',
+    ],
+
+    //My Course
+    'my_course' => [
+        'title' => 'My Courses',
+        'instructor' => 'Instructor',
+        'all_instructors' => 'All instructors',
+        'search_course' => 'Search courses',
+        'placeholder_course_name' => 'Enter course name...',
+        'course_name' => 'Course name',
+        'status' => 'Status',
+        'action' => 'Action',
+        'updated_at' => 'Last updated',
+        'active' => 'Active',
+        'stop_update' => 'Stop updating',
+        'enter_course' => 'Start learning',
+        'empty' => "You haven't enrolled in any courses yet",
+    ],
+
+    //Coupons
+    'coupons' => [
+        'title' => 'My Coupons',
+        'discount' => 'Discount',
+        'remaining' => 'Remaining',
+        'uses' => 'uses',
+        'no_use_limit' => 'Unlimited uses',
+        'exp' => 'exp',
+        'days' => 'days',
+        'expired' => 'expired',
+        'no_time_limit' => 'No time limit',
+        'no_remaining_uses' => 'No remaining uses',
+        'available' => 'Available',
+        'issued_at' => 'Issued on:',
+        'empty' => "You don't have any coupons yet",
+    ],
+
+    //Order
+    'order' => [
+        'title' => 'Orders',
+        'status' => 'Status',
+        'all_status' => 'All statuses',
+        'no_data' => 'No data',
+        'order_code' => 'Order code',
+        'placeholder_order_code' => 'Enter order code...',
+        'from_date' => 'From date',
+        'to_date' => 'To date',
+        'total' => 'Total amount',
+        'placeholder_total' => 'Enter total amount...',
+        'reset' => 'Reset',
+        'filter' => 'Filter',
+
+        'table_order_code' => 'Order code',
+        'table_total' => 'Total amount',
+        'table_status' => 'Status',
+        'table_time' => 'Time',
+        'table_action' => 'Action',
+
+        'empty' => "You don't have any orders yet",
+    ],
+
+    //Order Details
+    'order_detail' => [
+        'title' => 'Order Details',
+        'code' => 'Order ID',
+        'order_info' => 'Order information',
+        'order_code' => 'Order code',
+        'subtotal' => 'Subtotal',
+        'coupon_discount' => 'Coupon discount',
+        'total_payment' => 'Total payment',
+        'ordered_at' => 'Ordered at',
+        'status' => 'Status',
+        'payment_expired_at' => 'Payment expires at',
+        'pay' => 'Pay now',
+
+        'coupon_applied' => 'Coupon applied',
+        'discount' => 'Discount',
+        'for_order' => 'for this order',
+
+        'course_info' => 'Course information',
+        'course_name' => 'Course name',
+        'price' => 'Price',
+        'instructor' => 'Instructor',
+        'course_status' => 'Status',
+        'active' => 'Active',
+        'inactive' => 'Inactive',
+
+        'no_detail' => 'No detailed data available',
+        'back' => 'Back',
+        'download_invoice' => 'Download invoice',
+    ],
+
+    'change_password' => [
+        'title' => 'Change Password',
+        'error' => 'Please check your input data',
+        'old_password' => 'Current password',
+        'old_password_placeholder' => 'Enter current password...',
+        'new_password' => 'New password',
+        'new_password_placeholder' => 'Enter new password...',
+        'confirm_password' => 'Confirm new password',
+        'confirm_password_placeholder' => 'Re-enter new password...',
+        'submit' => 'Change password',
+    ],
+
+    'logout' => [
+        'confirm_logout' => 'Are you sure you want to log out?',
+    ],
+];

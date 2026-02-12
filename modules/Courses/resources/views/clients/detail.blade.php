@@ -9,25 +9,25 @@
                         <ul>
                             <li>
                                 <a href="#information">
-                                    <i class="fa-solid fa-file"></i> Thông tin chung
+                                    <i class="fa-solid fa-file"></i> {{ __('courses::clients/common.information') }}
                                 </a>
                             </li>
                             <li>
                                 <a href="#curriculum">
                                     <i class="fa-solid fa-book"></i>
-                                    Giáo trình
+                                    {{ __('courses::clients/common.curriculum') }}
                                 </a>
                             </li>
                             <li>
                                 <a href="#author">
                                     <i class="fa-solid fa-user"></i>
-                                    Giảng viên
+                                    {{ __('courses::clients/common.author') }}
                                 </a>
                             </li>
                             <li>
                                 <a href="#evaluate">
                                     <i class="fa-solid fa-comment"></i>
-                                    Đánh giá
+                                    {{ __('courses::clients/common.evaluate') }}
                                 </a>
                             </li>
                         </ul>
@@ -43,12 +43,13 @@
                         <div class="accordion-top px-2">
                             <p>
                                 <i class="fa-solid fa-book me-1"></i>
-                                Gồm: {{ getLessonCount($course)->module }} phần - {{ getLessonCount($course)->lessons }} bài
-                                giảng
+                                {{ __('courses::clients/common.include') }}: {{ getLessonCount($course)->module }}
+                                {{ __('courses::clients/common.portion') }} - {{ getLessonCount($course)->lessons }}
+                                {{ __('courses::clients/common.lessons') }}
                             </p>
                             <p>
                                 <i class="fa-solid fa-clock me-1"></i>
-                                Thời lượng {{ getTime($course->durations) }}
+                                {{ __('courses::clients/common.duration') }} {{ getTime($course->durations) }}
                             </p>
                         </div>
                         @include('courses::clients.lesson')
@@ -63,7 +64,7 @@
                                 </div>
 
                                 <div class="flex-grow-1 ms-3">
-                                    <p class="text-muted mb-1 small">Giảng viên</p>
+                                    <p class="text-muted mb-1 small">{{ __('courses::clients/common.instructor') }}</p>
 
                                     <h5 class="instructor-name mb-1 fw-semibold">
                                         <a href="/giang-vien/{{ $course->teacher->slug }}"
@@ -74,7 +75,8 @@
 
                                     <div class="d-flex align-items-center gap-2 text-muted">
                                         <i class="bi bi-mortarboard"></i>
-                                        <span>{{ $course->teacher->exp }} năm kinh nghiệm</span>
+                                        <span>{{ $course->teacher->exp }}
+                                            {{ __('courses::clients/common.experience_years') }}</span>
                                     </div>
                                 </div>
 
@@ -90,7 +92,7 @@
 
 
                     <div class="course-video mb-4 instructor-box" id="evaluate">
-                        <h2 class="fs-4">Học viên đánh giá</h2>
+                        <h2 class="fs-4">{{ __('courses::clients/common.student_reviews') }}</h2>
                     </div>
                 </div>
                 <div class="col-12 col-lg-3">
@@ -107,14 +109,14 @@
                                 <i class="fa-solid fa-tag text-primary me-1"></i>
                                 @if ($course->sale_price)
                                     <span class="text-muted text-decoration-line-through me-2">
-                                        {{ money($course->price) }}
+                                        {{ moneyLocale($course->price) }}
                                     </span>
                                     <span class="fw-bold text-danger fs-5">
-                                        {{ money($course->sale_price) }}
+                                        {{ moneyLocale($course->sale_price) }}
                                     </span>
                                 @else
                                     <span class="fw-bold fs-5 text-danger">
-                                        {{ money($course->price) }}
+                                        {{ moneyLocale($course->price) }}
                                     </span>
                                 @endif
                             </div>
@@ -123,54 +125,55 @@
                             <ul class="course-meta list-unstyled mb-3">
                                 <li>
                                     <i class="fa-solid fa-bookmark text-warning"></i>
-                                    <span>Mã khóa học:</span>
+                                    <span>{{ __('courses::clients/common.course_code') }}:</span>
                                     <strong>{{ $course->code }}</strong>
                                 </li>
 
                                 <li>
                                     <i class="fa-solid fa-user-graduate text-primary"></i>
-                                    <span>Giảng viên:</span>
+                                    <span>{{ __('courses::clients/common.instructor') }}:</span>
                                     <strong>{{ $course->teacher->name }}</strong>
-                                    <small class="text-muted">({{ $course->teacher->exp }} năm)</small>
+                                    <small class="text-muted">({{ $course->teacher->exp }}
+                                        {{ __('courses::clients/common.exp') }})</small>
                                 </li>
 
                                 <li>
                                     <i class="fa-solid fa-clock text-success"></i>
-                                    <span>Thời lượng:</span>
+                                    <span>{{ __('courses::clients/common.duration') }}:</span>
                                     <strong>{{ getTime($course->durations) }}</strong>
                                 </li>
 
                                 {{-- ✅ THÊM: Cập nhật gần nhất --}}
                                 <li>
                                     <i class="fa-solid fa-calendar-check text-secondary"></i>
-                                    <span>Cập nhật:</span>
+                                    <span>{{ __('courses::clients/common.updated_at') }}:</span>
                                     <strong>{{ format_date_dmy($course->updated_at) }}</strong>
                                 </li>
 
                                 {{-- ✅ THÊM: Tổng số học viên --}}
                                 <li>
                                     <i class="fa-solid fa-users text-info"></i>
-                                    <span>Học viên:</span>
+                                    <span>{{ __('courses::clients/common.students') }}:</span>
                                     <strong>{{ number_format($course->students_count ?? 0) }}</strong>
                                 </li>
 
                                 <li>
                                     <i class="fa-solid fa-headset text-info"></i>
-                                    <span>Hỗ trợ:</span>
+                                    <span>{{ __('courses::clients/common.support') }}:</span>
                                     <strong>{!! $course->supports !!}</strong>
                                 </li>
 
                                 <li class="d-flex align-items-center gap-2">
                                     <i class="fa-solid fa-file-lines text-info"></i>
-                                    <span>Tài liệu đính kèm:</span>
+                                    <span>{{ __('courses::clients/common.attachments') }}:</span>
 
                                     @if ($course->is_document == 1)
                                         <span class="badge bg-success">
-                                            <i class="fa-solid fa-check me-1"></i> Có
+                                            <i class="fa-solid fa-check me-1"></i> {{ __('courses::clients/common.yes') }}
                                         </span>
                                     @else
                                         <span class="badge bg-secondary">
-                                            <i class="fa-solid fa-xmark me-1"></i> Không
+                                            <i class="fa-solid fa-xmark me-1"></i> {{ __('courses::clients/common.no') }}
                                         </span>
                                     @endif
                                 </li>
@@ -190,24 +193,26 @@
                             @endphp
 
                             @if ($hasCourse && $firstLesson)
-                                <a href="{{ route('lessons.home', $firstLesson->slug) }}"
+                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $firstLesson->slug]) }}"
                                     class="btn btn-success w-100 fw-semibold">
                                     <i class="fa-solid fa-play me-1"></i>
-                                    Vào học
+                                    {{ __('courses::clients/common.start_learning') }}
                                 </a>
                             @elseif ($hasCourse)
                                 <button class="btn btn-secondary w-100" disabled>
                                     <i class="fa-solid fa-circle-info me-1"></i>
-                                    Khóa học chưa có bài giảng
+                                    {{ __('courses::clients/common.no_lectures') }}
+
                                 </button>
                             @else
-                                <form action="{{ route('courses.create') }}" method="POST">
+                                <form action="{{ route('courses.create', ['locale' => app()->getLocale()]) }}"
+                                    method="POST">
                                     @csrf
                                     <input type="hidden" name="course_id" value="{{ $course->id }}">
 
                                     <button class="btn btn-primary w-100 fw-semibold payment">
                                         <i class="fa-solid fa-cart-shopping me-1"></i>
-                                        Đặt mua khóa học
+                                        {{ __('courses::clients/common.buy_course') }}
                                     </button>
                                 </form>
                             @endif

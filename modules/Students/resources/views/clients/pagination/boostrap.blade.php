@@ -31,13 +31,13 @@
 
             {{-- Info --}}
             <div class="text-muted small">
-                Hiển thị
+                {{ __('students::clients/paginator.display') }}
                 <span class="fw-semibold">{{ $paginator->firstItem() }}</span>
                 –
                 <span class="fw-semibold">{{ $paginator->lastItem() }}</span>
                 /
                 <span class="fw-semibold">{{ $paginator->total() }}</span>
-                kết quả
+                {{ __('students::clients/paginator.result') }}
             </div>
 
             {{-- Pagination --}}

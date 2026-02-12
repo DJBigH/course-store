@@ -11,7 +11,7 @@
         </p>
 
         <div class="cta-actions">
-            <a href="{{ route('contacts.home') }}" class="cta-btn primary">
+            <a href="{{ route('contacts.home',['locale' => app()->getLocale()]) }}" class="cta-btn primary">
                 🚀 {{ __('home::common.btn_consult') }}
             </a>
             <a href="#" class="cta-btn outline">

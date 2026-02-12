@@ -4,7 +4,7 @@
 
 @if ($modules->isEmpty())
     <div class="alert alert-info text-center">
-        Khóa học chưa có bài học nào
+        {{ __('courses::clients/common.no_lessons') }}
     </div>
 @else
     @php $hasLesson = false; @endphp
@@ -21,7 +21,7 @@
             <h4 class="accordion-title {{ $key == 0 ? 'active' : '' }}">
                 {{ $module->name }}
                 <span class="lesson-count">
-                    {{ $module->children->count() }} bài học
+                    {{ $module->children->count() }} {{ __('courses::clients/common.lesson') }}
                 </span>
             </h4>
 
@@ -31,13 +31,14 @@
                         <div class="lesson-item">
                             <div class="lesson-left">
                                 <i class="fa-brands fa-youtube"></i>
-                                <a href="{{ route('lessons.home', $lesson->slug) }}" class="lesson-title">
+                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $lesson->slug]) }}"
+                                    class="lesson-title">
                                     {{ 'Bài ' . ++$index . ': ' . $lesson->name }}
                                 </a>
 
                                 @if ($lesson->is_trial)
                                     <p class="preview trial-btn" data-id="{{ $lesson->id }}">
-                                        Học thử
+                                        {{ __('courses::clients/common.trial') }}
                                     </p>
                                 @endif
                             </div>
@@ -48,7 +49,7 @@
                     </div>
                 @empty
                     <p class="text-muted small px-3">
-                        Chưa có bài học trong chương này
+                        {{ __('courses::clients/common.no_lessons_in_module') }}
                     </p>
                 @endforelse
             </div>
@@ -57,7 +58,7 @@
 
     @if (!$hasLesson)
         <div class="alert alert-info text-center mt-3">
-            Khóa học chưa có bài học nào
+            {{ __('courses::clients/common.no_lessons') }}
         </div>
     @endif
 @endif
@@ -80,7 +81,9 @@
                     activeBtnMap.set('current', e.target); // lưu nút hiện tại
 
                     try {
-                        const response = await fetch("{{ route('courses.data.trial') }}/" + id);
+                        const response = await fetch(
+                            "{{ route('courses.data.trial', ['locale' => app()->getLocale()]) }}/" +
+                            id);
                         const {
                             success,
                             data
@@ -89,11 +92,14 @@
                             'Không được phép học thử!');
 
                         modalEl.querySelector('.modal-title').innerText = data.name;
+                        const streamUrl =
+                            `{{ route('courses.data.stream', ['locale' => app()->getLocale()]) }}?video=${encodeURIComponent(data.video.url)}`;
                         modalEl.querySelector('.modal-body').innerHTML = `
-                    <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
-                        <source src="/data/stream?video=${data.video.url}" type="video/mp4"/>
-                    </video>
-                `;
+                        <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
+                            <source src="${streamUrl}" type="video/mp4"/>
+                        </video>
+                        `;
+
 
                         Modal.show();
                         videojs(modalEl.querySelector('#my-video'));

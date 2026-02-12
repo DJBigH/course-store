@@ -1,66 +1,66 @@
-@extends('layouts.auth_clients')
+@extends('layouts.client')
 @section('content')
     <div class="container">
         <div class="home-back">
-            <a href="{{ route('home', ['locale' => app()->getLocale()]) }}">
+            {{-- <a href="{{ route('home', ['locale' => app()->getLocale()]) }}">
                 <span>
                     <i class="fa-solid fa-arrow-left"></i>
                 </span>
-                Về trang chủ
-            </a>
+                {{ __('auth::clients/auth.register.back_home') }}
+            </a> --}}
         </div>
         <div class="sign-up">
-            <h3>Đăng kí</h3>
+            <h3>{{ __('auth::clients/auth.register.title') }}</h3>
             @if ($errors->any())
                 <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
                     <i class="fa-solid fa-circle-exclamation"></i>
-                    <span><strong>Lỗi!</strong> Vui lòng kiểm tra lại dữ liệu nhập vào.</span>
+                    <span><strong>{{ __('auth::clients/auth.register.error_title') }}</strong> {{ __('auth::clients/auth.register.error_message') }}</span>
                 </div>
             @endif
 
             @if (session('msg'))
                 <div class="alert alert-success d-flex align-items-center gap-2 mb-3" role="alert">
                     <i class="fa-solid fa-circle-check"></i>
-                    <span><strong>Thành công!</strong> {{ session('msg') }}</span>
+                    <span><strong>{{ __('auth::clients/auth.register.success_title') }}</strong> {{ session('msg') }}</span>
                 </div>
             @endif
 
             @if (session('msg_danger'))
                 <div class="alert alert-danger d-flex align-items-center gap-2 mb-3" role="alert">
                     <i class="fa-solid fa-circle-exclamation"></i>
-                    <span><strong>Lỗi!</strong> {{ session('msg_danger') }}</span>
+                    <span><strong>{{ __('auth::clients/auth.register.error_title') }}</strong> {{ session('msg_danger') }}</span>
                 </div>
             @endif
             <form action="" method="POST">
                 @csrf
-                <input type="text" name="name" placeholder="Họ và tên..." />
+                <input type="text" name="name" placeholder="{{ __('auth::clients/auth.register.name_placeholder') }}" />
                 @error('name')
                     <span class="text-start text-danger">{{ $message }}</span>
                 @enderror
-                <input type="text" name="email" placeholder="Email..." />
+                <input type="text" name="email" placeholder="{{ __('auth::clients/auth.register.email_placeholder') }}" />
                 @error('email')
                     <span class="text-start text-danger">{{ $message }}</span>
                 @enderror
-                <input type="text" name="phone" placeholder="Số điện thoại..." />
+                <input type="text" name="phone" placeholder="{{ __('auth::clients/auth.register.phone_placeholder') }}" />
                 @error('phone')
                     <span class="text-start text-danger">{{ $message }}</span>
                 @enderror
-                <input type="password" name="password" placeholder="Mật khẩu..." />
+                <input type="password" name="password" placeholder="{{ __('auth::clients/auth.register.password_placeholder') }}" />
                 @error('password')
                     <span class="text-start text-danger">{{ $message }}</span>
                 @enderror
-                <input type="password" name="confirm_password" placeholder="Lặp lại mật khẩu..." />
+                <input type="password" name="confirm_password" placeholder="{{ __('auth::clients/auth.register.password_confirm_placeholder') }}" />
                 @error('confirm_password')
                     <span class="text-start text-danger">{{ $message }}</span>
                 @enderror
                 <button type="submit">
                     <i class="fa-solid fa-user"></i>
-                    Đăng kí
+                    {{ __('auth::clients/auth.register.submit') }}
                 </button>
             </form>
             <p class="sign-in login">
-                Bạn đã có tài khoản?
-                <a href="{{ route('clients-login') }}">Đăng nhập ngay</a>
+                {{ __('auth::clients/auth.register.has_account') }}
+                <a href="{{ route('clients-login',['locale' => app()->getLocale()]) }}">{{ __('auth::clients/auth.register.login_now') }}</a>
             </p>
         </div>
     </div>

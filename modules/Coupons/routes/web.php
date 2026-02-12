@@ -19,10 +19,14 @@ Route::prefix('admin')->group(function () {
       Route::get('/coupons-usages/{id}', 'CouponController@CouponHistory')->name('coupons-history');
 
       Route::get('logs/{student}', 'CouponController@logs')->name('logs');
-
    });
 });
 
-Route::group(['as' => 'coupons.','middleware' => ['auth:students','verified','user.block']], function () {
-   Route::get('/ma-giam-gia','CouponController@CouponClient')->name('home');
+Route::group([
+   'as' => 'coupons.',
+   'prefix' => '{locale}',
+   'where' => ['locale' => 'vi|en'],
+   'middleware' => ['setLocale','auth:students', 'verified', 'user.block']
+], function () {
+   Route::get('/ma-giam-gia', 'CouponController@CouponClient')->name('home');
 });

@@ -36,25 +36,28 @@ class CoursesController extends Controller
         return view('courses::clients.index', compact('pageTitle', 'pageName', 'courses'));
     }
 
-    public function detail($slug)
+    public function detail($locale, $slug)
     {
+        // middleware setLocale đã set app()->getLocale() rồi
         $course = $this->courseRepository->getCourseActive($slug);
+
+        if (!$course) abort(404);
+
         $cacheKey = 'course_view_' . $course->id . '_' . request()->ip();
 
         if (!Cache::has($cacheKey)) {
             $course->increment('view');
             Cache::put($cacheKey, true, now()->addMinutes(30));
         }
-        if (!$course) {
-            abort(404);
-        }
+
         $pageTitle = $course->name;
-        $pageName = $course->name;
+        $pageName  = $course->name;
         $index = 0;
+
         return view('courses::clients.detail', compact('pageTitle', 'pageName', 'course', 'index'));
     }
 
-    public function getTrialVideo($lessonId = 0)
+    public function getTrialVideo($locale, $lessonId = 0)
     {
         $lesson = $this->lessonRepository->find($lessonId);
         if (!$lesson) {
@@ -101,14 +104,15 @@ class CoursesController extends Controller
         $order = $this->orderRepository
             ->createOrderWithDetail($orderData, $detailData);
 
-        return redirect()->route('students.account.checkout', $order->id);
+        return redirect()->route('students.account.checkout', ['locale' => app()->getLocale(), 'id' => $order->id]);
     }
 
-    public function category($slug)
+    public function category($locale, $slug)
     {
         $category = Category::where('slug', $slug)->firstOrFail();
-        $pageTitle = 'Khóa học theo chuyên mục ' . $category->name;
-        $pageName = 'Khóa học theo chuyên mục ' . $category->name;
+        $pageTitle = __('courses::clients/common.page_title') . ' ' . $category->name;
+        $pageName  = $pageTitle;
+
         if (!$category) {
             abort(404);
         }

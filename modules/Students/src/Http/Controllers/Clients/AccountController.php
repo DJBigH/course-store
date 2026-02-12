@@ -31,8 +31,8 @@ class AccountController extends Controller
     }
     public function index()
     {
-        $pageTitle = 'Thông tin tài khoản';
-        $pageName = 'Thông tin tài khoản';
+        $pageTitle = __('students::clients/account.account.title');
+        $pageName = $pageTitle;
         $student = Auth::guard('students')->user();
 
         // 1. Tổng số khóa học đã mua
@@ -53,10 +53,10 @@ class AccountController extends Controller
         return view('students::clients.account', compact('pageTitle', 'pageName', 'totalCoupons', 'totalCourses', 'totalOrders', 'recentCourses'));
     }
 
-    public function profile()
+    public function profile($locale)
     {
-        $pageTitle = 'Thông tin cá nhân';
-        $pageName = 'Thông tin cá nhân';
+        $pageTitle = __('students::clients/account.profile.title');
+        $pageName = $pageTitle;
 
         $student = Auth::guard('students')->user();
 
@@ -78,8 +78,8 @@ class AccountController extends Controller
 
     public function myCourse(Request $request)
     {
-        $pageTitle = 'Khóa học của tôi';
-        $pageName = 'Khóa học của tôi';
+        $pageTitle = __('students::clients/account.my_course.title');
+        $pageName = $pageTitle;
 
         $filters = [];
         if ($request->teacher_id) {
@@ -98,8 +98,8 @@ class AccountController extends Controller
 
     public function myCoupon(Request $request)
     {
-        $pageTitle = 'Mã giảm giá của tôi';
-        $pageName = 'Mã giảm giá của tôi';
+        $pageTitle = __('students::clients/account.coupons.title');
+        $pageName = $pageTitle;
         $filters = [];
         $studentId = Auth::guard('students')->user()->id;
         $coupon = $this->studentRepository->getCoupons($studentId, $filters, config('paginate.coupon_limit'));
@@ -108,8 +108,8 @@ class AccountController extends Controller
 
     public function myOrder(Request $request)
     {
-        $pageTitle = 'Đơn hàng';
-        $pageName = 'Đơn hàng';
+        $pageTitle = __('students::clients/account.order.title');
+        $pageName = $pageTitle;
 
         $filters = [];
         if ($request->status_id) {
@@ -139,10 +139,10 @@ class AccountController extends Controller
         return view('students::clients.my_order', compact('pageTitle', 'pageName', 'orders', 'ordersStatus'));
     }
 
-    public function orderDetail($orderId)
+    public function orderDetail($locale,$orderId)
     {
-        $pageTitle = 'Chi tiết đơn hàng';
-        $pageName = 'Chi tiết đơn hàng';
+        $pageTitle = __('students::clients/account.order_detail.title');
+        $pageName = $pageTitle;
         $order = $this->orderRepository->getOrder($orderId);
         if (!$order) {
             abort(404);
@@ -158,8 +158,8 @@ class AccountController extends Controller
 
     public function changePassword()
     {
-        $pageTitle = 'Đổi mật khẩu';
-        $pageName = 'Đổi mật khẩu';
+        $pageTitle = __('students::clients/account.change_password.title');
+        $pageName = $pageTitle;
         return view('students::clients.change_password', compact('pageTitle', 'pageName'));
     }
 

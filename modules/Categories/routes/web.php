@@ -16,6 +16,11 @@ Route::prefix('admin')->group(function () {
   });
 });
 
-Route::group(['as' => 'categories.'], function () {
+Route::group([
+  'as' => 'categories.',
+  'prefix' => '{locale}',
+  'where' => ['locale' => 'vi|en'],
+  'middleware' => ['setLocale']
+], function () {
   Route::get('danh-muc/{slug}', [CoursesController::class, 'category'])->name('category');
 });
