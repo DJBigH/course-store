@@ -17,8 +17,11 @@ class Courses extends Model
     protected $fillable = [
         'id',
         'name',
+        'name_en',
         'slug',
+        'slug_en',
         'detail',
+        'detail_en',
         'teacher_id',
         'thumbnail',
         'price',
@@ -27,6 +30,7 @@ class Courses extends Model
         'durations',
         'is_document',
         'supports',
+        'supports_en',
         'status',
         'view',
         'created_at',
@@ -66,7 +70,36 @@ class Courses extends Model
         );
     }
 
-    public function orderDetail(){
-        return $this->hasMany(OrderDetail::class,'course_id','id')->withoutGlobalScopes();
+    public function orderDetail()
+    {
+        return $this->hasMany(OrderDetail::class, 'course_id', 'id')->withoutGlobalScopes();
+    }
+
+    public function getNameLocaleAttribute(): string
+    {
+        return app()->getLocale() === 'en'
+            ? ($this->name_en ?: $this->name ?: '')
+            : ($this->name ?: $this->name_en ?: '');
+    }
+
+    public function getDetailLocaleAttribute(): string
+    {
+        return app()->getLocale() === 'en'
+            ? ($this->detail_en ?: $this->detail ?: '')
+            : ($this->detail ?: $this->detail_en ?: '');
+    }
+
+    public function getSupportsLocaleAttribute(): string
+    {
+        return app()->getLocale() === 'en'
+            ? ($this->supports_en ?: $this->supports ?: '')
+            : ($this->supports ?: $this->supports_en ?: '');
+    }
+
+    public function getSlugLocaleAttribute(): string
+    {
+        return app()->getLocale() === 'en'
+            ? ($this->slug_en ?: $this->slug ?: '')
+            : ($this->slug ?: $this->slug_en ?: '');
     }
 }

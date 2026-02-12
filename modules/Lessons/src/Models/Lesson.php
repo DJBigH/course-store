@@ -17,7 +17,9 @@ class Lesson extends Model
     protected $table = 'lessons';
     protected $fillable = [
         'name',
+        'name_en',
         'slug',
+        'slug_en',
         'video_id',
         'course_id',
         'document_id',
@@ -27,10 +29,11 @@ class Lesson extends Model
         'position',
         'durations',
         'description',
+        'description_en',
         'status',
     ];
 
-    protected $with = ['video','document'];
+    protected $with = ['video', 'document'];
 
     public function children()
     {
@@ -57,11 +60,34 @@ class Lesson extends Model
         return $this->belongsTo(Courses::class, 'course_id', 'id');
     }
 
-    public function scopeActive(Builder $query){
+    public function scopeActive(Builder $query)
+    {
         queryActive($query);
     }
 
-     public function scopePosition(Builder $query){
+    public function scopePosition(Builder $query)
+    {
         queryPosition($query);
+    }
+
+    public function getNameLocaleAttribute()
+    {
+        return app()->getLocale() === 'en'
+            ? ($this->name_en ?: $this->name)
+            : $this->name;
+    }
+
+    public function getSlugLocaleAttribute()
+    {
+        return app()->getLocale() === 'en'
+            ? ($this->slug_en ?: $this->slug)
+            : $this->slug;
+    }
+
+    public function getDescriptionLocaleAttribute()
+    {
+        return app()->getLocale() === 'en'
+            ? ($this->description_en ?: $this->description)
+            : $this->description;
     }
 }

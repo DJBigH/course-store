@@ -21,7 +21,7 @@ class TeacherSeeder extends Seeder
             $teacher = new Teacher();
             $teacher->name = $faker->name;
             $teacher->slug = $faker->slug;
-            $teacher->description = "Demo test";
+            $teacher->description = "Seeder Faker";
             $teacher->exp = 1;
             $teacher->image = null;
             $teacher->save();

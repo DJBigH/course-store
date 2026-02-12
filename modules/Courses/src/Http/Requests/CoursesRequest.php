@@ -25,23 +25,27 @@ class CoursesRequest extends FormRequest
 
         $uniqueRule = 'unique:courses,code';
 
-        if($id){
-            $uniqueRule.=','.$id;
+        if ($id) {
+            $uniqueRule .= ',' . $id;
         }
 
         $rules = [
             'name' => 'required|max:225',
+            'name_en' => 'nullable|max:225',
             'slug' => 'required|max:225',
+            'slug_en' => 'nullable|max:225',
             'detail' => 'required',
+            'detail_en' => 'nullable',
             'teacher_id' => ['required', 'integer', function ($attribute, $value, $fail) {
                 if ($value == 0) {
                     $fail(__('courses::validation.select'));
                 }
             }],
             'thumbnail' => 'required|max:225',
-            'code' => 'required|max:225|'.$uniqueRule,
+            'code' => 'required|max:225|' . $uniqueRule,
             'is_document' => 'required|integer',
             'supports' => 'required',
+            'supports_en' => 'nullable',
             'status' => 'required|integer',
             'categories' => 'required',
         ];

@@ -36,11 +36,10 @@ class CoursesController extends Controller
         return view('courses::clients.index', compact('pageTitle', 'pageName', 'courses'));
     }
 
-    public function detail($locale, $slug)
+    public function detail($locale, $slug_locale)
     {
         // middleware setLocale đã set app()->getLocale() rồi
-        $course = $this->courseRepository->getCourseActive($slug);
-
+        $course = $this->courseRepository->getCourseActive($slug_locale);
         if (!$course) abort(404);
 
         $cacheKey = 'course_view_' . $course->id . '_' . request()->ip();
@@ -50,8 +49,8 @@ class CoursesController extends Controller
             Cache::put($cacheKey, true, now()->addMinutes(30));
         }
 
-        $pageTitle = $course->name;
-        $pageName  = $course->name;
+        $pageTitle = $course->name_locale;
+        $pageName  = $course->name_locale;
         $index = 0;
 
         return view('courses::clients.detail', compact('pageTitle', 'pageName', 'course', 'index'));

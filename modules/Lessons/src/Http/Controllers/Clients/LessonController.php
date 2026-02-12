@@ -22,8 +22,8 @@ class LessonController extends Controller
         if(!$lesson){
             abort(404);
         }
-        $pageTitle = $lesson->name;
-        $pageName = $lesson->name;
+        $pageTitle = $lesson->name_locale;
+        $pageName = $lesson->name_locale;
         $course = $lesson->course;
         $index = 0;
 

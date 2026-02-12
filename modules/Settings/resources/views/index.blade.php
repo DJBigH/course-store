@@ -148,8 +148,7 @@
                 </div>
             </div>
 
-            <div class="row">
-                {{-- Cột trái --}}
+            {{-- <div class="row">
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header fw-bold">
@@ -184,8 +183,7 @@
                     </div>
                 </div>
 
-                {{-- Cột phải --}}
-                {{-- <div class="col-md-6">
+                <div class="col-md-6">
                     <div class="card">
                         <div class="card-header fw-bold">
                             Cấu hình chung
@@ -200,8 +198,8 @@
 
                         </div>
                     </div>
-                </div> --}}
-            </div>
+                </div> 
+            </div> --}}
 
             {{-- Nút lưu --}}
             <div class="text-end mt-3">

@@ -147,7 +147,7 @@
                                                 <tr>
                                                     <td class="text-center text-muted">{{ $key + 1 }}</td>
                                                     <td class="fw-semibold">
-                                                        {{ $item?->courses?->name }}
+                                                        {{ $item?->courses?->name_locale }}
                                                     </td>
                                                     <td class="text-end">
                                                         @if ($item->courses?->sale_price)

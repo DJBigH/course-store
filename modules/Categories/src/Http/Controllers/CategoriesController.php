@@ -60,7 +60,16 @@ class CategoriesController extends Controller
                 $row['logs'] = '<a href="' . route('categories.logs', $category['id']) . '" class="btn btn-info">Lịch sử</a>';
                 $row['edit'] = '<a href="' . route('categories.edit', $category['id']) . '" class="btn btn-warning">Sửa</a>';
                 $row['delete'] = '<a href="' . route('categories.delete', $category['id']) . '" class="btn btn-danger delete-action">Xóa</a>';
-                $row['link'] = '<a href="' . route('categories.category', $category['slug']) . '" class="btn btn-primary" target="_blank">Xem</a>';
+                $locale = app()->getLocale();
+                $slug = $locale === 'en'
+                    ? ($category['slug_en'] ?? $category['slug'])
+                    : ($category['slug'] ?? $category['slug_en']);
+
+                $row['link'] = '<a href="' . route('categories.category', [
+                    'locale' => $locale,
+                    'slug' => $slug
+                ]) . '" class="btn btn-primary" target="_blank">Xem</a>';
+
                 $row['created_at'] = Carbon::parse($category['created_at'])->format('d/m/Y H:i:s');
                 unset($row['sub_categories']);
                 unset($row['updated_at']);

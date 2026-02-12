@@ -35,7 +35,7 @@
 
                     <div class="course-descreption instructor-box" id="information">
                         <div class="course-content">
-                            {!! $course->detail !!}
+                            {!! $course->detail_locale !!}
                         </div>
                     </div>
 
@@ -85,7 +85,7 @@
                             <hr>
 
                             <div class="course-content-infor instructor-desc">
-                                {!! $course->teacher->description !!}
+                                {!! $course->teacher->description_locale !!}
                             </div>
                         </div>
                     @endif
@@ -99,7 +99,7 @@
                     <div class="course-profile shadow-sm rounded mb-4">
                         <!-- Thumbnail -->
                         <div class="course-thumb">
-                            <img src="{{ $course->thumbnail }}" alt="{{ $course->name }}">
+                            <img src="{{ $course->thumbnail }}" alt="{{ $course->name_locale }}">
                         </div>
 
                         <!-- Content -->
@@ -160,7 +160,7 @@
                                 <li>
                                     <i class="fa-solid fa-headset text-info"></i>
                                     <span>{{ __('courses::clients/common.support') }}:</span>
-                                    <strong>{!! $course->supports !!}</strong>
+                                    <strong>{!! $course->supports_locale !!}</strong>
                                 </li>
 
                                 <li class="d-flex align-items-center gap-2">

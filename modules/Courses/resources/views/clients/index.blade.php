@@ -37,13 +37,13 @@
                                         </p>
                                     </div>
 
-
                                     <h5 class="descreption-title">
-                                        <a
-                                            href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug]) }}">
-                                            {{ $course->name }}
-                                        </a>
+                                            <a
+                                                href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}">
+                                                {{ $course->name_locale ?? $course->name }}
+                                            </a>
                                     </h5>
+
 
                                     <div class="descreption-teacher">
                                         <img src="{{ $course->teacher?->image }}" alt="{{ $course->teacher?->name }}" />

@@ -460,3 +460,4 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm lượt xem khi ấn vào khóa học +1 lượt xem (Done)
 - Notification clients (Done)
 - Thêm email khi mua hàng
+- Bình luận khóa học

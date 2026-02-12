@@ -33,9 +33,9 @@
                                     <a
                                         href="{{ route('courses.detail', [
                                             'locale' => app()->getLocale(),
-                                            'slug' => $item->slug,
+                                            'slug' => $item->slug_locale,
                                         ]) }}">
-                                        {{ $item->name }}
+                                        {{ $item->name_locale }}
                                     </a>
                                 </h5>
 
@@ -53,7 +53,7 @@
 
                                 <a href="{{ route('courses.detail', [
                                     'locale' => app()->getLocale(),
-                                    'slug' => $item->slug,
+                                    'slug' => $item->slug_locale,
                                 ]) }}"
                                     class="btn-view">
                                     {{ __('home::common.detail') }} →

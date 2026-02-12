@@ -8,6 +8,7 @@ return [
             'name' => 'Tên',
             'slug' => 'Slug',
             'description' => 'Mô tả',
+            'description_en' => 'Mô tả',
             'exp' => 'Kinh nghiệm',
             'image' => 'Ảnh',
     ]

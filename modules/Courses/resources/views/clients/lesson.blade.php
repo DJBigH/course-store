@@ -19,7 +19,7 @@
 
         <div class="accordion-group">
             <h4 class="accordion-title {{ $key == 0 ? 'active' : '' }}">
-                {{ $module->name }}
+                {{ $module->name_locale }}
                 <span class="lesson-count">
                     {{ $module->children->count() }} {{ __('courses::clients/common.lesson') }}
                 </span>
@@ -31,9 +31,9 @@
                         <div class="lesson-item">
                             <div class="lesson-left">
                                 <i class="fa-brands fa-youtube"></i>
-                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $lesson->slug]) }}"
+                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $lesson->slug_locale]) }}"
                                     class="lesson-title">
-                                    {{ 'Bài ' . ++$index . ': ' . $lesson->name }}
+                                    {{ 'Bài ' . ++$index . ': ' . $lesson->name_locale }}
                                 </a>
 
                                 @if ($lesson->is_trial)

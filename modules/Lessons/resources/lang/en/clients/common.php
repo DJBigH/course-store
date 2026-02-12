@@ -12,7 +12,7 @@ return [
     // Tabs
     'lesson'      => 'Lessons',
     'document'    => 'Documents',
-
+    'lesson_1' => 'lessons',
     // Labels
     'lesson_item' => 'Lesson',
     'lessons'     => 'Lessons',

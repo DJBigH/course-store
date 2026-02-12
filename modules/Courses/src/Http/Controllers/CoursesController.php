@@ -96,9 +96,8 @@ class CoursesController extends Controller
         $payload['price']      = $payload['price'] ?: 0;
 
         $course = $this->courseRepository->create($payload);
-
         $categories = $this->getCategories($payload);
-        $this->courseRepository->createCoursesCategory($course, $categories);
+        $a = $this->courseRepository->createCoursesCategory($course, $categories);
         activity_log(
             action: 'create',
             subject: $course,
@@ -116,7 +115,7 @@ class CoursesController extends Controller
                 $student->notify(new StudentNotification([
                     'title' => 'Khóa học mới',
                     'message' => 'Khóa học ' . $course->name . ' vừa được đăng',
-                    'url' => route('courses.detail', $course->slug),
+                    'url' => route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug]),
                 ]));
             }
         });

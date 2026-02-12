@@ -13,6 +13,18 @@
     @endif
     <form action="" method="post">
         @csrf
+        {{-- Toggle ngôn ngữ nội dung --}}
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="mb-0">Thông tin giảng viên</h5>
+
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="content_lang" id="lang_vi" checked>
+                <label class="btn btn-outline-primary" for="lang_vi">VI</label>
+
+                <input type="radio" class="btn-check" name="content_lang" id="lang_en">
+                <label class="btn btn-outline-primary" for="lang_en">EN</label>
+            </div>
+        </div>
         <div class="row">
             <div class="col-6">
                 <div class="mb-3">
@@ -53,16 +65,30 @@
                 </div>
             </div>
 
+            {{-- DESCRIPTION (VI/EN) --}}
             <div class="col-12">
-                <div class="mb-3">
-                    <label for="">Mô tả</label>
-                    <textarea name="description" class="form-control ckeditor {{ $errors->has('description') ? ' is-invalid' : '' }}"
-                        cols="30" rows="10" placeholder="Hỗ trợ...">{{ old('description') ?? $teacher->description }}</textarea>
-                    @error('description')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
+                {{-- VI --}}
+                <div class="lang-block lang-vi">
+                    <div class="mb-3">
+                        <label for="">Mô tả (VI)</label>
+                        <textarea name="description" class="form-control ckeditor {{ $errors->has('description') ? ' is-invalid' : '' }}"
+                            cols="30" rows="10" placeholder="Mô tả...">{{ old('description', $teacher->description ?? '') }}</textarea>
+                        @error('description')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- EN --}}
+                <div class="lang-block lang-en d-none">
+                    <div class="mb-3">
+                        <label for="">Mô tả (EN)</label>
+                        <textarea name="description_en" class="form-control ckeditor {{ $errors->has('description_en') ? ' is-invalid' : '' }}"
+                            cols="30" rows="10" placeholder="Mô tả...">{{ old('description_en', $teacher->description_en ?? '') }}</textarea>
+                        @error('description_en')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
@@ -125,4 +151,26 @@
             border: 1px solid #d1d1d1
         }
     </style>
+@endsection
+
+@section('scripts')
+    <script>
+        (function() {
+            const viBtn = document.getElementById('lang_vi');
+            const enBtn = document.getElementById('lang_en');
+
+            function showLang(lang) {
+                document.querySelectorAll('.lang-block').forEach(el => el.classList.add('d-none'));
+                document.querySelectorAll('.lang-' + lang).forEach(el => el.classList.remove('d-none'));
+                localStorage.setItem('admin_teacher_lang', lang);
+            }
+
+            const saved = localStorage.getItem('admin_teacher_lang') || 'vi';
+            if (saved === 'en') enBtn.checked = true;
+            showLang(saved);
+
+            viBtn.addEventListener('change', () => showLang('vi'));
+            enBtn.addEventListener('change', () => showLang('en'));
+        })();
+    </script>
 @endsection

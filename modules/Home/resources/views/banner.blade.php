@@ -12,9 +12,9 @@
                                         <a
                                             href="{{ route('courses.detail', [
                                                 'locale' => app()->getLocale(),
-                                                'slug' => $item->slug,
+                                                'slug' => $item->slug_locale,
                                             ]) }}">
-                                            {{ $item->name }}
+                                            {{ $item->name_locale }}
                                         </a>
                                     </li>
 
@@ -36,8 +36,8 @@
                                     <li><a
                                             href="{{ route('courses.detail', [
                                                 'locale' => app()->getLocale(),
-                                                'slug' => $item->slug,
-                                            ]) }}">{{ $item->name }}</a>
+                                                'slug' => $item->slug_locale,
+                                            ]) }}">{{ $item->name_locale }}</a>
                                     </li>
                                 </ul>
                             @endforeach
@@ -57,8 +57,8 @@
                                     <li><a
                                             href="{{ route('courses.detail', [
                                                 'locale' => app()->getLocale(),
-                                                'slug' => $item->slug,
-                                            ]) }}">{{ $item->name }}</a>
+                                                'slug' => $item->slug_locale,
+                                            ]) }}">{{ $item->name_locale }}</a>
                                     </li>
                                     </li>
                                 </ul>
