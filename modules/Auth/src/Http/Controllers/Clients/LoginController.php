@@ -26,7 +26,7 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
-        $pageTitle = "Đăng nhập tài khoản";
+        $pageTitle = __('auth::clients/auth.login.page_title');
         return view('auth::clients.login', compact('pageTitle'));
     }
 
@@ -55,23 +55,23 @@ class LoginController extends Controller
             abort(403, 'Tài khoản đã đăng nhập trên thiết bị khác');
         }
 
-        return redirect()->intended('/');
+        return redirect()->route('home', ['locale' => app()->getLocale()]);
     }
 
 
     public function logout()
     {
         Auth::guard('students')->logout();
-        return redirect()->route('home');
+        return redirect()->route('home', ['locale' => app()->getLocale()]);
     }
 
-    public function showFormForgot()
+    public function showFormForgot($locale)
     {
-        $pageTitle = "Quên mật khẩu";
+        $pageTitle = __('auth::clients/auth.forgot.page_title');
         return view('auth::clients.forgot', compact('pageTitle'));
     }
 
-    public function handleSendForgotLink(Request $request)
+    public function handleSendForgotLink(Request $request, $locale)
     {
         $request->validate(['email' => 'required|email']);
 
@@ -85,13 +85,13 @@ class LoginController extends Controller
         return back()->with('msg_danger', __('auth::messages.password.sent.failure'));
     }
 
-    public function showFormReset($token)
+    public function showFormReset($token,$locale)
     {
-        $pageTitle = "Đặt lại mật khẩu";
+        $pageTitle = __('auth::clients/auth.reset.page_title');
         return view('auth::clients.reset', compact('pageTitle', 'token'));
     }
 
-    public function updatePassword(Request $request)
+    public function updatePassword(Request $request,$locale)
     {
         $request->validate([
             'email' => 'required|email',

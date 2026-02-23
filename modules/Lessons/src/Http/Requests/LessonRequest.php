@@ -29,7 +29,7 @@ class LessonRequest extends FormRequest
             'parent_id' => 'required|integer',
             'is_trial' => 'required|integer',
             'position' => 'required|integer',
-            'description' => 'required',
+            // 'description' => 'required',
 
         ];
         if ($this->parent_id !== 0) {

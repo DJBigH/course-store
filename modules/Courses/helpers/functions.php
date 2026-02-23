@@ -14,3 +14,5 @@ function getCategoriesCheckBox($categories, $old = [], $parentId = 0, $char = ''
         }
     }
 }
+
+

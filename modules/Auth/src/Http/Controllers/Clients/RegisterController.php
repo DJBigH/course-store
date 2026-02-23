@@ -25,13 +25,13 @@ class RegisterController extends Controller
         $this->middleware('guest:students');
     }
 
-    public function showRegistrationForm()
+    public function showRegistrationForm($locale)
     {
-        $pageTitle = "Đăng ký tài khoản";
+        $pageTitle = __('auth::clients/auth.register.page_title');
         return view('auth::clients.register', compact('pageTitle'));
     }
 
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request,$locale)
     {
         $dataInsert = [
             'name' => $request->name,
@@ -52,6 +52,6 @@ class RegisterController extends Controller
         foreach ($admins as $admin) {
             $admin->notify(new RegisterNotification($user));
         }
-        return redirect()->route('verification.notice');
+        return redirect()->route('verification.notice', ['locale' => app()->getLocale()]);
     }
 }

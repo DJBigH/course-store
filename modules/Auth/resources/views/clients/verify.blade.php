@@ -19,54 +19,56 @@
 
             {{-- Title --}}
             <h2 class="fw-bold text-danger mb-3">
-                Xác minh email của bạn
+                {{ __('auth::clients/auth.verify.title') }}
             </h2>
 
             {{-- Description --}}
             <p class="text-muted mb-4 lh-lg">
-                Chúng tôi đã gửi email xác minh đến địa chỉ của bạn.<br>
-                Vui lòng kiểm tra hộp thư và nhấn vào liên kết<br>
-                để kích hoạt tài khoản.
+                {{ __('auth::clients/auth.verify.message_sent') }}<br>
+                {{ __('auth::clients/auth.verify.instruction_1') }}<br>
+                {{ __('auth::clients/auth.verify.instruction_2') }}
             </p>
 
             {{-- Primary actions --}}
             <div class="d-flex flex-column flex-sm-row justify-content-center gap-3 mt-2">
-                <a href="{{ route('home') }}" class="btn btn-outline-secondary px-4">
+                <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-secondary px-4">
                     <i class="fa-solid fa-arrow-left me-1"></i>
-                    Trang chủ
+                    {{ __('auth::clients/auth.verify.home') }}
                 </a>
 
                 <a href="https://mail.google.com/" target="_blank" class="btn btn-danger px-4">
                     <i class="fa-solid fa-envelope me-1"></i>
-                    Mở Gmail
+                    {{ __('auth::clients/auth.verify.open_gmail') }}
                 </a>
             </div>
 
             {{-- Divider --}}
             <div class="d-flex align-items-center my-4">
                 <div class="flex-grow-1 border-top"></div>
-                <span class="px-3 text-muted small">hoặc</span>
+                <span class="px-3 text-muted small">{{ __('auth::clients/auth.verify.or') }}</span>
                 <div class="flex-grow-1 border-top"></div>
             </div>
 
             {{-- Resend --}}
-            <form method="POST" action="{{ route('verification.send') }}" id="resend-form">
+            <form method="POST" action="{{ route('verification.send', ['locale' => app()->getLocale()]) }}"
+                id="resend-form">
                 @csrf
                 <button type="submit" id="resend-btn" class="btn btn-link text-decoration-none text-danger fw-semibold">
                     <i class="fa-solid fa-rotate-right me-1"></i>
-                    Gửi lại email xác minh
+                    {{ __('auth::clients/auth.verify.resend_email') }}
                 </button>
             </form>
 
             <div id="countdown" class="mt-3 small text-muted d-none">
-                Bạn có thể gửi lại sau
-                <span id="timer" class="fw-bold">60</span> giây
+                {{ __('auth::clients/auth.verify.resend_after') }}
+                <span id="timer" class="fw-bold">60</span> {{ __('auth::clients/auth.verify.seconds') }}
             </div>
 
 
             {{-- Note --}}
             <div class="mt-3 small text-muted">
-                Không nhận được email? Hãy kiểm tra <b>Spam</b> hoặc <b>Quảng cáo</b>.
+                {{ __('auth::clients/auth.verify.not_received') }} <b>{{ __('auth::clients/auth.verify.spam') }}</b>
+                {{ __('auth::clients/auth.verify.or') }} <b>{{ __('auth::clients/auth.verify.promotions') }}</b>.
             </div>
         </div>
     </div>

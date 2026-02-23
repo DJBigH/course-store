@@ -16,14 +16,14 @@ class LessonController extends Controller
         $this->lessonRepository = $lessonRepository;
     }
 
-    public function index($slug)
+    public function index($locale,$slug)
     {
         $lesson = $this->lessonRepository->getLessonActive($slug);
         if(!$lesson){
             abort(404);
         }
-        $pageTitle = $lesson->name;
-        $pageName = $lesson->name;
+        $pageTitle = $lesson->name_locale;
+        $pageName = $lesson->name_locale;
         $course = $lesson->course;
         $index = 0;
 

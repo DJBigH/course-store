@@ -11,7 +11,10 @@ if (profileBtn) {
 
     const renderButton = () => {
         profileBtn.innerHTML =
-            status === "table" ? "Cập nhập thông tin" : "Hủy";
+            status === "table"
+                ? window.i18n.profile_edit
+                : window.i18n.profile_cancel;
+
         if (status === "form") {
             profileBtn.classList.replace("btn-warning", "btn-danger");
         } else {
@@ -45,9 +48,14 @@ if (profileBtn) {
 
 //Xử lý profile
 const profileForm = document.querySelector("form.js-profile");
+const locale = document.documentElement.lang || "vi";
+
 if (profileForm) {
+    const msgSuccess = profileForm.dataset.msgSuccess;
+    const msgError = profileForm.dataset.msgError;
+
     const updateProfile = async (formData, token) => {
-        const response = await fetch(`/tai-khoan/thong-tin`, {
+        const response = await fetch(`/${locale}/tai-khoan/thong-tin`, {
             method: "POST",
             headers: {
                 "X-CSRF-TOKEN": token,
@@ -56,22 +64,21 @@ if (profileForm) {
             },
             body: JSON.stringify(formData),
         });
+
         const { errors, success } = await response.json();
+
         if (errors) {
             showErrors(errors);
         } else {
-            const msgSuccess = `Cập nhật thông tin thành công`;
-            const msgError = `Không thể cập nhật vào lúc này`;
             if (success) {
                 showMessage(msgSuccess, "success");
-                setTimeout(() => {
-                    window.location.reload();
-                }, 300);
+                setTimeout(() => window.location.reload(), 300);
             } else {
                 showMessage(msgError, "error");
             }
         }
     };
+    // phần còn lại giữ nguyên
     const showErrors = (errors) => {
         const errorList = profileForm.querySelectorAll(".error");
         errorList.forEach((error) => {
@@ -122,8 +129,17 @@ if (downloadBtn) {
 
         pdf.addImage(image, "PNG", 0, 0, pdfWidth, pdfHeight);
 
-        pdf.save(`don-hang-${Date.now()}.pdf`);
+        pdf.save(`order-${Date.now()}.pdf`);
     });
-
-    
 }
+
+document.addEventListener("click", function (e) {
+    const el = e.target.closest(".js-logout");
+    if (!el) return;
+
+    e.preventDefault();
+
+    if (confirm(el.dataset.confirm)) {
+        el.closest("form").submit();
+    }
+});

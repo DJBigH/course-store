@@ -10,16 +10,15 @@
                 <!-- LEFT INFO -->
                 <div class="col-12 col-lg-5">
                     <div class="contact-info">
-                        <h3>Liên hệ với BigK-Udemy</h3>
+                        <h3>{{ __('contacts::clients/common.contact_me') }}</h3>
                         <p>
-                            Chúng tôi luôn sẵn sàng tư vấn lộ trình học phù hợp nhất
-                            cho mục tiêu nghề nghiệp của bạn.
+                            {{ __('contacts::clients/common.listen') }}
                         </p>
 
                         <div class="info-item">
                             <i class="fas fa-phone-alt"></i>
                             <div>
-                                <span>Hotline</span>
+                                <span>{{ __('contacts::clients/common.hotline') }}</span>
                                 <strong>{{ setting('phone', '012345678') }}</strong>
                             </div>
                         </div>
@@ -27,7 +26,7 @@
                         <div class="info-item">
                             <i class="fas fa-envelope"></i>
                             <div>
-                                <span>Email</span>
+                                <span>{{ __('contacts::clients/common.email') }}</span>
                                 <strong>{{ setting('email', 'bigk@gmail.com') }}</strong>
                             </div>
                         </div>
@@ -35,7 +34,7 @@
                         <div class="info-item">
                             <i class="fas fa-map-marker-alt"></i>
                             <div>
-                                <span>Địa chỉ</span>
+                                <span>{{ __('contacts::clients/common.address') }}</span>
                                 <strong>{{ setting('address', 'Việt Nam') }}</strong>
                             </div>
                         </div>
@@ -56,8 +55,8 @@
                 <!-- FORM -->
                 <div class="col-12 col-lg-7">
                     <div class="contact-form">
-                        <h4>🚀 Đăng ký tư vấn miễn phí</h4>
-                        <p>Để lại thông tin, chúng tôi sẽ liên hệ trong vòng 24h</p>
+                        <h4>🚀 {{ __('contacts::clients/common.register') }}</h4>
+                        <p>{{ __('contacts::clients/common.info') }}</p>
                         @if (session('msg'))
                             <div class="alert alert-success-custom">
                                 <i class="fas fa-check-circle"></i>
@@ -68,20 +67,22 @@
                             <div class="alert alert-error-custom">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <div>
-                                    <strong>Không thể gửi yêu cầu</strong>
-                                    <p>Vui lòng kiểm tra lại thông tin, một số trường chưa hợp lệ.</p>
+                                    <strong>{{ __('contacts::clients/messages.error.any.title') }}</strong>
+                                    <p>{{ __('contacts::clients/messages.error.any.content') }}</p>
                                 </div>
                             </div>
                         @endif
 
                         @if (!empty($studentData))
-                            <form method="POST" action="{{ route('contacts.post-contacts') }}">
+                            <form method="POST"
+                                action="{{ route('contacts.post-contacts', ['locale' => app()->getLocale()]) }}">
                                 @csrf
 
                                 <div class="form-group">
                                     <input type="text"
                                         class="form-control title {{ $errors->has('name') ? ' is-invalid' : '' }}"
-                                        name="name" placeholder="Tên..." value="{{ old('name', $studentData->name) }}">
+                                        name="name" placeholder="{{ __('contacts::clients/common.name_placeholder') }}"
+                                        value="{{ old('name', $studentData->name) }}">
                                     @error('name')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -92,7 +93,7 @@
                                 <div class="form-group">
                                     <input type="text"
                                         class="form-control title {{ $errors->has('phone') ? ' is-invalid' : '' }}"
-                                        name="phone" placeholder="Số điện thoại..."
+                                        name="phone" placeholder="{{ __('contacts::clients/common.phone_placeholder') }}"
                                         value="{{ old('phone', $studentData->phone) }}">
                                     @error('phone')
                                         <div class="invalid-feedback">
@@ -104,7 +105,7 @@
                                 <div class="form-group">
                                     <input type="text"
                                         class="form-control title {{ $errors->has('email') ? ' is-invalid' : '' }}"
-                                        name="email" placeholder="Email..."
+                                        name="email" placeholder="{{ __('contacts::clients/common.email_placeholder') }}"
                                         value="{{ old('email', $studentData->email) }}">
                                     @error('email')
                                         <div class="invalid-feedback">
@@ -114,7 +115,7 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <textarea name="message" rows="4" placeholder="Bạn muốn tư vấn khóa học nào?"
+                                    <textarea name="message" rows="4" placeholder="{{ __('contacts::clients/common.course') }}"
                                         class="form-control {{ $errors->has('message') ? 'is-invalid' : '' }}">{{ old('message') }}</textarea>
 
                                     @error('message')
@@ -126,7 +127,7 @@
 
 
                                 <button type="submit" class="btn-submit">
-                                    Gửi yêu cầu tư vấn →
+                                    {{ __('contacts::clients/common.submit_form') }} →
                                 </button>
                             </form>
                         @else
@@ -136,7 +137,8 @@
                                 <div class="form-group">
                                     <input type="text"
                                         class="form-control title {{ $errors->has('name') ? ' is-invalid' : '' }}"
-                                        name="name" placeholder="Tên..." value="{{ old('name') }}">
+                                        name="name" placeholder="{{ __('contacts::clients/common.name_placeholder') }}"
+                                        value="{{ old('name') }}">
                                     @error('name')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -147,7 +149,8 @@
                                 <div class="form-group">
                                     <input type="text"
                                         class="form-control title {{ $errors->has('phone') ? ' is-invalid' : '' }}"
-                                        name="phone" placeholder="Số điện thoại..." value="{{ old('phone') }}">
+                                        name="phone" placeholder="{{ __('contacts::clients/common.phone_placeholder') }}"
+                                        value="{{ old('phone') }}">
                                     @error('phone')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -158,7 +161,8 @@
                                 <div class="form-group">
                                     <input type="text"
                                         class="form-control title {{ $errors->has('email') ? ' is-invalid' : '' }}"
-                                        name="email" placeholder="Email..." value="{{ old('email') }}">
+                                        name="email" placeholder="{{ __('contacts::clients/common.email_placeholder') }}"
+                                        value="{{ old('email') }}">
                                     @error('email')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -167,7 +171,7 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <textarea name="message" rows="4" placeholder="Bạn muốn tư vấn khóa học nào?"
+                                    <textarea name="message" rows="4" placeholder="{{ __('contacts::clients/common.course') }}"
                                         class="form-control {{ $errors->has('message') ? 'is-invalid' : '' }}">{{ old('message') }}</textarea>
 
                                     @error('message')
@@ -179,7 +183,7 @@
 
 
                                 <button type="submit" class="btn-submit">
-                                    Gửi yêu cầu tư vấn →
+                                    {{ __('contacts::clients/common.submit_form') }} →
                                 </button>
                             </form>
                         @endif

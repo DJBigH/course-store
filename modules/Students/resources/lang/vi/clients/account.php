@@ -1,0 +1,184 @@
+<?php
+
+return [
+    //Menu
+    'menu' => [
+        'dashbroad' => 'Tổng quan',
+        'profile' => 'Thông tin cá nhân',
+        'my_course' => 'Khóa học của tôi',
+        'coupons' => 'Mã giảm giá',
+        'order' => 'Đơn hàng',
+        'change_password' => 'Đổi mật khẩu',
+        'logout' => 'Đăng xuất',
+    ],
+    //Core (dùng chung nhiều nơi)
+    'core' => [
+        'status' => 'Trạng thái',
+        'action' => 'Hành động',
+        'filter' => 'Lọc',
+        'reset' => 'Reset',
+        'all' => 'Tất cả',
+        'all_status' => 'Tất cả trạng thái',
+        'search' => 'Tìm kiếm',
+        'from_date' => 'Từ ngày',
+        'to_date' => 'Đến ngày',
+        'total' => 'Tổng tiền',
+        'time' => 'Thời gian',
+        'back' => 'Quay lại',
+        'discount' => 'Giảm',
+        'remaining' => 'Còn',
+        'uses' => 'lượt',
+        'days' => 'ngày',
+        'expired' => 'đã hết hạn',
+        'no_time_limit' => 'Không giới hạn thời gian',
+        'no_use_limit' => 'Không giới hạn lượt dùng',
+        'no_data' => 'Không có dữ liệu',
+        'active' => 'Đang hoạt động',
+        'inactive' => 'Dừng hoạt động',
+        'instructor' => 'Giảng viên',
+        'course' => 'Khóa học',
+        'order' => 'Đơn hàng',
+        'coupon' => 'Mã giảm giá',
+        'price' => 'Giá',
+    ],
+
+    //Account (Dashboard)
+    'account' => [
+        'title' => 'Tổng quan tài khoản',
+        'welcome' => 'Chào mừng bạn quay trở lại! Dưới đây là thông tin tổng quan về tài khoản học viên của bạn.',
+        'courses' => 'Khóa học',
+        'courses_unit' => 'khoá',
+        'coupons' => 'Mã giảm giá',
+        'coupons_unit' => 'mã',
+        'orders' => 'Đơn hàng',
+        'orders_unit' => 'đơn',
+    ],
+
+    //Profile
+    'profile' => [
+        'title' => 'Thông tin cá nhân',
+        'edit' => 'Chỉnh sửa thông tin',
+        'cancel' => 'Hủy',
+        'full_name' => 'Họ và tên',
+        'email' => 'Email',
+        'phone' => 'Số điện thoại',
+        'address' => 'Địa chỉ',
+        'status' => 'Trạng thái',
+        'registered_at' => 'Thời gian đăng ký',
+        'activated_at' => 'Thời gian kích hoạt',
+        'update_title' => 'Cập nhật thông tin cá nhân',
+
+        'placeholder_full_name' => 'Nhập họ và tên...',
+        'placeholder_email' => 'Nhập email...',
+        'placeholder_phone' => 'Nhập số điện thoại...',
+        'placeholder_address' => 'Nhập địa chỉ...',
+
+        'save' => 'Lưu thay đổi',
+        'note_reload' => '* Vui lòng reload hoặc nhấn F5 sau khi thay đổi thông tin',
+    ],
+
+    //My Course
+    'my_course' => [
+        'title' => 'Khóa học của tôi',
+        'instructor' => 'Giảng viên',
+        'all_instructors' => 'Tất cả giảng viên',
+        'search_course' => 'Tìm kiếm khóa học',
+        'placeholder_course_name' => 'Nhập tên khóa học...',
+        'course_name' => 'Tên khóa học',
+        'status' => 'Trạng thái',
+        'action' => 'Hành động',
+        'updated_at' => 'Cập nhật lần cuối',
+        'active' => 'Hoạt động',
+        'stop_update' => 'Dừng cập nhật',
+        'enter_course' => 'Vào học',
+        'empty' => 'Bạn chưa đăng ký khóa học nào',
+    ],
+
+    //Coupons
+    'coupons' => [
+        'title' => 'Mã giảm giá của tôi',
+        'discount' => 'Giảm',
+        'remaining' => 'Còn',
+        'uses' => 'lượt',
+        'no_use_limit' => 'Không giới hạn lượt dùng',
+        'exp' => 'HSD',
+        'days' => 'ngày',
+        'expired' => 'đã hết hạn',
+        'no_time_limit' => 'Không giới hạn thời gian',
+        'no_remaining_uses' => 'Đã hết lượt',
+        'available' => 'Còn dùng',
+        'issued_at' => 'Cấp ngày:',
+        'empty' => 'Bạn chưa có mã khuyến mãi nào',
+    ],
+
+    //Order
+    'order' => [
+        'title' => 'Đơn hàng',
+        'status' => 'Trạng thái',
+        'all_status' => 'Tất cả trạng thái',
+        'no_data' => 'Không có dữ liệu',
+        'order_code' => 'Mã đơn hàng',
+        'placeholder_order_code' => 'Nhập mã đơn hàng...',
+        'from_date' => 'Từ ngày',
+        'to_date' => 'Đến ngày',
+        'total' => 'Tổng tiền',
+        'placeholder_total' => 'Nhập tổng tiền...',
+        'reset' => 'Reset',
+        'filter' => 'Lọc',
+
+        'table_order_code' => 'Mã đơn hàng',
+        'table_total' => 'Tổng tiền',
+        'table_status' => 'Trạng thái',
+        'table_time' => 'Thời gian',
+        'table_action' => 'Hành động',
+
+        'empty' => 'Bạn chưa có đơn hàng nào',
+    ],
+
+    //Order Details
+    'order_detail' => [
+        'title' => 'Chi tiết đơn hàng',
+        'code' => 'Mã đơn',
+        'order_info' => 'Thông tin đơn hàng',
+        'order_code' => 'Mã đơn hàng',
+        'subtotal' => 'Tạm tính',
+        'coupon_discount' => 'Giảm giá mã khuyến mãi',
+        'total_payment' => 'Tổng thanh toán',
+        'ordered_at' => 'Thời gian đặt',
+        'status' => 'Trạng thái',
+        'payment_expired_at' => 'Hết hạn thanh toán',
+        'pay' => 'Thanh toán',
+
+        'coupon_applied' => 'Đã áp dụng mã khuyến mãi',
+        'discount' => 'Giảm',
+        'for_order' => 'cho đơn hàng',
+
+        'course_info' => 'Thông tin khóa học',
+        'course_name' => 'Tên khóa học',
+        'price' => 'Giá',
+        'instructor' => 'Giảng viên',
+        'course_status' => 'Trạng thái',
+        'active' => 'Đang hoạt động',
+        'inactive' => 'Dừng hoạt động',
+
+        'no_detail' => 'Không có dữ liệu chi tiết',
+        'back' => 'Quay lại',
+        'download_invoice' => 'Tải hóa đơn',
+    ],
+
+    'change_password' => [
+        'title' => 'Đổi mật khẩu',
+        'error' => 'Vui lòng kiểm tra lại dữ liệu',
+        'old_password' => 'Mật khẩu cũ',
+        'old_password_placeholder' => 'Nhập mật khẩu cũ...',
+        'new_password' => 'Mật khẩu mới',
+        'new_password_placeholder' => 'Nhập mật khẩu mới...',
+        'confirm_password' => 'Nhập lại mật khẩu mới',
+        'confirm_password_placeholder' => 'Nhập lại mật khẩu mới...',
+        'submit' => 'Đổi mật khẩu',
+    ],
+
+    'logout' => [
+        'confirm_logout' => 'Bạn có chắc chắn muốn đăng xuất?',
+    ]
+];

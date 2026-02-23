@@ -141,13 +141,16 @@ class LessonController extends Controller
     public function store(LessonRequest $request, $courseId)
     {
         $name = $request->name;
+        $name_en = $request->name_en;
         $slug = $request->slug;
+        $slug_en = $request->slug_en;
         $video = $request->video;
         $document = $request->document;
         $parent_id = $request->parent_id == 0 ? null : $request->parent_id;
         $is_trial = $request->is_trial;
         $position = $request->position;
         $description = $request->description;
+        $description_en = $request->description_en;
         $status = $request->status ?? 0;
         $document_id = null;
         $video_id = null;
@@ -165,28 +168,59 @@ class LessonController extends Controller
         }
 
         if (!empty($video)) {
-            $videoInfo = getVideoInfo($video);
-            $video = $this->videoRepository->createVideo(
-                [
-                    'url' => $video,
-                    'name' => $videoInfo['filename'],
-                    'size' => $videoInfo['playtime_seconds']
-                ],
-                $video
+
+            $host = strtolower((string) parse_url($video, PHP_URL_HOST));
+            $isExternal = $host && (
+                str_contains($host, 'youtube.com') ||
+                str_contains($host, 'youtu.be') ||
+                str_contains($host, 'vimeo.com')
             );
-            $video_id = $video ? $video->id : null;
+
+            if ($isExternal) {
+                // YouTube/Vimeo: không getVideoInfo
+                $videoModel = $this->videoRepository->createVideo(
+                    [
+                        'url' => $video,
+                        'name' => $name, // hoặc 'Youtube video'
+                        'size' => 0,
+                    ],
+                    $video
+                );
+
+                $video_id = $videoModel ? $videoModel->id : null;
+                $durations = 0;
+            } else {
+                // MP4/file nội bộ: giữ logic cũ
+                $videoInfo = getVideoInfo($video);
+
+                $videoModel = $this->videoRepository->createVideo(
+                    [
+                        'url' => $video,
+                        'name' => $videoInfo['filename'] ?? $name,
+                        'size' => $videoInfo['playtime_seconds'] ?? 0
+                    ],
+                    $video
+                );
+
+                $video_id = $videoModel ? $videoModel->id : null;
+                $durations = $videoInfo['playtime_seconds'] ?? 0;
+            }
         }
+
         $lesson = $this->lessonRepository->create([
             'name' => $name,
+            'name_en' => $name_en,
             'slug' => $slug,
+            'slug_en' => $slug_en,
             'video_id' => $video_id,
             'course_id' => $courseId,
             'document_id' => $document_id,
             'parent_id' => $parent_id,
             'is_trial' => $is_trial,
             'position' => $position,
-            'durations' => $videoInfo['playtime_seconds'] ?? 0,
+            'durations' => $durations ?? 0,
             'description' => $description,
+            'description_en' => $description_en,
             'status' => $status,
         ]);
         activity_log(
@@ -196,7 +230,9 @@ class LessonController extends Controller
                 'course_id' => $courseId,
                 'data' => [
                     'name' => $lesson->name,
+                    'name_en' => $lesson->name_en,
                     'slug' => $lesson->slug,
+                    'slug_en' => $lesson->slug_en,
                     'parent_id' => $lesson->parent_id,
                     'is_trial' => $lesson->is_trial,
                     'position' => $lesson->position,
@@ -214,7 +250,7 @@ class LessonController extends Controller
                 $student->notify(new StudentNotification([
                     'title' => 'Bài học mới',
                     'message' => $lesson->name . ' vừa được thêm vào',
-                    'url' => route('lessons.home', $lesson->slug),
+                    'url' => route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $lesson->slug]),
                 ]));
             }
         });
@@ -239,57 +275,112 @@ class LessonController extends Controller
 
     public function update(Request $request, $lessonId)
     {
+        $lessonOld = $this->lessonRepository->find($lessonId);
+
         $name = $request->name;
+        $name_en = $request->name_en;
         $slug = $request->slug;
-        $video = $request->video;
-        $document = $request->document;
-        $parent_id = $request->parent_id == 0 ? null : $request->parent_id;
-        $is_trial = $request->is_trial;
-        $position = $request->position;
+        $slug_en = $request->slug_en;
+        $videoUrl = trim((string)$request->video);
+        $documentUrl = trim((string)$request->document);
+
+        $parent_id = (int)$request->parent_id === 0 ? null : (int)$request->parent_id;
+        $is_trial = (int)$request->is_trial;
+        $position = (int)$request->position;
         $description = $request->description;
+        $description_en = $request->description_en;
         $status = $request->status ?? 0;
-        $document_id = null;
-        $video_id = null;
-        if (!empty($document)) {
-            $documentInfo = getFileInfo($document);
+
+        // Mặc định giữ nguyên ID cũ (đừng reset về null)
+        $document_id = $lessonOld?->document_id;
+        $video_id = $lessonOld?->video_id;
+        $durations = $lessonOld?->durations ?? 0;
+
+        // --- DOCUMENT: chỉ tạo mới khi có url mới ---
+        if ($documentUrl !== '') {
+            $documentInfo = getFileInfo($documentUrl);
+
             $document = $this->documentRepository->createDocument(
                 [
-                    'name' => $documentInfo['name'],
-                    'url' => $document,
-                    'size' => $documentInfo['size']
+                    'name' => $documentInfo['name'] ?? $name,
+                    'url' => $documentUrl,
+                    'size' => $documentInfo['size'] ?? 0
                 ],
-                $document
+                $documentUrl
             );
-            $document_id = $document ? $document->id : null;
+
+            $document_id = $document ? $document->id : $document_id;
         }
 
-        if (!empty($video)) {
-            $videoInfo = getVideoInfo($video);
-            $video = $this->videoRepository->createVideo(
-                [
-                    'url' => $video,
-                    'name' => $videoInfo['filename'],
-                    'size' => $videoInfo['playtime_seconds']
-                ],
-                $video
-            );
-            $video_id = $video ? $video->id : null;
+        // --- VIDEO: chỉ tạo mới khi có url mới ---
+        if ($videoUrl !== '') {
+
+            // normalize: thiếu https
+            if (!preg_match('~^https?://~i', $videoUrl)) {
+                $videoUrl = 'https://' . ltrim($videoUrl, '/');
+            }
+
+            // nếu video không đổi thì khỏi tạo record mới
+            $oldVideoUrl = $lessonOld?->video?->url ? trim((string)$lessonOld->video->url) : null;
+            if ($oldVideoUrl && $oldVideoUrl === $videoUrl) {
+                // giữ nguyên $video_id và $durations
+            } else {
+                $host = strtolower((string) parse_url($videoUrl, PHP_URL_HOST));
+                $isExternal = $host && (
+                    str_contains($host, 'youtube.com') ||
+                    str_contains($host, 'youtu.be') ||
+                    str_contains($host, 'vimeo.com')
+                );
+
+                if ($isExternal) {
+                    $video = $this->videoRepository->createVideo(
+                        [
+                            'url' => $videoUrl,
+                            'name' => $name,
+                            'size' => 0,
+                        ],
+                        $videoUrl
+                    );
+
+                    $video_id = $video ? $video->id : $video_id;
+                    $durations = 0;
+                } else {
+                    $videoInfo = getVideoInfo($videoUrl);
+
+                    $video = $this->videoRepository->createVideo(
+                        [
+                            'url' => $videoUrl,
+                            'name' => $videoInfo['filename'] ?? $name,
+                            'size' => $videoInfo['playtime_seconds'] ?? 0
+                        ],
+                        $videoUrl
+                    );
+
+                    $video_id = $video ? $video->id : $video_id;
+                    $durations = $videoInfo['playtime_seconds'] ?? 0;
+                }
+            }
         }
-        $lessonOld = $this->lessonRepository->find($lessonId);
+
+
         $old = $lessonOld ? $lessonOld->toArray() : [];
 
         $this->lessonRepository->update($lessonId, [
             'name' => $name,
+            'name_en' => $name_en,
             'slug' => $slug,
+            'slug_en' => $slug_en,
             'video_id' => $video_id,
             'document_id' => $document_id,
             'parent_id' => $parent_id,
             'is_trial' => $is_trial,
             'position' => $position,
-            'durations' => $videoInfo['playtime_seconds'] ?? 0,
+            'durations' => $durations,
             'description' => $description,
+            'description_en' => $description_en,
             'status' => $status,
         ]);
+
         $lessonFresh = $this->lessonRepository->find($lessonId);
         $new = $lessonFresh ? $lessonFresh->toArray() : [];
 
@@ -304,10 +395,16 @@ class LessonController extends Controller
             logName: 'Cập nhập',
             description: 'Cập nhật bài giảng'
         );
-        $lesson = $this->lessonRepository->find($lessonId);
-        $this->updateDurations($lesson->course_id);
-        return redirect()->route('lessons.edit', $lessonId)->with('msg', __('lessons::messages.update.success'));
+
+        $lesson = $lessonFresh ?? $lessonOld;
+        if ($lesson) {
+            $this->updateDurations($lesson->course_id);
+        }
+
+        return redirect()->route('lessons.edit', $lessonId)
+            ->with('msg', __('lessons::messages.update.success'));
     }
+
 
     public function delete(Request $request, $lessonId)
     {

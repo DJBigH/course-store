@@ -16,11 +16,11 @@
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
                             <h4 class="mb-0">
-                                🎟 Mã khuyến mại của tôi
+                                🎟 {{ __('students::clients/account.coupons.title') }}
                             </h4>
 
                             <span class="badge bg-primary">
-                                {{ $coupon->count() }} mã
+                                {{ $coupon->count() }} {{ __('students::clients/account.account.coupons_unit') }}
                             </span>
                         </div>
 
@@ -44,7 +44,7 @@
                                         </h5>
 
                                         <div class="text-danger small">
-                                            Giảm
+                                            {{ __('students::clients/account.coupons.discount') }}
                                             @if ($item->discount_type === 'percent')
                                                 {{ $item->discount_value }}%
                                             @else
@@ -54,9 +54,9 @@
 
                                         <div class="small">
                                             @if ($limited)
-                                                Còn {{ $remaining }} lượt
+                                                {{ __('students::clients/account.coupons.remaining') }} {{ $remaining }} {{ __('students::clients/account.coupons.uses') }}
                                             @else
-                                                Không giới hạn lượt dùng
+                                                {{ __('students::clients/account.coupons.no_use_limit') }}
                                             @endif
                                         </div>
 
@@ -74,7 +74,7 @@
                                         <div class="small text-muted mt-1">
                                             <i class="fas fa-clock"></i>
                                             @if ($endAt)
-                                                HSD:
+                                                {{ __('students::clients/account.coupons.exp') }}:
                                                 @if ($startAt)
                                                     {{ \Carbon\Carbon::parse($startAt)->format('d/m/Y') }}
                                                     →
@@ -83,15 +83,15 @@
 
                                                 @if ($daysLeft >= 0)
                                                     <span class="text-success">
-                                                        (còn {{ $daysLeft }} ngày)
+                                                        ({{ __('students::clients/account.coupons.remaining') }} {{ $daysLeft }} {{ __('students::clients/account.coupons.days') }})
                                                     </span>
                                                 @else
                                                     <span class="text-danger">
-                                                        (đã hết hạn)
+                                                        ({{ __('students::clients/account.coupons.expired') }})
                                                     </span>
                                                 @endif
                                             @else
-                                                Không giới hạn thời gian
+                                                {{ __('students::clients/account.coupons.no_time_limit') }}
                                             @endif
                                         </div>
 
@@ -100,13 +100,13 @@
                                     {{-- Right --}}
                                     <div class="text-end">
                                         @if ($limited && $remaining <= 0)
-                                            <span class="badge bg-danger mb-2">Đã hết lượt</span>
+                                            <span class="badge bg-danger mb-2">{{ __('students::clients/account.coupons.no_remaining_uses') }}</span>
                                         @else
-                                            <span class="badge bg-success mb-2">Còn dùng</span>
+                                            <span class="badge bg-success mb-2">{{ __('students::clients/account.coupons.available') }}</span>
                                         @endif
 
                                         <div class="small text-muted">
-                                            Cấp ngày:
+                                            {{ __('students::clients/account.coupons.issued_at') }}
                                             {{ $item->pivot->created_at->format('d/m/Y') }}
                                         </div>
                                     </div>
@@ -115,7 +115,7 @@
                             @empty
                                 <div class="text-center text-muted py-5">
                                     <i class="fas fa-ticket-alt fa-3x mb-3"></i>
-                                    <p>Bạn chưa có mã khuyến mại nào</p>
+                                    <p>{{ __('students::clients/account.coupons.empty') }}</p>
                                 </div>
                             @endforelse
 

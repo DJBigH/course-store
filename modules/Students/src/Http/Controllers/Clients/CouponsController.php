@@ -19,17 +19,17 @@ class CouponsController extends Controller
         $this->orderRepository = $orderRepository;
     }
 
-    public function verify(Request $request)
+    public function verify(Request $request, $locale)
     {
         try {
             $coupon = $request->coupon;
             if (!$coupon) {
-                throw new \Exception("Mã giảm giá bắt buộc phải nhập", 400);
+                throw new \Exception(__('students::clients/messages.verify_coupons.coupon_required'), 400);
             }
             $order = $this->orderRepository->getOrder($request->orderId);
             $coupon = $this->couponRepository->verifyCoupon($coupon, $order);
             if (!$coupon) {
-                throw new \Exception("Mã giảm giá không hợp lệ hoặc đã hết hạn", 400);
+                throw new \Exception(__('students::clients/messages.verify_coupons.coupon_exp'), 400);
             }
 
             //Tính toán mã giảm giá
@@ -100,7 +100,7 @@ class CouponsController extends Controller
         ], 500);
     }
 
-    public function remove(Request $request)
+    public function remove(Request $request, $locale)
     {
         $orderId = $request->orderId;
         if ($orderId) {

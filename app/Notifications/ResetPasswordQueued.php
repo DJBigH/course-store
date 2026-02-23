@@ -17,13 +17,17 @@ class ResetPasswordQueued extends ResetPassword implements ShouldQueue
     protected function buildMailMessage($url)
     {
         return (new MailMessage)
-            ->subject('Yêu cầu đặt lại mật khẩu')
-            ->greeting('Xin chào!')
-            ->line('Bạn nhận được email này vì chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.')
-            ->action('Đặt lại mật khẩu', $url)
-            ->line('Liên kết đặt lại mật khẩu này sẽ hết hạn sau '
-                . config('auth.passwords.' . config('auth.defaults.passwords') . '.expire')
-                . ' phút.')
-            ->line('Nếu bạn không yêu cầu đặt lại mật khẩu, bạn không cần thực hiện thêm hành động nào.');
+            ->subject(__('clients/forgot.subject'))
+            ->greeting(__('clients/forgot.greeting'))
+            ->line(__('clients/forgot.line'))
+            ->action(__('clients/forgot.action'), $url)
+            ->line(
+                __('clients/forgot.line_2')
+                    . ' '
+                    . config('auth.passwords.' . config('auth.defaults.passwords') . '.expire')
+                    . ' '
+                    . __('clients/forgot.subject')
+            )
+            ->line(__('clients/forgot.outro'));
     }
 }

@@ -9,33 +9,82 @@
         </div>
     @endif
     <form action="" method="post">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="mb-0"></h5>
+
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="content_lang" id="lang_vi" checked>
+                <label class="btn btn-outline-primary" for="lang_vi">VI</label>
+
+                <input type="radio" class="btn-check" name="content_lang" id="lang_en">
+                <label class="btn btn-outline-primary" for="lang_en">EN</label>
+            </div>
+        </div>
+
         @csrf
         <div class="row">
-            <div class="col-6">
-                <div class="mb-3">
-                    <label for="">Tên</label>
-                    <input type="text" class="form-control title {{ $errors->has('name') ? ' is-invalid' : '' }}"
-                        name="name" placeholder="Tên..." value="{{ old('name') }}">
-                    @error('name')
-                        <div class="invalid-feedback">
-                            {{ $message }}
+            <div class="col-12">
+                {{-- ================= VI ================= --}}
+                <div class="lang-block lang-vi">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Tên khóa học (VI)</label>
+                                <input type="text"
+                                    class="form-control title {{ $errors->has('name') ? 'is-invalid' : '' }}" name="name"
+                                    placeholder="Tên khóa học..." value="{{ old('name', $course->name ?? '') }}">
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                    @enderror
+
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Slug (VI)</label>
+                                <input type="text"
+                                    class="form-control slug {{ $errors->has('slug') ? 'is-invalid' : '' }}" name="slug"
+                                    placeholder="Auto generate..." value="{{ old('slug', $course->slug ?? '') }}" readonly>
+                                @error('slug')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ================= EN ================= --}}
+                <div class="lang-block lang-en d-none">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Tên (EN)</label>
+                                <input type="text"
+                                    class="form-control title-en {{ $errors->has('name_en') ? 'is-invalid' : '' }}"
+                                    name="name_en" placeholder="Tên khóa học..."
+                                    value="{{ old('name_en', $course->name_en ?? '') }}">
+                                @error('name_en')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Slug (EN)</label>
+                                <input type="text"
+                                    class="form-control slug-en {{ $errors->has('slug_en') ? 'is-invalid' : '' }}"
+                                    name="slug_en" placeholder="Auto generate..."
+                                    value="{{ old('slug_en', $course->slug_en ?? '') }}" readonly>
+                                @error('slug_en')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-6">
-                <div class="mb-3">
-                    <label for="">Slug</label>
-                    <input type="text" class="form-control slug {{ $errors->has('slug') ? ' is-invalid' : '' }}"
-                        name="slug" placeholder="Auto Generate..." value="{{ old('slug') }}" readonly>
-                    @error('slug')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
-                </div>
-            </div>
 
             <div class="col-6">
                 <div class="mb-3">
@@ -138,28 +187,37 @@
             </div>
 
             <div class="col-12">
-                <div class="mb-3">
-                    <label for="">Hỗ trợ</label>
-                    <textarea name="supports" class="form-control ckeditor {{ $errors->has('supports') ? ' is-invalid' : '' }}" cols="30"
-                        rows="10" placeholder="Hỗ trợ...">{{ old('supports') }}</textarea>
-                    @error('supports')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
+                {{-- VI --}}
+                <div class="lang-block lang-vi">
+                    <div class="mb-3">
+                        <label>Hỗ trợ (VI)</label>
+                        <textarea name="supports" class="form-control ckeditor">{{ old('supports', $course->supports ?? '') }}</textarea>
+                    </div>
+                </div>
+
+                {{-- EN --}}
+                <div class="lang-block lang-en d-none">
+                    <div class="mb-3">
+                        <label>Hỗ trợ (EN)</label>
+                        <textarea name="supports_en" class="form-control ckeditor">{{ old('supports_en', $course->supports_en ?? '') }}</textarea>
+                    </div>
                 </div>
             </div>
 
             <div class="col-12">
-                <div class="mb-3">
-                    <label for="">Nội dung</label>
-                    <textarea name="detail" class="form-control ckeditor {{ $errors->has('detail') ? ' is-invalid' : '' }}" cols="30"
-                        rows="10" placeholder="Nội dung...">{{ old('detail') }}</textarea>
-                    @error('detail')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
+                <div class="lang-block lang-vi">
+                    <div class="mb-3">
+                        <label>Nội dung (VI)</label>
+                        <textarea name="detail" class="form-control ckeditor">{{ old('detail', $course->detail ?? '') }}</textarea>
+                    </div>
+                </div>
+
+                {{-- EN --}}
+                <div class="lang-block lang-en d-none">
+                    <div class="mb-3">
+                        <label>Nội dung (EN)</label>
+                        <textarea name="detail_en" class="form-control ckeditor">{{ old('detail_en', $course->detail_en ?? '') }}</textarea>
+                    </div>
                 </div>
             </div>
 
@@ -245,5 +303,22 @@
             const random = Math.floor(100000 + Math.random() * 900000);
             document.getElementById('course_code').value = prefix + random;
         });
+        (function() {
+            const viBtn = document.getElementById('lang_vi');
+            const enBtn = document.getElementById('lang_en');
+
+            function showLang(lang) {
+                document.querySelectorAll('.lang-block').forEach(el => el.classList.add('d-none'));
+                document.querySelectorAll('.lang-' + lang).forEach(el => el.classList.remove('d-none'));
+                localStorage.setItem('admin_course_lang', lang);
+            }
+
+            const saved = localStorage.getItem('admin_course_lang') || 'vi';
+            if (saved === 'en') enBtn.checked = true;
+            showLang(saved);
+
+            viBtn.addEventListener('change', () => showLang('vi'));
+            enBtn.addEventListener('change', () => showLang('en'));
+        })();
     </script>
 @endsection

@@ -1,6 +1,6 @@
 @extends('layouts.client')
 
-@section('title', '404 - Không tìm thấy trang')
+@section('title', __('clients/errors.404.title'))
 
 @section('content')
     <div class="container-fluid">
@@ -13,19 +13,20 @@
 
                 {{-- Message --}}
                 <p class="lead text-muted mb-2">
-                    Trang bạn đang tìm không tồn tại,<br>
-                    có thể đã bị xóa hoặc đường dẫn không đúng.
+                    {{ __('clients/errors.404.message_1') }}<br>
+                    {{ __('clients/errors.404.message_2') }}
                 </p>
 
                 {{-- Actions --}}
                 <div class="d-flex justify-content-center gap-2">
                     <a href="{{ url()->previous() }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Quay lại
+                        <i class="fas fa-arrow-left"></i> {{ __('clients/errors.404.back') }}
                     </a>
 
-                    <a href="{{ route('home') }}" class="btn btn-primary">
-                        <i class="fas fa-home"></i> Trang chủ
+                    <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary">
+                        <i class="fas fa-home"></i> {{ __('common.home') }}
                     </a>
+
                 </div>
 
             </div>

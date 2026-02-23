@@ -34,16 +34,16 @@ class ContactRequest extends FormRequest
     public function messages()
     {
         return [
-            'required' => __('contacts::validation.required'),
-            'email' => __('contacts::validation.email'),
-            'integer' => __('contacts::validation.integer'),
-            'max' => __('contacts::validation.max'),
-            'regex' => __('contacts::validation.regex'),
+            'required' => __('contacts::clients/validation.required'),
+            'email' => __('contacts::clients/validation.email'),
+            'integer' => __('contacts::clients/validation.integer'),
+            'max' => __('contacts::clients/validation.max'),
+            'regex' => __('contacts::clients/validation.regex'),
         ];
     }
 
     public function attributes()
     {
-        return __(key: 'contacts::validation.attributes');
+        return __(key: 'contacts::clients/validation.attributes');
     }
 }

@@ -438,8 +438,8 @@ class CouponController extends Controller
 
     public function CouponClient()
     {
-        $pageTitle = 'Mã giảm giá';
-        $pageName  = 'Mã giảm giá';
+        $pageTitle = __('coupons::clients/common.pageName');
+        $pageName  = __('coupons::clients/common.pageName');
 
         $student = Auth::guard('students')->user();
 

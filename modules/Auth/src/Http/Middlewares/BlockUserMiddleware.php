@@ -20,11 +20,11 @@ class BlockUserMiddleware
         $user = Auth::guard('students')->user();
 
         if (!$user) {
-            return redirect()->route('clients-login');
+            return redirect()->route('clients-login',['locale' => app()->getLocale()]);
         }
 
         if (!$user->status) {
-            return redirect()->route('block-index');
+            return redirect()->route('block-index',['locale' => app()->getLocale()]);
         }
 
         return $next($request);

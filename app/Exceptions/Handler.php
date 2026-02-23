@@ -33,27 +33,24 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $e)
     {
+        $seg = $request->segment(1);
+        if (in_array($seg, ['vi', 'en'], true)) {
+            app()->setLocale($seg);
+        }
+
         if ($e instanceof NotFoundHttpException) {
-
             if ($request->is('admin/*')) {
-                return response()
-                    ->view('errors.admin.404', [], 404);
+                return response()->view('errors.admin.404', [], 404);
             }
-
-            return response()
-                ->view('errors.clients.404', [], 404);
+            return response()->view('errors.clients.404', [], 404);
         }
 
-         if ($e instanceof BadRequestHttpException) {
-
-        if ($request->is('admin/*')) {
-            return response()
-                ->view('errors.admin.400', [], 400);
+        if ($e instanceof BadRequestHttpException) {
+            if ($request->is('admin/*')) {
+                return response()->view('errors.admin.400', [], 400);
+            }
+            return response()->view('errors.clients.400', [], 400);
         }
-
-        return response()
-            ->view('errors.clients.400', [], 400);
-    }
 
         return parent::render($request, $e);
     }

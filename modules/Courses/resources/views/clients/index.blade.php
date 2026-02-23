@@ -14,47 +14,52 @@
 
                                 <div class="descreption-course">
                                     <div class="descreption-top">
-                                        <p><i class="fa-solid fa-clock"></i> {{ getTime($course->durations) }} học</p>
+                                        <p><i class="fa-solid fa-clock"></i> {{ getTime($course->durations) }}</p>
                                         <p><i class="fa-solid fa-video"></i> {{ getLessonCount($course)->module }}
-                                            phần/{{ getLessonCount($course)->lessons }} bài</p>
+                                            {{ __('courses::clients/common.portion') }}/{{ getLessonCount($course)->lessons }}
+                                            {{ __('courses::clients/common.poem') }}</p>
                                         <p><i class="fa-solid fa-eye"></i>
-                                            {{ $course->view ? number_format($course->view) : 0 }} lượt xem</p>
+                                            {{ $course->view ? number_format($course->view) : 0 }}
+                                            {{ __('courses::clients/common.view') }}</p>
                                     </div>
 
                                     <div class="descreption-meta">
                                         <p>
                                             <i class="fa-solid fa-calendar-check"></i>
-                                            Cập nhật:
+                                            {{ __('courses::clients/common.updated_at') }}:
                                             <span>{{ format_date_dmy($course->updated_at) }}</span>
                                         </p>
 
                                         <p>
                                             <i class="fa-solid fa-users"></i>
-                                            {{ number_format($course->students_count ?? 0) }} học viên
+                                            {{ number_format($course->students_count ?? 0) }}
+                                            {{ __('courses::clients/common.students') }}
                                         </p>
                                     </div>
 
-
                                     <h5 class="descreption-title">
-                                        <a href="/khoa-hoc/{{ $course->slug }}">
-                                            {{ $course->name }}
-                                        </a>
+                                            <a
+                                                href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}">
+                                                {{ $course->name_locale ?? $course->name }}
+                                            </a>
                                     </h5>
+
 
                                     <div class="descreption-teacher">
                                         <img src="{{ $course->teacher?->image }}" alt="{{ $course->teacher?->name }}" />
                                         <span>
-                                            <strong style="font-weight: bold">Giảng viên:</strong>
+                                            <strong
+                                                style="font-weight: bold">{{ __('courses::clients/common.instructor') }}:</strong>
                                             {{ $course->teacher?->name }}
                                         </span>
                                     </div>
 
                                     <p class="descreption-price">
                                         @if ($course->sale_price)
-                                            <span class="sale">{{ money($course->price) }}</span>
-                                            <span>{{ money($course->sale_price) }}</span>
+                                            <span class="sale">{{ moneyLocale($course->price) }}</span>
+                                            <span>{{ moneyLocale($course->sale_price) }}</span>
                                         @else
-                                            <span>{{ money($course->price) }}</span>
+                                            <span>{{ moneyLocale($course->price) }}</span>
                                         @endif
                                     </p>
 
@@ -70,20 +75,20 @@
                 <div class="empty-course text-center py-5">
                     {{-- <img src="{{ asset('clients/assets/empty.webm') }}" alt="Không có khóa học" class="mb-4"
                         width="220"> --}}
-                        <video src="{{ asset('clients/assets/empty.webm') }}" autoplay loop muted class="mb-4"
-                            width="220"></video>
+                    <video src="{{ asset('clients/assets/empty.webm') }}" autoplay loop muted class="mb-4"
+                        width="220"></video>
 
-                    <h4 class="fw-bold mb-2">Chưa có khóa học nào</h4>
+                    <h4 class="fw-bold mb-2">{{ __('courses::clients/common.empty_page_title') }}</h4>
 
                     <p class="text-muted mb-4">
-                        Hiện tại danh mục này chưa có khóa học.
+                        {{ __('courses::clients/common.empty_description') }}
                         <br>
-                        Bạn có thể khám phá các khóa học khác phù hợp với mình 🚀
+                        {{ __('courses::clients/common.empty_suggestion') }} 🚀
                     </p>
 
-                    <a href="{{ route('home') }}" class="btn btn-primary px-4">
+                    <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary px-4">
                         <i class="fa-solid fa-book-open me-1"></i>
-                        Khám phá khóa học
+                        {{ __('courses::clients/common.explore_courses') }}
                     </a>
                 </div>
             @endif

@@ -30,12 +30,49 @@ function activeSidebar($name, $routeList)
 
 function activeMenu($name)
 {
-    return request()->is(trim(route($name, [], false), '/'));
+    $url = route($name, ['locale' => app()->getLocale()], false);
+
+    return request()->is(trim($url, '/'));
 }
+
+
+if (!function_exists('vnd_to_usd')) {
+    function vnd_to_usd(int $vnd, int $precision = 2): float
+    {
+        $rate = config('currency.usd_vnd_rate');
+        return round($vnd / $rate, $precision);
+    }
+}
+
+if (!function_exists('usd_to_vnd')) {
+    function usd_to_vnd(float $usd): int
+    {
+        $rate = config('currency.usd_vnd_rate');
+        return (int) round($usd * $rate);
+    }
+}
+
+function moneyLocale($number)
+{
+    $locale = app()->getLocale();
+
+    if ($locale === 'en') {
+        return moneyUS($number);
+    }
+
+    // mặc định VI
+    return money($number);
+}
+
 
 function money($number, $currency = 'đ', $freeText = 'Miễn phí')
 {
     return !empty($number) ? number_format($number) . ' ' . $currency : $freeText;
+}
+
+function moneyUS($number, $currency = '$', $freeText = 'Free')
+{
+    return !empty($number) ? vnd_to_usd($number) . ' ' . $currency : $freeText;
 }
 
 function getHour($secounds)

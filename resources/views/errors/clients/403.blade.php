@@ -1,6 +1,6 @@
 @extends('layouts.client')
 
-@section('title', '403 - Không có quyền truy cập')
+@section('title', __('clients/errors.403.title'))
 
 @section('content')
     <section class="py-5">
@@ -11,21 +11,21 @@
                     <h1 class="display-1 fw-bold text-danger">403</h1>
 
                     <h3 class="mb-3">
-                        🚫 Không có quyền truy cập
+                        🚫 {{ __('clients/errors.403.message_1') }}
                     </h3>
 
                     {{-- 👉 THÔNG BÁO ĐỘNG TỪ abort() --}}
                     <p class="text-muted mb-4">
-                        {{ $exception->getMessage() ?: 'Bạn không có quyền truy cập trang này.' }}
+                        {{ $exception->getMessage() ?: {{ __('clients/errors.403.message_2') }} }}
                     </p>
 
                     <div class="d-flex justify-content-center gap-3">
                         <a href="{{ url()->previous() }}" class="btn btn-outline-secondary">
-                            ← Quay lại
+                            ← {{ __('clients/errors.403.back') }}
                         </a>
 
-                        <a href="{{ route('home') }}" class="btn btn-primary">
-                            🏠 Trang chủ
+                        <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary">
+                            🏠 T{{ __('common.home') }}
                         </a>
                     </div>
 

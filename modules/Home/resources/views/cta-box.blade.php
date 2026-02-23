@@ -1,37 +1,36 @@
 <section class="cta-page">
     <div class="cta-container">
-        <span class="cta-badge">🚀 Tư vấn miễn phí 100%</span>
+        <span class="cta-badge">🚀 {{ __('home::common.badge') }}</span>
 
         <h1>
-            Bạn chưa biết <span>bắt đầu học gì?</span>
+            {{ __('home::common.title_1') }} <span> {{ __('home::common.title_2') }}</span>
         </h1>
 
         <p class="cta-desc">
-            BigK-Udemy sẽ giúp bạn xây dựng lộ trình học phù hợp nhất
-            dựa trên mục tiêu, thời gian và trình độ hiện tại.
+            {{ __('home::common.description') }}
         </p>
 
         <div class="cta-actions">
-            <a href="{{ route('contacts.home') }}" class="cta-btn primary">
-                🚀 Đăng ký tư vấn miễn phí
+            <a href="{{ route('contacts.home',['locale' => app()->getLocale()]) }}" class="cta-btn primary">
+                🚀 {{ __('home::common.btn_consult') }}
             </a>
             <a href="#" class="cta-btn outline">
-                📞 Gọi ngay {{ setting('phone', '012345678') }}
+                📞 {{ __('home::common.btn_call') }} {{ setting('phone', '012345678') }}
             </a>
         </div>
 
         <div class="cta-features">
             <div class="feature">
                 <i class="fas fa-check-circle"></i>
-                <span>Tư vấn 1–1 cùng mentor</span>
+                <span>{{ __('home::common.feature_1') }}</span>
             </div>
             <div class="feature">
                 <i class="fas fa-check-circle"></i>
-                <span>Lộ trình cá nhân hóa</span>
+                <span>{{ __('home::common.feature_2') }}</span>
             </div>
             <div class="feature">
                 <i class="fas fa-check-circle"></i>
-                <span>Không phát sinh chi phí</span>
+                <span>{{ __('home::common.feature_3') }}</span>
             </div>
         </div>
     </div>

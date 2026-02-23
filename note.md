@@ -435,15 +435,16 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Với cấp mã khuyến mãi thì nếu đó có giá trị thời gian thì check là nếu nó hết time rồi thì không cho áp mã (Done)
 - Làm trang thông tin cá nhân ở bên admin (Done)
 - Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db
-- Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa )
-- Phân quyền admin/giáo viên
-- Import, Export cho toàn bộ
-- Suy nghĩ xem có cách nào liên kết được bảng user với teacher để phân quyền ko
+- Import, Export cho toàn bộ (Để làm sau)
 - Xóa đơn hàng thì xóa luôn khóa học mà học viên đã mua (Cái này note lại lúc nào thấy cấn thì làm còn đâu làm thế kia vẫn ổn)
 - Làm 1 trang log tổng dành cho super admin (Done)
 - Làm trang lịch sử hoạt động (Course (Done), User (Done), Cate (Done), Lesson (Done), Teacher (Done), Students (Done), Order, Copouns (Done), Contact (Done), Config (subject id == null))
 - Thêm cái setting sửa banner (Yêu cầu 3 ảnh nếu sửa 1 thì chỉ cập nhập 1, 3 cái sub banner) (DOne)
-- Tạo thêm 1 nơi để setting phân trang được
+- Suy nghĩ xem có cách nào liên kết được bảng user với teacher để phân quyền ko
+- Phân quyền admin/giáo viên
+- Tạo thêm 1 nơi để setting phân trang được (Không biết có nên làm không)
+- Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa ) (Done home page)
+- Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
     Clients:
 
 - Làm trang tổng quan cho cả clients ( Done )
@@ -458,3 +459,5 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm thanh toán = vnpay, momo
 - Làm lượt xem khi ấn vào khóa học +1 lượt xem (Done)
 - Notification clients (Done)
+- Thêm email khi mua hàng
+- Bình luận khóa học

@@ -8,19 +8,19 @@ use Illuminate\Http\Request;
 
 class VerifyController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $locale)
     {
         $user = $request->user();
-        if($user->hasVerifiedEmail()){
-            return redirect()->route('home');
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('home', ['locale' => app()->getLocale()]);
         }
-        $pageTitle = 'Kích hoạt tài khoản';
+        $pageTitle = __('auth::clients/auth.verify.page_title');
         return view('auth::clients.verify', compact('pageTitle'));
     }
 
-    public function resend(Request $request)
+    public function resend(Request $request, $locale)
     {
         $request->user()->sendEmailVerificationNotification();
-        return back()->with('resent', true)->with('msg', 'Email kích hoạt đã được gửi vào mail của bạn');
+        return back()->with('resent', true)->with('msg', __('auth::clients/email.verify.resend.success'));
     }
 }

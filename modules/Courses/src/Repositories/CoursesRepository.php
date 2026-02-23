@@ -26,8 +26,14 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
     public function getCourseActive($slug)
     {
-        return $this->model->withCount('students')->whereSlug($slug)->first();
+        $slugField = app()->getLocale() === 'en' ? 'slug_en' : 'slug';
+
+        return $this->model
+            ->withCount('students')
+            ->where($slugField, $slug)
+            ->first();
     }
+
 
     public function createCoursesCategory($course, $data = [])
     {
@@ -97,12 +103,12 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
     public function getCourseForYou($studentId)
     {
         return $this->model
-        ->where('status', 1)
-        ->when($studentId, function ($query) use ($studentId) {
-            $query->whereDoesntHave('students', function ($q) use ($studentId) {
-                $q->where('student_id', $studentId);
-            });
-        })
-        ->get();
+            ->where('status', 1)
+            ->when($studentId, function ($query) use ($studentId) {
+                $query->whereDoesntHave('students', function ($q) use ($studentId) {
+                    $q->where('student_id', $studentId);
+                });
+            })
+            ->get();
     }
 }

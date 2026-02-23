@@ -24,23 +24,28 @@ function getLessons($lessons, $old = '', $parentId = 0, $char = '')
 
 function getTime($totalSeconds)
 {
-    $hours = floor($totalSeconds / 3600);
+    $hours   = floor($totalSeconds / 3600);
     $minutes = floor(($totalSeconds % 3600) / 60);
     $seconds = $totalSeconds % 60;
 
+    $tSecond = __('clients/common.second');
+    $tMinute = __('clients/common.minute');
+    $tHour   = __('clients/common.hour');
+
     // < 1 phút
     if ($totalSeconds < 60) {
-        return sprintf('00:%02d giây', $seconds);
+        return sprintf('00:%02d %s', $seconds, $tSecond);
     }
 
-    // < 1 tiếng
+    // < 1 giờ
     if ($totalSeconds < 3600) {
-        return sprintf('%02d:%02d phút', $minutes, $seconds);
+        return sprintf('%02d:%02d %s', $minutes, $seconds, $tMinute);
     }
 
-    // >= 1 tiếng
-    return sprintf('%02d:%02d:%02d tiếng', $hours, $minutes, $seconds);
+    // >= 1 giờ
+    return sprintf('%02d:%02d:%02d %s', $hours, $minutes, $seconds, $tHour);
 }
+
 
 function getLessonCount($course)
 {

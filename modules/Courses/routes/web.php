@@ -19,7 +19,12 @@ Route::group(['prefix' => 'filemanager', 'middleware' => ['web']], function () {
    \UniSharp\LaravelFilemanager\Lfm::routes();
 });
 
-Route::group(['as' => 'courses.'], function () {
+Route::group([
+   'as' => 'courses.',
+   'prefix' => '{locale}',
+   'where' => ['locale' => 'vi|en'],
+   'middleware' => ['setLocale']
+], function () {
    Route::get('/khoa-hoc', 'Clients\CoursesController@index')->name('home');
    Route::get('/khoa-hoc/{slug}', 'Clients\CoursesController@detail')->name('detail');
    Route::prefix('data')->name('data.')->group(function () {

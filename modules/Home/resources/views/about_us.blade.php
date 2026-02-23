@@ -23,7 +23,7 @@
                 <div class="text">
                    <a href="{{ setting_url('youtube') }}" {!! setting_target('youtube') !!}>
                         <i class="fab fa-youtube"></i>
-                        Kênh Youtube
+                        Youtube
                     </a>
                 </div>
             </div>

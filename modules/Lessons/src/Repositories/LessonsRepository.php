@@ -61,6 +61,8 @@ class LessonsRepository extends BaseRepository implements LessonsRepositoryInter
 
     public function getLessonActive($slug)
     {
-        return $this->model->whereSlug($slug)->active()->first();
+        $slugField = app()->getLocale() === 'en' ? 'slug_en' : 'slug';
+
+        return $this->model->where($slugField, $slug)->active()->first();
     }
 }
