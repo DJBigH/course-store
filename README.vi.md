@@ -227,7 +227,7 @@ Client:
 
 ### 🔹 Bài giảng
 
-![Lesson](docs/images/Lesson.png)
+![Lesson](docs/images/lesson.png)
 
 Admin:
 
