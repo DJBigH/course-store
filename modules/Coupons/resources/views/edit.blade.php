@@ -28,7 +28,8 @@
                         <label class="form-label fw-semibold">Mã khuyến mãi</label>
                         <div class="input-group">
                             <input type="text" class="form-control {{ $errors->has('code') ? 'is-invalid' : '' }}"
-                                name="code" id="couponCode" placeholder="VD: SALE50" value="{{ old('code',$coupon->code) }}">
+                                name="code" id="couponCode" placeholder="VD: SALE50"
+                                value="{{ old('code', $coupon->code) }}">
                             <button type="button" class="btn btn-outline-secondary" id="randomCodeBtn"
                                 title="Tạo mã ngẫu nhiên">
                                 <i class="fas fa-random"></i>
@@ -44,10 +45,12 @@
                         <label class="form-label fw-semibold">Loại giảm giá</label>
                         <select name="discount_type"
                             class="form-select {{ $errors->has('discount_type') ? 'is-invalid' : '' }}">
-                            <option value="percent" {{ old('discount_type', $coupon->discount_type) == 'percent' ? 'selected' : '' }}>
+                            <option value="percent"
+                                {{ old('discount_type', $coupon->discount_type) == 'percent' ? 'selected' : '' }}>
                                 Phần trăm (%)
                             </option>
-                            <option value="value" {{ old('discount_type', $coupon->discount_type) == 'value' ? 'selected' : '' }}>
+                            <option value="value"
+                                {{ old('discount_type', $coupon->discount_type) == 'value' ? 'selected' : '' }}>
                                 Giá trị (VNĐ)
                             </option>
                         </select>
@@ -70,9 +73,17 @@
                     {{-- Tổng tiền tối thiểu --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Giá trị đơn hàng tối thiểu</label>
-                        <input type="number"
+
+                        {{-- input hiển thị có dấu phẩy --}}
+                        <input type="text"
                             class="form-control {{ $errors->has('total_condition') ? 'is-invalid' : '' }}"
-                            name="total_condition" placeholder="VD: 200000" value="{{ old('total_condition',$coupon->total_condition) }}">
+                            id="total_condition_display" placeholder="VD: 1,000,000" inputmode="numeric" autocomplete="off"
+                            value="{{ old('total_condition', $coupon->total_condition) ? money((int) old('total_condition', $coupon->total_condition)) : '' }}">
+
+                        {{-- input thật để submit --}}
+                        <input type="hidden" name="total_condition" id="total_condition"
+                            value="{{ old('total_condition', $coupon->total_condition) }}">
+
                         @error('total_condition')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -82,7 +93,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Số lượt sử dụng</label>
                         <input type="number" class="form-control {{ $errors->has('count') ? 'is-invalid' : '' }}"
-                            name="count" placeholder="VD: 100" value="{{ old('count',$coupon->count) }}">
+                            name="count" placeholder="VD: 100" value="{{ old('count', $coupon->count) }}">
                         @error('count')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -93,7 +104,8 @@
                         <label class="form-label fw-semibold">Ngày bắt đầu</label>
                         <input type="date"
                             class="form-control datepicker {{ $errors->has('start_date') ? 'is-invalid' : '' }}"
-                            name="start_date" placeholder="dd/mm/yyyy" value="{{ old('start_date',$coupon->start_date) }}">
+                            name="start_date" placeholder="dd/mm/yyyy"
+                            value="{{ old('start_date', $coupon->start_date) }}">
                         @error('start_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -104,7 +116,7 @@
                         <label class="form-label fw-semibold">Ngày kết thúc</label>
                         <input type="date"
                             class="form-control datepicker {{ $errors->has('end_date') ? 'is-invalid' : '' }}"
-                            name="end_date" placeholder="dd/mm/yyyy" value="{{ old('end_date',$coupon->end_date) }}">
+                            name="end_date" placeholder="dd/mm/yyyy" value="{{ old('end_date', $coupon->end_date) }}">
                         @error('end_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -125,10 +137,40 @@
     </form>
 @endsection
 @section('scripts')
-<script>
-    document.getElementById('randomCodeBtn').addEventListener('click', function () {
-        const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-        document.getElementById('couponCode').value = `${random}`;
-    });
-</script>
+    <script>
+        document.getElementById('randomCodeBtn').addEventListener('click', function() {
+            const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('couponCode').value = `${random}`;
+        });
+        // format 1,000,000 khi gõ và submit số sạch
+        const display = document.getElementById('total_condition_display');
+        const hidden = document.getElementById('total_condition');
+
+        function onlyDigits(str) {
+            return (str || '').toString().replace(/[^\d]/g, '');
+        }
+
+        function formatNumber(strDigits) {
+            if (!strDigits) return '';
+            return strDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function sync() {
+            const digits = onlyDigits(display.value);
+            hidden.value = digits ? parseInt(digits, 10) : 0;
+            display.value = formatNumber(digits);
+        }
+
+        // init
+        sync();
+
+        // on input
+        display.addEventListener('input', sync);
+
+        // random code giữ nguyên của bạn
+        document.getElementById('randomCodeBtn').addEventListener('click', function() {
+            const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('couponCode').value = `${random}`;
+        });
+    </script>
 @endsection

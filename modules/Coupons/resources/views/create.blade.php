@@ -70,9 +70,17 @@
                     {{-- Tổng tiền tối thiểu --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Giá trị đơn hàng tối thiểu</label>
-                        <input type="number"
+
+                        {{-- input hiển thị có dấu phẩy --}}
+                        <input type="text"
                             class="form-control {{ $errors->has('total_condition') ? 'is-invalid' : '' }}"
-                            name="total_condition" placeholder="VD: 200000" value="{{ old('total_condition', 0) }}">
+                            id="total_condition_display" placeholder="VD: 1,000,000" inputmode="numeric" autocomplete="off"
+                            value="{{ old('total_condition', 0) ? money((int) old('total_condition', 0)) : '' }}">
+
+                        {{-- input thật để submit --}}
+                        <input type="hidden" name="total_condition" id="total_condition"
+                            value="{{ old('total_condition', 0) }}">
+
                         @error('total_condition')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -125,10 +133,40 @@
     </form>
 @endsection
 @section('scripts')
-<script>
-    document.getElementById('randomCodeBtn').addEventListener('click', function () {
-        const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-        document.getElementById('couponCode').value = `${random}`;
-    });
-</script>
+    <script>
+        document.getElementById('randomCodeBtn').addEventListener('click', function() {
+            const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('couponCode').value = `${random}`;
+        });
+        // format 1,000,000 khi gõ và submit số sạch
+        const display = document.getElementById('total_condition_display');
+        const hidden = document.getElementById('total_condition');
+
+        function onlyDigits(str) {
+            return (str || '').toString().replace(/[^\d]/g, '');
+        }
+
+        function formatNumber(strDigits) {
+            if (!strDigits) return '';
+            return strDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function sync() {
+            const digits = onlyDigits(display.value);
+            hidden.value = digits ? parseInt(digits, 10) : 0;
+            display.value = formatNumber(digits);
+        }
+
+        // init
+        sync();
+
+        // on input
+        display.addEventListener('input', sync);
+
+        // random code giữ nguyên của bạn
+        document.getElementById('randomCodeBtn').addEventListener('click', function() {
+            const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('couponCode').value = `${random}`;
+        });
+    </script>
 @endsection

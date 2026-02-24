@@ -434,7 +434,6 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm trang quản lý liên hệ (Done)
 - Với cấp mã khuyến mãi thì nếu đó có giá trị thời gian thì check là nếu nó hết time rồi thì không cho áp mã (Done)
 - Làm trang thông tin cá nhân ở bên admin (Done)
-- Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db
 - Import, Export cho toàn bộ (Để làm sau)
 - Xóa đơn hàng thì xóa luôn khóa học mà học viên đã mua (Cái này note lại lúc nào thấy cấn thì làm còn đâu làm thế kia vẫn ổn)
 - Làm 1 trang log tổng dành cho super admin (Done)
@@ -445,6 +444,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Tạo thêm 1 nơi để setting phân trang được (Không biết có nên làm không)
 - Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa ) (Done)
 - Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
+- Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db (Done)
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -458,6 +458,6 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm lượt xem khi ấn vào khóa học +1 lượt xem (Done)
 - Notification clients (Done)
 - Làm thanh toán = vnpay, momo
-- Thêm email khi mua hàng
+- Thêm email khi mua hàng (Done)
 - Bình luận khóa học
-- Hoàn thành note hướng dẫn
+- Hoàn thành note hướng dẫn (Done)
