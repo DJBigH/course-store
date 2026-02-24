@@ -3,7 +3,7 @@
 A Laravel-based course platform with multi-language client (VI/EN) and an admin panel.  
 Includes **Email Verification**, **Queue jobs**, **CKEditor**, **Laravel File Manager**, and **Toastify**.
 
-- Vietnamese guide: `README.vi.md`
+[Tiếng Việt](README.vi.md)
 
 ---
 

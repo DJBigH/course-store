@@ -1,5 +1,5 @@
 # Nền tảng khóa học Laravel (Đa ngôn ngữ VI/EN)
-
+[English](README.md)
 Đây là nền tảng khóa học được xây dựng bằng **Laravel**, hỗ trợ:
 
 - Client đa ngôn ngữ (Tiếng Việt / English)
