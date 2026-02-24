@@ -211,11 +211,11 @@ Client:
 
 ### 🔹 Liên hệ
 
-![Contact](docs/images/Contact.png)
+![Contact](docs/images/contact.png)
 
 ### 🔹 Thanh tóan
 
-![Checkout](docs/images/Checkout.png)
+![Checkout](docs/images/checkout.png)
 
 ### 🔹 Cảm ơn
 
