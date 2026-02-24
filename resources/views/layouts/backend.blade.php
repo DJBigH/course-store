@@ -47,6 +47,7 @@
         $('#lfm-document').filemanager('document');
     </script>
     @yield('scripts')
+    @stack('scripts')
 </body>
 
 </html>
