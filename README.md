@@ -21,16 +21,18 @@ Includes **Email Verification**, **Queue jobs**, **CKEditor**, **Laravel File Ma
 ### 1) Clone project & install dependencies
 
 ```bash
-git clone <YOUR_REPO_URL>
+git clone <https://github.com/DJBigH/course-store.git> or git clone <git@github.com:DJBigH/course-store.git> for SSH
 cd <YOUR_PROJECT_FOLDER>
 
 composer install
 npm install
+
 2) Create .env & generate key
+```bash
 cp .env.example .env
 php artisan key:generate
-3) Configure Database in .env
 
+3) Configure Database in .env
 Edit .env:
 
 DB_CONNECTION=mysql
@@ -39,7 +41,9 @@ DB_PORT=3306
 DB_DATABASE=YOUR_DATABASE
 DB_USERNAME=YOUR_USERNAME
 DB_PASSWORD=YOUR_PASSWORD
+
 4) Migrate & Seed
+```bash
 php artisan migrate --seed
 
 ✅ Default admin (created by seeder)
@@ -49,9 +53,11 @@ Email: admin@gmail.com
 Password: 12345678
 
 5) Storage link (important for uploads / file manager)
+```bash
 php artisan storage:link
-6) Build frontend assets
 
+6) Build frontend assets
+```bash
 Development:
 
 npm run dev
@@ -60,8 +66,9 @@ Production:
 
 npm run build
 7) Run the project
+```bash
 php artisan serve
-
+```bash
 URLs:
 
 Client VI: http://127.0.0.1:8000/vi
@@ -129,15 +136,13 @@ If missing translations, check your language keys in these folders.
 
 UI Demo Screenshots
 
-Put screenshots in: docs/images/ then update file names below.
-
 Client:
 
 Home: docs/images/home.png
 
 Course: docs/images/course.png
 
-Course Detail: docs/images/course_detail.png
+Course: docs/images/course_detail.png
 
 Coupon: docs/images/coupon.png
 
@@ -147,11 +152,11 @@ Contact: docs/images/contact.png
 
 Checkout: docs/images/checkout.png
 
-Thank you: docs/images/thankyou.png
+Thank-you: docs/images/thankyou.png
 
-Order_detail you: docs/images/order_detail.png
+Order-detail: docs/images/order_detail.png
 
-Lesson you: docs/images/lesson.png
+Lesson: docs/images/lesson.png
 
 Admin:
 
@@ -161,18 +166,18 @@ Troubleshooting
 1) Missing failed_jobs table
 
 If you see error about failed_jobs table:
-
+```bash
 php artisan queue:table
 php artisan migrate
 2) Mail not sending
-
+```bash
 Check SMTP credentials in .env
 
 If mails are queued, make sure queue worker is running:
 
 php artisan queue:work
 3) Assets not loading
-
+```bash
 Run:
 
 npm run dev
@@ -182,8 +187,4 @@ npm run dev
 Author
 
 Author: BigK
-Contact: YOUR_EMAIL
-
-
-Nếu bạn muốn mình làm luôn bản **README.vi.md** tiếng Việt chuẩn (có cả phần “Cấu hình đa ngôn ngữ”, “Tài khoản
-```
+Contact: <khanhbeotixiu9x@gmail.com>
