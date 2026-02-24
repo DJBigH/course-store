@@ -188,7 +188,7 @@ Client:
 
 ### 🔹 Coupon
 
-![Coupon](docs/images/Coupon.png)
+![Coupon](docs/images/coupon.png)
 
 ### 🔹 Login/Register
 
@@ -196,11 +196,11 @@ Client:
 
 ### 🔹 Contact
 
-![Contact](docs/images/Contact.png)
+![Contact](docs/images/contact.png)
 
 ### 🔹 Checkout
 
-![Checkout](docs/images/Checkout.png)
+![Checkout](docs/images/checkout.png)
 
 ### 🔹 Thank-you
 

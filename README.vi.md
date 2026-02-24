@@ -203,7 +203,7 @@ Client:
 
 ### 🔹 Mã giảm giá
 
-![Coupon](docs/images/Coupon.png)
+![Coupon](docs/images/coupon.png)
 
 ### 🔹 Đăng nhập/Đăng ký
 
