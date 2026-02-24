@@ -426,7 +426,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - phần trang block = status của học viên có thể đổi lại thành không có quyền hạn vào xem hoặc j đó nếu vì chưa phát triền xong
 - trang lịch sử nhập mã khuyến mãi ( Done )
 - Notification (Done và có thể thêm nữa trong tl)
-- Làm trang tổng quan
+- Làm trang tổng quan (Done)
 - Làm thêm cái options thiết lập cấu hình cho website (Done)
 - Trong khóa học project này nếu không dạy đổi giao diện email thì hay làm lại giao diện đó việt hóa nó (Done)
 - cái sắp xếp bài giảng chưa kéo được bài giảng ở module dưới lên module trên ( có j check lại hoặc note là chỉ kéo được bài giảng của module đó )
@@ -443,10 +443,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Suy nghĩ xem có cách nào liên kết được bảng user với teacher để phân quyền ko
 - Phân quyền admin/giáo viên
 - Tạo thêm 1 nơi để setting phân trang được (Không biết có nên làm không)
-- Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa ) (Done home page)
+- Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa ) (Done)
 - Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
     Clients:
-
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
 - Từ làm nốt chức năng thanh toán ( Vì trong khóa học dạy thanh toán trực tiếp ) ( Done )
@@ -456,8 +455,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - bên clients thiếu mấy trang nếu được cố code html css
 - Làm cái lọc theo danh mục ở trên menu ( Done )
 - Làm trang liên hệ (Done)
-- Làm thanh toán = vnpay, momo
 - Làm lượt xem khi ấn vào khóa học +1 lượt xem (Done)
 - Notification clients (Done)
+- Làm thanh toán = vnpay, momo
 - Thêm email khi mua hàng
 - Bình luận khóa học
+- Hoàn thành note hướng dẫn

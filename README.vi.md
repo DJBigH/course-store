@@ -1,150 +1,274 @@
-# Nền tảng khóa học Laravel
+# Nền tảng khóa học Laravel (Đa ngôn ngữ VI/EN)
 
 [English](README.md)
 
-# Laravel Course Platform (Multi-language)
+Một nền tảng khóa học dựa trên Laravel với giao diện người dùng đa ngôn ngữ (tiếng Việt/tiếng Anh) và bảng điều khiển quản trị.
 
-Dự án web bán / quản lý khóa học xây bằng **Laravel** (client & admin), hỗ trợ **đa ngôn ngữ (VI/EN)**, có **đăng nhập/đăng ký + kích hoạt email**, **checkout**, **coupon**, và trang quản trị.
+Đây là nền tảng khóa học được xây dựng bằng **Laravel**, hỗ trợ:
 
+- Client đa ngôn ngữ (Tiếng Việt / English)
+- Trang quản trị (Admin Panel)
+- Xác thực email (Email Verification)
+- Queue xử lý gửi mail
+- CKEditor
+- Laravel File Manager
+- Toastify
 ---
 
-## 1) Yêu cầu môi trường
+# Yêu cầu hệ thống
 
 - PHP >= 8.x
 - Composer
 - Node.js + NPM
 - MySQL / MariaDB
-- (Khuyến nghị) Redis hoặc database driver cho Queue
 
 ---
 
-## 2) Cài đặt sau khi clone
+# Hướng dẫn cài đặt sau khi clone
 
-### Bước 1: Clone & cài package PHP
+## 1) Clone project và cài đặt dependency
 
 ```bash
-git clone <your-repo-url>
-cd <project-folder>
-composer install
+git clone <LINK_REPO_CUA_BAN>
+cd <TEN_THU_MUC_PROJECT>
 ```
 
-Bước 2: Tạo file môi trường .env
+```bash
+composer install
+npm install
+```
+
+2. Tạo file .env
+
+```bash
 cp .env.example .env
 php artisan key:generate
-Bước 3: Cấu hình DB trong .env
-Ví dụ:
+```
+
+3. Cấu hình Database
+
+```bash
+Mở file .env và chỉnh:
+
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=laravel_project
-DB_USERNAME=root
-DB_PASSWORD=
+DB_DATABASE=TEN_DATABASE
+DB_USERNAME=TEN_USER
+DB_PASSWORD=MAT_KHAU
+```
 
-Bước 4: Migrate + Seeder (tạo dữ liệu mẫu)
+4. Migrate & Seed dữ liệu
+
+```bash
 php artisan migrate --seed
-✅ Tài khoản admin sau khi chạy seeder:
+
+✅ Tài khoản Admin mặc định (được tạo bởi Seeder)
+
 Email: admin@gmail.com
+
 Password: 12345678
+```
 
-3. Cài đặt Frontend (NPM + Toastify)
-   Dự án có dùng toastify-js:
-   npm install
-   npm install --save toastify-js
-   npm run dev
-   Nếu deploy production:
-   npm run build
+5. Tạo storage link (bắt buộc cho upload & file manager)
 
-4. Chạy server
-   php artisan serve
-   Mặc định:
-   Client:
-   VI: http://127.0.0.1:8000/vi
-   EN: http://127.0.0.1:8000/en
-   Admin: http://127.0.0.1:8000/admin/
+```bash
+php artisan storage:link
+```
 
-5. Mail kích hoạt tài khoản học viên (IMPORTANT)
-   Học viên đăng ký sẽ cần email verification → bạn phải cấu hình SMTP trong .env.
-   Ví dụ Gmail SMTP:
-   MAIL_MAILER=smtp
-   MAIL_HOST=smtp.gmail.com
-   MAIL_PORT=587
-   MAIL_USERNAME=your_email@gmail.com
-   MAIL_PASSWORD=your_app_password
-   MAIL_ENCRYPTION=tls
-   MAIL_FROM_ADDRESS=your_email@gmail.com
-   MAIL_FROM_NAME="${APP_NAME}"
-   Kiểm tra nhanh:
-   php artisan config:clear
-   php artisan cache:clear
+6. Build Frontend
 
-6. Queue (hàng đợi) – gửi mail / job nền
-   Dự án có sử dụng Queue (ví dụ: gửi mail kích hoạt).
-   Cấu hình driver queue trong .env
-   Nếu dùng database (dễ setup nhất):
-   QUEUE_CONNECTION=database
-   Tạo bảng queue:
-   php artisan queue:table
-   php artisan migrate
-   Chạy worker:
-   php artisan queue:work
-   Trong môi trường dev, có thể dùng:
-   php artisan queue:listen
+```bash
+Chạy môi trường development:
 
-7. CKEditor + Laravel File Manager
-   Dự án sử dụng:
-   CKEditor
-   Laravel File Manager để upload/chọn ảnh trong editor
-   Publish / setup (nếu dự án yêu cầu)
-   Tùy package bạn dùng, thường sẽ có các lệnh kiểu:
-   php artisan vendor:publish
-   php artisan storage:link
-   ✅ Lưu ý chung:
-   đảm bảo đã chạy php artisan storage:link
-   phân quyền thư mục storage/ và bootstrap/cache/ ghi được
-   nếu dùng file manager route riêng, đảm bảo middleware/auth đúng cho admin
+npm run dev
 
-8. Đa ngôn ngữ (VI/EN)
-   Client chạy theo prefix:
-   /vi
-   /en
-   Nếu bạn gặp lỗi thiếu text:
-   kiểm tra resources/lang/vi/_.php và resources/lang/en/_.php
-   đảm bảo key tồn tại ở cả 2 ngôn ngữ
+Chạy production:
 
-9. Demo giao diện
-   Bạn thêm ảnh demo vào thư mục: docs/images/
-   và thay các link bên dưới theo đúng tên ảnh của bạn.
-   Client pages
-   Home
-   Course List
-   Course Detail
-   Coupon
-   Login / Register
-   Contact
-   Checkout
-   Thank you
-   Multi-language
-   Admin pages
-   Admin Dashboard / Manager
+npm run build
+```
 
-10. Troubleshooting
-11. Lỗi thiếu bảng failed_jobs
-    Nếu dùng queue database mà thiếu bảng:
-    php artisan queue:failed-table
-    php artisan migrate
+7. Chạy project
 
-12. Không gửi mail được
-    kiểm tra đúng SMTP .env
-    chạy queue worker nếu mail đang gửi qua queue:
-    php artisan queue:work
+```bash
+php artisan serve
+```
 
-13. Không load được asset
-    npm run dev
-    php artisan config:clear
-    php artisan cache:clear
+Truy cập:
 
-14. Tác giả
-    Author: <BigK>
-    Contact: <khanhbeotixiu9x@gmail.com>
+Client Tiếng Việt:
+http://127.0.0.1:8000/vi
 
----
+Client English:
+http://127.0.0.1:8000/en
+
+Admin Panel:
+http://127.0.0.1:8000/admin/
+
+Xác thực Email (QUAN TRỌNG)
+
+Học viên đăng ký bắt buộc phải xác thực email.
+
+Bạn cần cấu hình SMTP trong .env.
+
+Ví dụ dùng Gmail:
+
+```bash
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=app_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your_email@gmail.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+Sau khi chỉnh sửa .env, chạy:
+
+```bash
+php artisan config:clear
+php artisan cache:clear
+```
+
+Queue (BẮT BUỘC nếu dùng gửi mail)
+
+Project sử dụng Laravel Queue để gửi email xác thực.
+
+Chạy worker:
+
+```bash
+php artisan queue:work
+```
+
+⚠️ Lưu ý: Nếu không chạy queue, email xác thực sẽ không gửi.
+
+CKEditor & Laravel File Manager
+
+Đảm bảo đã chạy:
+
+```bash
+php artisan storage:link
+```
+
+Nếu package file manager yêu cầu publish config:
+
+```bash
+php artisan vendor:publish
+```
+
+(Tùy package bạn đang sử dụng)
+
+Cấu hình đa ngôn ngữ (VI / EN)
+
+Client sử dụng prefix ngôn ngữ:
+
+/vi
+
+/en
+
+File ngôn ngữ nằm tại:
+
+resources/lang/vi/
+resources/lang/en/
+
+Nếu thiếu bản dịch, kiểm tra các file:
+
+resources/lang/vi/_.php
+resources/lang/en/_.php
+Cấu trúc chính
+
+Client: giao diện người dùng
+
+Admin: quản lý khóa học, đơn hàng, học viên
+
+Orders: quản lý đơn hàng
+
+Students: quản lý học viên
+
+Dashboard: thống kê
+Client:
+
+### 🔹 Khách hàng
+
+![Home](docs/images/home.png)
+
+### 🔹 Khóa học
+
+![Course](docs/images/course.png)
+
+### 🔹 Chi tiết khóa học
+
+![Course_Detail](docs/images/course_detail.png)
+
+### 🔹 Mã giảm giá
+
+![Coupon](docs/images/coupon.png)
+
+### 🔹 Đăng nhập/Đăng ký
+
+![Login/Register](docs/images/login.png)
+
+### 🔹 Liên hệ
+
+![Contact](docs/images/contact.png)
+
+### 🔹 Thanh tóan
+
+![Checkout](docs/images/checkout.png)
+
+### 🔹 Cảm ơn
+
+![Thank-you](docs/images/thanks.png)
+
+### 🔹 Chi tiết hóa đơn
+
+![Order Detail](docs/images/order_detail.png)
+
+### 🔹 Bài giảng
+
+![Lesson](docs/images/lesson.png)
+
+Admin:
+
+### 🔹 Trang chủ Admin
+
+![Admin Home](docs/images/admin.png)
+Xử lý lỗi thường gặp
+
+1. Lỗi thiếu bảng failed_jobs
+
+Chạy:
+
+```bash
+php artisan queue:table
+php artisan migrate
+```
+
+2. Không gửi được mail
+
+Kiểm tra lại SMTP trong .env
+
+Kiểm tra đã chạy queue chưa:
+
+```bash
+php artisan queue:work
+```
+
+3. Không load được CSS/JS
+
+Chạy lại:
+
+```bash
+npm run dev
+
+hoặc
+
+npm run build
+```
+
+Tác giả
+
+Author: BigK
+
+Liên hệ: <khanhbeotixiu9x@gmail.com>
