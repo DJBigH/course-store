@@ -10,6 +10,7 @@ use Modules\Orders\src\Models\OrderStatus;
 use Modules\Teacher\seeders\TeacherSeeder;
 use Modules\User\seeders\UserSeeder;
 use Modules\Orders\seeders\OrderStatusSeeder;
+use Modules\Settings\seeders\SettingSeeder;
 use Modules\Settings\src\Http\Requests\SettingRequest;
 use Modules\Settings\src\Models\Setting;
 
@@ -30,9 +31,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             TeacherSeeder::class,
             OrderStatusSeeder::class,
-            SettingRequest::class,
-            // CategoriesSeeder::class,
-            // CoursesSeeder::class,
+            SettingSeeder::class,
         ]);
     }
 }
