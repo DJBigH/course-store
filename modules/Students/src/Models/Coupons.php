@@ -18,6 +18,10 @@ class Coupons extends Model
         'discount_value',
         'total_condition',
         'count',
+        'start_date',
+        'end_date',
+        'created_at',
+        'updated_at',
     ];
 
     public function students()
@@ -35,7 +39,8 @@ class Coupons extends Model
         return $this->belongsToMany(Order::class, 'coupons_usage', 'coupon_id', 'order_id');
     }
 
-    public function usagescoupon(){
-            return $this->hasMany(CouponUsage::class, 'coupon_id');
+    public function usagescoupon()
+    {
+        return $this->hasMany(CouponUsage::class, 'coupon_id');
     }
 }

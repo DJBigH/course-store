@@ -34,6 +34,6 @@ class ContactController extends Controller
         foreach ($admins as $admin) {
             $admin->notify(new NewContactNotification($contacts));
         }
-        return back()->with('msg', 'Bạn đã gửi yêu cầu tư vấn thành công');
+        return back()->with('msg', __('contacts::clients/messages.success.request'));
     }
 }

@@ -3,10 +3,14 @@
 namespace Modules\Students\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\OrderPaidCustomerNotification;
 use App\Notifications\OrderPaidNotification;
 use Modules\Orders\src\Models\Order;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
+use Modules\Students\src\Models\Student;
 use Modules\User\src\Models\User;
+use App\Mail\OrderPaidCustomerMail;
+use Illuminate\Support\Facades\Mail;
 
 class CheckoutController extends Controller
 {
@@ -47,16 +51,24 @@ class CheckoutController extends Controller
     {
         $order = $this->orderRepository->getOrder($orderId);
 
-        if (!$order) {
-            abort(404);
-        }
+        if (!$order) abort(404);
 
         $this->orderRepository->completePayment($order);
-        $admins = User::where('group_id', 1)->get();
 
+        // notify admin
+        $admins = User::where('group_id', 1)->get();
         foreach ($admins as $admin) {
             $admin->notify(new OrderPaidNotification($order));
         }
+
+        $student = Student::find($order->student_id); // hoặc Student model tuỳ bạn lưu
+        // if ($student && $student->email) {
+        //     $student->notify(new OrderPaidCustomerNotification($order));
+        // }
+
+        Mail::to($student->email)
+            ->queue(new OrderPaidCustomerMail($order));
+
         return redirect()->route('students.account.checkout-thankyou', [
             'locale' => app()->getLocale(),
             'id' => $order->id
