@@ -19,7 +19,7 @@
 - `ja`
 - `zh`
 
-[Tiếng Việt](README.md) | [English](README.en.md) | [한국어](README.ko.md) | [日本語](README.ja.md)
+[README](README.md) | [Tiếng Việt](README.vi.md) | [English](README.en.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | 中文
 
 [5语言详细指南](docs/5-language-guide.md)
 
@@ -161,11 +161,18 @@ php artisan queue:work
 php artisan test
 ```
 
-## 文档
+## Docs Links
 
 - [README.md](README.md)
+- [README.vi.md](README.vi.md)
 - [README.en.md](README.en.md)
 - [README.ko.md](README.ko.md)
 - [README.ja.md](README.ja.md)
 - [README.zh.md](README.zh.md)
 - [docs/5-language-guide.md](docs/5-language-guide.md)
+- [note.md](note.md)
+
+## Contact
+
+- Author: BigK
+- Email: `khanhbeotixiu9x@gmail.com`

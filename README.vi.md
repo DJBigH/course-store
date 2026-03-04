@@ -17,7 +17,7 @@ Hiện dự án hỗ trợ 5 ngôn ngữ phía client:
 - `ja`
 - `zh`
 
-[English](README.en.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
+[README](README.md) | Tiếng Việt | [English](README.en.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
 
 [Tài liệu 5 ngôn ngữ chi tiết](docs/5-language-guide.md)
 
@@ -265,21 +265,18 @@ Admin:
 
 - Admin Home: `docs/images/admin.png`
 
-## Ghi chú
+## Docs Links
 
-- `README.vi.md` là bản tiếng Việt đồng bộ với README mới
-- `note.md` là tài liệu note nội bộ / phác thảo
-- tài liệu nên dùng hiện tại là:
-  - [README.md](README.md)
-  - [README.vi.md](README.vi.md)
-  - [README.en.md](README.en.md)
-  - [README.ko.md](README.ko.md)
-  - [README.ja.md](README.ja.md)
-  - [README.zh.md](README.zh.md)
-  - [docs/5-language-guide.md](docs/5-language-guide.md)
+- [README.md](README.md)
+- [README.vi.md](README.vi.md)
+- [README.en.md](README.en.md)
+- [README.ko.md](README.ko.md)
+- [README.ja.md](README.ja.md)
+- [README.zh.md](README.zh.md)
+- [docs/5-language-guide.md](docs/5-language-guide.md)
+- [note.md](note.md)
 
-## Liên hệ
+## Contact
 
 - Author: BigK
 - Email: `khanhbeotixiu9x@gmail.com`
-
