@@ -197,7 +197,7 @@ class LessonController extends Controller
                 );
 
                 $video_id = $videoModel ? $videoModel->id : null;
-                $durations = 0;
+                $durations = externalVideoDuration($video);
             } else {
                 // MP4/file nội bộ: giữ logic cũ
                 $videoInfo = getVideoInfo($video);
@@ -390,7 +390,7 @@ class LessonController extends Controller
                     );
 
                     $video_id = $video ? $video->id : $video_id;
-                    $durations = 0;
+                    $durations = externalVideoDuration($videoUrl);
                 } else {
                     $videoInfo = getVideoInfo($videoUrl);
 

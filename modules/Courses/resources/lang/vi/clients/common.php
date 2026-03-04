@@ -38,6 +38,12 @@ return [
     'no_lessons'             => 'Khóa học chưa có bài học nào',
     'no_lessons_in_module'   => 'Chưa có bài học trong chương này',
     'trial'                  => 'Học thử',
+    'trial_opening'          => 'Đang mở...',
+    'trial_login_required'   => 'Bạn cần đăng nhập để xem bài học thử.',
+    'trial_unavailable'      => 'Không mở được video học thử!',
+    'trial_no_video'         => 'Bài học này chưa có video học thử.',
+    'lesson_login_required'  => 'Bạn cần đăng nhập để xem bài học này.',
+    'lesson_purchase_required' => 'Bạn cần mua khóa học để xem bài học này.',
 
 
     // Page titles

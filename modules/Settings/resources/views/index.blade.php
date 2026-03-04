@@ -148,6 +148,52 @@
                 </div>
             </div>
 
+            <div class="card mt-3">
+                <div class="card-header fw-bold">
+                    Cấu hình tiền tệ
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tỷ giá USD / VND</label>
+                                <input type="number" step="0.01" min="0.01" name="currency_rate_usd"
+                                    class="form-control"
+                                    value="{{ old('currency_rate_usd', $settings['currency_rate_usd'] ?? config('currency.rates.usd')) }}">
+                                <small class="text-muted">1 USD tương ứng bao nhiêu VND.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tỷ giá KRW / VND</label>
+                                <input type="number" step="0.01" min="0.01" name="currency_rate_krw"
+                                    class="form-control"
+                                    value="{{ old('currency_rate_krw', $settings['currency_rate_krw'] ?? config('currency.rates.krw')) }}">
+                                <small class="text-muted">1 Won Hàn tương ứng bao nhiêu VND.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tỷ giá JPY / VND</label>
+                                <input type="number" step="0.01" min="0.01" name="currency_rate_jpy"
+                                    class="form-control"
+                                    value="{{ old('currency_rate_jpy', $settings['currency_rate_jpy'] ?? config('currency.rates.jpy')) }}">
+                                <small class="text-muted">1 Yên Nhật tương ứng bao nhiêu VND.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tỷ giá CNY / VND</label>
+                                <input type="number" step="0.01" min="0.01" name="currency_rate_cny"
+                                    class="form-control"
+                                    value="{{ old('currency_rate_cny', $settings['currency_rate_cny'] ?? config('currency.rates.cny')) }}">
+                                <small class="text-muted">1 Nhân dân tệ tương ứng bao nhiêu VND.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- <div class="row">
                 <div class="col-md-6">
                     <div class="card">

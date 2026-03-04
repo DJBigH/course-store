@@ -39,6 +39,12 @@ return [
     'no_lessons'           => '이 강의에는 아직 수업이 없습니다',
     'no_lessons_in_module' => '이 섹션에는 수업이 없습니다',
     'trial'                => '미리보기',
+    'trial_opening'        => '여는 중...',
+    'trial_login_required' => '미리보기 강의를 보려면 로그인해 주세요.',
+    'trial_unavailable'    => '미리보기 영상을 열 수 없습니다.',
+    'trial_no_video'       => '이 미리보기 강의에는 아직 영상이 없습니다.',
+    'lesson_login_required' => '이 강의를 보려면 로그인해 주세요.',
+    'lesson_purchase_required' => '이 강의를 보려면 먼저 강의를 구매해야 합니다.',
 
     'page_title'        => '카테고리별 강의',
     'empty_page_title'  => '강의가 없습니다',

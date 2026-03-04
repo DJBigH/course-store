@@ -5,6 +5,7 @@ namespace Modules\Courses\src\Models;
 use App\Models\Scopes\ActiveScope;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Categories\Src\Models\Category;
+use Modules\Courses\src\Models\CourseComment;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Orders\src\Models\OrderDetail;
 use Modules\Students\src\Models\Student;
@@ -85,6 +86,11 @@ class Courses extends Model
     public function orderDetail()
     {
         return $this->hasMany(OrderDetail::class, 'course_id', 'id')->withoutGlobalScopes();
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(CourseComment::class, 'course_id', 'id');
     }
 
     public function getNameLocaleAttribute(): string
@@ -169,5 +175,27 @@ class Courses extends Model
         }
 
         return $this->slug ?: $this->slug_en ?: $this->slug_ko ?: $this->slug_ja ?: $this->slug_zh ?: '';
+    }
+
+    public function getDurationsAttribute($value)
+    {
+        $duration = (float) $value;
+
+        if ($duration > 0) {
+            return $duration;
+        }
+
+        if ($this->relationLoaded('lessons')) {
+            return (float) $this->lessons
+                ->whereNotNull('parent_id')
+                ->where('status', 1)
+                ->sum('durations');
+        }
+
+        return (float) $this->lessons()
+            ->whereNotNull('parent_id')
+            ->where('status', 1)
+            ->get()
+            ->sum('durations');
     }
 }

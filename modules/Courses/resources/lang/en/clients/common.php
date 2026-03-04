@@ -39,6 +39,12 @@ return [
     'no_lessons'           => 'This course has no lessons yet',
     'no_lessons_in_module' => 'No lessons in this section',
     'trial'                => 'Preview',
+    'trial_opening'        => 'Opening...',
+    'trial_login_required' => 'Please sign in to watch the preview lesson.',
+    'trial_unavailable'    => 'Unable to open the preview video.',
+    'trial_no_video'       => 'This preview lesson does not have a video yet.',
+    'lesson_login_required' => 'Please sign in to view this lesson.',
+    'lesson_purchase_required' => 'Please purchase the course to view this lesson.',
 
     'page_title'        => 'Courses by category',
     'empty_page_title'  => 'No courses available',

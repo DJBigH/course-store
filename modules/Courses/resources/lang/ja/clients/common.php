@@ -39,6 +39,12 @@ return [
     'no_lessons'           => 'このコースにはまだレッスンがありません',
     'no_lessons_in_module' => 'このセクションにはレッスンがありません',
     'trial'                => 'プレビュー',
+    'trial_opening'        => '読み込み中...',
+    'trial_login_required' => 'プレビューを見るにはログインしてください。',
+    'trial_unavailable'    => 'プレビュー動画を開けませんでした。',
+    'trial_no_video'       => 'このプレビューにはまだ動画がありません。',
+    'lesson_login_required' => 'このレッスンを見るにはログインしてください。',
+    'lesson_purchase_required' => 'このレッスンを見るにはコースの購入が必要です。',
 
     'page_title'        => 'カテゴリ別コース',
     'empty_page_title'  => '利用可能なコースがありません',

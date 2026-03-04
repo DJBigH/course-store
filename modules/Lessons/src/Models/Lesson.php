@@ -141,4 +141,25 @@ class Lesson extends Model
 
         return $this->description ?: $this->description_en ?: $this->description_ko ?: $this->description_ja ?: $this->description_zh;
     }
+
+    public function getDurationsAttribute($value)
+    {
+        $duration = (float) $value;
+
+        if ($duration > 0) {
+            return $duration;
+        }
+
+        $videoUrl = $this->relationLoaded('video')
+            ? $this->video?->url
+            : $this->video()->value('url');
+
+        if (!$videoUrl) {
+            return $duration;
+        }
+
+        $externalDuration = externalVideoDuration($videoUrl);
+
+        return $externalDuration > 0 ? $externalDuration : $duration;
+    }
 }

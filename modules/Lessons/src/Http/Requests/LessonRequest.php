@@ -37,7 +37,7 @@ class LessonRequest extends FormRequest
             'parent_id' => 'required|integer',
             'is_trial' => 'required|integer',
             'position' => 'required|integer',
-            'description' => 'required',
+            'description' => 'nullable',
             'description_en' => 'nullable',
             'description_ko' => 'nullable',
             'description_ja' => 'nullable',

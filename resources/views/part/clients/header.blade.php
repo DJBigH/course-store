@@ -220,7 +220,7 @@
                     <li class="nav-item dropdown dropdown-hover">
                         <a class="nav-link
         {{ request()->routeIs('courses.*') ? 'active' : '' }}"
-                            href="#" id="coursesDropdown" role="button">
+                            id="coursesDropdown" role="button">
                             <i class="fas fa-tv"></i>
                             {{ __('clients/common.course_categories') }}
                         </a>

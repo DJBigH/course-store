@@ -22,6 +22,10 @@ class SettingSeeder extends Seeder
             ['key' => 'instagram', 'value' => '#'],
             ['key' => 'youtube', 'value' => '#'],
             ['key' => 'tiktok', 'value' => '#'],
+            ['key' => 'currency_rate_usd', 'value' => (string) config('currency.rates.usd')],
+            ['key' => 'currency_rate_krw', 'value' => (string) config('currency.rates.krw')],
+            ['key' => 'currency_rate_jpy', 'value' => (string) config('currency.rates.jpy')],
+            ['key' => 'currency_rate_cny', 'value' => (string) config('currency.rates.cny')],
         ], ['key'], ['value']);
     }
 }

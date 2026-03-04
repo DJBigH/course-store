@@ -92,7 +92,14 @@
 
 
                     <div class="course-video mb-4 instructor-box" id="evaluate">
-                        <h2 class="fs-4">{{ __('courses::clients/common.student_reviews') }}</h2>
+                        <div id="course-comments-wrap">
+                            @include('courses::clients.comments_thread', [
+                                'course' => $course,
+                                'threads' => $threads,
+                                'canComment' => $canComment,
+                                'viewerIsAdmin' => $viewerIsAdmin,
+                            ])
+                        </div>
                     </div>
                 </div>
                 <div class="col-12 col-lg-3">
@@ -223,4 +230,228 @@
             </div>
         </div>
     </section>
+@endsection
+
+@section('stylesheets')
+    <style>
+        .course-comments-shell {
+            border-radius: 18px;
+        }
+
+        .course-comments-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .course-comment-form textarea {
+            border-radius: 14px;
+            resize: vertical;
+            min-height: 88px;
+        }
+
+        .admin-reply-form {
+            margin-left: 72px;
+            margin-top: 12px;
+        }
+
+        .admin-reply-form textarea {
+            min-height: 68px;
+            background: #f8fafc;
+        }
+
+        .comment-thread + .comment-thread {
+            margin-top: 18px;
+        }
+
+        .comment-card {
+            display: flex;
+            gap: 14px;
+            padding: 16px;
+            border-radius: 18px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+        }
+
+        .comment-card.is-student {
+            border-left: 4px solid #22c55e;
+        }
+
+        .comment-card.is-admin {
+            border-left: 4px solid #2563eb;
+            background: #f8fbff;
+        }
+
+        .reply-card {
+            margin-top: 10px;
+        }
+
+        .comment-replies {
+            margin-left: 72px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .comment-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .comment-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .comment-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .comment-content {
+            white-space: pre-wrap;
+            line-height: 1.65;
+            color: #0f172a;
+        }
+
+        .comment-actions {
+            margin-top: 12px;
+        }
+
+        .comment-flag-note {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #b91c1c;
+        }
+
+        .is-hidden-comment {
+            opacity: 0.72;
+        }
+
+        .empty-comments {
+            padding: 18px;
+            text-align: center;
+            border-radius: 16px;
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px dashed #cbd5e1;
+        }
+
+        @media (max-width: 768px) {
+            .comment-replies,
+            .admin-reply-form {
+                margin-left: 0;
+            }
+        }
+    </style>
+@endsection
+
+@section('scripts')
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const wrap = document.getElementById('course-comments-wrap');
+
+            if (!wrap) {
+                return;
+            }
+
+            const token = document.querySelector('meta[name="csrf_token"]')?.getAttribute('content') || '';
+
+            const submitAsyncForm = async (form) => {
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalText = submitButton ? submitButton.innerText : '';
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerText = 'Dang gui...';
+                }
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                        body: new FormData(form),
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        alert(result.message || 'Khong the gui binh luan ngay luc nay.');
+                        return;
+                    }
+
+                    wrap.innerHTML = result.html;
+                } catch (error) {
+                    alert('Khong the gui binh luan ngay luc nay.');
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerText = originalText;
+                    }
+                }
+            };
+
+            wrap.addEventListener('submit', (event) => {
+                const form = event.target.closest('[data-comment-form]');
+
+                if (!form) {
+                    return;
+                }
+
+                event.preventDefault();
+                submitAsyncForm(form);
+            });
+
+            wrap.addEventListener('click', async (event) => {
+                const toggleButton = event.target.closest('[data-visibility-form]');
+
+                if (!toggleButton) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                try {
+                    const response = await fetch(toggleButton.dataset.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        alert(result.message || 'Khong the cap nhat trang thai binh luan.');
+                        return;
+                    }
+
+                    wrap.innerHTML = result.html;
+                } catch (error) {
+                    alert('Khong the cap nhat trang thai binh luan.');
+                }
+            });
+        });
+    </script>
 @endsection
