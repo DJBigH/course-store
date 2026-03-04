@@ -1,119 +1,113 @@
-# Laravel Course Platform (Multi-language VI/EN)
+# Course Store
 
-[Tiếng Việt](README.vi.md)
+Nền tảng khóa học online xây dựng bằng Laravel, có:
 
-A Laravel-based course platform with multi-language client (VI/EN) and an admin panel.  
+- client đa ngôn ngữ
+- trang quản trị (admin)
+- xác thực email
+- queue gửi mail
+- thông báo trong hệ thống
+- CKEditor + Laravel File Manager
 
-This course platform is built using **Laravel**, and supports:
+Hiện dự án hỗ trợ 5 ngôn ngữ phía client:
 
-- Multilingual client (Vietnamese / English)
+- `vi`
+- `en`
+- `ko`
+- `ja`
+- `zh`
 
-- Admin Panel
-- Email Verification
+[English](README.en.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
 
-- Mail Queue
-- CK Editor
+[Tài liệu 5 ngôn ngữ chi tiết](docs/5-language-guide.md)
 
-- Laravel File Manager
+## Yêu cầu hệ thống
 
-- Toastify
-
----
-
-## Requirements
-
-- PHP >= 8.x
+- PHP `>= 8.x`
 - Composer
 - Node.js + NPM
-- MySQL/MariaDB
+- MySQL hoặc MariaDB
 
----
+## Cài đặt nhanh
 
-## Quick Start (After Clone)
-
-### 1) Clone project & install dependencies
+### 1. Clone và cài dependency
 
 ```bash
-git clone <https://github.com/DJBigH/course-store.git> or git clone <git@github.com:DJBigH/course-store.git> for SSH
-cd <YOUR_PROJECT_FOLDER>
-```
-
-```bash
+git clone <REPO_URL>
+cd course-store
 composer install
 npm install
 ```
 
-2. Create .env & generate key
+### 2. Tạo file môi trường
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-3. Configure Database in .env
+### 3. Cấu hình database trong `.env`
 
-```bash
-Edit .env:
-
+```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=YOUR_DATABASE
-DB_USERNAME=YOUR_USERNAME
-DB_PASSWORD=YOUR_PASSWORD
+DB_DATABASE=your_database
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
 ```
 
-4. Migrate & Seed
+### 4. Migrate và seed
 
 ```bash
 php artisan migrate --seed
-
-✅ Default admin (created by seeder)
-
-Email: admin@gmail.com
-
-Password: 12345678
 ```
 
-5. Storage link (important for uploads / file manager)
+Tài khoản admin mặc định:
+
+- Email: `admin@gmail.com`
+- Password: `12345678`
+
+### 5. Tạo storage link
 
 ```bash
 php artisan storage:link
 ```
 
-6. Build frontend assets
+### 6. Build frontend assets
+
+Chạy môi trường dev:
 
 ```bash
-Development:
-
 npm run dev
+```
 
-Production:
+Build production:
 
+```bash
 npm run build
 ```
 
-7. Run the project
+### 7. Chạy project
 
 ```bash
 php artisan serve
 ```
 
-URLs:
+URL mặc định:
 
-Client VI: http://127.0.0.1:8000/vi
+- Client: `http://127.0.0.1:8000/vi`
+- Admin: `http://127.0.0.1:8000/admin`
 
-Client EN: http://127.0.0.1:8000/en
+## Mail và queue
 
-Admin: http://127.0.0.1:8000/admin/
+Dự án có dùng email xác thực, quên mật khẩu, và một số mail hệ thống.
 
-Email Verification (IMPORTANT)
+### Cấu hình mail trong `.env`
 
-Students register and must verify email. Configure SMTP in .env.
+Ví dụ SMTP:
 
-```bash
-Example (Gmail SMTP):
-
+```env
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
@@ -124,129 +118,166 @@ MAIL_FROM_ADDRESS=your_email@gmail.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-Clear config cache after editing .env:
+Sau khi sửa `.env`, nên clear cache:
 
 ```bash
 php artisan config:clear
 php artisan cache:clear
 ```
 
-Queue (IMPORTANT)
-This project uses Laravel Queue (e.g. email verification jobs).
+### Chạy queue worker
 
-Run queue worker:
+Nếu mail/notification đang queue:
 
 ```bash
 php artisan queue:work
 ```
 
-Tip: Open another terminal tab and keep queue:work running while testing email verification.
+Trong môi trường production, không nên dùng `sync` cho queue.
 
-CKEditor + Laravel File Manager
+## Đa ngôn ngữ
 
-Make sure you ran:
+Client dùng locale ở đầu URL:
+
+- `/vi`
+- `/en`
+- `/ko`
+- `/ja`
+- `/zh`
+
+Nguyên tắc hiện tại:
+
+- nếu bản dịch của `en/ko/ja/zh` trống, hệ thống fallback về `vi`
+- notification mới có thể hiện theo locale hiện tại
+- email có thể bám theo locale tại thời điểm gửi
+
+File dịch nằm ở:
+
+- `resources/lang/{locale}`
+- `modules/*/resources/lang/{locale}`
+
+Nếu bạn cần hướng dẫn đầy đủ về dữ liệu đa ngôn ngữ, slug, fallback, notification và mail:
+
+[Xem tài liệu chi tiết](docs/5-language-guide.md)
+
+## Cấu hình production khuyến nghị
+
+Trước khi deploy production, nên kiểm tra:
+
+1. Tắt debug
+
+```env
+APP_DEBUG=false
+```
+
+2. Dùng queue thật (`database` hoặc `redis`)
+
+3. Build assets production
+
+```bash
+npm run build
+```
+
+4. Cache lại config, route, view
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+5. Đảm bảo worker queue đang chạy
+
+## Lệnh thường dùng
+
+```bash
+php artisan serve
+php artisan migrate
+php artisan db:seed
+php artisan queue:work
+php artisan test
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+## Xử lý lỗi thường gặp
+
+### 1. Không gửi được mail
+
+- kiểm tra SMTP trong `.env`
+- kiểm tra queue worker có đang chạy không
+- clear config cache sau khi sửa `.env`
+
+```bash
+php artisan config:clear
+php artisan cache:clear
+php artisan queue:work
+```
+
+### 2. Upload / file manager không hoạt động
+
+Đảm bảo đã tạo storage link:
 
 ```bash
 php artisan storage:link
-
-If your file manager package requires publish config/assets, run (depends on your package):
-
-php artisan vendor:publish
 ```
 
-Multi-language (VI/EN)
+### 3. CSS / JS không load
 
-Client uses language prefix:
+Chạy lại build assets:
 
-/vi
+```bash
+npm run dev
+```
 
-/en
+hoặc:
 
-Translation files:
+```bash
+npm run build
+```
 
-resources/lang/vi/\*.php
+### 4. Lỗi bảng queue / failed jobs
 
-resources/lang/en/\*.php
+Nếu thiếu bảng queue:
 
-If missing translations, check your language keys in these folders.
+```bash
+php artisan queue:table
+php artisan migrate
+```
 
-UI Demo Screenshots
+## Giao diện demo
 
 Client:
 
-### 🔹 Home
-
-![Home](docs/images/home.png)
-
-### 🔹 Course
-
-![Course](docs/images/course.png)
-
-### 🔹 Course Detail
-
-![Course_Detail](docs/images/course_detail.png)
-
-### 🔹 Coupon
-
-![Coupon](docs/images/coupon.png)
-
-### 🔹 Login/Register
-
-![Login/Register](docs/images/login.png)
-
-### 🔹 Contact
-
-![Contact](docs/images/contact.png)
-
-### 🔹 Checkout
-
-![Checkout](docs/images/checkout.png)
-
-### 🔹 Thank-you
-
-![Thank-you](docs/images/thanks.png)
-
-### 🔹 Order Detail
-
-![Order Detail](docs/images/order_detail.png)
-
-### 🔹 Lesson
-
-![Lesson](docs/images/lesson.png)
+- Home: `docs/images/home.png`
+- Course: `docs/images/course.png`
+- Course Detail: `docs/images/course_detail.png`
+- Coupon: `docs/images/coupon.png`
+- Login/Register: `docs/images/login.png`
+- Contact: `docs/images/contact.png`
+- Checkout: `docs/images/checkout.png`
+- Thank-you: `docs/images/thanks.png`
+- Order Detail: `docs/images/order_detail.png`
+- Lesson: `docs/images/lesson.png`
 
 Admin:
 
-### 🔹 Admin Home
+- Admin Home: `docs/images/admin.png`
 
-![Admin Home](docs/images/admin.png)
+## Ghi chú
 
-Troubleshooting
+- `README.vi.md` là bản ghi chú tiếng Việt cũ hơn
+- `note.md` là tài liệu note nội bộ / phác thảo
+- tài liệu nên dùng hiện tại là:
+  - [README.md](README.md)
+  - [README.en.md](README.en.md)
+  - [README.ko.md](README.ko.md)
+  - [README.ja.md](README.ja.md)
+  - [README.zh.md](README.zh.md)
+  - [docs/5-language-guide.md](docs/5-language-guide.md)
 
-1. Missing failed_jobs table
+## Liên hệ
 
-If you see error about failed_jobs table:
-```bash
-php artisan queue:table
-php artisan migrate 
-```
-2) Mail not sending
-
-Check SMTP credentials in .env
-
-If mails are queued, make sure queue worker is running:
-```bash
-php artisan queue:work 
-```
-3) Assets not loading
-
-Run:
-```bash
-npm run dev
-
-(or npm run build for production)
-```
-Author
-
-Author: BigK
-
-Contact: <khanhbeotixiu9x@gmail.com>
+- Author: BigK
+- Email: `khanhbeotixiu9x@gmail.com`
