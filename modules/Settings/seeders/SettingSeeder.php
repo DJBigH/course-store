@@ -13,7 +13,7 @@ class SettingSeeder extends Seeder
      */
     public function run(): void
     {
-        Setting::insert([
+        Setting::upsert([
             ['key' => 'site_name', 'value' => 'ABC Udemy'],
             ['key' => 'email', 'value' => 'abcudemy@gmail.com'],
             ['key' => 'phone', 'value' => '0123456789'],
@@ -22,6 +22,6 @@ class SettingSeeder extends Seeder
             ['key' => 'instagram', 'value' => '#'],
             ['key' => 'youtube', 'value' => '#'],
             ['key' => 'tiktok', 'value' => '#'],
-        ]);
+        ], ['key'], ['value']);
     }
 }

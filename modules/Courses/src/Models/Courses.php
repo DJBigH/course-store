@@ -18,10 +18,19 @@ class Courses extends Model
         'id',
         'name',
         'name_en',
+        'name_ko',
+        'name_ja',
+        'name_zh',
         'slug',
         'slug_en',
+        'slug_ko',
+        'slug_ja',
+        'slug_zh',
         'detail',
         'detail_en',
+        'detail_ko',
+        'detail_ja',
+        'detail_zh',
         'teacher_id',
         'thumbnail',
         'price',
@@ -31,6 +40,9 @@ class Courses extends Model
         'is_document',
         'supports',
         'supports_en',
+        'supports_ko',
+        'supports_ja',
+        'supports_zh',
         'status',
         'view',
         'created_at',
@@ -77,29 +89,85 @@ class Courses extends Model
 
     public function getNameLocaleAttribute(): string
     {
-        return app()->getLocale() === 'en'
-            ? ($this->name_en ?: $this->name ?: '')
-            : ($this->name ?: $this->name_en ?: '');
+        if (app()->getLocale() === 'zh') {
+            return $this->name_zh ?: $this->name ?: $this->name_en ?: $this->name_ko ?: $this->name_ja ?: '';
+        }
+
+        if (app()->getLocale() === 'ja') {
+            return $this->name_ja ?: $this->name ?: $this->name_en ?: $this->name_ko ?: $this->name_zh ?: '';
+        }
+
+        if (app()->getLocale() === 'ko') {
+            return $this->name_ko ?: $this->name ?: $this->name_en ?: $this->name_ja ?: $this->name_zh ?: '';
+        }
+
+        if (app()->getLocale() === 'en') {
+            return $this->name_en ?: $this->name ?: $this->name_ko ?: $this->name_ja ?: $this->name_zh ?: '';
+        }
+
+        return $this->name ?: $this->name_en ?: $this->name_ko ?: $this->name_ja ?: $this->name_zh ?: '';
     }
 
     public function getDetailLocaleAttribute(): string
     {
-        return app()->getLocale() === 'en'
-            ? ($this->detail_en ?: $this->detail ?: '')
-            : ($this->detail ?: $this->detail_en ?: '');
+        if (app()->getLocale() === 'zh') {
+            return $this->detail_zh ?: $this->detail ?: $this->detail_en ?: $this->detail_ko ?: $this->detail_ja ?: '';
+        }
+
+        if (app()->getLocale() === 'ja') {
+            return $this->detail_ja ?: $this->detail ?: $this->detail_en ?: $this->detail_ko ?: $this->detail_zh ?: '';
+        }
+
+        if (app()->getLocale() === 'ko') {
+            return $this->detail_ko ?: $this->detail ?: $this->detail_en ?: $this->detail_ja ?: $this->detail_zh ?: '';
+        }
+
+        if (app()->getLocale() === 'en') {
+            return $this->detail_en ?: $this->detail ?: $this->detail_ko ?: $this->detail_ja ?: $this->detail_zh ?: '';
+        }
+
+        return $this->detail ?: $this->detail_en ?: $this->detail_ko ?: $this->detail_ja ?: $this->detail_zh ?: '';
     }
 
     public function getSupportsLocaleAttribute(): string
     {
-        return app()->getLocale() === 'en'
-            ? ($this->supports_en ?: $this->supports ?: '')
-            : ($this->supports ?: $this->supports_en ?: '');
+        if (app()->getLocale() === 'zh') {
+            return $this->supports_zh ?: $this->supports ?: $this->supports_en ?: $this->supports_ko ?: $this->supports_ja ?: '';
+        }
+
+        if (app()->getLocale() === 'ja') {
+            return $this->supports_ja ?: $this->supports ?: $this->supports_en ?: $this->supports_ko ?: $this->supports_zh ?: '';
+        }
+
+        if (app()->getLocale() === 'ko') {
+            return $this->supports_ko ?: $this->supports ?: $this->supports_en ?: $this->supports_ja ?: $this->supports_zh ?: '';
+        }
+
+        if (app()->getLocale() === 'en') {
+            return $this->supports_en ?: $this->supports ?: $this->supports_ko ?: $this->supports_ja ?: $this->supports_zh ?: '';
+        }
+
+        return $this->supports ?: $this->supports_en ?: $this->supports_ko ?: $this->supports_ja ?: $this->supports_zh ?: '';
     }
 
     public function getSlugLocaleAttribute(): string
     {
-        return app()->getLocale() === 'en'
-            ? ($this->slug_en ?: $this->slug ?: '')
-            : ($this->slug ?: $this->slug_en ?: '');
+        if (app()->getLocale() === 'zh') {
+            return $this->slug_zh ?: $this->slug ?: $this->slug_en ?: $this->slug_ko ?: $this->slug_ja ?: '';
+        }
+
+        if (app()->getLocale() === 'ja') {
+            return $this->slug_ja ?: $this->slug ?: $this->slug_en ?: $this->slug_ko ?: $this->slug_zh ?: '';
+        }
+
+        if (app()->getLocale() === 'ko') {
+            return $this->slug_ko ?: $this->slug ?: $this->slug_en ?: $this->slug_ja ?: $this->slug_zh ?: '';
+        }
+
+        if (app()->getLocale() === 'en') {
+            return $this->slug_en ?: $this->slug ?: $this->slug_ko ?: $this->slug_ja ?: $this->slug_zh ?: '';
+        }
+
+        return $this->slug ?: $this->slug_en ?: $this->slug_ko ?: $this->slug_ja ?: $this->slug_zh ?: '';
     }
 }

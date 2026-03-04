@@ -2,7 +2,15 @@
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Modules\Categories\src\Models\Category;
 use Modules\ActiveLogs\src\Models\ActiveLog;
+use Modules\Courses\src\Models\Courses;
+use Modules\Document\src\Models\Document;
+use Modules\Orders\src\Models\Order;
+use Modules\Students\src\Models\Coupons;
+use Modules\Students\src\Models\Student;
+use Modules\Teacher\src\Models\Teacher;
+use Modules\Video\src\Models\Video;
 
 function activity_log(
     string $action,
@@ -11,15 +19,24 @@ function activity_log(
     string $logName = null,
     string $description = null
 ) {
-    $user = Auth::guard('students')->user()
-        ?? Auth::user();
+    $student = Auth::guard('students')->user();
+    $admin = Auth::user();
+    $user = $student ?? $admin;
+
+    if ($student) {
+        $causerLabel = $student->name . ' (Học viên)';
+    } elseif ($admin) {
+        $causerLabel = $admin->name . ' (Admin)';
+    } else {
+        $causerLabel = 'System';
+    }
 
     ActiveLog::create([
         'log_name'     => $logName,
         'action'       => $action,
         'subject_type' => $subject ? get_class($subject) : null,
         'subject_id'   => $subject->id ?? null,
-        'causer_type'  => Auth::user()->name,
+        'causer_type'  => $causerLabel,
         'causer_id'    => $user->id ?? null,
         'properties'   => $properties,
         'description'  => $description,
@@ -31,223 +48,306 @@ function activity_log(
 if (!function_exists('presentLogProperties')) {
     function presentLogProperties($log)
     {
-        $p = $log->properties ?? [];
+        $rows = logDetailRows($log);
 
-        // Map tên field -> tiếng Việt (rất quan trọng)
-        $fieldLabels = [
-            'name'        => 'Tên',
-            'price'       => 'Giá',
-            'sale_price'  => 'Giá khuyến mãi',
-            'status'      => 'Trạng thái',
+        if (empty($rows)) {
+            return 'Không có chi tiết thay đổi.';
+        }
+
+        return collect($rows)
+            ->map(function ($row) {
+                if (array_key_exists('old', $row) || array_key_exists('new', $row)) {
+                    return sprintf(
+                        "- %s: %s -> %s",
+                        $row['label'],
+                        $row['old'] ?? '—',
+                        $row['new'] ?? '—'
+                    );
+                }
+
+                return sprintf(
+                    "- %s: %s",
+                    $row['label'],
+                    $row['value'] ?? '—'
+                );
+            })
+            ->implode("\n");
+    }
+}
+
+if (!function_exists('logFieldLabels')) {
+    function logFieldLabels(): array
+    {
+        return [
+            'name' => 'Tên',
+            'name_en' => 'Tên (EN)',
+            'name_ko' => 'Tên (KO)',
+            'name_ja' => 'Tên (JA)',
+            'name_zh' => 'Tên (ZH)',
+            'slug' => 'Slug',
+            'slug_en' => 'Slug (EN)',
+            'slug_ko' => 'Slug (KO)',
+            'slug_ja' => 'Slug (JA)',
+            'slug_zh' => 'Slug (ZH)',
+            'price' => 'Giá',
+            'sale_price' => 'Giá khuyến mãi',
+            'status' => 'Trạng thái',
             'description' => 'Mô tả',
-            'thumbnail'   => 'Ảnh đại diện',
-            'code' => 'Mã khóa học',
+            'description_en' => 'Mô tả (EN)',
+            'description_ko' => 'Mô tả (KO)',
+            'description_ja' => 'Mô tả (JA)',
+            'description_zh' => 'Mô tả (ZH)',
+            'detail' => 'Nội dung',
+            'detail_en' => 'Nội dung (EN)',
+            'detail_ko' => 'Nội dung (KO)',
+            'detail_ja' => 'Nội dung (JA)',
+            'detail_zh' => 'Nội dung (ZH)',
+            'supports' => 'Hỗ trợ',
+            'supports_en' => 'Hỗ trợ (EN)',
+            'supports_ko' => 'Hỗ trợ (KO)',
+            'supports_ja' => 'Hỗ trợ (JA)',
+            'supports_zh' => 'Hỗ trợ (ZH)',
+            'thumbnail' => 'Ảnh đại diện',
+            'image' => 'Hình ảnh',
+            'code' => 'Mã',
             'view' => 'Lượt xem',
             'is_document' => 'Tài liệu',
+            'is_trial' => 'Học thử',
             'created_at' => 'Thời gian tạo',
-            'updated_at' => 'Thời gian cập nhập',
+            'updated_at' => 'Thời gian cập nhật',
             'durations' => 'Thời lượng',
             'position' => 'Thứ tự',
-            'document' => 'Tài liệu'
+            'document' => 'Tài liệu',
+            'video' => 'Video',
+            'site_name' => 'Tên website',
+            'email' => 'Email',
+            'phone' => 'Số điện thoại',
+            'address' => 'Địa chỉ',
+            'facebook' => 'Facebook',
+            'instagram' => 'Instagram',
+            'youtube' => 'Youtube',
+            'tiktok' => 'TikTok',
+            'logo' => 'Logo',
+            'banner_slider' => 'Banner slider',
+            'banner_right' => 'Banner bên phải',
+            'banner_full' => 'Banner full',
+            'teacher_id' => 'Giảng viên',
+            'parent_id' => 'Mục cha',
+            'exp' => 'Kinh nghiệm',
+            'course_id' => 'Khóa học',
+            'student_id' => 'Học viên',
+            'coupon_id' => 'Mã giảm giá',
+            'order_id' => 'Đơn hàng',
+            'document_id' => 'Tài liệu',
+            'video_id' => 'Video',
+        ];
+    }
+}
 
+if (!function_exists('logFieldLabel')) {
+    function logFieldLabel(string $key): string
+    {
+        return logFieldLabels()[$key] ?? ucfirst(str_replace('_', ' ', $key));
+    }
+}
+
+if (!function_exists('logActionLabel')) {
+    function logActionLabel(?string $action): string
+    {
+        $labels = [
+            'create' => 'Tạo mới',
+            'update' => 'Cập nhật',
+            'delete' => 'Xóa',
+            'view' => 'Xem',
+            'accept' => 'Tiếp nhận',
+            'assign_students' => 'Gán học viên',
+            'revoke_students' => 'Hủy gán học viên',
+            'sync_students' => 'Đồng bộ học viên',
+            'assigned_coupon' => 'Được gán mã',
+            'revoked_coupon' => 'Bị hủy mã',
+            'update_settings' => 'Cập nhật cấu hình',
         ];
 
-        // === UPDATE ===
-        if ($log->action === 'update' && isset($p['old'], $p['new'])) {
-            $lines = [];
+        return $labels[$action] ?? ($action ?: 'Khác');
+    }
+}
 
-            foreach ($p['new'] as $key => $newValue) {
-                $oldValue = $p['old'][$key] ?? null;
+if (!function_exists('logActionBadgeClass')) {
+    function logActionBadgeClass(?string $action): string
+    {
+        return match ($action) {
+            'create', 'assign_students', 'assigned_coupon', 'accept' => 'success',
+            'update', 'update_settings', 'sync_students' => 'primary',
+            'delete', 'revoke_students', 'revoked_coupon' => 'danger',
+            'view' => 'secondary',
+            default => 'dark',
+        };
+    }
+}
 
-                if ($oldValue != $newValue) {
-                    $label = $fieldLabels[$key] ?? ucfirst(str_replace('_', ' ', $key));
+if (!function_exists('logDetailRows')) {
+    function logDetailRows($log): array
+    {
+        $p = $log->properties ?? [];
+        $rows = [];
+        $hiddenFields = ['created_at', 'updated_at'];
 
-                    $lines[] = sprintf(
-                        "- %s: %s → %s",
-                        $label,
-                        formatLogValue($oldValue, $key),
-                        formatLogValue($newValue, $key)
-                    );
-                }
-            }
-
-            return !empty($lines)
-                ? implode("\n", $lines)
-                : 'Không có thay đổi dữ liệu.';
-        }
-
-        // === CREATE ===
-        if ($log->action === 'create') {
-            return 'Tạo mới dữ liệu.';
-        }
-
-        // === DELETE ===
-        if ($log->action === 'delete') {
-            return 'Xóa dữ liệu.';
-        }
-
-        // === ASSIGN / OTHER ===
-        if (isset($p['categories_new'])) {
-            return 'Cập nhật danh mục: ' . implode(', ', $p['categories_new']);
-        }
-
-        // ===== COUPON - ASSIGN STUDENTS =====
-        if ($log->action === 'assign_students') {
-            $code = $p['coupon_code'] ?? ($p['coupon_name'] ?? '');
-            $students = collect($p['students'] ?? []);
-            $names = $students->pluck('name')->filter()->values();
-
-            $short = $names->take(5)->implode(', ');
-            $more = $names->count() > 5 ? '…' : '';
-
-            return "Gán mã {$code} cho học viên: {$short}{$more}";
-        }
-
-        if ($log->action === 'revoke_students') {
-            $code = $p['coupon_code'] ?? ($p['coupon_name'] ?? '');
-            $students = collect($p['students'] ?? []);
-            $names = $students->pluck('name')->filter()->values();
-
-            $short = $names->take(5)->implode(', ');
-            $more = $names->count() > 5 ? '…' : '';
-
-            return "Hủy mã {$code} khỏi học viên: {$short}{$more}";
-        }
-
-        // Trường hợp bạn đang dùng sync_students (attached/detached)
-        if ($log->action === 'sync_students') {
-            $attached = $p['attached'] ?? [];
-            $detached = $p['detached'] ?? [];
-
-            $parts = [];
-            if (!empty($attached)) $parts[] = 'Gán mới: ' . count($attached);
-            if (!empty($detached)) $parts[] = 'Hủy gán: ' . count($detached);
-
-            return $parts ? ('Cập nhật học viên áp dụng mã (' . implode(' | ', $parts) . ')') : 'Không có thay đổi.';
-        }
-
-        // ===== STUDENT SIDE =====
-        if ($log->action === 'assigned_coupon') {
-            $code = $p['coupon_code'] ?? ($p['coupon_name'] ?? '');
-            return "Được gán mã: {$code}";
-        }
-
-        if ($log->action === 'revoked_coupon') {
-            $code = $p['coupon_code'] ?? ($p['coupon_name'] ?? '');
-            return "Bị hủy mã: {$code}";
-        }
-
-        // ===== CONTACT =====
-        if ($log->action === 'accept') {
-            // bạn đang log old/new status
-            $old = $p['old']['status'] ?? null;
-            $new = $p['new']['status'] ?? null;
-
-            $oldText = ($old === 1 || $old === '1') ? 'Đã tiếp nhận' : 'Chờ xử lý';
-            $newText = ($new === 1 || $new === '1') ? 'Đã tiếp nhận' : 'Chờ xử lý';
-
-            // nếu không có old/new thì fallback
-            if ($old === null && $new === null) {
-                return 'Tiếp nhận liên hệ';
-            }
-
-            return "Tiếp nhận liên hệ: {$oldText} → {$newText}";
-        }
-
-        if ($log->action === 'view') {
-            return 'Xem chi tiết liên hệ';
-        }
-
-        // ===== LESSON =====
-        if (
-            $log->action === 'update'
-            && isset($p['old']['is_trial'], $p['new']['is_trial'])
-            && $p['old']['is_trial'] != $p['new']['is_trial']
-        ) {
-            $old = $p['old']['is_trial'];
-            $new = $p['new']['is_trial'];
-
-            $oldText = ((int)$old === 1) ? 'Có học thử' : 'Không có học thử';
-            $newText = ((int)$new === 1) ? 'Có học thử' : 'Không có học thử';
-
-            return "Học thử: {$oldText} → {$newText}";
-        }
-
-
-        // ===== SETTINGS =====
         if ($log->action === 'update_settings' && isset($p['old'], $p['new'])) {
-
-            // 1) Nhóm field
             $bannerFields = ['logo', 'banner_full', 'banner_slider', 'banner_right'];
             $socialFields = ['facebook', 'instagram', 'youtube', 'tiktok'];
-            $showDetailFields = ['site_name', 'email', 'phone', 'address']; // hiện old → new
 
-            // 2) Label
-            $labels = [
-                'site_name' => 'Tên website',
-                'email'     => 'Email',
-                'phone'     => 'Số điện thoại',
-                'address'   => 'Địa chỉ',
+            foreach (array_keys(array_merge($p['old'], $p['new'])) as $key) {
+                if (in_array($key, $hiddenFields, true)) {
+                    continue;
+                }
 
-                'facebook'  => 'Facebook',
-                'instagram' => 'Instagram',
-                'youtube'   => 'Youtube',
-                'tiktok'    => 'TikTok',
-
-                'logo'         => 'Logo',
-                'banner_slider' => 'Banner slider',
-                'banner_right' => 'Banner bên phải',
-                'banner_full'  => 'Banner full',
-            ];
-
-            $lines = [];
-
-            foreach ($p['new'] as $key => $newValue) {
                 $oldValue = $p['old'][$key] ?? null;
+                $newValue = $p['new'][$key] ?? null;
 
-                // không đổi thì skip
-                if ($oldValue == $newValue) continue;
-
-                $label = $labels[$key] ?? ucfirst(str_replace('_', ' ', $key));
-
-                // ✅ Banner: chỉ báo "đã thay đổi ảnh"
-                if (in_array($key, $bannerFields)) {
-                    $lines[] = "- {$label}: Đã thay đổi ảnh";
+                if ($oldValue == $newValue) {
                     continue;
                 }
 
-                // ✅ MXH: chỉ báo "đã thay đổi ..."
-                if (in_array($key, $socialFields)) {
-                    $lines[] = "- Đã thay đổi {$label}";
+                if (in_array($key, $bannerFields, true)) {
+                    $rows[] = [
+                        'label' => logFieldLabel($key),
+                        'value' => 'Đã thay đổi ảnh',
+                    ];
                     continue;
                 }
 
-                // ✅ Thông tin chung: hiện rõ old → new
-                if (in_array($key, $showDetailFields)) {
-                    $lines[] = sprintf(
-                        "- %s: %s → %s",
-                        $label,
-                        formatLogValue($oldValue, $key),
-                        formatLogValue($newValue, $key)
-                    );
+                if (in_array($key, $socialFields, true)) {
+                    $rows[] = [
+                        'label' => logFieldLabel($key),
+                        'value' => 'Đã thay đổi liên kết',
+                    ];
                     continue;
                 }
 
-                // ✅ Field khác: fallback (nếu sau này có thêm key)
-                $lines[] = sprintf(
-                    "- %s: %s → %s",
-                    $label,
-                    formatLogValue($oldValue, $key),
-                    formatLogValue($newValue, $key)
-                );
+                $rows[] = [
+                    'label' => logFieldLabel($key),
+                    'old' => formatLogValue($oldValue, $key),
+                    'new' => formatLogValue($newValue, $key),
+                ];
             }
 
-            return !empty($lines)
-                ? implode("\n", $lines)
-                : 'Không có thay đổi cấu hình.';
+            return $rows;
         }
 
-        return 'Có thay đổi dữ liệu.';
+        if (isset($p['old'], $p['new']) && is_array($p['old']) && is_array($p['new'])) {
+            $keys = array_unique(array_merge(array_keys($p['old']), array_keys($p['new'])));
+
+            foreach ($keys as $key) {
+                if (in_array($key, $hiddenFields, true)) {
+                    continue;
+                }
+
+                $oldValue = $p['old'][$key] ?? null;
+                $newValue = $p['new'][$key] ?? null;
+
+                if ($oldValue == $newValue) {
+                    continue;
+                }
+
+                $rows[] = [
+                    'label' => logFieldLabel($key),
+                    'old' => formatLogValue($oldValue, $key),
+                    'new' => formatLogValue($newValue, $key),
+                ];
+            }
+
+            if (!empty($rows)) {
+                return $rows;
+            }
+        }
+
+        if (isset($p['data']) && is_array($p['data'])) {
+            foreach ($p['data'] as $key => $value) {
+                if (in_array($key, array_merge(['password'], $hiddenFields), true) || is_array($value) || is_object($value)) {
+                    continue;
+                }
+
+                $rows[] = [
+                    'label' => logFieldLabel($key),
+                    'value' => formatLogValue($value, $key),
+                ];
+            }
+
+            if (!empty($rows)) {
+                return $rows;
+            }
+        }
+
+        if (isset($p['categories_old']) || isset($p['categories_new'])) {
+            $rows[] = [
+                'label' => 'Chuyên mục cũ',
+                'value' => formatLogValue($p['categories_old'] ?? [], 'categories_old'),
+            ];
+            $rows[] = [
+                'label' => 'Chuyên mục mới',
+                'value' => formatLogValue($p['categories_new'] ?? [], 'categories_new'),
+            ];
+
+            return $rows;
+        }
+
+        if (isset($p['students']) && is_array($p['students'])) {
+            $studentNames = collect($p['students'])->pluck('name')->filter()->implode(', ');
+            $rows[] = [
+                'label' => 'Học viên',
+                'value' => $studentNames ?: '—',
+            ];
+
+            return $rows;
+        }
+
+        foreach ($p as $key => $value) {
+            if (in_array((string) $key, $hiddenFields, true)) {
+                continue;
+            }
+
+            if (is_array($value) || is_object($value)) {
+                continue;
+            }
+
+            $rows[] = [
+                'label' => logFieldLabel((string) $key),
+                'value' => formatLogValue($value, (string) $key),
+            ];
+        }
+
+        return $rows;
+    }
+}
+
+if (!function_exists('logSummaryText')) {
+    function logSummaryText($log): string
+    {
+        $rows = logDetailRows($log);
+
+        if (empty($rows)) {
+            return $log->description ?: 'Không có chi tiết.';
+        }
+
+        $first = $rows[0];
+
+        if (array_key_exists('old', $first) || array_key_exists('new', $first)) {
+            return sprintf(
+                '%s: %s -> %s',
+                $first['label'],
+                $first['old'] ?? '—',
+                $first['new'] ?? '—'
+            );
+        }
+
+        return sprintf('%s: %s', $first['label'], $first['value'] ?? '—');
+    }
+}
+
+if (!function_exists('logDiffCount')) {
+    function logDiffCount($log): int
+    {
+        return count(logDetailRows($log));
     }
 }
 
@@ -255,6 +355,10 @@ if (!function_exists('formatLogValue')) {
     function formatLogValue($value, string $field = null)
     {
         if (is_null($value)) return '—';
+
+        if (is_bool($value)) {
+            return $value ? 'Có' : 'Không';
+        }
 
         // ===== STATUS =====
         if ($field === 'status') {
@@ -264,6 +368,124 @@ if (!function_exists('formatLogValue')) {
         // ===== IS_DOCUMENT =====
         if ($field === 'is_document') {
             return $value == 1 ? 'Có tài liệu' : 'Không có tài liệu';
+        }
+
+        if ($field === 'is_trial') {
+            return $value == 1 ? 'Có học thử' : 'Không học thử';
+        }
+
+        if ($field === 'parent_id') {
+            if (empty($value) || (int) $value === 0) {
+                return 'Không có';
+            }
+
+            $category = Category::query()->find((int) $value);
+
+            if ($category) {
+                return $category->name . ' (#' . $category->id . ')';
+            }
+
+            return 'Chuyên mục #' . (int) $value;
+        }
+
+        if ($field === 'teacher_id') {
+            if (empty($value) || (int) $value === 0) {
+                return 'Không có';
+            }
+
+            $teacher = Teacher::query()->find((int) $value);
+
+            if ($teacher) {
+                return $teacher->name . ' (#' . $teacher->id . ')';
+            }
+
+            return 'Giảng viên #' . (int) $value;
+        }
+
+        if ($field === 'course_id') {
+            if (empty($value) || (int) $value === 0) {
+                return 'Không có';
+            }
+
+            $course = Courses::withoutGlobalScopes()->find((int) $value);
+
+            if ($course) {
+                $label = $course->name ?: $course->code ?: ('Khóa học #' . $course->id);
+
+                return $label . ' (#' . $course->id . ')';
+            }
+
+            return 'Khóa học #' . (int) $value;
+        }
+
+        if ($field === 'student_id') {
+            if (empty($value) || (int) $value === 0) {
+                return 'Không có';
+            }
+
+            $student = Student::query()->find((int) $value);
+
+            if ($student) {
+                return $student->name . ' (#' . $student->id . ')';
+            }
+
+            return 'Học viên #' . (int) $value;
+        }
+
+        if ($field === 'coupon_id') {
+            if (empty($value) || (int) $value === 0) {
+                return 'Không có';
+            }
+
+            $coupon = Coupons::query()->find((int) $value);
+
+            if ($coupon) {
+                return ($coupon->code ?: 'Mã giảm giá') . ' (#' . $coupon->id . ')';
+            }
+
+            return 'Mã giảm giá #' . (int) $value;
+        }
+
+        if ($field === 'order_id') {
+            if (empty($value) || (int) $value === 0) {
+                return 'Không có';
+            }
+
+            $order = Order::query()->find((int) $value);
+
+            if ($order) {
+                return ($order->code ?: 'Đơn hàng') . ' (#' . $order->id . ')';
+            }
+
+            return 'Đơn hàng #' . (int) $value;
+        }
+
+        if ($field === 'document_id') {
+            if (empty($value) || (int) $value === 0) {
+                return 'Không có';
+            }
+
+            $document = Document::query()->find((int) $value);
+
+            if ($document) {
+                return ($document->name ?: 'Tài liệu') . ' (#' . $document->id . ')';
+            }
+
+            return 'Tài liệu #' . (int) $value;
+        }
+
+        if ($field === 'video_id') {
+            if (empty($value) || (int) $value === 0) {
+                return 'Không có';
+            }
+
+            $video = Video::query()->find((int) $value);
+
+            if ($video) {
+                return ($video->name ?: 'Video') . ' (#' . $video->id . ')';
+            }
+
+            return 'Video #' . (int) $value;
         }
 
         if ($field === 'created_at' ||  $field === 'updated_at') {
@@ -277,9 +499,37 @@ if (!function_exists('formatLogValue')) {
             return money($value) . 'đ';
         }
 
+        if (in_array($field, [
+            'description',
+            'description_en',
+            'description_ko',
+            'description_ja',
+            'description_zh',
+            'detail',
+            'detail_en',
+            'detail_ko',
+            'detail_ja',
+            'detail_zh',
+            'supports',
+            'supports_en',
+            'supports_ko',
+            'supports_ja',
+            'supports_zh',
+        ], true)) {
+            return formatHtmlForLog((string) $value, 220);
+        }
+
         // ===== ARRAY =====
         if (is_array($value)) {
             return implode(', ', $value);
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+
+            if ($trimmed === '') {
+                return '—';
+            }
         }
 
         return (string) $value;

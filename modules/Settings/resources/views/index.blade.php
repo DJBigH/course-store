@@ -78,7 +78,7 @@
                             <div class="mb-3">
                                 <label class="form-label">TikTok</label>
                                 <input type="text" name="tiktok" class="form-control"
-                                    value="{{ old('', $settings['tiktok'] ?? '') }}">
+                                    value="{{ old('tiktok', $settings['tiktok'] ?? '') }}">
                             </div>
 
                         </div>

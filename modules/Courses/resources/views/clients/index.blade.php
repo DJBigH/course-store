@@ -9,7 +9,7 @@
                         <div class="col-12 col-lg-6 mb-4">
                             <div class="d-flex course">
                                 <div class="banner-course">
-                                    <img src="{{ $course->thumbnail }}" alt="{{ $course->name }}" />
+                                    <img src="{{ $course->thumbnail }}" alt="{{ $course->name_locale }}" />
                                 </div>
 
                                 <div class="descreption-course">
@@ -40,17 +40,17 @@
                                     <h5 class="descreption-title">
                                             <a
                                                 href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}">
-                                                {{ $course->name_locale ?? $course->name }}
+                                                {{ $course->name_locale }}
                                             </a>
                                     </h5>
 
 
                                     <div class="descreption-teacher">
-                                        <img src="{{ $course->teacher?->image }}" alt="{{ $course->teacher?->name }}" />
+                                        <img src="{{ $course->teacher?->image }}" alt="{{ $course->teacher?->name_locale }}" />
                                         <span>
                                             <strong
                                                 style="font-weight: bold">{{ __('courses::clients/common.instructor') }}:</strong>
-                                            {{ $course->teacher?->name }}
+                                            {{ $course->teacher?->name_locale }}
                                         </span>
                                     </div>
 

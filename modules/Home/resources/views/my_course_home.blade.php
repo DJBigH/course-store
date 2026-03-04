@@ -38,7 +38,7 @@
 
                                         <div class="course-teacher">
                                             <img src="{{ $item->teacher->image }}" alt="">
-                                            <span>{{ $item->teacher->name }}</span>
+                                            <span>{{ $item->teacher->name_locale }}</span>
                                         </div>
 
                                         <div class="course-price">

@@ -108,8 +108,14 @@ class CoursesController extends Controller
 
     public function category($locale, $slug)
     {
-        $category = Category::where('slug', $slug)->firstOrFail();
-        $pageTitle = __('courses::clients/common.page_title') . ' ' . $category->name;
+        $category = Category::where(function ($query) use ($slug) {
+            $query->where('slug', $slug)
+                ->orWhere('slug_en', $slug)
+                ->orWhere('slug_ko', $slug)
+                ->orWhere('slug_ja', $slug)
+                ->orWhere('slug_zh', $slug);
+        })->firstOrFail();
+        $pageTitle = __('courses::clients/common.page_title') . ' ' . $category->name_locale;
         $pageName  = $pageTitle;
 
         if (!$category) {

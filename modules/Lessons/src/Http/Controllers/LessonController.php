@@ -142,8 +142,14 @@ class LessonController extends Controller
     {
         $name = $request->name;
         $name_en = $request->name_en;
+        $name_ko = $request->name_ko;
+        $name_ja = $request->name_ja;
+        $name_zh = $request->name_zh;
         $slug = $request->slug;
         $slug_en = $request->slug_en;
+        $slug_ko = $request->slug_ko;
+        $slug_ja = $request->slug_ja;
+        $slug_zh = $request->slug_zh;
         $video = $request->video;
         $document = $request->document;
         $parent_id = $request->parent_id == 0 ? null : $request->parent_id;
@@ -151,6 +157,9 @@ class LessonController extends Controller
         $position = $request->position;
         $description = $request->description;
         $description_en = $request->description_en;
+        $description_ko = $request->description_ko;
+        $description_ja = $request->description_ja;
+        $description_zh = $request->description_zh;
         $status = $request->status ?? 0;
         $document_id = null;
         $video_id = null;
@@ -210,8 +219,14 @@ class LessonController extends Controller
         $lesson = $this->lessonRepository->create([
             'name' => $name,
             'name_en' => $name_en,
+            'name_ko' => $name_ko,
+            'name_ja' => $name_ja,
+            'name_zh' => $name_zh,
             'slug' => $slug,
             'slug_en' => $slug_en,
+            'slug_ko' => $slug_ko,
+            'slug_ja' => $slug_ja,
+            'slug_zh' => $slug_zh,
             'video_id' => $video_id,
             'course_id' => $courseId,
             'document_id' => $document_id,
@@ -221,6 +236,9 @@ class LessonController extends Controller
             'durations' => $durations ?? 0,
             'description' => $description,
             'description_en' => $description_en,
+            'description_ko' => $description_ko,
+            'description_ja' => $description_ja,
+            'description_zh' => $description_zh,
             'status' => $status,
         ]);
         activity_log(
@@ -231,8 +249,14 @@ class LessonController extends Controller
                 'data' => [
                     'name' => $lesson->name,
                     'name_en' => $lesson->name_en,
+                    'name_ko' => $lesson->name_ko,
+                    'name_ja' => $lesson->name_ja,
+                    'name_zh' => $lesson->name_zh,
                     'slug' => $lesson->slug,
                     'slug_en' => $lesson->slug_en,
+                    'slug_ko' => $lesson->slug_ko,
+                    'slug_ja' => $lesson->slug_ja,
+                    'slug_zh' => $lesson->slug_zh,
                     'parent_id' => $lesson->parent_id,
                     'is_trial' => $lesson->is_trial,
                     'position' => $lesson->position,
@@ -249,7 +273,21 @@ class LessonController extends Controller
             foreach ($students as $student) {
                 $student->notify(new StudentNotification([
                     'title' => 'Bài học mới',
-                    'message' => $lesson->name . ' vừa được thêm vào',
+                    'title_translations' => [
+                        'vi' => 'Bài học mới',
+                        'en' => 'New lesson',
+                        'ko' => '새 레슨',
+                        'ja' => '新しいレッスン',
+                        'zh' => '新课程内容',
+                    ],
+                    'message' => localizedModelField($lesson, 'name', 'vi') . ' vừa được thêm vào',
+                    'message_translations' => [
+                        'vi' => localizedModelField($lesson, 'name', 'vi') . ' vừa được thêm vào',
+                        'en' => localizedModelField($lesson, 'name', 'en') . ' has just been added',
+                        'ko' => localizedModelField($lesson, 'name', 'ko') . ' 레슨이 새로 추가되었습니다',
+                        'ja' => localizedModelField($lesson, 'name', 'ja') . ' が新しく追加されました',
+                        'zh' => localizedModelField($lesson, 'name', 'zh') . ' 已新增',
+                    ],
                     'url' => route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $lesson->slug]),
                 ]));
             }
@@ -273,14 +311,20 @@ class LessonController extends Controller
         return view('lessons::edit', compact('pageTitle', 'lessons', 'lesson', 'courseId'));
     }
 
-    public function update(Request $request, $lessonId)
+    public function update(LessonRequest $request, $lessonId)
     {
         $lessonOld = $this->lessonRepository->find($lessonId);
 
         $name = $request->name;
         $name_en = $request->name_en;
+        $name_ko = $request->name_ko;
+        $name_ja = $request->name_ja;
+        $name_zh = $request->name_zh;
         $slug = $request->slug;
         $slug_en = $request->slug_en;
+        $slug_ko = $request->slug_ko;
+        $slug_ja = $request->slug_ja;
+        $slug_zh = $request->slug_zh;
         $videoUrl = trim((string)$request->video);
         $documentUrl = trim((string)$request->document);
 
@@ -289,6 +333,9 @@ class LessonController extends Controller
         $position = (int)$request->position;
         $description = $request->description;
         $description_en = $request->description_en;
+        $description_ko = $request->description_ko;
+        $description_ja = $request->description_ja;
+        $description_zh = $request->description_zh;
         $status = $request->status ?? 0;
 
         // Mặc định giữ nguyên ID cũ (đừng reset về null)
@@ -368,8 +415,14 @@ class LessonController extends Controller
         $this->lessonRepository->update($lessonId, [
             'name' => $name,
             'name_en' => $name_en,
+            'name_ko' => $name_ko,
+            'name_ja' => $name_ja,
+            'name_zh' => $name_zh,
             'slug' => $slug,
             'slug_en' => $slug_en,
+            'slug_ko' => $slug_ko,
+            'slug_ja' => $slug_ja,
+            'slug_zh' => $slug_zh,
             'video_id' => $video_id,
             'document_id' => $document_id,
             'parent_id' => $parent_id,
@@ -378,6 +431,9 @@ class LessonController extends Controller
             'durations' => $durations,
             'description' => $description,
             'description_en' => $description_en,
+            'description_ko' => $description_ko,
+            'description_ja' => $description_ja,
+            'description_zh' => $description_zh,
             'status' => $status,
         ]);
 

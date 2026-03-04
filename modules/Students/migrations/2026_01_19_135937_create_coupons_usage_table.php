@@ -31,6 +31,6 @@ return new class () extends Migration {
      */
     public function down()
     {
-        Schema::drop('coupons_usage');
+        Schema::dropIfExists('coupons_usage');
     }
 };

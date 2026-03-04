@@ -18,6 +18,15 @@
 
                 <input type="radio" class="btn-check" name="content_lang" id="lang_en">
                 <label class="btn btn-outline-primary" for="lang_en">EN</label>
+
+                <input type="radio" class="btn-check" name="content_lang" id="lang_ko">
+                <label class="btn btn-outline-primary" for="lang_ko">KO</label>
+
+                <input type="radio" class="btn-check" name="content_lang" id="lang_ja">
+                <label class="btn btn-outline-primary" for="lang_ja">JA</label>
+
+                <input type="radio" class="btn-check" name="content_lang" id="lang_zh">
+                <label class="btn btn-outline-primary" for="lang_zh">ZH</label>
             </div>
         </div>
 
@@ -77,6 +86,97 @@
                                     name="slug_en" placeholder="Auto generate..."
                                     value="{{ old('slug_en', $course->slug_en ?? '') }}" readonly>
                                 @error('slug_en')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ================= KO ================= --}}
+                <div class="lang-block lang-ko d-none">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Tên (KO)</label>
+                                <input type="text"
+                                    class="form-control title-ko {{ $errors->has('name_ko') ? 'is-invalid' : '' }}"
+                                    name="name_ko" placeholder="Tên khóa học..."
+                                    value="{{ old('name_ko', $course->name_ko ?? '') }}">
+                                @error('name_ko')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Slug (KO)</label>
+                                <input type="text"
+                                    class="form-control slug-ko {{ $errors->has('slug_ko') ? 'is-invalid' : '' }}"
+                                    name="slug_ko" placeholder="Auto generate..."
+                                    value="{{ old('slug_ko', $course->slug_ko ?? '') }}" readonly>
+                                @error('slug_ko')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lang-block lang-ja d-none">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Tên (JA)</label>
+                                <input type="text"
+                                    class="form-control title-ja {{ $errors->has('name_ja') ? 'is-invalid' : '' }}"
+                                    name="name_ja" placeholder="Tên khóa học..."
+                                    value="{{ old('name_ja', $course->name_ja ?? '') }}">
+                                @error('name_ja')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Slug (JA)</label>
+                                <input type="text"
+                                    class="form-control slug-ja {{ $errors->has('slug_ja') ? 'is-invalid' : '' }}"
+                                    name="slug_ja" placeholder="Auto generate..."
+                                    value="{{ old('slug_ja', $course->slug_ja ?? '') }}" readonly>
+                                @error('slug_ja')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lang-block lang-zh d-none">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Tên (ZH)</label>
+                                <input type="text"
+                                    class="form-control title-zh {{ $errors->has('name_zh') ? 'is-invalid' : '' }}"
+                                    name="name_zh" placeholder="Tên khóa học..."
+                                    value="{{ old('name_zh', $course->name_zh ?? '') }}">
+                                @error('name_zh')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Slug (ZH)</label>
+                                <input type="text"
+                                    class="form-control slug-zh {{ $errors->has('slug_zh') ? 'is-invalid' : '' }}"
+                                    name="slug_zh" placeholder="Auto generate..."
+                                    value="{{ old('slug_zh', $course->slug_zh ?? '') }}" readonly>
+                                @error('slug_zh')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -202,6 +302,27 @@
                         <textarea name="supports_en" class="form-control ckeditor">{{ old('supports_en', $course->supports_en ?? '') }}</textarea>
                     </div>
                 </div>
+
+                <div class="lang-block lang-ko d-none">
+                    <div class="mb-3">
+                        <label>Hỗ trợ (KO)</label>
+                        <textarea name="supports_ko" class="form-control ckeditor">{{ old('supports_ko', $course->supports_ko ?? '') }}</textarea>
+                    </div>
+                </div>
+
+                <div class="lang-block lang-ja d-none">
+                    <div class="mb-3">
+                        <label>Hỗ trợ (JA)</label>
+                        <textarea name="supports_ja" class="form-control ckeditor">{{ old('supports_ja', $course->supports_ja ?? '') }}</textarea>
+                    </div>
+                </div>
+
+                <div class="lang-block lang-zh d-none">
+                    <div class="mb-3">
+                        <label>Hỗ trợ (ZH)</label>
+                        <textarea name="supports_zh" class="form-control ckeditor">{{ old('supports_zh', $course->supports_zh ?? '') }}</textarea>
+                    </div>
+                </div>
             </div>
 
             <div class="col-12">
@@ -217,6 +338,27 @@
                     <div class="mb-3">
                         <label>Nội dung (EN)</label>
                         <textarea name="detail_en" class="form-control ckeditor">{{ old('detail_en', $course->detail_en ?? '') }}</textarea>
+                    </div>
+                </div>
+
+                <div class="lang-block lang-ko d-none">
+                    <div class="mb-3">
+                        <label>Nội dung (KO)</label>
+                        <textarea name="detail_ko" class="form-control ckeditor">{{ old('detail_ko', $course->detail_ko ?? '') }}</textarea>
+                    </div>
+                </div>
+
+                <div class="lang-block lang-ja d-none">
+                    <div class="mb-3">
+                        <label>Nội dung (JA)</label>
+                        <textarea name="detail_ja" class="form-control ckeditor">{{ old('detail_ja', $course->detail_ja ?? '') }}</textarea>
+                    </div>
+                </div>
+
+                <div class="lang-block lang-zh d-none">
+                    <div class="mb-3">
+                        <label>Nội dung (ZH)</label>
+                        <textarea name="detail_zh" class="form-control ckeditor">{{ old('detail_zh', $course->detail_zh ?? '') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -303,9 +445,18 @@
             const random = Math.floor(100000 + Math.random() * 900000);
             document.getElementById('course_code').value = prefix + random;
         });
+
+        function getSlugIntl(title) {
+            return (title || '').toLowerCase().trim().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '-')
+                .replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+        }
+
         (function() {
             const viBtn = document.getElementById('lang_vi');
             const enBtn = document.getElementById('lang_en');
+            const koBtn = document.getElementById('lang_ko');
+            const jaBtn = document.getElementById('lang_ja');
+            const zhBtn = document.getElementById('lang_zh');
 
             function showLang(lang) {
                 document.querySelectorAll('.lang-block').forEach(el => el.classList.add('d-none'));
@@ -315,10 +466,20 @@
 
             const saved = localStorage.getItem('admin_course_lang') || 'vi';
             if (saved === 'en') enBtn.checked = true;
+            if (saved === 'ko') koBtn.checked = true;
+            if (saved === 'ja') jaBtn.checked = true;
+            if (saved === 'zh') zhBtn.checked = true;
             showLang(saved);
 
             viBtn.addEventListener('change', () => showLang('vi'));
             enBtn.addEventListener('change', () => showLang('en'));
+            koBtn.addEventListener('change', () => showLang('ko'));
+            jaBtn.addEventListener('change', () => showLang('ja'));
+            zhBtn.addEventListener('change', () => showLang('zh'));
         })();
+
+        window.AdminSlug.bindAuto('.title-ko', '.slug-ko', 'ko');
+        window.AdminSlug.bindAuto('.title-ja', '.slug-ja', 'ja');
+        window.AdminSlug.bindAuto('.title-zh', '.slug-zh', 'zh');
     </script>
 @endsection

@@ -64,8 +64,8 @@
                                             <div class="card h-100">
                                                 <img src="{{ asset($course->thumbnail) }}" class="card-img-top">
                                                 <div class="card-body d-flex flex-column">
-                                                    <h6 class="mb-3">{{ $course->name }}</h6>
-                                                    <a href="{{ route('courses.detail', $course->slug) }}"
+                                                    <h6 class="mb-3">{{ $course->name_locale }}</h6>
+                                                    <a href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}"
                                                         class="btn btn-sm btn-primary mt-auto">
                                                         Tiếp tục học
                                                     </a>

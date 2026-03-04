@@ -10,7 +10,7 @@
                     <i class="fa-solid fa-file-arrow-down text-primary"></i>
                 </a>
                 <a target="_blank" href="{{ $item->document->url }}" class="document-name">
-                    {{ $item->name }}
+                    {{ $item->name_locale }}
                 </a>
             </div>
 

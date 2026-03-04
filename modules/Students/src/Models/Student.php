@@ -5,6 +5,7 @@ namespace Modules\Students\src\Models;
 use App\Notifications\EmailVerifyQueued;
 use App\Notifications\ResetPasswordQueued;
 use Illuminate\Contracts\Auth\CanResetPassword;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Modules\Courses\src\Models\Courses;
 use Modules\Orders\src\Models\Order;
 
-class Student extends Authenticatable implements MustVerifyEmail, CanResetPassword
+class Student extends Authenticatable implements MustVerifyEmail, CanResetPassword, HasLocalePreference
 {
     use HasFactory;
     use Notifiable;
@@ -33,12 +34,17 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
 
     public function sendEmailVerificationNotification()
     {
-        $this->notify(new EmailVerifyQueued);
+        $this->notify((new EmailVerifyQueued)->locale($this->preferredLocale()));
     }
 
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new ResetPasswordQueued($token));
+        $this->notify((new ResetPasswordQueued($token))->locale($this->preferredLocale()));
+    }
+
+    public function preferredLocale()
+    {
+        return app()->getLocale() ?: config('app.locale', 'vi');
     }
 
     public function courses()

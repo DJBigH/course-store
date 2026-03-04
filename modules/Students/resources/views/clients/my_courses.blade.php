@@ -85,7 +85,7 @@
 
                                                 <td>
                                                     <div class="fw-semibold"><a
-                                                            href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug]) }}">{{ $course->name }}</a>
+                                                            href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}">{{ $course->name_locale }}</a>
                                                     </div>
                                                     <small class="text-muted">
                                                         {{ __('students::clients/account.my_course.updated_at') }}:
@@ -95,7 +95,7 @@
 
                                                 <td>
                                                     <span class="badge bg-info-subtle text-info px-3 py-2">
-                                                        <a href="#">{{ $course->teacher->name ?? 'Nguyễn Văn A' }}</a>
+                                                        <a href="#">{{ $course->teacher->name_locale ?? 'Nguyễn Văn A' }}</a>
                                                     </span>
                                                 </td>
 
@@ -114,7 +114,7 @@
                                                 </td>
 
                                                 <td class="text-center">
-                                                    <a href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug]) }}"
+                                                    <a href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}"
                                                         class="btn btn-primary btn-sm px-3">
                                                         <i class="bi bi-play-circle me-1"></i>
                                                         {{ __('students::clients/account.my_course.enter_course') }}

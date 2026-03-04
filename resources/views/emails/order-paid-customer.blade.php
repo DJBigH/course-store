@@ -47,14 +47,14 @@
 
                     <!-- Header -->
                     <tr>
-                        <td style="padding:22px 26px;background:linear-gradient(135deg,#16a34a,#22c55e);">
-                            <div style="font-size:13px;color:#dcfce7;">
+                        <td style="padding:22px 26px;background:linear-gradient(135deg,#1d4ed8,#2563eb);">
+                            <div style="font-size:13px;color:#dbeafe;">
                                 {{ config('app.name') }}
                             </div>
                             <div style="font-size:20px;font-weight:800;color:#ffffff;margin-top:4px;">
                                 Xác nhận thanh toán
                             </div>
-                            <div style="margin-top:10px;font-size:13px;color:#ecfdf5;">
+                            <div style="margin-top:10px;font-size:13px;color:#e0e7ff;">
                                 <strong style="color:#ffffff;">[Đơn hàng #{{ $order->code }}]</strong>
                                 @if ($orderDateText)
                                     <span style="opacity:.95;"> ({{ $orderDateText }})</span>
@@ -142,7 +142,7 @@
                                             Giảm giá:
                                         </td>
                                         <td align="right"
-                                            style="padding:10px 14px;font-size:13px;color:#dc2626;border-top:1px solid #eef2f7;">
+                                        style="padding:10px 14px;font-size:13px;color:#dc2626;border-top:1px solid #eef2f7;">
                                             -{{ moneyLocale($discount) }}
                                         </td>
                                     </tr>
@@ -165,7 +165,7 @@
                                         Tổng cộng:
                                     </td>
                                     <td align="right"
-                                        style="padding:12px 14px;font-size:14px;color:#16a34a;font-weight:900;border-top:1px solid #eef2f7;background:#f8fafc;">
+                                        style="padding:12px 14px;font-size:14px;color:#2563eb;font-weight:900;border-top:1px solid #eef2f7;background:#f8fafc;">
                                         {{ money($grandTotal) }}
                                     </td>
                                 </tr>
@@ -199,7 +199,7 @@
                                 <tr>
                                     <td align="center">
                                         <a href="{{ route('students.account.order-detail', ['locale' => app()->getLocale(), 'id' => $order->id]) }}"
-                                            style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;
+                                            style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;
                                                   font-size:14px;font-weight:800;padding:12px 18px;border-radius:10px;">
                                             Xem chi tiết đơn hàng
                                         </a>

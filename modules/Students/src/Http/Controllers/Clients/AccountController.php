@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersStatusRepositoryInterface;
 use Modules\Students\src\Http\Requests\Clients\PasswordRequest;
@@ -111,16 +112,21 @@ class AccountController extends Controller
         $pageTitle = __('students::clients/account.order.title');
         $pageName = $pageTitle;
 
+        $validator = Validator::make($request->only(['start_date', 'end_date']), [
+            'start_date' => ['nullable', 'date_format:Y-m-d'],
+            'end_date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
         $filters = [];
         if ($request->status_id) {
             $filters['status_id'] = $request->status_id;
         }
 
-        if ($request->start_date) {
+        if (!$validator->fails() && $request->start_date) {
             $filters['start_date'] = Carbon::parse($request->start_date)->format('Y-m-d');
         }
 
-        if ($request->end_date) {
+        if (!$validator->fails() && $request->end_date) {
             $filters['end_date'] = Carbon::parse($request->end_date)->format('Y-m-d');
         }
 

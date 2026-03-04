@@ -60,13 +60,7 @@
                                                 {{ __('students::clients/checkout.checkout.discount') }}
                                             </th>
                                             <td class="text-success fw-medium discount-value">
-                                                @if ($locale = app()->getLocale())
-                                                    @if ($locale === 'en')
-                                                        -0 $
-                                                    @else
-                                                        -0 đ
-                                                    @endif
-                                                @endif
+                                                - {{ moneyLocale(0) }}
                                             </td>
                                         @endif
                                     </tr>

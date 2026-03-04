@@ -59,7 +59,7 @@
                         <div class="course-video instructor-box mb-4" id="author">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0 instructor-avatar">
-                                    <img src="{{ $course->teacher->image }}" alt="{{ $course->teacher->name }}"
+                                    <img src="{{ $course->teacher->image }}" alt="{{ $course->teacher->name_locale }}"
                                         class="rounded-circle">
                                 </div>
 
@@ -67,9 +67,9 @@
                                     <p class="text-muted mb-1 small">{{ __('courses::clients/common.instructor') }}</p>
 
                                     <h5 class="instructor-name mb-1 fw-semibold">
-                                        <a href="/giang-vien/{{ $course->teacher->slug }}"
+                                        <a href="/giang-vien/{{ $course->teacher->slug_locale }}"
                                             class="text-decoration-none text-dark hover-primary">
-                                            {{ $course->teacher->name }}
+                                            {{ $course->teacher->name_locale }}
                                         </a>
                                     </h5>
 
@@ -132,7 +132,7 @@
                                 <li>
                                     <i class="fa-solid fa-user-graduate text-primary"></i>
                                     <span>{{ __('courses::clients/common.instructor') }}:</span>
-                                    <strong>{{ $course->teacher->name }}</strong>
+                                    <strong>{{ $course->teacher->name_locale }}</strong>
                                     <small class="text-muted">({{ $course->teacher->exp }}
                                         {{ __('courses::clients/common.exp') }})</small>
                                 </li>
@@ -193,7 +193,7 @@
                             @endphp
 
                             @if ($hasCourse && $firstLesson)
-                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $firstLesson->slug]) }}"
+                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $firstLesson->slug_locale]) }}"
                                     class="btn btn-success w-100 fw-semibold">
                                     <i class="fa-solid fa-play me-1"></i>
                                     {{ __('courses::clients/common.start_learning') }}

@@ -25,9 +25,20 @@ class TeacherRequest extends FormRequest
 
         $rules = [
             'name' => 'required|max:225',
+            'name_en' => 'nullable|max:225',
+            'name_ko' => 'nullable|max:225',
+            'name_ja' => 'nullable|max:225',
+            'name_zh' => 'nullable|max:225',
             'slug' => 'required|max:225',
+            'slug_en' => 'nullable|max:225',
+            'slug_ko' => 'nullable|max:225',
+            'slug_ja' => 'nullable|max:225',
+            'slug_zh' => 'nullable|max:225',
             'description' => 'required',
             'description_en' => 'nullable',
+            'description_ko' => 'nullable',
+            'description_ja' => 'nullable',
+            'description_zh' => 'nullable',
             'exp' => 'required|integer',
             'image' => 'required|max:225',
         ];

@@ -60,6 +60,18 @@ function moneyLocale($number)
         return moneyUS($number);
     }
 
+    if ($locale === 'ko') {
+        return moneyKR($number);
+    }
+
+    if ($locale === 'ja') {
+        return moneyJP($number);
+    }
+
+    if ($locale === 'zh') {
+        return moneyCN($number);
+    }
+
     // mặc định VI
     return money($number);
 }
@@ -73,6 +85,21 @@ function money($number, $currency = 'đ', $freeText = 'Miễn phí')
 function moneyUS($number, $currency = '$', $freeText = 'Free')
 {
     return !empty($number) ? vnd_to_usd($number) . ' ' . $currency : $freeText;
+}
+
+function moneyKR($number, $currency = '₫', $freeText = '무료')
+{
+    return !empty($number) ? number_format($number) . ' ' . $currency : $freeText;
+}
+
+function moneyJP($number, $currency = '₫', $freeText = '無料')
+{
+    return !empty($number) ? number_format($number) . ' ' . $currency : $freeText;
+}
+
+function moneyCN($number, $currency = '₫', $freeText = '免费')
+{
+    return !empty($number) ? number_format($number) . ' ' . $currency : $freeText;
 }
 
 function getHour($secounds)
@@ -117,5 +144,66 @@ if (!function_exists('format_date_dmy')) {
         } catch (\Exception $e) {
             return '';
         }
+    }
+}
+
+if (!function_exists('localizedValue')) {
+    function localizedValue($data, ?string $locale = null, $fallback = '')
+    {
+        if (!is_array($data) || empty($data)) {
+            return $fallback;
+        }
+
+        $locale = $locale ?: app()->getLocale();
+        $priority = [$locale, 'vi', 'en', 'ko', 'ja', 'zh'];
+        $priority = array_values(array_unique($priority));
+
+        foreach ($priority as $key) {
+            $value = $data[$key] ?? null;
+
+            if ($value !== null && $value !== '') {
+                return $value;
+            }
+        }
+
+        return $fallback;
+    }
+}
+
+if (!function_exists('localizedModelField')) {
+    function localizedModelField($model, string $field, ?string $locale = null): string
+    {
+        if (!$model) {
+            return '';
+        }
+
+        $locale = $locale ?: app()->getLocale();
+        $priority = [$locale, 'vi', 'en', 'ko', 'ja', 'zh'];
+        $priority = array_values(array_unique($priority));
+
+        foreach ($priority as $lang) {
+            $attribute = $lang === 'vi' ? $field : $field . '_' . $lang;
+            $value = $model->{$attribute} ?? null;
+
+            if ($value !== null && $value !== '') {
+                return (string) $value;
+            }
+        }
+
+        return (string) ($model->{$field} ?? '');
+    }
+}
+
+if (!function_exists('notificationText')) {
+    function notificationText($notification, string $key, ?string $default = ''): string
+    {
+        $data = $notification->data ?? [];
+        $translations = $data[$key . '_translations'] ?? null;
+
+        if (is_array($translations)) {
+            return (string) localizedValue($translations, app()->getLocale(), $data[$key] ?? $default);
+        }
+
+        return (string) ($data[$key] ?? $default);
     }
 }

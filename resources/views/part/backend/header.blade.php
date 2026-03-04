@@ -48,7 +48,7 @@
 
                             <div class="flex-grow-1">
                                 <div class="notification-text">
-                                    {{ $notification->data['message'] ?? 'Bạn có thông báo mới' }}
+                                    {{ notificationText($notification, 'message', 'Bạn có thông báo mới') }}
                                 </div>
                                 <div class="notification-time text-muted small">
                                     {{ $notification->created_at->diffForHumans() }}

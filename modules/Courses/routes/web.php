@@ -22,7 +22,7 @@ Route::group(['prefix' => 'filemanager', 'middleware' => ['web']], function () {
 Route::group([
    'as' => 'courses.',
    'prefix' => '{locale}',
-   'where' => ['locale' => 'vi|en'],
+   'where' => ['locale' => 'vi|en|ko|ja|zh'],
    'middleware' => ['setLocale']
 ], function () {
    Route::get('/khoa-hoc', 'Clients\CoursesController@index')->name('home');

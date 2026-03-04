@@ -26,6 +26,6 @@ return new class () extends Migration {
      */
     public function down()
     {
-        Schema::drop('student_password_rests');
+        Schema::dropIfExists('student_password_rests');
     }
 };

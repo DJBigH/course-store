@@ -13,7 +13,7 @@ Route::post('/logout', "Admin\LoginController@logout")->middleware('web')->name(
 
 Route::group([
     'prefix' => '{locale}',
-    'where' => ['locale' => 'vi|en'],
+    'where' => ['locale' => 'vi|en|ko|ja|zh'],
     'middleware' => 'setLocale',
 ], function () {
 

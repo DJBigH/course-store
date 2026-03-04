@@ -114,7 +114,21 @@ class CoursesController extends Controller
             foreach ($students as $student) {
                 $student->notify(new StudentNotification([
                     'title' => 'Khóa học mới',
-                    'message' => 'Khóa học ' . $course->name . ' vừa được đăng',
+                    'title_translations' => [
+                        'vi' => 'Khóa học mới',
+                        'en' => 'New course',
+                        'ko' => '새 강의',
+                        'ja' => '新しいコース',
+                        'zh' => '新课程',
+                    ],
+                    'message' => 'Khóa học ' . localizedModelField($course, 'name', 'vi') . ' vừa được đăng',
+                    'message_translations' => [
+                        'vi' => 'Khóa học ' . localizedModelField($course, 'name', 'vi') . ' vừa được đăng',
+                        'en' => 'Course ' . localizedModelField($course, 'name', 'en') . ' has just been published',
+                        'ko' => localizedModelField($course, 'name', 'ko') . ' 강의가 새로 등록되었습니다',
+                        'ja' => 'コース ' . localizedModelField($course, 'name', 'ja') . ' が公開されました',
+                        'zh' => '课程 ' . localizedModelField($course, 'name', 'zh') . ' 已发布',
+                    ],
                     'url' => route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug]),
                 ]));
             }
