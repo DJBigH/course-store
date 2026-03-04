@@ -16,6 +16,8 @@ return [
     'no_notifications' => '暂无通知',
     'notification' => '通知',
     'page_not_found' => '页面未找到',
+    'loading_title' => 'BigK Udemy',
+    'loading_subtitle' => '正在加载内容，并为你准备更顺畅的学习体验。',
 
     // Footer
     'student_support'      => '学员支持',

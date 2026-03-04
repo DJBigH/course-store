@@ -16,6 +16,8 @@ return [
     'no_notifications' => '알림이 없습니다',
     'notification' => '알림',
     'page_not_found' => '페이지를 찾을 수 없습니다',
+    'loading_title' => 'BigK Udemy',
+    'loading_subtitle' => '콘텐츠를 불러오고 더 나은 학습 경험을 준비하고 있습니다.',
 
     // Footer
     'student_support'      => '수강생 지원',

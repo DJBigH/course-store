@@ -16,6 +16,8 @@ return [
     'no_notifications' => 'No notifications',
     'notification' => 'Notification',
     'page_not_found' => 'Page not found',
+    'loading_title' => 'BigK Udemy',
+    'loading_subtitle' => 'Loading content and preparing a smoother learning experience.',
 
     // Footer
     'student_support'      => 'Student Support',

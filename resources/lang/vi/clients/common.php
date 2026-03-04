@@ -16,6 +16,8 @@ return [
     'no_notifications' => 'Không có thông báo',
     'notification' => 'Thông báo',
     'page_not_found' => 'Không tìm thấy trang',
+    'loading_title' => 'BigK Udemy',
+    'loading_subtitle' => 'Đang tải nội dung và chuẩn bị trải nghiệm học tập tốt hơn.',
 
     //Footer
     'student_support' => 'Hỗ trợ học viên',

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="UTF-8" />
@@ -15,6 +15,23 @@
 </head>
 
 <body>
+    <div id="page-loader" class="page-loader" aria-hidden="true">
+        <div class="page-loader__panel">
+            <div class="page-loader__brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <p class="page-loader__title">{{ __('clients/common.loading_title') }}</p>
+            <p class="page-loader__subtitle">{{ __('clients/common.loading_subtitle') }}</p>
+            <div class="page-loader__track">
+                <div class="page-loader__bar"></div>
+            </div>
+            <div class="page-loader__dots" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
     @include ('part.clients.header')
     <main>
         @yield('content')
@@ -43,7 +60,5 @@
 @endif
 @vite(['resources/js/app.js'])
 @yield('scripts')
-
-</html>
 
 </html>
