@@ -19,7 +19,7 @@ Laravel 기반 온라인 강의 플랫폼입니다.
 - `ja`
 - `zh`
 
-[README](README.md) | [Tiếng Việt](README.vi.md) | [English](README.en.md) | 한국어 | [日本語](README.ja.md) | [中文](README.zh.md)
+[Default README](README.md) | [English](README.en.md) | 한국어 | [日本語](README.ja.md) | [中文](README.zh.md)
 
 [5개 언어 상세 가이드](docs/5-language-guide.md)
 
@@ -164,7 +164,6 @@ php artisan test
 ## Docs Links
 
 - [README.md](README.md)
-- [README.vi.md](README.vi.md)
 - [README.en.md](README.en.md)
 - [README.ko.md](README.ko.md)
 - [README.ja.md](README.ja.md)

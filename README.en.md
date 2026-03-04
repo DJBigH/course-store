@@ -17,7 +17,7 @@ Supported client locales:
 - `ja`
 - `zh`
 
-[README](README.md) | [Tiếng Việt](README.vi.md) | English | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
+[Default README](README.md) | English | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
 
 [Detailed 5-language guide](docs/5-language-guide.md)
 
@@ -162,7 +162,6 @@ php artisan test
 ## Docs Links
 
 - [README.md](README.md)
-- [README.vi.md](README.vi.md)
 - [README.en.md](README.en.md)
 - [README.ko.md](README.ko.md)
 - [README.ja.md](README.ja.md)

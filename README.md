@@ -1,15 +1,16 @@
-# Course Store
+# Course Store (Tai lieu chinh)
 
-Nền tảng khóa học online xây dựng bằng Laravel, có:
+Nen tang khoa hoc truc tuyen xay dung bang Laravel, gom:
 
-- client đa ngôn ngữ
-- trang quản trị (admin)
-- xác thực email
-- queue gửi mail
-- thông báo trong hệ thống
+- giao dien client da ngon ngu
+- trang quan tri (admin)
+- dang ky, dang nhap, quen mat khau
+- xac thuc email
+- queue gui mail
+- thong bao trong he thong
 - CKEditor + Laravel File Manager
 
-Hiện dự án hỗ trợ 5 ngôn ngữ phía client:
+Hien tai du an ho tro 5 ngon ngu phia client:
 
 - `vi`
 - `en`
@@ -17,20 +18,32 @@ Hiện dự án hỗ trợ 5 ngôn ngữ phía client:
 - `ja`
 - `zh`
 
-Tiếng Việt | [README VI](README.vi.md) | [English](README.en.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
+Ban chinh (Tieng Viet) | [English](README.en.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
 
-[Tài liệu 5 ngôn ngữ chi tiết](docs/5-language-guide.md)
+[Xem tai lieu van hanh 5 ngon ngu](docs/5-language-guide.md)
 
-## Yêu cầu hệ thống
+## Tong quan
+
+Du an su dung `locale` ngay tren URL de phan tach ngon ngu, vi du:
+
+- `http://127.0.0.1:8000/vi`
+- `http://127.0.0.1:8000/en`
+- `http://127.0.0.1:8000/ko`
+- `http://127.0.0.1:8000/ja`
+- `http://127.0.0.1:8000/zh`
+
+Neu cac truong da ngon ngu cua `en/ko/ja/zh` chua co du lieu, he thong se uu tien fallback ve tieng Viet de tranh loi `404` va tranh hien thi rong.
+
+## Yeu cau he thong
 
 - PHP `>= 8.x`
 - Composer
-- Node.js + NPM
-- MySQL hoặc MariaDB
+- Node.js va NPM
+- MySQL hoac MariaDB
 
-## Cài đặt nhanh
+## Cai dat nhanh
 
-### 1. Clone và cài dependency
+### 1. Tai ma nguon va cai dependency
 
 ```bash
 git clone <REPO_URL>
@@ -39,14 +52,14 @@ composer install
 npm install
 ```
 
-### 2. Tạo file môi trường
+### 2. Tao file moi truong
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-### 3. Cấu hình database trong `.env`
+### 3. Cau hinh co so du lieu trong `.env`
 
 ```env
 DB_CONNECTION=mysql
@@ -57,55 +70,59 @@ DB_USERNAME=your_username
 DB_PASSWORD=your_password
 ```
 
-### 4. Migrate và seed
+### 4. Chay migration va seed du lieu
 
 ```bash
 php artisan migrate --seed
 ```
 
-Tài khoản admin mặc định:
+Tai khoan admin mac dinh:
 
 - Email: `admin@gmail.com`
-- Password: `12345678`
+- Mat khau: `12345678`
 
-### 5. Tạo storage link
+### 5. Tao lien ket `storage`
 
 ```bash
 php artisan storage:link
 ```
 
-### 6. Build frontend assets
+### 6. Build tai nguyen giao dien
 
-Chạy môi trường dev:
+Chay moi truong phat trien:
 
 ```bash
 npm run dev
 ```
 
-Build production:
+Build cho production:
 
 ```bash
 npm run build
 ```
 
-### 7. Chạy project
+### 7. Khoi dong du an
 
 ```bash
 php artisan serve
 ```
 
-URL mặc định:
+Duong dan mac dinh:
 
 - Client: `http://127.0.0.1:8000/vi`
 - Admin: `http://127.0.0.1:8000/admin`
 
-## Mail và queue
+## Mail va queue
 
-Dự án có dùng email xác thực, quên mật khẩu, và một số mail hệ thống.
+Du an co su dung email cho cac luong:
 
-### Cấu hình mail trong `.env`
+- xac thuc tai khoan
+- quen mat khau
+- thong bao he thong lien quan den nguoi dung
 
-Ví dụ SMTP:
+### Cau hinh mail trong `.env`
+
+Vi du voi SMTP:
 
 ```env
 MAIL_MAILER=smtp
@@ -118,67 +135,68 @@ MAIL_FROM_ADDRESS=your_email@gmail.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-Sau khi sửa `.env`, nên clear cache:
+Sau khi sua `.env`, nen xoa cache cau hinh:
 
 ```bash
 php artisan config:clear
 php artisan cache:clear
 ```
 
-### Chạy queue worker
+### Chay queue worker
 
-Nếu mail/notification đang queue:
+Neu mail hoac notification dang duoc dua vao queue:
 
 ```bash
 php artisan queue:work
 ```
 
-Trong môi trường production, không nên dùng `sync` cho queue.
+Khuyen nghi khong dung `sync` tren production.
 
-## Đa ngôn ngữ
+## Da ngon ngu
 
-Client dùng locale ở đầu URL:
+He thong dang ho tro giao dien va dich chuoi cho 5 ngon ngu:
 
-- `/vi`
-- `/en`
-- `/ko`
-- `/ja`
-- `/zh`
+- `vi`
+- `en`
+- `ko`
+- `ja`
+- `zh`
 
-Nguyên tắc hiện tại:
+Nguyen tac hien tai:
 
-- nếu bản dịch của `en/ko/ja/zh` trống, hệ thống fallback về `vi`
-- notification mới có thể hiện theo locale hiện tại
-- email có thể bám theo locale tại thời điểm gửi
+- du lieu dong se uu tien ngon ngu hien tai
+- neu ngon ngu hien tai chua co du lieu, he thong fallback ve `vi`
+- notification moi co the hien theo locale hien tai
+- email co the bam theo locale tai thoi diem gui
 
-File dịch nằm ở:
+Vi tri file dich:
 
 - `resources/lang/{locale}`
 - `modules/*/resources/lang/{locale}`
 
-Nếu bạn cần hướng dẫn đầy đủ về dữ liệu đa ngôn ngữ, slug, fallback, notification và mail:
+Neu ban can tai lieu day du ve slug, fallback, du lieu da ngon ngu, notification va email:
 
-[Xem tài liệu chi tiết](docs/5-language-guide.md)
+- [docs/5-language-guide.md](docs/5-language-guide.md)
 
-## Cấu hình production khuyến nghị
+## Khuyen nghi truoc khi dua len production
 
-Trước khi deploy production, nên kiểm tra:
+Truoc khi deploy, nen kiem tra toi thieu cac muc sau:
 
-1. Tắt debug
+1. Tat che do debug
 
 ```env
 APP_DEBUG=false
 ```
 
-2. Dùng queue thật (`database` hoặc `redis`)
+2. Dung queue that (`database` hoac `redis`)
 
-3. Build assets production
+3. Build tai nguyen giao dien cho production
 
 ```bash
 npm run build
 ```
 
-4. Cache lại config, route, view
+4. Cache lai cau hinh, route va view
 
 ```bash
 php artisan config:cache
@@ -186,9 +204,11 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-5. Đảm bảo worker queue đang chạy
+5. Dam bao queue worker dang chay on dinh
 
-## Lệnh thường dùng
+6. Kiem tra mail gui duoc tren moi truong that
+
+## Lenh thuong dung
 
 ```bash
 php artisan serve
@@ -201,13 +221,13 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-## Xử lý lỗi thường gặp
+## Xu ly loi thuong gap
 
-### 1. Không gửi được mail
+### 1. Khong gui duoc mail
 
-- kiểm tra SMTP trong `.env`
-- kiểm tra queue worker có đang chạy không
-- clear config cache sau khi sửa `.env`
+- kiem tra cau hinh SMTP trong `.env`
+- kiem tra queue worker co dang chay khong
+- xoa cache cau hinh sau khi sua `.env`
 
 ```bash
 php artisan config:clear
@@ -215,60 +235,59 @@ php artisan cache:clear
 php artisan queue:work
 ```
 
-### 2. Upload / file manager không hoạt động
+### 2. Upload hoac file manager khong hoat dong
 
-Đảm bảo đã tạo storage link:
+Dam bao da tao lien ket `storage`:
 
 ```bash
 php artisan storage:link
 ```
 
-### 3. CSS / JS không load
+### 3. CSS hoac JS khong load
 
-Chạy lại build assets:
+Build lai tai nguyen:
 
 ```bash
 npm run dev
 ```
 
-hoặc:
+hoac:
 
 ```bash
 npm run build
 ```
 
-### 4. Lỗi bảng queue / failed jobs
+### 4. Loi bang queue hoac `failed_jobs`
 
-Nếu thiếu bảng queue:
+Neu thieu bang queue:
 
 ```bash
 php artisan queue:table
 php artisan migrate
 ```
 
-## Giao diện demo
+## Hinh anh demo
 
-Client:
+Giao dien client:
 
-- Home: `docs/images/home.png`
-- Course: `docs/images/course.png`
-- Course Detail: `docs/images/course_detail.png`
+- Trang chu: `docs/images/home.png`
+- Danh sach khoa hoc: `docs/images/course.png`
+- Chi tiet khoa hoc: `docs/images/course_detail.png`
 - Coupon: `docs/images/coupon.png`
-- Login/Register: `docs/images/login.png`
-- Contact: `docs/images/contact.png`
-- Checkout: `docs/images/checkout.png`
-- Thank-you: `docs/images/thanks.png`
-- Order Detail: `docs/images/order_detail.png`
-- Lesson: `docs/images/lesson.png`
+- Dang nhap / Dang ky: `docs/images/login.png`
+- Lien he: `docs/images/contact.png`
+- Thanh toan: `docs/images/checkout.png`
+- Cam on: `docs/images/thanks.png`
+- Chi tiet don hang: `docs/images/order_detail.png`
+- Bai hoc: `docs/images/lesson.png`
 
-Admin:
+Giao dien admin:
 
-- Admin Home: `docs/images/admin.png`
+- Trang tong quan: `docs/images/admin.png`
 
-## Docs Links
+## Lien ket tai lieu
 
 - [README.md](README.md)
-- [README.vi.md](README.vi.md)
 - [README.en.md](README.en.md)
 - [README.ko.md](README.ko.md)
 - [README.ja.md](README.ja.md)
@@ -276,7 +295,7 @@ Admin:
 - [docs/5-language-guide.md](docs/5-language-guide.md)
 - [note.md](note.md)
 
-## Contact
+## Lien he
 
-- Author: BigK
+- Tac gia: BigK
 - Email: `khanhbeotixiu9x@gmail.com`
