@@ -3,9 +3,9 @@
 namespace Modules\DashBoard\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\CarbonPeriod;
 use Modules\Courses\src\Models\Courses;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Orders\src\Models\Order;
@@ -18,11 +18,11 @@ class DashboardController extends Controller
     {
         $pageTitle = 'Tổng quan';
 
-        // ===== Config =====
-        $paidStatusId = 2; // đã thanh toán
-        $dateColumn = 'payment_complete_date'; // ngày thanh toán hoàn tất
+        // Config
+        $paidStatusId = (int) (OrderStatus::query()->where('is_success', true)->value('id') ?? 2);
+        $dateColumn = 'payment_complete_date';
 
-        // ===== Range filter (default: today) =====
+        // Range filter
         $range = $request->query('range', 'today');
         $to = now()->endOfDay();
 
@@ -44,26 +44,26 @@ class DashboardController extends Controller
             default => 'hôm qua',
         };
 
-        $chartTitle = "Doanh thu {$rangeLabel}"; // ví dụ: Doanh thu Hôm nay / Doanh thu 1 tuần...
+        $chartTitle = "Doanh thu {$rangeLabel}";
 
-        // ===== Revenue (paid) theo range =====
+        // Revenue
         $revenue = Order::query()
             ->where('status_id', $paidStatusId)
             ->whereNotNull($dateColumn)
             ->whereBetween($dateColumn, [$from, $to])
             ->sum('total');
 
-        // ===== Revenue compare kỳ trước để ra % =====
+        // Previous period for comparison
         if (in_array($range, ['today', '7d', '14d'])) {
             $days = $range === 'today' ? 1 : ($range === '7d' ? 7 : 14);
             $prevFrom = (clone $from)->subDays($days);
-            $prevTo   = (clone $to)->subDays($days);
+            $prevTo = (clone $to)->subDays($days);
         } elseif ($range === '1m') {
             $prevFrom = (clone $from)->subMonth();
-            $prevTo   = (clone $to)->subMonth();
-        } else { // 1y
+            $prevTo = (clone $to)->subMonth();
+        } else {
             $prevFrom = (clone $from)->subYear();
-            $prevTo   = (clone $to)->subYear();
+            $prevTo = (clone $to)->subYear();
         }
 
         $prevRevenue = Order::query()
@@ -76,19 +76,61 @@ class DashboardController extends Controller
             ? round((($revenue - $prevRevenue) / $prevRevenue) * 100, 1)
             : ($revenue > 0 ? 100 : 0);
 
-        // ===== Orders + conversion theo range (tính theo created_at) =====
-        $totalOrders = Order::query()
+        // Orders + conversion
+        $totalOrdersCreated = Order::query()
             ->whereBetween('created_at', [$from, $to])
             ->count();
 
-        $paidOrders = Order::query()
+        $paidOrdersCreated = Order::query()
             ->where('status_id', $paidStatusId)
             ->whereBetween('created_at', [$from, $to])
             ->count();
 
-        $conversionRate = $totalOrders > 0 ? round(($paidOrders / $totalOrders) * 100, 1) : 0;
+        $paymentStartedOrders = Order::query()
+            ->whereNotNull('payment_date')
+            ->whereBetween('payment_date', [$from, $to])
+            ->count();
 
-        // ===== Students theo range (verified + active) =====
+        $paidOrdersCompleted = Order::query()
+            ->where('status_id', $paidStatusId)
+            ->whereNotNull($dateColumn)
+            ->whereBetween($dateColumn, [$from, $to])
+            ->count();
+
+        $conversionRateByCreatedAt = $totalOrdersCreated > 0
+            ? round(($paidOrdersCreated / $totalOrdersCreated) * 100, 1)
+            : 0;
+
+        $conversionRateByPaymentComplete = $paymentStartedOrders > 0
+            ? round(($paidOrdersCompleted / $paymentStartedOrders) * 100, 1)
+            : 0;
+
+        $failedStatusIds = OrderStatus::query()
+            ->where(function ($query) {
+                $query->where('name', 'like', '%thất bại%')
+                    ->orWhere('name', 'like', '%that bai%')
+                    ->orWhere('name', 'like', '%failed%');
+            })
+            ->pluck('id');
+
+        if ($failedStatusIds->isEmpty()) {
+            $failedStatusIds = collect([3]);
+        }
+
+        $failedOrders = Order::query()
+            ->whereIn('status_id', $failedStatusIds->values())
+            ->whereBetween('created_at', [$from, $to])
+            ->count();
+
+        $failedRate = $totalOrdersCreated > 0
+            ? round(($failedOrders / $totalOrdersCreated) * 100, 1)
+            : 0;
+
+        $aov = $paidOrdersCompleted > 0
+            ? (int) round($revenue / $paidOrdersCompleted)
+            : 0;
+
+        // Students
         $studentCount = Student::query()
             ->where('status', 1)
             ->whereNotNull('email_verified_at')
@@ -102,23 +144,27 @@ class DashboardController extends Controller
 
         $coursesCount = Courses::query()->count();
         $lessonsCount = Lesson::query()->count();
-        // ===== KPI =====
+
         $kpi = [
             'revenue' => $revenue,
             'revenue_change_percent' => $revenueChangePercent,
-
-            // card "Đơn hàng" bạn đang hiển thị paid
-            'orders' => $paidOrders,
-            'orders_count' => $totalOrders,
-
-            'conversion_rate' => $conversionRate,
+            'aov' => $aov,
+            'orders' => $paidOrdersCreated,
+            'orders_count' => $totalOrdersCreated,
+            'paid_orders_completed' => $paidOrdersCompleted,
+            'payment_started_orders' => $paymentStartedOrders,
+            'conversion_rate' => $conversionRateByCreatedAt,
+            'conversion_rate_by_created_at' => $conversionRateByCreatedAt,
+            'conversion_rate_by_payment_complete_date' => $conversionRateByPaymentComplete,
+            'failed_orders' => $failedOrders,
+            'failed_rate' => $failedRate,
             'new_students' => $studentCount,
             'student' => $studentTotal,
             'courses_count' => $coursesCount,
             'lessons_count' => $lessonsCount,
         ];
 
-        // ===== Line chart revenue theo ngày (range nào cũng theo ngày) =====
+        // Revenue line chart
         $rows = Order::query()
             ->selectRaw("DATE($dateColumn) as d, SUM(total) as revenue")
             ->where('status_id', $paidStatusId)
@@ -131,14 +177,14 @@ class DashboardController extends Controller
 
         $period = CarbonPeriod::create($from->toDateString(), $to->toDateString());
 
-        $revenueLabels = collect($period)->map(fn($dt) => $dt->format('d/m'))->values();
+        $revenueLabels = collect($period)->map(fn ($dt) => $dt->format('d/m'))->values();
 
         $revenueData = collect($period)->map(function ($dt) use ($rows) {
-            $key = $dt->toDateString(); // Y-m-d
+            $key = $dt->toDateString();
             return (int) ($rows[$key]->revenue ?? 0);
         })->values();
 
-        // ===== Doughnut status theo range =====
+        // Doughnut by order status
         $statusMap = OrderStatus::query()
             ->orderBy('id')
             ->get(['id', 'name']);
@@ -151,10 +197,10 @@ class DashboardController extends Controller
 
         $orderStatus = [
             'labels' => $statusMap->pluck('name')->values(),
-            'data'   => $statusMap->pluck('id')->map(fn($id) => (int) ($statusCounts[$id] ?? 0))->values(),
+            'data' => $statusMap->pluck('id')->map(fn ($id) => (int) ($statusCounts[$id] ?? 0))->values(),
         ];
 
-        // ===== Top courses từ orders_detail (paid + theo range) =====
+        // Top courses by paid orders
         $top = DB::table('orders_detail as od')
             ->join('orders as o', 'o.id', '=', 'od.order_id')
             ->join('courses as c', 'c.id', '=', 'od.course_id')
@@ -169,7 +215,7 @@ class DashboardController extends Controller
 
         $topCourses = [
             'labels' => $top->pluck('course_name')->values(),
-            'data'   => $top->pluck('total_buy')->map(fn($v) => (int) $v)->values(),
+            'data' => $top->pluck('total_buy')->map(fn ($v) => (int) $v)->values(),
         ];
 
         $totalBuys = DB::table('orders_detail as od')
@@ -179,7 +225,7 @@ class DashboardController extends Controller
             ->whereBetween("o.$dateColumn", [$from, $to])
             ->count();
 
-        // ===== Recent orders theo range =====
+        // Recent orders
         $recentOrders = Order::query()
             ->whereBetween('created_at', [$from, $to])
             ->latest('created_at')
@@ -207,6 +253,7 @@ class DashboardController extends Controller
             'totalBuys',
             'range',
             'rangeLabel',
+            'compareLabel',
             'chartTitle'
         ));
     }

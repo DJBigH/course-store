@@ -2,7 +2,6 @@
 
 @section('content')
     <div class="container-fluid">
-
         <div class="d-flex align-items-center justify-content-between mb-3">
             <div>
                 <form method="GET" class="d-flex gap-2 align-items-center">
@@ -20,13 +19,9 @@
                 <a href="{{ url()->full() }}" class="btn btn-outline-secondary">
                     <i class="fa-solid fa-rotate me-1"></i> Refresh
                 </a>
-                {{-- <a href="#" class="btn btn-primary">
-                    <i class="fa-solid fa-file-export me-1"></i> Export
-                </a> --}}
             </div>
         </div>
 
-        {{-- KPI CARDS --}}
         <div class="row g-3 mb-3">
             <div class="col-12 col-md-6 col-xl-3">
                 <div class="card shadow-sm h-100">
@@ -45,12 +40,14 @@
                             $pct = (float) ($kpi['revenue_change_percent'] ?? 0);
                             $isUp = $pct >= 0;
                         @endphp
-
                         <div class="mt-2 small text-muted">
                             So với {{ $compareLabel ?? 'hôm qua' }}:
                             <span class="{{ $isUp ? 'text-success' : 'text-danger' }} fw-semibold">
                                 {{ $isUp ? '+' : '' }}{{ $pct }}%
                             </span>
+                        </div>
+                        <div class="mt-1 small text-muted">
+                            AOV: <span class="fw-semibold">{{ money($kpi['aov'] ?? 0) }}</span>
                         </div>
                     </div>
                 </div>
@@ -61,8 +58,8 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <div class="text-muted small">Đơn hàng</div>
-                                <div class="fs-4 fw-bold">{{ number_format($kpi['orders']) }} đơn hàng</div>
+                                <div class="text-muted small">Đơn hàng thanh toán (theo ngày tạo)</div>
+                                <div class="fs-4 fw-bold">{{ number_format($kpi['orders']) }} đơn</div>
                             </div>
                             <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
                                 style="width:48px;height:48px;">
@@ -70,8 +67,20 @@
                             </div>
                         </div>
                         <div class="mt-2 small text-muted">
-                            Tỉ lệ chuyển đổi:
-                            <span class="fw-semibold">{{ $kpi['conversion_rate'] ?? 0 }}%</span>
+                            Conversion (created_at):
+                            <i class="fa-solid fa-circle-info ms-1 text-secondary" data-bs-toggle="tooltip"
+                                title="Số đơn đã thanh toán / tổng số đơn được tạo trong kỳ"></i>
+                            <span class="fw-semibold">{{ $kpi['conversion_rate_by_created_at'] ?? 0 }}%</span>
+                        </div>
+                        <div class="mt-1 small text-muted">
+                            Conversion (payment_complete_date):
+                            <i class="fa-solid fa-circle-info ms-1 text-secondary" data-bs-toggle="tooltip"
+                                title="Số đơn hoàn tất thanh toán / số đơn đã bắt đầu thanh toán trong kỳ"></i>
+                            <span class="fw-semibold">{{ $kpi['conversion_rate_by_payment_complete_date'] ?? 0 }}%</span>
+                        </div>
+                        <div class="mt-1 small text-muted">
+                            Failed rate:
+                            <span class="fw-semibold">{{ $kpi['failed_rate'] ?? 0 }}%</span>
                         </div>
                     </div>
                 </div>
@@ -90,8 +99,10 @@
                                 <i class="fa-solid fa-user-plus fs-4"></i>
                             </div>
                         </div>
-                        <div class="mt-2 small text-muted">Tổng học viên: <span
-                                class="fw-semibold">{{ number_format($kpi['student']) }} học viên</span></div>
+                        <div class="mt-2 small text-muted">
+                            Tổng học viên:
+                            <span class="fw-semibold">{{ number_format($kpi['student']) }} học viên</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -109,7 +120,6 @@
                                 <i class="fa-solid fa-book fs-4"></i>
                             </div>
                         </div>
-
                         <div class="mt-2 small text-muted">
                             Tổng bài giảng:
                             <span class="fw-semibold">{{ number_format($kpi['lessons_count'] ?? 0) }} bài giảng</span>
@@ -119,13 +129,12 @@
             </div>
         </div>
 
-        {{-- CHARTS --}}
         <div class="row g-3 mb-3">
             <div class="col-12 col-xl-8">
                 <div class="card shadow-sm h-100">
                     <div class="card-header bg-white d-flex align-items-center justify-content-between">
                         <div class="fw-semibold">{{ $chartTitle ?? 'Doanh thu' }}</div>
-                        <div class="small text-muted">VNĐ</div>
+                        <div class="small text-muted">VND</div>
                     </div>
                     <div class="card-body">
                         <canvas id="chartRevenue" height="110"></canvas>
@@ -181,10 +190,10 @@
                                     @foreach ($recentOrders as $od)
                                         @php
                                             $badge = match ((int) $od['status_id']) {
-                                                2 => 'success', // đã thanh toán
-                                                1 => 'warning', // chờ
-                                                3 => 'secondary', // hủy
-                                                4 => 'danger', // thất bại/hoàn tiền tùy bạn
+                                                2 => 'success',
+                                                1 => 'warning',
+                                                3 => 'danger',
+                                                4 => 'secondary',
                                                 default => 'light',
                                             };
                                         @endphp
@@ -192,12 +201,8 @@
                                             <td class="ps-3 fw-semibold">{{ $od['code'] }}</td>
                                             <td>{{ $od['customer'] }}</td>
                                             <td class="text-end">{{ money($od['total']) }}</td>
-                                            <td>
-                                                <span class="badge bg-{{ $badge }}">{{ $od['status'] }}</span>
-                                            </td>
-                                            <td class="pe-3 text-end text-muted small">
-                                                {{ $od['created_at']->diffForHumans() }}
-                                            </td>
+                                            <td><span class="badge bg-{{ $badge }}">{{ $od['status'] }}</span></td>
+                                            <td class="pe-3 text-end text-muted small">{{ $od['created_at']->diffForHumans() }}</td>
                                         </tr>
                                     @endforeach
                                     @if ($recentOrders->isEmpty())
@@ -212,31 +217,29 @@
                 </div>
             </div>
         </div>
-
     </div>
 @endsection
 
-@push('styles')
+@section('stylesheets')
     <style>
         .card {
             border-radius: 14px;
         }
     </style>
-@endpush
+@endsection
 
 @push('scripts')
-    {{-- Chart.js CDN --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
     <script>
-        // ====== DATA từ PHP sang JS ======
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+            new bootstrap.Tooltip(el);
+        });
+
         const revenueLabels = @json($revenueLabels);
         const revenueData = @json($revenueData);
-
         const orderStatus = {!! json_encode($orderStatus, JSON_UNESCAPED_UNICODE) !!};
         const topCourses = @json($topCourses);
 
-        // ====== LINE: REVENUE ======
         new Chart(document.getElementById('chartRevenue'), {
             type: 'line',
             data: {
@@ -251,9 +254,6 @@
             options: {
                 responsive: true,
                 plugins: {
-                    legend: {
-                        display: true
-                    },
                     tooltip: {
                         callbacks: {
                             label: (ctx) => {
@@ -273,7 +273,6 @@
             }
         });
 
-        // ====== DOUGHNUT: ORDER STATUS ======
         new Chart(document.getElementById('chartOrderStatus'), {
             type: 'doughnut',
             data: {
@@ -293,7 +292,6 @@
             }
         });
 
-        // ====== BAR (Horizontal): TOP COURSES ======
         new Chart(document.getElementById('chartTopCourses'), {
             type: 'bar',
             data: {

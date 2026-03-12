@@ -112,21 +112,23 @@
                         <!-- Content -->
                         <div class="course-info p-3">
                             <!-- Price -->
-                            <div class="course-price mb-3">
-                                <i class="fa-solid fa-tag text-primary me-1"></i>
-                                @if ($course->sale_price)
-                                    <span class="text-muted text-decoration-line-through me-2">
-                                        {{ moneyLocale($course->price) }}
-                                    </span>
-                                    <span class="fw-bold text-danger fs-5">
-                                        {{ moneyLocale($course->sale_price) }}
-                                    </span>
-                                @else
-                                    <span class="fw-bold fs-5 text-danger">
-                                        {{ moneyLocale($course->price) }}
-                                    </span>
-                                @endif
-                            </div>
+                            @unless ($hasCourse)
+                                <div class="course-price mb-3">
+                                    <i class="fa-solid fa-tag text-primary me-1"></i>
+                                    @if ($course->sale_price)
+                                        <span class="text-muted text-decoration-line-through me-2">
+                                            {{ moneyLocale($course->price) }}
+                                        </span>
+                                        <span class="fw-bold text-danger fs-5">
+                                            {{ moneyLocale($course->sale_price) }}
+                                        </span>
+                                    @else
+                                        <span class="fw-bold fs-5 text-danger">
+                                            {{ moneyLocale($course->price) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @endunless
 
                             <!-- Info list -->
                             <ul class="course-meta list-unstyled mb-3">
@@ -188,14 +190,6 @@
 
 
                             @php
-                                $student = Auth::guard('students')->user();
-                                $hasCourse = $student
-                                    ? $student
-                                        ->courses()
-                                        ->where('courses.id', $course->id)
-                                        ->wherePivot('status', 1)
-                                        ->exists()
-                                    : false;
                                 $firstLesson = $course->lessons->whereNotNull('parent_id')->first();
                             @endphp
 
@@ -362,9 +356,11 @@
 @endsection
 
 @section('scripts')
+    <script src="{{ asset('backend/plugins/ckeditor/ckeditor.js') }}"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const wrap = document.getElementById('course-comments-wrap');
+            let editorIndex = 0;
 
             if (!wrap) {
                 return;
@@ -372,13 +368,69 @@
 
             const token = document.querySelector('meta[name="csrf_token"]')?.getAttribute('content') || '';
 
+            const initCommentEditors = () => {
+                if (typeof window.CKEDITOR === 'undefined') {
+                    return;
+                }
+
+                wrap.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
+                    if (!textarea.id) {
+                        editorIndex += 1;
+                        textarea.id = `course-comment-editor-${editorIndex}`;
+                    }
+
+                    if (window.CKEDITOR.instances[textarea.id]) {
+                        return;
+                    }
+
+                    window.CKEDITOR.replace(textarea.id, {
+                        height: 120,
+                        resize_enabled: false,
+                        removePlugins: 'elementspath',
+                        toolbar: [
+                            ['Bold', 'Italic', 'Underline', '-', 'NumberedList', 'BulletedList', '-', 'Link', 'Unlink'],
+                        ],
+                    });
+                });
+            };
+
+            const syncCommentEditors = (scope) => {
+                if (typeof window.CKEDITOR === 'undefined') {
+                    return;
+                }
+
+                scope.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
+                    const editor = textarea.id ? window.CKEDITOR.instances[textarea.id] : null;
+
+                    if (editor) {
+                        editor.updateElement();
+                    }
+                });
+            };
+
+            const destroyCommentEditors = () => {
+                if (typeof window.CKEDITOR === 'undefined') {
+                    return;
+                }
+
+                wrap.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
+                    const editor = textarea.id ? window.CKEDITOR.instances[textarea.id] : null;
+
+                    if (editor) {
+                        editor.destroy(true);
+                    }
+                });
+            };
+
             const submitAsyncForm = async (form) => {
                 const submitButton = form.querySelector('button[type="submit"]');
                 const originalText = submitButton ? submitButton.innerText : '';
 
+                syncCommentEditors(form);
+
                 if (submitButton) {
                     submitButton.disabled = true;
-                    submitButton.innerText = 'Dang gui...';
+                    submitButton.innerText = @js(__('courses::clients/common.comment_submitting'));
                 }
 
                 try {
@@ -395,13 +447,15 @@
                     const result = await response.json();
 
                     if (!response.ok || !result.success) {
-                        alert(result.message || 'Khong the gui binh luan ngay luc nay.');
+                        alert(result.message || @js(__('courses::clients/common.comment_submit_error')));
                         return;
                     }
 
+                    destroyCommentEditors();
                     wrap.innerHTML = result.html;
+                    initCommentEditors();
                 } catch (error) {
-                    alert('Khong the gui binh luan ngay luc nay.');
+                    alert(@js(__('courses::clients/common.comment_submit_error')));
                 } finally {
                     if (submitButton) {
                         submitButton.disabled = false;
@@ -410,16 +464,19 @@
                 }
             };
 
-            wrap.addEventListener('submit', (event) => {
-                const form = event.target.closest('[data-comment-form]');
+            document.addEventListener('submit', (event) => {
+                const form = event.target instanceof HTMLFormElement
+                    ? event.target
+                    : event.target?.closest?.('[data-comment-form]');
 
-                if (!form) {
+                if (!form || !wrap.contains(form) || !form.matches('[data-comment-form]')) {
                     return;
                 }
 
                 event.preventDefault();
+                event.stopPropagation();
                 submitAsyncForm(form);
-            });
+            }, true);
 
             wrap.addEventListener('click', async (event) => {
                 const toggleButton = event.target.closest('[data-visibility-form]');
@@ -443,15 +500,19 @@
                     const result = await response.json();
 
                     if (!response.ok || !result.success) {
-                        alert(result.message || 'Khong the cap nhat trang thai binh luan.');
+                        alert(result.message || @js(__('courses::clients/common.comment_toggle_error')));
                         return;
                     }
 
+                    destroyCommentEditors();
                     wrap.innerHTML = result.html;
+                    initCommentEditors();
                 } catch (error) {
-                    alert('Khong the cap nhat trang thai binh luan.');
+                    alert(@js(__('courses::clients/common.comment_toggle_error')));
                 }
             });
+
+            initCommentEditors();
         });
     </script>
 @endsection
