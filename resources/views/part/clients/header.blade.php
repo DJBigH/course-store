@@ -3,7 +3,27 @@
     $unreadCount = $student?->unreadNotifications()->count() ?? 0;
     $notifications = $student ? $student->notifications()->latest()->take(20)->get() : collect();
 
-    $supportedLocales = ['vi', 'en'];
+    $localeOptions = [
+        'vi' => ['flag' => '🇻🇳', 'short' => 'VI', 'label' => 'Tiếng Việt'],
+        'en' => ['flag' => '🇺🇸', 'short' => 'EN', 'label' => 'English'],
+        'ko' => ['flag' => '🇰🇷', 'short' => 'KO', 'label' => '한국어'],
+        'ja' => ['flag' => '🇯🇵', 'short' => 'JA', 'label' => '日本語'],
+        'zh' => ['flag' => '🇨🇳', 'short' => 'ZH', 'label' => '中文'],
+    ];
+    $supportedLocales = array_keys($localeOptions);
+    $localeFlags = [
+        'vi' => '&#x1F1FB;&#x1F1F3;',
+        'en' => '&#x1F1FA;&#x1F1F8;',
+        'ko' => '&#x1F1F0;&#x1F1F7;',
+        'ja' => '&#x1F1EF;&#x1F1F5;',
+        'zh' => '&#x1F1E8;&#x1F1F3;',
+    ];
+
+    foreach ($localeFlags as $locale => $flag) {
+        if (isset($localeOptions[$locale])) {
+            $localeOptions[$locale]['flag'] = $flag;
+        }
+    }
 
     $currentLocale = app()->getLocale();
     if (!in_array($currentLocale, $supportedLocales)) {
@@ -20,15 +40,17 @@
     }
 
     $restPath = implode('/', $segments); // ví dụ: "courses/abc"
-
-    $viUrl = url('vi' . ($restPath ? '/' . $restPath : ''));
-    $enUrl = url('en' . ($restPath ? '/' . $restPath : ''));
+    $localeUrls = [];
+    foreach ($supportedLocales as $locale) {
+        $localeUrls[$locale] = url($locale . ($restPath ? '/' . $restPath : ''));
+    }
 
     // giữ query string ?page=2...
     $qs = request()->getQueryString();
     if ($qs) {
-        $viUrl .= '?' . $qs;
-        $enUrl .= '?' . $qs;
+        foreach ($localeUrls as $locale => $localeUrl) {
+            $localeUrls[$locale] = $localeUrl . '?' . $qs;
+        }
     }
 @endphp
 
@@ -61,26 +83,19 @@
                         <div class="dropdown">
                             <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2"
                                 data-bs-toggle="dropdown">
-                                @if ($currentLocale === 'vi')
-                                    <span>🇻🇳</span> VI
-                                @else
-                                    <span>🇺🇸</span> EN
-                                @endif
+                                <span>{!! $localeOptions[$currentLocale]['flag'] !!}</span>
+                                {{ $localeOptions[$currentLocale]['short'] }}
                             </button>
 
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item d-flex gap-2 {{ $currentLocale === 'vi' ? 'active' : '' }}"
-                                        href="{{ $viUrl }}">
-                                        🇻🇳 Tiếng Việt
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item d-flex gap-2 {{ $currentLocale === 'en' ? 'active' : '' }}"
-                                        href="{{ $enUrl }}">
-                                        🇺🇸 English
-                                    </a>
-                                </li>
+                                @foreach ($localeOptions as $locale => $option)
+                                    <li>
+                                        <a class="dropdown-item d-flex gap-2 {{ $currentLocale === $locale ? 'active' : '' }}"
+                                            href="{{ $localeUrls[$locale] }}">
+                                            {!! $option['flag'] !!} {{ $option['label'] }}
+                                        </a>
+                                    </li>
+                                @endforeach
                             </ul>
                         </div>
 
@@ -118,11 +133,11 @@
 
                                                     <div class="notification-content">
                                                         <div class="notification-title">
-                                                            {{ $notification->data['title'] ?? __('clients/common.notifications') }}
+                                                            {{ notificationText($notification, 'title', __('clients/common.notifications')) }}
                                                         </div>
 
                                                         <div class="notification-message">
-                                                            {{ $notification->data['message'] ?? '' }}
+                                                            {{ notificationText($notification, 'message', '') }}
                                                         </div>
 
                                                         <div class="notification-time">
@@ -218,7 +233,7 @@
                     <li class="nav-item dropdown dropdown-hover">
                         <a class="nav-link
         {{ request()->routeIs('courses.*') ? 'active' : '' }}"
-                            href="#" id="coursesDropdown" role="button">
+                            id="coursesDropdown" role="button">
                             <i class="fas fa-tv"></i>
                             {{ __('clients/common.course_categories') }}
                         </a>
@@ -229,8 +244,8 @@
                                     <a class="dropdown-item"
                                         href="{{ route('categories.category', [
                                         'locale' => app()->getLocale(),
-                                        'slug' => $category->slug]) }}">
-                                        {{ $category->name }}
+                                        'slug' => $category->slug_locale]) }}">
+                                        {{ $category->name_locale }}
                                     </a>
                                     {{-- <ul class="dropdown-menu">
                                         <li>

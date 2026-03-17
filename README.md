@@ -1,119 +1,130 @@
-# Laravel Course Platform (Multi-language VI/EN)
+# Course Store (Tai lieu chinh)
 
-[Tiếng Việt](README.vi.md)
+Nen tang khoa hoc truc tuyen xay dung bang Laravel, gom:
 
-A Laravel-based course platform with multi-language client (VI/EN) and an admin panel.  
+- giao dien client da ngon ngu
+- trang quan tri (admin)
+- dang ky, dang nhap, quen mat khau
+- xac thuc email
+- queue gui mail
+- thong bao trong he thong
+- CKEditor + Laravel File Manager
 
-This course platform is built using **Laravel**, and supports:
+Hien tai du an ho tro 5 ngon ngu phia client:
 
-- Multilingual client (Vietnamese / English)
+- `vi`
+- `en`
+- `ko`
+- `ja`
+- `zh`
 
-- Admin Panel
-- Email Verification
+Ban chinh (Tieng Viet) | [English](README.en.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
 
-- Mail Queue
-- CK Editor
+[Xem tai lieu van hanh 5 ngon ngu](docs/5-language-guide.md)
 
-- Laravel File Manager
+## Tong quan
 
-- Toastify
+Du an su dung `locale` ngay tren URL de phan tach ngon ngu, vi du:
 
----
+- `http://127.0.0.1:8000/vi`
+- `http://127.0.0.1:8000/en`
+- `http://127.0.0.1:8000/ko`
+- `http://127.0.0.1:8000/ja`
+- `http://127.0.0.1:8000/zh`
 
-## Requirements
+Neu cac truong da ngon ngu cua `en/ko/ja/zh` chua co du lieu, he thong se uu tien fallback ve tieng Viet de tranh loi `404` va tranh hien thi rong.
 
-- PHP >= 8.x
+## Yeu cau he thong
+
+- PHP `>= 8.x`
 - Composer
-- Node.js + NPM
-- MySQL/MariaDB
+- Node.js va NPM
+- MySQL hoac MariaDB
 
----
+## Cai dat nhanh
 
-## Quick Start (After Clone)
-
-### 1) Clone project & install dependencies
+### 1. Tai ma nguon va cai dependency
 
 ```bash
-git clone <https://github.com/DJBigH/course-store.git> or git clone <git@github.com:DJBigH/course-store.git> for SSH
-cd <YOUR_PROJECT_FOLDER>
-```
-
-```bash
+git clone <REPO_URL>
+cd course-store
 composer install
 npm install
 ```
 
-2. Create .env & generate key
+### 2. Tao file moi truong
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-3. Configure Database in .env
+### 3. Cau hinh co so du lieu trong `.env`
 
-```bash
-Edit .env:
-
+```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=YOUR_DATABASE
-DB_USERNAME=YOUR_USERNAME
-DB_PASSWORD=YOUR_PASSWORD
+DB_DATABASE=your_database
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
 ```
 
-4. Migrate & Seed
+### 4. Chay migration va seed du lieu
 
 ```bash
 php artisan migrate --seed
-
-✅ Default admin (created by seeder)
-
-Email: admin@gmail.com
-
-Password: 12345678
 ```
 
-5. Storage link (important for uploads / file manager)
+Tai khoan admin mac dinh:
+
+- Email: `admin@gmail.com`
+- Mat khau: `12345678`
+
+### 5. Tao lien ket `storage`
 
 ```bash
 php artisan storage:link
 ```
 
-6. Build frontend assets
+### 6. Build tai nguyen giao dien
+
+Chay moi truong phat trien:
 
 ```bash
-Development:
-
 npm run dev
+```
 
-Production:
+Build cho production:
 
+```bash
 npm run build
 ```
 
-7. Run the project
+### 7. Khoi dong du an
 
 ```bash
 php artisan serve
 ```
 
-URLs:
+Duong dan mac dinh:
 
-Client VI: http://127.0.0.1:8000/vi
+- Client: `http://127.0.0.1:8000/vi`
+- Admin: `http://127.0.0.1:8000/admin`
 
-Client EN: http://127.0.0.1:8000/en
+## Mail va queue
 
-Admin: http://127.0.0.1:8000/admin/
+Du an co su dung email cho cac luong:
 
-Email Verification (IMPORTANT)
+- xac thuc tai khoan
+- quen mat khau
+- thong bao he thong lien quan den nguoi dung
 
-Students register and must verify email. Configure SMTP in .env.
+### Cau hinh mail trong `.env`
 
-```bash
-Example (Gmail SMTP):
+Vi du voi SMTP:
 
+```env
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
@@ -124,129 +135,167 @@ MAIL_FROM_ADDRESS=your_email@gmail.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-Clear config cache after editing .env:
+Sau khi sua `.env`, nen xoa cache cau hinh:
 
 ```bash
 php artisan config:clear
 php artisan cache:clear
 ```
 
-Queue (IMPORTANT)
-This project uses Laravel Queue (e.g. email verification jobs).
+### Chay queue worker
 
-Run queue worker:
+Neu mail hoac notification dang duoc dua vao queue:
 
 ```bash
 php artisan queue:work
 ```
 
-Tip: Open another terminal tab and keep queue:work running while testing email verification.
+Khuyen nghi khong dung `sync` tren production.
 
-CKEditor + Laravel File Manager
+## Da ngon ngu
 
-Make sure you ran:
+He thong dang ho tro giao dien va dich chuoi cho 5 ngon ngu:
+
+- `vi`
+- `en`
+- `ko`
+- `ja`
+- `zh`
+
+Nguyen tac hien tai:
+
+- du lieu dong se uu tien ngon ngu hien tai
+- neu ngon ngu hien tai chua co du lieu, he thong fallback ve `vi`
+- notification moi co the hien theo locale hien tai
+- email co the bam theo locale tai thoi diem gui
+
+Vi tri file dich:
+
+- `resources/lang/{locale}`
+- `modules/*/resources/lang/{locale}`
+
+Neu ban can tai lieu day du ve slug, fallback, du lieu da ngon ngu, notification va email:
+
+- [docs/5-language-guide.md](docs/5-language-guide.md)
+
+## Khuyen nghi truoc khi dua len production
+
+Truoc khi deploy, nen kiem tra toi thieu cac muc sau:
+
+1. Tat che do debug
+
+```env
+APP_DEBUG=false
+```
+
+2. Dung queue that (`database` hoac `redis`)
+
+3. Build tai nguyen giao dien cho production
+
+```bash
+npm run build
+```
+
+4. Cache lai cau hinh, route va view
+
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+5. Dam bao queue worker dang chay on dinh
+
+6. Kiem tra mail gui duoc tren moi truong that
+
+## Lenh thuong dung
+
+```bash
+php artisan serve
+php artisan migrate
+php artisan db:seed
+php artisan queue:work
+php artisan test
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+## Xu ly loi thuong gap
+
+### 1. Khong gui duoc mail
+
+- kiem tra cau hinh SMTP trong `.env`
+- kiem tra queue worker co dang chay khong
+- xoa cache cau hinh sau khi sua `.env`
+
+```bash
+php artisan config:clear
+php artisan cache:clear
+php artisan queue:work
+```
+
+### 2. Upload hoac file manager khong hoat dong
+
+Dam bao da tao lien ket `storage`:
 
 ```bash
 php artisan storage:link
-
-If your file manager package requires publish config/assets, run (depends on your package):
-
-php artisan vendor:publish
 ```
 
-Multi-language (VI/EN)
+### 3. CSS hoac JS khong load
 
-Client uses language prefix:
+Build lai tai nguyen:
 
-/vi
-
-/en
-
-Translation files:
-
-resources/lang/vi/\*.php
-
-resources/lang/en/\*.php
-
-If missing translations, check your language keys in these folders.
-
-UI Demo Screenshots
-
-Client:
-
-### 🔹 Home
-
-![Home](docs/images/home.png)
-
-### 🔹 Course
-
-![Course](docs/images/course.png)
-
-### 🔹 Course Detail
-
-![Course_Detail](docs/images/course_detail.png)
-
-### 🔹 Coupon
-
-![Coupon](docs/images/coupon.png)
-
-### 🔹 Login/Register
-
-![Login/Register](docs/images/login.png)
-
-### 🔹 Contact
-
-![Contact](docs/images/contact.png)
-
-### 🔹 Checkout
-
-![Checkout](docs/images/checkout.png)
-
-### 🔹 Thank-you
-
-![Thank-you](docs/images/thanks.png)
-
-### 🔹 Order Detail
-
-![Order Detail](docs/images/order_detail.png)
-
-### 🔹 Lesson
-
-![Lesson](docs/images/lesson.png)
-
-Admin:
-
-### 🔹 Admin Home
-
-![Admin Home](docs/images/admin.png)
-
-Troubleshooting
-
-1. Missing failed_jobs table
-
-If you see error about failed_jobs table:
-```bash
-php artisan queue:table
-php artisan migrate 
-```
-2) Mail not sending
-
-Check SMTP credentials in .env
-
-If mails are queued, make sure queue worker is running:
-```bash
-php artisan queue:work 
-```
-3) Assets not loading
-
-Run:
 ```bash
 npm run dev
-
-(or npm run build for production)
 ```
-Author
 
-Author: BigK
+hoac:
 
-Contact: <khanhbeotixiu9x@gmail.com>
+```bash
+npm run build
+```
+
+### 4. Loi bang queue hoac `failed_jobs`
+
+Neu thieu bang queue:
+
+```bash
+php artisan queue:table
+php artisan migrate
+```
+
+## Hinh anh demo
+
+Giao dien client:
+
+- Trang chu: `docs/images/home.png`
+- Danh sach khoa hoc: `docs/images/course.png`
+- Chi tiet khoa hoc: `docs/images/course_detail.png`
+- Coupon: `docs/images/coupon.png`
+- Dang nhap / Dang ky: `docs/images/login.png`
+- Lien he: `docs/images/contact.png`
+- Thanh toan: `docs/images/checkout.png`
+- Cam on: `docs/images/thanks.png`
+- Chi tiet don hang: `docs/images/order_detail.png`
+- Bai hoc: `docs/images/lesson.png`
+
+Giao dien admin:
+
+- Trang tong quan: `docs/images/admin.png`
+
+## Lien ket tai lieu
+
+- [README.md](README.md)
+- [README.en.md](README.en.md)
+- [README.ko.md](README.ko.md)
+- [README.ja.md](README.ja.md)
+- [README.zh.md](README.zh.md)
+- [docs/5-language-guide.md](docs/5-language-guide.md)
+- [note.md](note.md)
+
+## Lien he
+
+- Tac gia: BigK
+- Email: `khanhbeotixiu9x@gmail.com`

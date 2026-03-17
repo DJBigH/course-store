@@ -16,7 +16,7 @@ Route::prefix('admin')->group(function () {
 Route::group([
    'as' => 'contacts.',
    'prefix' => '{locale}',
-   'where' => ['locale' => 'vi|en'],
+   'where' => ['locale' => 'vi|en|ko|ja|zh'],
    'middleware' => ['setLocale']
 ], function () {
    Route::get('/lien-he', 'Clients\ContactController@index')->name('home');

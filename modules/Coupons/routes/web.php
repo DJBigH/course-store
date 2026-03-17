@@ -25,7 +25,7 @@ Route::prefix('admin')->group(function () {
 Route::group([
    'as' => 'coupons.',
    'prefix' => '{locale}',
-   'where' => ['locale' => 'vi|en'],
+   'where' => ['locale' => 'vi|en|ko|ja|zh'],
    'middleware' => ['setLocale','auth:students', 'verified', 'user.block']
 ], function () {
    Route::get('/ma-giam-gia', 'CouponController@CouponClient')->name('home');

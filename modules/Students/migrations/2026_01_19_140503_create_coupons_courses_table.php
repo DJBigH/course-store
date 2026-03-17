@@ -29,6 +29,6 @@ return new class() extends Migration {
      */
     public function down()
     {
-        Schema::drop('coupons_courses');
+        Schema::dropIfExists('coupons_courses');
     }
 };

@@ -16,7 +16,7 @@ class ActiveLog extends Model
         'subject_type',
         'subject_id',
         'causer_type',
-        'user_id',
+        'causer_id',
         'properties',
         'description',
         'ip',

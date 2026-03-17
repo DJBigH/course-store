@@ -26,11 +26,15 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
     public function getCourseActive($slug)
     {
-        $slugField = app()->getLocale() === 'en' ? 'slug_en' : 'slug';
-
         return $this->model
             ->withCount('students')
-            ->where($slugField, $slug)
+            ->where(function ($query) use ($slug) {
+                $query->where('slug', $slug)
+                    ->orWhere('slug_en', $slug)
+                    ->orWhere('slug_ko', $slug)
+                    ->orWhere('slug_ja', $slug)
+                    ->orWhere('slug_zh', $slug);
+            })
             ->first();
     }
 

@@ -1,51 +1,90 @@
 if ("ontouchstart" in window) {
-	var click = "touchstart";
+    var click = "touchstart";
 } else {
-	var click = "click";
+    var click = "click";
 }
 
 $("div.burger").on(click, function () {
-	if (!$(this).hasClass("open")) {
-		openMenu();
-	} else {
-		closeMenu();
-	}
+    if (!$(this).hasClass("open")) {
+        openMenu();
+    } else {
+        closeMenu();
+    }
 });
 
 $("div.menu ul li a").on(click, function (e) {
-	e.preventDefault();
-	closeMenu();
+    e.preventDefault();
+    closeMenu();
 });
 
 function openMenu() {
-	$("div.burger").addClass("open");
-	$("div.y").fadeOut(100);
-	$("div.screen").addClass("animate");
+    $("div.burger").addClass("open");
+    $("div.y").fadeOut(100);
+    $("div.screen").addClass("animate");
 
-	setTimeout(function () {
-		$("div.x").addClass("rotate30");
-		$("div.z").addClass("rotate150");
-		$(".menu").addClass("animate");
+    setTimeout(function () {
+        $("div.x").addClass("rotate30");
+        $("div.z").addClass("rotate150");
+        $(".menu").addClass("animate");
 
-		setTimeout(function () {
-			$("div.x").addClass("rotate45");
-			$("div.z").addClass("rotate135");
-		}, 100);
-	}, 10);
+        setTimeout(function () {
+            $("div.x").addClass("rotate45");
+            $("div.z").addClass("rotate135");
+        }, 100);
+    }, 10);
 }
 
 function closeMenu() {
-	$("div.screen, .menu").removeClass("animate");
-	$("div.y").fadeIn(150);
-	$("div.burger").removeClass("open");
-	$("div.x").removeClass("rotate45").addClass("rotate30");
-	$("div.z").removeClass("rotate135").addClass("rotate150");
+    $("div.screen, .menu").removeClass("animate");
+    $("div.y").fadeIn(150);
+    $("div.burger").removeClass("open");
+    $("div.x").removeClass("rotate45").addClass("rotate30");
+    $("div.z").removeClass("rotate135").addClass("rotate150");
 
-	setTimeout(function () {
-		$("div.x").removeClass("rotate30");
-		$("div.z").removeClass("rotate150");
-	}, 50);
-	setTimeout(function () {
-		$("div.x, div.z").removeClass("collapse");
-	}, 70);
+    setTimeout(function () {
+        $("div.x").removeClass("rotate30");
+        $("div.z").removeClass("rotate150");
+    }, 50);
+    setTimeout(function () {
+        $("div.x, div.z").removeClass("collapse");
+    }, 70);
 }
+
+(function () {
+    const loader = document.getElementById("page-loader");
+
+    if (!loader) {
+        return;
+    }
+
+    let hidden = false;
+
+    const hideLoader = () => {
+        if (hidden) {
+            return;
+        }
+
+        hidden = true;
+        loader.classList.add("is-hidden");
+
+        window.setTimeout(() => {
+            loader.remove();
+        }, 500);
+    };
+
+    window.addEventListener("load", hideLoader, {
+        once: true,
+    });
+
+    window.addEventListener("pageshow", hideLoader, {
+        once: true,
+    });
+
+    document.addEventListener("readystatechange", () => {
+        if (document.readyState === "complete") {
+            hideLoader();
+        }
+    });
+
+    window.setTimeout(hideLoader, 2200);
+})();

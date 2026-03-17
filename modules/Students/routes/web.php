@@ -18,7 +18,7 @@ Route::prefix('admin')->group(function () {
 });
 
 Route::group(['as' => 'students.'], function () {
-   Route::group(['prefix' => '{locale}/tai-khoan', 'where' => ['locale' => 'vi|en'], 'as' => 'account.', 'middleware' => ['setLocale','auth:students', 'verified', 'user.block']], function () {
+   Route::group(['prefix' => '{locale}/tai-khoan', 'where' => ['locale' => 'vi|en|ko|ja|zh'], 'as' => 'account.', 'middleware' => ['setLocale','auth:students', 'verified', 'user.block']], function () {
       Route::get('/', 'Clients\AccountController@index')->name('index');
       Route::get('/thong-tin', 'Clients\AccountController@profile')->name('profile');
       Route::post('/thong-tin', 'Clients\AccountController@updateProfile')->name('client-updateprofile');
@@ -58,9 +58,11 @@ Route::get('students/notifications/read/{id}', function ($id) {
    $notification->markAsRead();
 
    return redirect($notification->data['url'] ?? '/');
-})->name('students.notifications.read');
+})->middleware(['auth:students', 'verified', 'user.block'])->name('students.notifications.read');
 Route::get('students/notifications', function () {
    return view('students.notifications.index', [
+      'pageTitle' => 'Thong bao',
+      'pageName' => 'Thong bao',
       'notifications' => auth('students')->user()->notifications()->latest()->paginate(100)
    ]);
-})->name('students.notifications.index');
+})->middleware(['auth:students', 'verified', 'user.block'])->name('students.notifications.index');

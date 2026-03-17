@@ -19,6 +19,15 @@
 
                 <input type="radio" class="btn-check" name="content_lang" id="lang_en">
                 <label class="btn btn-outline-primary" for="lang_en">EN</label>
+
+                <input type="radio" class="btn-check" name="content_lang" id="lang_ko">
+                <label class="btn btn-outline-primary" for="lang_ko">KO</label>
+
+                <input type="radio" class="btn-check" name="content_lang" id="lang_ja">
+                <label class="btn btn-outline-primary" for="lang_ja">JA</label>
+
+                <input type="radio" class="btn-check" name="content_lang" id="lang_zh">
+                <label class="btn btn-outline-primary" for="lang_zh">ZH</label>
             </div>
         </div>
 
@@ -72,6 +81,90 @@
                                 class="form-control slug-en {{ $errors->has('slug_en') ? ' is-invalid' : '' }}"
                                 name="slug_en" placeholder="Auto Generate..." value="{{ old('slug_en') }}" readonly>
                             @error('slug_en')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 lang-block lang-ko d-none">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <label for="">Name (KO)</label>
+                            <input type="text"
+                                class="form-control title-ko {{ $errors->has('name_ko') ? ' is-invalid' : '' }}"
+                                name="name_ko" placeholder="Lesson name..." value="{{ old('name_ko') }}">
+                            @error('name_ko')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <label for="">Slug (KO)</label>
+                            <input type="text"
+                                class="form-control slug-ko {{ $errors->has('slug_ko') ? ' is-invalid' : '' }}"
+                                name="slug_ko" placeholder="Auto Generate..." value="{{ old('slug_ko') }}" readonly>
+                            @error('slug_ko')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 lang-block lang-ja d-none">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <label for="">Name (JA)</label>
+                            <input type="text"
+                                class="form-control title-ja {{ $errors->has('name_ja') ? ' is-invalid' : '' }}"
+                                name="name_ja" placeholder="Lesson name..." value="{{ old('name_ja') }}">
+                            @error('name_ja')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <label for="">Slug (JA)</label>
+                            <input type="text"
+                                class="form-control slug-ja {{ $errors->has('slug_ja') ? ' is-invalid' : '' }}"
+                                name="slug_ja" placeholder="Auto Generate..." value="{{ old('slug_ja') }}" readonly>
+                            @error('slug_ja')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 lang-block lang-zh d-none">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <label for="">Name (ZH)</label>
+                            <input type="text"
+                                class="form-control title-zh {{ $errors->has('name_zh') ? ' is-invalid' : '' }}"
+                                name="name_zh" placeholder="Lesson name..." value="{{ old('name_zh') }}">
+                            @error('name_zh')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="mb-3">
+                            <label for="">Slug (ZH)</label>
+                            <input type="text"
+                                class="form-control slug-zh {{ $errors->has('slug_zh') ? ' is-invalid' : '' }}"
+                                name="slug_zh" placeholder="Auto Generate..." value="{{ old('slug_zh') }}" readonly>
+                            @error('slug_zh')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -171,6 +264,39 @@
                 </div>
             </div>
 
+            <div class="col-12 lang-block lang-ko d-none">
+                <div class="mb-3">
+                    <label for="">Description (KO)</label>
+                    <textarea name="description_ko"
+                        class="form-control ckeditor {{ $errors->has('description_ko') ? ' is-invalid' : '' }}">{{ old('description_ko') }}</textarea>
+                    @error('description_ko')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="col-12 lang-block lang-ja d-none">
+                <div class="mb-3">
+                    <label for="">Description (JA)</label>
+                    <textarea name="description_ja"
+                        class="form-control ckeditor {{ $errors->has('description_ja') ? ' is-invalid' : '' }}">{{ old('description_ja') }}</textarea>
+                    @error('description_ja')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="col-12 lang-block lang-zh d-none">
+                <div class="mb-3">
+                    <label for="">Description (ZH)</label>
+                    <textarea name="description_zh"
+                        class="form-control ckeditor {{ $errors->has('description_zh') ? ' is-invalid' : '' }}">{{ old('description_zh') }}</textarea>
+                    @error('description_zh')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
             <div class="col-12">
                 <div class="mb-3">
                     <label>Trạng thái</label>
@@ -233,6 +359,11 @@
             return slug;
         }
 
+        function getSlugIntl(title) {
+            return (title || '').toLowerCase().trim().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '-')
+                .replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+        }
+
         function bindAutoSlug(titleSelector, slugSelector, fn) {
             const titleEl = document.querySelector(titleSelector);
             const slugEl = document.querySelector(slugSelector);
@@ -255,11 +386,17 @@
         // bind VI + EN
         bindAutoSlug('.title', '.slug', getSlugVI);
         bindAutoSlug('.title-en', '.slug-en', getSlugEN);
+        bindAutoSlug('.title-ko', '.slug-ko', (title) => getSlugByLocale(title, 'ko'));
+        bindAutoSlug('.title-ja', '.slug-ja', (title) => getSlugByLocale(title, 'ja'));
+        bindAutoSlug('.title-zh', '.slug-zh', (title) => getSlugByLocale(title, 'zh'));
 
         // toggle lang blocks + remember
         (function() {
             const viBtn = document.getElementById('lang_vi');
             const enBtn = document.getElementById('lang_en');
+            const koBtn = document.getElementById('lang_ko');
+            const jaBtn = document.getElementById('lang_ja');
+            const zhBtn = document.getElementById('lang_zh');
 
             function showLang(lang) {
                 document.querySelectorAll('.lang-block').forEach(el => el.classList.add('d-none'));
@@ -269,10 +406,16 @@
 
             const saved = localStorage.getItem('admin_lesson_lang') || 'vi';
             if (saved === 'en') enBtn.checked = true;
+            if (saved === 'ko') koBtn.checked = true;
+            if (saved === 'ja') jaBtn.checked = true;
+            if (saved === 'zh') zhBtn.checked = true;
             showLang(saved);
 
             viBtn.addEventListener('change', () => showLang('vi'));
             enBtn.addEventListener('change', () => showLang('en'));
+            koBtn.addEventListener('change', () => showLang('ko'));
+            jaBtn.addEventListener('change', () => showLang('ja'));
+            zhBtn.addEventListener('change', () => showLang('zh'));
         })();
     </script>
 @endsection

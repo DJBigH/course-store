@@ -1,7 +1,10 @@
 <?php
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Modules\Courses\src\Models\CourseComment;
 
 function deleteFileStorage($image)
 {
@@ -39,16 +42,43 @@ function activeMenu($name)
 if (!function_exists('vnd_to_usd')) {
     function vnd_to_usd(int $vnd, int $precision = 2): float
     {
-        $rate = config('currency.usd_vnd_rate');
-        return round($vnd / $rate, $precision);
+        return vnd_to_currency($vnd, 'usd', $precision);
     }
 }
 
 if (!function_exists('usd_to_vnd')) {
     function usd_to_vnd(float $usd): int
     {
-        $rate = config('currency.usd_vnd_rate');
+        $rate = max((float) config('currency.rates.usd', 25000), 1);
         return (int) round($usd * $rate);
+    }
+}
+
+if (!function_exists('vnd_to_currency')) {
+    function vnd_to_currency(int|float $vnd, string $currency, int $precision = 2): float|int
+    {
+        $settingKey = 'currency_rate_' . strtolower($currency);
+        $configRate = config("currency.rates.{$currency}", 0);
+        $rate = function_exists('setting')
+            ? (float) setting($settingKey, $configRate)
+            : (float) $configRate;
+
+        if ($rate <= 0) {
+            $rate = 1;
+        }
+
+        $value = $vnd / $rate;
+
+        return $precision > 0
+            ? round($value, $precision)
+            : (int) round($value);
+    }
+}
+
+if (!function_exists('format_money_value')) {
+    function format_money_value(int|float $number, int $precision = 0): string
+    {
+        return number_format($number, $precision, '.', ',');
     }
 }
 
@@ -60,6 +90,18 @@ function moneyLocale($number)
         return moneyUS($number);
     }
 
+    if ($locale === 'ko') {
+        return moneyKR($number);
+    }
+
+    if ($locale === 'ja') {
+        return moneyJP($number);
+    }
+
+    if ($locale === 'zh') {
+        return moneyCN($number);
+    }
+
     // mặc định VI
     return money($number);
 }
@@ -67,12 +109,27 @@ function moneyLocale($number)
 
 function money($number, $currency = 'đ', $freeText = 'Miễn phí')
 {
-    return !empty($number) ? number_format($number) . ' ' . $currency : $freeText;
+    return !empty($number) ? format_money_value($number) . ' ' . $currency : $freeText;
 }
 
 function moneyUS($number, $currency = '$', $freeText = 'Free')
 {
-    return !empty($number) ? vnd_to_usd($number) . ' ' . $currency : $freeText;
+    return !empty($number) ? $currency . format_money_value(vnd_to_usd($number), 2) : $freeText;
+}
+
+function moneyKR($number, $currency = '₩', $freeText = '무료')
+{
+    return !empty($number) ? $currency . format_money_value(vnd_to_currency($number, 'krw', 0)) : $freeText;
+}
+
+function moneyJP($number, $currency = '¥', $freeText = '無料')
+{
+    return !empty($number) ? $currency . format_money_value(vnd_to_currency($number, 'jpy', 0)) : $freeText;
+}
+
+function moneyCN($number, $currency = 'CN¥', $freeText = '免费')
+{
+    return !empty($number) ? $currency . format_money_value(vnd_to_currency($number, 'cny', 2), 2) : $freeText;
 }
 
 function getHour($secounds)
@@ -117,5 +174,347 @@ if (!function_exists('format_date_dmy')) {
         } catch (\Exception $e) {
             return '';
         }
+    }
+}
+
+if (!function_exists('localizedValue')) {
+    function localizedValue($data, ?string $locale = null, $fallback = '')
+    {
+        if (!is_array($data) || empty($data)) {
+            return $fallback;
+        }
+
+        $locale = $locale ?: app()->getLocale();
+        $priority = [$locale, 'vi', 'en', 'ko', 'ja', 'zh'];
+        $priority = array_values(array_unique($priority));
+
+        foreach ($priority as $key) {
+            $value = $data[$key] ?? null;
+
+            if ($value !== null && $value !== '') {
+                return $value;
+            }
+        }
+
+        return $fallback;
+    }
+}
+
+if (!function_exists('localizedModelField')) {
+    function localizedModelField($model, string $field, ?string $locale = null): string
+    {
+        if (!$model) {
+            return '';
+        }
+
+        $locale = $locale ?: app()->getLocale();
+        $priority = [$locale, 'vi', 'en', 'ko', 'ja', 'zh'];
+        $priority = array_values(array_unique($priority));
+
+        foreach ($priority as $lang) {
+            $attribute = $lang === 'vi' ? $field : $field . '_' . $lang;
+            $value = $model->{$attribute} ?? null;
+
+            if ($value !== null && $value !== '') {
+                return (string) $value;
+            }
+        }
+
+        return (string) ($model->{$field} ?? '');
+    }
+}
+
+if (!function_exists('notificationText')) {
+    function notificationText($notification, string $key, ?string $default = ''): string
+    {
+        $data = $notification->data ?? [];
+        $translations = $data[$key . '_translations'] ?? null;
+
+        if (is_array($translations)) {
+            return (string) localizedValue($translations, app()->getLocale(), $data[$key] ?? $default);
+        }
+
+        return (string) ($data[$key] ?? $default);
+    }
+}
+
+if (!function_exists('normalizeVideoUrl')) {
+    function normalizeVideoUrl($url): string
+    {
+        $url = trim((string) $url);
+
+        if ($url === '') {
+            return '';
+        }
+
+        if (preg_match('~^https?://~i', $url)) {
+            return $url;
+        }
+
+        if (preg_match('~^(?:www\.)?(?:youtu\.be|youtube\.com|vimeo\.com)(?:/|$)~i', $url)) {
+            return 'https://' . ltrim($url, '/');
+        }
+
+        return $url;
+    }
+}
+
+if (!function_exists('videoEmbedUrl')) {
+    function videoEmbedUrl($url): ?string
+    {
+        $url = normalizeVideoUrl($url);
+
+        if ($url === '' || !preg_match('~^https?://~i', $url)) {
+            return null;
+        }
+
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $path = (string) parse_url($url, PHP_URL_PATH);
+
+        if (str_contains($host, 'youtu.be')) {
+            $id = trim($path, '/');
+            return $id ? "https://www.youtube.com/embed/{$id}" : null;
+        }
+
+        if (str_contains($host, 'youtube.com') && str_contains($path, '/embed/')) {
+            $id = trim(str_replace('/embed/', '', $path), '/');
+            return $id ? "https://www.youtube.com/embed/{$id}" : null;
+        }
+
+        if (str_contains($host, 'youtube.com') && str_contains($path, '/shorts/')) {
+            $id = trim(str_replace('/shorts/', '', $path), '/');
+            return $id ? "https://www.youtube.com/embed/{$id}" : null;
+        }
+
+        if (str_contains($host, 'youtube.com')) {
+            $query = (string) parse_url($url, PHP_URL_QUERY);
+            parse_str($query, $params);
+            $id = $params['v'] ?? null;
+            return $id ? "https://www.youtube.com/embed/{$id}" : null;
+        }
+
+        if (str_contains($host, 'vimeo.com')) {
+            $id = trim($path, '/');
+
+            if (preg_match('~(\d+)$~', $id, $matches)) {
+                return "https://player.vimeo.com/video/{$matches[1]}";
+            }
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('videoPlaybackMeta')) {
+    function videoPlaybackMeta($url, ?string $locale = null): array
+    {
+        $url = normalizeVideoUrl($url);
+
+        if ($url === '') {
+            return [
+                'type' => 'none',
+                'url' => null,
+            ];
+        }
+
+        $embedUrl = videoEmbedUrl($url);
+
+        if ($embedUrl) {
+            return [
+                'type' => 'embed',
+                'url' => $embedUrl,
+            ];
+        }
+
+        if (preg_match('~^https?://~i', $url)) {
+            return [
+                'type' => 'file',
+                'url' => $url,
+            ];
+        }
+
+        return [
+            'type' => 'file',
+            'url' => route('courses.data.stream', ['locale' => $locale ?: app()->getLocale()]) . '?video=' . urlencode(ltrim($url, '/')),
+        ];
+    }
+}
+
+if (!function_exists('parseIso8601DurationToSeconds')) {
+    function parseIso8601DurationToSeconds(?string $value): int
+    {
+        $value = trim((string) $value);
+
+        if ($value === '' || !preg_match('/^P/i', $value)) {
+            return 0;
+        }
+
+        try {
+            $interval = new DateInterval($value);
+        } catch (Throwable $exception) {
+            return 0;
+        }
+
+        return ($interval->d * 86400)
+            + ($interval->h * 3600)
+            + ($interval->i * 60)
+            + $interval->s;
+    }
+}
+
+if (!function_exists('fetchExternalVideoDuration')) {
+    function fetchExternalVideoDuration($url): int
+    {
+        $normalizedUrl = normalizeVideoUrl($url);
+
+        if ($normalizedUrl === '' || !preg_match('~^https?://~i', $normalizedUrl)) {
+            return 0;
+        }
+
+        $host = strtolower((string) parse_url($normalizedUrl, PHP_URL_HOST));
+
+        try {
+            if (str_contains($host, 'vimeo.com')) {
+                $response = Http::timeout(5)
+                    ->acceptJson()
+                    ->get('https://vimeo.com/api/oembed.json', ['url' => $normalizedUrl]);
+
+                if ($response->successful()) {
+                    return (int) ($response->json('duration') ?? 0);
+                }
+            }
+
+            if (str_contains($host, 'youtube.com') || str_contains($host, 'youtu.be')) {
+                $watchUrl = $normalizedUrl;
+
+                if (preg_match('~youtube\.com/embed/([^?&/]+)~i', $normalizedUrl, $matches)) {
+                    $watchUrl = 'https://www.youtube.com/watch?v=' . $matches[1];
+                } elseif (preg_match('~youtube\.com/shorts/([^?&/]+)~i', $normalizedUrl, $matches)) {
+                    $watchUrl = 'https://www.youtube.com/watch?v=' . $matches[1];
+                } elseif (preg_match('~youtu\.be/([^?&/]+)~i', $normalizedUrl, $matches)) {
+                    $watchUrl = 'https://www.youtube.com/watch?v=' . $matches[1];
+                }
+
+                $response = Http::timeout(5)
+                    ->withHeaders([
+                        'User-Agent' => 'Mozilla/5.0',
+                    ])
+                    ->get($watchUrl);
+
+                if ($response->successful()) {
+                    $body = (string) $response->body();
+
+                    if (preg_match('/"approxDurationMs":"(\d+)"/', $body, $matches)) {
+                        return (int) round(((int) $matches[1]) / 1000);
+                    }
+
+                    if (preg_match('/"lengthSeconds":"(\d+)"/', $body, $matches)) {
+                        return (int) $matches[1];
+                    }
+
+                    if (preg_match('/itemprop="duration"\s+content="([^"]+)"/i', $body, $matches)) {
+                        return parseIso8601DurationToSeconds($matches[1]);
+                    }
+                }
+            }
+        } catch (Throwable $exception) {
+            return 0;
+        }
+
+        return 0;
+    }
+}
+
+if (!function_exists('externalVideoDuration')) {
+    function externalVideoDuration($url): int
+    {
+        $normalizedUrl = normalizeVideoUrl($url);
+
+        if ($normalizedUrl === '' || !preg_match('~^https?://~i', $normalizedUrl)) {
+            return 0;
+        }
+
+        return Cache::remember(
+            'external_video_duration_' . md5($normalizedUrl),
+            now()->addHours(12),
+            static fn() => fetchExternalVideoDuration($normalizedUrl)
+        );
+    }
+}
+
+if (!function_exists('courseCommentAvatar')) {
+    function courseCommentAvatar(int|string|null $seed = null): string
+    {
+        $avatars = [
+            'clients/assets/avatar-1.svg',
+            'clients/assets/avatar-2.svg',
+            'clients/assets/avatar-3.svg',
+        ];
+
+        $index = abs((int) crc32((string) ($seed ?? '0'))) % count($avatars);
+
+        return asset($avatars[$index]);
+    }
+}
+
+if (!function_exists('courseCommentModeration')) {
+    function courseCommentModeration(string $content): array
+    {
+        $normalized = mb_strtolower(trim($content), 'UTF-8');
+        $blockedTerms = [
+            'dm',
+            'đm',
+            'địt',
+            'dit me',
+            'ditme',
+            'clm',
+            'vcl',
+            'vl',
+            'fuck',
+            'fucking',
+            'shit',
+            'bitch',
+            'asshole',
+            'idiot',
+            'ngu',
+            'lon',
+            'cc',
+        ];
+
+        $matched = [];
+
+        foreach ($blockedTerms as $term) {
+            if ($term !== '' && str_contains($normalized, $term)) {
+                $matched[] = $term;
+            }
+        }
+
+        $matched = array_values(array_unique($matched));
+
+        return [
+            'is_flagged' => !empty($matched),
+            'matched_terms' => $matched,
+        ];
+    }
+}
+
+if (!function_exists('courseCommentThreads')) {
+    function courseCommentThreads($courseId, bool $includeHidden = false)
+    {
+        return CourseComment::query()
+            ->where('course_id', $courseId)
+            ->roots()
+            ->when(!$includeHidden, fn($query) => $query->visible())
+            ->with([
+                'student',
+                'admin',
+                'replies' => function ($query) use ($includeHidden) {
+                    $query->with(['student', 'admin'])
+                        ->when(!$includeHidden, fn($replyQuery) => $replyQuery->visible())
+                        ->oldest();
+                },
+            ])
+            ->latest()
+            ->get();
     }
 }

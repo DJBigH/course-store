@@ -4,18 +4,35 @@
 
 <ul class="list-group mt-3 document-list">
     @forelse ($documents as $item)
+        @php
+            $canOpenDocument = $hasCourse || (int) $item->is_trial === 1;
+        @endphp
         <li class="list-group-item d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-2">
-                <a target="_blank" href="{{ $item->document->url }}">
-                    <i class="fa-solid fa-file-arrow-down text-primary"></i>
-                </a>
-                <a target="_blank" href="{{ $item->document->url }}" class="document-name">
-                    {{ $item->name }}
-                </a>
+                @if ($canOpenDocument)
+                    <a target="_blank" href="{{ $item->document->url }}">
+                        <i class="fa-solid fa-file-arrow-down text-primary"></i>
+                    </a>
+                    <a target="_blank" href="{{ $item->document->url }}" class="document-name">
+                        {{ $item->name_locale }}
+                    </a>
+                @else
+                    <span class="text-secondary">
+                        <i class="fa-solid fa-lock"></i>
+                    </span>
+                    <div>
+                        <span class="document-name text-muted d-block">{{ $item->name_locale }}</span>
+                        <small class="text-muted">{{ __('lessons::clients/common.buy_to_view_document') }}</small>
+                    </div>
+                @endif
             </div>
 
             <span class="badge bg-light text-dark document-size">
-                {{ getSize($item->document->size) }}
+                @if ($canOpenDocument)
+                    {{ getSize($item->document->size) }}
+                @else
+                    {{ __('lessons::clients/common.locked_document') }}
+                @endif
             </span>
         </li>
     @empty

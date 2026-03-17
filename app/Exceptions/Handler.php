@@ -34,7 +34,7 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $e)
     {
         $seg = $request->segment(1);
-        if (in_array($seg, ['vi', 'en'], true)) {
+        if (in_array($seg, ['vi', 'en', 'ko'], true)) {
             app()->setLocale($seg);
         }
 

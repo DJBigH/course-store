@@ -1,6 +1,9 @@
 @extends('layouts.backend')
 @section('content')
-    <p class="text-end"><a href="{{ route('courses.add') }}" class="btn btn-primary">Thêm mới</a></p>
+    <p class="text-end d-flex justify-content-end gap-2">
+        <a href="{{ route('courses.comments.admin') }}" class="btn btn-dark">Bình luận</a>
+        <a href="{{ route('courses.add') }}" class="btn btn-primary">Thêm mới</a>
+    </p>
     @if (session('msg'))
         <div class="alert alert-success">{{ session('msg') }}</div>
     @endif

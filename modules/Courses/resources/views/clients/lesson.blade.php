@@ -1,5 +1,13 @@
 @php
     $modules = getModuleByPosition($course);
+    $student = Auth::guard('students')->user();
+    $hasCourseAccess = $student
+        ? $student
+            ->courses()
+            ->where('courses.id', $course->id)
+            ->wherePivot('status', 1)
+            ->exists()
+        : false;
 @endphp
 
 @if ($modules->isEmpty())
@@ -27,14 +35,31 @@
 
             <div class="accordion-detail" style="{{ $key == 0 ? 'display:block;' : '' }}">
                 @forelse ($lessons as $lesson)
+                    @php
+                        $canOpenLesson = $hasCourseAccess || (int) $lesson->is_trial === 1;
+                    @endphp
                     <div class="card-accordion">
                         <div class="lesson-item">
                             <div class="lesson-left">
                                 <i class="fa-brands fa-youtube"></i>
-                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $lesson->slug_locale]) }}"
-                                    class="lesson-title">
-                                    {{ 'Bài ' . ++$index . ': ' . $lesson->name_locale }}
-                                </a>
+                                @if ($canOpenLesson)
+                                    <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $lesson->slug_locale]) }}"
+                                        class="lesson-title">
+                                        {{ __('lessons::clients/common.lesson_item') . ' ' . ++$index . ': ' . $lesson->name_locale }}
+                                    </a>
+                                @elseif ($student)
+                                    <a href="#"
+                                        class="lesson-title text-muted js-locked-lesson"
+                                        data-message="{{ __('courses::clients/common.lesson_purchase_required') }}">
+                                        {{ __('lessons::clients/common.lesson_item') . ' ' . ++$index . ': ' . $lesson->name_locale }}
+                                    </a>
+                                @else
+                                    <a href="#"
+                                        class="lesson-title text-muted js-login-required-lesson"
+                                        data-message="{{ __('courses::clients/common.lesson_login_required') }}">
+                                        {{ __('lessons::clients/common.lesson_item') . ' ' . ++$index . ': ' . $lesson->name_locale }}
+                                    </a>
+                                @endif
 
                                 @if ($lesson->is_trial)
                                     <p class="preview trial-btn" data-id="{{ $lesson->id }}">
@@ -67,18 +92,58 @@
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const modalEl = document.getElementById('modal');
-            const Modal = new bootstrap.Modal(modalEl); // 1 lần duy nhất
+            const Modal = new bootstrap.Modal(modalEl);
             const trialBtnList = document.querySelectorAll('.trial-btn');
+            const lockedLessonList = document.querySelectorAll('.js-locked-lesson');
+            const loginRequiredLessonList = document.querySelectorAll('.js-login-required-lesson');
             const activeBtnMap = new Map();
+            const initialTexts = new WeakMap();
+            const messages = {
+                opening: @json(__('courses::clients/common.trial_opening')),
+                loginRequired: @json(__('courses::clients/common.trial_login_required')),
+                lessonLoginRequired: @json(__('courses::clients/common.lesson_login_required')),
+                lessonPurchaseRequired: @json(__('courses::clients/common.lesson_purchase_required')),
+                unavailable: @json(__('courses::clients/common.trial_unavailable')),
+                noVideo: @json(__('courses::clients/common.trial_no_video')),
+            };
+
+            const renderTrialContent = (video) => {
+                if (!video || !video.type || !video.url) {
+                    return '';
+                }
+
+                if (video.type === 'embed') {
+                    return `
+                        <div class="ratio ratio-16x9">
+                            <iframe src="${video.url}" title="Trial video"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen></iframe>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
+                        <source src="${video.url}" type="video/mp4"/>
+                    </video>
+                `;
+            };
 
             trialBtnList.forEach(trialBtn => {
                 trialBtn.addEventListener('click', async (e) => {
-                    const initText = e.target.innerText;
-                    const id = e.target.dataset.id;
-                    if (!id) return alert('Không mở được video học thử!');
+                    const button = e.currentTarget;
+                    const id = button.dataset.id;
 
-                    e.target.innerText = 'Đang mở...';
-                    activeBtnMap.set('current', e.target); // lưu nút hiện tại
+                    if (!id) {
+                        return alert(messages.unavailable);
+                    }
+
+                    if (!initialTexts.has(button)) {
+                        initialTexts.set(button, button.innerText);
+                    }
+
+                    button.innerText = messages.opening;
+                    activeBtnMap.set('current', button);
 
                     try {
                         const response = await fetch(
@@ -86,26 +151,50 @@
                             id);
                         const {
                             success,
-                            data
+                            data,
+                            requires_login: requiresLogin,
+                            message
                         } = await response.json();
-                        if (!success || data.is_trial != 1) return alert(
-                            'Không được phép học thử!');
+                        if (!success && requiresLogin) {
+                            alert(message || messages.loginRequired);
+                            return;
+                        }
+
+                        if (!success || data.is_trial !== 1) {
+                            return alert(messages.unavailable);
+                        }
+
+                        if (!data.video || !data.video.url) {
+                            return alert(messages.noVideo);
+                        }
 
                         modalEl.querySelector('.modal-title').innerText = data.name;
-                        const streamUrl =
-                            `{{ route('courses.data.stream', ['locale' => app()->getLocale()]) }}?video=${encodeURIComponent(data.video.url)}`;
-                        modalEl.querySelector('.modal-body').innerHTML = `
-                        <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
-                            <source src="${streamUrl}" type="video/mp4"/>
-                        </video>
-                        `;
-
+                        modalEl.querySelector('.modal-body').innerHTML = renderTrialContent(data.video);
 
                         Modal.show();
-                        videojs(modalEl.querySelector('#my-video'));
+                        const videoEl = modalEl.querySelector('#my-video');
+                        if (videoEl) {
+                            videojs(videoEl);
+                        }
+                    } catch (error) {
+                        alert(messages.unavailable);
                     } finally {
-                        // e.target.innerText = initText;
+                        button.innerText = initialTexts.get(button) ?? '{{ __('courses::clients/common.trial') }}';
                     }
+                });
+            });
+
+            lockedLessonList.forEach((lessonLink) => {
+                lessonLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert(lessonLink.dataset.message || messages.lessonPurchaseRequired);
+                });
+            });
+
+            loginRequiredLessonList.forEach((lessonLink) => {
+                lessonLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert(lessonLink.dataset.message || messages.lessonLoginRequired);
                 });
             });
 
@@ -117,14 +206,12 @@
                 modalEl.querySelector('.modal-title').innerText = '';
                 modalEl.querySelector('.modal-body').innerHTML = '';
 
-                // Reset text nút
                 const activeBtn = activeBtnMap.get('current');
                 if (activeBtn) {
-                    activeBtn.innerText = 'Học thử';
+                    activeBtn.innerText = initialTexts.get(activeBtn) ?? '{{ __('courses::clients/common.trial') }}';
                     activeBtnMap.delete('current');
                 }
 
-                // Reset body style và backdrop
                 if (!document.querySelector('.modal.show')) {
                     document.body.style.overflow = '';
                     document.body.style.paddingRight = '';

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Modules\ActiveLogs\src\Models\ActiveLog;
+use Modules\Settings\src\Http\Requests\SettingRequest;
 use Modules\Settings\src\Models\Setting;
 
 class SettingController extends Controller
@@ -21,7 +22,7 @@ class SettingController extends Controller
         return view('settings::index', compact('settings', 'pageName', 'pageTitle'));
     }
 
-    public function update(Request $request)
+    public function update(SettingRequest $request)
     {
         // 1) Lấy tất cả input trừ file + token
         $textInputs = $request->except('_token', 'banner_slider', 'banner_right', 'banner_full', 'logo');

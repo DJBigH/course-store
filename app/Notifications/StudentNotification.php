@@ -29,8 +29,10 @@ class StudentNotification extends Notification
     public function toDatabase($notifiable)
     {
         return [
-            'title' => $this->data['title'],
-            'message' => $this->data['message'],
+            'title' => $this->data['title'] ?? null,
+            'title_translations' => $this->data['title_translations'] ?? null,
+            'message' => $this->data['message'] ?? null,
+            'message_translations' => $this->data['message_translations'] ?? null,
             'url' => $this->data['url'] ?? null,
         ];
     }

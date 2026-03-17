@@ -46,6 +46,64 @@
         $('#lfm-video').filemanager('video');
         $('#lfm-document').filemanager('document');
     </script>
+    <script>
+        window.AdminSlug = {
+            vi(title) {
+                let slug = (title || '').toLowerCase();
+                slug = slug.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a');
+                slug = slug.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e');
+                slug = slug.replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i');
+                slug = slug.replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o');
+                slug = slug.replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u');
+                slug = slug.replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y');
+                slug = slug.replace(/đ/gi, 'd');
+                slug = slug.replace(/[^\p{L}\p{N}\s-]/gu, '');
+                return slug.replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+            },
+            intl(title) {
+                return (title || '').toLowerCase().trim().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '-')
+                    .replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+            },
+            byLocale(title, locale = 'vi') {
+                const normalizedLocale = (locale || 'vi').toLowerCase();
+                if (normalizedLocale === 'vi') {
+                    return this.vi(title);
+                }
+
+                return this.intl(title);
+            },
+            bindAuto(titleSelector, slugSelector, locale = 'vi') {
+                const titleEl = document.querySelector(titleSelector);
+                const slugEl = document.querySelector(slugSelector);
+                if (!titleEl || !slugEl) return;
+
+                titleEl.addEventListener('input', (event) => {
+                    if (!slugEl.dataset.manual) {
+                        slugEl.value = this.byLocale(event.target.value, locale);
+                    }
+                });
+
+                slugEl.addEventListener('input', () => {
+                    slugEl.dataset.manual = '1';
+                });
+            },
+            bindIfEmpty(titleSelector, slugSelector, locale = 'vi') {
+                const titleEl = document.querySelector(titleSelector);
+                const slugEl = document.querySelector(slugSelector);
+                if (!titleEl || !slugEl) return;
+
+                titleEl.addEventListener('input', (event) => {
+                    if (slugEl.value.trim() === '') {
+                        slugEl.value = this.byLocale(event.target.value, locale);
+                    }
+                });
+            }
+        };
+
+        window.getSlugByLocale = function(title, locale) {
+            return window.AdminSlug.byLocale(title, locale);
+        };
+    </script>
     @yield('scripts')
     @stack('scripts')
 </body>

@@ -6,7 +6,7 @@
 @if ($level === 'error')
 # @lang('Whoops!')
 @else
-# @lang('Xin chào!')
+# Xin chào từ {{ config('app.name') }}!
 @endif
 @endif
 

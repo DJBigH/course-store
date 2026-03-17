@@ -32,10 +32,19 @@ class CoursesRequest extends FormRequest
         $rules = [
             'name' => 'required|max:225',
             'name_en' => 'nullable|max:225',
+            'name_ko' => 'nullable|max:225',
+            'name_ja' => 'nullable|max:225',
+            'name_zh' => 'nullable|max:225',
             'slug' => 'required|max:225',
             'slug_en' => 'nullable|max:225',
+            'slug_ko' => 'nullable|max:225',
+            'slug_ja' => 'nullable|max:225',
+            'slug_zh' => 'nullable|max:225',
             'detail' => 'required',
             'detail_en' => 'nullable',
+            'detail_ko' => 'nullable',
+            'detail_ja' => 'nullable',
+            'detail_zh' => 'nullable',
             'teacher_id' => ['required', 'integer', function ($attribute, $value, $fail) {
                 if ($value == 0) {
                     $fail(__('courses::validation.select'));
@@ -46,6 +55,9 @@ class CoursesRequest extends FormRequest
             'is_document' => 'required|integer',
             'supports' => 'required',
             'supports_en' => 'nullable',
+            'supports_ko' => 'nullable',
+            'supports_ja' => 'nullable',
+            'supports_zh' => 'nullable',
             'status' => 'required|integer',
             'categories' => 'required',
         ];

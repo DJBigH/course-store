@@ -52,17 +52,45 @@ class CoursesController extends Controller
         $pageTitle = $course->name_locale;
         $pageName  = $course->name_locale;
         $index = 0;
+        $student = Auth::guard('students')->user();
+        $hasCourse = $student
+            ? $student
+                ->courses()
+                ->where('courses.id', $course->id)
+                ->wherePivot('status', 1)
+                ->exists()
+            : false;
+        $canComment = $hasCourse;
+        $viewerIsAdmin = Auth::check();
+        $threads = courseCommentThreads($course->id, $viewerIsAdmin);
 
-        return view('courses::clients.detail', compact('pageTitle', 'pageName', 'course', 'index'));
+        return view('courses::clients.detail', compact('pageTitle', 'pageName', 'course', 'index', 'threads', 'canComment', 'viewerIsAdmin', 'hasCourse'));
     }
 
     public function getTrialVideo($locale, $lessonId = 0)
     {
+        if (!Auth::guard('students')->check()) {
+            return [
+                'success' => false,
+                'requires_login' => true,
+                'message' => __('courses::clients/common.trial_login_required'),
+            ];
+        }
+
         $lesson = $this->lessonRepository->find($lessonId);
-        if (!$lesson) {
+        if (!$lesson || (int) $lesson->is_trial !== 1) {
             return ['success' => false];
         }
-        return ['success' => true, 'data' => $lesson];
+
+        return [
+            'success' => true,
+            'data' => [
+                'id' => $lesson->id,
+                'name' => $lesson->name_locale,
+                'is_trial' => (int) $lesson->is_trial,
+                'video' => videoPlaybackMeta($lesson->video?->url, $locale),
+            ],
+        ];
     }
 
     public function streamVideo(Request $request)
@@ -108,8 +136,14 @@ class CoursesController extends Controller
 
     public function category($locale, $slug)
     {
-        $category = Category::where('slug', $slug)->firstOrFail();
-        $pageTitle = __('courses::clients/common.page_title') . ' ' . $category->name;
+        $category = Category::where(function ($query) use ($slug) {
+            $query->where('slug', $slug)
+                ->orWhere('slug_en', $slug)
+                ->orWhere('slug_ko', $slug)
+                ->orWhere('slug_ja', $slug)
+                ->orWhere('slug_zh', $slug);
+        })->firstOrFail();
+        $pageTitle = __('courses::clients/common.page_title') . ' ' . $category->name_locale;
         $pageName  = $pageTitle;
 
         if (!$category) {

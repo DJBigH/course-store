@@ -25,14 +25,15 @@ Route::get('admin/notifications/read/{id}', function ($id) {
    $notification->markAsRead();
 
    return redirect($notification->data['url'] ?? route('admin.index'));
-})->name('admin.notifications.read');
+})->middleware('auth')->name('admin.notifications.read');
 
 
 Route::get('admin/notifications', function () {
    return view('admin.notifications.index', [
+      'pageTitle' => 'Thong bao',
       'notifications' => auth()->user()
          ->notifications()
          ->latest()
          ->paginate(50)
    ]);
-})->name('admin.notifications.index');
+})->middleware('auth')->name('admin.notifications.index');

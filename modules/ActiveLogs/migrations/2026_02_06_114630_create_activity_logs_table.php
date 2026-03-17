@@ -41,6 +41,6 @@ return new class() extends Migration {
      */
     public function down()
     {
-        Schema::drop('active_logs');
+        Schema::dropIfExists('active_logs');
     }
 };

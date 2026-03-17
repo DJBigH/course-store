@@ -9,75 +9,18 @@
                     <div class="video-detail">
                         @php
                             $videoUrl = trim((string) ($lesson->video?->url ?? ''));
-
-                            if (!function_exists('lessonEmbedUrl')) {
-                                function lessonEmbedUrl($url)
-                                {
-                                    $url = trim((string) $url);
-                                    if ($url === '') {
-                                        return null;
-                                    }
-
-                                    if (!preg_match('~^https?://~i', $url)) {
-                                        $url = 'https://' . ltrim($url, '/');
-                                    }
-
-                                    $host = strtolower((string) parse_url($url, PHP_URL_HOST));
-                                    $path = (string) parse_url($url, PHP_URL_PATH);
-
-                                    if (str_contains($host, 'youtu.be')) {
-                                        $id = trim($path, '/');
-                                        return $id ? "https://www.youtube.com/embed/{$id}" : null;
-                                    }
-
-                                    if (str_contains($host, 'youtube.com') && str_contains($path, '/embed/')) {
-                                        $id = trim(str_replace('/embed/', '', $path), '/');
-                                        return $id ? "https://www.youtube.com/embed/{$id}" : null;
-                                    }
-
-                                    if (str_contains($host, 'youtube.com') && str_contains($path, '/shorts/')) {
-                                        $id = trim(str_replace('/shorts/', '', $path), '/');
-                                        return $id ? "https://www.youtube.com/embed/{$id}" : null;
-                                    }
-
-                                    if (str_contains($host, 'youtube.com')) {
-                                        $query = (string) parse_url($url, PHP_URL_QUERY);
-                                        parse_str($query, $q);
-                                        $id = $q['v'] ?? null;
-                                        return $id ? "https://www.youtube.com/embed/{$id}" : null;
-                                    }
-
-                                    if (str_contains($host, 'vimeo.com')) {
-                                        $id = trim($path, '/');
-                                        if (preg_match('~(\d+)$~', $id, $m)) {
-                                            return "https://player.vimeo.com/video/{$m[1]}";
-                                        }
-                                        return null;
-                                    }
-
-                                    return null;
-                                }
-                            }
-
-                            $embed = $videoUrl ? lessonEmbedUrl($videoUrl) : null;
+                            $videoMeta = videoPlaybackMeta($videoUrl);
                         @endphp
 
-                        @if ($embed)
+                        @if ($videoMeta['type'] === 'embed' && !empty($videoMeta['url']))
                             <div class="ratio ratio-16x9">
-                                <iframe src="{{ $embed }}" title="Lesson video"
+                                <iframe src="{{ $videoMeta['url'] }}" title="Lesson video"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowfullscreen></iframe>
                             </div>
-                        @elseif ($videoUrl)
-                            @php
-                                $streamUrl =
-                                    route('courses.data.stream', ['locale' => app()->getLocale()]) .
-                                    '?video=' .
-                                    urlencode(ltrim($videoUrl, '/'));
-                            @endphp
-
+                        @elseif ($videoMeta['type'] === 'file' && !empty($videoMeta['url']))
                             <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
-                                <source src="{{ $streamUrl }}" type="video/mp4" />
+                                <source src="{{ $videoMeta['url'] }}" type="video/mp4" />
                                 <p class="vjs-no-js">{{ __('lessons::clients/common.help') }}</p>
                             </video>
                         @else
@@ -87,7 +30,7 @@
 
                     <div class="lesson-nav d-flex justify-content-between mt-4">
                         <div>
-                            @if ($prevLesson)
+                            @if ($prevLesson && ($hasCourse || (int) $prevLesson->is_trial === 1))
                                 <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $prevLesson->slug_locale]) }}"
                                     class="btn-lesson btn-prev">
                                     <i class="fa-solid fa-arrow-left"></i>
@@ -97,7 +40,7 @@
                         </div>
 
                         <div>
-                            @if ($nextLesson)
+                            @if ($nextLesson && ($hasCourse || (int) $nextLesson->is_trial === 1))
                                 <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $nextLesson->slug_locale]) }}"
                                     class="btn-lesson btn-next">
                                     <span>{{ __('lessons::clients/common.next') }}</span>

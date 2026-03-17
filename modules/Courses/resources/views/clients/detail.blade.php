@@ -59,7 +59,7 @@
                         <div class="course-video instructor-box mb-4" id="author">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0 instructor-avatar">
-                                    <img src="{{ $course->teacher->image }}" alt="{{ $course->teacher->name }}"
+                                    <img src="{{ $course->teacher->image }}" alt="{{ $course->teacher->name_locale }}"
                                         class="rounded-circle">
                                 </div>
 
@@ -67,9 +67,9 @@
                                     <p class="text-muted mb-1 small">{{ __('courses::clients/common.instructor') }}</p>
 
                                     <h5 class="instructor-name mb-1 fw-semibold">
-                                        <a href="/giang-vien/{{ $course->teacher->slug }}"
+                                        <a href="/giang-vien/{{ $course->teacher->slug_locale }}"
                                             class="text-decoration-none text-dark hover-primary">
-                                            {{ $course->teacher->name }}
+                                            {{ $course->teacher->name_locale }}
                                         </a>
                                     </h5>
 
@@ -92,7 +92,14 @@
 
 
                     <div class="course-video mb-4 instructor-box" id="evaluate">
-                        <h2 class="fs-4">{{ __('courses::clients/common.student_reviews') }}</h2>
+                        <div id="course-comments-wrap">
+                            @include('courses::clients.comments_thread', [
+                                'course' => $course,
+                                'threads' => $threads,
+                                'canComment' => $canComment,
+                                'viewerIsAdmin' => $viewerIsAdmin,
+                            ])
+                        </div>
                     </div>
                 </div>
                 <div class="col-12 col-lg-3">
@@ -105,21 +112,23 @@
                         <!-- Content -->
                         <div class="course-info p-3">
                             <!-- Price -->
-                            <div class="course-price mb-3">
-                                <i class="fa-solid fa-tag text-primary me-1"></i>
-                                @if ($course->sale_price)
-                                    <span class="text-muted text-decoration-line-through me-2">
-                                        {{ moneyLocale($course->price) }}
-                                    </span>
-                                    <span class="fw-bold text-danger fs-5">
-                                        {{ moneyLocale($course->sale_price) }}
-                                    </span>
-                                @else
-                                    <span class="fw-bold fs-5 text-danger">
-                                        {{ moneyLocale($course->price) }}
-                                    </span>
-                                @endif
-                            </div>
+                            @unless ($hasCourse)
+                                <div class="course-price mb-3">
+                                    <i class="fa-solid fa-tag text-primary me-1"></i>
+                                    @if ($course->sale_price)
+                                        <span class="text-muted text-decoration-line-through me-2">
+                                            {{ moneyLocale($course->price) }}
+                                        </span>
+                                        <span class="fw-bold text-danger fs-5">
+                                            {{ moneyLocale($course->sale_price) }}
+                                        </span>
+                                    @else
+                                        <span class="fw-bold fs-5 text-danger">
+                                            {{ moneyLocale($course->price) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @endunless
 
                             <!-- Info list -->
                             <ul class="course-meta list-unstyled mb-3">
@@ -132,7 +141,7 @@
                                 <li>
                                     <i class="fa-solid fa-user-graduate text-primary"></i>
                                     <span>{{ __('courses::clients/common.instructor') }}:</span>
-                                    <strong>{{ $course->teacher->name }}</strong>
+                                    <strong>{{ $course->teacher->name_locale }}</strong>
                                     <small class="text-muted">({{ $course->teacher->exp }}
                                         {{ __('courses::clients/common.exp') }})</small>
                                 </li>
@@ -181,19 +190,11 @@
 
 
                             @php
-                                $student = Auth::guard('students')->user();
-                                $hasCourse = $student
-                                    ? $student
-                                        ->courses()
-                                        ->where('courses.id', $course->id)
-                                        ->wherePivot('status', 1)
-                                        ->exists()
-                                    : false;
                                 $firstLesson = $course->lessons->whereNotNull('parent_id')->first();
                             @endphp
 
                             @if ($hasCourse && $firstLesson)
-                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $firstLesson->slug]) }}"
+                                <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $firstLesson->slug_locale]) }}"
                                     class="btn btn-success w-100 fw-semibold">
                                     <i class="fa-solid fa-play me-1"></i>
                                     {{ __('courses::clients/common.start_learning') }}
@@ -223,4 +224,295 @@
             </div>
         </div>
     </section>
+@endsection
+
+@section('stylesheets')
+    <style>
+        .course-comments-shell {
+            border-radius: 18px;
+        }
+
+        .course-comments-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .course-comment-form textarea {
+            border-radius: 14px;
+            resize: vertical;
+            min-height: 88px;
+        }
+
+        .admin-reply-form {
+            margin-left: 72px;
+            margin-top: 12px;
+        }
+
+        .admin-reply-form textarea {
+            min-height: 68px;
+            background: #f8fafc;
+        }
+
+        .comment-thread + .comment-thread {
+            margin-top: 18px;
+        }
+
+        .comment-card {
+            display: flex;
+            gap: 14px;
+            padding: 16px;
+            border-radius: 18px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+        }
+
+        .comment-card.is-student {
+            border-left: 4px solid #22c55e;
+        }
+
+        .comment-card.is-admin {
+            border-left: 4px solid #2563eb;
+            background: #f8fbff;
+        }
+
+        .reply-card {
+            margin-top: 10px;
+        }
+
+        .comment-replies {
+            margin-left: 72px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .comment-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .comment-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .comment-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .comment-content {
+            white-space: pre-wrap;
+            line-height: 1.65;
+            color: #0f172a;
+        }
+
+        .comment-actions {
+            margin-top: 12px;
+        }
+
+        .comment-flag-note {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #b91c1c;
+        }
+
+        .is-hidden-comment {
+            opacity: 0.72;
+        }
+
+        .empty-comments {
+            padding: 18px;
+            text-align: center;
+            border-radius: 16px;
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px dashed #cbd5e1;
+        }
+
+        @media (max-width: 768px) {
+            .comment-replies,
+            .admin-reply-form {
+                margin-left: 0;
+            }
+        }
+    </style>
+@endsection
+
+@section('scripts')
+    <script src="{{ asset('backend/plugins/ckeditor/ckeditor.js') }}"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const wrap = document.getElementById('course-comments-wrap');
+            let editorIndex = 0;
+
+            if (!wrap) {
+                return;
+            }
+
+            const token = document.querySelector('meta[name="csrf_token"]')?.getAttribute('content') || '';
+
+            const initCommentEditors = () => {
+                if (typeof window.CKEDITOR === 'undefined') {
+                    return;
+                }
+
+                wrap.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
+                    if (!textarea.id) {
+                        editorIndex += 1;
+                        textarea.id = `course-comment-editor-${editorIndex}`;
+                    }
+
+                    if (window.CKEDITOR.instances[textarea.id]) {
+                        return;
+                    }
+
+                    window.CKEDITOR.replace(textarea.id, {
+                        height: 120,
+                        resize_enabled: false,
+                        removePlugins: 'elementspath',
+                        toolbar: [
+                            ['Bold', 'Italic', 'Underline', '-', 'NumberedList', 'BulletedList', '-', 'Link', 'Unlink'],
+                        ],
+                    });
+                });
+            };
+
+            const syncCommentEditors = (scope) => {
+                if (typeof window.CKEDITOR === 'undefined') {
+                    return;
+                }
+
+                scope.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
+                    const editor = textarea.id ? window.CKEDITOR.instances[textarea.id] : null;
+
+                    if (editor) {
+                        editor.updateElement();
+                    }
+                });
+            };
+
+            const destroyCommentEditors = () => {
+                if (typeof window.CKEDITOR === 'undefined') {
+                    return;
+                }
+
+                wrap.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
+                    const editor = textarea.id ? window.CKEDITOR.instances[textarea.id] : null;
+
+                    if (editor) {
+                        editor.destroy(true);
+                    }
+                });
+            };
+
+            const submitAsyncForm = async (form) => {
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalText = submitButton ? submitButton.innerText : '';
+
+                syncCommentEditors(form);
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerText = @js(__('courses::clients/common.comment_submitting'));
+                }
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                        body: new FormData(form),
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        alert(result.message || @js(__('courses::clients/common.comment_submit_error')));
+                        return;
+                    }
+
+                    destroyCommentEditors();
+                    wrap.innerHTML = result.html;
+                    initCommentEditors();
+                } catch (error) {
+                    alert(@js(__('courses::clients/common.comment_submit_error')));
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerText = originalText;
+                    }
+                }
+            };
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target instanceof HTMLFormElement
+                    ? event.target
+                    : event.target?.closest?.('[data-comment-form]');
+
+                if (!form || !wrap.contains(form) || !form.matches('[data-comment-form]')) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+                submitAsyncForm(form);
+            }, true);
+
+            wrap.addEventListener('click', async (event) => {
+                const toggleButton = event.target.closest('[data-visibility-form]');
+
+                if (!toggleButton) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                try {
+                    const response = await fetch(toggleButton.dataset.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        alert(result.message || @js(__('courses::clients/common.comment_toggle_error')));
+                        return;
+                    }
+
+                    destroyCommentEditors();
+                    wrap.innerHTML = result.html;
+                    initCommentEditors();
+                } catch (error) {
+                    alert(@js(__('courses::clients/common.comment_toggle_error')));
+                }
+            });
+
+            initCommentEditors();
+        });
+    </script>
 @endsection

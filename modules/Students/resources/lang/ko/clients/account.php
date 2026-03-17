@@ -1,0 +1,184 @@
+<?php
+
+return [
+    //Menu
+    'menu' => [
+        'dashbroad' => '대시보드',
+        'profile' => '개인 정보',
+        'my_course' => '내 강의',
+        'coupons' => '쿠폰',
+        'order' => '주문',
+        'change_password' => '비밀번호 변경',
+        'logout' => '로그아웃',
+    ],
+    //Core (shared)
+    'core' => [
+        'status' => '상태',
+        'action' => '동작',
+        'filter' => '필터',
+        'reset' => '초기화',
+        'all' => '전체',
+        'all_status' => '모든 상태',
+        'search' => '검색',
+        'from_date' => '시작일',
+        'to_date' => '종료일',
+        'total' => '총 금액',
+        'time' => '시간',
+        'back' => '뒤로',
+        'discount' => '할인',
+        'remaining' => '남은 수량',
+        'uses' => '회 사용',
+        'days' => '일',
+        'expired' => '만료됨',
+        'no_time_limit' => '기간 제한 없음',
+        'no_use_limit' => '사용 횟수 제한 없음',
+        'no_data' => '데이터 없음',
+        'active' => '활성',
+        'inactive' => '비활성',
+        'instructor' => '강사',
+        'course' => '강의',
+        'order' => '주문',
+        'coupon' => '쿠폰',
+        'price' => '가격',
+    ],
+
+    //Account (Dashboard)
+    'account' => [
+        'title' => '계정 개요',
+        'welcome' => '다시 오신 것을 환영합니다. 수강생 계정 현황을 확인해 보세요.',
+        'courses' => '강의',
+        'courses_unit' => '개',
+        'coupons' => '쿠폰',
+        'coupons_unit' => '개',
+        'orders' => '주문',
+        'orders_unit' => '건',
+    ],
+
+    //Profile
+    'profile' => [
+        'title' => '개인 정보',
+        'edit' => '정보 수정',
+        'cancel' => '취소',
+        'full_name' => '이름',
+        'email' => '이메일',
+        'phone' => '전화번호',
+        'address' => '주소',
+        'status' => '상태',
+        'registered_at' => '가입 일시',
+        'activated_at' => '활성화 일시',
+        'update_title' => '개인 정보 수정',
+
+        'placeholder_full_name' => '이름을 입력하세요...',
+        'placeholder_email' => '이메일을 입력하세요...',
+        'placeholder_phone' => '전화번호를 입력하세요...',
+        'placeholder_address' => '주소를 입력하세요...',
+
+        'save' => '변경 사항 저장',
+        'note_reload' => '* 정보 수정 후 새로고침 또는 F5를 눌러 주세요',
+    ],
+
+    //My Course
+    'my_course' => [
+        'title' => '내 강의',
+        'instructor' => '강사',
+        'all_instructors' => '모든 강사',
+        'search_course' => '강의 검색',
+        'placeholder_course_name' => '강의 이름을 입력하세요...',
+        'course_name' => '강의명',
+        'status' => '상태',
+        'action' => '동작',
+        'updated_at' => '최근 업데이트',
+        'active' => '활성',
+        'stop_update' => '업데이트 중지',
+        'enter_course' => '학습 시작',
+        'empty' => '아직 등록한 강의가 없습니다',
+    ],
+
+    //Coupons
+    'coupons' => [
+        'title' => '내 쿠폰',
+        'discount' => '할인',
+        'remaining' => '남은 수량',
+        'uses' => '회 사용',
+        'no_use_limit' => '사용 횟수 제한 없음',
+        'exp' => '만료',
+        'days' => '일',
+        'expired' => '만료됨',
+        'no_time_limit' => '기간 제한 없음',
+        'no_remaining_uses' => '남은 사용 횟수 없음',
+        'available' => '사용 가능',
+        'issued_at' => '발급일:',
+        'empty' => '아직 보유한 쿠폰이 없습니다',
+    ],
+
+    //Order
+    'order' => [
+        'title' => '주문',
+        'status' => '상태',
+        'all_status' => '모든 상태',
+        'no_data' => '데이터 없음',
+        'order_code' => '주문 코드',
+        'placeholder_order_code' => '주문 코드를 입력하세요...',
+        'from_date' => '시작일',
+        'to_date' => '종료일',
+        'total' => '총 금액',
+        'placeholder_total' => '총 금액을 입력하세요...',
+        'reset' => '초기화',
+        'filter' => '필터',
+
+        'table_order_code' => '주문 코드',
+        'table_total' => '총 금액',
+        'table_status' => '상태',
+        'table_time' => '시간',
+        'table_action' => '동작',
+
+        'empty' => '아직 주문 내역이 없습니다',
+    ],
+
+    //Order Details
+    'order_detail' => [
+        'title' => '주문 상세',
+        'code' => '주문 ID',
+        'order_info' => '주문 정보',
+        'order_code' => '주문 코드',
+        'subtotal' => '소계',
+        'coupon_discount' => '쿠폰 할인',
+        'total_payment' => '총 결제 금액',
+        'ordered_at' => '주문 일시',
+        'status' => '상태',
+        'payment_expired_at' => '결제 만료 시간',
+        'pay' => '지금 결제',
+
+        'coupon_applied' => '적용된 쿠폰',
+        'discount' => '할인',
+        'for_order' => '이 주문에 적용',
+
+        'course_info' => '강의 정보',
+        'course_name' => '강의명',
+        'price' => '가격',
+        'instructor' => '강사',
+        'course_status' => '강의 상태',
+        'active' => '활성',
+        'inactive' => '비활성',
+
+        'no_detail' => '상세 데이터가 없습니다',
+        'back' => '뒤로',
+        'download_invoice' => '영수증 다운로드',
+    ],
+
+    'change_password' => [
+        'title' => '비밀번호 변경',
+        'error' => '입력 정보를 확인해 주세요',
+        'old_password' => '현재 비밀번호',
+        'old_password_placeholder' => '현재 비밀번호를 입력하세요...',
+        'new_password' => '새 비밀번호',
+        'new_password_placeholder' => '새 비밀번호를 입력하세요...',
+        'confirm_password' => '새 비밀번호 확인',
+        'confirm_password_placeholder' => '새 비밀번호를 다시 입력하세요...',
+        'submit' => '비밀번호 변경',
+    ],
+
+    'logout' => [
+        'confirm_logout' => '정말 로그아웃하시겠습니까?',
+    ],
+];

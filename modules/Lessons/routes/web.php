@@ -17,6 +17,6 @@ Route::prefix('admin')->group(function () {
    });
 });
 
-Route::group(['as' => 'lessons.', 'prefix' => '{locale}', 'where' => ['locale' => 'vi|en'], 'middleware' => ['setLocale','auth:students', 'verified', 'user.block']], function () {
+Route::group(['as' => 'lessons.', 'prefix' => '{locale}', 'where' => ['locale' => 'vi|en|ko|ja|zh'], 'middleware' => ['setLocale','auth:students', 'verified', 'user.block']], function () {
    Route::get('/bai-hoc/{slug}', 'Clients\LessonController@index')->name('home');
 });

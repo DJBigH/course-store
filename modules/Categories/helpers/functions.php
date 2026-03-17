@@ -10,12 +10,11 @@ function getCategories($categories, $old = '', $parentId = 0, $char = '')
                 if ($old == $category->id) {
                     echo ' selected';
                 }
-                echo '>' . $char . $category->name . '</option>';
+                echo '>' . $char . ($category->name_locale ?? $category->name) . '</option>';
                 unset($categories[$key]);
                 getCategories($categories, $old, $category->id, $char . ' |- ');
             }
         }
     }
 }
-
 

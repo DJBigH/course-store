@@ -56,14 +56,32 @@ class CategoriesController extends Controller
         if (!empty($categories)) {
             foreach ($categories as $key => $category) {
                 $row = $category;
-                $row['name'] = $char . $category['name'];
+                $localizedName = $category['name'] ?? '';
+                if (app()->getLocale() === 'zh') {
+                    $localizedName = $category['name_zh'] ?? $category['name'] ?? $category['name_en'] ?? $category['name_ko'] ?? $category['name_ja'] ?? '';
+                } elseif (app()->getLocale() === 'ja') {
+                    $localizedName = $category['name_ja'] ?? $category['name'] ?? $category['name_en'] ?? $category['name_ko'] ?? $category['name_zh'] ?? '';
+                } elseif (app()->getLocale() === 'ko') {
+                    $localizedName = $category['name_ko'] ?? $category['name'] ?? $category['name_en'] ?? $category['name_ja'] ?? $category['name_zh'] ?? '';
+                } elseif (app()->getLocale() === 'en') {
+                    $localizedName = $category['name_en'] ?? $category['name'] ?? $category['name_ko'] ?? $category['name_ja'] ?? $category['name_zh'] ?? '';
+                }
+                $row['name'] = $char . $localizedName;
                 $row['logs'] = '<a href="' . route('categories.logs', $category['id']) . '" class="btn btn-info">Lịch sử</a>';
                 $row['edit'] = '<a href="' . route('categories.edit', $category['id']) . '" class="btn btn-warning">Sửa</a>';
                 $row['delete'] = '<a href="' . route('categories.delete', $category['id']) . '" class="btn btn-danger delete-action">Xóa</a>';
                 $locale = app()->getLocale();
-                $slug = $locale === 'en'
-                    ? ($category['slug_en'] ?? $category['slug'])
-                    : ($category['slug'] ?? $category['slug_en']);
+                if ($locale === 'zh') {
+                    $slug = $category['slug_zh'] ?? $category['slug'] ?? $category['slug_en'] ?? $category['slug_ko'] ?? $category['slug_ja'];
+                } elseif ($locale === 'ja') {
+                    $slug = $category['slug_ja'] ?? $category['slug'] ?? $category['slug_en'] ?? $category['slug_ko'] ?? $category['slug_zh'];
+                } elseif ($locale === 'ko') {
+                    $slug = $category['slug_ko'] ?? $category['slug'] ?? $category['slug_en'] ?? $category['slug_ja'] ?? $category['slug_zh'];
+                } elseif ($locale === 'en') {
+                    $slug = $category['slug_en'] ?? $category['slug'] ?? $category['slug_ko'] ?? $category['slug_ja'] ?? $category['slug_zh'];
+                } else {
+                    $slug = $category['slug'] ?? $category['slug_en'] ?? $category['slug_ko'] ?? $category['slug_ja'] ?? $category['slug_zh'];
+                }
 
                 $row['link'] = '<a href="' . route('categories.category', [
                     'locale' => $locale,
@@ -93,7 +111,15 @@ class CategoriesController extends Controller
     {
         $dataInsert = [
             'name'      => $request->name,
+            'name_en'   => $request->name_en,
+            'name_ko'   => $request->name_ko,
+            'name_ja'   => $request->name_ja,
+            'name_zh'   => $request->name_zh,
             'slug'      => $request->slug,
+            'slug_en'   => $request->slug_en,
+            'slug_ko'   => $request->slug_ko,
+            'slug_ja'   => $request->slug_ja,
+            'slug_zh'   => $request->slug_zh,
             'parent_id' => $request->parent_id,
         ];
 
