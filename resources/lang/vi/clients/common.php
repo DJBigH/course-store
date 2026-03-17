@@ -18,6 +18,10 @@ return [
     'page_not_found' => 'Không tìm thấy trang',
     'loading_title' => 'BigK Udemy',
     'loading_subtitle' => 'Đang tải nội dung và chuẩn bị trải nghiệm học tập tốt hơn.',
+    'theme_dark' => 'Tối',
+    'theme_light' => 'Sáng',
+    'theme_switch_to_dark' => 'Chuyển sang chế độ tối',
+    'theme_switch_to_light' => 'Chuyển sang chế độ sáng',
 
     //Footer
     'student_support' => 'Hỗ trợ học viên',

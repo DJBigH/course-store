@@ -1,0 +1,38 @@
+<?php
+
+return [
+    'account_deactivated' => [
+        'subject' => 'Your account has been moved back to the unverified state',
+        'title' => 'Account deactivated',
+        'subtitle' => 'You only need to verify your email again to reactivate and continue using your account.',
+        'preheader' => 'Account deactivation notice and reactivation instructions.',
+        'greeting' => 'Hello :name,',
+        'line_1' => 'Your account has just been moved back to the unverified state.',
+        'line_2' => 'To continue using all student features, please verify this email address again.',
+        'panel' => 'If you did not perform this action, please sign in again and change your password immediately to protect your account.',
+        'button' => 'Sign in again',
+        'footer' => 'If you need more help, please contact customer support.',
+    ],
+    'order_paid' => [
+        'subject' => 'Payment successful - Order #:code',
+        'eyebrow' => 'Payment confirmation',
+        'title' => 'Payment successful',
+        'preheader' => 'Order #:code has been paid successfully.',
+        'greeting' => 'Hello :name,',
+        'intro' => 'Thank you for your successful payment. Here are your order details.',
+        'order_code_label' => 'Order #:code',
+        'order_date' => 'Paid on: :date',
+        'products' => 'Courses',
+        'quantity' => 'Quantity',
+        'price' => 'Price',
+        'empty_products' => 'There are no courses in this order.',
+        'subtotal' => 'Subtotal',
+        'discount' => 'Discount',
+        'total' => 'Total',
+        'billing_title' => 'Student information',
+        'view_order' => 'View order details',
+        'fallback_link' => 'If the button does not work, please open this link in your browser:',
+        'thanks' => 'Thank you for trusting :app.',
+        'support' => 'If you need assistance, please contact customer support.',
+    ],
+];

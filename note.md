@@ -422,7 +422,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 
     Admin:
 
-- Bên admin chưa có chức năng quản lý đơn hàng, quản lý mã khuyến mại ( Tự làm vì trong khóa không dạy)
+- Bên admin chưa có chức năng quản lý đơn hàng, quản lý mã khuyến mại ( Tự làm vì trong khóa không dạy) (Done)
 - phần trang block = status của học viên có thể đổi lại thành không có quyền hạn vào xem hoặc j đó nếu vì chưa phát triền xong
 - trang lịch sử nhập mã khuyến mãi ( Done )
 - Notification (Done và có thể thêm nữa trong tl)
@@ -443,8 +443,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Phân quyền admin/giáo viên
 - Tạo thêm 1 nơi để setting phân trang được (Không biết có nên làm không)
 - Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa ) (Done)
-- Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
 - Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db (Done)
+- Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
+- Chỉnh lại khóa học khi chuyển thành đã ra mắt thì bên clients những người đã mua khóa học ấn vào sẽ bị trang 404 ( tìm xem hướng giải nào ok nhất )
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -452,12 +453,19 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Cập nhập lại quyền khi học viên đã mua khóa học ( Done )
 - Làm trang chủ giống unicode (Done có biến tấu thêm 1 chút ở dưới)
 - chức năng khóa học đã mua của học viên nên dùng trang bờ lóc tạm thời hẹ hẹ ( Hình như xử lý rồi )
-- bên clients thiếu mấy trang nếu được cố code html css
 - Làm cái lọc theo danh mục ở trên menu ( Done )
 - Làm trang liên hệ (Done)
 - Làm lượt xem khi ấn vào khóa học +1 lượt xem (Done)
 - Notification clients (Done)
-- Làm thanh toán = vnpay, momo
 - Thêm email khi mua hàng (Done)
-- Bình luận khóa học
+- Bình luận khóa học (Done)
 - Hoàn thành note hướng dẫn (Done)
+- Làm chế độ sáng/tối (Done)
+- Làm thanh toán = vnpay, momo (Done momo)
+- Làm chức năng bảo mật 2 lớp 
+- Làm chức năng vô hiệu hóa tài khoản
+- Làm chức năng xóa tài khoản
+- Tất cả những cái phân trang làm mượt nhất có thể
+- bên clients thiếu mấy trang nếu được cố code html css
+- cái chỗ tìm ở trang chủ xem có cái j thay thế được không chứ nó như bù nhìn
+- Chỉnh cái header đi theo

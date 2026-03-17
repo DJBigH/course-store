@@ -18,6 +18,10 @@ return [
     'page_not_found' => '页面未找到',
     'loading_title' => 'BigK Udemy',
     'loading_subtitle' => '正在加载内容，并为你准备更顺畅的学习体验。',
+    'theme_dark' => '深色',
+    'theme_light' => '浅色',
+    'theme_switch_to_dark' => '切换到深色模式',
+    'theme_switch_to_light' => '切换到浅色模式',
 
     // Footer
     'student_support'      => '学员支持',

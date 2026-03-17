@@ -18,9 +18,15 @@
                     <div class="account-content">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h2 class="fw-semibold mb-0">{{ __('students::clients/account.profile.title') }}</h2>
-                            <button class="btn btn-warning js-profile-btn">
-                                {{ __('students::clients/account.profile.edit') }}
-                            </button>
+                            <div class="d-flex flex-wrap gap-2 justify-content-end">
+                                <button class="btn btn-warning js-profile-btn" type="button">
+                                    {{ __('students::clients/account.profile.edit') }}
+                                </button>
+                                <a class="btn btn-outline-danger"
+                                    href="{{ route('students.account.deactivate', ['locale' => app()->getLocale()]) }}">
+                                    {{ __('students::clients/account.profile.deactivate') }}
+                                </a>
+                            </div>
                         </div>
 
                         <table class="js-profile profile-item table table-bordered table-profile active">
@@ -44,8 +50,13 @@
                                 <tr>
                                     <th>{{ __('students::clients/account.profile.status') }}</th>
                                     <td>
-                                        <span
-                                            class="badge bg-success">{{ __('students::clients/account.core.active') }}</span>
+                                        @if ($student->email_verified_at)
+                                            <span
+                                                class="badge bg-success">{{ __('students::clients/account.core.active') }}</span>
+                                        @else
+                                            <span
+                                                class="badge bg-warning text-dark">{{ __('students::clients/account.profile.not_activated') }}</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 <tr>
@@ -54,7 +65,13 @@
                                 </tr>
                                 <tr>
                                     <th>{{ __('students::clients/account.profile.activated_at') }}</th>
-                                    <td>{{ Carbon\Carbon::parse($student->email_verified_at)->format('d/m/Y H:i:s') }}</td>
+                                    <td>
+                                        @if ($student->email_verified_at)
+                                            {{ Carbon\Carbon::parse($student->email_verified_at)->format('d/m/Y H:i:s') }}
+                                        @else
+                                            {{ __('students::clients/account.profile.not_activated') }}
+                                        @endif
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

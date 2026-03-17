@@ -96,6 +96,10 @@
     flex: 1;
 }
 
+.accordion .accordion-detail .card-accordion .text-info-emphasis{
+    color: rgb(49, 153, 223);
+}
+
 .card-accordion.active {
     background-color: #e7f1ff;
     border-left: 4px solid #1978dc;
@@ -110,8 +114,35 @@
     color: #1978dc;
 }
 
+.card-accordion.active .lesson-left i.fa-brands.fa-youtube {
+    // color: #1978dc;
+}
+
 .lesson-left i.fa-brands.fa-youtube {
     margin-left: 8px;
+}
+
+.lesson-left .preview.trial-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    margin: 0 0 0 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid #198754 !important;
+    background: #198754 !important;
+    color: #fff !important;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    box-shadow: none;
+}
+
+.card-accordion.active .lesson-left .preview.trial-btn {
+    border-color: #0f62fe !important;
+    background: #0f62fe !important;
+    color: #fff !important;
 }
 
 .lesson-nav {

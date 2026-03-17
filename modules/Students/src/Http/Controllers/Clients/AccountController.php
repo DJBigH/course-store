@@ -2,10 +2,13 @@
 
 namespace Modules\Students\src\Http\Controllers\Clients;
 
+use App\Mail\AccountDeactivatedMail;
 use App\Http\Controllers\Controller;
+use App\Models\Scopes\ActiveScope;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersStatusRepositoryInterface;
@@ -76,6 +79,45 @@ class AccountController extends Controller
         return ['success' => $status];
     }
 
+    public function showDeactivateConfirm($locale)
+    {
+        $pageTitle = __('students::clients/account.profile.deactivate_page_title');
+        $pageName = $pageTitle;
+        $student = Auth::guard('students')->user();
+
+        return view('students::clients.deactivate_confirm', compact('pageTitle', 'pageName', 'student'));
+    }
+
+    public function deactivate($locale)
+    {
+        $student = Auth::guard('students')->user();
+
+        $student->forceFill([
+            'email_verified_at' => null,
+        ])->save();
+
+        Mail::to($student->email)
+            ->locale($locale)
+            ->queue(new AccountDeactivatedMail($student, $locale));
+
+        return redirect()
+            ->route('students.account.deactivate-success', ['locale' => $locale])
+            ->with('account_deactivated_success', true)
+            ->with('msg', __('students::clients/account.profile.deactivate_success'));
+    }
+
+    public function deactivateSuccess($locale)
+    {
+        if (!session('account_deactivated_success')) {
+            return redirect()->route('home', ['locale' => $locale]);
+        }
+
+        $pageTitle = __('students::clients/account.profile.deactivate_success_title');
+        $pageName = $pageTitle;
+
+        return view('students::clients.deactivate_success', compact('pageTitle', 'pageName'));
+    }
+
 
     public function myCourse(Request $request)
     {
@@ -93,7 +135,17 @@ class AccountController extends Controller
 
         $studentId = Auth::guard('students')->user()->id;
         $courses = $this->studentRepository->getCourses($studentId, $filters, config('pagination.account_limit'));
-        $teacher = $this->teacherRepository->getTeachers();
+        $student = Auth::guard('students')->user();
+        $teacher = $student->courses()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->with('teacher')
+            ->get()
+            ->pluck('teacher')
+            ->filter()
+            ->unique('id')
+            ->sortBy('name_locale')
+            ->values();
+
         return view('students::clients.my_courses', compact('pageTitle', 'pageName', 'courses', 'teacher'));
     }
 

@@ -22,6 +22,8 @@ Route::group(['as' => 'students.'], function () {
       Route::get('/', 'Clients\AccountController@index')->name('index');
       Route::get('/thong-tin', 'Clients\AccountController@profile')->name('profile');
       Route::post('/thong-tin', 'Clients\AccountController@updateProfile')->name('client-updateprofile');
+      Route::get('/vo-hieu-hoa', 'Clients\AccountController@showDeactivateConfirm')->name('deactivate');
+      Route::post('/vo-hieu-hoa', 'Clients\AccountController@deactivate')->name('deactivate-submit');
       Route::get('/khoa-hoc', 'Clients\AccountController@myCourse')->name('my-courses');
       Route::get('/ma-giam-gia', 'Clients\AccountController@myCoupon')->name('my-coupon');
       Route::get('/don-hang', 'Clients\AccountController@myOrder')->name('my-order');
@@ -31,6 +33,7 @@ Route::group(['as' => 'students.'], function () {
       Route::get('/thanh-toan/{id}', 'Clients\CheckoutController@index')->name('checkout');
       Route::post('/thanh-toan/{id}/hoan-tat', 'Clients\CheckoutController@complete')->name('checkout-payment');
       Route::post('/thanh-toan/{id}/huy', 'Clients\CheckoutController@cancel')->name('checkout-cancel');
+      Route::post('/thanh-toan/{id}/momo', 'Clients\CheckoutController@momo')->name('checkout-momo');
 
 
 
@@ -47,6 +50,25 @@ Route::group(['as' => 'students.'], function () {
          });
       });
    });
+});
+
+Route::group([
+   'prefix' => '{locale}/tai-khoan/thanh-toan/momo',
+   'where' => ['locale' => 'vi|en|ko|ja|zh'],
+   'as' => 'students.account.',
+   'middleware' => ['setLocale'],
+], function () {
+   Route::get('/return', 'Clients\CheckoutController@momoReturn')->name('checkout-momo-return');
+   Route::match(['get', 'post'], '/ipn', 'Clients\CheckoutController@momoIpn')->name('checkout-momo-ipn');
+});
+
+Route::group([
+   'prefix' => '{locale}/tai-khoan',
+   'where' => ['locale' => 'vi|en|ko|ja|zh'],
+   'as' => 'students.account.',
+   'middleware' => ['setLocale', 'auth:students', 'user.block'],
+], function () {
+   Route::get('/vo-hieu-hoa/thanh-cong', 'Clients\AccountController@deactivateSuccess')->name('deactivate-success');
 });
 
 Route::get('students/notifications/read/{id}', function ($id) {

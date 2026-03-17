@@ -18,6 +18,10 @@ return [
     'page_not_found' => 'Page not found',
     'loading_title' => 'BigK Udemy',
     'loading_subtitle' => 'Loading content and preparing a smoother learning experience.',
+    'theme_dark' => 'Dark',
+    'theme_light' => 'Light',
+    'theme_switch_to_dark' => 'Switch to dark mode',
+    'theme_switch_to_light' => 'Switch to light mode',
 
     // Footer
     'student_support'      => 'Student Support',

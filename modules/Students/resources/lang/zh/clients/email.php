@@ -1,0 +1,38 @@
+<?php
+
+return [
+    'account_deactivated' => [
+        'subject' => '您的账户已切换回未激活状态',
+        'title' => '账户已被停用',
+        'subtitle' => '您只需重新验证邮箱，即可重新激活并继续使用账户。',
+        'preheader' => '账户停用通知及重新激活说明。',
+        'greeting' => ':name，您好：',
+        'line_1' => '您的账户刚刚被切换回未激活状态。',
+        'line_2' => '如需继续使用学员功能，请重新验证此邮箱地址。',
+        'panel' => '如果这不是您本人执行的操作，请重新登录并立即修改密码以保护账户安全。',
+        'button' => '重新登录',
+        'footer' => '如需更多帮助，请联系客户支持。',
+    ],
+    'order_paid' => [
+        'subject' => '支付成功 - 订单 #:code',
+        'eyebrow' => '支付确认',
+        'title' => '支付已成功完成',
+        'preheader' => '订单 #:code 已支付成功。',
+        'greeting' => ':name，您好：',
+        'intro' => '感谢您的成功支付，以下是您的订单信息。',
+        'order_code_label' => '订单 #:code',
+        'order_date' => '支付日期：:date',
+        'products' => '课程',
+        'quantity' => '数量',
+        'price' => '价格',
+        'empty_products' => '该订单中没有课程。',
+        'subtotal' => '小计',
+        'discount' => '折扣',
+        'total' => '总计',
+        'billing_title' => '学员信息',
+        'view_order' => '查看订单详情',
+        'fallback_link' => '如果按钮无法使用，请在浏览器中打开以下链接：',
+        'thanks' => '感谢您信任 :app。',
+        'support' => '如需帮助，请联系客户支持。',
+    ],
+];

@@ -3,7 +3,7 @@
 @section('content')
     @include('part.clients.page_title')
 
-    <section class="account-page py-4">
+    <section class="account-page account-orders-page py-4">
         <div class="container">
             <div class="row">
                 {{-- Sidebar --}}
@@ -15,7 +15,7 @@
 
                 {{-- Content --}}
                 <div class="col-lg-9">
-                    <div class="account-content card shadow-sm border-0">
+                    <div class="account-content card shadow-sm border-0 account-orders-content">
                         <div class="card-body p-4">
 
                             <div class="d-flex align-items-center justify-content-between mb-3">
@@ -25,7 +25,7 @@
                             </div>
 
                             <div class="table-responsive" style="overflow-x: unset;">
-                                <form method="GET" action="#" class="card shadow-sm border-0 mb-4">
+                                <form method="GET" action="#" class="card shadow-sm border-0 mb-4 account-orders-filter">
                                     <div class="card-body">
                                         <div class="row g-3 align-items-end">
 
@@ -117,7 +117,7 @@
                                 </form>
 
 
-                                <table class="table table-hover align-middle mb-0">
+                                <table class="table table-hover align-middle mb-0 account-orders-table">
                                     <thead class="table-light text-uppercase small">
                                         <tr>
                                             <th class="text-center" style="width: 50px;">#</th>
@@ -172,7 +172,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="7" class="text-center py-5 text-muted">
+                                                <td colspan="7" class="text-center py-5 text-muted account-orders-empty">
                                                     <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                                                     {{ __('students::clients/account.order.empty') }}
                                                 </td>

@@ -78,6 +78,17 @@
                 </div>
                 <div class="col-lg-3">
                     <div class="social d-flex align-items-center justify-content-end gap-2">
+                        <button class="btn btn-outline-primary theme-toggle" type="button" data-theme-toggle
+                            data-theme-label-light="{{ __('clients/common.theme_light') }}"
+                            data-theme-label-dark="{{ __('clients/common.theme_dark') }}"
+                            data-theme-switch-light="{{ __('clients/common.theme_switch_to_light') }}"
+                            data-theme-switch-dark="{{ __('clients/common.theme_switch_to_dark') }}"
+                            aria-label="{{ __('clients/common.theme_switch_to_dark') }}"
+                            aria-pressed="false" title="{{ __('clients/common.theme_switch_to_dark') }}">
+                            <i class="bi bi-moon-stars-fill theme-toggle__icon theme-toggle__icon--dark"></i>
+                            <i class="bi bi-sun-fill theme-toggle__icon theme-toggle__icon--light"></i>
+                            <span class="theme-toggle__label">{{ __('clients/common.theme_dark') }}</span>
+                        </button>
 
                         {{-- 🌐 LANGUAGE SWITCH --}}
                         <div class="dropdown">
@@ -271,7 +282,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}"
                             href="{{ route('contacts.home', ['locale' => app()->getLocale()]) }}">
                             <i class="fas fa-phone-alt"></i>
                             {{ __('clients/common.contact') }}

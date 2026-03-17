@@ -362,6 +362,81 @@
             }
         }
 
+        html[data-theme="dark"] .contact-page {
+            background:
+                radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 24%),
+                linear-gradient(180deg, #07111f 0%, #0a1628 100%);
+        }
+
+        html[data-theme="dark"] .contact-info,
+        html[data-theme="dark"] .contact-form {
+            background: linear-gradient(180deg, #0f1b2d 0%, #132238 100%);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.28);
+        }
+
+        html[data-theme="dark"] .contact-info h3,
+        html[data-theme="dark"] .contact-form h4,
+        html[data-theme="dark"] .info-item strong {
+            color: #eff6ff;
+        }
+
+        html[data-theme="dark"] .contact-info p,
+        html[data-theme="dark"] .contact-form p,
+        html[data-theme="dark"] .info-item span {
+            color: #9fb4cb;
+        }
+
+        html[data-theme="dark"] .info-item i,
+        html[data-theme="dark"] .contact-social a {
+            background: rgba(148, 163, 184, 0.12);
+            color: #cfe3ff;
+        }
+
+        html[data-theme="dark"] .contact-social a:hover {
+            background: rgba(59, 130, 246, 0.24);
+            color: #eff6ff;
+        }
+
+        html[data-theme="dark"] .form-group input,
+        html[data-theme="dark"] .form-group textarea {
+            background: #091321;
+            border-color: rgba(148, 163, 184, 0.16);
+            color: #eff6ff;
+        }
+
+        html[data-theme="dark"] .form-group input::placeholder,
+        html[data-theme="dark"] .form-group textarea::placeholder {
+            color: #8fa8c5;
+        }
+
+        html[data-theme="dark"] .form-group input:focus,
+        html[data-theme="dark"] .form-group textarea:focus {
+            border-color: rgba(96, 165, 250, 0.48);
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.14);
+        }
+
+        html[data-theme="dark"] .btn-submit {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #eff6ff;
+        }
+
+        html[data-theme="dark"] .btn-submit:hover {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        html[data-theme="dark"] .alert-success-custom {
+            background: rgba(16, 185, 129, 0.12);
+            color: #bbf7d0;
+            border-color: rgba(52, 211, 153, 0.22);
+        }
+
+        html[data-theme="dark"] .alert-error-custom {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fecaca;
+            border-color: rgba(248, 113, 113, 0.24);
+        }
+
         .alert {
             display: flex;
             gap: 12px;

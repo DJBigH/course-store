@@ -3,7 +3,7 @@
 @section('content')
     @include('part.clients.page_title')
 
-    <section class="account-page py-4">
+    <section class="account-page account-order-detail-page py-4">
         <div class="container">
             <div class="row">
 
@@ -16,7 +16,7 @@
 
                 {{-- Content --}}
                 <div class="col-lg-9">
-                    <div class="card shadow-sm border-0">
+                    <div class="card shadow-sm border-0 account-order-detail-content">
                         <div class="card-body p-4 order-detail" id="order-print">
 
                             {{-- Header --}}

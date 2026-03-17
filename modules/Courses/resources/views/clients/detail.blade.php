@@ -227,6 +227,7 @@
 @endsection
 
 @section('stylesheets')
+    <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
     <style>
         .course-comments-shell {
             border-radius: 18px;
@@ -346,6 +347,34 @@
             border: 1px dashed #cbd5e1;
         }
 
+        html[data-theme="dark"] .course-comments-head {
+            border-bottom-color: rgba(148, 163, 184, 0.18);
+        }
+
+        html[data-theme="dark"] .comment-card {
+            background: #0f1b2d;
+            border-color: rgba(148, 163, 184, 0.18);
+            box-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
+        }
+
+        html[data-theme="dark"] .comment-card.is-admin {
+            background: linear-gradient(180deg, #132238 0%, #0f1b2d 100%);
+        }
+
+        html[data-theme="dark"] .comment-content {
+            color: #d6e3f3;
+        }
+
+        html[data-theme="dark"] .empty-comments {
+            background: rgba(96, 165, 250, 0.08);
+            color: #9fb4cb;
+            border-color: rgba(148, 163, 184, 0.22);
+        }
+
+        html[data-theme="dark"] .admin-reply-form textarea {
+            background: #091321;
+        }
+
         @media (max-width: 768px) {
             .comment-replies,
             .admin-reply-form {
@@ -356,6 +385,7 @@
 @endsection
 
 @section('scripts')
+    <script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
     <script src="{{ asset('backend/plugins/ckeditor/ckeditor.js') }}"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {

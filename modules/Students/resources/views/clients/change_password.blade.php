@@ -3,7 +3,7 @@
 @section('content')
     @include('part.clients.page_title')
 
-    <section class="account-page py-4">
+    <section class="account-page account-password-page py-4">
         <div class="container">
             <div class="row">
                 {{-- Sidebar --}}
@@ -15,7 +15,7 @@
 
                 {{-- Content --}}
                 <div class="col-lg-9">
-                    <div class="account-content card shadow-sm border-0">
+                    <div class="account-content card shadow-sm border-0 account-password-content">
                         <div class="card-body p-4">
                             <h2 class="mb-2 fw-semibold">{{ __('students::clients/account.change_password.title') }}</h2>
                             @if (session('msg'))

@@ -1,0 +1,38 @@
+<?php
+
+return [
+    'account_deactivated' => [
+        'subject' => 'Tai khoan cua ban da duoc chuyen ve trang thai chua kich hoat',
+        'title' => 'Tai khoan da bi vo hieu hoa',
+        'subtitle' => 'Ban chi can xac minh lai email de kich hoat va tiep tuc su dung tai khoan.',
+        'preheader' => 'Thong bao vo hieu hoa tai khoan va huong dan kich hoat lai.',
+        'greeting' => 'Xin chao :name,',
+        'line_1' => 'Tai khoan cua ban vua duoc chuyen ve trang thai chua kich hoat.',
+        'line_2' => 'De tiep tuc su dung day du cac tinh nang hoc vien, vui long xac minh lai dia chi email nay.',
+        'panel' => 'Neu ban khong thuc hien thao tac nay, hay dang nhap lai va doi mat khau ngay de bao ve tai khoan.',
+        'button' => 'Dang nhap lai',
+        'footer' => 'Neu can ho tro them, vui long lien he bo phan cham soc khach hang.',
+    ],
+    'order_paid' => [
+        'subject' => 'Thanh toan thanh cong - Don hang #:code',
+        'eyebrow' => 'Xac nhan thanh toan',
+        'title' => 'Thanh toan thanh cong',
+        'preheader' => 'Don hang #:code da duoc thanh toan thanh cong.',
+        'greeting' => 'Xin chao :name,',
+        'intro' => 'Cam on ban da thanh toan thanh cong. Duoi day la thong tin don hang cua ban.',
+        'order_code_label' => 'Don hang #:code',
+        'order_date' => 'Ngay thanh toan: :date',
+        'products' => 'Khoa hoc',
+        'quantity' => 'So luong',
+        'price' => 'Gia',
+        'empty_products' => 'Khong co khoa hoc nao trong don hang.',
+        'subtotal' => 'Tam tinh',
+        'discount' => 'Giam gia',
+        'total' => 'Tong cong',
+        'billing_title' => 'Thong tin hoc vien',
+        'view_order' => 'Xem chi tiet don hang',
+        'fallback_link' => 'Neu nut khong hoat dong, vui long mo lien ket sau tren trinh duyet:',
+        'thanks' => 'Cam on ban da tin tuong :app.',
+        'support' => 'Neu can ho tro, vui long lien he bo phan cham soc khach hang.',
+    ],
+];

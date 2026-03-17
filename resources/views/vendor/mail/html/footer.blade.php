@@ -5,6 +5,9 @@
 <td class="content-cell" align="center">
 <div style="padding-top:8px;">
 {{ Illuminate\Mail\Markdown::parse($slot) }}
+<div style="margin-top:12px;color:#94a3b8;font-size:12px;">
+{{ __('auth::clients/email.common.automated_email') }}
+</div>
 </div>
 </td>
 </tr>

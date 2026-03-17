@@ -62,6 +62,13 @@ return [
         // MoMo
         'momo_notice' => 'Bạn sẽ được chuyển đến cổng thanh toán MoMo để hoàn tất giao dịch.',
         'pay_with_momo' => 'Thanh toán bằng MoMo',
+        'momo_not_configured' => 'MoMo sandbox chưa được cấu hình. Vui lòng thêm key sandbox vào .env.',
+        'momo_invalid_amount' => 'Số tiền thanh toán không hợp lệ.',
+        'momo_create_failed' => 'Không thể khởi tạo giao dịch MoMo lúc này.',
+        'momo_invalid_return' => 'Không xác định được đơn hàng từ MoMo.',
+        'momo_payment_success' => 'Thanh toán MoMo thành công.',
+        'momo_payment_failed' => 'Thanh toán MoMo không thành công.',
+        'momo_order_info' => 'Thanh toán đơn hàng :code',
     ],
 
     'coupons' => [

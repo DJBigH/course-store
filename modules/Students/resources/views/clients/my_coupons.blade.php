@@ -2,7 +2,7 @@
 
 @section('content')
     @include('part.clients.page_title')
-    <section class="coupon-section py-5">
+    <section class="coupon-section account-page account-coupons-page py-5">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-3 mb-4">
@@ -13,8 +13,8 @@
 
                 <div class="col-lg-9">
 
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <div class="card shadow-sm border-0 account-coupons-card">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center account-coupons-head">
                             <h4 class="mb-0">
                                 🎟 {{ __('students::clients/account.coupons.title') }}
                             </h4>
@@ -24,7 +24,7 @@
                             </span>
                         </div>
 
-                        <div class="card-body">
+                        <div class="card-body account-coupons-body">
 
                             @forelse ($coupon as $item)
                                 @php
@@ -113,7 +113,7 @@
 
                                 </div>
                             @empty
-                                <div class="text-center text-muted py-5">
+                                <div class="text-center text-muted py-5 account-coupons-empty">
                                     <i class="fas fa-ticket-alt fa-3x mb-3"></i>
                                     <p>{{ __('students::clients/account.coupons.empty') }}</p>
                                 </div>

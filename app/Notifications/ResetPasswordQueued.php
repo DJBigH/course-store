@@ -3,12 +3,9 @@
 namespace App\Notifications;
 
 use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Lang;
 
 class ResetPasswordQueued extends ResetPassword implements ShouldQueue
 {
@@ -17,17 +14,13 @@ class ResetPasswordQueued extends ResetPassword implements ShouldQueue
     protected function buildMailMessage($url)
     {
         return (new MailMessage)
-            ->subject(__('clients/forgot.subject'))
-            ->greeting(__('clients/forgot.greeting'))
-            ->line(__('clients/forgot.line'))
-            ->action(__('clients/forgot.action'), $url)
-            ->line(
-                __('clients/forgot.line_2')
-                    . ' '
-                    . config('auth.passwords.' . config('auth.defaults.passwords') . '.expire')
-                    . ' '
-                    . __('clients/forgot.subject')
-            )
-            ->line(__('clients/forgot.outro'));
+            ->subject(__('auth::clients/email.reset_password.subject'))
+            ->greeting(__('auth::clients/email.reset_password.greeting'))
+            ->line(__('auth::clients/email.reset_password.line'))
+            ->action(__('auth::clients/email.reset_password.action'), $url)
+            ->line(__('auth::clients/email.reset_password.expire_notice', [
+                'count' => config('auth.passwords.' . config('auth.defaults.passwords') . '.expire'),
+            ]))
+            ->line(__('auth::clients/email.reset_password.outro'));
     }
 }

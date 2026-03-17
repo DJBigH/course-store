@@ -62,6 +62,13 @@ return [
         // MoMo
         'momo_notice' => 'You will be redirected to the MoMo payment gateway to complete the transaction.',
         'pay_with_momo' => 'Pay with MoMo',
+        'momo_not_configured' => 'MoMo sandbox is not configured yet. Please add sandbox credentials to .env.',
+        'momo_invalid_amount' => 'The payment amount is invalid.',
+        'momo_create_failed' => 'Unable to create the MoMo transaction right now.',
+        'momo_invalid_return' => 'Unable to resolve the order from the MoMo response.',
+        'momo_payment_success' => 'MoMo payment completed successfully.',
+        'momo_payment_failed' => 'MoMo payment failed.',
+        'momo_order_info' => 'Payment for order :code',
     ],
 
     'coupons' => [

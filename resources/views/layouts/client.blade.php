@@ -6,10 +6,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf_token" content="{{ csrf_token() }}" />
+    <meta name="color-scheme" content="light dark" />
     <title>{{ $pageTitle ?? __('clients/common.page_not_found') }} - BigK Udemy</title>
     <link rel="shortcut icon" href="{{ asset('clients/assets/LOGO-DSCONS-FAVICON.png') }}" type="image/x-icon">
-    <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script>
+        (() => {
+            const storageKey = 'client-theme';
+            const root = document.documentElement;
+            const savedTheme = localStorage.getItem(storageKey);
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme === 'light' || savedTheme === 'dark'
+                ? savedTheme
+                : (systemPrefersDark ? 'dark' : 'light');
+
+            root.dataset.theme = theme;
+            root.style.colorScheme = theme;
+        })();
+    </script>
     @vite(['resources/sass/app.scss'])
     @yield('stylesheets')
 </head>
@@ -32,6 +46,41 @@
             </div>
         </div>
     </div>
+    <script>
+        (() => {
+            const loader = document.getElementById('page-loader');
+
+            if (!loader) {
+                return;
+            }
+
+            let hidden = false;
+            const hideLoader = () => {
+                if (hidden) {
+                    return;
+                }
+
+                hidden = true;
+                loader.classList.add('is-hidden');
+
+                window.setTimeout(() => {
+                    if (loader && loader.parentNode) {
+                        loader.remove();
+                    }
+                }, 320);
+            };
+
+            if (document.readyState === 'interactive' || document.readyState === 'complete') {
+                window.requestAnimationFrame(hideLoader);
+            } else {
+                document.addEventListener('DOMContentLoaded', hideLoader, { once: true });
+            }
+
+            window.addEventListener('load', hideLoader, { once: true });
+            window.addEventListener('pageshow', hideLoader, { once: true });
+            window.setTimeout(hideLoader, 1200);
+        })();
+    </script>
     @include ('part.clients.header')
     <main>
         @yield('content')
@@ -50,7 +99,6 @@
         </div>
     </div>
 </body>
-<script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
 @if (request()->routeIs('students.account.checkout'))
     <script>
         let paymentDate = '{{ getCurrentPaymentDate() }}';
