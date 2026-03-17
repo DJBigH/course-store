@@ -32,8 +32,6 @@ class DatabaseSeeder extends Seeder
             TeacherSeeder::class,
             OrderStatusSeeder::class,
             SettingSeeder::class,
-            // CategoriesSeeder::class,
-            // CoursesSeeder::class,
         ]);
     }
 }
