@@ -53,17 +53,18 @@ class CoursesController extends Controller
         $pageName  = $course->name_locale;
         $index = 0;
         $student = Auth::guard('students')->user();
-        $canComment = $student
+        $hasCourse = $student
             ? $student
                 ->courses()
                 ->where('courses.id', $course->id)
                 ->wherePivot('status', 1)
                 ->exists()
             : false;
+        $canComment = $hasCourse;
         $viewerIsAdmin = Auth::check();
         $threads = courseCommentThreads($course->id, $viewerIsAdmin);
 
-        return view('courses::clients.detail', compact('pageTitle', 'pageName', 'course', 'index', 'threads', 'canComment', 'viewerIsAdmin'));
+        return view('courses::clients.detail', compact('pageTitle', 'pageName', 'course', 'index', 'threads', 'canComment', 'viewerIsAdmin', 'hasCourse'));
     }
 
     public function getTrialVideo($locale, $lessonId = 0)

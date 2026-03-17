@@ -11,6 +11,19 @@
         'zh' => ['flag' => '🇨🇳', 'short' => 'ZH', 'label' => '中文'],
     ];
     $supportedLocales = array_keys($localeOptions);
+    $localeFlags = [
+        'vi' => '&#x1F1FB;&#x1F1F3;',
+        'en' => '&#x1F1FA;&#x1F1F8;',
+        'ko' => '&#x1F1F0;&#x1F1F7;',
+        'ja' => '&#x1F1EF;&#x1F1F5;',
+        'zh' => '&#x1F1E8;&#x1F1F3;',
+    ];
+
+    foreach ($localeFlags as $locale => $flag) {
+        if (isset($localeOptions[$locale])) {
+            $localeOptions[$locale]['flag'] = $flag;
+        }
+    }
 
     $currentLocale = app()->getLocale();
     if (!in_array($currentLocale, $supportedLocales)) {
@@ -70,7 +83,7 @@
                         <div class="dropdown">
                             <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2"
                                 data-bs-toggle="dropdown">
-                                <span>{{ $localeOptions[$currentLocale]['flag'] }}</span>
+                                <span>{!! $localeOptions[$currentLocale]['flag'] !!}</span>
                                 {{ $localeOptions[$currentLocale]['short'] }}
                             </button>
 
@@ -79,7 +92,7 @@
                                     <li>
                                         <a class="dropdown-item d-flex gap-2 {{ $currentLocale === $locale ? 'active' : '' }}"
                                             href="{{ $localeUrls[$locale] }}">
-                                            {{ $option['flag'] }} {{ $option['label'] }}
+                                            {!! $option['flag'] !!} {{ $option['label'] }}
                                         </a>
                                     </li>
                                 @endforeach
