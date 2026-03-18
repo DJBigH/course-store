@@ -1,7 +1,6 @@
 <?php
 
 return [
-    //Menu
     'menu' => [
         'dashbroad' => 'Tổng quan',
         'profile' => 'Thông tin cá nhân',
@@ -11,12 +10,12 @@ return [
         'change_password' => 'Đổi mật khẩu',
         'logout' => 'Đăng xuất',
     ],
-    //Core (dùng chung nhiều nơi)
+
     'core' => [
         'status' => 'Trạng thái',
         'action' => 'Hành động',
         'filter' => 'Lọc',
-        'reset' => 'Reset',
+        'reset' => 'Đặt lại',
         'all' => 'Tất cả',
         'all_status' => 'Tất cả trạng thái',
         'search' => 'Tìm kiếm',
@@ -42,19 +41,23 @@ return [
         'price' => 'Giá',
     ],
 
-    //Account (Dashboard)
     'account' => [
         'title' => 'Tổng quan tài khoản',
         'welcome' => 'Chào mừng bạn quay trở lại! Dưới đây là thông tin tổng quan về tài khoản học viên của bạn.',
         'courses' => 'Khóa học',
-        'courses_unit' => 'khoá',
+        'courses_unit' => 'khóa',
         'coupons' => 'Mã giảm giá',
         'coupons_unit' => 'mã',
         'orders' => 'Đơn hàng',
         'orders_unit' => 'đơn',
+        'recent_courses' => 'Khóa học gần đây',
+        'view_all_courses' => 'Xem tất cả khóa học',
+        'continue_learning' => 'Tiếp tục học',
+        'recent_orders' => 'Đơn hàng gần nhất',
+        'view_all_orders' => 'Xem tất cả đơn hàng',
+        'view_order_detail' => 'Xem chi tiết đơn hàng',
     ],
 
-    //Profile
     'profile' => [
         'title' => 'Thông tin cá nhân',
         'edit' => 'Chỉnh sửa thông tin',
@@ -67,12 +70,10 @@ return [
         'registered_at' => 'Thời gian đăng ký',
         'activated_at' => 'Thời gian kích hoạt',
         'update_title' => 'Cập nhật thông tin cá nhân',
-
         'placeholder_full_name' => 'Nhập họ và tên...',
         'placeholder_email' => 'Nhập email...',
         'placeholder_phone' => 'Nhập số điện thoại...',
         'placeholder_address' => 'Nhập địa chỉ...',
-
         'save' => 'Lưu thay đổi',
         'deactivate' => 'Vô hiệu hóa tài khoản',
         'deactivate_confirm' => 'Bạn có chắc muốn vô hiệu hóa tài khoản không?',
@@ -81,8 +82,8 @@ return [
         'deactivate_heading' => 'Tài khoản sẽ bị vô hiệu hóa',
         'deactivate_description' => 'Sau khi xác nhận, tài khoản của bạn sẽ chuyển về trạng thái chưa kích hoạt.',
         'deactivate_note' => 'Chỉ cần xác minh lại email :email thì tài khoản sẽ hoạt động lại bình thường.',
-        'deactivate_note_1' => 'Việc này không làm mất tài khoản, không xóa dữ liệu và không vô hiệu hóa tài khoản.',
-        'deactivate_warning' => 'Hệ thống sẽ gửi email thông báo và yêu cầu bạn xác minh lại tài khoản để sử dụng tiếp.',
+        'deactivate_note_1' => 'Việc này không làm mất tài khoản, không xóa dữ liệu và không xóa lịch sử học tập của bạn.',
+        'deactivate_warning' => 'Hệ thống sẽ gửi email thông báo và yêu cầu bạn xác minh lại tài khoản để tiếp tục sử dụng.',
         'deactivate_back' => 'Quay lại hồ sơ',
         'deactivate_cancel' => 'Hủy',
         'deactivate_modal_title' => 'Xác nhận lần cuối',
@@ -93,10 +94,9 @@ return [
         'deactivate_success_logout' => 'Hệ thống sẽ tự đăng xuất sau',
         'deactivate_success_home' => 'Về trang chủ và đăng xuất ngay',
         'not_activated' => 'Chưa kích hoạt',
-        'note_reload' => '* Vui lòng reload hoặc nhấn F5 sau khi thay đổi thông tin',
+        'note_reload' => '* Vui lòng tải lại trang hoặc nhấn F5 sau khi thay đổi thông tin',
     ],
 
-    //My Course
     'my_course' => [
         'title' => 'Khóa học của tôi',
         'instructor' => 'Giảng viên',
@@ -113,7 +113,6 @@ return [
         'empty' => 'Bạn chưa đăng ký khóa học nào',
     ],
 
-    //Coupons
     'coupons' => [
         'title' => 'Mã giảm giá của tôi',
         'discount' => 'Giảm',
@@ -130,7 +129,6 @@ return [
         'empty' => 'Bạn chưa có mã khuyến mãi nào',
     ],
 
-    //Order
     'order' => [
         'title' => 'Đơn hàng',
         'status' => 'Trạng thái',
@@ -142,19 +140,16 @@ return [
         'to_date' => 'Đến ngày',
         'total' => 'Tổng tiền',
         'placeholder_total' => 'Nhập tổng tiền...',
-        'reset' => 'Reset',
+        'reset' => 'Đặt lại',
         'filter' => 'Lọc',
-
         'table_order_code' => 'Mã đơn hàng',
         'table_total' => 'Tổng tiền',
         'table_status' => 'Trạng thái',
         'table_time' => 'Thời gian',
         'table_action' => 'Hành động',
-
         'empty' => 'Bạn chưa có đơn hàng nào',
     ],
 
-    //Order Details
     'order_detail' => [
         'title' => 'Chi tiết đơn hàng',
         'code' => 'Mã đơn',
@@ -167,11 +162,9 @@ return [
         'status' => 'Trạng thái',
         'payment_expired_at' => 'Hết hạn thanh toán',
         'pay' => 'Thanh toán',
-
         'coupon_applied' => 'Đã áp dụng mã khuyến mãi',
         'discount' => 'Giảm',
         'for_order' => 'cho đơn hàng',
-
         'course_info' => 'Thông tin khóa học',
         'course_name' => 'Tên khóa học',
         'price' => 'Giá',
@@ -179,7 +172,6 @@ return [
         'course_status' => 'Trạng thái',
         'active' => 'Đang hoạt động',
         'inactive' => 'Dừng hoạt động',
-
         'no_detail' => 'Không có dữ liệu chi tiết',
         'back' => 'Quay lại',
         'download_invoice' => 'Tải hóa đơn',
@@ -199,5 +191,5 @@ return [
 
     'logout' => [
         'confirm_logout' => 'Bạn có chắc chắn muốn đăng xuất?',
-    ]
+    ],
 ];

@@ -24,8 +24,12 @@
                                 </h2>
                             </div>
 
-                            <div class="table-responsive" style="overflow-x: unset;">
-                                <form method="GET" action="#" class="account-courses-filter mb-4">
+                            <div class="table-responsive" style="overflow-x: unset;" data-pagination-scroll
+                                data-filter-block="account-my-courses">
+                                <form method="GET"
+                                    action="{{ route('students.account.my-courses', ['locale' => app()->getLocale()]) }}"
+                                    class="account-courses-filter mb-4 js-smooth-filter"
+                                    data-filter-block-target="account-my-courses">
                                     <div class="row g-2 align-items-end">
                                         <!-- Lọc theo giảng viên -->
                                         <div class="col-lg-3 col-md-6">
@@ -66,6 +70,7 @@
                                     </div>
                                 </form>
 
+                                <div data-pagination-container="account-my-courses">
                                 <table class="table table-hover align-middle mb-0 account-courses-table">
                                     <thead class="table-light">
                                         <tr>
@@ -133,8 +138,9 @@
                                         @endforelse
                                     </tbody>
                                 </table>
-                                <div class="mt-2">
-                                    {{ $courses->links('students::clients.pagination.boostrap') }}
+                                    <div class="mt-2">
+                                        {{ $courses->links('students::clients.pagination.boostrap') }}
+                                    </div>
                                 </div>
                             </div>
 

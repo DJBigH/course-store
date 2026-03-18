@@ -1,15 +1,18 @@
 <?php
+
 return [
-    'required' => ':attribute bắt buộc phải nhập',
-    'email' => ':attribute không đúng định dạng',
-    'max' => ':attribute quá :max ký tự',
-    'integer' => ':attribute phải là số',
-    'select' => ':attribute bắt buộc phải chọn',
-    'regex' => ':attribute không đúng định dạng',
+    'required' => ':attribute bắt buộc phải nhập.',
+    'email' => ':attribute không đúng định dạng.',
+    'max' => ':attribute không được vượt quá :max ký tự.',
+    'integer' => ':attribute phải là số nguyên.',
+    'select' => ':attribute bắt buộc phải chọn.',
+    'regex' => ':attribute không đúng định dạng.',
+    'recaptcha' => 'Vui lòng xác nhận captcha để gửi liên hệ.',
     'attributes' => [
         'name' => 'Tên',
         'email' => 'Email',
         'phone' => 'Số điện thoại',
-        'message' => 'Nội dung'
-    ]
+        'message' => 'Nội dung',
+        'g-recaptcha-response' => 'Captcha',
+    ],
 ];

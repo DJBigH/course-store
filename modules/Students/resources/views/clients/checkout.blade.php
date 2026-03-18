@@ -178,8 +178,7 @@
                                         value="vnpay">
                                     <img src="{{ asset('clients/assets/vnpay.png') }}" alt="" style="width: 40px;">
                                     <label class="form-check-label">
-                                        VNPay <strong
-                                            style="color: red">({{ __('students::clients/checkout.checkout.maintenance') }})</strong>
+                                        VNPay
                                     </label>
                                 </div>
 
@@ -295,11 +294,11 @@
                                     {{ __('students::clients/checkout.checkout.vnpay_notice') }}
                                 </p>
 
-                                <form method="POST" action="#">
+                                <form method="POST"
+                                    action="{{ route('students.account.checkout-vnpay', ['locale' => app()->getLocale(), 'id' => $order->id]) }}">
                                     @csrf
                                     <button class="btn btn-primary w-100">
                                         {{ __('students::clients/checkout.checkout.pay_with_vnpay') }}
-                                        ({{ __('students::clients/checkout.checkout.maintenance') }})
                                     </button>
                                 </form>
                             </div>

@@ -2,15 +2,25 @@
     <section class="foundation-course">
         <div class="container py-5">
 
-            <div id="my-course-wrapper">
+            <div id="my-course-wrapper" data-pagination-container="home-my-courses" data-pagination-scroll>
                 <h3 class="section-title mb-4 text-success">🎓 {{ __('home::common.my_course') }}</h3>
                 <div class="row g-4">
                     @if ($myCourse->count())
                         @foreach ($myCourse as $item)
+                            @php
+                                $thumbnail = $item->thumbnail
+                                    ? (\Illuminate\Support\Str::startsWith($item->thumbnail, ['http://', 'https://']) ? $item->thumbnail : asset($item->thumbnail))
+                                    : asset('clients/assets/banner-course.png');
+
+                                $teacherImage = $item->teacher?->image
+                                    ? (\Illuminate\Support\Str::startsWith($item->teacher->image, ['http://', 'https://']) ? $item->teacher->image : asset($item->teacher->image))
+                                    : asset('clients/assets/course-teacher.png');
+                            @endphp
                             <div class="col-12 col-lg-6">
                                 <div class="course-card d-flex">
                                     <div class="course-thumb">
-                                        <img src="{{ asset($item->thumbnail) }}" alt="">
+                                        <img src="{{ $thumbnail }}" alt="{{ $item->name_locale }}"
+                                            onerror="this.onerror=null;this.src='{{ asset('clients/assets/banner-course.png') }}';">
                                     </div>
 
                                     <div class="course-content">
@@ -37,7 +47,8 @@
                                         </h5>
 
                                         <div class="course-teacher">
-                                            <img src="{{ $item->teacher->image }}" alt="">
+                                            <img src="{{ $teacherImage }}" alt="{{ $item->teacher?->name_locale }}"
+                                                onerror="this.onerror=null;this.src='{{ asset('clients/assets/course-teacher.png') }}';">
                                             <span>{{ $item->teacher->name_locale }}</span>
                                         </div>
 

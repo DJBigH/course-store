@@ -21,6 +21,14 @@ class VerifyController extends Controller
     public function resend(Request $request, $locale)
     {
         $request->user()->sendEmailVerificationNotification();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('auth::clients/email.verify.resend.success'),
+                'resent' => true,
+            ]);
+        }
+
         return back()->with('resent', true)->with('msg', __('auth::clients/email.verify.resend.success'));
     }
 }

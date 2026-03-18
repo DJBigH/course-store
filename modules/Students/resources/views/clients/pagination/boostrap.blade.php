@@ -1,26 +1,26 @@
 @if ($paginator->hasPages())
-    <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <nav class="pagination-nav d-flex justify-content-between align-items-center flex-wrap gap-2">
 
         {{-- Mobile: Previous / Next --}}
         <div class="d-flex d-sm-none gap-2">
             {{-- Previous --}}
             @if ($paginator->onFirstPage())
-                <span class="btn btn-outline-secondary btn-sm disabled">
+                <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">
                     <i class="bi bi-chevron-left"></i>
                 </span>
             @else
-                <a href="{{ $paginator->previousPageUrl() }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ $paginator->previousPageUrl() }}" class="btn btn-outline-primary btn-sm page-link-compact" rel="prev">
                     <i class="bi bi-chevron-left"></i>
                 </a>
             @endif
 
             {{-- Next --}}
             @if ($paginator->hasMorePages())
-                <a href="{{ $paginator->nextPageUrl() }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ $paginator->nextPageUrl() }}" class="btn btn-outline-primary btn-sm page-link-compact" rel="next">
                     <i class="bi bi-chevron-right"></i>
                 </a>
             @else
-                <span class="btn btn-outline-secondary btn-sm disabled">
+                <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">
                     <i class="bi bi-chevron-right"></i>
                 </span>
             @endif
@@ -45,9 +45,15 @@
 
                 {{-- Previous --}}
                 <li class="page-item {{ $paginator->onFirstPage() ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ $paginator->previousPageUrl() }}" aria-label="Previous">
-                        <i class="bi bi-chevron-left"></i>
-                    </a>
+                    @if ($paginator->onFirstPage())
+                        <span class="page-link" aria-hidden="true">
+                            <i class="bi bi-chevron-left"></i>
+                        </span>
+                    @else
+                        <a class="page-link" href="{{ $paginator->previousPageUrl() }}" aria-label="Previous" rel="prev">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    @endif
                 </li>
 
                 {{-- Pages --}}
@@ -69,37 +75,18 @@
 
                 {{-- Next --}}
                 <li class="page-item {{ $paginator->hasMorePages() ? '' : 'disabled' }}">
-                    <a class="page-link" href="{{ $paginator->nextPageUrl() }}" aria-label="Next">
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
+                    @if ($paginator->hasMorePages())
+                        <a class="page-link" href="{{ $paginator->nextPageUrl() }}" aria-label="Next" rel="next">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    @else
+                        <span class="page-link" aria-hidden="true">
+                            <i class="bi bi-chevron-right"></i>
+                        </span>
+                    @endif
                 </li>
 
             </ul>
         </div>
     </nav>
 @endif
-@section('stylesheets')
-    <style>
-        .pagination-custom .page-link {
-            border-radius: 8px;
-            margin: 0 2px;
-            color: #0d6efd;
-            transition: all 0.2s ease;
-        }
-
-        .pagination-custom .page-item.active .page-link {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-            color: #fff;
-            font-weight: 600;
-        }
-
-        .pagination-custom .page-link:hover {
-            background-color: rgba(13, 110, 253, .1);
-        }
-
-        .pagination-custom .page-item.disabled .page-link {
-            color: #adb5bd;
-        }
-    </style>
-@endsection

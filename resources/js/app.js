@@ -1,6 +1,8 @@
 import "./bootstrap.bundle.min.js";
 import "./theme.js";
+import "./locale-switcher.js";
 import "./ui-loader.js";
+import "./pagination-smooth.js";
 import "./jquery.min.js";
 import "./jquery-migrate-1.2.1.min.js";
 
@@ -29,6 +31,14 @@ if (
     import("./account.js");
 }
 
+if (document.querySelector("form.js-smooth-filter")) {
+    import("./search-filters.js");
+}
+
 if (document.querySelector(".checkout-page")) {
     import("./checkout.js");
+}
+
+if (document.querySelector("form.js-auth-form") || document.querySelector("#resend-form")) {
+    import("./auth-forms.js");
 }

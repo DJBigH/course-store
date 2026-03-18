@@ -1,6 +1,90 @@
 @extends('emails.layouts.client')
 
 @php
+    $mailTheme = $mailTheme ?? [
+        'bg' => '#f3f5f9',
+        'card' => '#ffffff',
+        'surface' => '#f8fafc',
+        'surface_alt' => '#fbfdff',
+        'line' => '#eef2f7',
+        'text' => '#111827',
+        'muted' => '#6b7280',
+        'muted_soft' => '#9ca3af',
+        'primary' => '#2563eb',
+        'primary_dark' => '#1d4ed8',
+        'primary_soft' => '#dbeafe',
+        'accent_soft' => '#e0e7ff',
+        'danger' => '#dc2626',
+        'shadow' => '0 10px 30px rgba(17,24,39,0.08)',
+    ];
+    $mailTokens = $mailTokens ?? [
+        'card_radius' => '14px',
+        'panel_radius' => '12px',
+        'button_radius' => '10px',
+        'container_width' => '600px',
+        'section_gap_sm' => '10px',
+        'section_gap_md' => '14px',
+        'section_gap_lg' => '18px',
+        'body_padding' => '26px',
+        'header_padding' => '22px 26px',
+        'footer_padding' => '18px 26px',
+    ];
+    $mailStyles = $mailStyles ?? [
+        'body_text' => 'font-size:14px;line-height:1.7;color:' . $mailTheme['text'] . ';',
+        'panel' => 'border:1px solid ' . $mailTheme['line'] . ';border-radius:' . $mailTokens['panel_radius'] . ';overflow:hidden;',
+        'table_head' =>
+            'background:' .
+            $mailTheme['surface'] .
+            ';padding:12px 14px;font-size:12px;color:' .
+            $mailTheme['muted'] .
+            ';font-weight:700;',
+        'table_head_center' =>
+            'background:' .
+            $mailTheme['surface'] .
+            ';padding:12px 10px;font-size:12px;color:' .
+            $mailTheme['muted'] .
+            ';font-weight:700;width:90px;',
+        'table_head_right' =>
+            'background:' .
+            $mailTheme['surface'] .
+            ';padding:12px 14px;font-size:12px;color:' .
+            $mailTheme['muted'] .
+            ';font-weight:700;width:140px;',
+        'button_primary' =>
+            'display:inline-block;background:' .
+            $mailTheme['primary'] .
+            ';color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;padding:12px 18px;border-radius:' .
+            $mailTokens['button_radius'] .
+            ';',
+        'stats_label' =>
+            'padding:10px 14px;font-size:13px;color:' .
+            $mailTheme['muted'] .
+            ';background:' .
+            $mailTheme['surface_alt'] .
+            ';',
+        'stats_value' =>
+            'padding:10px 14px;font-size:13px;color:' .
+            $mailTheme['text'] .
+            ';background:' .
+            $mailTheme['surface_alt'] .
+            ';',
+        'stats_total_label' =>
+            'padding:12px 14px;font-size:14px;color:' .
+            $mailTheme['text'] .
+            ';font-weight:800;border-top:1px solid ' .
+            $mailTheme['line'] .
+            ';background:' .
+            $mailTheme['surface'] .
+            ';',
+        'stats_total_value' =>
+            'padding:12px 14px;font-size:14px;color:' .
+            $mailTheme['primary'] .
+            ';font-weight:900;border-top:1px solid ' .
+            $mailTheme['line'] .
+            ';background:' .
+            $mailTheme['surface'] .
+            ';',
+    ];
     $orderDate = $order->payment_complete_date ?? $order->created_at;
     $orderDateText = $orderDate ? \Carbon\Carbon::parse($orderDate)->format('d/m/Y H:i') : null;
 

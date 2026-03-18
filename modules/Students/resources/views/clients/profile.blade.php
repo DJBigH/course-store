@@ -143,7 +143,7 @@
                                 </div>
                             </div>
                             <p class="text-muted fst-italic mt-2">
-                                {{ __('students::clients/account.profile.note_reload') }}
+                                {{ __('students::clients/messages.profile.update_success') }}
                             </p>
                         </form>
                     </div>

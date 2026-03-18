@@ -1,17 +1,18 @@
 <?php
+
 return [
     'create.success' => 'Thêm thành công',
     'create.failure' => 'Thêm không thành công',
-    'update.success' => 'Cập nhập thành công',
-    'update.failure' => 'Cập nhập không thành công',
+    'update.success' => 'Cập nhật thành công',
+    'update.failure' => 'Cập nhật không thành công',
     'delete.success' => 'Xóa thành công',
     'delete.failure' => 'Xóa không thành công',
-    'update-password.success' => 'Cập nhập mật khẩu thành công',
-    'update-password.failure' => 'Cập nhập mật khẩu không thành công',
+    'update-password.success' => 'Cập nhật mật khẩu thành công',
+    'update-password.failure' => 'Cập nhật mật khẩu không thành công',
 
     'profile' => [
-        'update_success' => 'Cập nhật thông tin thành công',
-        'update_error' => 'Không thể cập nhật vào lúc này',
+        'update_success' => 'Thông tin của bạn đã được cập nhật ngay trên trang.',
+        'update_error' => 'Không thể cập nhật vào lúc này. Vui lòng thử lại.',
     ],
 
     'verify_coupons' => [

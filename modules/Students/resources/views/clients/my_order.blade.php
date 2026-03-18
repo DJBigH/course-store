@@ -24,8 +24,12 @@
                                 </h2>
                             </div>
 
-                            <div class="table-responsive" style="overflow-x: unset;">
-                                <form method="GET" action="#" class="card shadow-sm border-0 mb-4 account-orders-filter">
+                            <div class="table-responsive" style="overflow-x: unset;" data-pagination-scroll
+                                data-filter-block="account-my-orders">
+                                <form method="GET"
+                                    action="{{ route('students.account.my-order', ['locale' => app()->getLocale()]) }}"
+                                    class="card shadow-sm border-0 mb-4 account-orders-filter js-smooth-filter"
+                                    data-filter-block-target="account-my-orders">
                                     <div class="card-body">
                                         <div class="row g-3 align-items-end">
 
@@ -117,6 +121,7 @@
                                 </form>
 
 
+                                <div data-pagination-container="account-my-orders">
                                 <table class="table table-hover align-middle mb-0 account-orders-table">
                                     <thead class="table-light text-uppercase small">
                                         <tr>
@@ -181,8 +186,9 @@
                                     </tbody>
 
                                 </table>
-                                <div class="mt-2">
-                                    {{ $orders->links('students::clients.pagination.boostrap') }}
+                                    <div class="mt-2">
+                                        {{ $orders->links('students::clients.pagination.boostrap') }}
+                                    </div>
                                 </div>
                             </div>
 

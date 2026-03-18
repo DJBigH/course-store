@@ -99,6 +99,122 @@ class CheckoutController extends Controller
         return view('students::clients.thanksyou', compact('pageTitle', 'pageName', 'order'));
     }
 
+    public function vnpay($locale, $orderId, Request $request)
+    {
+        $order = $this->orderRepository->getOrder($orderId);
+
+        if (!$order || $order->status->is_success) {
+            abort(404);
+        }
+
+        $config = config('services.vnpay');
+        if (empty($config['tmn_code']) || empty($config['hash_secret']) || empty($config['url'])) {
+            return redirect()->route('students.account.checkout', [
+                'locale' => $locale,
+                'id' => $order->id,
+            ])->with('msg', __('students::clients/checkout.checkout.vnpay_not_configured'))
+                ->with('msgType', 'danger');
+        }
+
+        $amount = (int) max($order->total - ($order->discount ?? 0), 0);
+        if ($amount <= 0) {
+            return redirect()->route('students.account.checkout', [
+                'locale' => $locale,
+                'id' => $order->id,
+            ])->with('msg', __('students::clients/checkout.checkout.vnpay_invalid_amount'))
+                ->with('msgType', 'danger');
+        }
+
+        $returnUrl = $config['return_url'] ?: route('students.account.checkout-vnpay-return', ['locale' => $locale]);
+        $inputData = [
+            'vnp_Version' => $config['version'],
+            'vnp_TmnCode' => $config['tmn_code'],
+            'vnp_Amount' => $amount * 100,
+            'vnp_Command' => $config['command'],
+            'vnp_CreateDate' => now()->format('YmdHis'),
+            'vnp_CurrCode' => $config['curr_code'],
+            'vnp_IpAddr' => $request->ip(),
+            'vnp_Locale' => app()->getLocale() === 'vi' ? 'vn' : 'en',
+            'vnp_OrderInfo' => __('students::clients/checkout.checkout.vnpay_order_info', ['code' => $order->code]),
+            'vnp_OrderType' => $config['order_type'],
+            'vnp_ReturnUrl' => $returnUrl,
+            'vnp_TxnRef' => $order->code,
+            'vnp_ExpireDate' => now()->addMinutes((int) config('checkout.checkout_countdown', 15))->format('YmdHis'),
+        ];
+
+        if (!empty($config['bank_code'])) {
+            $inputData['vnp_BankCode'] = $config['bank_code'];
+        }
+
+        $paymentUrl = $this->buildVnpayUrl($config['url'], $inputData, $config['hash_secret']);
+
+        return redirect()->away($paymentUrl);
+    }
+
+    public function vnpayReturn(Request $request, $locale)
+    {
+        $order = $this->resolveVnpayOrder($request);
+
+        if (!$order) {
+            return redirect()->route('students.account.my-order', ['locale' => $locale])
+                ->with('msg', __('students::clients/checkout.checkout.vnpay_invalid_return'))
+                ->with('msgType', 'danger');
+        }
+
+        if (!$this->validateVnpaySignature($request)) {
+            return redirect()->route('students.account.order-detail', [
+                'locale' => $locale,
+                'id' => $order->id,
+            ])->with('msg', __('students::clients/checkout.checkout.vnpay_invalid_signature'))
+                ->with('msgType', 'danger');
+        }
+
+        if ($request->input('vnp_ResponseCode') === '00' && $request->input('vnp_TransactionStatus') === '00') {
+            $this->markOrderAsPaid($order);
+
+            return redirect()->route('students.account.checkout-thankyou', [
+                'locale' => $locale,
+                'id' => $order->id,
+            ])->with('msg', __('students::clients/checkout.checkout.vnpay_payment_success'))
+                ->with('msgType', 'success');
+        }
+
+        if (!$order->status->is_success) {
+            $order->update(['status_id' => 3]);
+        }
+
+        return redirect()->route('students.account.order-detail', [
+            'locale' => $locale,
+            'id' => $order->id,
+        ])->with('msg', $this->mapVnpayMessage($request) ?: __('students::clients/checkout.checkout.vnpay_payment_failed'))
+            ->with('msgType', 'danger');
+    }
+
+    public function vnpayIpn(Request $request, $locale)
+    {
+        $order = $this->resolveVnpayOrder($request);
+
+        if (!$order) {
+            return response()->json(['RspCode' => '01', 'Message' => 'Order not found'], 404);
+        }
+
+        if (!$this->validateVnpaySignature($request)) {
+            return response()->json(['RspCode' => '97', 'Message' => 'Invalid signature'], 400);
+        }
+
+        if ($request->input('vnp_ResponseCode') === '00' && $request->input('vnp_TransactionStatus') === '00') {
+            $this->markOrderAsPaid($order);
+
+            return response()->json(['RspCode' => '00', 'Message' => 'Confirm Success']);
+        }
+
+        if (!$order->status->is_success) {
+            $order->update(['status_id' => 3]);
+        }
+
+        return response()->json(['RspCode' => '00', 'Message' => 'Failure recorded']);
+    }
+
     public function momo($locale, $orderId)
     {
         $order = $this->orderRepository->getOrder($orderId);
@@ -117,7 +233,7 @@ class CheckoutController extends Controller
                 'locale' => $locale,
                 'id' => $order->id,
             ])->with('msg', __('students::clients/checkout.checkout.momo_not_configured'))
-              ->with('msgType', 'danger');
+                ->with('msgType', 'danger');
         }
 
         $amount = (int) max($order->total - ($order->discount ?? 0), 0);
@@ -126,7 +242,7 @@ class CheckoutController extends Controller
                 'locale' => $locale,
                 'id' => $order->id,
             ])->with('msg', __('students::clients/checkout.checkout.momo_invalid_amount'))
-              ->with('msgType', 'danger');
+                ->with('msgType', 'danger');
         }
 
         $requestId = (string) Str::uuid();
@@ -184,7 +300,7 @@ class CheckoutController extends Controller
                 'locale' => $locale,
                 'id' => $order->id,
             ])->with('msg', __('students::clients/checkout.checkout.momo_create_failed'))
-              ->with('msgType', 'danger');
+                ->with('msgType', 'danger');
         }
 
         if (!empty($response['payUrl'])) {
@@ -200,7 +316,7 @@ class CheckoutController extends Controller
             'locale' => $locale,
             'id' => $order->id,
         ])->with('msg', $response['message'] ?? __('students::clients/checkout.checkout.momo_create_failed'))
-          ->with('msgType', 'danger');
+            ->with('msgType', 'danger');
     }
 
     public function momoReturn(Request $request, $locale)
@@ -220,7 +336,7 @@ class CheckoutController extends Controller
                 'locale' => $locale,
                 'id' => $order->id,
             ])->with('msg', __('students::clients/checkout.checkout.momo_payment_success'))
-              ->with('msgType', 'success');
+                ->with('msgType', 'success');
         }
 
         if (!$order->status->is_success) {
@@ -231,7 +347,7 @@ class CheckoutController extends Controller
             'locale' => $locale,
             'id' => $order->id,
         ])->with('msg', $request->string('message')->toString() ?: __('students::clients/checkout.checkout.momo_payment_failed'))
-          ->with('msgType', 'danger');
+            ->with('msgType', 'danger');
     }
 
     public function momoIpn(Request $request, $locale)
@@ -275,6 +391,72 @@ class CheckoutController extends Controller
         }
 
         return $this->orderRepository->getOrder($orderId);
+    }
+
+    private function resolveVnpayOrder(Request $request): ?Order
+    {
+        $txnRef = $request->input('vnp_TxnRef');
+        if (!$txnRef) {
+            return null;
+        }
+
+        $orderId = Order::where('code', $txnRef)->value('id');
+
+        if (!$orderId) {
+            return null;
+        }
+
+        return $this->orderRepository->getOrder($orderId);
+    }
+
+    private function buildVnpayUrl(string $baseUrl, array $inputData, string $hashSecret): string
+    {
+        ksort($inputData);
+
+        $pairs = [];
+        foreach ($inputData as $key => $value) {
+            $pairs[] = urlencode((string) $key) . '=' . urlencode((string) $value);
+        }
+
+        $query = implode('&', $pairs);
+        $secureHash = hash_hmac('sha512', $query, $hashSecret);
+
+        return $baseUrl . '?' . $query . '&vnp_SecureHash=' . $secureHash;
+    }
+
+    private function validateVnpaySignature(Request $request): bool
+    {
+        $hashSecret = config('services.vnpay.hash_secret');
+        $secureHash = $request->input('vnp_SecureHash');
+
+        if (!$hashSecret || !$secureHash) {
+            return false;
+        }
+
+        $inputData = $request->except(['vnp_SecureHash', 'vnp_SecureHashType']);
+        ksort($inputData);
+
+        $pairs = [];
+        foreach ($inputData as $key => $value) {
+            $pairs[] = urlencode((string) $key) . '=' . urlencode((string) $value);
+        }
+
+        $calculatedHash = hash_hmac('sha512', implode('&', $pairs), $hashSecret);
+
+        return hash_equals($calculatedHash, $secureHash);
+    }
+
+    private function mapVnpayMessage(Request $request): string
+    {
+        $responseCode = $request->input('vnp_ResponseCode');
+
+        return match ($responseCode) {
+            '24' => __('students::clients/checkout.checkout.vnpay_payment_cancelled'),
+            '51' => __('students::clients/checkout.checkout.vnpay_insufficient_balance'),
+            '65' => __('students::clients/checkout.checkout.vnpay_transaction_limit'),
+            '75' => __('students::clients/checkout.checkout.vnpay_bank_maintenance'),
+            default => $request->input('vnp_OrderInfo', __('students::clients/checkout.checkout.vnpay_payment_failed')),
+        };
     }
 
     private function markOrderAsPaid(Order $order): void

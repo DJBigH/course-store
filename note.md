@@ -446,6 +446,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db (Done)
 - Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
 - Chỉnh lại khóa học khi chuyển thành đã ra mắt thì bên clients những người đã mua khóa học ấn vào sẽ bị trang 404 ( tìm xem hướng giải nào ok nhất )
+- Check lại mã giảm giá
+- Trong config thêm cái kiểm soát momo, vnpay, captcha
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -461,11 +463,15 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Bình luận khóa học (Done)
 - Hoàn thành note hướng dẫn (Done)
 - Làm chế độ sáng/tối (Done)
-- Làm thanh toán = vnpay, momo (Done momo)
-- Làm chức năng bảo mật 2 lớp 
-- Làm chức năng vô hiệu hóa tài khoản
+- Làm thanh toán = vnpay, momo (Done)
+- Làm chức năng vô hiệu hóa tài khoản (Done)
+- cái chỗ tìm ở trang chủ xem có cái j thay thế được không chứ nó như bù nhìn ( Done )
+- Tất cả những cái phân trang làm mượt nhất có thể  ( Done )
+- Làm captcha cho form liên hệ tránh spam và nhớ validate ( Dùng captcha dành cho localhost) ( Done )
+- Xử lý tất cả các submit cho nó mượt không phải submit lại trang ( Done )
+- Làm chức năng bảo mật 2 lớp
 - Làm chức năng xóa tài khoản
-- Tất cả những cái phân trang làm mượt nhất có thể
+- Với cái trạng thái đơn hàng thêm đa ngôn ngữ lưu vào db ỏ bảng order_status và thêm seeder
+- Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin
 - bên clients thiếu mấy trang nếu được cố code html css
-- cái chỗ tìm ở trang chủ xem có cái j thay thế được không chứ nó như bù nhìn
-- Chỉnh cái header đi theo
+- Check lại responsive

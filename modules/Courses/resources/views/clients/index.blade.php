@@ -1,8 +1,8 @@
 @extends('layouts.client')
 @section('content')
     @include('part.clients.page_title')
-    <section class="all-course">
-        <div class="container">
+    <section class="all-course" data-pagination-scroll>
+        <div class="container" data-pagination-container="courses-index">
             @if ($courses && $courses->count())
                 <div class="row">
                     @foreach ($courses as $course)

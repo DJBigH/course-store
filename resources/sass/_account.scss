@@ -47,6 +47,12 @@
     border-radius: 14px;
     padding: 25px;
     text-align: center;
+    min-height: 132px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     transition: 0.2s;
 }
 
@@ -58,16 +64,149 @@
 
 .overview-card h5 {
     font-size: 16px;
-    margin-bottom: 5px;
+    margin-bottom: 0;
+    font-weight: 700;
 }
 
-.overview-card span {
-    font-weight: 600;
+.overview-card__meta {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
+}
+
+.overview-card__value {
+    font-size: 1.65rem;
+    line-height: 1;
+    font-weight: 800;
     color: #111827;
+}
+
+.overview-card__unit {
+    font-size: 0.98rem;
+    line-height: 1;
+    font-weight: 600;
+    color: #475569;
 }
 
 .overview-card:hover {
     background: #eef2ff;
 }
 
+.overview-card-link {
+    display: block;
+    text-decoration: none !important;
+}
 
+.overview-card-link:hover {
+    text-decoration: none !important;
+}
+
+.account-dashboard-block {
+    padding-top: 10px;
+}
+
+.account-dashboard-block__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.account-dashboard-block__head h4 {
+    margin-bottom: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.account-dashboard-block__head a {
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.account-mini-card,
+.account-order-card {
+    height: 100%;
+    border-radius: 16px;
+    background: #f8fbff;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.account-mini-card__thumb {
+    width: 100%;
+    height: 164px;
+    object-fit: cover;
+    display: block;
+    background: #e5edf8;
+}
+
+.account-mini-card__body,
+.account-order-card {
+    padding: 16px;
+}
+
+.account-mini-card__body h5,
+.account-order-card__code {
+    margin-bottom: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.account-mini-card__body p,
+.account-order-card__meta span {
+    margin-bottom: 0;
+    color: #64748b;
+    font-size: 0.92rem;
+}
+
+.account-mini-card__link,
+.account-order-card__link {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 14px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none !important;
+}
+
+.account-order-card__top,
+.account-order-card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.account-order-card__top {
+    margin-bottom: 14px;
+}
+
+.account-order-card__status {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.account-order-card__meta strong {
+    color: #111827;
+    font-size: 1rem;
+}
+
+@media (max-width: 767.98px) {
+    .account-dashboard-block__head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .account-mini-card__thumb {
+        height: 180px;
+    }
+}

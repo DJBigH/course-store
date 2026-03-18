@@ -2,8 +2,8 @@
 
 namespace Modules\Students\src\Http\Controllers\Clients;
 
-use App\Mail\AccountDeactivatedMail;
 use App\Http\Controllers\Controller;
+use App\Mail\AccountDeactivatedMail;
 use App\Models\Scopes\ActiveScope;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -20,48 +20,60 @@ use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 
 class AccountController extends Controller
 {
-
     protected $studentRepository;
     private $teacherRepository;
-
     private $orderRepository;
     private $ordersStatusRepository;
-    public function __construct(StudentsRepositoryInterface $studentRepository, TeacherRepositoryInterface $teacherRepository, OrdersRepositoryInterface $orderRepository, OrdersStatusRepositoryInterface $ordersStatusRepository)
-    {
+
+    public function __construct(
+        StudentsRepositoryInterface $studentRepository,
+        TeacherRepositoryInterface $teacherRepository,
+        OrdersRepositoryInterface $orderRepository,
+        OrdersStatusRepositoryInterface $ordersStatusRepository
+    ) {
         $this->studentRepository = $studentRepository;
         $this->teacherRepository = $teacherRepository;
         $this->orderRepository = $orderRepository;
         $this->ordersStatusRepository = $ordersStatusRepository;
     }
+
     public function index()
     {
         $pageTitle = __('students::clients/account.account.title');
         $pageName = $pageTitle;
         $student = Auth::guard('students')->user();
 
-        // 1. Tổng số khóa học đã mua
         $totalCourses = $student->courses()->count();
-
-        // 2. Tổng số mã giảm giá
         $totalCoupons = $student->coupons()->count();
-
-        // 3. Tổng số đơn hàng
         $totalOrders = $student->orders()->count();
 
-        // (Nâng cao) Khóa học gần nhất
         $recentCourses = $student->courses()
+            ->with('teacher')
             ->latest('created_at')
             ->take(3)
             ->get();
 
-        return view('students::clients.account', compact('pageTitle', 'pageName', 'totalCoupons', 'totalCourses', 'totalOrders', 'recentCourses'));
+        $recentOrders = $student->orders()
+            ->with(['status', 'detail.courses'])
+            ->latest('created_at')
+            ->take(3)
+            ->get();
+
+        return view('students::clients.account', compact(
+            'pageTitle',
+            'pageName',
+            'totalCoupons',
+            'totalCourses',
+            'totalOrders',
+            'recentCourses',
+            'recentOrders'
+        ));
     }
 
     public function profile($locale)
     {
         $pageTitle = __('students::clients/account.profile.title');
         $pageName = $pageTitle;
-
         $student = Auth::guard('students')->user();
 
         return view('students::clients.profile', compact('pageTitle', 'pageName', 'student'));
@@ -76,6 +88,22 @@ class AccountController extends Controller
             'phone' => $request->phone,
             'address' => $request->address,
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => $status,
+                'message' => $status
+                    ? __('students::clients/messages.profile.update_success')
+                    : __('students::clients/messages.profile.update_error'),
+                'student' => [
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'address' => $request->address,
+                ],
+            ], $status ? 200 : 422);
+        }
+
         return ['success' => $status];
     }
 
@@ -118,7 +146,6 @@ class AccountController extends Controller
         return view('students::clients.deactivate_success', compact('pageTitle', 'pageName'));
     }
 
-
     public function myCourse(Request $request)
     {
         $pageTitle = __('students::clients/account.my_course.title');
@@ -156,6 +183,7 @@ class AccountController extends Controller
         $filters = [];
         $studentId = Auth::guard('students')->user()->id;
         $coupon = $this->studentRepository->getCoupons($studentId, $filters, config('paginate.coupon_limit'));
+
         return view('students::clients.my_coupons', compact('pageName', 'pageTitle', 'coupon'));
     }
 
@@ -197,20 +225,23 @@ class AccountController extends Controller
         return view('students::clients.my_order', compact('pageTitle', 'pageName', 'orders', 'ordersStatus'));
     }
 
-    public function orderDetail($locale,$orderId)
+    public function orderDetail($locale, $orderId)
     {
         $pageTitle = __('students::clients/account.order_detail.title');
         $pageName = $pageTitle;
         $order = $this->orderRepository->getOrder($orderId);
+
         if (!$order) {
             abort(404);
         }
+
         $now = strtotime(date('Y-m-d H:i:s'));
         $paymentDate = strtotime($order->payment_date);
         $driff = $now - $paymentDate;
         if ($driff > 30) {
             $order->expired = true;
         }
+
         return view('students::clients.order_detail', compact('pageTitle', 'pageName', 'order'));
     }
 
@@ -218,6 +249,7 @@ class AccountController extends Controller
     {
         $pageTitle = __('students::clients/account.change_password.title');
         $pageName = $pageTitle;
+
         return view('students::clients.change_password', compact('pageTitle', 'pageName'));
     }
 
@@ -226,10 +258,18 @@ class AccountController extends Controller
         $id = Auth::guard('students')->user()->id;
         $status = $this->studentRepository->setPassword($request->password, $id);
         if ($status) {
-            $message = __('students::messages.update-password.success');
+            $message = __('students::clients/messages.update-password.success');
         } else {
-            $message = __('students::messages.update-password.failure');
+            $message = __('students::clients/messages.update-password.failure');
         }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => $status,
+                'message' => $message,
+            ], $status ? 200 : 422);
+        }
+
         return back()->with('msg', $message)->with('msgType', $status ? 'success' : 'danger');
     }
 }

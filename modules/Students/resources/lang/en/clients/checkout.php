@@ -58,6 +58,17 @@ return [
         // VNPay
         'vnpay_notice' => 'You will be redirected to the VNPay payment gateway to complete the transaction.',
         'pay_with_vnpay' => 'Pay with VNPay',
+        'vnpay_not_configured' => 'VNPay is not configured yet. Please add sandbox credentials to .env.',
+        'vnpay_invalid_amount' => 'The VNPay payment amount is invalid.',
+        'vnpay_invalid_return' => 'Unable to resolve the order from the VNPay response.',
+        'vnpay_invalid_signature' => 'The VNPay response signature is invalid.',
+        'vnpay_payment_success' => 'VNPay payment completed successfully.',
+        'vnpay_payment_failed' => 'VNPay payment failed.',
+        'vnpay_payment_cancelled' => 'The VNPay transaction was cancelled.',
+        'vnpay_insufficient_balance' => 'The payment account has insufficient balance.',
+        'vnpay_transaction_limit' => 'The transaction exceeds the account limit.',
+        'vnpay_bank_maintenance' => 'The payment bank is under maintenance. Please try again later.',
+        'vnpay_order_info' => 'Payment for order :code',
 
         // MoMo
         'momo_notice' => 'You will be redirected to the MoMo payment gateway to complete the transaction.',

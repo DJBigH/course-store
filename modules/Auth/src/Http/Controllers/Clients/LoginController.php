@@ -38,6 +38,15 @@ class LoginController extends Controller
         ];
 
         if (!Auth::guard('students')->attempt($dataLogin, $request->remember == 1)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth::messages.login.failure'),
+                    'errors' => [
+                        'email' => [__('auth::messages.login.failure')],
+                    ],
+                ], 422);
+            }
+
             return back()->with('msg_danger', __('auth::messages.login.failure'));
         }
 
@@ -53,6 +62,13 @@ class LoginController extends Controller
             Auth::guard('students')->logout();
 
             abort(403, 'Tài khoản đã đăng nhập trên thiết bị khác');
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('auth::clients/auth.login.success_title'),
+                'redirect' => route('home', ['locale' => app()->getLocale()]),
+            ]);
         }
 
         return redirect()->route('home', ['locale' => app()->getLocale()]);
@@ -80,8 +96,24 @@ class LoginController extends Controller
         );
 
         if ($status === Password::RESET_LINK_SENT) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth::messages.password.sent.success'),
+                ]);
+            }
+
             return back()->with('msg', __('auth::messages.password.sent.success'));
         }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('auth::messages.password.sent.failure'),
+                'errors' => [
+                    'email' => [__('auth::messages.password.sent.failure')],
+                ],
+            ], 422);
+        }
+
         return back()->with('msg_danger', __('auth::messages.password.sent.failure'));
     }
 
@@ -114,7 +146,24 @@ class LoginController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return redirect()->route('clients-login')->with('msg', __('auth::messages.passwords.reset.success'));
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth::messages.passwords.reset.success'),
+                    'redirect' => route('clients-login', ['locale' => app()->getLocale()]),
+                ]);
+            }
+
+            return redirect()->route('clients-login', ['locale' => app()->getLocale()])
+                ->with('msg', __('auth::messages.passwords.reset.success'));
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('auth::messages.passwords.reset.failure'),
+                'errors' => [
+                    'email' => [__('auth::messages.' . $status)],
+                ],
+            ], 422);
         }
 
         return back()->with('msg_danger', __('auth::messages.' . $status));

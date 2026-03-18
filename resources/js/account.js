@@ -53,6 +53,7 @@ const locale = document.documentElement.lang || "vi";
 if (profileForm) {
     const msgSuccess = profileForm.dataset.msgSuccess;
     const msgError = profileForm.dataset.msgError;
+    const profileTable = document.querySelector(".table-profile");
 
     const updateProfile = async (formData, token) => {
         const response = await fetch(`/${locale}/tai-khoan/thong-tin`, {
@@ -65,16 +66,16 @@ if (profileForm) {
             body: JSON.stringify(formData),
         });
 
-        const { errors, success } = await response.json();
+        const { errors, success, message, student } = await response.json();
 
         if (errors) {
             showErrors(errors);
         } else {
             if (success) {
-                showMessage(msgSuccess, "success");
-                setTimeout(() => window.location.reload(), 300);
+                updateTable(student);
+                showMessage(message || msgSuccess, "success");
             } else {
-                showMessage(msgError, "error");
+                showMessage(message || msgError, "error");
             }
         }
     };
@@ -89,12 +90,86 @@ if (profileForm) {
             errorEl.innerText = errors[key];
         });
     };
+    const updateTable = (student) => {
+        if (!profileTable || !student) return;
+
+        const rows = profileTable.querySelectorAll("tbody tr td");
+        if (rows[0]) rows[0].innerText = student.name || "";
+        if (rows[1]) rows[1].innerText = student.email || "";
+        if (rows[2]) rows[2].innerText = student.phone || "";
+        if (rows[3]) rows[3].innerText = student.address || "Chưa cập nhật";
+    };
     profileForm.addEventListener("submit", (e) => {
         e.preventDefault();
         const formData = Object.fromEntries(new FormData(e.target));
         const csrfToken =
             document.head.querySelector(`[name="csrf_token"]`).content;
         updateProfile(formData, csrfToken);
+    });
+}
+
+const changePasswordForm = document.querySelector("form.js-change-password");
+
+if (changePasswordForm) {
+    const msgSuccess = changePasswordForm.dataset.msgSuccess;
+    const msgError = changePasswordForm.dataset.msgError;
+    const alertBox = document.querySelector("[data-account-alerts]");
+
+    const showAccountAlert = (message, type = "success") => {
+        if (!alertBox) return;
+        alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    };
+
+    const showPasswordErrors = (errors) => {
+        changePasswordForm.querySelectorAll(".error").forEach((error) => {
+            error.innerText = "";
+        });
+
+        Object.keys(errors || {}).forEach((key) => {
+            const errorEl = changePasswordForm.querySelector(`.error-${key}`);
+            if (errorEl) {
+                errorEl.innerText = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
+            }
+        });
+    };
+
+    changePasswordForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        showPasswordErrors({});
+        if (alertBox) {
+            alertBox.innerHTML = "";
+        }
+
+        const submitButton = changePasswordForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+        try {
+            const response = await fetch(window.location.href, {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-TOKEN": document.head.querySelector(`[name="csrf_token"]`).content,
+                },
+                body: new FormData(changePasswordForm),
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                showPasswordErrors(data.errors || {});
+                showAccountAlert(data.message || msgError, "danger");
+                return;
+            }
+
+            changePasswordForm.reset();
+            showAccountAlert(data.message || msgSuccess, "success");
+        } catch (error) {
+            showAccountAlert(msgError, "danger");
+        } finally {
+            submitButton.disabled = false;
+        }
     });
 }
 

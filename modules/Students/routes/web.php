@@ -33,6 +33,7 @@ Route::group(['as' => 'students.'], function () {
       Route::get('/thanh-toan/{id}', 'Clients\CheckoutController@index')->name('checkout');
       Route::post('/thanh-toan/{id}/hoan-tat', 'Clients\CheckoutController@complete')->name('checkout-payment');
       Route::post('/thanh-toan/{id}/huy', 'Clients\CheckoutController@cancel')->name('checkout-cancel');
+      Route::post('/thanh-toan/{id}/vnpay', 'Clients\CheckoutController@vnpay')->name('checkout-vnpay');
       Route::post('/thanh-toan/{id}/momo', 'Clients\CheckoutController@momo')->name('checkout-momo');
 
 
@@ -50,6 +51,16 @@ Route::group(['as' => 'students.'], function () {
          });
       });
    });
+});
+
+Route::group([
+   'prefix' => '{locale}/tai-khoan/thanh-toan/vnpay',
+   'where' => ['locale' => 'vi|en|ko|ja|zh'],
+   'as' => 'students.account.',
+   'middleware' => ['setLocale'],
+], function () {
+   Route::get('/return', 'Clients\CheckoutController@vnpayReturn')->name('checkout-vnpay-return');
+   Route::match(['get', 'post'], '/ipn', 'Clients\CheckoutController@vnpayIpn')->name('checkout-vnpay-ipn');
 });
 
 Route::group([

@@ -5,8 +5,8 @@
 
     <section class="py-5">
         <div class="container">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
+            <div class="card shadow-sm border-0" data-pagination-scroll>
+                <div class="card-body" data-pagination-container="student-notifications">
                     @forelse ($notifications as $notification)
                         <div class="border-bottom py-3">
                             <div class="d-flex justify-content-between align-items-start gap-3">
@@ -28,11 +28,11 @@
                     @empty
                         <p class="mb-0 text-muted">Ban chua co thong bao nao.</p>
                     @endforelse
-                </div>
-            </div>
 
-            <div class="mt-4">
-                {{ $notifications->links('students::clients.pagination.boostrap') }}
+                    <div class="mt-4">
+                        {{ $notifications->links('students::clients.pagination.boostrap') }}
+                    </div>
+                </div>
             </div>
         </div>
     </section>

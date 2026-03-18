@@ -3,19 +3,18 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Locale;
 
 class CouponStudentNotification extends Notification
 {
     use Queueable;
 
-    protected $conpon;
+    protected $coupon;
 
-    public function __construct($conpon)
+    public function __construct($coupon)
     {
-        $this->conpon = $conpon;
+        $this->coupon = $coupon;
     }
 
     public function via($notifiable)
@@ -25,6 +24,10 @@ class CouponStudentNotification extends Notification
 
     public function toArray($notifiable)
     {
+        $locale = method_exists($notifiable, 'preferredLocale')
+            ? $notifiable->preferredLocale()
+            : app()->getLocale();
+
         $titleTranslations = [
             'vi' => 'Mã giảm giá mới',
             'en' => 'New coupon',
@@ -42,12 +45,12 @@ class CouponStudentNotification extends Notification
         ];
 
         return [
-            'type' => 'conpon.new',
+            'type' => 'coupon.new',
             'title' => $titleTranslations['vi'],
             'title_translations' => $titleTranslations,
             'message' => $messageTranslations['vi'],
             'message_translations' => $messageTranslations,
-            'url' => route('students.account.my-coupon'),
+            'url' => route('students.account.my-coupon', ['locale' => $locale]),
         ];
     }
 }

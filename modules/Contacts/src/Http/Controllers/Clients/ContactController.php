@@ -27,13 +27,20 @@ class ContactController extends Controller
 
     public function store(ContactRequest $request)
     {
-        $contacts = $request->except(['_token']);
+        $contacts = $request->except(['_token', 'g-recaptcha-response']);
         $contacts = $this->contactrepository->create($contacts);
         $admins = User::where('group_id', 1)->get();
 
         foreach ($admins as $admin) {
             $admin->notify(new NewContactNotification($contacts));
         }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('contacts::clients/messages.success.request'),
+            ]);
+        }
+
         return back()->with('msg', __('contacts::clients/messages.success.request'));
     }
 }

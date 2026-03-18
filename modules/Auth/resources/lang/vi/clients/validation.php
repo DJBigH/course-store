@@ -1,4 +1,5 @@
 <?php
+
 return [
     'required' => ':attribute bắt buộc phải nhập',
     'string' => ':attribute phải là chuỗi',
@@ -8,10 +9,10 @@ return [
     'same' => 'Mật khẩu nhập lại không khớp',
     'min' => ':attribute phải lớn hơn :min ký tự',
     'attributes' => [
-            'email' => 'Email',
-            'password' => 'Mật khẩu',
-            'phone' => 'Số điện thoại',
-            'confirm_password' => 'Nhập lại mật khẩu',
-            'name' => 'Họ và tên'
-    ]
+        'email' => 'Email',
+        'password' => 'Mật khẩu',
+        'phone' => 'Số điện thoại',
+        'confirm_password' => 'Nhập lại mật khẩu',
+        'name' => 'Họ và tên',
+    ],
 ];

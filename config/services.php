@@ -36,7 +36,26 @@ return [
         'partner_code' => env('MOMO_PARTNER_CODE'),
         'access_key' => env('MOMO_ACCESS_KEY'),
         'secret_key' => env('MOMO_SECRET_KEY'),
-        'request_type' => env('MOMO_REQUEST_TYPE', 'captureWallet'),
+        'request_type' => env('MOMO_REQUEST_TYPE', 'payWithATM'),
+    ],
+
+    'vnpay' => [
+        'url' => env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
+        'tmn_code' => env('VNPAY_TMN_CODE'),
+        'hash_secret' => env('VNPAY_HASH_SECRET'),
+        'return_url' => env('VNPAY_RETURN_URL'),
+        'bank_code' => env('VNPAY_BANK_CODE', 'NCB'),
+        'version' => env('VNPAY_VERSION', '2.1.0'),
+        'command' => env('VNPAY_COMMAND', 'pay'),
+        'curr_code' => env('VNPAY_CURR_CODE', 'VND'),
+        'locale' => env('VNPAY_LOCALE', 'vn'),
+        'order_type' => env('VNPAY_ORDER_TYPE', 'other'),
+    ],
+
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+        'verify_url' => env('RECAPTCHA_VERIFY_URL'),
     ],
 
 ];

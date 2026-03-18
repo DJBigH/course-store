@@ -12,20 +12,19 @@
                 </div>
 
                 <div class="col-lg-9">
-
-                    <div class="card shadow-sm border-0 account-coupons-card">
+                    <div class="card shadow-sm border-0 account-coupons-card" data-pagination-scroll>
                         <div class="card-header bg-white d-flex justify-content-between align-items-center account-coupons-head">
                             <h4 class="mb-0">
-                                🎟 {{ __('students::clients/account.coupons.title') }}
+                                ðŸŽŸ {{ __('students::clients/account.coupons.title') }}
                             </h4>
 
                             <span class="badge bg-primary">
-                                {{ $coupon->count() }} {{ __('students::clients/account.account.coupons_unit') }}
+                                {{ method_exists($coupon, 'total') ? $coupon->total() : $coupon->count() }}
+                                {{ __('students::clients/account.account.coupons_unit') }}
                             </span>
                         </div>
 
-                        <div class="card-body account-coupons-body">
-
+                        <div class="card-body account-coupons-body" data-pagination-container="account-my-coupons">
                             @forelse ($coupon as $item)
                                 @php
                                     $used = $item->usages_count ?? 0;
@@ -37,7 +36,6 @@
                                     class="coupon-item d-flex justify-content-between align-items-center mb-3 p-3 border rounded
                                     {{ $limited && $remaining <= 0 ? 'opacity-50' : '' }}">
 
-                                    {{-- Left --}}
                                     <div>
                                         <h5 class="mb-1 text-primary">
                                             {{ $item->code }}
@@ -62,13 +60,9 @@
 
                                         @php
                                             $now = \Carbon\Carbon::now();
-
                                             $startAt = $item->start_date ?? null;
                                             $endAt = $item->end_date ?? null;
-
-                                            $daysLeft = $endAt
-                                                ? $now->diffInDays(\Carbon\Carbon::parse($endAt), false)
-                                                : null;
+                                            $daysLeft = $endAt ? $now->diffInDays(\Carbon\Carbon::parse($endAt), false) : null;
                                         @endphp
 
                                         <div class="small text-muted mt-1">
@@ -77,7 +71,7 @@
                                                 {{ __('students::clients/account.coupons.exp') }}:
                                                 @if ($startAt)
                                                     {{ \Carbon\Carbon::parse($startAt)->format('d/m/Y') }}
-                                                    →
+                                                    â†’
                                                 @endif
                                                 {{ \Carbon\Carbon::parse($endAt)->format('d/m/Y') }}
 
@@ -94,10 +88,8 @@
                                                 {{ __('students::clients/account.coupons.no_time_limit') }}
                                             @endif
                                         </div>
-
                                     </div>
 
-                                    {{-- Right --}}
                                     <div class="text-end">
                                         @if ($limited && $remaining <= 0)
                                             <span class="badge bg-danger mb-2">{{ __('students::clients/account.coupons.no_remaining_uses') }}</span>
@@ -110,7 +102,6 @@
                                             {{ $item->pivot->created_at->format('d/m/Y') }}
                                         </div>
                                     </div>
-
                                 </div>
                             @empty
                                 <div class="text-center text-muted py-5 account-coupons-empty">
@@ -119,10 +110,10 @@
                                 </div>
                             @endforelse
 
+                            <div class="mt-2">
+                                {{ $coupon->links('students::clients.pagination.boostrap') }}
+                            </div>
                         </div>
-                    </div>
-                    <div class="mt-2">
-                        {{ $coupon->links('students::clients.pagination.boostrap') }}
                     </div>
                 </div>
             </div>

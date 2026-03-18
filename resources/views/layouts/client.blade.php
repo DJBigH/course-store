@@ -28,7 +28,7 @@
     @yield('stylesheets')
 </head>
 
-<body>
+<body data-locale-switch-loading="{{ __('clients/common.loading_subtitle') }}">
     <div id="page-loader" class="page-loader" aria-hidden="true">
         <div class="page-loader__panel">
             <div class="page-loader__brand">
