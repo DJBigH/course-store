@@ -1,21 +1,37 @@
 <?php
 
 return [
-    'create.success' => 'Created successfully',
-    'create.failure' => 'Creation failed',
+    'create' => [
+        'success' => 'Created successfully',
+        'failure' => 'Creation failed',
+    ],
 
-    'update.success' => 'Updated successfully',
-    'update.failure' => 'Update failed',
+    'update' => [
+        'success' => 'Updated successfully',
+        'failure' => 'Update failed',
+    ],
 
-    'delete.success' => 'Deleted successfully',
-    'delete.failure' => 'Deletion failed',
+    'delete' => [
+        'success' => 'Deleted successfully',
+        'failure' => 'Deletion failed',
+    ],
 
-    'update-password.success' => 'Password updated successfully',
-    'update-password.failure' => 'Password update failed',
+    'password' => [
+        'update' => [
+            'success' => 'Password updated successfully',
+            'failure' => 'Password update failed',
+        ],
+    ],
 
     'profile' => [
-        'update_success' => 'Profile updated successfully',
-        'update_error' => 'Unable to update at the moment',
+        'update' => [
+            'success' => 'Your profile has been updated on this page.',
+            'error' => 'Unable to update at the moment. Please try again.',
+            'confirm_email_sent' => 'We have sent a confirmation email to your new address. The new email will only be applied after you confirm it successfully.',
+            'confirm_email_invalid' => 'The email confirmation link is invalid or has expired.',
+            'confirm_email_conflict' => 'This new email address is already being used by another account.',
+            'confirm_email_success' => 'Your new email has been confirmed and your profile information has been updated.',
+        ],
     ],
 
     'verify_coupons' => [

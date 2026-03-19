@@ -42,6 +42,13 @@
         </a>
     </li>
     <li class="nav-item">
+        <a href="{{ route('students.account.activity-history', ['locale' => app()->getLocale()]) }}"
+            class="nav-link {{ activeMenu('students.account.activity-history') ? 'active' : '' }}">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            {{ __('students::clients/account.menu.activity_history') }}
+        </a>
+    </li>
+    <li class="nav-item">
         <form action="{{ route('clients-logout', ['locale' => app()->getLocale()]) }}" method="POST" class="d-inline">
             @csrf
             <a href="#" class="nav-link text-danger js-logout"

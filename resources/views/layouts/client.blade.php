@@ -86,6 +86,7 @@
         @yield('content')
     </main>
     @include ('part.clients.footer')
+    @yield('modals')
     <div class="modal fade" id="modal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">

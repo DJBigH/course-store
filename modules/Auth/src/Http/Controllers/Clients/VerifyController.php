@@ -3,11 +3,15 @@
 namespace Modules\Auth\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
+use App\Support\ClientMailThrottle;
 use Illuminate\Http\Request;
-
 
 class VerifyController extends Controller
 {
+    public function __construct(protected ClientMailThrottle $mailThrottle)
+    {
+    }
+
     public function index(Request $request, $locale)
     {
         $user = $request->user();
@@ -20,6 +24,29 @@ class VerifyController extends Controller
 
     public function resend(Request $request, $locale)
     {
+        $throttle = config('mail.throttle.verify_resend');
+        $throttleKey = $this->mailThrottle->key('verify-resend', [
+            $request->ip(),
+            $request->user()?->getAuthIdentifier(),
+            $request->user()?->email,
+        ]);
+
+        if ($this->mailThrottle->tooManyAttempts($throttleKey, (int) $throttle['max_attempts'])) {
+            $message = __('auth::clients/messages.mail_throttled', [
+                'seconds' => $this->mailThrottle->availableIn($throttleKey),
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                    'resent' => false,
+                ], 429);
+            }
+
+            return back()->with('msg_danger', $message);
+        }
+
+        $this->mailThrottle->hit($throttleKey, (int) $throttle['decay_seconds']);
         $request->user()->sendEmailVerificationNotification();
 
         if ($request->expectsJson()) {

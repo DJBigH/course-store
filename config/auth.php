@@ -128,4 +128,8 @@ return [
 
     'max_devices' => 1,
 
+    'student_two_factor_timeout' => (int) env('STUDENT_TWO_FACTOR_TIMEOUT', 600),
+    'student_two_factor_code_expire' => (int) env('STUDENT_TWO_FACTOR_CODE_EXPIRE', 600),
+    'student_two_factor_resend_cooldown' => (int) env('STUDENT_TWO_FACTOR_RESEND_COOLDOWN', 60),
+
 ];

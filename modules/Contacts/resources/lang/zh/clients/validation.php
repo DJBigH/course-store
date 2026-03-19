@@ -13,5 +13,6 @@ return [
         'email'   => 'メールアドレス',
         'phone'   => '電話番号',
         'message' => '内容',
+        'g-recaptcha-response' => '验证码',
     ],
 ];

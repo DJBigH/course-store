@@ -103,7 +103,8 @@
     ];
 @endphp
 
-<body style="margin:0;padding:0;background:#f3f5f9;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+<body
+    style="margin:0;padding:0;background:#f3f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC','Noto Sans CJK JP','Noto Sans CJK KR','Malgun Gothic',sans-serif;color:#111827;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
         {{ $preheader ?? '' }}
     </div>

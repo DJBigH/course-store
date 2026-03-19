@@ -3,9 +3,6 @@
 namespace Modules\Students\src\Http\Requests\Clients;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
-
-
 class StudentsRequest extends FormRequest
 {
     /**
@@ -25,10 +22,9 @@ class StudentsRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = Auth::guard('students')->user()->id;
         $rules = [
             'name' => 'required|max:225',
-            'email' => 'required|email|unique:students,email,' . $id,
+            'email' => 'required|email',
             'phone' => 'required|regex:/(0)[0-9]{9}/',
         ];
         return $rules;

@@ -131,4 +131,24 @@ return [
         ],
     ],
 
+    'throttle' => [
+        'verify_resend' => [
+            'max_attempts' => (int) env('MAIL_THROTTLE_VERIFY_MAX_ATTEMPTS', 3),
+            'decay_seconds' => (int) env('MAIL_THROTTLE_VERIFY_DECAY_SECONDS', 600),
+        ],
+        'forgot_password' => [
+            'max_attempts' => (int) env('MAIL_THROTTLE_FORGOT_MAX_ATTEMPTS', 3),
+            'decay_seconds' => (int) env('MAIL_THROTTLE_FORGOT_DECAY_SECONDS', 900),
+        ],
+        'contact_form' => [
+            'max_attempts' => (int) env('MAIL_THROTTLE_CONTACT_MAX_ATTEMPTS', 3),
+            'decay_seconds' => (int) env('MAIL_THROTTLE_CONTACT_DECAY_SECONDS', 900),
+        ],
+        'profile_sensitive_changed' => [
+            'max_attempts' => (int) env('MAIL_THROTTLE_PROFILE_CHANGE_MAX_ATTEMPTS', 2),
+            'decay_seconds' => (int) env('MAIL_THROTTLE_PROFILE_CHANGE_DECAY_SECONDS', 600),
+        ],
+    ],
+
 ];
+

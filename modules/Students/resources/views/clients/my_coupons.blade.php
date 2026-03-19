@@ -15,17 +15,17 @@
                     <div class="card shadow-sm border-0 account-coupons-card" data-pagination-scroll>
                         <div class="card-header bg-white d-flex justify-content-between align-items-center account-coupons-head">
                             <h4 class="mb-0">
-                                ðŸŽŸ {{ __('students::clients/account.coupons.title') }}
+                                {{ __('students::clients/account.coupons.title') }}
                             </h4>
 
                             <span class="badge bg-primary">
-                                {{ method_exists($coupon, 'total') ? $coupon->total() : $coupon->count() }}
+                                {{ method_exists($coupons, 'total') ? $coupons->total() : $coupons->count() }}
                                 {{ __('students::clients/account.account.coupons_unit') }}
                             </span>
                         </div>
 
                         <div class="card-body account-coupons-body" data-pagination-container="account-my-coupons">
-                            @forelse ($coupon as $item)
+                            @forelse ($coupons as $item)
                                 @php
                                     $used = $item->usages_count ?? 0;
                                     $limited = !empty($item->count);
@@ -52,7 +52,8 @@
 
                                         <div class="small">
                                             @if ($limited)
-                                                {{ __('students::clients/account.coupons.remaining') }} {{ $remaining }} {{ __('students::clients/account.coupons.uses') }}
+                                                {{ __('students::clients/account.coupons.remaining') }} {{ $remaining }}
+                                                {{ __('students::clients/account.coupons.uses') }}
                                             @else
                                                 {{ __('students::clients/account.coupons.no_use_limit') }}
                                             @endif
@@ -70,14 +71,14 @@
                                             @if ($endAt)
                                                 {{ __('students::clients/account.coupons.exp') }}:
                                                 @if ($startAt)
-                                                    {{ \Carbon\Carbon::parse($startAt)->format('d/m/Y') }}
-                                                    â†’
+                                                    {{ \Carbon\Carbon::parse($startAt)->format('d/m/Y') }} -
                                                 @endif
                                                 {{ \Carbon\Carbon::parse($endAt)->format('d/m/Y') }}
 
                                                 @if ($daysLeft >= 0)
                                                     <span class="text-success">
-                                                        ({{ __('students::clients/account.coupons.remaining') }} {{ $daysLeft }} {{ __('students::clients/account.coupons.days') }})
+                                                        ({{ __('students::clients/account.coupons.remaining') }} {{ $daysLeft }}
+                                                        {{ __('students::clients/account.coupons.days') }})
                                                     </span>
                                                 @else
                                                     <span class="text-danger">
@@ -111,7 +112,7 @@
                             @endforelse
 
                             <div class="mt-2">
-                                {{ $coupon->links('students::clients.pagination.boostrap') }}
+                                {{ $coupons->links('students::clients.pagination.boostrap') }}
                             </div>
                         </div>
                     </div>

@@ -37,7 +37,7 @@
 
                             <form
                                 id="deactivate-account-form"
-                                action="{{ route('students.account.deactivate-submit', ['locale' => app()->getLocale()]) }}"
+                                action="{{ route('students.account.deactivate-start-2fa', ['locale' => app()->getLocale()]) }}"
                                 method="POST">
                                 @csrf
                                 <button type="button" class="btn btn-danger px-4" data-bs-toggle="modal"

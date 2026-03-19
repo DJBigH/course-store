@@ -1,7 +1,6 @@
 <?php
 
 return [
-    //Menu
     'menu' => [
         'dashbroad' => '대시보드',
         'profile' => '개인 정보',
@@ -9,9 +8,9 @@ return [
         'coupons' => '쿠폰',
         'order' => '주문',
         'change_password' => '비밀번호 변경',
+        'activity_history' => '활동 기록',
         'logout' => '로그아웃',
     ],
-    //Core (shared)
     'core' => [
         'status' => '상태',
         'action' => '동작',
@@ -26,8 +25,8 @@ return [
         'time' => '시간',
         'back' => '뒤로',
         'discount' => '할인',
-        'remaining' => '남은 수량',
-        'uses' => '회 사용',
+        'remaining' => '남은',
+        'uses' => '회',
         'days' => '일',
         'expired' => '만료됨',
         'no_time_limit' => '기간 제한 없음',
@@ -41,8 +40,6 @@ return [
         'coupon' => '쿠폰',
         'price' => '가격',
     ],
-
-    //Account (Dashboard)
     'account' => [
         'title' => '계정 개요',
         'welcome' => '다시 오신 것을 환영합니다. 수강생 계정 현황을 확인해 보세요.',
@@ -52,9 +49,13 @@ return [
         'coupons_unit' => '개',
         'orders' => '주문',
         'orders_unit' => '건',
+        'recent_courses' => '최근 강의',
+        'view_all_courses' => '모든 강의 보기',
+        'continue_learning' => '계속 학습하기',
+        'recent_orders' => '최근 주문',
+        'view_all_orders' => '모든 주문 보기',
+        'view_order_detail' => '주문 상세 보기',
     ],
-
-    //Profile
     'profile' => [
         'title' => '개인 정보',
         'edit' => '정보 수정',
@@ -67,58 +68,52 @@ return [
         'registered_at' => '가입 일시',
         'activated_at' => '활성화 일시',
         'update_title' => '개인 정보 수정',
-
         'placeholder_full_name' => '이름을 입력하세요...',
         'placeholder_email' => '이메일을 입력하세요...',
         'placeholder_phone' => '전화번호를 입력하세요...',
         'placeholder_address' => '주소를 입력하세요...',
-
         'save' => '변경 사항 저장',
         'deactivate' => '계정 비활성화',
         'deactivate_confirm' => '정말 이 계정을 비활성화하시겠습니까?',
-        'deactivate_success' => '계정이 미인증 상태로 변경되었습니다.',
+        'deactivate_success' => '계정이 미인증 상태로 전환되었습니다.',
         'deactivate_page_title' => '계정 비활성화 확인',
         'deactivate_heading' => '계정이 비활성화됩니다',
         'deactivate_description' => '확인 후 계정은 미인증 상태로 전환됩니다.',
-        'deactivate_note' => '이메일 :email 을 다시 인증하면 계정이 다시 활성화됩니다.',
-        'deactivate_note_1' => '이 작업은 계정을 삭제하거나, 데이터를 제거하거나, 계정을 비활성화하지 않습니다.',
-        'deactivate_warning' => '시스템이 안내 메일을 보내며, 계속 사용하려면 계정을 다시 인증해야 합니다.',
+        'deactivate_note' => '이메일 :email 을 다시 인증하면 계정을 다시 사용할 수 있습니다.',
+        'deactivate_note_1' => '이 작업은 계정을 삭제하거나 데이터를 제거하지 않으며 학습 기록도 유지됩니다.',
+        'deactivate_warning' => '시스템이 안내 메일을 발송하며, 계속 사용하려면 다시 이메일 인증이 필요합니다.',
         'deactivate_back' => '프로필로 돌아가기',
         'deactivate_cancel' => '취소',
         'deactivate_modal_title' => '최종 확인',
         'deactivate_confirm_button' => '비활성화 확인',
         'deactivate_success_title' => '계정 비활성화 완료',
-        'deactivate_success_message' => '회원님의 계정이 비활성화되었습니다.',
-        'deactivate_success_reactivate' => '이메일을 다시 인증하면 계정을 다시 사용할 수 있습니다.',
+        'deactivate_success_message' => '계정이 비활성화되었습니다.',
+        'deactivate_success_reactivate' => '이메일을 다시 인증하면 계정을 다시 활성화할 수 있습니다.',
         'deactivate_success_logout' => '잠시 후 자동으로 로그아웃됩니다',
         'deactivate_success_home' => '홈으로 이동하고 바로 로그아웃',
         'not_activated' => '아직 활성화되지 않음',
-        'note_reload' => '* 정보 수정 후 새로고침 또는 F5를 눌러 주세요',
+        'note_reload' => '* 정보 변경 후 새로고침하거나 F5를 눌러 주세요',
     ],
-
-    //My Course
     'my_course' => [
         'title' => '내 강의',
         'instructor' => '강사',
         'all_instructors' => '모든 강사',
         'search_course' => '강의 검색',
-        'placeholder_course_name' => '강의 이름을 입력하세요...',
+        'placeholder_course_name' => '강의명을 입력하세요...',
         'course_name' => '강의명',
         'status' => '상태',
         'action' => '동작',
         'updated_at' => '최근 업데이트',
         'active' => '활성',
         'stop_update' => '업데이트 중지',
-        'enter_course' => '학습 시작',
+        'enter_course' => '강의 시작',
         'empty' => '아직 등록한 강의가 없습니다',
     ],
-
-    //Coupons
     'coupons' => [
         'title' => '내 쿠폰',
         'discount' => '할인',
-        'remaining' => '남은 수량',
-        'uses' => '회 사용',
+        'remaining' => '남은',
+        'uses' => '회',
         'no_use_limit' => '사용 횟수 제한 없음',
         'exp' => '만료',
         'days' => '일',
@@ -127,10 +122,8 @@ return [
         'no_remaining_uses' => '남은 사용 횟수 없음',
         'available' => '사용 가능',
         'issued_at' => '발급일:',
-        'empty' => '아직 보유한 쿠폰이 없습니다',
+        'empty' => '보유한 쿠폰이 없습니다',
     ],
-
-    //Order
     'order' => [
         'title' => '주문',
         'status' => '상태',
@@ -144,17 +137,13 @@ return [
         'placeholder_total' => '총 금액을 입력하세요...',
         'reset' => '초기화',
         'filter' => '필터',
-
         'table_order_code' => '주문 코드',
         'table_total' => '총 금액',
         'table_status' => '상태',
         'table_time' => '시간',
         'table_action' => '동작',
-
         'empty' => '아직 주문 내역이 없습니다',
     ],
-
-    //Order Details
     'order_detail' => [
         'title' => '주문 상세',
         'code' => '주문 ID',
@@ -166,12 +155,10 @@ return [
         'ordered_at' => '주문 일시',
         'status' => '상태',
         'payment_expired_at' => '결제 만료 시간',
-        'pay' => '지금 결제',
-
-        'coupon_applied' => '적용된 쿠폰',
+        'pay' => '결제하기',
+        'coupon_applied' => '쿠폰 적용됨',
         'discount' => '할인',
         'for_order' => '이 주문에 적용',
-
         'course_info' => '강의 정보',
         'course_name' => '강의명',
         'price' => '가격',
@@ -179,12 +166,10 @@ return [
         'course_status' => '강의 상태',
         'active' => '활성',
         'inactive' => '비활성',
-
         'no_detail' => '상세 데이터가 없습니다',
         'back' => '뒤로',
         'download_invoice' => '영수증 다운로드',
     ],
-
     'change_password' => [
         'title' => '비밀번호 변경',
         'error' => '입력 정보를 확인해 주세요',
@@ -196,8 +181,83 @@ return [
         'confirm_password_placeholder' => '새 비밀번호를 다시 입력하세요...',
         'submit' => '비밀번호 변경',
     ],
-
     'logout' => [
         'confirm_logout' => '정말 로그아웃하시겠습니까?',
+    ],
+    'two_factor' => [
+        'title' => '이메일 2단계 인증',
+        'description' => '이메일로 전송되는 인증 코드로 계정을 한 번 더 보호하세요.',
+        'scope_hint' => '활성화하면 새 로그인과 프로필 수정, 비밀번호 변경, 계정 비활성화 같은 민감한 작업에서 다시 인증 코드가 필요합니다.',
+        'enabled' => '사용 중',
+        'disabled' => '사용 안 함',
+        'enabled_at' => '활성화 시간:',
+        'enable_button' => '이메일 2단계 인증 켜기',
+        'disable_button' => '이메일 2단계 인증 끄기',
+        'enable_confirm' => '2단계 인증을 켜기 위한 인증 코드가 이메일로 전송됩니다. 계속하시겠습니까?',
+        'disable_confirm' => '2단계 인증을 끄기 위한 인증 코드가 이메일로 전송됩니다. 계속하시겠습니까?',
+        'modal_title' => '작업 확인',
+        'modal_submit' => '계속',
+        'purpose_login' => '로그인',
+        'purpose_step_up' => '민감한 작업 확인',
+        'purpose_enable' => '2단계 인증 활성화',
+        'purpose_disable' => '2단계 인증 비활성화',
+        'login_code_sent' => '로그인을 완료하기 위한 인증 코드가 이메일로 전송되었습니다.',
+        'enable_code_sent' => '2단계 인증을 켜기 위한 인증 코드가 이메일로 전송되었습니다.',
+        'disable_code_sent' => '2단계 인증을 끄기 위한 인증 코드가 이메일로 전송되었습니다.',
+        'deactivate_code_sent' => '계정 비활성화를 확인하기 위한 인증 코드가 이메일로 전송되었습니다.',
+        'code_already_sent' => '최근에 코드가 전송되었습니다. 새 코드를 받으려면 :seconds초 후 다시 시도하세요.',
+        'code_resent' => '새 인증 코드가 이메일로 전송되었습니다.',
+        'code_invalid' => '인증 코드가 올바르지 않습니다.',
+        'code_expired' => '인증 코드가 만료되었습니다. 새 코드를 요청해 주세요.',
+        'challenge_not_found' => '인증 요청을 찾을 수 없습니다. 처음부터 다시 시도해 주세요.',
+        'deactivate_requires_verification' => '계정을 비활성화하기 전에 이메일 코드 인증이 필요합니다.',
+        'already_enabled' => '이메일 2단계 인증이 이미 활성화되어 있습니다.',
+        'already_disabled' => '이메일 2단계 인증이 현재 비활성화되어 있습니다.',
+        'enabled_success' => '이메일 2단계 인증이 성공적으로 활성화되었습니다.',
+        'disabled_success' => '이메일 2단계 인증이 성공적으로 비활성화되었습니다.',
+        'reauth_required' => '이 작업을 계속하려면 이메일 코드를 다시 인증해 주세요.',
+        'reauth_success' => '인증이 완료되었습니다. 계속 진행할 수 있습니다.',
+        'login_success' => '인증이 완료되었습니다. 이제 로그인되었습니다.',
+    ],
+    'activity_history' => [
+        'title' => '활동 기록',
+        'login_title' => '로그인 기록',
+        'activity_title' => '작업 기록',
+        'time' => '시간',
+        'device' => '기기',
+        'network' => '네트워크 / IP',
+        'note' => '메모',
+        'detail' => '상세',
+        'action' => '작업',
+        'previous' => '이전',
+        'unusual' => '의심스러운 로그인',
+        'normal' => '정상',
+        'empty_login' => '로그인 기록이 없습니다.',
+        'empty_activity' => '작업 기록이 없습니다.',
+        'all_actions' => '모든 작업',
+        'code_purpose' => '코드 전송 목적',
+        'actions' => [
+            'login' => '로그인',
+            'update_profile' => '정보 수정',
+            'change_password' => '비밀번호 변경',
+            'two_factor_code_sent' => '인증 코드 전송',
+            'enable_two_factor' => '2단계 인증 켜기',
+            'disable_two_factor' => '2단계 인증 끄기',
+        ],
+        'fields' => [
+            'name' => '이름',
+            'email' => '이메일',
+            'phone' => '전화번호',
+            'address' => '주소',
+        ],
+    ],
+    'activity_log' => [
+        'login_desc' => '로그인에 성공했습니다.',
+        'unusual_login_desc' => '낯선 기기 또는 네트워크에서 로그인이 감지되었습니다.',
+        'two_factor_code_sent_desc' => '이메일로 인증 코드가 전송되었습니다.',
+        'two_factor_enabled_desc' => '이메일 2단계 인증이 활성화되었습니다.',
+        'two_factor_disabled_desc' => '이메일 2단계 인증이 비활성화되었습니다.',
+        'profile_updated_desc' => '개인 정보가 수정되었습니다.',
+        'password_changed_desc' => '계정 비밀번호가 변경되었습니다.',
     ],
 ];

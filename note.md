@@ -448,6 +448,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Chỉnh lại khóa học khi chuyển thành đã ra mắt thì bên clients những người đã mua khóa học ấn vào sẽ bị trang 404 ( tìm xem hướng giải nào ok nhất )
 - Check lại mã giảm giá
 - Trong config thêm cái kiểm soát momo, vnpay, captcha
+- Thêm phần quản lý học viên xem học viên đã bật 2FA chưa
+- Làm bên admin bảo mật hơn
+- Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không)
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -469,9 +472,16 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Tất cả những cái phân trang làm mượt nhất có thể  ( Done )
 - Làm captcha cho form liên hệ tránh spam và nhớ validate ( Dùng captcha dành cho localhost) ( Done )
 - Xử lý tất cả các submit cho nó mượt không phải submit lại trang ( Done )
-- Làm chức năng bảo mật 2 lớp
+- Làm chức năng bảo mật 2 lớp ( Done )
+- Làm chức năng check localtion khi đăng nhập ( Done )
+- Làm lịch sử đăng nhập, lịch sử hoạt động hay thao tác ( Với thao tác thì là đổi mật khẩu, gửi mã xác thực, Chỉnh sửa thông tin ) ( Done )
+- Với chức năng đổi mật khẩu kể cả khi không bật 2FA thì mỗi khi đổi mật khẩu thì sẽ gửi email rằng tài khoản đã đổi mật khẩu ( Done )
+- Cái đổi mật khẩu cũng có vấn đề nếu là đổi mật khẩu xong họ vẫn không đăng nhập đúng mật khẩu đó
+- Quên mật khẩu có vấn đề
 - Làm chức năng xóa tài khoản
 - Với cái trạng thái đơn hàng thêm đa ngôn ngữ lưu vào db ỏ bảng order_status và thêm seeder
 - Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin
+- Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không
 - bên clients thiếu mấy trang nếu được cố code html css
+- Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để ghi cho backend )
 - Check lại responsive

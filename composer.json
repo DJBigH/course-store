@@ -40,7 +40,8 @@
         ],
         "files": [
             "app/Helpers/functions.php",
-            "app/Helpers/activity_log.php"
+            "app/Helpers/activity_log.php",
+            "app/Support/StudentTwoFactorService.php"
         ]
     },
     "autoload-dev": {

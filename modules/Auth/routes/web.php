@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Auth\Src\Http\Controllers\Admin\LoginController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use Modules\Students\src\Http\Controllers\Clients\TwoFactorController;
 
 
 Route::get('/login', "Admin\LoginController@showLoginForm")->middleware('web')->name('login');
@@ -65,4 +66,13 @@ Route::group([
     Route::post('/dat-lai-mat-khau', 'Clients\LoginController@updatePassword')
         ->middleware('guest:students')
         ->name('clients.update.password');
+
+    Route::get('/xac-thuc-2-lop', [TwoFactorController::class, 'showChallenge'])
+        ->name('students.2fa.challenge');
+
+    Route::post('/xac-thuc-2-lop', [TwoFactorController::class, 'verify'])
+        ->name('students.2fa.verify');
+
+    Route::post('/xac-thuc-2-lop/gui-lai', [TwoFactorController::class, 'resend'])
+        ->name('students.2fa.resend');
 });

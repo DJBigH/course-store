@@ -1,18 +1,37 @@
 <?php
 
 return [
-    'create.success' => 'Thêm thành công',
-    'create.failure' => 'Thêm không thành công',
-    'update.success' => 'Cập nhật thành công',
-    'update.failure' => 'Cập nhật không thành công',
-    'delete.success' => 'Xóa thành công',
-    'delete.failure' => 'Xóa không thành công',
-    'update-password.success' => 'Cập nhật mật khẩu thành công',
-    'update-password.failure' => 'Cập nhật mật khẩu không thành công',
+    'create' => [
+        'success' => 'Thêm thành công',
+        'failure' => 'Thêm không thành công',
+    ],
+
+    'update' => [
+        'success' => 'Cập nhật thành công',
+        'failure' => 'Cập nhật không thành công',
+    ],
+
+    'delete' => [
+        'success' => 'Xóa thành công',
+        'failure' => 'Xóa không thành công',
+    ],
+
+    'password' => [
+        'update' => [
+            'success' => 'Cập nhật mật khẩu thành công',
+            'failure' => 'Cập nhật mật khẩu không thành công',
+        ],
+    ],
 
     'profile' => [
-        'update_success' => 'Thông tin của bạn đã được cập nhật ngay trên trang.',
-        'update_error' => 'Không thể cập nhật vào lúc này. Vui lòng thử lại.',
+        'update' => [
+            'success' => 'Thông tin của bạn đã được cập nhật thành công.',
+            'error' => 'Không thể cập nhật vào lúc này. Vui lòng thử lại.',
+            'confirm_email_sent' => 'Chúng tôi đã gửi email xác nhận đến địa chỉ mới. Chỉ sau khi xác nhận thành công, email mới mới được cập nhật.',
+            'confirm_email_invalid' => 'Liên kết xác nhận email không hợp lệ hoặc đã hết hạn.',
+            'confirm_email_conflict' => 'Email mới này đã được sử dụng bởi tài khoản khác.',
+            'confirm_email_success' => 'Email mới đã được xác nhận và thông tin tài khoản của bạn đã được cập nhật.',
+        ],
     ],
 
     'verify_coupons' => [

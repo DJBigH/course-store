@@ -1,7 +1,6 @@
 <?php
 
 return [
-    //Menu
     'menu' => [
         'dashbroad' => 'ダッシュボード',
         'profile' => '個人情報',
@@ -9,9 +8,9 @@ return [
         'coupons' => 'クーポン',
         'order' => '注文',
         'change_password' => 'パスワード変更',
+        'activity_history' => '操作履歴',
         'logout' => 'ログアウト',
     ],
-    //Core (shared)
     'core' => [
         'status' => 'ステータス',
         'action' => '操作',
@@ -41,8 +40,6 @@ return [
         'coupon' => 'クーポン',
         'price' => '価格',
     ],
-
-    //Account (Dashboard)
     'account' => [
         'title' => 'アカウント概要',
         'welcome' => 'おかえりなさい。受講者アカウントの概要はこちらです。',
@@ -52,9 +49,13 @@ return [
         'coupons_unit' => '枚',
         'orders' => '注文',
         'orders_unit' => '件',
+        'recent_courses' => '最近のコース',
+        'view_all_courses' => 'すべてのコースを見る',
+        'continue_learning' => '学習を続ける',
+        'recent_orders' => '最近の注文',
+        'view_all_orders' => 'すべての注文を見る',
+        'view_order_detail' => '注文詳細を見る',
     ],
-
-    //Profile
     'profile' => [
         'title' => '個人情報',
         'edit' => '情報を編集',
@@ -67,36 +68,32 @@ return [
         'registered_at' => '登録日時',
         'activated_at' => '有効化日時',
         'update_title' => '個人情報を更新',
-
         'placeholder_full_name' => '氏名を入力...',
         'placeholder_email' => 'メールアドレスを入力...',
         'placeholder_phone' => '電話番号を入力...',
         'placeholder_address' => '住所を入力...',
-
         'save' => '変更を保存',
         'deactivate' => 'アカウントを無効化',
-        'deactivate_confirm' => 'このアカウントを無効化してもよろしいですか？',
-        'deactivate_success' => 'アカウントが未認証状態に戻りました。',
+        'deactivate_confirm' => 'このアカウントを本当に無効化しますか？',
+        'deactivate_success' => 'アカウントは未認証状態に戻りました。',
         'deactivate_page_title' => 'アカウント無効化の確認',
         'deactivate_heading' => 'アカウントは無効化されます',
         'deactivate_description' => '確認後、アカウントは未認証状態に戻ります。',
-        'deactivate_note' => 'メール :email を再認証するだけで、アカウントは再び利用できます。',
-        'deactivate_note_1' => 'この操作によって、アカウントが削除されたり、データが消去されたり、アカウントが無効化されたりすることはありません。',
-        'deactivate_warning' => 'システムから通知メールが送信され、引き続き利用するには再認証が必要になります。',
+        'deactivate_note' => 'メール :email を再認証するだけで、アカウントを再び利用できます。',
+        'deactivate_note_1' => 'この操作ではアカウント削除やデータ消去は行われず、学習履歴も保持されます。',
+        'deactivate_warning' => 'システムから通知メールが送信され、継続利用には再認証が必要になります。',
         'deactivate_back' => 'プロフィールへ戻る',
         'deactivate_cancel' => 'キャンセル',
         'deactivate_modal_title' => '最終確認',
-        'deactivate_confirm_button' => '無効化を確定',
+        'deactivate_confirm_button' => '無効化を確認',
         'deactivate_success_title' => 'アカウントの無効化が完了しました',
-        'deactivate_success_message' => 'お客様のアカウントは無効化されました。',
-        'deactivate_success_reactivate' => 'メールを再認証すれば、アカウントは再び利用できます。',
+        'deactivate_success_message' => 'アカウントは無効化されました。',
+        'deactivate_success_reactivate' => 'メールを再認証すると、再びアカウントを利用できます。',
         'deactivate_success_logout' => 'まもなく自動的にログアウトします',
         'deactivate_success_home' => 'ホームへ戻って今すぐログアウト',
         'not_activated' => 'まだ有効化されていません',
         'note_reload' => '* 更新後は再読み込み、または F5 を押してください',
     ],
-
-    //My Course
     'my_course' => [
         'title' => 'マイコース',
         'instructor' => '講師',
@@ -112,8 +109,6 @@ return [
         'enter_course' => '学習を始める',
         'empty' => 'まだ受講中のコースはありません',
     ],
-
-    //Coupons
     'coupons' => [
         'title' => 'マイクーポン',
         'discount' => '割引',
@@ -129,8 +124,6 @@ return [
         'issued_at' => '発行日:',
         'empty' => 'クーポンはまだありません',
     ],
-
-    //Order
     'order' => [
         'title' => '注文',
         'status' => 'ステータス',
@@ -144,20 +137,16 @@ return [
         'placeholder_total' => '合計金額を入力...',
         'reset' => 'リセット',
         'filter' => '絞り込み',
-
         'table_order_code' => '注文コード',
         'table_total' => '合計金額',
         'table_status' => 'ステータス',
         'table_time' => '時間',
         'table_action' => '操作',
-
         'empty' => 'まだ注文はありません',
     ],
-
-    //Order Details
     'order_detail' => [
         'title' => '注文詳細',
-        'code' => '注文ID',
+        'code' => '注文 ID',
         'order_info' => '注文情報',
         'order_code' => '注文コード',
         'subtotal' => '小計',
@@ -167,11 +156,9 @@ return [
         'status' => 'ステータス',
         'payment_expired_at' => '支払期限',
         'pay' => '今すぐ支払う',
-
         'coupon_applied' => '適用されたクーポン',
         'discount' => '割引',
         'for_order' => 'この注文に適用',
-
         'course_info' => 'コース情報',
         'course_name' => 'コース名',
         'price' => '価格',
@@ -179,12 +166,10 @@ return [
         'course_status' => 'ステータス',
         'active' => '有効',
         'inactive' => '無効',
-
         'no_detail' => '詳細データはありません',
         'back' => '戻る',
         'download_invoice' => '請求書をダウンロード',
     ],
-
     'change_password' => [
         'title' => 'パスワード変更',
         'error' => '入力内容を確認してください',
@@ -196,8 +181,83 @@ return [
         'confirm_password_placeholder' => '新しいパスワードを再入力...',
         'submit' => 'パスワードを変更',
     ],
-
     'logout' => [
         'confirm_logout' => '本当にログアウトしますか？',
+    ],
+    'two_factor' => [
+        'title' => 'メール二要素認証',
+        'description' => 'メールに送信される認証コードで、アカウントをもう一段階保護します。',
+        'scope_hint' => '有効にすると、新しいログインやプロフィール更新、パスワード変更、アカウント無効化などの操作時に再度認証コードが必要になります。',
+        'enabled' => '有効',
+        'disabled' => '無効',
+        'enabled_at' => '有効化日時:',
+        'enable_button' => 'メール二要素認証を有効化',
+        'disable_button' => 'メール二要素認証を無効化',
+        'enable_confirm' => '二要素認証を有効化するための認証コードがメールに送信されます。続行しますか？',
+        'disable_confirm' => '二要素認証を無効化するための認証コードがメールに送信されます。続行しますか？',
+        'modal_title' => '操作の確認',
+        'modal_submit' => '続行',
+        'purpose_login' => 'ログイン',
+        'purpose_step_up' => '重要な操作の確認',
+        'purpose_enable' => '二要素認証の有効化',
+        'purpose_disable' => '二要素認証の無効化',
+        'login_code_sent' => 'ログインを完了するための認証コードがメールに送信されました。',
+        'enable_code_sent' => '二要素認証を有効化するための認証コードをメールに送信しました。',
+        'disable_code_sent' => '二要素認証を無効化するための認証コードをメールに送信しました。',
+        'deactivate_code_sent' => 'アカウント無効化を確認するための認証コードをメールに送信しました。',
+        'code_already_sent' => '最近コードを送信しました。新しいコードを受け取るには :seconds 秒後に再度お試しください。',
+        'code_resent' => '新しい認証コードをメールに送信しました。',
+        'code_invalid' => '認証コードが正しくありません。',
+        'code_expired' => '認証コードの有効期限が切れました。新しいコードをリクエストしてください。',
+        'challenge_not_found' => '認証リクエストが見つかりません。最初からやり直してください。',
+        'deactivate_requires_verification' => 'アカウントを無効化する前に、メールコードで認証してください。',
+        'already_enabled' => 'メール二要素認証はすでに有効です。',
+        'already_disabled' => 'メール二要素認証は現在無効です。',
+        'enabled_success' => 'メール二要素認証を有効化しました。',
+        'disabled_success' => 'メール二要素認証を無効化しました。',
+        'reauth_required' => 'この操作を続けるには、メールコードでもう一度認証してください。',
+        'reauth_success' => '認証に成功しました。続行できます。',
+        'login_success' => '認証に成功しました。ログインが完了しました。',
+    ],
+    'activity_history' => [
+        'title' => '操作履歴',
+        'login_title' => 'ログイン履歴',
+        'activity_title' => '操作ログ',
+        'time' => '時間',
+        'device' => 'デバイス',
+        'network' => 'ネットワーク / IP',
+        'note' => 'メモ',
+        'detail' => '詳細',
+        'action' => '操作',
+        'previous' => '前回',
+        'unusual' => '不審なログイン',
+        'normal' => '通常',
+        'empty_login' => 'ログイン履歴はまだありません。',
+        'empty_activity' => '操作履歴はまだありません。',
+        'all_actions' => 'すべての操作',
+        'code_purpose' => 'コード送信の目的',
+        'actions' => [
+            'login' => 'ログイン',
+            'update_profile' => 'プロフィール更新',
+            'change_password' => 'パスワード変更',
+            'two_factor_code_sent' => '認証コード送信',
+            'enable_two_factor' => '二要素認証を有効化',
+            'disable_two_factor' => '二要素認証を無効化',
+        ],
+        'fields' => [
+            'name' => '氏名',
+            'email' => 'メールアドレス',
+            'phone' => '電話番号',
+            'address' => '住所',
+        ],
+    ],
+    'activity_log' => [
+        'login_desc' => 'ログインに成功しました。',
+        'unusual_login_desc' => '見慣れない端末またはネットワークからのログインが検出されました。',
+        'two_factor_code_sent_desc' => 'メールで認証コードを送信しました。',
+        'two_factor_enabled_desc' => 'メール二要素認証が有効になりました。',
+        'two_factor_disabled_desc' => 'メール二要素認証が無効になりました。',
+        'profile_updated_desc' => '個人情報を更新しました。',
+        'password_changed_desc' => 'アカウントのパスワードが変更されました。',
     ],
 ];

@@ -36,7 +36,7 @@
                                             <label class="form-label fw-medium">{{ __('students::clients/account.my_course.instructor') }}</label>
                                             <select name="teacher_id" class="form-select js-select2">
                                                 <option value="">{{ __('students::clients/account.my_course.all_instructors') }}</option>
-                                                @foreach ($teacher as $item)
+                                                @foreach ($teachers as $item)
                                                     <option value="{{ $item->id }}"
                                                         {{ request()->teacher_id == $item->id ? 'selected' : '' }}>
                                                         {{ $item->name_locale }}

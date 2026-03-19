@@ -62,11 +62,18 @@ if (profileForm) {
                 "X-CSRF-TOKEN": token,
                 "Content-Type": "application/json",
                 Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
             },
             body: JSON.stringify(formData),
         });
 
-        const { errors, success, message, student } = await response.json();
+        const { errors, success, message, student, redirect } =
+            await response.json();
+
+        if (response.status === 423 && redirect) {
+            window.location.href = redirect;
+            return;
+        }
 
         if (errors) {
             showErrors(errors);
@@ -157,14 +164,27 @@ if (changePasswordForm) {
 
             const data = await response.json().catch(() => ({}));
 
+            if (response.status === 423 && data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
+
             if (!response.ok) {
                 showPasswordErrors(data.errors || {});
                 showAccountAlert(data.message || msgError, "danger");
                 return;
             }
 
-            changePasswordForm.reset();
             showAccountAlert(data.message || msgSuccess, "success");
+
+            if (data.redirect) {
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 900);
+                return;
+            }
+
+            changePasswordForm.reset();
         } catch (error) {
             showAccountAlert(msgError, "danger");
         } finally {
