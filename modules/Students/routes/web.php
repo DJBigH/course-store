@@ -25,6 +25,8 @@ Route::group(['as' => 'students.'], function () {
       Route::post('/thong-tin', 'Clients\AccountController@updateProfile')->name('client-updateprofile');
       Route::post('/bao-mat-2-lop/bat', [TwoFactorController::class, 'startEnable'])->name('two-factor.enable');
       Route::post('/bao-mat-2-lop/tat', [TwoFactorController::class, 'startDisable'])->name('two-factor.disable');
+      Route::get('/xoa-tai-khoan', 'Clients\AccountController@deleteConfirm')->name('delete');
+      Route::post('/xoa-tai-khoan/xac-thuc', [TwoFactorController::class, 'startDelete'])->name('delete-start-2fa');
       Route::get('/vo-hieu-hoa', 'Clients\AccountController@deactivateConfirm')->name('deactivate');
       Route::post('/vo-hieu-hoa/xac-thuc', [TwoFactorController::class, 'startDeactivate'])->name('deactivate-start-2fa');
       Route::post('/vo-hieu-hoa', 'Clients\AccountController@deactivate')->name('deactivate-submit');
@@ -33,7 +35,7 @@ Route::group(['as' => 'students.'], function () {
       Route::get('/don-hang', 'Clients\AccountController@myOrder')->name('my-order');
       Route::get('/don-hang/{id}', 'Clients\AccountController@detailOrder')->name('order-detail');
       Route::get('/doi-mat-khau', 'Clients\AccountController@showChangePassword')->middleware('student.2fa:change-password-page')->name('change-password');
-      Route::post('/doi-mat-khau', 'Clients\AccountController@updatePassword')->middleware('student.2fa')->name('change-postpassword');
+      Route::post('/doi-mat-khau', 'Clients\AccountController@updatePassword')->middleware('student.2fa:change-password-page')->name('change-postpassword');
       Route::get('/lich-su-hoat-dong', 'Clients\AccountController@activityHistory')->name('activity-history');
       Route::get('/thanh-toan/{id}', 'Clients\CheckoutController@index')->name('checkout');
       Route::post('/thanh-toan/{id}/hoan-tat', 'Clients\CheckoutController@complete')->name('checkout-payment');
@@ -79,8 +81,9 @@ Route::group([
    'prefix' => '{locale}/tai-khoan',
    'where' => ['locale' => 'vi|en|ko|ja|zh'],
    'as' => 'students.account.',
-   'middleware' => ['setLocale', 'auth:students', 'user.block'],
+   'middleware' => ['setLocale'],
 ], function () {
+   Route::get('/xoa-tai-khoan/thanh-cong', 'Clients\AccountController@deleteSuccess')->name('delete-success');
    Route::get('/vo-hieu-hoa/thanh-cong', 'Clients\AccountController@deactivateSuccess')->name('deactivate-success');
 });
 

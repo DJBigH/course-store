@@ -1,6 +1,19 @@
 ﻿<?php
 
 return [
+    'account_deleted' => [
+        'subject' => 'Tài khoản của bạn đã được xóa',
+        'title' => 'Tài khoản đã được xóa thành công',
+        'subtitle' => 'Cảm ơn bạn đã đồng hành cùng chúng tôi trong thời gian qua.',
+        'preheader' => 'Thông báo xác nhận xóa tài khoản học viên.',
+        'greeting' => 'Xin chào :name,',
+        'line_1' => 'Yêu cầu xóa tài khoản của bạn đã được xử lý thành công.',
+        'line_2' => 'Toàn bộ dữ liệu học viên liên quan đã được gỡ khỏi hệ thống, ngoại trừ những đơn hàng cần lưu cho mục đích đối soát và hỗ trợ.',
+        'line_3' => 'Cảm ơn bạn đã tin tưởng và học tập cùng chúng tôi.',
+        'panel' => 'Nếu bạn không thực hiện thao tác này, vui lòng liên hệ bộ phận hỗ trợ ngay để chúng tôi kiểm tra thêm.',
+        'button' => 'Về trang chủ',
+        'footer' => 'Khi cần quay lại, bạn luôn có thể đăng ký một tài khoản mới bằng email khác hoặc email cũ nếu hệ thống cho phép.',
+    ],
     'account_deactivated' => [
         'subject' => 'Tài khoản của bạn đã được chuyển về trạng thái chưa kích hoạt',
         'title' => 'Tài khoản đã bị vô hiệu hóa',

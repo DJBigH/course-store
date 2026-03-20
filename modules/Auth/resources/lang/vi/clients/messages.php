@@ -13,7 +13,7 @@ return [
     'password.sent.failure' => 'Hệ thống không thể gửi email. Vui lòng thử lại sau.',
     'passwords.reset.success' => 'Đặt lại mật khẩu thành công.',
     'passwords.reset.failure' => 'Bạn không thể đặt lại mật khẩu lúc này.',
-    'passwords.token' => 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng gửi yêu cầu mới.',
+    'passwords.token' => 'Liên kết đã hết hạn hoặc không hợp lệ. Vui lòng gửi yêu cầu mới.',
     'passwords.user' => 'Email không hợp lệ. Vui lòng kiểm tra lại.',
     'mail_throttled' => 'Bạn đang thao tác gửi email quá nhanh. Vui lòng thử lại sau :seconds giây.',
 ];

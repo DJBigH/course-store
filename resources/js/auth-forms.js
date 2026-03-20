@@ -102,6 +102,11 @@ const handleSuccess = (form, data) => {
 };
 
 const submitAuthForm = async (form) => {
+    if (form.dataset.submitting === "1") {
+        return;
+    }
+
+    form.dataset.submitting = "1";
     clearFieldErrors(form);
     clearAlerts(form);
     setSubmittingState(form, true);
@@ -137,6 +142,7 @@ const submitAuthForm = async (form) => {
     } catch (error) {
         setAlert(form, "danger", "Không thể kết nối tới máy chủ. Vui lòng thử lại.");
     } finally {
+        form.dataset.submitting = "0";
         setSubmittingState(form, false);
     }
 };

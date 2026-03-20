@@ -181,7 +181,7 @@ class AccountController extends Controller
             });
         }
 
-        $courses = $courses->latest('student_course.created_at')->paginate(5)->withQueryString();
+        $courses = $courses->orderByPivot('created_at', 'desc')->paginate(5)->withQueryString();
 
         return view('students::clients.my_courses', compact('pageTitle', 'pageName', 'courses', 'teachers', 'teacherId', 'keyword'));
     }
@@ -191,7 +191,10 @@ class AccountController extends Controller
         $pageTitle = __('students::clients/account.coupons.title');
         $pageName = $pageTitle;
         $student = Auth::guard('students')->user();
-        $coupons = $student->coupons()->latest()->paginate(3);
+        $coupons = $student->coupons()
+            ->active()
+            ->latest()
+            ->paginate(3);
         return view('students::clients.my_coupons', compact('pageTitle', 'pageName', 'coupons'));
     }
 
@@ -258,7 +261,7 @@ class AccountController extends Controller
     {
         $student = Auth::guard('students')->user();
 
-        $student->password = bcrypt($request->new_password);
+        $student->password = bcrypt($request->password);
         $student->setRememberToken(Str::random(60));
         $student->save();
         $student->notify(new ResetPasswordChangeNotification());
@@ -348,6 +351,27 @@ class AccountController extends Controller
         return view('students::clients.deactivate_success', compact('pageTitle', 'pageName'));
     }
 
+    public function deleteConfirm()
+    {
+        $pageTitle = __('students::clients/account.profile.delete_page_title');
+        $pageName = $pageTitle;
+        $student = Auth::guard('students')->user();
+
+        return view('students::clients.delete_confirm', compact('pageTitle', 'pageName', 'student'));
+    }
+
+    public function deleteSuccess()
+    {
+        if (!session('students.account_deleted.success')) {
+            return redirect()->route('students.account.profile', ['locale' => app()->getLocale()]);
+        }
+
+        $pageTitle = __('students::clients/account.profile.delete_success_title');
+        $pageName = $pageTitle;
+
+        return view('students::clients.delete_success', compact('pageTitle', 'pageName'));
+    }
+
     public function postDeactivateSuccess(Request $request)
     {
         if (!session('students.deactivation.success_logout')) {
@@ -409,6 +433,7 @@ class AccountController extends Controller
             'two_factor_enabled',
             'two_factor_disabled',
             'account_deactivated',
+            'account_deleted',
         ];
 
         $filters = [

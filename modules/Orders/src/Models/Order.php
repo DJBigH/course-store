@@ -16,6 +16,10 @@ class Order extends Model
         'id',
         'code',
         'student_id',
+        'customer_name_snapshot',
+        'customer_email_snapshot',
+        'customer_phone_snapshot',
+        'customer_address_snapshot',
         'total',
         'discount',
         'coupon',
@@ -40,5 +44,50 @@ class Order extends Model
 
     public function students(){
         return $this->belongsTo(Student::class,'student_id','id');
+    }
+
+    public function getCustomerNameDisplayAttribute(): string
+    {
+        $name = (string) ($this->students?->name ?: $this->customer_name_snapshot ?: '-');
+
+        if ($name === '-') {
+            return $name;
+        }
+
+        return $name . $this->accountStatusSuffix();
+    }
+
+    public function getCustomerEmailDisplayAttribute(): string
+    {
+        $email = (string) ($this->students?->email ?: $this->customer_email_snapshot ?: '-');
+
+        if ($email === '-') {
+            return $email;
+        }
+
+        return $email . $this->accountStatusSuffix();
+    }
+
+    public function getCustomerPhoneDisplayAttribute(): string
+    {
+        return (string) ($this->students?->phone ?: $this->customer_phone_snapshot ?: '-');
+    }
+
+    public function getCustomerAddressDisplayAttribute(): string
+    {
+        return (string) ($this->students?->address ?: $this->customer_address_snapshot ?: '-');
+    }
+
+    protected function accountStatusSuffix(): string
+    {
+        if (!$this->students && ($this->customer_name_snapshot || $this->customer_email_snapshot)) {
+            return ' (' . __('students::clients/account.order_detail.account_deleted') . ')';
+        }
+
+        if ($this->students && !$this->students->email_verified_at) {
+            return ' (' . __('students::clients/account.order_detail.account_deactivated') . ')';
+        }
+
+        return '';
     }
 }

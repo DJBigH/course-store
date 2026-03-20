@@ -108,8 +108,8 @@ return [
         'students' => [
             'provider' => 'students',
             'table' => 'student_password_rests',
-            'expire' => 60,
-            'throttle' => 60,
+            'expire' => (int) env('STUDENT_PASSWORD_RESET_EXPIRE', 10),
+            'throttle' => (int) env('STUDENT_PASSWORD_RESET_THROTTLE', 600),
         ],
     ],
 

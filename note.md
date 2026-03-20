@@ -476,9 +476,10 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm chức năng check localtion khi đăng nhập ( Done )
 - Làm lịch sử đăng nhập, lịch sử hoạt động hay thao tác ( Với thao tác thì là đổi mật khẩu, gửi mã xác thực, Chỉnh sửa thông tin ) ( Done )
 - Với chức năng đổi mật khẩu kể cả khi không bật 2FA thì mỗi khi đổi mật khẩu thì sẽ gửi email rằng tài khoản đã đổi mật khẩu ( Done )
-- Cái đổi mật khẩu cũng có vấn đề nếu là đổi mật khẩu xong họ vẫn không đăng nhập đúng mật khẩu đó
-- Quên mật khẩu có vấn đề
-- Làm chức năng xóa tài khoản
+- Cái đổi mật khẩu cũng có vấn đề nếu là đổi mật khẩu xong họ vẫn không đăng nhập đúng mật khẩu đó (Check trong db thấy thay đổi rồi nhưng nhập đúng mk vừa thay thì lại bị lỗi)
+- Quên mật khẩu có vấn đề là khi mới gửi mail xong vào mail đó đổi mật khẩu đã báo token sai hay quá hạn rồi và tôi muốn limit và thời gian token đó để đổi mk là 10p ( Done )
+- Làm chức năng xóa tài khoản ( Done )
+- Với cái trang mã giảm giá chỉ lấy mã giảm giá nào còn hiệu lực (còn thời gian, còn số lượng, không giới hạn số lượng, không giới hạn thời gian) ( Done )
 - Với cái trạng thái đơn hàng thêm đa ngôn ngữ lưu vào db ỏ bảng order_status và thêm seeder
 - Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin
 - Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không

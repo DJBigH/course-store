@@ -39,7 +39,7 @@
             </div>
 
             <form action="{{ route('clients.update.password', ['locale' => app()->getLocale()]) }}" method="POST"
-                class="js-auth-form" data-success-title="{{ __('auth::clients/auth.reset.success_title') }}"
+                data-success-title="{{ __('auth::clients/auth.reset.success_title') }}"
                 data-error-title="{{ __('auth::clients/auth.reset.error_title') }}">
                 @csrf
                 <input type="password" name="password"

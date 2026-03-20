@@ -5,6 +5,7 @@ namespace Modules\Students\src\Http\Controllers\Clients;
 use App\Http\Controllers\Controller;
 use App\Mail\AccountDeactivatedMail;
 use App\Mail\StudentTwoFactorStatusMail;
+use App\Support\StudentAccountDeletionService;
 use App\Support\StudentTwoFactorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,7 +14,10 @@ use Modules\Students\src\Models\Student;
 
 class TwoFactorController extends Controller
 {
-    public function __construct(protected StudentTwoFactorService $twoFactorService)
+    public function __construct(
+        protected StudentTwoFactorService $twoFactorService,
+        protected StudentAccountDeletionService $accountDeletionService
+    )
     {
     }
 
@@ -106,6 +110,35 @@ class TwoFactorController extends Controller
                 'msg',
                 $sent
                     ? __('students::clients/account.two_factor.deactivate_code_sent')
+                    : __('students::clients/account.two_factor.code_already_sent', [
+                        'seconds' => $this->twoFactorService->secondsUntilResend($student),
+                    ])
+            );
+    }
+
+    public function startDelete(Request $request, string $locale)
+    {
+        $student = Auth::guard('students')->user();
+
+        if (!$student) {
+            return redirect()->route('clients-login', ['locale' => $locale]);
+        }
+
+        $sent = $this->twoFactorService->issueChallenge(
+            $student,
+            StudentTwoFactorService::PURPOSE_STEP_UP,
+            $locale,
+            true
+        );
+
+        $request->session()->put('students.two_factor.step_up_context', 'delete-submit');
+
+        return redirect()
+            ->route('students.2fa.challenge', ['locale' => $locale])
+            ->with(
+                'msg',
+                $sent
+                    ? __('students::clients/account.two_factor.delete_code_sent')
                     : __('students::clients/account.two_factor.code_already_sent', [
                         'seconds' => $this->twoFactorService->secondsUntilResend($student),
                     ])
@@ -270,6 +303,19 @@ class TwoFactorController extends Controller
             case StudentTwoFactorService::PURPOSE_STEP_UP:
                 $stepUpContext = $request->session()->pull('students.two_factor.step_up_context');
 
+                if (!in_array($stepUpContext, [
+                    'change-password-page',
+                    'deactivate-page',
+                    'deactivate-submit',
+                    'delete-submit',
+                ], true)) {
+                    return $this->errorResponse(
+                        $request,
+                        __('students::clients/account.two_factor.challenge_not_found'),
+                        $locale
+                    );
+                }
+
                 $this->twoFactorService->markRecentVerification($request);
 
                 if (in_array($stepUpContext, ['change-password-page', 'deactivate-page'], true)) {
@@ -305,6 +351,17 @@ class TwoFactorController extends Controller
                         $request,
                         __('students::clients/account.profile.deactivate_success'),
                         route('students.account.deactivate-success', ['locale' => $locale])
+                    );
+                }
+
+                if ($stepUpContext === 'delete-submit') {
+                    $this->twoFactorService->forgetRecentVerification($request);
+                    $this->accountDeletionService->delete($student, $request, $locale);
+
+                    return $this->successResponse(
+                        $request,
+                        __('students::clients/account.profile.delete_success'),
+                        route('students.account.delete-success', ['locale' => $locale])
                     );
                 }
 

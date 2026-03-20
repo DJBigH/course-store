@@ -148,6 +148,10 @@ return [
             'max_attempts' => (int) env('MAIL_THROTTLE_PROFILE_CHANGE_MAX_ATTEMPTS', 2),
             'decay_seconds' => (int) env('MAIL_THROTTLE_PROFILE_CHANGE_DECAY_SECONDS', 600),
         ],
+        'account_deleted' => [
+            'max_attempts' => (int) env('MAIL_THROTTLE_ACCOUNT_DELETED_MAX_ATTEMPTS', 1),
+            'decay_seconds' => (int) env('MAIL_THROTTLE_ACCOUNT_DELETED_DECAY_SECONDS', 86400),
+        ],
     ],
 
 ];

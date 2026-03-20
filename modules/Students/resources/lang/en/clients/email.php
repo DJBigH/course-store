@@ -1,6 +1,19 @@
 ﻿<?php
 
 return [
+    'account_deleted' => [
+        'subject' => 'Your account has been deleted',
+        'title' => 'Your account was deleted successfully',
+        'subtitle' => 'Thank you for learning with us.',
+        'preheader' => 'Confirmation notice for your account deletion request.',
+        'greeting' => 'Hello :name,',
+        'line_1' => 'Your account deletion request has been completed successfully.',
+        'line_2' => 'All student-related data has been removed from the system, except orders that must be retained for accounting and support purposes.',
+        'line_3' => 'Thank you for the time you spent learning with us.',
+        'panel' => 'If you did not perform this action, please contact support immediately so we can investigate further.',
+        'button' => 'Go to homepage',
+        'footer' => 'If you want to come back later, you can always register a new account when needed.',
+    ],
     'account_deactivated' => [
         'subject' => 'Your account has been moved back to the unverified state',
         'title' => 'Account deactivated',

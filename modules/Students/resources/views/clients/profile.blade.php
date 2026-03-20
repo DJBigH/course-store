@@ -6,14 +6,12 @@
     <section class="account-page py-4">
         <div class="container">
             <div class="row">
-                {{-- Sidebar --}}
                 <div class="col-lg-3 mb-4">
                     <div class="account-sidebar">
                         @include('students::clients.menu')
                     </div>
                 </div>
 
-                {{-- Content --}}
                 <div class="col-lg-9 account-profile">
                     <div class="account-content">
                         <div class="auth-form-alerts mb-3" data-auth-alerts>
@@ -37,10 +35,10 @@
                                 <button class="btn btn-warning js-profile-btn" type="button">
                                     {{ __('students::clients/account.profile.edit') }}
                                 </button>
-                                <a class="btn btn-outline-danger"
-                                    href="{{ route('students.account.deactivate', ['locale' => app()->getLocale()]) }}">
-                                    {{ __('students::clients/account.profile.deactivate') }}
-                                </a>
+                                <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal"
+                                    data-bs-target="#accountSecurityModal">
+                                    {{ __('students::clients/account.profile.security_button') }}
+                                </button>
                             </div>
                         </div>
 
@@ -60,17 +58,17 @@
                                 </tr>
                                 <tr>
                                     <th>{{ __('students::clients/account.profile.address') }}</th>
-                                    <td>{{ $student->address ?? 'Chưa cập nhật' }}</td>
+                                    <td>{{ $student->address ?: __('students::clients/account.profile.not_updated') }}</td>
                                 </tr>
                                 <tr>
                                     <th>{{ __('students::clients/account.profile.status') }}</th>
                                     <td>
                                         @if ($student->email_verified_at)
-                                            <span
-                                                class="badge bg-success">{{ __('students::clients/account.core.active') }}</span>
+                                            <span class="badge bg-success">{{ __('students::clients/account.core.active') }}</span>
                                         @else
-                                            <span
-                                                class="badge bg-warning text-dark">{{ __('students::clients/account.profile.not_activated') }}</span>
+                                            <span class="badge bg-warning text-dark">
+                                                {{ __('students::clients/account.profile.not_activated') }}
+                                            </span>
                                         @endif
                                     </td>
                                 </tr>
@@ -91,7 +89,6 @@
                             </tbody>
                         </table>
 
-
                         <form
                             action="{{ route('students.account.client-updateprofile', ['locale' => app()->getLocale()]) }}"
                             class="js-profile profile-item profile-form" method="post"
@@ -107,8 +104,9 @@
 
                                 <div class="card-body">
                                     <div class="row mb-3">
-                                        <label
-                                            class="col-md-4 col-form-label">{{ __('students::clients/account.profile.full_name') }}</label>
+                                        <label class="col-md-4 col-form-label">
+                                            {{ __('students::clients/account.profile.full_name') }}
+                                        </label>
                                         <div class="col-md-8">
                                             <input type="text" class="form-control"
                                                 placeholder="{{ __('students::clients/account.profile.placeholder_full_name') }}"
@@ -118,19 +116,23 @@
                                     </div>
 
                                     <div class="row mb-3">
-                                        <label
-                                            class="col-md-4 col-form-label">{{ __('students::clients/account.profile.email') }}</label>
+                                        <label class="col-md-4 col-form-label">
+                                            {{ __('students::clients/account.profile.email') }}
+                                        </label>
                                         <div class="col-md-8">
-                                            <input type="email" class="form-control"
-                                                value="{{ $student->email }}" name="email" readonly>
-                                            <small class="text-muted d-block mt-1">Email hiện không thể thay đổi tại đây.</small>
+                                            <input type="email" class="form-control" value="{{ $student->email }}"
+                                                name="email" readonly>
+                                            <small class="text-muted d-block mt-1">
+                                                {{ __('students::clients/account.profile.email_readonly_hint') }}
+                                            </small>
                                             <span class="error error-email text-danger"></span>
                                         </div>
                                     </div>
 
                                     <div class="row mb-3">
-                                        <label
-                                            class="col-md-4 col-form-label">{{ __('students::clients/account.profile.phone') }}</label>
+                                        <label class="col-md-4 col-form-label">
+                                            {{ __('students::clients/account.profile.phone') }}
+                                        </label>
                                         <div class="col-md-8">
                                             <input type="text" class="form-control"
                                                 placeholder="{{ __('students::clients/account.profile.placeholder_phone') }}"
@@ -140,8 +142,9 @@
                                     </div>
 
                                     <div class="row">
-                                        <label
-                                            class="col-md-4 col-form-label">{{ __('students::clients/account.profile.address') }}</label>
+                                        <label class="col-md-4 col-form-label">
+                                            {{ __('students::clients/account.profile.address') }}
+                                        </label>
                                         <div class="col-md-8">
                                             <input type="text" class="form-control"
                                                 placeholder="{{ __('students::clients/account.profile.placeholder_address') }}"
@@ -163,11 +166,9 @@
                         </form>
 
                         <div class="card shadow-sm mt-4 two-factor-card">
-                            <div
-                                class="card-header bg-light fw-bold d-flex justify-content-between align-items-center two-factor-card__header">
+                            <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center two-factor-card__header">
                                 <span>{{ __('students::clients/account.two_factor.title') }}</span>
-                                <span
-                                    class="badge {{ $student->two_factor_email_enabled ? 'bg-success' : 'bg-secondary' }}">
+                                <span class="badge {{ $student->two_factor_email_enabled ? 'bg-success' : 'bg-secondary' }}">
                                     {{ $student->two_factor_email_enabled
                                         ? __('students::clients/account.two_factor.enabled')
                                         : __('students::clients/account.two_factor.disabled') }}
@@ -227,15 +228,40 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </section>
-
 @endsection
 
 @section('modals')
+    <div class="modal fade" id="accountSecurityModal" tabindex="-1" aria-labelledby="accountSecurityModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="accountSecurityModalLabel">
+                        {{ __('students::clients/account.profile.security_modal_title') }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{ __('students::clients/account.profile.security_modal_desc') }}
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-outline-danger"
+                        href="{{ route('students.account.deactivate', ['locale' => app()->getLocale()]) }}">
+                        {{ __('students::clients/account.profile.deactivate') }}
+                    </a>
+                    <a class="btn btn-danger"
+                        href="{{ route('students.account.delete', ['locale' => app()->getLocale()]) }}">
+                        {{ __('students::clients/account.profile.delete') }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="twoFactorConfirmModal" tabindex="-1" aria-labelledby="twoFactorConfirmModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

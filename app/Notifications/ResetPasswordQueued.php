@@ -3,8 +3,8 @@
 namespace App\Notifications;
 
 use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 
 class ResetPasswordQueued extends ResetPassword implements ShouldQueue
@@ -19,7 +19,7 @@ class ResetPasswordQueued extends ResetPassword implements ShouldQueue
             ->line(__('auth::clients/email.reset_password.line'))
             ->action(__('auth::clients/email.reset_password.action'), $url)
             ->line(__('auth::clients/email.reset_password.expire_notice', [
-                'count' => config('auth.passwords.' . config('auth.defaults.passwords') . '.expire'),
+                'count' => config('auth.passwords.students.expire'),
             ]))
             ->line(__('auth::clients/email.reset_password.outro'));
     }

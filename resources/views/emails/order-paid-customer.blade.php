@@ -99,8 +99,8 @@
 
     $discount = (int) ($order->discount ?? 0);
     $grandTotal = (int) ($order->total ?? 0);
-    $billingName = $order->students->name ?? '-';
-    $billingEmail = $order->students->email ?? '-';
+    $billingName = $order->customer_name_display;
+    $billingEmail = $order->customer_email_display;
     $orderUrl = route('students.account.order-detail', ['locale' => app()->getLocale(), 'id' => $order->id]);
 
     $mailTitle = __('students::clients/email.order_paid.subject', ['code' => $order->code]);
@@ -249,3 +249,4 @@
         {{ __('students::clients/email.order_paid.support') }}
     </div>
 @endsection
+
