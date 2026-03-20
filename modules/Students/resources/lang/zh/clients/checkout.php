@@ -44,6 +44,13 @@ return [
         'pay_with_vnpay' => '使用 VNPay 支付',
         'momo_notice' => '您将跳转到 MoMo 支付网关完成交易。',
         'pay_with_momo' => '使用 MoMo 支付',
+        'momo_not_configured' => 'MoMo sandbox 尚未配置。请在 .env 中添加 sandbox 凭证。',
+        'momo_invalid_amount' => '支付金额无效。',
+        'momo_create_failed' => '当前无法创建 MoMo 交易。',
+        'momo_invalid_return' => '无法从 MoMo 返回结果中解析订单。',
+        'momo_payment_success' => 'MoMo 支付成功。',
+        'momo_payment_failed' => 'MoMo 支付失败。',
+        'momo_order_info' => '订单 :code 支付',
     ],
     'coupons' => [
         'title' => '优惠码',

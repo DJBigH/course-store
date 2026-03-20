@@ -125,16 +125,16 @@
                     </div>
                     <div class="card-body">
                         <p class="mb-1">
-                            <strong>Họ tên:</strong> {{ $order->students->name ?? '-' }}
+                            <strong>Họ tên:</strong> {{ $order->customer_name_display }}
                         </p>
                         <p class="mb-1">
-                            <strong>Email:</strong> {{ $order->students->email ?? '-' }}
+                            <strong>Email:</strong> {{ $order->customer_email_display }}
                         </p>
                         <p class="mb-1">
-                            <strong>SĐT:</strong> {{ $order->students->phone ?? '-' }}
+                            <strong>SĐT:</strong> {{ $order->customer_phone_display }}
                         </p>
                         <p class="mb-0">
-                            <strong>Địa chỉ:</strong> {{ $order->students->address ?? '-' }}
+                            <strong>Địa chỉ:</strong> {{ $order->customer_address_display }}
                         </p>
                     </div>
                 </div>
@@ -179,3 +179,4 @@
         </div>
     </div>
 @endsection
+

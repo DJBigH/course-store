@@ -12,11 +12,19 @@ class OrderPaidCustomerMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Order $order) {}
+    public Order $order;
+
+    public function __construct(Order $order, string $locale)
+    {
+        $this->order = $order;
+        $this->locale = $locale;
+    }
 
     public function build()
     {
-        return $this->subject('Thanh toán thành công - Đơn hàng ' . $this->order->code)
+        app()->setLocale($this->locale);
+
+        return $this->subject(__('students::clients/email.order_paid.subject', ['code' => $this->order->code]))
             ->view('emails.order-paid-customer');
     }
 }

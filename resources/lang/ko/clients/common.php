@@ -18,6 +18,10 @@ return [
     'page_not_found' => '페이지를 찾을 수 없습니다',
     'loading_title' => 'BigK Udemy',
     'loading_subtitle' => '콘텐츠를 불러오고 더 나은 학습 경험을 준비하고 있습니다.',
+    'theme_dark' => '다크',
+    'theme_light' => '라이트',
+    'theme_switch_to_dark' => '다크 모드로 전환',
+    'theme_switch_to_light' => '라이트 모드로 전환',
 
     // Footer
     'student_support'      => '수강생 지원',

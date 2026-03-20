@@ -1,7 +1,6 @@
 <?php
 
 return [
-    //Menu
     'menu' => [
         'dashbroad' => 'Dashboard',
         'profile' => 'Personal Information',
@@ -9,9 +8,10 @@ return [
         'coupons' => 'Coupons',
         'order' => 'Orders',
         'change_password' => 'Change Password',
+        'activity_history' => 'Activity History',
         'logout' => 'Log Out',
     ],
-    //Core (shared)
+
     'core' => [
         'status' => 'Status',
         'action' => 'Action',
@@ -42,7 +42,6 @@ return [
         'price' => 'Price',
     ],
 
-    //Account (Dashboard)
     'account' => [
         'title' => 'Account Overview',
         'welcome' => 'Welcome back! Here is an overview of your student account.',
@@ -52,9 +51,14 @@ return [
         'coupons_unit' => 'codes',
         'orders' => 'Orders',
         'orders_unit' => 'orders',
+        'recent_courses' => 'Recent Courses',
+        'view_all_courses' => 'View all courses',
+        'continue_learning' => 'Continue learning',
+        'recent_orders' => 'Recent Orders',
+        'view_all_orders' => 'View all orders',
+        'view_order_detail' => 'View order details',
     ],
 
-    //Profile
     'profile' => [
         'title' => 'Personal Information',
         'edit' => 'Edit information',
@@ -67,17 +71,59 @@ return [
         'registered_at' => 'Registered time',
         'activated_at' => 'Activated time',
         'update_title' => 'Update personal information',
-
         'placeholder_full_name' => 'Enter full name...',
         'placeholder_email' => 'Enter email...',
         'placeholder_phone' => 'Enter phone number...',
         'placeholder_address' => 'Enter address...',
-
         'save' => 'Save changes',
+        'deactivate' => 'Deactivate account',
+        'delete' => 'Delete account',
+        'delete_page_title' => 'Confirm account deletion',
+        'delete_heading' => 'Your account will be permanently deleted',
+        'delete_description' => 'This action permanently removes your student account and related learning data from the system.',
+        'delete_note_1' => 'This action cannot be undone. Please review the impacts carefully before continuing.',
+        'delete_note_2' => 'We will send a final verification code and a confirmation notice to :email before the deletion is completed.',
+        'delete_warning_title' => 'Important',
+        'delete_warning' => 'Your comments, enrolled courses, coupon history, and security data linked to this account will be removed. Orders will be retained for accounting and support purposes.',
+        'delete_consequence_1' => 'Your course enrollments and learning access will be removed.',
+        'delete_consequence_2' => 'Your coupon assignments and coupon usage history linked to this account will be removed.',
+        'delete_consequence_3' => 'Your course comments and account-related notifications will be removed.',
+        'delete_consequence_4' => 'Your completed orders will remain, but the customer information will be marked as deleted or deactivated for reference.',
+        'delete_back' => 'Back to profile',
+        'delete_cancel' => 'Cancel',
+        'delete_modal_title' => 'Final confirmation',
+        'delete_confirm' => 'Are you sure you want to permanently delete this account?',
+        'delete_confirm_button' => 'Confirm deletion',
+        'delete_success' => 'Your account has been deleted successfully.',
+        'delete_success_title' => 'Account deleted successfully',
+        'delete_success_message' => 'Your student account and related data have been removed from the system.',
+        'delete_success_subtitle' => 'Thank you for learning with us. A confirmation email has been sent to your address.',
+        'delete_success_home' => 'Go to homepage',
+        'delete_success_register' => 'Create a new account',
+        'security_button' => 'Security',
+        'security_modal_title' => 'Account security actions',
+        'security_modal_desc' => 'Choose what you want to do with your account. These actions are sensitive and may require verification.',
+        'deactivate_confirm' => 'Are you sure you want to deactivate this account?',
+        'deactivate_success' => 'Your account has been moved back to the unverified state.',
+        'deactivate_page_title' => 'Confirm account deactivation',
+        'deactivate_heading' => 'Your account will be deactivated',
+        'deactivate_description' => 'After confirmation, your account will be moved back to the unverified state.',
+        'deactivate_note' => 'You only need to verify the email :email again to reactivate your account.',
+        'deactivate_note_1' => 'This action will not delete your account, remove your data, or erase your learning history.',
+        'deactivate_warning' => 'The system will send a notification email and ask you to verify the account again before continuing to use it.',
+        'deactivate_back' => 'Back to profile',
+        'deactivate_cancel' => 'Cancel',
+        'deactivate_modal_title' => 'Final confirmation',
+        'deactivate_confirm_button' => 'Confirm deactivation',
+        'deactivate_success_title' => 'Account deactivated successfully',
+        'deactivate_success_message' => 'Your account has been deactivated.',
+        'deactivate_success_reactivate' => 'You only need to verify your email again to reactivate it.',
+        'deactivate_success_logout' => 'You will be logged out automatically in',
+        'deactivate_success_home' => 'Go home and log out now',
+        'not_activated' => 'Not activated yet',
         'note_reload' => '* Please reload or press F5 after updating your information',
     ],
 
-    //My Course
     'my_course' => [
         'title' => 'My Courses',
         'instructor' => 'Instructor',
@@ -94,7 +140,6 @@ return [
         'empty' => "You haven't enrolled in any courses yet",
     ],
 
-    //Coupons
     'coupons' => [
         'title' => 'My Coupons',
         'discount' => 'Discount',
@@ -111,7 +156,6 @@ return [
         'empty' => "You don't have any coupons yet",
     ],
 
-    //Order
     'order' => [
         'title' => 'Orders',
         'status' => 'Status',
@@ -125,17 +169,14 @@ return [
         'placeholder_total' => 'Enter total amount...',
         'reset' => 'Reset',
         'filter' => 'Filter',
-
         'table_order_code' => 'Order code',
         'table_total' => 'Total amount',
         'table_status' => 'Status',
         'table_time' => 'Time',
         'table_action' => 'Action',
-
         'empty' => "You don't have any orders yet",
     ],
 
-    //Order Details
     'order_detail' => [
         'title' => 'Order Details',
         'code' => 'Order ID',
@@ -148,11 +189,9 @@ return [
         'status' => 'Status',
         'payment_expired_at' => 'Payment expires at',
         'pay' => 'Pay now',
-
         'coupon_applied' => 'Coupon applied',
         'discount' => 'Discount',
         'for_order' => 'for this order',
-
         'course_info' => 'Course information',
         'course_name' => 'Course name',
         'price' => 'Price',
@@ -160,10 +199,11 @@ return [
         'course_status' => 'Status',
         'active' => 'Active',
         'inactive' => 'Inactive',
-
         'no_detail' => 'No detailed data available',
         'back' => 'Back',
         'download_invoice' => 'Download invoice',
+        'account_deleted' => 'account deleted',
+        'account_deactivated' => 'account deactivated',
     ],
 
     'change_password' => [
@@ -180,5 +220,89 @@ return [
 
     'logout' => [
         'confirm_logout' => 'Are you sure you want to log out?',
+    ],
+
+    'two_factor' => [
+        'title' => 'Email two-factor authentication',
+        'description' => 'Add an extra layer of protection for your account with a verification code sent to your email.',
+        'scope_hint' => 'When enabled, the system will ask for a verification code again on new sign-ins and sensitive actions such as updating your profile, changing password, or deactivating your account.',
+        'enabled' => 'Enabled',
+        'disabled' => 'Disabled',
+        'enabled_at' => 'Enabled at:',
+        'enable_button' => 'Enable email 2FA',
+        'disable_button' => 'Disable email 2FA',
+        'enable_confirm' => 'A verification code will be sent to your email to enable two-factor authentication. Do you want to continue?',
+        'disable_confirm' => 'A verification code will be sent to your email to disable two-factor authentication. Do you want to continue?',
+        'modal_title' => 'Confirm action',
+        'modal_submit' => 'Continue',
+        'purpose_login' => 'signing in',
+        'purpose_step_up' => 'confirming a sensitive action',
+        'purpose_enable' => 'enabling two-factor authentication',
+        'purpose_disable' => 'disabling two-factor authentication',
+        'login_code_sent' => 'A verification code has been sent to your email to complete sign-in.',
+        'enable_code_sent' => 'We sent a verification code to your email to enable two-factor authentication.',
+        'disable_code_sent' => 'We sent a verification code to your email to disable two-factor authentication.',
+        'deactivate_code_sent' => 'We sent a verification code to your email to confirm account deactivation.',
+        'delete_code_sent' => 'We sent a verification code to your email to confirm account deletion.',
+        'code_already_sent' => 'A code was sent recently. Please wait :seconds seconds before requesting a new one.',
+        'code_resent' => 'A new verification code has been sent to your email.',
+        'code_invalid' => 'The verification code is invalid.',
+        'code_expired' => 'The verification code has expired. Please request a new one.',
+        'challenge_not_found' => 'No verification request was found. Please try again from the beginning.',
+        'deactivate_requires_verification' => 'Please verify the email code before deactivating your account.',
+        'already_enabled' => 'Email two-factor authentication is already enabled.',
+        'already_disabled' => 'Email two-factor authentication is already disabled.',
+        'enabled_success' => 'Email two-factor authentication has been enabled successfully.',
+        'disabled_success' => 'Email two-factor authentication has been disabled successfully.',
+        'reauth_required' => 'Please verify the email code again before continuing this action.',
+        'reauth_success' => 'Verification successful. You can continue now.',
+        'login_success' => 'Verification successful. You are now signed in.',
+    ],
+
+    'activity_history' => [
+        'title' => 'Activity History',
+        'login_title' => 'Login History',
+        'activity_title' => 'Action History',
+        'time' => 'Time',
+        'device' => 'Device',
+        'network' => 'Network / IP',
+        'note' => 'Note',
+        'detail' => 'Details',
+        'action' => 'Action',
+        'previous' => 'Previous',
+        'unusual' => 'Unusual login',
+        'normal' => 'Normal',
+        'empty_login' => 'No login history yet.',
+        'empty_activity' => 'No activity history yet.',
+        'all_actions' => 'All actions',
+        'code_purpose' => 'Verification purpose',
+        'actions' => [
+            'login' => 'Login',
+            'profile_updated' => 'Profile updated',
+            'password_changed' => 'Password changed',
+            'two_factor_code_sent' => 'Verification code sent',
+            'two_factor_enabled' => 'Enable two-factor authentication',
+            'two_factor_disabled' => 'Disable two-factor authentication',
+            'account_deactivated' => 'Account deactivated',
+            'account_deleted' => 'Account deleted',
+        ],
+        'fields' => [
+            'name' => 'Full name',
+            'email' => 'Email',
+            'phone' => 'Phone number',
+            'address' => 'Address',
+        ],
+    ],
+
+    'activity_log' => [
+        'login_desc' => 'Signed in successfully.',
+        'unusual_login_desc' => 'Sign-in detected from an unusual device or network.',
+        'two_factor_code_sent_desc' => 'A verification code was sent via email.',
+        'two_factor_enabled_desc' => 'Email two-factor authentication was enabled.',
+        'two_factor_disabled_desc' => 'Email two-factor authentication was disabled.',
+        'profile_updated_desc' => 'Personal information was updated.',
+        'password_changed_desc' => 'Account password was changed.',
+        'account_deactivated_desc' => 'The account was deactivated.',
+        'account_deleted_desc' => 'The account was permanently deleted.',
     ],
 ];

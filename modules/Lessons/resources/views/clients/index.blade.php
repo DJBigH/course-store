@@ -70,6 +70,7 @@
     </section>
 @endsection
 @section('scripts')
+    <script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
     <script>
         const myVideoEl = document.querySelector('#my-video');
         if (myVideoEl) videojs(myVideoEl);
@@ -78,6 +79,7 @@
 
 
 @section('stylesheets')
+    <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
     <style>
         .group {
             /* position: relative; */

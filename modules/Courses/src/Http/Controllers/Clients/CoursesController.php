@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Iman\Streamer\VideoStreamer;
 use Modules\Categories\src\Models\Category;
+use Modules\Courses\src\Models\Courses;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
@@ -18,29 +19,52 @@ class CoursesController extends Controller
     protected $lessonRepository;
     protected $orderRepository;
 
-    public function __construct(CoursesRepositoryInterface $courseRepository, LessonsRepositoryInterface $lessonRepository, OrdersRepositoryInterface $orderRepository)
-    {
+    public function __construct(
+        CoursesRepositoryInterface $courseRepository,
+        LessonsRepositoryInterface $lessonRepository,
+        OrdersRepositoryInterface $orderRepository
+    ) {
         $this->courseRepository = $courseRepository;
         $this->lessonRepository = $lessonRepository;
         $this->orderRepository = $orderRepository;
     }
+
     public function index(Request $request)
     {
-        $student = Auth::guard('students')->user();
-
-        $course = $this->courseRepository->getCourse($request->course_id);
-        $pageTitle = 'Khóa học';
-        $pageName = 'Khóa học';
+        $searchKeyword = trim((string) $request->input('keyword', ''));
+        $pageTitle = __('courses::clients/common.page_title');
+        $pageName = __('courses::clients/common.page_title');
         $courses = $this->courseRepository->getCourses(config('paginate.limit'));
 
-        return view('courses::clients.index', compact('pageTitle', 'pageName', 'courses'));
+        if ($searchKeyword !== '') {
+            $courses = Courses::query()
+                ->withCount('students')
+                ->where(function ($query) use ($searchKeyword) {
+                    $query->where('name', 'like', '%' . $searchKeyword . '%')
+                        ->orWhere('name_en', 'like', '%' . $searchKeyword . '%')
+                        ->orWhere('name_ko', 'like', '%' . $searchKeyword . '%')
+                        ->orWhere('name_ja', 'like', '%' . $searchKeyword . '%')
+                        ->orWhere('name_zh', 'like', '%' . $searchKeyword . '%')
+                        ->orWhere('detail', 'like', '%' . $searchKeyword . '%')
+                        ->orWhere('detail_en', 'like', '%' . $searchKeyword . '%')
+                        ->orWhere('detail_ko', 'like', '%' . $searchKeyword . '%')
+                        ->orWhere('detail_ja', 'like', '%' . $searchKeyword . '%')
+                        ->orWhere('detail_zh', 'like', '%' . $searchKeyword . '%');
+                })
+                ->latest('id')
+                ->paginate(config('paginate.limit'))
+                ->withQueryString();
+        }
+
+        return view('courses::clients.index', compact('pageTitle', 'pageName', 'courses', 'searchKeyword'));
     }
 
     public function detail($locale, $slug_locale)
     {
-        // middleware setLocale đã set app()->getLocale() rồi
         $course = $this->courseRepository->getCourseActive($slug_locale);
-        if (!$course) abort(404);
+        if (!$course) {
+            abort(404);
+        }
 
         $cacheKey = 'course_view_' . $course->id . '_' . request()->ip();
 
@@ -50,7 +74,7 @@ class CoursesController extends Controller
         }
 
         $pageTitle = $course->name_locale;
-        $pageName  = $course->name_locale;
+        $pageName = $course->name_locale;
         $index = 0;
         $student = Auth::guard('students')->user();
         $hasCourse = $student
@@ -64,7 +88,16 @@ class CoursesController extends Controller
         $viewerIsAdmin = Auth::check();
         $threads = courseCommentThreads($course->id, $viewerIsAdmin);
 
-        return view('courses::clients.detail', compact('pageTitle', 'pageName', 'course', 'index', 'threads', 'canComment', 'viewerIsAdmin', 'hasCourse'));
+        return view('courses::clients.detail', compact(
+            'pageTitle',
+            'pageName',
+            'course',
+            'index',
+            'threads',
+            'canComment',
+            'viewerIsAdmin',
+            'hasCourse'
+        ));
     }
 
     public function getTrialVideo($locale, $lessonId = 0)
@@ -109,27 +142,27 @@ class CoursesController extends Controller
         if (!$course) {
             abort(404);
         }
+
         $price = $course->sale_price && $course->sale_price > 0
             ? $course->sale_price
             : $course->price;
 
         $orderData = [
-            'code'       => generateUniqueCouponCode(),
+            'code' => generateUniqueCouponCode(),
             'student_id' => $studentId,
-            'discount'   => 0,
-            'price'     => $price,
-            'coupon'     => null,
-            'status_id'  => 1,
+            'discount' => 0,
+            'price' => $price,
+            'coupon' => null,
+            'status_id' => 1,
             'payment_date' => null,
         ];
 
         $detailData = [
             'course_id' => $course->id,
-            'price'     => $price
+            'price' => $price,
         ];
 
-        $order = $this->orderRepository
-            ->createOrderWithDetail($orderData, $detailData);
+        $order = $this->orderRepository->createOrderWithDetail($orderData, $detailData);
 
         return redirect()->route('students.account.checkout', ['locale' => app()->getLocale(), 'id' => $order->id]);
     }
@@ -143,12 +176,10 @@ class CoursesController extends Controller
                 ->orWhere('slug_ja', $slug)
                 ->orWhere('slug_zh', $slug);
         })->firstOrFail();
-        $pageTitle = __('courses::clients/common.page_title') . ' ' . $category->name_locale;
-        $pageName  = $pageTitle;
 
-        if (!$category) {
-            abort(404);
-        }
+        $pageTitle = __('courses::clients/common.page_title') . ' ' . $category->name_locale;
+        $pageName = $pageTitle;
+
         $courses = $category->courses()
             ->where('status', 1)
             ->paginate(config('paginate.limit'));

@@ -4,12 +4,14 @@ namespace Modules\Orders\src\Repositories;
 
 use App\Repositories\BaseRepository;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Modules\Orders\src\Models\Order;
 use Modules\Orders\src\Models\OrderDetail;
 use Modules\Orders\src\Models\OrderStatus;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\CouponUsage;
+use Modules\Students\src\Models\Student;
 use Modules\Students\src\Models\StudentsCourses;
 
 class OrdersRepository extends BaseRepository implements OrdersRepositoryInterface
@@ -71,12 +73,15 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
 
     public function createOrder($data = [])
     {
+        $data = $this->enrichCustomerSnapshot($data);
+
         return $this->model->create($data);
     }
 
     public function createOrderWithDetail(array $orderData, array $detailData)
     {
         return DB::transaction(function () use ($orderData, $detailData) {
+            $orderData = $this->enrichCustomerSnapshot($orderData);
 
             $orderData['total'] = 0;
             $order = Order::create($orderData);
@@ -149,5 +154,33 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
     public function getCategories()
     {
         return $this->model->with(['detail', 'status'])->select(['id', 'code', 'total', 'discount', 'coupon', 'status_id', 'created_at'])->latest();
+    }
+
+    protected function enrichCustomerSnapshot(array $data): array
+    {
+        if (empty($data['student_id'])) {
+            return $data;
+        }
+
+        $student = Student::query()->find($data['student_id']);
+
+        if (! $student || ! $this->hasOrderSnapshotColumns()) {
+            return $data;
+        }
+
+        $data['customer_name_snapshot'] = $data['customer_name_snapshot'] ?? $student->name;
+        $data['customer_email_snapshot'] = $data['customer_email_snapshot'] ?? $student->email;
+        $data['customer_phone_snapshot'] = $data['customer_phone_snapshot'] ?? $student->phone;
+        $data['customer_address_snapshot'] = $data['customer_address_snapshot'] ?? $student->address;
+
+        return $data;
+    }
+
+    protected function hasOrderSnapshotColumns(): bool
+    {
+        return Schema::hasColumn('orders', 'customer_name_snapshot')
+            && Schema::hasColumn('orders', 'customer_email_snapshot')
+            && Schema::hasColumn('orders', 'customer_phone_snapshot')
+            && Schema::hasColumn('orders', 'customer_address_snapshot');
     }
 }

@@ -1,13 +1,44 @@
-import "./bootstrap.bundle.min.js"; 
-// import "./bootstrap.min.js";
-// import "./bootstrap.min.js.map";
+import "./bootstrap.bundle.min.js";
+import "./theme.js";
+import "./locale-switcher.js";
+import "./ui-loader.js";
+import "./pagination-smooth.js";
 import "./jquery.min.js";
 import "./jquery-migrate-1.2.1.min.js";
-import "./slick.min.js";
-import "./slider-home.js";
-import "./accordion.js";
-import "./home.js";
-import "./tab.js";
-// import "./video.min.js";
-import "./account.js";
-import "./checkout.js";
+
+window.$ = window.$ || window.jQuery;
+window.jQuery = window.jQuery || window.$;
+
+if (document.querySelector("div.burger, div.menu, div.screen")) {
+    import("./home.js");
+}
+
+if (document.querySelector(".banner-slider")) {
+    import("./slick.min.js").then(() => import("./slider-home.js"));
+}
+
+if (document.querySelector(".accordion-group .accordion-title")) {
+    import("./accordion.js");
+}
+
+if (document.querySelector(".nav p") && document.querySelector(".group .title")) {
+    import("./tab.js");
+}
+
+if (
+    document.querySelector(".js-profile-btn, form.js-profile, .js-select2, .download-btn, .js-logout")
+) {
+    import("./account.js");
+}
+
+if (document.querySelector("form.js-smooth-filter")) {
+    import("./search-filters.js");
+}
+
+if (document.querySelector(".checkout-page")) {
+    import("./checkout.js");
+}
+
+if (document.querySelector("form.js-auth-form") || document.querySelector("#resend-form")) {
+    import("./auth-forms.js");
+}

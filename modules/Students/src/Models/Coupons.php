@@ -43,4 +43,22 @@ class Coupons extends Model
     {
         return $this->hasMany(CouponUsage::class, 'coupon_id');
     }
+
+    public function scopeActive($query, $now = null)
+    {
+        $now = $now ?: now();
+
+        return $query
+            ->where(function ($sub) use ($now) {
+                $sub->whereNull('start_date')
+                    ->orWhere('start_date', '<=', $now);
+            })
+            ->where(function ($sub) use ($now) {
+                $sub->whereNull('end_date')
+                    ->orWhere('end_date', '>=', $now);
+            })
+            ->whereRaw(
+                '(coupons.count is null or coupons.count = 0 or (select count(*) from coupons_usage where coupons_usage.coupon_id = coupons.id) < coupons.count)'
+            );
+    }
 }

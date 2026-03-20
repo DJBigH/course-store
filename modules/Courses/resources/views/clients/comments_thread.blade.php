@@ -11,7 +11,7 @@
             action="{{ route('courses.comments.store', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}"
             method="POST">
             @csrf
-            <textarea name="content" rows="3" class="form-control" data-rich-editor maxlength="2000"
+            <textarea name="content" rows="3" class="form-control ckeditor" data-rich-editor maxlength="2000"
                 placeholder="{{ __('courses::clients/common.comment_placeholder') }}"></textarea>
             <div class="d-flex justify-content-between align-items-center mt-2">
                 <small class="text-muted">{{ __('courses::clients/common.comment_purchase_only') }}</small>

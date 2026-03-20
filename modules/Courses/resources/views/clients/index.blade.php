@@ -1,15 +1,27 @@
 @extends('layouts.client')
 @section('content')
     @include('part.clients.page_title')
-    <section class="all-course">
-        <div class="container">
+    <section class="all-course" data-pagination-scroll>
+        <div class="container" data-pagination-container="courses-index">
             @if ($courses && $courses->count())
                 <div class="row">
                     @foreach ($courses as $course)
-                        <div class="col-12 col-lg-6 mb-4">
+                        @php
+                            $thumbnail = $course->thumbnail
+                                ? (\Illuminate\Support\Str::startsWith($course->thumbnail, ['http://', 'https://']) ? $course->thumbnail : asset($course->thumbnail))
+                                : asset('clients/assets/banner-course.png');
+
+                            $teacherImage = $course->teacher?->image
+                                ? (\Illuminate\Support\Str::startsWith($course->teacher->image, ['http://', 'https://']) ? $course->teacher->image : asset($course->teacher->image))
+                                : asset('clients/assets/course-teacher.png');
+
+                            $isOddLastItem = $courses->count() % 2 !== 0 && $loop->last;
+                        @endphp
+                        <div class="col-12 col-lg-6 mb-4 {{ $isOddLastItem ? 'mx-lg-auto' : '' }}">
                             <div class="d-flex course">
                                 <div class="banner-course">
-                                    <img src="{{ $course->thumbnail }}" alt="{{ $course->name_locale }}" />
+                                    <img src="{{ $thumbnail }}" alt="{{ $course->name_locale }}"
+                                        onerror="this.onerror=null;this.src='{{ asset('clients/assets/banner-course.png') }}';" />
                                 </div>
 
                                 <div class="descreption-course">
@@ -46,7 +58,8 @@
 
 
                                     <div class="descreption-teacher">
-                                        <img src="{{ $course->teacher?->image }}" alt="{{ $course->teacher?->name_locale }}" />
+                                        <img src="{{ $teacherImage }}" alt="{{ $course->teacher?->name_locale }}"
+                                            onerror="this.onerror=null;this.src='{{ asset('clients/assets/course-teacher.png') }}';" />
                                         <span>
                                             <strong
                                                 style="font-weight: bold">{{ __('courses::clients/common.instructor') }}:</strong>

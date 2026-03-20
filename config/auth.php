@@ -108,8 +108,8 @@ return [
         'students' => [
             'provider' => 'students',
             'table' => 'student_password_rests',
-            'expire' => 60,
-            'throttle' => 60,
+            'expire' => (int) env('STUDENT_PASSWORD_RESET_EXPIRE', 10),
+            'throttle' => (int) env('STUDENT_PASSWORD_RESET_THROTTLE', 600),
         ],
     ],
 
@@ -127,5 +127,9 @@ return [
     'password_timeout' => 10800,
 
     'max_devices' => 1,
+
+    'student_two_factor_timeout' => (int) env('STUDENT_TWO_FACTOR_TIMEOUT', 600),
+    'student_two_factor_code_expire' => (int) env('STUDENT_TWO_FACTOR_CODE_EXPIRE', 600),
+    'student_two_factor_resend_cooldown' => (int) env('STUDENT_TWO_FACTOR_RESEND_COOLDOWN', 60),
 
 ];

@@ -5,6 +5,12 @@
 
     <section class="account-page py-5 bg-light checkout-page">
         <div class="container">
+            @if (session('msg'))
+                <div class="alert alert-{{ session('msgType', 'info') }} mb-4">
+                    {{ session('msg') }}
+                </div>
+            @endif
+
             {{-- Header --}}
             <div class="mb-4">
                 <h2 class="fw-bold">
@@ -24,7 +30,7 @@
 
                 {{-- LEFT: ORDER INFO --}}
                 <div class="col-lg-7">
-                    <div class="card shadow-sm border-0 mb-4">
+                    <div class="card shadow-sm border-0 mb-4 checkout-main-card">
                         <div class="card-body p-4">
 
                             <h5 class="fw-bold mb-3">
@@ -126,7 +132,7 @@
                                                     </td>
                                                 @endif
                                                 <td>
-                                                    {{ $item?->courses?->teacher?->name }}
+                                                    {{ $item?->courses?->teacher?->name_locale }}
                                                 </td>
                                                 <td class="text-center">
                                                     <span
@@ -172,8 +178,7 @@
                                         value="vnpay">
                                     <img src="{{ asset('clients/assets/vnpay.png') }}" alt="" style="width: 40px;">
                                     <label class="form-check-label">
-                                        VNPay <strong
-                                            style="color: red">({{ __('students::clients/checkout.checkout.maintenance') }})</strong>
+                                        VNPay
                                     </label>
                                 </div>
 
@@ -193,7 +198,7 @@
 
                 {{-- RIGHT: PAYMENT --}}
                 <div class="col-lg-5">
-                    <div class="card shadow border-0 sticky-top" style="top:90px">
+                    <div class="card shadow border-0 sticky-top checkout-side-card" style="top:90px">
                         <div class="card-body p-4">
 
 
@@ -234,7 +239,7 @@
                                 {{-- QR --}}
                                 {{-- QR --}}
                                 <div class="text-center my-4">
-                                    <div class="border rounded-3 p-3 bg-light d-inline-block">
+                                    <div class="border rounded-3 p-3 bg-light d-inline-block checkout-qr-card">
                                         <img id="vietqr-img"
                                             src="https://img.vietqr.io/image/techcombank-61043040524-compact2.jpg?amount={{ $order->total - $order->discount }}&addInfo={{ rawurlencode(__('students::clients/checkout.checkout.transfer_note_qr') . ' ' . $order->code) }}"
                                             class="img-fluid mb-2 qr-image" style="max-width: 220px" alt="VietQR">
@@ -289,11 +294,11 @@
                                     {{ __('students::clients/checkout.checkout.vnpay_notice') }}
                                 </p>
 
-                                <form method="POST" action="#">
+                                <form method="POST"
+                                    action="{{ route('students.account.checkout-vnpay', ['locale' => app()->getLocale(), 'id' => $order->id]) }}">
                                     @csrf
                                     <button class="btn btn-primary w-100">
                                         {{ __('students::clients/checkout.checkout.pay_with_vnpay') }}
-                                        ({{ __('students::clients/checkout.checkout.maintenance') }})
                                     </button>
                                 </form>
                             </div>
@@ -304,11 +309,11 @@
                                     {{ __('students::clients/checkout.checkout.momo_notice') }}
                                 </p>
 
-                                <form method="POST" action="#">
+                                <form method="POST"
+                                    action="{{ route('students.account.checkout-momo', ['locale' => app()->getLocale(), 'id' => $order->id]) }}">
                                     @csrf
                                     <button class="btn btn-danger w-100">
                                         {{ __('students::clients/checkout.checkout.pay_with_momo') }}
-                                        ({{ __('students::clients/checkout.checkout.maintenance') }})
                                     </button>
                                 </form>
                             </div>

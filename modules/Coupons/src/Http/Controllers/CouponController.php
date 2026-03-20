@@ -444,14 +444,19 @@ class CouponController extends Controller
         $student = Auth::guard('students')->user();
 
         $myCoupons = $student
-            ? $student->coupons()->paginate(config('paginate.mycoupon_limit'), ['*'], 'my_page')
+            ? $student->coupons()
+                ->active()
+                ->paginate(config('paginate.mycoupon_limit'), ['*'], 'my_page')
             : null;
 
-        $courseCoupons = Coupons::whereHas('courses')
+        $courseCoupons = Coupons::query()
+            ->active()
+            ->whereHas('courses')
             ->with('courses')
             ->paginate(config('paginate.mycoupon_limit'), ['*'], 'course_page');
 
         $publicCoupons = Coupons::query()
+            ->active()
             ->whereDoesntHave('students')
             ->whereDoesntHave('courses')
             ->paginate(config('paginate.mycoupon_limit'), ['*'], 'public_page');

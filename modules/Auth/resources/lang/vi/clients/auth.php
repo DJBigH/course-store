@@ -16,7 +16,6 @@ return [
         'no_account' => 'Bạn chưa có tài khoản?',
         'register_now' => 'Đăng ký ngay',
     ],
-
     'register' => [
         'page_title' => 'Đăng ký tài khoản',
         'title' => 'Đăng ký',
@@ -33,12 +32,11 @@ return [
         'has_account' => 'Bạn đã có tài khoản?',
         'login_now' => 'Đăng nhập ngay',
     ],
-
     'forgot' => [
         'page_title' => 'Quên mật khẩu',
         'back_home' => 'Về trang chủ',
         'title' => 'Quên mật khẩu',
-        'instruction' => 'Vui lòng nhập email để đặt lại mật khẩu',
+        'instruction' => 'Vui lòng nhập email để đặt lại mật khẩu.',
         'error_title' => 'Lỗi!',
         'error_message' => 'Vui lòng kiểm tra lại dữ liệu nhập vào.',
         'success_title' => 'Thành công!',
@@ -47,7 +45,6 @@ return [
         'back_login' => 'Quay lại đăng nhập?',
         'login' => 'Đăng nhập',
     ],
-
     'reset' => [
         'page_title' => 'Đặt lại mật khẩu',
         'back_home' => 'Về trang chủ',
@@ -61,7 +58,6 @@ return [
         'back_login' => 'Quay lại đăng nhập?',
         'login' => 'Đăng nhập',
     ],
-
     'verify' => [
         'page_title' => 'Kích hoạt tài khoản',
         'title' => 'Xác minh email của bạn',
@@ -78,7 +74,6 @@ return [
         'spam' => 'Spam',
         'promotions' => 'Quảng cáo',
     ],
-
     'block' => [
         'page_title' => 'Tài khoản đã bị khóa',
         'title' => 'Tài khoản đã bị khóa',
@@ -88,5 +83,22 @@ return [
         'message_3' => 'để được hỗ trợ mở lại.',
         'back_home' => 'Về trang chủ',
         'contact_support' => 'Liên hệ CSKH',
+    ],
+    'two_factor' => [
+        'page_title' => 'Xác thực 2 lớp qua email',
+        'title' => 'Xác minh danh tính',
+        'description' => 'Chúng tôi đã gửi mã xác thực đến email của bạn để tiếp tục thao tác: :purpose.',
+        'code_sent_to' => 'Mã xác thực đã được gửi đến: :email',
+        'code_placeholder' => 'Nhập mã gồm 6 số...',
+        'submit' => 'Xác minh mã',
+        'resend_hint' => 'Chưa nhận được mã?',
+        'resend' => 'Gửi lại mã',
+        'expire_notice' => 'Mã sẽ hết hạn sau :minutes phút.',
+        'expire_label' => 'Mã sẽ hết hạn sau',
+        'calculating' => 'Đang tính...',
+        'expired_inline' => 'Mã đã hết hạn',
+        'error_title' => 'Lỗi!',
+        'error_message' => 'Vui lòng kiểm tra lại mã xác thực và thử lại.',
+        'success_title' => 'Thành công!',
     ],
 ];

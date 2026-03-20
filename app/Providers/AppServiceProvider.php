@@ -2,30 +2,23 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Support\Facades\View;
-use Modules\Categories\src\Models\Category;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
+use Modules\Categories\src\Models\Category;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // 1) Tạo URL verify có kèm locale
         VerifyEmail::createUrlUsing(function ($notifiable) {
             return URL::temporarySignedRoute(
                 'verification.verify',
@@ -38,27 +31,27 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        // 2) Custom nội dung email (giữ nguyên như bạn đang làm)
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
             return (new MailMessage)
-                ->subject(__('clients/verify.subject'))
-                ->line(__('clients/verify.intro'))
-                ->action(__('clients/verify.action'), $url)
-                ->line(__('clients/verify.outro'));
+                ->subject(__('auth::clients/email.verify.subject'))
+                ->greeting(__('auth::clients/email.verify.greeting', [
+                    'name' => $notifiable->name ?? '',
+                ]))
+                ->line(__('auth::clients/email.verify.intro'))
+                ->action(__('auth::clients/email.verify.action'), $url)
+                ->line(__('auth::clients/email.verify.outro'));
         });
 
         ResetPassword::createUrlUsing(function ($notifiable, string $token) {
             return URL::route('password.reset', [
                 'locale' => app()->getLocale(),
-                'token'  => $token,
-                'email'  => $notifiable->getEmailForPasswordReset(),
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
             ]);
         });
 
         View::composer('layouts.client', function ($view) {
-            $courseCategories = Category::withCount('courses')
-                ->get();
-
+            $courseCategories = Category::withCount('courses')->get();
             $view->with('courseCategories', $courseCategories);
         });
     }

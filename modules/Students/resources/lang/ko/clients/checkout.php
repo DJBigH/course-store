@@ -62,6 +62,13 @@ return [
         // MoMo
         'momo_notice' => '결제를 완료하기 위해 MoMo 결제 페이지로 이동합니다.',
         'pay_with_momo' => 'MoMo로 결제',
+        'momo_not_configured' => 'MoMo sandbox가 아직 설정되지 않았습니다. .env에 sandbox 자격 증명을 추가해 주세요.',
+        'momo_invalid_amount' => '결제 금액이 올바르지 않습니다.',
+        'momo_create_failed' => '현재 MoMo 거래를 생성할 수 없습니다.',
+        'momo_invalid_return' => 'MoMo 응답에서 주문을 확인할 수 없습니다.',
+        'momo_payment_success' => 'MoMo 결제가 완료되었습니다.',
+        'momo_payment_failed' => 'MoMo 결제에 실패했습니다.',
+        'momo_order_info' => '주문 :code 결제',
     ],
 
     'coupons' => [

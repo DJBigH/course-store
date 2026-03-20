@@ -7,11 +7,13 @@ return [
     'integer'  => 'The :attribute must be an integer.',
     'select'   => 'The :attribute field must be selected.',
     'regex'    => 'The :attribute format is invalid.',
+    'recaptcha' => 'Please complete the captcha verification before submitting.',
 
     'attributes' => [
         'name'    => 'name',
         'email'   => 'email',
         'phone'   => 'phone number',
         'message' => 'message',
+        'g-recaptcha-response' => 'captcha',
     ],
 ];

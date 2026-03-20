@@ -4,7 +4,6 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\DatabaseMessage;
 
 class NewLessonNotification extends Notification
 {
@@ -21,11 +20,15 @@ class NewLessonNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database']; // lưu DB để đổ chuông
+        return ['database'];
     }
 
     public function toDatabase($notifiable)
     {
+        $locale = method_exists($notifiable, 'preferredLocale')
+            ? $notifiable->preferredLocale()
+            : app()->getLocale();
+
         $titleTranslations = [
             'vi' => 'Bài giảng mới',
             'en' => 'New lesson',
@@ -65,7 +68,7 @@ class NewLessonNotification extends Notification
             'message_translations' => $messageTranslations,
             'lesson_id' => $this->lesson->id,
             'course_id' => $this->course->id,
-            'url' => route('courses.home'),
+            'url' => route('courses.home', ['locale' => $locale]),
         ];
     }
 }

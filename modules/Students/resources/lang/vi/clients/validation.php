@@ -1,4 +1,5 @@
 <?php
+
 return [
     'required' => ':attribute bắt buộc phải nhập',
     'email' => ':attribute không đúng định dạng',
@@ -16,5 +17,5 @@ return [
         'phone' => 'Số điện thoại',
         'confirm_password' => 'Nhập lại mật khẩu',
         'old_password' => 'Mật khẩu cũ',
-    ]
+    ],
 ];

@@ -234,7 +234,7 @@ class DashboardController extends Controller
             ->map(function ($od) {
                 return [
                     'code' => $od->code,
-                    'customer' => optional($od->students)->name ?? ('Student #' . $od->student_id),
+                    'customer' => $od->customer_name_display ?: ('Student #' . $od->student_id),
                     'total' => (int) $od->total,
                     'status_id' => (int) $od->status_id,
                     'status' => optional($od->status)->name ?? ('Status ' . $od->status_id),
@@ -258,3 +258,4 @@ class DashboardController extends Controller
         ));
     }
 }
+

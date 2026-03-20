@@ -1,7 +1,6 @@
 <?php
 
 return [
-    //Menu
     'menu' => [
         'dashbroad' => 'Tổng quan',
         'profile' => 'Thông tin cá nhân',
@@ -9,14 +8,15 @@ return [
         'coupons' => 'Mã giảm giá',
         'order' => 'Đơn hàng',
         'change_password' => 'Đổi mật khẩu',
+        'activity_history' => 'Lịch sử hoạt động',
         'logout' => 'Đăng xuất',
     ],
-    //Core (dùng chung nhiều nơi)
+
     'core' => [
         'status' => 'Trạng thái',
         'action' => 'Hành động',
         'filter' => 'Lọc',
-        'reset' => 'Reset',
+        'reset' => 'Đặt lại',
         'all' => 'Tất cả',
         'all_status' => 'Tất cả trạng thái',
         'search' => 'Tìm kiếm',
@@ -42,19 +42,23 @@ return [
         'price' => 'Giá',
     ],
 
-    //Account (Dashboard)
     'account' => [
         'title' => 'Tổng quan tài khoản',
         'welcome' => 'Chào mừng bạn quay trở lại! Dưới đây là thông tin tổng quan về tài khoản học viên của bạn.',
         'courses' => 'Khóa học',
-        'courses_unit' => 'khoá',
+        'courses_unit' => 'khóa',
         'coupons' => 'Mã giảm giá',
         'coupons_unit' => 'mã',
         'orders' => 'Đơn hàng',
         'orders_unit' => 'đơn',
+        'recent_courses' => 'Khóa học gần đây',
+        'view_all_courses' => 'Xem tất cả khóa học',
+        'continue_learning' => 'Tiếp tục học',
+        'recent_orders' => 'Đơn hàng gần nhất',
+        'view_all_orders' => 'Xem tất cả đơn hàng',
+        'view_order_detail' => 'Xem chi tiết đơn hàng',
     ],
 
-    //Profile
     'profile' => [
         'title' => 'Thông tin cá nhân',
         'edit' => 'Chỉnh sửa thông tin',
@@ -67,17 +71,62 @@ return [
         'registered_at' => 'Thời gian đăng ký',
         'activated_at' => 'Thời gian kích hoạt',
         'update_title' => 'Cập nhật thông tin cá nhân',
-
         'placeholder_full_name' => 'Nhập họ và tên...',
         'placeholder_email' => 'Nhập email...',
         'placeholder_phone' => 'Nhập số điện thoại...',
         'placeholder_address' => 'Nhập địa chỉ...',
-
         'save' => 'Lưu thay đổi',
-        'note_reload' => '* Vui lòng reload hoặc nhấn F5 sau khi thay đổi thông tin',
+        'delete' => 'Xóa tài khoản',
+        'delete_page_title' => 'Xác nhận xóa tài khoản',
+        'delete_heading' => 'Tài khoản của bạn sẽ bị xóa vĩnh viễn',
+        'delete_description' => 'Thao tác này sẽ xóa vĩnh viễn tài khoản học viên và phần lớn dữ liệu học tập liên quan khỏi hệ thống. Bạn sẽ mất quyền truy cập vào khóa học, tiến độ và các quyền lợi đã mua.',
+        'delete_note_1' => 'Đây là thao tác không thể hoàn tác. Sau khi xóa, chúng tôi không thể khôi phục lại tài khoản hay dữ liệu học tập của bạn.',
+        'delete_note_2' => 'Hệ thống sẽ gửi mã xác minh cuối cùng và email xác nhận xóa tài khoản tới :email trước khi hoàn tất.',
+        'delete_warning_title' => 'Lưu ý quan trọng',
+        'delete_warning' => 'Bình luận, lịch sử học tập, mã giảm giá đã nhận, lịch sử bảo mật và các dữ liệu gắn với tài khoản này sẽ bị xóa. Đơn hàng vẫn được lưu để đối soát và hỗ trợ, nhưng thông tin khách hàng sẽ được ẩn hoặc đánh dấu đã xóa.',
+        'delete_consequence_1' => 'Quyền truy cập vào khóa học, tiến độ học tập và ghi danh sẽ bị xóa ngay sau khi xác nhận.',
+        'delete_consequence_2' => 'Lịch sử gán mã và sử dụng mã giảm giá liên quan tới tài khoản sẽ không còn.',
+        'delete_consequence_3' => 'Bình luận, thông báo, lịch sử đăng nhập và dữ liệu bảo mật liên quan sẽ bị xóa.',
+        'delete_consequence_4' => 'Đơn hàng đã phát sinh vẫn được lưu, nhưng tên/email khách hàng sẽ được đánh dấu đã xóa để tra cứu.',
+        'delete_back' => 'Quay lại hồ sơ',
+        'delete_cancel' => 'Hủy',
+        'delete_modal_title' => 'Xác nhận lần cuối',
+        'delete_confirm' => 'Bạn chắc chắn muốn xóa vĩnh viễn tài khoản này chứ?',
+        'delete_confirm_button' => 'Xác nhận xóa tài khoản',
+        'delete_success' => 'Tài khoản của bạn đã được xóa thành công.',
+        'delete_success_title' => 'Xóa tài khoản thành công',
+        'delete_success_message' => 'Tài khoản học viên cùng các dữ liệu liên quan đã được gỡ khỏi hệ thống.',
+        'delete_success_subtitle' => 'Cảm ơn bạn đã đồng hành cùng chúng tôi. Email xác nhận đã được gửi tới hộp thư của bạn.',
+        'delete_success_home' => 'Về trang chủ',
+        'delete_success_register' => 'Tạo tài khoản mới',
+        'security_button' => 'Quản lý an toàn',
+        'security_modal_title' => 'Bảo mật & an toàn tài khoản',
+        'security_modal_desc' => 'Chọn thao tác bạn muốn thực hiện. Đây là các hành động nhạy cảm và có thể yêu cầu xác thực.',
+        'delete_coming_soon' => 'Chức năng xóa tài khoản sẽ được bổ sung ở bước tiếp theo.',
+        'email_readonly_hint' => 'Email hiện không thể thay đổi tại đây.',
+        'deactivate' => 'Vô hiệu hóa tài khoản',
+        'deactivate_confirm' => 'Bạn có chắc chắn muốn vô hiệu hóa tài khoản không?',
+        'deactivate_success' => 'Tài khoản của bạn đã được chuyển về trạng thái chưa kích hoạt.',
+        'deactivate_page_title' => 'Xác nhận vô hiệu hóa tài khoản',
+        'deactivate_heading' => 'Tài khoản sẽ bị vô hiệu hóa',
+        'deactivate_description' => 'Sau khi xác nhận, tài khoản của bạn sẽ được chuyển về trạng thái chưa kích hoạt.',
+        'deactivate_note' => 'Bạn chỉ cần xác minh lại email :email là tài khoản sẽ hoạt động lại.',
+        'deactivate_note_1' => 'Thao tác này không xóa tài khoản, không làm mất dữ liệu và không xóa lịch sử học tập của bạn.',
+        'deactivate_warning' => 'Hệ thống sẽ gửi email thông báo và yêu cầu bạn xác minh lại email để tiếp tục sử dụng tài khoản.',
+        'deactivate_back' => 'Quay lại hồ sơ',
+        'deactivate_cancel' => 'Hủy',
+        'deactivate_modal_title' => 'Xác nhận lần cuối',
+        'deactivate_confirm_button' => 'Xác nhận vô hiệu hóa',
+        'deactivate_success_title' => 'Vô hiệu hóa tài khoản thành công',
+        'deactivate_success_message' => 'Tài khoản của bạn đã được vô hiệu hóa.',
+        'deactivate_success_reactivate' => 'Bạn chỉ cần xác minh lại email để kích hoạt lại tài khoản.',
+        'deactivate_success_logout' => 'Hệ thống sẽ tự động đăng xuất sau',
+        'deactivate_success_home' => 'Về trang chủ và đăng xuất ngay',
+        'not_activated' => 'Chưa kích hoạt',
+        'not_updated' => 'Chưa cập nhật',
+        'note_reload' => '* Vui lòng tải lại trang hoặc nhấn F5 sau khi thay đổi thông tin',
     ],
 
-    //My Course
     'my_course' => [
         'title' => 'Khóa học của tôi',
         'instructor' => 'Giảng viên',
@@ -94,7 +143,6 @@ return [
         'empty' => 'Bạn chưa đăng ký khóa học nào',
     ],
 
-    //Coupons
     'coupons' => [
         'title' => 'Mã giảm giá của tôi',
         'discount' => 'Giảm',
@@ -111,7 +159,6 @@ return [
         'empty' => 'Bạn chưa có mã khuyến mãi nào',
     ],
 
-    //Order
     'order' => [
         'title' => 'Đơn hàng',
         'status' => 'Trạng thái',
@@ -123,19 +170,16 @@ return [
         'to_date' => 'Đến ngày',
         'total' => 'Tổng tiền',
         'placeholder_total' => 'Nhập tổng tiền...',
-        'reset' => 'Reset',
+        'reset' => 'Đặt lại',
         'filter' => 'Lọc',
-
         'table_order_code' => 'Mã đơn hàng',
         'table_total' => 'Tổng tiền',
         'table_status' => 'Trạng thái',
         'table_time' => 'Thời gian',
         'table_action' => 'Hành động',
-
         'empty' => 'Bạn chưa có đơn hàng nào',
     ],
 
-    //Order Details
     'order_detail' => [
         'title' => 'Chi tiết đơn hàng',
         'code' => 'Mã đơn',
@@ -148,11 +192,9 @@ return [
         'status' => 'Trạng thái',
         'payment_expired_at' => 'Hết hạn thanh toán',
         'pay' => 'Thanh toán',
-
         'coupon_applied' => 'Đã áp dụng mã khuyến mãi',
         'discount' => 'Giảm',
         'for_order' => 'cho đơn hàng',
-
         'course_info' => 'Thông tin khóa học',
         'course_name' => 'Tên khóa học',
         'price' => 'Giá',
@@ -160,10 +202,11 @@ return [
         'course_status' => 'Trạng thái',
         'active' => 'Đang hoạt động',
         'inactive' => 'Dừng hoạt động',
-
         'no_detail' => 'Không có dữ liệu chi tiết',
         'back' => 'Quay lại',
         'download_invoice' => 'Tải hóa đơn',
+        'account_deleted' => 'da xoa tai khoan',
+        'account_deactivated' => 'da vo hieu hoa',
     ],
 
     'change_password' => [
@@ -180,5 +223,90 @@ return [
 
     'logout' => [
         'confirm_logout' => 'Bạn có chắc chắn muốn đăng xuất?',
-    ]
+    ],
+
+    'two_factor' => [
+        'title' => 'Xác thực 2 lớp qua email',
+        'description' => 'Tăng thêm một lớp bảo vệ cho tài khoản bằng mã xác thực được gửi về email của bạn.',
+        'scope_hint' => 'Khi bật, hệ thống sẽ yêu cầu nhập lại mã xác thực ở lần đăng nhập mới và các thao tác nhạy cảm như đổi mật khẩu hoặc vô hiệu hóa tài khoản.',
+        'enabled' => 'Đang bật',
+        'disabled' => 'Đang tắt',
+        'enabled_at' => 'Bật lúc:',
+        'enable_button' => 'Bật xác thực 2 lớp',
+        'disable_button' => 'Tắt xác thực 2 lớp',
+        'enable_confirm' => 'Hệ thống sẽ gửi mã xác thực đến email của bạn để bật xác thực 2 lớp. Bạn có muốn tiếp tục không?',
+        'disable_confirm' => 'Hệ thống sẽ gửi mã xác thực đến email của bạn để tắt xác thực 2 lớp. Bạn có muốn tiếp tục không?',
+        'modal_title' => 'Xác nhận thao tác',
+        'modal_submit' => 'Tiếp tục',
+        'purpose_login' => 'đăng nhập',
+        'purpose_step_up' => 'xác nhận thao tác nhạy cảm',
+        'purpose_enable' => 'bật xác thực 2 lớp',
+        'purpose_disable' => 'tắt xác thực 2 lớp',
+        'login_code_sent' => 'Mã xác thực đã được gửi tới email của bạn để hoàn tất đăng nhập.',
+        'enable_code_sent' => 'Chúng tôi đã gửi mã xác thực tới email của bạn để bật xác thực 2 lớp.',
+        'disable_code_sent' => 'Chúng tôi đã gửi mã xác thực tới email của bạn để tắt xác thực 2 lớp.',
+        'deactivate_code_sent' => 'Chúng tôi đã gửi mã xác thực tới email của bạn để xác nhận vô hiệu hóa tài khoản.',
+        'delete_code_sent' => 'Chung toi da gui ma xac thuc toi email cua ban de xac nhan xoa tai khoan.',
+        'code_already_sent' => 'Mã vừa được gửi gần đây. Vui lòng đợi :seconds giây trước khi yêu cầu mã mới.',
+        'code_resent' => 'Mã xác thực mới đã được gửi tới email của bạn.',
+        'code_invalid' => 'Mã xác thực không hợp lệ.',
+        'code_expired' => 'Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.',
+        'challenge_not_found' => 'Không tìm thấy yêu cầu xác thực phù hợp. Vui lòng thử lại từ đầu.',
+        'deactivate_requires_verification' => 'Vui lòng xác thực bằng mã email trước khi vô hiệu hóa tài khoản.',
+        'already_enabled' => 'Xác thực 2 lớp qua email đã được bật trước đó.',
+        'already_disabled' => 'Xác thực 2 lớp qua email hiện đang tắt.',
+        'enabled_success' => 'Bạn đã bật xác thực 2 lớp qua email thành công.',
+        'disabled_success' => 'Bạn đã tắt xác thực 2 lớp qua email thành công.',
+        'reauth_required' => 'Vui lòng xác thực lại bằng mã email trước khi tiếp tục thao tác này.',
+        'reauth_success' => 'Xác thực thành công. Bạn có thể tiếp tục thao tác.',
+        'login_success' => 'Xác thực thành công. Bạn đã đăng nhập vào tài khoản.',
+    ],
+
+    'activity_history' => [
+        'title' => 'Lịch sử hoạt động',
+        'login_title' => 'Lịch sử đăng nhập',
+        'activity_title' => 'Lịch sử thao tác',
+        'time' => 'Thời gian',
+        'device' => 'Thiết bị',
+        'network' => 'Mạng / IP',
+        'note' => 'Ghi chú',
+        'detail' => 'Chi tiết',
+        'action' => 'Thao tác',
+        'previous' => 'Lần trước',
+        'unusual' => 'Đăng nhập lạ',
+        'normal' => 'Bình thường',
+        'empty_login' => 'Chưa có lịch sử đăng nhập nào.',
+        'empty_activity' => 'Chưa có lịch sử thao tác nào.',
+        'all_actions' => 'Tất cả thao tác',
+        'code_purpose' => 'Mục đích gửi mã',
+        'actions' => [
+            'login' => 'Đăng nhập',
+            'profile_updated' => 'Đã cập nhật thông tin',
+            'password_changed' => 'Đã đổi mật khẩu',
+            'two_factor_code_sent' => 'Gửi mã xác thực',
+            'two_factor_enabled' => 'Bật xác thực 2 lớp',
+            'two_factor_disabled' => 'Tắt xác thực 2 lớp',
+            'account_deactivated' => 'Vô hiệu hóa tài khoản',
+            'account_deleted' => 'Xoa tai khoan',
+        ],
+        'fields' => [
+            'name' => 'Họ và tên',
+            'email' => 'Email',
+            'phone' => 'Số điện thoại',
+            'address' => 'Địa chỉ',
+        ],
+    ],
+
+    'activity_log' => [
+        'login_desc' => 'Đăng nhập thành công.',
+        'unusual_login_desc' => 'Phát hiện đăng nhập từ thiết bị hoặc mạng khác thường.',
+        'two_factor_code_sent_desc' => 'Đã gửi mã xác thực qua email.',
+        'two_factor_enabled_desc' => 'Đã bật xác thực 2 lớp qua email.',
+        'two_factor_disabled_desc' => 'Đã tắt xác thực 2 lớp qua email.',
+        'profile_updated_desc' => 'Đã cập nhật thông tin cá nhân.',
+        'password_changed_desc' => 'Đã thay đổi mật khẩu tài khoản.',
+        'account_deactivated_desc' => 'Tài khoản đã được vô hiệu hóa.',
+        'account_deleted_desc' => 'Tai khoan da bi xoa vinh vien.',
+    ],
 ];
+

@@ -43,6 +43,12 @@ class RegisterController extends Controller
         ];
         $user = $this->studentRepository->create($dataInsert);
         if (!$user) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth::messages.register.failure'),
+                ], 422);
+            }
+
             return back()->with('msg_danger', __('auth::messages.register.failure'));
         }
         event(new Registered($user));
@@ -52,6 +58,14 @@ class RegisterController extends Controller
         foreach ($admins as $admin) {
             $admin->notify(new RegisterNotification($user));
         }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('auth::clients/auth.register.success_title'),
+                'redirect' => route('verification.notice', ['locale' => app()->getLocale()]),
+            ]);
+        }
+
         return redirect()->route('verification.notice', ['locale' => app()->getLocale()]);
     }
 }

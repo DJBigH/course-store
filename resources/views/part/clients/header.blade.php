@@ -58,13 +58,23 @@
     <div class="action-bar">
         <div class="container">
             <div class="row align-items-center">
-                <div class="d-none d-lg-block col-lg-2">
-                    <form>
-                        <input type="text" placeholder="{{ __('clients/common.search_placeholder') }}" />
-                        <button type="submit" class="btn btn-primary">{{ __('clients/common.search') }}</button>
+                <div class="d-none d-lg-block col-lg-3">
+                    <form class="header-search" action="{{ route('courses.home', ['locale' => app()->getLocale()]) }}"
+                        method="GET" role="search">
+                        <label class="visually-hidden"
+                            for="header-search-input">{{ __('clients/common.search') }}</label>
+                        <span class="header-search__icon" aria-hidden="true">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input id="header-search-input" type="text" name="keyword"
+                            value="{{ request('keyword') }}"
+                            placeholder="{{ __('clients/common.search_placeholder') }}" />
+                        <button type="submit" class="btn btn-primary header-search__button">
+                            {{ __('clients/common.search') }}
+                        </button>
                     </form>
                 </div>
-                <div class="d-none d-lg-block col-lg-7">
+                <div class="d-none d-lg-block col-lg-4">
                     <div class="d-flex">
                         <p class="slogan">
                             <i class="fas fa-phone"></i>{{ __('clients/common.support') }}
@@ -76,23 +86,40 @@
                         </p>
                     </div>
                 </div>
-                <div class="col-lg-3">
+                <div class="col-lg-5">
                     <div class="social d-flex align-items-center justify-content-end gap-2">
+                        <button class="btn btn-outline-primary theme-toggle" type="button" data-theme-toggle
+                            data-theme-label-light="{{ __('clients/common.theme_light') }}"
+                            data-theme-label-dark="{{ __('clients/common.theme_dark') }}"
+                            data-theme-switch-light="{{ __('clients/common.theme_switch_to_light') }}"
+                            data-theme-switch-dark="{{ __('clients/common.theme_switch_to_dark') }}"
+                            aria-label="{{ __('clients/common.theme_switch_to_dark') }}"
+                            aria-pressed="false" title="{{ __('clients/common.theme_switch_to_dark') }}">
+                            <i class="bi bi-moon-stars-fill theme-toggle__icon theme-toggle__icon--dark"></i>
+                            <i class="bi bi-sun-fill theme-toggle__icon theme-toggle__icon--light"></i>
+                            <span class="theme-toggle__label">{{ __('clients/common.theme_dark') }}</span>
+                        </button>
 
                         {{-- 🌐 LANGUAGE SWITCH --}}
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2"
-                                data-bs-toggle="dropdown">
-                                <span>{!! $localeOptions[$currentLocale]['flag'] !!}</span>
-                                {{ $localeOptions[$currentLocale]['short'] }}
+                        <div class="dropdown locale-switcher">
+                            <button
+                                class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2 locale-switcher__toggle"
+                                data-bs-toggle="dropdown" type="button" aria-expanded="false">
+                                <span class="locale-switcher__flag">{!! $localeOptions[$currentLocale]['flag'] !!}</span>
+                                <span class="locale-switcher__short">{{ $localeOptions[$currentLocale]['short'] }}</span>
                             </button>
 
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            <ul class="dropdown-menu dropdown-menu-end locale-switcher__menu">
                                 @foreach ($localeOptions as $locale => $option)
                                     <li>
-                                        <a class="dropdown-item d-flex gap-2 {{ $currentLocale === $locale ? 'active' : '' }}"
-                                            href="{{ $localeUrls[$locale] }}">
-                                            {!! $option['flag'] !!} {{ $option['label'] }}
+                                        <a class="dropdown-item d-flex gap-2 align-items-center locale-switcher__item {{ $currentLocale === $locale ? 'active' : '' }}"
+                                            href="{{ $localeUrls[$locale] }}" data-locale-link
+                                            data-locale-code="{{ strtoupper($locale) }}"
+                                            data-locale-label="{{ $option['label'] }}"
+                                            @if ($currentLocale === $locale) aria-current="true" @endif>
+                                            <span class="locale-switcher__flag">{!! $option['flag'] !!}</span>
+                                            <span class="locale-switcher__label">{{ $option['label'] }}</span>
+                                            <span class="locale-switcher__code">{{ strtoupper($locale) }}</span>
                                         </a>
                                     </li>
                                 @endforeach
@@ -184,16 +211,18 @@
 
                             </div>
                         @else
-                            <button class="btn btn-primary">
-                                <a href="{{ route('clients-register',['locale' => app()->getLocale()]) }}" class="text-white"
-                                    style="text-decoration: none !important"><i class="fas fa-user"></i>
-                                    {{ __('clients/common.register') }}</a>
-                            </button>
-                            <button class="btn btn-primary">
-                                <a href="{{ route('clients-login',['locale' => app()->getLocale()]) }}" class="text-white"
-                                    style="text-decoration: none !important"><i class="fas fa-key"></i>
-                                    {{ __('clients/common.login') }}</a>
-                            </button>
+                            <div class="header-auth-actions d-flex align-items-center gap-2">
+                                <a href="{{ route('clients-register',['locale' => app()->getLocale()]) }}"
+                                    class="btn btn-primary header-auth-btn">
+                                    <i class="fas fa-user"></i>
+                                    <span>{{ __('clients/common.register') }}</span>
+                                </a>
+                                <a href="{{ route('clients-login',['locale' => app()->getLocale()]) }}"
+                                    class="btn btn-primary header-auth-btn">
+                                    <i class="fas fa-key"></i>
+                                    <span>{{ __('clients/common.login') }}</span>
+                                </a>
+                            </div>
                         @endif
 
                     </div>
@@ -271,7 +300,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('coupons.*') ? 'active' : '' }}"
+                        <a class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}"
                             href="{{ route('contacts.home', ['locale' => app()->getLocale()]) }}">
                             <i class="fas fa-phone-alt"></i>
                             {{ __('clients/common.contact') }}

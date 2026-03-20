@@ -13,5 +13,6 @@ return [
         'email'   => '이메일',
         'phone'   => '전화번호',
         'message' => '내용',
+        'g-recaptcha-response' => '캡차',
     ],
 ];

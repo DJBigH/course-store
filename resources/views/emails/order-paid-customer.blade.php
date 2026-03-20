@@ -1,248 +1,252 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('emails.layouts.client')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đơn hàng #{{ $order->code }}</title>
-</head>
+@php
+    $mailTheme = $mailTheme ?? [
+        'bg' => '#f3f5f9',
+        'card' => '#ffffff',
+        'surface' => '#f8fafc',
+        'surface_alt' => '#fbfdff',
+        'line' => '#eef2f7',
+        'text' => '#111827',
+        'muted' => '#6b7280',
+        'muted_soft' => '#9ca3af',
+        'primary' => '#2563eb',
+        'primary_dark' => '#1d4ed8',
+        'primary_soft' => '#dbeafe',
+        'accent_soft' => '#e0e7ff',
+        'danger' => '#dc2626',
+        'shadow' => '0 10px 30px rgba(17,24,39,0.08)',
+    ];
+    $mailTokens = $mailTokens ?? [
+        'card_radius' => '14px',
+        'panel_radius' => '12px',
+        'button_radius' => '10px',
+        'container_width' => '600px',
+        'section_gap_sm' => '10px',
+        'section_gap_md' => '14px',
+        'section_gap_lg' => '18px',
+        'body_padding' => '26px',
+        'header_padding' => '22px 26px',
+        'footer_padding' => '18px 26px',
+    ];
+    $mailStyles = $mailStyles ?? [
+        'body_text' => 'font-size:14px;line-height:1.7;color:' . $mailTheme['text'] . ';',
+        'panel' => 'border:1px solid ' . $mailTheme['line'] . ';border-radius:' . $mailTokens['panel_radius'] . ';overflow:hidden;',
+        'table_head' =>
+            'background:' .
+            $mailTheme['surface'] .
+            ';padding:12px 14px;font-size:12px;color:' .
+            $mailTheme['muted'] .
+            ';font-weight:700;',
+        'table_head_center' =>
+            'background:' .
+            $mailTheme['surface'] .
+            ';padding:12px 10px;font-size:12px;color:' .
+            $mailTheme['muted'] .
+            ';font-weight:700;width:90px;',
+        'table_head_right' =>
+            'background:' .
+            $mailTheme['surface'] .
+            ';padding:12px 14px;font-size:12px;color:' .
+            $mailTheme['muted'] .
+            ';font-weight:700;width:140px;',
+        'button_primary' =>
+            'display:inline-block;background:' .
+            $mailTheme['primary'] .
+            ';color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;padding:12px 18px;border-radius:' .
+            $mailTokens['button_radius'] .
+            ';',
+        'stats_label' =>
+            'padding:10px 14px;font-size:13px;color:' .
+            $mailTheme['muted'] .
+            ';background:' .
+            $mailTheme['surface_alt'] .
+            ';',
+        'stats_value' =>
+            'padding:10px 14px;font-size:13px;color:' .
+            $mailTheme['text'] .
+            ';background:' .
+            $mailTheme['surface_alt'] .
+            ';',
+        'stats_total_label' =>
+            'padding:12px 14px;font-size:14px;color:' .
+            $mailTheme['text'] .
+            ';font-weight:800;border-top:1px solid ' .
+            $mailTheme['line'] .
+            ';background:' .
+            $mailTheme['surface'] .
+            ';',
+        'stats_total_value' =>
+            'padding:12px 14px;font-size:14px;color:' .
+            $mailTheme['primary'] .
+            ';font-weight:900;border-top:1px solid ' .
+            $mailTheme['line'] .
+            ';background:' .
+            $mailTheme['surface'] .
+            ';',
+    ];
+    $orderDate = $order->payment_complete_date ?? $order->created_at;
+    $orderDateText = $orderDate ? \Carbon\Carbon::parse($orderDate)->format('d/m/Y H:i') : null;
 
-<body style="margin:0;padding:0;background:#f3f5f9;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
-        Xác nhận thanh toán đơn hàng #{{ $order->code }}.
+    $subTotal = 0;
+    if (!empty($order->detail)) {
+        foreach ($order->detail as $detail) {
+            $qty = (int) ($detail->qty ?? 1);
+            $price = (int) ($detail->price ?? 0);
+            $subTotal += $qty * $price;
+        }
+    }
+
+    $discount = (int) ($order->discount ?? 0);
+    $grandTotal = (int) ($order->total ?? 0);
+    $billingName = $order->customer_name_display;
+    $billingEmail = $order->customer_email_display;
+    $orderUrl = route('students.account.order-detail', ['locale' => app()->getLocale(), 'id' => $order->id]);
+
+    $mailTitle = __('students::clients/email.order_paid.subject', ['code' => $order->code]);
+    $mailEyebrow = __('students::clients/email.order_paid.eyebrow');
+    $mailHeading = __('students::clients/email.order_paid.title');
+    $mailSubtitle = '<strong style="color:#ffffff;">' .
+        e(__('students::clients/email.order_paid.order_code_label', ['code' => $order->code])) .
+        '</strong>' .
+        ($orderDateText ? ' <span style="opacity:.95;">(' . e(__('students::clients/email.order_paid.order_date', ['date' => $orderDateText])) . ')</span>' : '');
+    $preheader = __('students::clients/email.order_paid.preheader', ['code' => $order->code]);
+@endphp
+
+@section('mail_content')
+    <div style="{{ $mailStyles['body_text'] }}">
+        {{ __('students::clients/email.order_paid.greeting', ['name' => $billingName]) }}
     </div>
 
-    @php
-        // Ngày hiển thị: ưu tiên ngày hoàn tất thanh toán nếu có
-        $orderDate = $order->payment_complete_date ?? $order->created_at;
-        $orderDateText = $orderDate ? \Carbon\Carbon::parse($orderDate)->format('d \T\há\n\g m, Y') : '';
+    <div style="height:{{ $mailTokens['section_gap_sm'] }};"></div>
 
-        // Tính tạm tính từ detail (fallback nếu thiếu price/qty)
-        $subTotal = 0;
-        if (!empty($order->detail)) {
-            foreach ($order->detail as $d) {
-                $qty = (int) ($d->qty ?? 1);
-                $price = (int) ($d->price ?? 0);
-                $subTotal += $qty * $price;
-            }
-        }
+    <div style="{{ $mailStyles['body_text'] }}">
+        {{ __('students::clients/email.order_paid.intro') }}
+    </div>
 
-        $discount = (int) ($order->discount ?? 0);
-        $grandTotal = (int) ($order->total ?? 0);
+    <div style="height:{{ $mailTokens['section_gap_md'] }};"></div>
 
-        // Phương thức thanh toán (tuỳ hệ thống bạn)
-        $paymentMethod =
-            $order->payment_method ??
-            ($order->payment_method_name ?? (null ?? ($order->payment_type ?? (null ?? '—'))));
-
-        $billingName = $order->students->name ?? '—';
-        $billingEmail = $order->students->email ?? '—';
-    @endphp
-
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f5f9;padding:24px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="{{ $mailStyles['panel'] }}">
         <tr>
-            <td align="center">
-                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
-                    style="width:600px;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(17,24,39,0.08);">
+            <td style="{{ $mailStyles['table_head'] }}">
+                {{ __('students::clients/email.order_paid.products') }}
+            </td>
+            <td align="center" style="{{ $mailStyles['table_head_center'] }}">
+                {{ __('students::clients/email.order_paid.quantity') }}
+            </td>
+            <td align="right" style="{{ $mailStyles['table_head_right'] }}">
+                {{ __('students::clients/email.order_paid.price') }}
+            </td>
+        </tr>
 
-                    <!-- Header -->
-                    <tr>
-                        <td style="padding:22px 26px;background:linear-gradient(135deg,#1d4ed8,#2563eb);">
-                            <div style="font-size:13px;color:#dbeafe;">
-                                {{ config('app.name') }}
-                            </div>
-                            <div style="font-size:20px;font-weight:800;color:#ffffff;margin-top:4px;">
-                                Xác nhận thanh toán
-                            </div>
-                            <div style="margin-top:10px;font-size:13px;color:#e0e7ff;">
-                                <strong style="color:#ffffff;">[Đơn hàng #{{ $order->code }}]</strong>
-                                @if ($orderDateText)
-                                    <span style="opacity:.95;"> ({{ $orderDateText }})</span>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
+        @forelse($order->detail as $detail)
+            @php
+                $name = $detail->courses->name_locale ?? $detail->courses->name ?? __('students::clients/email.order_paid.products');
+                $qty = (int) ($detail->qty ?? 1);
+                $price = (int) ($detail->price ?? 0);
+            @endphp
+            <tr>
+                <td style="padding:12px 14px;border-top:1px solid {{ $mailTheme['line'] }};">
+                    <div style="font-size:14px;font-weight:600;color:{{ $mailTheme['text'] }};">
+                        {{ $name }}
+                    </div>
+                </td>
+                <td align="center"
+                    style="padding:12px 10px;border-top:1px solid {{ $mailTheme['line'] }};font-size:14px;color:{{ $mailTheme['text'] }};">
+                    {{ $qty }}
+                </td>
+                <td align="right"
+                    style="padding:12px 14px;border-top:1px solid {{ $mailTheme['line'] }};font-size:14px;color:{{ $mailTheme['text'] }};">
+                    {{ money($price) }}
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="3"
+                    style="padding:12px 14px;border-top:1px solid {{ $mailTheme['line'] }};color:{{ $mailTheme['muted'] }};">
+                    {{ __('students::clients/email.order_paid.empty_products') }}
+                </td>
+            </tr>
+        @endforelse
+    </table>
 
-                    <!-- Body -->
-                    <tr>
-                        <td style="padding:26px;">
-                            <div style="font-size:14px;line-height:1.7;color:#111827;">
-                                Xin chào <strong>{{ $billingName }}</strong>,<br>
-                                Cảm ơn bạn đã mua hàng. Dưới đây là thông tin đơn hàng của bạn:
-                            </div>
+    <div style="height:{{ $mailTokens['section_gap_md'] }};"></div>
 
-                            <!-- Products table -->
-                            <div style="height:14px;"></div>
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                                style="border:1px solid #eef2f7;border-radius:12px;overflow:hidden;">
-                                <tr>
-                                    <td
-                                        style="background:#f8fafc;padding:12px 14px;font-size:12px;color:#6b7280;font-weight:700;">
-                                        Sản phẩm
-                                    </td>
-                                    <td align="center"
-                                        style="background:#f8fafc;padding:12px 10px;font-size:12px;color:#6b7280;font-weight:700;width:90px;">
-                                        Số lượng
-                                    </td>
-                                    <td align="right"
-                                        style="background:#f8fafc;padding:12px 14px;font-size:12px;color:#6b7280;font-weight:700;width:140px;">
-                                        Giá
-                                    </td>
-                                </tr>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="{{ $mailStyles['panel'] }}">
+        <tr>
+            <td style="{{ $mailStyles['stats_label'] }}">
+                {{ __('students::clients/email.order_paid.subtotal') }}
+            </td>
+            <td align="right" style="{{ $mailStyles['stats_value'] }}">
+                {{ moneyLocale($subTotal > 0 ? $subTotal : $grandTotal + $discount) }}
+            </td>
+        </tr>
 
-                                @forelse($order->detail as $d)
-                                    @php
-                                        $name = $d->courses->name ?? 'Sản phẩm';
-                                        $qty = (int) ($d->qty ?? 1);
-                                        $price = (int) ($d->price ?? 0);
-                                    @endphp
-                                    <tr>
-                                        <td style="padding:12px 14px;border-top:1px solid #eef2f7;">
-                                            <div style="font-size:14px;font-weight:600;color:#111827;">
-                                                {{ $name }}
-                                            </div>
-                                        </td>
-                                        <td align="center"
-                                            style="padding:12px 10px;border-top:1px solid #eef2f7;font-size:14px;color:#111827;">
-                                            {{ $qty }}
-                                        </td>
-                                        <td align="right"
-                                            style="padding:12px 14px;border-top:1px solid #eef2f7;font-size:14px;color:#111827;">
-                                            {{ money($price) }}
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3"
-                                            style="padding:12px 14px;border-top:1px solid #eef2f7;color:#6b7280;">
-                                            Không có sản phẩm trong đơn hàng.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </table>
+        @if ($discount > 0)
+            <tr>
+                <td
+                    style="padding:10px 14px;font-size:13px;color:{{ $mailTheme['muted'] }};border-top:1px solid {{ $mailTheme['line'] }};">
+                    {{ __('students::clients/email.order_paid.discount') }}
+                </td>
+                <td align="right"
+                    style="padding:10px 14px;font-size:13px;color:{{ $mailTheme['danger'] }};border-top:1px solid {{ $mailTheme['line'] }};">
+                    -{{ moneyLocale($discount) }}
+                </td>
+            </tr>
+        @endif
 
-                            <!-- Totals -->
-                            <div style="height:14px;"></div>
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                                style="border:1px solid #eef2f7;border-radius:12px;overflow:hidden;">
-                                <tr>
-                                    <td style="padding:10px 14px;font-size:13px;color:#6b7280;background:#fbfdff;">
-                                        Tổng số phụ:
-                                    </td>
-                                    <td align="right"
-                                        style="padding:10px 14px;font-size:13px;color:#111827;background:#fbfdff;">
-                                        {{ moneyLocale($subTotal > 0 ? $subTotal : $grandTotal + $discount) }}
-                                    </td>
-                                </tr>
-
-                                @if ($discount > 0)
-                                    <tr>
-                                        <td
-                                            style="padding:10px 14px;font-size:13px;color:#6b7280;border-top:1px solid #eef2f7;">
-                                            Giảm giá:
-                                        </td>
-                                        <td align="right"
-                                        style="padding:10px 14px;font-size:13px;color:#dc2626;border-top:1px solid #eef2f7;">
-                                            -{{ moneyLocale($discount) }}
-                                        </td>
-                                    </tr>
-                                @endif
-
-                                {{-- <tr>
-                                    <td
-                                        style="padding:10px 14px;font-size:13px;color:#6b7280;border-top:1px solid #eef2f7;">
-                                        Phương thức thanh toán:
-                                    </td>
-                                    <td align="right"
-                                        style="padding:10px 14px;font-size:13px;color:#111827;border-top:1px solid #eef2f7;">
-                                        {{ $paymentMethod }}
-                                    </td>
-                                </tr> --}}
-
-                                <tr>
-                                    <td
-                                        style="padding:12px 14px;font-size:14px;color:#111827;font-weight:800;border-top:1px solid #eef2f7;background:#f8fafc;">
-                                        Tổng cộng:
-                                    </td>
-                                    <td align="right"
-                                        style="padding:12px 14px;font-size:14px;color:#2563eb;font-weight:900;border-top:1px solid #eef2f7;background:#f8fafc;">
-                                        {{ money($grandTotal) }}
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- Billing address -->
-                            <div style="height:14px;"></div>
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-                                style="border:1px solid #eef2f7;border-radius:12px;overflow:hidden;">
-                                <tr>
-                                    <td
-                                        style="padding:12px 14px;background:#f8fafc;font-size:12px;color:#6b7280;font-weight:800;">
-                                        Địa chỉ thanh toán
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:12px 14px;">
-                                        <div style="font-size:14px;font-weight:700;color:#111827;">
-                                            {{ $billingName }}
-                                        </div>
-                                        <div style="margin-top:4px;font-size:13px;color:#6b7280;">
-                                            {{ $billingEmail }}
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- CTA -->
-                            <div style="height:18px;"></div>
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center">
-                                        <a href="{{ route('students.account.order-detail', ['locale' => app()->getLocale(), 'id' => $order->id]) }}"
-                                            style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;
-                                                  font-size:14px;font-weight:800;padding:12px 18px;border-radius:10px;">
-                                            Xem chi tiết đơn hàng
-                                        </a>
-
-                                        <div style="margin-top:10px;font-size:12px;color:#6b7280;line-height:1.5;">
-                                            Nếu nút không bấm được, copy link này và mở trên trình duyệt:
-                                            <div style="margin-top:6px;word-break:break-all;color:#2563eb;">
-                                                {{ route('students.account.order-detail', ['locale' => app()->getLocale(), 'id' => $order->id]) }}
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <div style="margin-top:18px;font-size:12px;color:#6b7280;line-height:1.6;">
-                                Cảm ơn bạn đã tin tưởng <strong>{{ config('app.name') }}</strong>.
-                                Nếu bạn cần hỗ trợ, vui lòng liên hệ bộ phận CSKH.
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                        <td style="padding:18px 26px;background:#f8fafc;border-top:1px solid #eef2f7;">
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td style="font-size:12px;color:#6b7280;line-height:1.5;">
-                                        © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
-                                    </td>
-                                    <td align="right" style="font-size:12px;color:#9ca3af;">
-                                        Email tự động
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                </table>
-
-                <div style="height:16px;"></div>
+        <tr>
+            <td style="{{ $mailStyles['stats_total_label'] }}">
+                {{ __('students::clients/email.order_paid.total') }}
+            </td>
+            <td align="right" style="{{ $mailStyles['stats_total_value'] }}">
+                {{ money($grandTotal) }}
             </td>
         </tr>
     </table>
-</body>
 
-</html>
+    <div style="height:{{ $mailTokens['section_gap_md'] }};"></div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="{{ $mailStyles['panel'] }}">
+        <tr>
+            <td style="{{ $mailStyles['table_head'] }}">
+                {{ __('students::clients/email.order_paid.billing_title') }}
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:12px 14px;">
+                <div style="font-size:14px;font-weight:700;color:{{ $mailTheme['text'] }};">
+                    {{ $billingName }}
+                </div>
+                <div style="margin-top:4px;font-size:13px;color:{{ $mailTheme['muted'] }};">
+                    {{ $billingEmail }}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div style="height:{{ $mailTokens['section_gap_lg'] }};"></div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center">
+                <a href="{{ $orderUrl }}" style="{{ $mailStyles['button_primary'] }}">
+                    {{ __('students::clients/email.order_paid.view_order') }}
+                </a>
+
+                <div style="margin-top:10px;font-size:12px;color:{{ $mailTheme['muted'] }};line-height:1.5;">
+                    {{ __('students::clients/email.order_paid.fallback_link') }}
+                    <div style="margin-top:6px;word-break:break-all;color:{{ $mailTheme['primary'] }};">
+                        {{ $orderUrl }}
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div style="margin-top:18px;font-size:12px;color:{{ $mailTheme['muted'] }};line-height:1.6;">
+        {{ __('students::clients/email.order_paid.thanks', ['app' => config('app.name')]) }}
+        {{ __('students::clients/email.order_paid.support') }}
+    </div>
+@endsection
+

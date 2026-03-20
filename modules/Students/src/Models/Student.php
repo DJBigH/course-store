@@ -5,10 +5,9 @@ namespace Modules\Students\src\Models;
 use App\Notifications\EmailVerifyQueued;
 use App\Notifications\ResetPasswordQueued;
 use Illuminate\Contracts\Auth\CanResetPassword;
-use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Courses\src\Models\Courses;
@@ -29,7 +28,28 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
         'address',
         'phone',
         'remember_token',
-        'email_verified_at'
+        'email_verified_at',
+        'two_factor_email_enabled',
+        'two_factor_email_enabled_at',
+        'two_factor_email_code',
+        'two_factor_email_purpose',
+        'two_factor_email_code_expires_at',
+        'two_factor_email_code_sent_at',
+        'last_login_at',
+        'last_login_ip',
+        'last_login_user_agent',
+        'last_login_browser',
+        'last_login_platform',
+        'last_login_device',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'two_factor_email_enabled' => 'boolean',
+        'two_factor_email_enabled_at' => 'datetime',
+        'two_factor_email_code_expires_at' => 'datetime',
+        'two_factor_email_code_sent_at' => 'datetime',
+        'last_login_at' => 'datetime',
     ];
 
     public function sendEmailVerificationNotification()
@@ -61,7 +81,7 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
     {
         return $this->belongsToMany(
             Coupons::class,
-            'coupons_students', // bảng pivot
+            'coupons_students',
             'student_id',
             'coupon_id'
         )->withPivot('created_at')->withTimestamps();

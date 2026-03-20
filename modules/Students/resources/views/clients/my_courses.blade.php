@@ -3,7 +3,7 @@
 @section('content')
     @include('part.clients.page_title')
 
-    <section class="account-page py-4">
+    <section class="account-page account-courses-page py-4">
         <div class="container">
             <div class="row">
                 {{-- Sidebar --}}
@@ -15,27 +15,31 @@
 
                 {{-- Content --}}
                 <div class="col-lg-9">
-                    <div class="account-content card shadow-sm border-0">
+                    <div class="account-content account-courses-content card shadow-sm border-0">
                         <div class="card-body p-4">
 
-                            <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="account-courses-head d-flex align-items-center justify-content-between mb-3">
                                 <h2 class="fw-semibold mb-0">
                                     {{ __('students::clients/account.my_course.title') }}
                                 </h2>
                             </div>
 
-                            <div class="table-responsive" style="overflow-x: unset;">
-                                <form method="GET" action="#" class="mb-4">
+                            <div class="table-responsive" style="overflow-x: unset;" data-pagination-scroll
+                                data-filter-block="account-my-courses">
+                                <form method="GET"
+                                    action="{{ route('students.account.my-courses', ['locale' => app()->getLocale()]) }}"
+                                    class="account-courses-filter mb-4 js-smooth-filter"
+                                    data-filter-block-target="account-my-courses">
                                     <div class="row g-2 align-items-end">
                                         <!-- Lọc theo giảng viên -->
                                         <div class="col-lg-3 col-md-6">
                                             <label class="form-label fw-medium">{{ __('students::clients/account.my_course.instructor') }}</label>
                                             <select name="teacher_id" class="form-select js-select2">
                                                 <option value="">{{ __('students::clients/account.my_course.all_instructors') }}</option>
-                                                @foreach ($teacher as $item)
+                                                @foreach ($teachers as $item)
                                                     <option value="{{ $item->id }}"
                                                         {{ request()->teacher_id == $item->id ? 'selected' : '' }}>
-                                                        {{ $item->name }}
+                                                        {{ $item->name_locale }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -45,7 +49,7 @@
                                         <!-- Tìm kiếm theo tên khóa học -->
                                         <div class="col-lg-7 col-md-6">
                                             <label class="form-label fw-medium">{{ __('students::clients/account.my_course.search_course') }}</label>
-                                            <div class="input-group">
+                                            <div class="input-group account-courses-search">
                                                 <span class="input-group-text">
                                                     <i class="bi bi-search"></i>
                                                 </span>
@@ -66,7 +70,8 @@
                                     </div>
                                 </form>
 
-                                <table class="table table-hover align-middle mb-0">
+                                <div data-pagination-container="account-my-courses">
+                                <table class="table table-hover align-middle mb-0 account-courses-table">
                                     <thead class="table-light">
                                         <tr>
                                             <th class="text-center" style="width: 60px;">#</th>
@@ -124,15 +129,18 @@
                                         @empty
                                             <tr>
                                                 <td colspan="5" class="text-center py-4 text-muted">
-                                                    <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                                    {{ __('students::clients/account.my_course.empty') }}
+                                                    <div class="account-courses-empty">
+                                                        <i class="bi bi-inbox"></i>
+                                                        <p>{{ __('students::clients/account.my_course.empty') }}</p>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @endforelse
                                     </tbody>
                                 </table>
-                                <div class="mt-2">
-                                    {{ $courses->links('students::clients.pagination.boostrap') }}
+                                    <div class="mt-2">
+                                        {{ $courses->links('students::clients.pagination.boostrap') }}
+                                    </div>
                                 </div>
                             </div>
 

@@ -3,25 +3,25 @@
 namespace Modules\Auth\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
+use App\Support\ClientMailThrottle;
+use App\Support\StudentTwoFactorService;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Modules\Auth\src\Http\Requests\LoginRequest;
 use Modules\Students\src\Models\Student;
-use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected StudentTwoFactorService $twoFactorService,
+        protected ClientMailThrottle $mailThrottle
+    ) {
         $this->middleware('guest:students', ['except' => 'logout']);
-        // $this->middleware('auth')->only('logout');
     }
 
     public function showLoginForm()
@@ -38,10 +38,20 @@ class LoginController extends Controller
         ];
 
         if (!Auth::guard('students')->attempt($dataLogin, $request->remember == 1)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth::messages.login.failure'),
+                    'errors' => [
+                        'email' => [__('auth::messages.login.failure')],
+                    ],
+                ], 422);
+            }
+
             return back()->with('msg_danger', __('auth::messages.login.failure'));
         }
 
-        $studentId  = Auth::guard('students')->id();
+        $student = Auth::guard('students')->user();
+        $studentId = $student?->id;
         $maxDevices = config('auth.max_devices', 1);
 
         $activeSessions = DB::table('sessions')
@@ -49,18 +59,56 @@ class LoginController extends Controller
             ->count();
 
         if ($activeSessions > $maxDevices) {
+            Auth::guard('students')->logout();
+            abort(403, 'TÃ i kho?n dÃ£ dang nh?p trÃªn thi?t b? khÃ¡c');
+        }
 
+        if ($student?->two_factor_email_enabled) {
             Auth::guard('students')->logout();
 
-            abort(403, 'Tài khoản đã đăng nhập trên thiết bị khác');
+            $request->session()->put('students.two_factor.pending_login_id', $student->id);
+            $request->session()->put('students.two_factor.pending_remember', $request->remember == 1);
+
+            $this->twoFactorService->issueChallenge(
+                $student,
+                StudentTwoFactorService::PURPOSE_LOGIN,
+                app()->getLocale(),
+                false
+            );
+
+            $redirect = route('students.2fa.challenge', ['locale' => app()->getLocale()]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('students::clients/account.two_factor.login_code_sent'),
+                    'redirect' => $redirect,
+                ]);
+            }
+
+            return redirect($redirect)->with('msg', __('students::clients/account.two_factor.login_code_sent'));
+        }
+
+        $this->twoFactorService->markRecentVerification($request);
+        $this->twoFactorService->handleSuccessfulLogin($student, $request, app()->getLocale());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('auth::clients/auth.login.success_title'),
+                'redirect' => route('home', ['locale' => app()->getLocale()]),
+            ]);
         }
 
         return redirect()->route('home', ['locale' => app()->getLocale()]);
     }
 
-
     public function logout()
     {
+        $this->twoFactorService->forgetRecentVerification(request());
+        request()->session()->forget([
+            'students.two_factor.pending_login_id',
+            'students.two_factor.pending_remember',
+            'students.two_factor.intended',
+        ]);
         Auth::guard('students')->logout();
         return redirect()->route('home', ['locale' => app()->getLocale()]);
     }
@@ -75,23 +123,82 @@ class LoginController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
+        $throttle = config('mail.throttle.forgot_password');
+        $throttleKey = $this->mailThrottle->key('forgot-password', [
+            $request->ip(),
+            $request->input('email'),
+        ]);
+
+        if ($this->mailThrottle->tooManyAttempts($throttleKey, (int) $throttle['max_attempts'])) {
+            $message = __('auth::clients/messages.mail_throttled', [
+                'seconds' => $this->mailThrottle->availableIn($throttleKey),
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                    'errors' => [
+                        'email' => [$message],
+                    ],
+                ], 429);
+            }
+
+            return back()->with('msg_danger', $message);
+        }
+
+        $this->mailThrottle->hit($throttleKey, (int) $throttle['decay_seconds']);
+
         $status = Password::broker('students')->sendResetLink(
             $request->only('email')
         );
 
+        if ($status === Password::RESET_THROTTLED || $status === 'passwords.throttled') {
+            $seconds = (int) config('auth.passwords.students.throttle', 600);
+            $message = __('auth::clients/messages.mail_throttled', [
+                'seconds' => $seconds,
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                    'errors' => [
+                        'email' => [$message],
+                    ],
+                ], 429);
+            }
+
+            return back()->with('msg_danger', $message);
+        }
+
         if ($status === Password::RESET_LINK_SENT) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth::messages.password.sent.success'),
+                ]);
+            }
+
             return back()->with('msg', __('auth::messages.password.sent.success'));
         }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('auth::messages.password.sent.failure'),
+                'errors' => [
+                    'email' => [__('auth::messages.password.sent.failure')],
+                ],
+            ], 422);
+        }
+
         return back()->with('msg_danger', __('auth::messages.password.sent.failure'));
     }
 
-    public function showFormReset($token,$locale)
+    public function showFormReset($locale, $token)
     {
         $pageTitle = __('auth::clients/auth.reset.page_title');
         return view('auth::clients.reset', compact('pageTitle', 'token'));
     }
 
-    public function updatePassword(Request $request,$locale)
+    public function updatePassword(Request $request, $locale)
     {
         $request->validate([
             'email' => 'required|email',
@@ -100,23 +207,56 @@ class LoginController extends Controller
             'confirm_password' => 'required|same:password',
         ]);
 
-        $status = Password::broker('students')->reset(
-            $request->only('email', 'password', 'confirm_password', 'token'),
-            function (Student $student, string $password) {
-                $student->forceFill([
-                    'password' => Hash::make($password),
-                ])->setRememberToken(Str::random(60));
+        $email = trim((string) $request->input('email'));
+        $token = trim((string) $request->input('token'));
+        $password = (string) $request->input('password');
 
-                $student->save();
+        $student = Student::where('email', $email)->first();
+        $tokenRow = DB::table(config('auth.passwords.students.table'))
+            ->where('email', $email)
+            ->first();
 
-                event(new PasswordReset($student));
-            }
-        );
+        $isTokenValid = false;
 
-        if ($status === Password::PASSWORD_RESET) {
-            return redirect()->route('clients-login')->with('msg', __('auth::messages.passwords.reset.success'));
+        if ($student && $tokenRow) {
+            $expiresAt = now()->parse($tokenRow->created_at)
+                ->addMinutes((int) config('auth.passwords.students.expire', 10));
+
+            $isTokenValid = $expiresAt->isFuture() && Hash::check($token, $tokenRow->token);
         }
 
-        return back()->with('msg_danger', __('auth::messages.' . $status));
+        if (! $isTokenValid) {
+            $message = __('auth::messages.passwords.token');
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth::messages.passwords.reset.failure'),
+                    'errors' => [
+                        'email' => [$message],
+                    ],
+                ], 422);
+            }
+
+            return back()->with('msg_danger', $message);
+        }
+
+        $student->forceFill([
+            'password' => Hash::make($password),
+        ])->setRememberToken(Str::random(60));
+
+        $student->save();
+        DB::table(config('auth.passwords.students.table'))->where('email', $email)->delete();
+
+        event(new PasswordReset($student));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('auth::messages.passwords.reset.success'),
+                'redirect' => route('clients-login', ['locale' => app()->getLocale()]),
+            ]);
+        }
+
+        return redirect()->route('clients-login', ['locale' => app()->getLocale()])
+            ->with('msg', __('auth::messages.passwords.reset.success'));
     }
 }
