@@ -29,6 +29,7 @@ return [
     'feel_student'         => '수강 후기',
     'terms_and_conditions' => '이용 약관',
     'affiliate'            => '제휴 프로그램',
+    'payment_policy'       => '결제 정책',
     'terms_of_service' => '서비스 약관',
     'privacy_policy'       => '개인정보 처리방침',
 

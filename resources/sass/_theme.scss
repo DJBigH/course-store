@@ -790,6 +790,30 @@ html[data-theme="dark"] footer .footer-group h3 {
     color: #f8fbff;
 }
 
+html[data-theme="dark"] footer .footer-brand {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(148, 163, 184, 0.12);
+}
+
+html[data-theme="dark"] footer .footer-brand h3 {
+    color: #f8fbff;
+}
+
+html[data-theme="dark"] footer .footer-brand p {
+    color: var(--client-text-soft);
+}
+
+html[data-theme="dark"] footer .footer-brand__actions a {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(148, 163, 184, 0.12);
+    color: var(--client-text-soft);
+}
+
+html[data-theme="dark"] footer .footer-brand__actions a:hover {
+    color: #eff6ff;
+    border-color: rgba(96, 165, 250, 0.34);
+}
+
 html[data-theme="dark"] footer .footer-group ul {
     background: rgba(255, 255, 255, 0.04);
     border-color: rgba(148, 163, 184, 0.12) !important;

@@ -44,9 +44,10 @@
                                                         {{ __('students::clients/account.order.all_status') }}</option>
                                                     @if (!empty($ordersStatus))
                                                         @foreach ($ordersStatus as $item)
-                                                            <option
-                                                                value="{{ $item->id }} {{ request()->status_id == $item->id ? 'selected' : '' }}">
-                                                                {{ $item->name }}</option>
+                                                            <option value="{{ $item->id }}"
+                                                                {{ request()->status_id == $item->id ? 'selected' : '' }}>
+                                                                {{ $item->name_locale }}
+                                                            </option>
                                                         @endforeach
                                                     @else
                                                         <option value="">
@@ -160,7 +161,7 @@
                                                 <td class="text-center">
                                                     <span
                                                         class="badge bg-{{ $item->status->color }}-subtle text-{{ $item->status->color }} px-3">
-                                                        {{ $item->status->name }}
+                                                        {{ $item->status->name_locale }}
                                                     </span>
                                                 </td>
 
@@ -220,3 +221,4 @@
         });
     </script>
 @endsection
+

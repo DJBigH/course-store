@@ -15,9 +15,8 @@
                                 ? (\Illuminate\Support\Str::startsWith($course->teacher->image, ['http://', 'https://']) ? $course->teacher->image : asset($course->teacher->image))
                                 : asset('clients/assets/course-teacher.png');
 
-                            $isOddLastItem = $courses->count() % 2 !== 0 && $loop->last;
                         @endphp
-                        <div class="col-12 col-lg-6 mb-4 {{ $isOddLastItem ? 'mx-lg-auto' : '' }}">
+                        <div class="col-12 col-lg-6 mb-4">
                             <div class="d-flex course">
                                 <div class="banner-course">
                                     <img src="{{ $thumbnail }}" alt="{{ $course->name_locale }}"
@@ -110,7 +109,7 @@
 
 @endsection
 
-@section('stylesheet')
+@section('stylesheets')
     <style>
         .empty-course {
             background: #f8fafc;
@@ -119,8 +118,10 @@
             box-shadow: inset 0 0 0 1px #e5e7eb;
         }
 
-        .empty-course img {
+        .empty-course video {
+            display: inline-block;
             opacity: 0.9;
+            border-radius: 12px;
         }
 
         .empty-course h4 {

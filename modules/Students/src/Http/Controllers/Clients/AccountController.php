@@ -10,15 +10,19 @@ use App\Support\StudentTwoFactorService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Modules\ActiveLogs\src\Models\ActiveLog;
+use Modules\Lessons\src\Models\Lesson;
+use Modules\Orders\src\Models\Order;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersStatusRepositoryInterface;
 use Modules\Students\src\Http\Requests\Clients\PasswordRequest;
 use Modules\Students\src\Http\Requests\Clients\StudentsRequest;
 use Modules\Students\src\Models\Student;
+use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 
@@ -181,7 +185,45 @@ class AccountController extends Controller
             });
         }
 
-        $courses = $courses->orderByPivot('created_at', 'desc')->paginate(5)->withQueryString();
+        $courses = $courses->orderByPivot('created_at', 'desc')->paginate(3)->withQueryString();
+
+        $courseIds = $courses->getCollection()->pluck('id')->all();
+
+        $totalLessonsByCourse = [];
+        $completedLessonsByCourse = [];
+
+        if (!empty($courseIds)) {
+            $totalLessonsByCourse = Lesson::query()
+                ->active()
+                ->whereIn('course_id', $courseIds)
+                ->whereNotNull('parent_id')
+                ->selectRaw('course_id, COUNT(*) as total_lessons')
+                ->groupBy('course_id')
+                ->pluck('total_lessons', 'course_id')
+                ->all();
+
+            $completedLessonsByCourse = StudentLessonProgress::query()
+                ->where('student_id', $student->id)
+                ->whereIn('course_id', $courseIds)
+                ->selectRaw('course_id, COUNT(DISTINCT lesson_id) as completed_lessons')
+                ->groupBy('course_id')
+                ->pluck('completed_lessons', 'course_id')
+                ->all();
+        }
+
+        $courses->getCollection()->transform(function ($course) use ($totalLessonsByCourse, $completedLessonsByCourse) {
+            $totalLessons = (int) ($totalLessonsByCourse[$course->id] ?? 0);
+            $completedLessons = min((int) ($completedLessonsByCourse[$course->id] ?? 0), $totalLessons);
+            $progressPercent = $totalLessons > 0
+                ? (int) round(($completedLessons * 100) / $totalLessons)
+                : 0;
+
+            $course->setAttribute('progress_total_lessons', $totalLessons);
+            $course->setAttribute('progress_completed_lessons', $completedLessons);
+            $course->setAttribute('progress_percent', min($progressPercent, 100));
+
+            return $course;
+        });
 
         return view('students::clients.my_courses', compact('pageTitle', 'pageName', 'courses', 'teachers', 'teacherId', 'keyword'));
     }
@@ -232,19 +274,32 @@ class AccountController extends Controller
         return view('students::clients.my_order', compact('pageTitle', 'pageName', 'orders', 'ordersStatus'));
     }
 
-    public function detailOrder($id)
+    public function detailOrder($locale, $id)
     {
         $pageTitle = __('students::clients/account.order_detail.title');
         $pageName = $pageTitle;
         $student = Auth::guard('students')->user();
 
-        $order = $student->orders()->with([
+        $order = Order::query()->with([
             'detail.courses.teacher',
             'status',
-            'paymentStatus',
-            'orderAddress',
-            'coupon'
-        ])->findOrFail($id);
+            'coupon',
+            'students',
+        ])->where('id', $id)
+            ->where('student_id', $student->id)
+            ->first();
+
+        if (!$order) {
+            Log::warning('Student order detail not found', [
+                'locale' => $locale,
+                'requested_order_id' => $id,
+                'student_id' => $student->id,
+                'route_name' => request()->route()?->getName(),
+                'url' => request()->fullUrl(),
+            ]);
+
+            abort(404);
+        }
 
         return view('students::clients.order_detail', compact('pageTitle', 'pageName', 'order'));
     }
@@ -404,7 +459,7 @@ class AccountController extends Controller
             ->where('causer_id', $student->id)
             ->where('subject_type', Student::class)
             ->where('subject_id', $student->id)
-            ->whereIn('log_name', ['student_profile', 'student_security'])
+            ->whereIn('log_name', ['student_profile', 'student_security', 'student_order', 'student_learning'])
             ->latest();
 
         if ($request->filled('from_date')) {
@@ -434,6 +489,8 @@ class AccountController extends Controller
             'two_factor_disabled',
             'account_deactivated',
             'account_deleted',
+            'order_purchased',
+            'lesson_learned',
         ];
 
         $filters = [

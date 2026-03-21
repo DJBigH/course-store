@@ -123,7 +123,7 @@
                                                 <div class="account-order-card__top">
                                                     <span class="account-order-card__code">#{{ $order->code }}</span>
                                                     <span class="account-order-card__status">
-                                                        {{ $order->status->name ?? __('students::clients/account.core.status') }}
+                                                        {{ $order->status->name_locale ?? __('students::clients/account.core.status') }}
                                                     </span>
                                                 </div>
                                                 <div class="account-order-card__meta">
@@ -146,3 +146,4 @@
         </div>
     </section>
 @endsection
+

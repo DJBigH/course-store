@@ -4,10 +4,8 @@ return [
     'checkout' => [
         'page_title' => 'Order Checkout',
         'page_name' => 'Checkout',
-
-        'notice_complete_payment' => 'Please complete the payment to activate the course',
-
-        // Order info
+        'notice_complete_payment' => 'Please complete the payment to activate the course.',
+        'notice_free_order' => 'This is a free order. You can activate the course immediately.',
         'order_info' => 'Order Information',
         'order_code' => 'Order Code',
         'subtotal' => 'Subtotal',
@@ -15,8 +13,6 @@ return [
         'order_time' => 'Order Time',
         'status' => 'Status',
         'total_payment' => 'Total Payment',
-
-        // Course details
         'course_details' => 'Course Details',
         'course' => 'Course',
         'price' => 'Price',
@@ -24,17 +20,11 @@ return [
         'course_status' => 'Status',
         'active' => 'Active',
         'inactive' => 'Inactive',
-
-        // Actions
         'back_home' => 'Back to Home',
         'buy_another_course' => 'Buy Another Course',
-
-        // Payment methods
         'choose_payment_method' => 'Choose Payment Method',
         'qr_transfer' => 'QR Bank Transfer',
         'maintenance' => 'Under Maintenance',
-
-        // Bank transfer
         'bank_transfer' => 'Bank Transfer Payment',
         'bank_name' => 'Bank',
         'bank_account' => 'Account Number',
@@ -44,18 +34,16 @@ return [
         'transfer_content' => 'Transfer Content',
         'transfer_note' => 'Order payment',
         'transfer_note_qr' => 'order payment',
-
         'download_qr' => 'Download QR',
-
         'after_transfer_notice' => 'After completing the bank transfer, please click',
-        'confirm_paid' => '“I have paid”',
+        'confirm_paid' => '"I have paid"',
         'complete_order_notice' => 'to complete your order.',
-
         'i_have_paid' => 'I have paid',
         'cancel_order' => 'Cancel order',
         'cancel_confirm' => 'Are you sure you want to cancel this order?',
-
-        // VNPay
+        'free_order_message' => 'This order has a payable amount of 0. No payment gateway is required.',
+        'activate_free_course' => 'Activate free course',
+        'free_order_completed' => 'The free course has been activated successfully.',
         'vnpay_notice' => 'You will be redirected to the VNPay payment gateway to complete the transaction.',
         'pay_with_vnpay' => 'Pay with VNPay',
         'vnpay_not_configured' => 'VNPay is not configured yet. Please add sandbox credentials to .env.',
@@ -69,8 +57,6 @@ return [
         'vnpay_transaction_limit' => 'The transaction exceeds the account limit.',
         'vnpay_bank_maintenance' => 'The payment bank is under maintenance. Please try again later.',
         'vnpay_order_info' => 'Payment for order :code',
-
-        // MoMo
         'momo_notice' => 'You will be redirected to the MoMo payment gateway to complete the transaction.',
         'pay_with_momo' => 'Pay with MoMo',
         'momo_not_configured' => 'MoMo sandbox is not configured yet. Please add sandbox credentials to .env.',
@@ -87,5 +73,4 @@ return [
         'placeholder' => 'Enter discount code...',
         'apply' => 'Apply',
     ],
-
 ];

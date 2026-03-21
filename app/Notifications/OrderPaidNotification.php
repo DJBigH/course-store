@@ -23,7 +23,7 @@ class OrderPaidNotification extends Notification
 
     public function toArray($notifiable)
     {
-        $statusName = $this->order->status->name ?? '';
+        $statusName = $this->order->status->name_locale ?? '';
         $messageTranslations = [
             'vi' => 'Có đơn hàng mới ' . $statusName,
             'en' => 'A new order has status ' . $statusName,
@@ -40,3 +40,4 @@ class OrderPaidNotification extends Notification
         ];
     }
 }
+

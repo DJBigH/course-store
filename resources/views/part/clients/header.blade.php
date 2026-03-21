@@ -4,11 +4,11 @@
     $notifications = $student ? $student->notifications()->latest()->take(20)->get() : collect();
 
     $localeOptions = [
-        'vi' => ['flag' => '🇻🇳', 'short' => 'VI', 'label' => 'Tiếng Việt'],
-        'en' => ['flag' => '🇺🇸', 'short' => 'EN', 'label' => 'English'],
-        'ko' => ['flag' => '🇰🇷', 'short' => 'KO', 'label' => '한국어'],
-        'ja' => ['flag' => '🇯🇵', 'short' => 'JA', 'label' => '日本語'],
-        'zh' => ['flag' => '🇨🇳', 'short' => 'ZH', 'label' => '中文'],
+        'vi' => ['flag' => '', 'short' => 'VI', 'label' => 'Vietnamese'],
+        'en' => ['flag' => '', 'short' => 'EN', 'label' => 'English'],
+        'ko' => ['flag' => '', 'short' => 'KO', 'label' => 'Korean'],
+        'ja' => ['flag' => '', 'short' => 'JA', 'label' => 'Japanese'],
+        'zh' => ['flag' => '', 'short' => 'ZH', 'label' => 'Chinese'],
     ];
     $supportedLocales = array_keys($localeOptions);
     $localeFlags = [
@@ -30,22 +30,126 @@
         $currentLocale = 'vi';
     }
 
-    // path hiện tại (không có domain), ví dụ: "vi/courses/abc"
-    $path = trim(request()->path(), '/');
-    $segments = $path === '' ? [] : explode('/', $path);
+    $currentRoute = request()->route();
+    $currentRouteName = $currentRoute?->getName();
+    $routeParameters = $currentRoute?->parameters() ?? [];
+    $phone = setting('phone', '012345678');
+    $email = setting('email', 'bigk@gmail.com');
+    $phoneHref = 'tel:' . preg_replace('/[^\d+]/', '', (string) $phone);
 
-    // nếu segment đầu là locale thì bỏ ra
-    if (!empty($segments) && in_array($segments[0], $supportedLocales)) {
-        array_shift($segments);
-    }
+    $fallbackLocaleUrl = function (string $locale): string {
+        $path = trim(request()->path(), '/');
+        $segments = $path === '' ? [] : explode('/', $path);
 
-    $restPath = implode('/', $segments); // ví dụ: "courses/abc"
+        if (!empty($segments) && in_array($segments[0], ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
+            $segments[0] = $locale;
+        } else {
+            array_unshift($segments, $locale);
+        }
+
+        return url(implode('/', $segments));
+    };
+
+    $resolveLocalizedSlug = function ($model, string $locale): string {
+        if (!$model) {
+            return '';
+        }
+
+        $slugByLocale = match ($locale) {
+            'zh' => $model->slug_zh ?? null,
+            'ja' => $model->slug_ja ?? null,
+            'ko' => $model->slug_ko ?? null,
+            'en' => $model->slug_en ?? null,
+            default => $model->slug ?? null,
+        };
+
+        return $slugByLocale
+            ?: ($model->slug ?? null)
+            ?: ($model->slug_en ?? null)
+            ?: ($model->slug_ko ?? null)
+            ?: ($model->slug_ja ?? null)
+            ?: ($model->slug_zh ?? null)
+            ?: '';
+    };
+
+    $findByLocalizedSlug = function (string $modelClass, ?string $slug) {
+        if (!$slug || !class_exists($modelClass)) {
+            return null;
+        }
+
+        return $modelClass::query()
+            ->where('slug', $slug)
+            ->orWhere('slug_en', $slug)
+            ->orWhere('slug_ko', $slug)
+            ->orWhere('slug_ja', $slug)
+            ->orWhere('slug_zh', $slug)
+            ->first();
+    };
+
+    $buildLocaleUrl = function (string $locale) use (
+        $currentRouteName,
+        $routeParameters,
+        $fallbackLocaleUrl,
+        $findByLocalizedSlug,
+        $resolveLocalizedSlug
+    ): string {
+        $params = $routeParameters;
+        unset($params['locale']);
+
+        try {
+            return match ($currentRouteName) {
+                'home',
+                'home.about',
+                'home.student-support',
+                'home.faq',
+                'home.testimonials',
+                'home.payment-policy',
+                'home.refund-policy',
+                'home.terms-of-service',
+                'home.privacy-policy',
+                'courses.home',
+                'contacts.home',
+                'coupons.home',
+                'clients-login',
+                'clients-register',
+                'clients-forgot',
+                'block-index',
+                'verification.notice',
+                'students.account.index',
+                'students.account.profile',
+                'students.account.my-courses',
+                'students.account.my-coupon',
+                'students.account.my-order',
+                'students.account.change-password',
+                'students.account.activity-history',
+                'students.account.deactivate',
+                'students.account.delete',
+                'students.account.order-detail',
+                'students.account.checkout' => route($currentRouteName, array_merge(['locale' => $locale], $params)),
+                'courses.detail' => (($course = $findByLocalizedSlug(\Modules\Courses\src\Models\Courses::class, $params['slug'] ?? null)) && ($slug = $resolveLocalizedSlug($course, $locale)))
+                    ? route('courses.detail', ['locale' => $locale, 'slug' => $slug])
+                    : route('courses.home', ['locale' => $locale]),
+                'categories.category' => (($category = $findByLocalizedSlug(\Modules\Categories\src\Models\Category::class, $params['slug'] ?? null)) && ($slug = $resolveLocalizedSlug($category, $locale)))
+                    ? route('categories.category', ['locale' => $locale, 'slug' => $slug])
+                    : route('home', ['locale' => $locale]),
+                'lessons.home',
+                'lessons.toggle-completion' => (($lesson = $findByLocalizedSlug(\Modules\Lessons\src\Models\Lesson::class, $params['slug'] ?? null)) && ($slug = $resolveLocalizedSlug($lesson, $locale)))
+                    ? route('lessons.home', ['locale' => $locale, 'slug' => $slug])
+                    : route('home', ['locale' => $locale]),
+                default => $currentRouteName
+                    ? route($currentRouteName, array_merge(['locale' => $locale], $params))
+                    : $fallbackLocaleUrl($locale),
+            };
+        } catch (\Throwable $exception) {
+            return $fallbackLocaleUrl($locale);
+        }
+    };
+
     $localeUrls = [];
     foreach ($supportedLocales as $locale) {
-        $localeUrls[$locale] = url($locale . ($restPath ? '/' . $restPath : ''));
+        $localeUrls[$locale] = $buildLocaleUrl($locale);
     }
 
-    // giữ query string ?page=2...
     $qs = request()->getQueryString();
     if ($qs) {
         foreach ($localeUrls as $locale => $localeUrl) {
@@ -78,11 +182,11 @@
                     <div class="d-flex">
                         <p class="slogan">
                             <i class="fas fa-phone"></i>{{ __('clients/common.support') }}
-                            <a href="#">{{ setting('phone', '012345678') }}</a>
+                            <a href="{{ $phoneHref }}">{{ $phone }}</a>
                         </p>
                         <p class="mail">
                             <i class="far fa-envelope"></i>
-                            <a href="#">{{ setting('email', 'bigk@gmail.com') }}</a>
+                            <a href="mailto:{{ $email }}">{{ $email }}</a>
                         </p>
                     </div>
                 </div>
@@ -100,7 +204,7 @@
                             <span class="theme-toggle__label">{{ __('clients/common.theme_dark') }}</span>
                         </button>
 
-                        {{-- 🌐 LANGUAGE SWITCH --}}
+                        {{-- LANGUAGE SWITCH --}}
                         <div class="dropdown locale-switcher">
                             <button
                                 class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2 locale-switcher__toggle"
@@ -129,7 +233,7 @@
                         @if (auth('students')->check())
                             <div class="d-flex align-items-center gap-3">
 
-                                {{-- 🔔 Chuông thông báo --}}
+                                {{-- Notification bell --}}
                                 <div class="nav-item dropdown notification-hover position-relative">
 
                                     <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown"
@@ -137,7 +241,7 @@
 
                                         <i class="fas fa-bell"></i>
 
-                                        {{-- Badge số thông báo --}}
+                                        {{-- Notification count badge --}}
                                         @if ($unreadCount > 0)
                                             <span
                                                 class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -182,7 +286,7 @@
 
                                     </ul>
                                 </div>
-                                {{-- 👤 User dropdown --}}
+                                {{-- User dropdown --}}
                                 <div class="dropdown">
                                     <button class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2"
                                         type="button" id="userDropdown" data-bs-toggle="dropdown"
@@ -194,7 +298,7 @@
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                         <li>
                                             <a class="dropdown-item d-flex align-items-center gap-2"
-                                                href="{{ route('students.account.index',['locale' => app()->getLocale()]) }}">
+                                                href="{{ route('students.account.index', ['locale' => app()->getLocale()]) }}">
                                                 <i class="fas fa-user-circle"></i>
                                                 {{ __('clients/common.my_account') }}
                                             </a>
@@ -212,12 +316,12 @@
                             </div>
                         @else
                             <div class="header-auth-actions d-flex align-items-center gap-2">
-                                <a href="{{ route('clients-register',['locale' => app()->getLocale()]) }}"
+                                <a href="{{ route('clients-register', ['locale' => app()->getLocale()]) }}"
                                     class="btn btn-primary header-auth-btn">
                                     <i class="fas fa-user"></i>
                                     <span>{{ __('clients/common.register') }}</span>
                                 </a>
-                                <a href="{{ route('clients-login',['locale' => app()->getLocale()]) }}"
+                                <a href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}"
                                     class="btn btn-primary header-auth-btn">
                                     <i class="fas fa-key"></i>
                                     <span>{{ __('clients/common.login') }}</span>
@@ -272,8 +376,9 @@
                                 <li class="dropdown-submenu">
                                     <a class="dropdown-item"
                                         href="{{ route('categories.category', [
-                                        'locale' => app()->getLocale(),
-                                        'slug' => $category->slug_locale]) }}">
+                                            'locale' => app()->getLocale(),
+                                            'slug' => $category->slug_locale,
+                                        ]) }}">
                                         {{ $category->name_locale }}
                                     </a>
                                     {{-- <ul class="dropdown-menu">
@@ -313,4 +418,4 @@
     </nav>
 
 </header>
-<form action="{{ route('clients-logout',['locale' => app()->getLocale()]) }}" method="post" name="form-logout">@csrf</form>
+<form action="{{ route('clients-logout', ['locale' => app()->getLocale()]) }}" method="post" name="form-logout">@csrf</form>

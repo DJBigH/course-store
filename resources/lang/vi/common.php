@@ -22,6 +22,7 @@ return [
     'feel_student' => 'Cảm nhận học viên',
     'terms_and_conditions' => 'Chính sách điều khoản',
     'affiliate' => 'Chương trình Affiliate',
+    'payment_policy' => 'Chính sách thanh toán',
     'terms_of_service' => 'Điều khoản dịch vụ',
     'privacy_policy' => 'Chính sách bảo mật'
 ];

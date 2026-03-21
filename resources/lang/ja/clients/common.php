@@ -29,6 +29,7 @@ return [
     'feel_student'         => '受講者の声',
     'terms_and_conditions' => '利用規約',
     'affiliate'            => 'アフィリエイトプログラム',
+    'payment_policy'       => 'お支払いポリシー',
     'terms_of_service' => 'サービス利用規約',
     'privacy_policy'       => 'プライバシーポリシー',
 

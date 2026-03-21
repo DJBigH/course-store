@@ -50,7 +50,10 @@ class CheckoutController extends Controller
             }
         }
 
-        return view('students::clients.checkout', compact('pageTitle', 'pageName', 'order'));
+        $payableAmount = $this->getPayableAmount($order);
+        $isFreeOrder = $payableAmount <= 0;
+
+        return view('students::clients.checkout', compact('pageTitle', 'pageName', 'order', 'payableAmount', 'isFreeOrder'));
     }
 
     public function complete($locale, $orderId)
@@ -118,11 +121,13 @@ class CheckoutController extends Controller
 
         $amount = (int) max($order->total - ($order->discount ?? 0), 0);
         if ($amount <= 0) {
-            return redirect()->route('students.account.checkout', [
+            $this->markOrderAsPaid($order);
+
+            return redirect()->route('students.account.checkout-thankyou', [
                 'locale' => $locale,
                 'id' => $order->id,
-            ])->with('msg', __('students::clients/checkout.checkout.vnpay_invalid_amount'))
-                ->with('msgType', 'danger');
+            ])->with('msg', __('students::clients/checkout.checkout.free_order_completed'))
+                ->with('msgType', 'success');
         }
 
         $returnUrl = $config['return_url'] ?: route('students.account.checkout-vnpay-return', ['locale' => $locale]);
@@ -238,11 +243,13 @@ class CheckoutController extends Controller
 
         $amount = (int) max($order->total - ($order->discount ?? 0), 0);
         if ($amount <= 0) {
-            return redirect()->route('students.account.checkout', [
+            $this->markOrderAsPaid($order);
+
+            return redirect()->route('students.account.checkout-thankyou', [
                 'locale' => $locale,
                 'id' => $order->id,
-            ])->with('msg', __('students::clients/checkout.checkout.momo_invalid_amount'))
-                ->with('msgType', 'danger');
+            ])->with('msg', __('students::clients/checkout.checkout.free_order_completed'))
+                ->with('msgType', 'success');
         }
 
         $requestId = (string) Str::uuid();
@@ -466,6 +473,7 @@ class CheckoutController extends Controller
         }
 
         $this->orderRepository->completePayment($order);
+        $order->refresh()->loadMissing(['status', 'detail.courses']);
 
         $admins = User::where('group_id', 1)->get();
         foreach ($admins as $admin) {
@@ -473,11 +481,69 @@ class CheckoutController extends Controller
         }
 
         $student = Student::find($order->student_id);
+        if ($student) {
+            $this->logPurchasedOrder($student, $order);
+        }
+
         if ($student && $student->email) {
             Mail::to($student->email)->queue(new OrderPaidCustomerMail(
                 $order,
                 method_exists($student, 'preferredLocale') ? $student->preferredLocale() : app()->getLocale()
             ));
         }
+    }
+
+    private function logPurchasedOrder(Student $student, Order $order): void
+    {
+        $courses = $order->detail
+            ->pluck('courses')
+            ->filter()
+            ->map(function ($course) {
+                return $this->buildTranslatedNames($course);
+            })
+            ->values()
+            ->all();
+
+        activity_log(
+            'order_purchased',
+            $student,
+            [
+                'order_code' => $order->code,
+                'order_status' => $this->buildTranslatedStatus($order),
+                'total_paid' => (float) max($order->total - ($order->discount ?? 0), 0),
+                'courses' => $courses,
+            ],
+            'student_order',
+            __('students::clients/account.activity_log.order_purchased_desc')
+        );
+    }
+
+    private function buildTranslatedNames(object $model): array
+    {
+        return [
+            'vi' => (string) ($model->name ?? ''),
+            'en' => (string) ($model->name_en ?? $model->name ?? ''),
+            'ko' => (string) ($model->name_ko ?? $model->name ?? $model->name_en ?? ''),
+            'ja' => (string) ($model->name_ja ?? $model->name ?? $model->name_en ?? ''),
+            'zh' => (string) ($model->name_zh ?? $model->name ?? $model->name_en ?? ''),
+        ];
+    }
+
+    private function buildTranslatedStatus(Order $order): array
+    {
+        $status = $order->status;
+
+        return [
+            'vi' => (string) ($status->name ?? ''),
+            'en' => (string) ($status->name_en ?? $status->name ?? ''),
+            'ko' => (string) ($status->name_ko ?? $status->name ?? $status->name_en ?? ''),
+            'ja' => (string) ($status->name_ja ?? $status->name ?? $status->name_en ?? ''),
+            'zh' => (string) ($status->name_zh ?? $status->name ?? $status->name_en ?? ''),
+        ];
+    }
+
+    private function getPayableAmount(Order $order): float
+    {
+        return (float) max($order->total - ($order->discount ?? 0), 0);
     }
 }

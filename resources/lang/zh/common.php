@@ -22,6 +22,7 @@ return [
     'feel_student'         => '学员评价',
     'terms_and_conditions' => '条款与条件',
     'affiliate'            => '联盟计划',
+    'payment_policy'       => '支付政策',
     'terms_of_service' => '服务条款',
     'privacy_policy'       => '隐私政策',
 

@@ -279,6 +279,11 @@ return [
         'empty_activity' => 'Chưa có lịch sử thao tác nào.',
         'all_actions' => 'Tất cả thao tác',
         'code_purpose' => 'Mục đích gửi mã',
+        'order_code_label' => 'Mã đơn hàng',
+        'order_status_label' => 'Trạng thái mua hàng',
+        'amount_label' => 'Số tiền thanh toán',
+        'course_label' => 'Khóa học',
+        'lesson_label' => 'Bài học',
         'actions' => [
             'login' => 'Đăng nhập',
             'profile_updated' => 'Đã cập nhật thông tin',
@@ -288,6 +293,8 @@ return [
             'two_factor_disabled' => 'Tắt xác thực 2 lớp',
             'account_deactivated' => 'Vô hiệu hóa tài khoản',
             'account_deleted' => 'Xoa tai khoan',
+            'order_purchased' => 'Mua khóa học',
+            'lesson_learned' => 'Học bài',
         ],
         'fields' => [
             'name' => 'Họ và tên',
@@ -307,6 +314,8 @@ return [
         'password_changed_desc' => 'Đã thay đổi mật khẩu tài khoản.',
         'account_deactivated_desc' => 'Tài khoản đã được vô hiệu hóa.',
         'account_deleted_desc' => 'Tai khoan da bi xoa vinh vien.',
+        'order_purchased_desc' => 'Đã hoàn tất mua khóa học.',
+        'lesson_learned_desc' => 'Đã bắt đầu học một bài học.',
     ],
 ];
 

@@ -18,4 +18,12 @@ Route::group([
    'middleware' => 'setLocale',
 ], function () {
    Route::get('/', 'HomeController@index')->name('home');
+   Route::get('/ve-chung-toi', 'HomeController@about')->name('home.about');
+   Route::get('/ho-tro-hoc-vien', 'HomeController@studentSupport')->name('home.student-support');
+   Route::get('/cau-hoi-thuong-gap', 'HomeController@faq')->name('home.faq');
+   Route::get('/cam-nhan-hoc-vien', 'HomeController@testimonials')->name('home.testimonials');
+   Route::get('/chinh-sach-thanh-toan', 'HomeController@paymentPolicy')->name('home.payment-policy');
+   Route::get('/chinh-sach-hoan-tien-huy-don', 'HomeController@refundPolicy')->name('home.refund-policy');
+   Route::get('/dieu-khoan-dich-vu', 'HomeController@termsOfService')->name('home.terms-of-service');
+   Route::get('/chinh-sach-bao-mat', 'HomeController@privacyPolicy')->name('home.privacy-policy');
 });

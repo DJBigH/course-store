@@ -1,21 +1,26 @@
 <?php
 
 return [
-    // Core messages
-    'help'        => 'If this video has an issue, please contact the administrator for support.',
-    'no_video'    => 'This lesson has no video',
+    'help' => 'If this video has an issue, please contact the administrator for support.',
+    'no_video' => 'This lesson has no video',
     'no_document' => 'The current course has no materials available',
     'locked_document' => 'Locked',
     'buy_to_view_document' => 'Purchase the course to access this document.',
-    // Navigation
-    'back'        => 'Previous',
-    'next'        => 'Next',
-
-    // Tabs
-    'lesson'      => 'Lessons',
-    'document'    => 'Documents',
+    'back' => 'Previous',
+    'next' => 'Next',
+    'lesson' => 'Lessons',
+    'document' => 'Documents',
     'lesson_1' => 'lessons',
-    // Labels
     'lesson_item' => 'Lesson',
-    'lessons'     => 'Lessons',
+    'lessons' => 'Lessons',
+    'course_progress' => 'Course progress',
+    'completed' => 'Completed',
+    'completed_lessons' => ':completed / :total lessons completed',
+    'mark_completed' => 'Mark as completed',
+    'mark_incomplete' => 'Unmark as completed',
+    'mark_completed_success' => 'This lesson has been marked as completed.',
+    'mark_incomplete_success' => 'This lesson has been removed from completed progress.',
+    'completion_error' => 'Unable to update lesson progress. Please try again.',
+    'lesson_not_found' => 'Lesson not found.',
+    'login_required' => 'Please sign in to update lesson progress.',
 ];

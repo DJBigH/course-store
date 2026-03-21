@@ -1,23 +1,26 @@
 <?php
 
 return [
-    // Core messages
-    'help'        => 'Nếu video này bị lỗi, vui lòng liên hệ quản trị viên để được hỗ trợ.',
-    'no_video'    => 'Bài học này chưa có video',
+    'help' => 'Nếu video này bị lỗi, vui lòng liên hệ quản trị viên để được hỗ trợ.',
+    'no_video' => 'Bài học này chưa có video',
     'no_document' => 'Khóa học hiện tại chưa có tài liệu',
     'locked_document' => 'Đã khóa',
     'buy_to_view_document' => 'Cần mua khóa học để xem tài liệu này.',
-
-    // Navigation
-    'back'        => 'Quay lại',
-    'next'        => 'Tiếp theo',
-
-    // Tabs
-    'lesson'      => 'Bài học',
-    'document'    => 'Tài liệu',
+    'back' => 'Quay lại',
+    'next' => 'Tiếp theo',
+    'lesson' => 'Bài học',
+    'document' => 'Tài liệu',
     'lesson_1' => 'bài học',
-
-    // Labels
     'lesson_item' => 'Bài',
-    'lessons'     => 'Bài học',
+    'lessons' => 'Bài học',
+    'course_progress' => 'Tiến độ học',
+    'completed' => 'Đã học',
+    'completed_lessons' => 'Đã học :completed / :total bài',
+    'mark_completed' => 'Đánh dấu đã học',
+    'mark_incomplete' => 'Bỏ đánh dấu đã học',
+    'mark_completed_success' => 'Bài học đã được đánh dấu hoàn thành.',
+    'mark_incomplete_success' => 'Bài học đã được bỏ khỏi tiến độ hoàn thành.',
+    'completion_error' => 'KhÃ´ng thá»ƒ cáº­p nháº­t tiáº¿n Ä‘á»™ bÃ i há»c. Vui lÃ²ng thá»­ láº¡i.',
+    'lesson_not_found' => 'KhÃ´ng tÃ¬m tháº¥y bÃ i há»c.',
+    'login_required' => 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ cáº­p nháº­t tiáº¿n Ä‘á»™ bÃ i há»c.',
 ];

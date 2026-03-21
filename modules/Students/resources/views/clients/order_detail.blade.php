@@ -30,7 +30,7 @@
                                 <span
                                     class="badge bg-{{ $order->status->color }}-subtle 
                                     text-{{ $order->status->color }} px-3 py-2 fs-6">
-                                    {{ $order->status->name }}
+                                    {{ $order->status->name_locale }}
                                 </span>
                             </div>
 
@@ -88,7 +88,7 @@
                                                     {{ __('students::clients/account.order_detail.status') }}</th>
                                                 <td>
                                                     <span class="badge bg-{{ $order->status->color }}">
-                                                        {{ $order->status->name }}
+                                                        {{ $order->status->name_locale }}
                                                     </span>
 
                                                     @if ($order->status->color == 'warning')
@@ -253,3 +253,4 @@
         }
     </style>
 @endsection
+

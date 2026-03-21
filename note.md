@@ -451,6 +451,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm phần quản lý học viên xem học viên đã bật 2FA chưa
 - Làm bên admin bảo mật hơn
 - Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không)
+- Config gắn token hay api của bot telegram nếu đẩy lên production ( Hiện tại hướng dùng con botfather trên tele để thây tất cả thông tin ) làm chuẩn chỉ vì khi đẩy lên lại phải vào fix lại và có cách nào test được mình ở local mà test được nó kết nối được chưa không
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -480,9 +481,14 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Quên mật khẩu có vấn đề là khi mới gửi mail xong vào mail đó đổi mật khẩu đã báo token sai hay quá hạn rồi và tôi muốn limit và thời gian token đó để đổi mk là 10p ( Done )
 - Làm chức năng xóa tài khoản ( Done )
 - Với cái trang mã giảm giá chỉ lấy mã giảm giá nào còn hiệu lực (còn thời gian, còn số lượng, không giới hạn số lượng, không giới hạn thời gian) ( Done )
-- Với cái trạng thái đơn hàng thêm đa ngôn ngữ lưu vào db ỏ bảng order_status và thêm seeder
-- Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin
-- Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không
-- bên clients thiếu mấy trang nếu được cố code html css
+- Với cái trạng thái đơn hàng thêm đa ngôn ngữ lưu vào db ỏ bảng order_status và thêm seeder ( Done )
+- Phần bài giảng thì thêm cái tiến độ học tổng học được bao nhiêu % có tích đánh dấu những bài đã học ( Done )
+- bên clients thiếu mấy trang nếu được cố code html css ( Done )
+- Check UI/UX xem có trang nào khiến người dùng khó chịu hay không (các trang, light mode, đa ngôn ngữ) (Check lại để khi đẩy lên production tránh fix) ( Done )
+- Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin ( Bot tự đọc db các khóa học, mã giảm giá, hay liên quan j đến website không được đọc những thông tin nhạy cảm hay bảo mật)
+- Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không 
 - Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để ghi cho backend )
 - Check lại responsive
+
+Tổng kết
+- check lại lần cuối trước khi đẩy lên production

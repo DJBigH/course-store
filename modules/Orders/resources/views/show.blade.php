@@ -52,7 +52,7 @@
                                     <th>Trạng thái</th>
                                     <td>
                                         <span class="badge bg-{{ $order->status->color }}">
-                                            {{ $order->status->name }}
+                                            {{ $order->status->name_locale }}
                                         </span>
                                     </td>
                                 </tr>
@@ -179,4 +179,5 @@
         </div>
     </div>
 @endsection
+
 

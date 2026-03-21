@@ -28,7 +28,7 @@ class OrderController extends Controller
 
         return DataTables::of($orders)
             ->editColumn('status_id', function ($orders) {
-                $name = $orders->status->name;
+                $name = $orders->status->name_locale;
                 $color = $orders->status->color;
                 return '<button class="btn btn-' . $color . '">' . $name . '</button>';
             })
@@ -78,3 +78,4 @@ class OrderController extends Controller
         return back()->with('msg', __('orders::messages.delete.success'));
     }
 }
+

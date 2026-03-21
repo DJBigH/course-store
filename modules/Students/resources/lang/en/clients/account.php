@@ -131,6 +131,8 @@ return [
         'search_course' => 'Search courses',
         'placeholder_course_name' => 'Enter course name...',
         'course_name' => 'Course name',
+        'progress' => 'Progress',
+        'progress_detail' => ':completed / :total lessons completed',
         'status' => 'Status',
         'action' => 'Action',
         'updated_at' => 'Last updated',
@@ -276,6 +278,11 @@ return [
         'empty_activity' => 'No activity history yet.',
         'all_actions' => 'All actions',
         'code_purpose' => 'Verification purpose',
+        'order_code_label' => 'Order code',
+        'order_status_label' => 'Purchase status',
+        'amount_label' => 'Paid amount',
+        'course_label' => 'Course',
+        'lesson_label' => 'Lesson',
         'actions' => [
             'login' => 'Login',
             'profile_updated' => 'Profile updated',
@@ -285,6 +292,8 @@ return [
             'two_factor_disabled' => 'Disable two-factor authentication',
             'account_deactivated' => 'Account deactivated',
             'account_deleted' => 'Account deleted',
+            'order_purchased' => 'Purchased course',
+            'lesson_learned' => 'Studied lesson',
         ],
         'fields' => [
             'name' => 'Full name',
@@ -304,5 +313,7 @@ return [
         'password_changed_desc' => 'Account password was changed.',
         'account_deactivated_desc' => 'The account was deactivated.',
         'account_deleted_desc' => 'The account was permanently deleted.',
+        'order_purchased_desc' => 'Completed a course purchase order.',
+        'lesson_learned_desc' => 'Started studying a lesson.',
     ],
 ];
