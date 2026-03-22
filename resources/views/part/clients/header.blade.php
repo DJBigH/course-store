@@ -12,11 +12,11 @@
     ];
     $supportedLocales = array_keys($localeOptions);
     $localeFlags = [
-        'vi' => '&#x1F1FB;&#x1F1F3;',
-        'en' => '&#x1F1FA;&#x1F1F8;',
-        'ko' => '&#x1F1F0;&#x1F1F7;',
-        'ja' => '&#x1F1EF;&#x1F1F5;',
-        'zh' => '&#x1F1E8;&#x1F1F3;',
+        'vi' => '🇻🇳',
+        'en' => '🇺🇸',
+        'ko' => '🇰🇷',
+        'ja' => '🇯🇵',
+        'zh' => '🇨🇳',
     ];
 
     foreach ($localeFlags as $locale => $flag) {

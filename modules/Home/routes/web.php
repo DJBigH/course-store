@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-   // ưu tiên: session locale -> nếu chưa có thì lấy từ header trình duyệt
    $locale = session('locale');
 
    if (!in_array($locale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
@@ -18,6 +17,8 @@ Route::group([
    'middleware' => 'setLocale',
 ], function () {
    Route::get('/', 'HomeController@index')->name('home');
+   Route::post('/tro-ly-ban-hang/lien-he', 'ChatbotController@saveLead')->name('home.sales-chatbot.lead');
+   Route::post('/tro-ly-ban-hang', 'ChatbotController@reply')->name('home.sales-chatbot');
    Route::get('/ve-chung-toi', 'HomeController@about')->name('home.about');
    Route::get('/ho-tro-hoc-vien', 'HomeController@studentSupport')->name('home.student-support');
    Route::get('/cau-hoi-thuong-gap', 'HomeController@faq')->name('home.faq');

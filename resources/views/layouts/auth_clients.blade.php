@@ -28,6 +28,7 @@
 
 <body>
     @yield('content')
+    @include('part.clients.sales-chatbot')
 </body>
 
 @vite(['resources/js/app.js'])

@@ -485,9 +485,10 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Phần bài giảng thì thêm cái tiến độ học tổng học được bao nhiêu % có tích đánh dấu những bài đã học ( Done )
 - bên clients thiếu mấy trang nếu được cố code html css ( Done )
 - Check UI/UX xem có trang nào khiến người dùng khó chịu hay không (các trang, light mode, đa ngôn ngữ) (Check lại để khi đẩy lên production tránh fix) ( Done )
-- Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin ( Bot tự đọc db các khóa học, mã giảm giá, hay liên quan j đến website không được đọc những thông tin nhạy cảm hay bảo mật)
+- Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin ( Bot tự đọc db các khóa học, mã giảm giá, hay liên quan j đến website không được đọc những thông tin nhạy cảm hay bảo mật) ( Done )
+- Kết nối với api của con gemeni thêm cho nó các api xem khóa học, đa ngôn ngữ (nếu thấy ổn thì làm)
 - Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không 
-- Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để ghi cho backend )
+- Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi )
 - Check lại responsive
 
 Tổng kết

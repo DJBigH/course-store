@@ -42,3 +42,7 @@ if (document.querySelector(".checkout-page")) {
 if (document.querySelector("form.js-auth-form") || document.querySelector("#resend-form")) {
     import("./auth-forms.js");
 }
+
+if (document.querySelector("[data-sales-chatbot]")) {
+    import("./sales-chatbot.js");
+}
