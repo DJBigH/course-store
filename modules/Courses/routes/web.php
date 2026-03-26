@@ -5,11 +5,20 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('admin')->group(function () {
    Route::prefix('courses')->name('courses.')->group(function () {
       Route::get('/', 'CoursesController@index')->name('index');
+      Route::get('/trash', 'CoursesController@trash')->name('trash');
       Route::get('/comments', 'CourseCommentController@index')->name('comments.admin');
+      Route::post('/comments/bulk', 'CourseCommentController@bulkAction')->name('comments.admin-bulk');
       Route::post('/comments/{commentId}/toggle-visibility', 'CourseCommentController@toggleVisibility')->name('comments.admin-toggle');
       Route::get('data', 'CoursesController@data')->name('data');
+      Route::get('/trash/data', 'CoursesController@trashData')->name('trash.data');
       Route::get('/create', 'CoursesController@create')->name('add');
       Route::post('/create', 'CoursesController@store')->name('post-add');
+      Route::post('/bulk', 'CoursesController@bulkAction')->name('bulk');
+      Route::post('/trash/bulk', 'CoursesController@trashBulkAction')->name('trash.bulk');
+      Route::post('/toggle-status/{courses}', 'CoursesController@toggleStatus')->name('toggle-status');
+      Route::post('/duplicate/{courses}', 'CoursesController@duplicate')->name('duplicate');
+      Route::post('/restore/{courses}', 'CoursesController@restore')->name('restore');
+      Route::delete('/force-delete/{courses}', 'CoursesController@forceDelete')->name('force-delete');
       Route::get('/edit/{courses}', 'CoursesController@edit')->name('edit');
       Route::post('/edit/{courses}', 'CoursesController@update')->name('post-edit');
       Route::delete('/delete/{courses}', 'CoursesController@delete')->name('delete');

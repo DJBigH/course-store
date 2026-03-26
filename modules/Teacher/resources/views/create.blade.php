@@ -11,11 +11,11 @@
         </div>
     @endif
 
-    <form action="" method="post">
+    <form action="" method="post" class="admin-form">
         @csrf
 
         {{-- Toggle ngôn ngữ nội dung --}}
-        <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="admin-form__header d-flex align-items-center justify-content-between mb-3">
             <h5 class="mb-0">Thông tin giảng viên</h5>
 
             <div class="btn-group" role="group">
@@ -280,7 +280,7 @@
             </div>
 
             {{-- ACTIONS --}}
-            <div class="col-12 text-end">
+            <div class="col-12 text-end admin-form__footer">
                 <button type="submit" class="btn btn-success">Lưu</button>
                 <a href="{{ route('teacher.index') }}" class="btn btn-warning">Trở về</a>
             </div>

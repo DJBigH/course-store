@@ -5,6 +5,7 @@ namespace Modules\Students\src\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Students\src\Http\Requests\studentRequest;
 use Modules\Students\src\Models\CouponUsage;
@@ -32,21 +33,24 @@ class StudentController extends Controller
         $students = $this->studentRepository->getAllStudents();
 
         return DataTables::of($students)
+            ->addColumn('select', function ($student) {
+                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $student->id . '"></div>';
+            })
             ->addColumn('logs', function ($student) {
-                return '<a href="' . route('students.logs', $student->id) . '" class="btn btn-info">Lịch sử</a>';
+                return '<a href="' . route('students.logs', $student->id) . '" class="btn btn-light border">Lịch sử</a>';
             })
 
             ->addColumn('courses', function ($student) {
-                return '<a href="' . route('students.purchased-courses', $student->id) . '" class="btn btn-info">Xem khóa học</a>';
+                return '<a href="' . route('students.purchased-courses', $student->id) . '" class="btn btn-light border">Khóa học</a>';
             })
             ->addColumn('link', function ($student) {
-                return '<a href="' . route('students.coupon-history', $student->id) . '" class="btn btn-primary">Lịch sử cấp mã</a>';
+                return '<a href="' . route('students.coupon-history', $student->id) . '" class="btn btn-primary">Lịch sử mã</a>';
             })
             ->addColumn('edit', function ($student) {
                 return '<a href="' . route('students.edit', $student->id) . '" class="btn btn-warning">Sửa</a>';
             })
             ->addColumn('delete', function ($student) {
-                return '<a href="' . route('students.delete', $student->id) . '" class="btn btn-danger delete-action">Xóa</a>';
+                return '<a href="' . route('students.delete', $student->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>';
             })
             ->editColumn('created_at', function ($students) {
                 return Carbon::parse($students->created_at)->format('d/m/Y H:i:s');
@@ -54,8 +58,75 @@ class StudentController extends Controller
             ->editColumn('status', function ($students) {
                 return $students->status == 1 ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>' : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
             })
-            ->rawColumns(['edit', 'delete', 'status', 'link', 'courses', 'logs'])
+            ->rawColumns(['select', 'edit', 'delete', 'status', 'link', 'courses', 'logs'])
             ->toJson();
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một học viên.',
+            ]);
+        }
+
+        $students = Student::query()->whereIn('id', $selectedIds)->get();
+
+        if ($students->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy học viên để xử lý.');
+        }
+
+        if ($action === 'activate' || $action === 'deactivate') {
+            $newStatus = $action === 'activate' ? 1 : 0;
+            Student::query()->whereIn('id', $selectedIds)->update(['status' => $newStatus]);
+
+            foreach ($students as $student) {
+                activity_log(
+                    action: 'update',
+                    subject: $student,
+                    properties: [
+                        'old' => ['status' => $student->status],
+                        'new' => ['status' => $newStatus],
+                    ],
+                    logName: $newStatus === 1 ? 'Kích hoạt hàng loạt' : 'Tạm khóa hàng loạt',
+                    description: $newStatus === 1 ? 'Kích hoạt học viên' : 'Tạm khóa học viên'
+                );
+            }
+
+            return back()->with('msg', $newStatus === 1
+                ? 'Đã kích hoạt ' . $students->count() . ' học viên.'
+                : 'Đã tạm khóa ' . $students->count() . ' học viên.');
+        }
+
+        if ($action === 'delete') {
+            foreach ($students as $student) {
+                $snapshot = $student->toArray();
+                unset($snapshot['password']);
+
+                $this->studentRepository->delete($student->id);
+
+                activity_log(
+                    action: 'delete',
+                    subject: $student,
+                    properties: [
+                        'data' => $snapshot,
+                    ],
+                    logName: 'Xóa hàng loạt',
+                    description: 'Xóa học viên'
+                );
+            }
+
+            return back()->with('msg', 'Đã xóa ' . $students->count() . ' học viên.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
     }
 
     public function create()

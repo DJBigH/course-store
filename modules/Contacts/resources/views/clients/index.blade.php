@@ -332,10 +332,27 @@
                 padding: 40px 0;
             }
 
+            .contact-info,
+            .contact-form {
+                padding: 24px 18px;
+            }
+
+            .info-item {
+                align-items: flex-start;
+            }
+
             .contact-captcha-box {
                 width: 100%;
                 overflow-x: auto;
                 justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .contact-captcha-box {
+                transform: scale(0.88);
+                transform-origin: left top;
+                width: 112%;
             }
         }
 

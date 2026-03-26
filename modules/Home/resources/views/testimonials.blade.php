@@ -352,6 +352,10 @@
             .testimonial-hero {
                 grid-template-columns: 1fr;
             }
+
+            .testimonial-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         @media (max-width: 767.98px) {
@@ -379,6 +383,32 @@
 
             .testimonial-card p {
                 font-size: 16px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .testimonial-landing::before {
+                width: 180px;
+                height: 180px;
+                left: -70px;
+            }
+
+            .testimonial-landing::after {
+                width: 220px;
+                height: 220px;
+                right: -90px;
+            }
+
+            .testimonial-hero__content h2 {
+                font-size: 2rem;
+            }
+
+            .testimonial-hero__content p {
+                font-size: 15px;
+            }
+
+            .testimonial-stats {
+                grid-template-columns: 1fr;
             }
         }
     </style>

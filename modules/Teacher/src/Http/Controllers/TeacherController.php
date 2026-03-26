@@ -5,70 +5,161 @@ namespace Modules\Teacher\src\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Illuminate\Validation\ValidationException;
 use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Teacher\src\Http\Requests\TeacherRequest;
-use Modules\Teacher\src\Repositories\TeacherRepository;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
 
 class TeacherController extends Controller
 {
-
     protected $teacherRepository;
 
     public function __construct(TeacherRepositoryInterface $teacherRepository)
     {
         $this->teacherRepository = $teacherRepository;
     }
+
     public function index()
     {
         $pageTitle = 'Quản lý giáo viên';
+
         return view('teacher::lists', compact('pageTitle'));
     }
 
-    public function data()
+    public function data(Request $request)
     {
         $teacher = $this->teacherRepository->getAllTeacher();
 
-        return DataTables::of($teacher)
-            ->addColumn('logs', function ($teachers) {
-                return '<a href="' . route('teacher.logs', $teachers->id) . '" class="btn btn-info">Lịch sử</a>';
-            })
+        if ($request->filled('q')) {
+            $keyword = trim((string) $request->input('q'));
 
+            $teacher->where(function ($query) use ($keyword) {
+                $query->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('name_en', 'like', '%' . $keyword . '%')
+                    ->orWhere('name_ko', 'like', '%' . $keyword . '%')
+                    ->orWhere('name_ja', 'like', '%' . $keyword . '%')
+                    ->orWhere('name_zh', 'like', '%' . $keyword . '%')
+                    ->orWhere('slug', 'like', '%' . $keyword . '%')
+                    ->orWhere('exp', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        if ($request->filled('profile_status')) {
+            if ($request->input('profile_status') === 'has_image') {
+                $teacher->whereNotNull('image')->where('image', '!=', '');
+            }
+
+            if ($request->input('profile_status') === 'missing_image') {
+                $teacher->where(function ($query) {
+                    $query->whereNull('image')->orWhere('image', '');
+                });
+            }
+        }
+
+        if ($request->filled('from_date')) {
+            $teacher->whereDate('created_at', '>=', $request->input('from_date'));
+        }
+
+        if ($request->filled('to_date')) {
+            $teacher->whereDate('created_at', '<=', $request->input('to_date'));
+        }
+
+        return DataTables::of($teacher)
+            ->addColumn('select', function ($teachers) {
+                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teachers->id . '"></div>';
+            })
+            ->addColumn('logs', function ($teachers) {
+                return '<a href="' . route('teacher.logs', $teachers->id) . '" class="btn btn-light border">Lịch sử</a>';
+            })
             ->addColumn('edit', function ($teachers) {
                 return '<a href="' . route('teacher.edit', $teachers->id) . '" class="btn btn-warning">Sửa</a>';
             })
             ->addColumn('delete', function ($teachers) {
-                return '<a href="' . route('teacher.delete', $teachers->id) . '" class="btn btn-danger delete-action">Xóa</a>';
+                return '<a href="' . route('teacher.delete', $teachers->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>';
             })
             ->editColumn('created_at', function ($teachers) {
                 return Carbon::parse($teachers->created_at)->format('d/m/Y H:i:s');
             })
             ->editColumn('image', function ($teachers) {
-                return $teachers->image ? '<img src="' . $teachers->image . '" style="width: 80px;">' : 'Không có ảnh';
+                return $teachers->image
+                    ? '<img src="' . $teachers->image . '" style="width: 80px; border-radius: 12px;">'
+                    : 'Không có ảnh';
             })
-            ->rawColumns(['edit', 'delete', 'image', 'logs'])
+            ->rawColumns(['select', 'edit', 'delete', 'image', 'logs'])
             ->toJson();
     }
 
     public function create()
     {
         $pageTitle = 'Thêm mới giáo viên';
+
         return view('teacher::create', compact('pageTitle'));
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một giảng viên.',
+            ]);
+        }
+
+        $teachers = $selectedIds
+            ->map(fn($id) => $this->teacherRepository->find($id))
+            ->filter();
+
+        if ($teachers->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy giảng viên để xử lý.');
+        }
+
+        if ($action === 'delete') {
+            foreach ($teachers as $teacher) {
+                $snapshot = $teacher->toArray();
+                unset($snapshot['password']);
+                $image = $teacher->image;
+
+                $this->teacherRepository->delete($teacher->id);
+
+                if ($image) {
+                    deleteFileStorage($image);
+                }
+
+                activity_log(
+                    action: 'delete',
+                    subject: $teacher,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_image' => $image ? basename($image) : null,
+                    ],
+                    logName: 'Xóa hàng loạt',
+                    description: 'Xóa giáo viên'
+                );
+            }
+
+            return back()->with('msg', 'Đã xóa ' . $teachers->count() . ' giảng viên.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
     }
 
     public function store(TeacherRequest $request)
     {
         $data = $request->except(['_token']);
-
-        $teacher = $this->teacherRepository->create($data); // ✅ nên return model
+        $teacher = $this->teacherRepository->create($data);
 
         activity_log(
             action: 'create',
             subject: $teacher,
             properties: [
-                'data' => array_diff_key($data, array_flip(['password'])), // không log password
+                'data' => array_diff_key($data, array_flip(['password'])),
             ],
             logName: 'Thêm mới',
             description: 'Tạo mới giáo viên'
@@ -77,11 +168,11 @@ class TeacherController extends Controller
         return redirect()->route('teacher.index')->with('msg', __('teacher::messages.create.success'));
     }
 
-
     public function edit($id)
     {
-        $pageTitle = 'Cập nhập giáo viên';
+        $pageTitle = 'Cập nhật giáo viên';
         $teacher = $this->teacherRepository->find($id);
+
         if (empty($teacher)) {
             abort(404);
         }
@@ -92,10 +183,12 @@ class TeacherController extends Controller
     public function update(TeacherRequest $request, $id)
     {
         $teacherModel = $this->teacherRepository->find($id);
-        if (empty($teacherModel)) abort(404);
+
+        if (empty($teacherModel)) {
+            abort(404);
+        }
 
         $old = $teacherModel->toArray();
-
         $data = $request->except('_token');
 
         if ($request->filled('password')) {
@@ -110,21 +203,24 @@ class TeacherController extends Controller
             $teacherFresh = $this->teacherRepository->find($id);
             $new = $teacherFresh ? $teacherFresh->toArray() : [];
 
-            // không log password
             unset($old['password'], $new['password']);
 
-            // nếu bạn thấy bio/description HTML quá dài, chỉ log bản rút gọn:
-            if (isset($old['description'])) $old['description'] = formatHtmlForLog($old['description'], 120);
-            if (isset($new['description'])) $new['description'] = formatHtmlForLog($new['description'], 120);
+            if (isset($old['description'])) {
+                $old['description'] = formatHtmlForLog($old['description'], 120);
+            }
 
-            \activity_log(
+            if (isset($new['description'])) {
+                $new['description'] = formatHtmlForLog($new['description'], 120);
+            }
+
+            activity_log(
                 action: 'update',
                 subject: $teacherFresh ?? $teacherModel,
                 properties: [
                     'old' => $old,
                     'new' => $new,
                 ],
-                logName: 'Cập nhập',
+                logName: 'Cập nhật',
                 description: 'Cập nhật giáo viên'
             );
 
@@ -134,23 +230,26 @@ class TeacherController extends Controller
         return back()->with('msg_danger', __('teacher::messages.update.failure'));
     }
 
-
     public function delete($id)
     {
         $teacher = $this->teacherRepository->find($id);
-        if (empty($teacher)) abort(404);
+
+        if (empty($teacher)) {
+            abort(404);
+        }
 
         $snapshot = $teacher->toArray();
-        unset($snapshot['password']); // không log password
-
+        unset($snapshot['password']);
         $image = $teacher->image;
 
         $status = $this->teacherRepository->delete($id);
 
         if ($status) {
-            if ($image) deleteFileStorage($image);
+            if ($image) {
+                deleteFileStorage($image);
+            }
 
-            \activity_log(
+            activity_log(
                 action: 'delete',
                 subject: $teacher,
                 properties: [
@@ -167,24 +266,25 @@ class TeacherController extends Controller
         return back()->with('msg_danger', 'Xóa thất bại');
     }
 
-
     public function logs(Request $request, $id)
     {
         $teacher = $this->teacherRepository->find($id);
-        if (empty($teacher)) abort(404);
+
+        if (empty($teacher)) {
+            abort(404);
+        }
 
         $pageTitle = "Lịch sử: {$teacher->name}";
 
         $query = ActiveLog::query()
             ->where('subject_type', get_class($teacher))
-            ->where('subject_id', $teacher->id)->withoutGlobalScopes();
+            ->where('subject_id', $teacher->id)
+            ->withoutGlobalScopes();
 
-        // 🔹 Filter theo action
         if ($request->filled('action')) {
             $query->where('action', $request->action);
         }
 
-        // 🔹 Filter theo khoảng thời gian
         if ($request->filled('from')) {
             $query->whereDate('created_at', '>=', $request->from);
         }
@@ -193,7 +293,6 @@ class TeacherController extends Controller
             $query->whereDate('created_at', '<=', $request->to);
         }
 
-        // 🔹 Filter theo keyword (description hoặc log_name)
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($sub) use ($q) {

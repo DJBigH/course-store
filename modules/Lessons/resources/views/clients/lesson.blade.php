@@ -13,7 +13,8 @@
                 @endphp
                 <div class="card-accordion px-0 {{ $item->id == $lesson->id ? 'active' : '' }}">
                     <div class="lesson-item {{ $isCompleted ? 'is-completed' : '' }}">
-                        <div class="lesson-left">
+                        <div
+                            class="lesson-left {{ $hasCourse ? 'lesson-left--trackable' : 'lesson-left--readonly' }} {{ !$hasCourse && (int) $item->is_trial === 1 ? 'lesson-left--trial' : '' }}">
                             @if ($hasCourse)
                                 <form method="POST"
                                     action="{{ route('lessons.toggle-completion', ['locale' => app()->getLocale(), 'slug' => $item->slug_locale]) }}"
@@ -39,9 +40,11 @@
                                         {{ __('lessons::clients/common.lesson_item') . ' ' . ++$index . ': ' . $item->name_locale }}
                                     </a>
                                 @else
-                                    <span class="lesson-title text-muted">
+                                    <a href="#"
+                                        class="lesson-title text-muted js-locked-lesson"
+                                        data-message="{{ __('courses::clients/common.lesson_purchase_required') }}">
                                         {{ __('lessons::clients/common.lesson_item') . ' ' . ++$index . ': ' . $item->name_locale }}
-                                    </span>
+                                    </a>
                                 @endif
                             </span>
                             <span class="lesson-time">{{ getTime($item->durations) }}</span>

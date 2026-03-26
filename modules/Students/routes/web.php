@@ -7,6 +7,7 @@ Route::prefix('admin')->group(function () {
    Route::prefix('students')->name('students.')->group(function () {
       Route::get('/', 'StudentController@index')->name('index');
       Route::get('data', 'StudentController@data')->name('data');
+      Route::post('/bulk', 'StudentController@bulkAction')->name('bulk');
       Route::get('/create', 'StudentController@create')->name('add');
       Route::post('/create', 'StudentController@store')->name('post-add');
       Route::get('/edit/{student}', 'StudentController@edit')->name('edit');

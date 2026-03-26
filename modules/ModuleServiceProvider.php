@@ -152,8 +152,14 @@ class ModuleServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
 
         $request = request();
-        if ($request->is('admin') || $request->is('admin/*')) {
+        $isAdminArea = $request->is('admin') || $request->is('admin/*');
+        $isAdminGuestRoute = $request->is('admin/forgot-password')
+            || $request->is('admin/reset-password')
+            || $request->is('admin/reset-password/*');
+
+        if ($isAdminArea && !$isAdminGuestRoute) {
             $this->app['router']->pushMiddlewareToGroup('web', 'auth');
+            $this->app['router']->pushMiddlewareToGroup('web', 'admin.access');
         }
     }
 

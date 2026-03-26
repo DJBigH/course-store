@@ -452,6 +452,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm bên admin bảo mật hơn
 - Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không)
 - Config gắn token hay api của bot telegram nếu đẩy lên production ( Hiện tại hướng dùng con botfather trên tele để thây tất cả thông tin ) làm chuẩn chỉ vì khi đẩy lên lại phải vào fix lại và có cách nào test được mình ở local mà test được nó kết nối được chưa không
+- Thêm remember login
+
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -488,7 +490,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin ( Bot tự đọc db các khóa học, mã giảm giá, hay liên quan j đến website không được đọc những thông tin nhạy cảm hay bảo mật) ( Done )
 - Kết nối với api của con gemeni thêm cho nó các api xem khóa học, đa ngôn ngữ (nếu thấy ổn thì làm)
 - Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không 
-- Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi )
+- Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi ) ( Done )
 - Check lại responsive
 
 Tổng kết

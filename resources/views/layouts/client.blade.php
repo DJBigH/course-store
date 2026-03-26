@@ -82,6 +82,7 @@
         })();
     </script>
     @include ('part.clients.header')
+    @include('part.clients.site-announcement')
     <main>
         @yield('content')
     </main>

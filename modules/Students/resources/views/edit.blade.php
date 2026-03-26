@@ -11,7 +11,7 @@
             Vui lòng kiểm tra lại dữ liệu đã nhập.
         </div>
     @endif
-    <form action="" method="post">
+    <form action="" method="post" class="admin-form">
         @csrf
         <div class="row">
             <div class="col-6">
@@ -98,7 +98,7 @@
                 </div>
             </div>
 
-            <div class="col-12 text-end">
+            <div class="col-12 text-end admin-form__footer">
                 <button type="submit" class="btn btn-success">Lưu</button>
                 <a href="{{ route('students.index') }}" class="btn btn-warning">Trở về</a>
             </div>

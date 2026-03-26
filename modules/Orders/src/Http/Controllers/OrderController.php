@@ -3,6 +3,8 @@
 namespace Modules\Orders\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Modules\Orders\src\Models\Order;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
@@ -27,6 +29,9 @@ class OrderController extends Controller
         $orders = $this->orderRepository->getCategories();
 
         return DataTables::of($orders)
+            ->addColumn('select', function ($order) {
+                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $order->id . '"></div>';
+            })
             ->editColumn('status_id', function ($orders) {
                 $name = $orders->status->name_locale;
                 $color = $orders->status->color;
@@ -47,10 +52,51 @@ class OrderController extends Controller
                 return '<a href="' . route('orders.show', $order->id) . '" class="btn btn-primary btn-sm">Xem</a>';
             })
             ->addColumn('delete', function ($order) {
-                return '<a href="' . route('orders.delete', $order->id) . '" class="btn btn-danger btn-sm delete-action">Xóa</a>';
+                return '<a href="' . route('orders.delete', $order->id) . '" class="btn btn-outline-danger btn-sm delete-action">Xóa</a>';
             })
-            ->rawColumns(['detail', 'delete', 'status_id'])
+            ->rawColumns(['select', 'detail', 'delete', 'status_id'])
             ->make(true);
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một đơn hàng.',
+            ]);
+        }
+
+        $orders = Order::query()->whereIn('id', $selectedIds)->get();
+
+        if ($orders->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy đơn hàng để xử lý.');
+        }
+
+        if ($action === 'cancel') {
+            $affected = Order::query()
+                ->whereIn('id', $selectedIds)
+                ->where('status_id', '!=', 2)
+                ->update(['status_id' => 4]);
+
+            return back()->with('msg', 'Đã hủy ' . $affected . ' đơn hàng chưa thanh toán.');
+        }
+
+        if ($action === 'delete') {
+            foreach ($orders as $order) {
+                $this->orderRepository->delete($order->id);
+            }
+
+            return back()->with('msg', 'Đã xóa ' . $orders->count() . ' đơn hàng.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
     }
 
     public function show($orderId)

@@ -131,5 +131,15 @@
         .empty-course p {
             font-size: 15px;
         }
+
+        @media (max-width: 575.98px) {
+            .empty-course {
+                padding: 40px 16px;
+            }
+
+            .empty-course video {
+                width: min(100%, 180px);
+            }
+        }
     </style>
 @endsection

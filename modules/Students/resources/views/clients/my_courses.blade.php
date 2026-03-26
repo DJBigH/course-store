@@ -80,11 +80,13 @@
                                         <tbody>
                                             @forelse ($courses as $course)
                                                 <tr>
-                                                    <td class="text-center fw-medium account-courses-index">
+                                                    <td class="text-center fw-medium account-courses-index"
+                                                        data-label="#">
                                                         {{ $loop->iteration }}
                                                     </td>
 
-                                                    <td class="account-courses-course">
+                                                    <td class="account-courses-course"
+                                                        data-label="{{ __('students::clients/account.my_course.course_name') }}">
                                                         <div class="fw-semibold account-courses-course__title">
                                                             <a
                                                                 href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}">{{ $course->name_locale }}</a>
@@ -95,7 +97,8 @@
                                                         </small>
                                                     </td>
 
-                                                    <td class="account-courses-progress-cell">
+                                                    <td class="account-courses-progress-cell"
+                                                        data-label="{{ __('lessons::clients/common.course_progress') }}">
                                                         <div class="account-course-progress">
                                                             <div class="account-course-progress__head">
                                                                 <strong>{{ $course->progress_percent }}%</strong>
@@ -115,13 +118,15 @@
                                                         </div>
                                                     </td>
 
-                                                    <td class="account-courses-teacher">
+                                                    <td class="account-courses-teacher"
+                                                        data-label="{{ __('students::clients/account.my_course.instructor') }}">
                                                         <span class="badge bg-info-subtle text-info px-3 py-2 account-courses-chip">
                                                             <a href="#">{{ $course->teacher->name_locale ?? 'Nguyen Van A' }}</a>
                                                         </span>
                                                     </td>
 
-                                                    <td class="account-courses-status">
+                                                    <td class="account-courses-status"
+                                                        data-label="{{ __('students::clients/account.my_course.status') }}">
                                                         @if ($course->pivot->status)
                                                             <span class="badge bg-success-subtle text-success px-3 py-2 account-courses-chip">
                                                                 <i class="bi bi-check-circle me-1"></i>
@@ -135,7 +140,8 @@
                                                         @endif
                                                     </td>
 
-                                                    <td class="text-center account-courses-action">
+                                                    <td class="text-center account-courses-action"
+                                                        data-label="{{ __('students::clients/account.my_course.action') }}">
                                                         <a href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}"
                                                             class="btn btn-primary btn-sm px-3 account-courses-action__btn">
                                                             <i class="bi bi-play-circle me-1"></i>
@@ -144,7 +150,7 @@
                                                     </td>
                                                 </tr>
                                             @empty
-                                                <tr>
+                                                <tr class="account-courses-empty-row">
                                                     <td colspan="6" class="text-center py-4 text-muted">
                                                         <div class="account-courses-empty">
                                                             <i class="bi bi-inbox"></i>
@@ -331,6 +337,10 @@
             min-width: 112px;
             white-space: nowrap;
             border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .account-courses-table tbody tr:hover td {
@@ -413,6 +423,173 @@
 
             .account-courses-progress-cell {
                 min-width: 180px;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .account-courses-content .card-body {
+                padding: 1.5rem !important;
+            }
+
+            .account-courses-head {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 10px;
+            }
+
+            .account-courses-content .table-responsive {
+                overflow: visible !important;
+            }
+
+            .account-courses-filter .row {
+                --bs-gutter-x: 0.85rem;
+                --bs-gutter-y: 0.85rem;
+            }
+
+            .account-courses-filter .col-md-6 {
+                width: 50%;
+            }
+
+            .account-courses-filter .col-lg-2 {
+                width: 100%;
+            }
+
+            .account-courses-filter .btn {
+                width: 100%;
+                min-height: 44px;
+            }
+
+            .account-courses-table {
+                min-width: 0;
+                border-spacing: 0;
+            }
+
+            .account-courses-table thead {
+                display: none;
+            }
+
+            .account-courses-table,
+            .account-courses-table tbody,
+            .account-courses-table tr,
+            .account-courses-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .account-courses-table tbody {
+                display: grid;
+                gap: 14px;
+            }
+
+            .account-courses-table tbody tr {
+                border: 1px solid rgba(148, 163, 184, 0.16);
+                border-radius: 18px;
+                overflow: hidden;
+                background: #ffffff;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+            }
+
+            .account-courses-table tbody td,
+            .account-courses-table tbody td:first-child,
+            .account-courses-table tbody td:last-child {
+                border: 0;
+                border-radius: 0;
+                padding: 12px 14px;
+                background: transparent;
+            }
+
+            .account-courses-table tbody td + td {
+                border-top: 1px solid rgba(203, 213, 225, 0.5);
+            }
+
+            .account-courses-table tbody td::before {
+                content: attr(data-label);
+                display: block;
+                margin-bottom: 6px;
+                color: #64748b;
+                font-size: 0.78rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+
+            .account-courses-index {
+                text-align: left !important;
+            }
+
+            .account-courses-course__title {
+                max-width: none;
+                font-size: 1rem;
+            }
+
+            .account-courses-course__meta {
+                margin-top: 6px;
+                font-size: 0.84rem;
+            }
+
+            .account-courses-progress-cell {
+                min-width: 0;
+            }
+
+            .account-courses-chip {
+                width: auto;
+                max-width: none;
+                justify-content: flex-start;
+                padding-inline: 12px !important;
+            }
+
+            .account-courses-action {
+                text-align: left !important;
+            }
+
+            .account-courses-action__btn {
+                width: 100%;
+                min-width: 0;
+                min-height: 42px;
+            }
+
+            .account-courses-empty-row td::before {
+                display: none;
+            }
+
+            .account-courses-empty-row .account-courses-empty {
+                min-height: 120px;
+                display: grid;
+                place-items: center;
+                text-align: center;
+            }
+
+            html[data-theme="dark"] .account-courses-table tbody tr {
+                background: rgba(15, 23, 42, 0.92);
+                border-color: rgba(148, 163, 184, 0.14);
+                box-shadow: 0 12px 30px rgba(2, 6, 23, 0.26);
+            }
+
+            html[data-theme="dark"] .account-courses-table tbody td + td {
+                border-top-color: rgba(148, 163, 184, 0.14);
+            }
+
+            html[data-theme="dark"] .account-courses-table tbody td::before {
+                color: #94a7c0;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .account-courses-content .card-body {
+                padding: 1.25rem !important;
+            }
+
+            .account-courses-filter .col-lg-2,
+            .account-courses-filter .btn {
+                width: 100%;
+            }
+
+            .account-courses-course__title {
+                font-size: 1rem;
+            }
+
+            .account-courses-course__meta {
+                font-size: 0.84rem;
             }
         }
     </style>

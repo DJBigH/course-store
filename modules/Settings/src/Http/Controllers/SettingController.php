@@ -25,7 +25,14 @@ class SettingController extends Controller
     public function update(SettingRequest $request)
     {
         // 1) Lấy tất cả input trừ file + token
-        $textInputs = $request->except('_token', 'banner_slider', 'banner_right', 'banner_full', 'logo');
+        $textInputs = array_merge(
+            $request->except('_token', 'banner_slider', 'banner_right', 'banner_full', 'logo'),
+            [
+                'global_notice_enabled' => $request->boolean('global_notice_enabled') ? '1' : '0',
+                'popup_notice_enabled' => $request->boolean('popup_notice_enabled') ? '1' : '0',
+                'popup_notice_snooze_minutes' => (string) ($request->input('popup_notice_snooze_minutes') ?: '60'),
+            ]
+        );
 
         // 2) Lấy old settings theo các key gửi lên
         $old = Setting::whereIn('key', array_keys($textInputs))

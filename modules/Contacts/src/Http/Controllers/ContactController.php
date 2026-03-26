@@ -5,15 +5,14 @@ namespace Modules\Contacts\src\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Modules\ActiveLogs\src\Models\ActiveLog;
-use Modules\Contacts\src\Http\Requests\ContactRequest;
 use Modules\Contacts\src\Repositories\ContactsRepositoryInterface;
-use Yajra\DataTables\Facades\DataTables;
 
 class ContactController extends Controller
 {
     protected $contactrepository;
+
     public function __construct(ContactsRepositoryInterface $contactsRepository)
     {
         $this->contactrepository = $contactsRepository;
@@ -23,22 +22,46 @@ class ContactController extends Controller
     {
         $pageTitle = 'Liên hệ thông tin';
         $pageName = 'Liên hệ';
+
         return view('contacts::index', compact('pageName', 'pageTitle'));
     }
 
-    public function data()
+    public function data(Request $request)
     {
         $contacts = $this->contactrepository->getContacts();
 
+        if ($request->filled('q')) {
+            $keyword = trim((string) $request->input('q'));
+
+            $contacts->where(function ($query) use ($keyword) {
+                $query->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('email', 'like', '%' . $keyword . '%')
+                    ->orWhere('phone', 'like', '%' . $keyword . '%')
+                    ->orWhere('message', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        if ($request->filled('status_filter')) {
+            $contacts->where('status', (int) $request->input('status_filter'));
+        }
+
+        if ($request->filled('from_date')) {
+            $contacts->whereDate('created_at', '>=', $request->input('from_date'));
+        }
+
+        if ($request->filled('to_date')) {
+            $contacts->whereDate('created_at', '<=', $request->input('to_date'));
+        }
+
         return datatables()->of($contacts)
             ->addColumn(
-                'logs',
-                fn($c) =>
-                '<a href="' . route('contacts.logs', $c->id) . '" class="btn btn-sm btn-secondary">
-        <i class="fas fa-clock"></i>
-     </a>'
+                'select',
+                fn($c) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $c->id . '"></div>'
             )
-
+            ->addColumn(
+                'logs',
+                fn($c) => '<a href="' . route('contacts.logs', $c->id) . '" class="btn btn-sm btn-secondary"><i class="fas fa-clock"></i></a>'
+            )
             ->addColumn('name', fn($c) => $c->name)
             ->addColumn('phone', fn($c) => $c->phone)
             ->addColumn('email', fn($c) => $c->email)
@@ -52,15 +75,13 @@ class ContactController extends Controller
             })
             ->addColumn(
                 'view',
-                fn($c) =>
-                '<a href="' . route('contacts.show', $c->id) . '" class="btn btn-sm btn-primary">Xem</a>'
+                fn($c) => '<a href="' . route('contacts.show', $c->id) . '" class="btn btn-sm btn-primary">Xem</a>'
             )
             ->addColumn(
                 'delete',
-                fn($c) =>
-                '<a href="' . route('contacts.delete', $c->id) . '" class="btn btn-danger delete-action">Xóa</a>'
+                fn($c) => '<a href="' . route('contacts.delete', $c->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>'
             )
-            ->rawColumns(['status', 'view', 'delete', 'logs'])
+            ->rawColumns(['select', 'status', 'view', 'delete', 'logs'])
             ->make(true);
     }
 
@@ -70,36 +91,97 @@ class ContactController extends Controller
         $pageName = 'Liên hệ';
 
         $contact = $this->contactrepository->find($id);
-        if (!$contact) abort(404);
 
-        // ✅ log view (tránh spam: chỉ log khi không có ?page=)
-        // if (!request()->has('page')) {
-        //     activity_log(
-        //         action: 'view',
-        //         subject: $contact,
-        //         properties: [
-        //             'contact' => [
-        //                 'name' => $contact->name,
-        //                 'email' => $contact->email,
-        //                 'phone' => $contact->phone,
-        //             ]
-        //         ],
-        //         logName: 'Xem chi tiết',
-        //         description: 'Xem chi tiết liên hệ'
-        //     );
-        // }
+        if (!$contact) {
+            abort(404);
+        }
 
         return view('contacts::show', compact('contact', 'pageName', 'pageTitle'));
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một liên hệ.',
+            ]);
+        }
+
+        $contacts = $selectedIds
+            ->map(fn($id) => $this->contactrepository->find($id))
+            ->filter();
+
+        if ($contacts->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy liên hệ để xử lý.');
+        }
+
+        if ($action === 'accept') {
+            foreach ($contacts as $contact) {
+                if ((int) $contact->status === 0) {
+                    $this->contactrepository->update($contact->id, ['status' => 1]);
+
+                    activity_log(
+                        action: 'accept',
+                        subject: $contact,
+                        properties: [
+                            'old' => ['status' => 0],
+                            'new' => ['status' => 1],
+                        ],
+                        logName: 'Tiếp nhận hàng loạt',
+                        description: 'Tiếp nhận liên hệ'
+                    );
+                }
+            }
+
+            return back()->with('msg', 'Đã tiếp nhận ' . $contacts->count() . ' liên hệ.');
+        }
+
+        if ($action === 'delete') {
+            foreach ($contacts as $contact) {
+                $snapshot = $contact->toArray();
+                $this->contactrepository->delete($contact->id);
+
+                activity_log(
+                    action: 'delete',
+                    subject: $contact,
+                    properties: [
+                        'data' => [
+                            'name' => $snapshot['name'] ?? null,
+                            'email' => $snapshot['email'] ?? null,
+                            'phone' => $snapshot['phone'] ?? null,
+                            'status' => $snapshot['status'] ?? null,
+                            'created_at' => $snapshot['created_at'] ?? null,
+                        ]
+                    ],
+                    logName: 'Xóa hàng loạt',
+                    description: 'Xóa liên hệ'
+                );
+            }
+
+            return back()->with('msg', 'Đã xóa ' . $contacts->count() . ' liên hệ.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
     }
 
     public function accept($id)
     {
         $contact = $this->contactrepository->find($id);
-        if (!$contact) abort(404);
 
-        $old = is_object($contact) && method_exists($contact, 'toArray') ? $contact->toArray() : (array)$contact;
+        if (!$contact) {
+            abort(404);
+        }
 
-        if ((int)$contact->status === 0) {
+        $old = is_object($contact) && method_exists($contact, 'toArray') ? $contact->toArray() : (array) $contact;
+
+        if ((int) $contact->status === 0) {
             $this->contactrepository->update($id, ['status' => 1]);
 
             $fresh = $this->contactrepository->find($id);
@@ -112,11 +194,10 @@ class ContactController extends Controller
                     'old' => ['status' => $old['status'] ?? 0],
                     'new' => ['status' => $new['status'] ?? 1],
                 ],
-                logName: 'contact',
+                logName: 'Liên hệ',
                 description: 'Tiếp nhận liên hệ'
             );
         } else {
-            // Optional: log thao tác "tiếp nhận lại"
             activity_log(
                 action: 'accept',
                 subject: $contact,
@@ -132,10 +213,12 @@ class ContactController extends Controller
     public function delete($id)
     {
         $contact = $this->contactrepository->find($id);
-        if (!$contact) abort(404);
+
+        if (!$contact) {
+            abort(404);
+        }
 
         $snapshot = $contact->toArray();
-
         $status = $this->contactrepository->delete($id);
 
         if ($status) {
@@ -161,24 +244,25 @@ class ContactController extends Controller
         return back()->with('msg_danger', 'Xóa thất bại');
     }
 
-
     public function logs(Request $request, $id)
     {
         $contacts = $this->contactrepository->find($id);
-        if (empty($contacts)) abort(404);
+
+        if (empty($contacts)) {
+            abort(404);
+        }
 
         $pageTitle = "Lịch sử: {$contacts->name}";
 
         $query = ActiveLog::query()
             ->where('subject_type', get_class($contacts))
-            ->where('subject_id', $contacts->id)->withoutGlobalScopes();
+            ->where('subject_id', $contacts->id)
+            ->withoutGlobalScopes();
 
-        // 🔹 Filter theo action
         if ($request->filled('action')) {
             $query->where('action', $request->action);
         }
 
-        // 🔹 Filter theo khoảng thời gian
         if ($request->filled('from')) {
             $query->whereDate('created_at', '>=', $request->from);
         }
@@ -187,7 +271,6 @@ class ContactController extends Controller
             $query->whereDate('created_at', '<=', $request->to);
         }
 
-        // 🔹 Filter theo keyword (description hoặc log_name)
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($sub) use ($q) {

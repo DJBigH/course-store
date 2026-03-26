@@ -194,5 +194,27 @@ a {
 	width: 100% !important;
 }
 
+@media (max-width: 767.98px) {
+    .home-back a {
+        margin: 20px 0 0 0;
+        font-size: 1rem;
+    }
+
+    .home-back span {
+        width: 42px;
+        height: 42px;
+    }
+
+    .sign-in {
+        width: min(100%, 500px);
+        margin: 24px auto 0;
+        padding: 24px 18px;
+        border-radius: 16px;
+    }
+
+    .sign-in h3 {
+        font-size: 1.25rem;
+    }
+}
 
 

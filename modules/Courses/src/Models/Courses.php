@@ -4,6 +4,7 @@ namespace Modules\Courses\src\Models;
 
 use App\Models\Scopes\ActiveScope;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Categories\Src\Models\Category;
 use Modules\Courses\src\Models\CourseComment;
 use Modules\Lessons\src\Models\Lesson;
@@ -13,6 +14,8 @@ use Modules\Teacher\src\Models\Teacher;
 
 class Courses extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'courses';
 
     protected $fillable = [

@@ -2,6 +2,7 @@
 
 namespace Modules\User\src\Models;
 
+use App\Notifications\AdminResetPasswordQueued;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -46,8 +47,20 @@ class User extends Authenticatable implements HasLocalePreference
         'password' => 'hashed',
     ];
 
+    public function isAdmin(): bool
+    {
+        return (int) ($this->group_id ?? 0) === 1;
+    }
+
     public function preferredLocale()
     {
         return app()->getLocale() ?: config('app.locale', 'vi');
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(
+            (new AdminResetPasswordQueued($token))->locale($this->preferredLocale())
+        );
     }
 }

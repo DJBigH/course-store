@@ -131,6 +131,17 @@ if (!function_exists('logFieldLabels')) {
             'banner_slider' => 'Banner slider',
             'banner_right' => 'Banner bên phải',
             'banner_full' => 'Banner full',
+            'global_notice_enabled' => 'Bật thông báo tổng',
+            'global_notice_title' => 'Tiêu đề thông báo tổng',
+            'global_notice_content' => 'Nội dung thông báo tổng',
+            'global_notice_link_label' => 'Nút thông báo tổng',
+            'global_notice_link_url' => 'Liên kết thông báo tổng',
+            'popup_notice_enabled' => 'Bật popup thông báo',
+            'popup_notice_title' => 'Tiêu đề popup',
+            'popup_notice_content' => 'Nội dung popup',
+            'popup_notice_link_label' => 'Nút popup',
+            'popup_notice_link_url' => 'Liên kết popup',
+            'popup_notice_snooze_minutes' => 'Số phút tắt popup tạm thời',
             'teacher_id' => 'Giảng viên',
             'parent_id' => 'Mục cha',
             'exp' => 'Kinh nghiệm',
@@ -515,6 +526,8 @@ if (!function_exists('formatLogValue')) {
             'supports_ko',
             'supports_ja',
             'supports_zh',
+            'global_notice_content',
+            'popup_notice_content',
         ], true)) {
             return formatHtmlForLog((string) $value, 220);
         }

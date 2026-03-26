@@ -182,6 +182,101 @@
             color: #dc2626;
         }
 
+        @media (max-width: 768px) {
+            .course-card {
+                flex-direction: column;
+                border-radius: 18px;
+            }
+
+            .course-thumb {
+                width: 100%;
+            }
+
+            .course-thumb img {
+                width: 100%;
+                height: 220px;
+                object-fit: cover;
+                object-position: center;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .foundation-course .container {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+
+            .section-title {
+                font-size: 1.2rem;
+                line-height: 1.4;
+            }
+
+            .row.g-4 {
+                --bs-gutter-y: 1rem;
+            }
+
+            .course-card {
+                border-radius: 20px;
+                box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+            }
+
+            .course-content {
+                padding: 14px 14px 16px;
+                gap: 12px;
+            }
+
+            .course-thumb img {
+                height: 188px;
+            }
+
+            .course-meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 0;
+                font-size: 11px;
+            }
+
+            .course-meta span {
+                display: inline-flex;
+                align-items: center;
+                padding: 6px 10px;
+                border-radius: 999px;
+                background: #eff6ff;
+                color: #475569;
+                line-height: 1.3;
+            }
+
+            .course-title a {
+                font-size: 15px;
+                line-height: 1.45;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .course-teacher {
+                margin-top: 0;
+            }
+
+            .course-teacher span {
+                font-size: 13px;
+            }
+
+            .course-price {
+                width: 100%;
+                margin-top: 0;
+            }
+
+            .course-price .btn-view {
+                width: 100%;
+                text-align: center;
+                padding: 10px 14px;
+                border-radius: 14px;
+            }
+        }
+
         html[data-theme="dark"] .foundation-course {
             background: #0a1628;
         }
@@ -213,6 +308,11 @@
         html[data-theme="dark"] .foundation-course .course-teacher span,
         html[data-theme="dark"] .foundation-course .text-muted {
             color: #9fb4cb !important;
+        }
+
+        html[data-theme="dark"] .foundation-course .course-meta span {
+            background: rgba(96, 165, 250, 0.1);
+            color: #c7d5e8;
         }
 
         html[data-theme="dark"] .foundation-course .btn-view {

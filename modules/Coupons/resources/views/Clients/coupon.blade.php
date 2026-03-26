@@ -164,6 +164,19 @@
             background: #eff6ff;
         }
 
+        @media (max-width: 767.98px) {
+            .coupon-page {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+
+            .coupon-page h4 {
+                align-items: flex-start;
+                flex-wrap: wrap;
+                font-size: 1.1rem;
+            }
+        }
+
         html[data-theme="dark"] .coupon-page {
             background:
                 radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 24%),

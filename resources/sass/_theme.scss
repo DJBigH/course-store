@@ -87,6 +87,53 @@ a:hover {
     box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
 }
 
+@media (max-width: 575.98px) {
+    .pagination-nav {
+        gap: 0.75rem;
+    }
+
+    .account-pagination-mobile {
+        width: 100%;
+    }
+
+    .page-link-compact--mobile {
+        flex: 1 1 0;
+        min-height: 46px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0.75rem 1rem !important;
+        border-radius: 16px !important;
+        font-size: 0.92rem !important;
+        font-weight: 700 !important;
+        line-height: 1;
+    }
+
+    .pagination-nav .pagination {
+        width: 100%;
+        justify-content: stretch;
+        gap: 0.75rem;
+    }
+
+    .pagination-nav .pagination .page-item {
+        flex: 1 1 0;
+    }
+
+    .pagination-nav .pagination .page-link {
+        width: 100%;
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        border-radius: 16px !important;
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-align: center;
+    }
+}
+
 @keyframes clientPaginationReveal {
     from {
         opacity: 0.4;
@@ -1501,6 +1548,16 @@ html[data-theme="dark"] .checkout-page .alert-warning {
     html[data-theme="dark"] .checkout-page .checkout-main-card,
     html[data-theme="dark"] .checkout-page .checkout-side-card {
         box-shadow: none;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199.98px) {
+    .theme-toggle {
+        min-width: 0;
+    }
+
+    .theme-toggle__label {
+        display: inline;
     }
 }
 

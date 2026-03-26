@@ -162,7 +162,7 @@
     <div class="action-bar">
         <div class="container">
             <div class="row align-items-center">
-                <div class="d-none d-lg-block col-lg-3">
+                <div class="d-none d-xl-block col-xl-3">
                     <form class="header-search" action="{{ route('courses.home', ['locale' => app()->getLocale()]) }}"
                         method="GET" role="search">
                         <label class="visually-hidden"
@@ -178,7 +178,7 @@
                         </button>
                     </form>
                 </div>
-                <div class="d-none d-lg-block col-lg-4">
+                <div class="d-none d-xl-block col-xl-4">
                     <div class="d-flex">
                         <p class="slogan">
                             <i class="fas fa-phone"></i>{{ __('clients/common.support') }}
@@ -190,7 +190,7 @@
                         </p>
                     </div>
                 </div>
-                <div class="col-lg-5">
+                <div class="col-12 col-xl-5">
                     <div class="social d-flex align-items-center justify-content-end gap-2">
                         <button class="btn btn-outline-primary theme-toggle" type="button" data-theme-toggle
                             data-theme-label-light="{{ __('clients/common.theme_light') }}"
@@ -231,13 +231,15 @@
                         </div>
 
                         @if (auth('students')->check())
-                            <div class="d-flex align-items-center gap-3">
+                            <div class="header-user-actions d-flex align-items-center gap-3">
 
                                 {{-- Notification bell --}}
-                                <div class="nav-item dropdown notification-hover position-relative">
+                                <div class="nav-item dropdown notification-hover position-relative" data-notification-dropdown>
 
-                                    <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown"
-                                        role="button">
+                                    <a class="nav-link dropdown-toggle header-notification-toggle" href="#"
+                                        id="notificationDropdown" role="button" data-bs-toggle="dropdown"
+                                        data-bs-auto-close="outside" aria-expanded="false"
+                                        data-notification-toggle>
 
                                         <i class="fas fa-bell"></i>
 
@@ -251,6 +253,7 @@
                                     </a>
 
                                     <ul class="dropdown-menu dropdown-menu-end notification-dropdown"
+                                        data-notification-menu
                                         aria-labelledby="notificationDropdown">
 
                                         <li class="dropdown-header fw-bold">
@@ -288,7 +291,7 @@
                                 </div>
                                 {{-- User dropdown --}}
                                 <div class="dropdown">
-                                    <button class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2"
+                                    <button class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2 header-user-toggle"
                                         type="button" id="userDropdown" data-bs-toggle="dropdown"
                                         aria-expanded="false">
                                         <i class="fas fa-user-circle"></i>
@@ -334,7 +337,7 @@
             </div>
         </div>
     </div>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-xl navbar-light bg-light">
         <div class="container">
 
             {{-- Logo --}}
@@ -345,7 +348,7 @@
 
 
             {{-- Toggle mobile --}}
-            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
+            <button class="navbar-toggler d-xl-none" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
                 aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -364,14 +367,17 @@
                     </li>
 
                     <li class="nav-item dropdown dropdown-hover">
-                        <a class="nav-link
+                        <a class="nav-link nav-link--submenu-toggle
         {{ request()->routeIs('courses.*') ? 'active' : '' }}"
-                            id="coursesDropdown" role="button">
+                            id="coursesDropdown" role="button" href="#"
+                            data-mobile-submenu-toggle="courses-submenu"
+                            aria-expanded="false">
                             <i class="fas fa-tv"></i>
-                            {{ __('clients/common.course_categories') }}
+                            <span>{{ __('clients/common.course_categories') }}</span>
+                            <i class="fas fa-chevron-down nav-link__chevron" aria-hidden="true"></i>
                         </a>
 
-                        <ul class="dropdown-menu">
+                        <ul class="dropdown-menu mobile-nav-submenu" id="courses-submenu">
                             @foreach ($courseCategories as $category)
                                 <li class="dropdown-submenu">
                                     <a class="dropdown-item"
@@ -419,3 +425,113 @@
 
 </header>
 <form action="{{ route('clients-logout', ['locale' => app()->getLocale()]) }}" method="post" name="form-logout">@csrf</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggles = document.querySelectorAll('[data-mobile-submenu-toggle]');
+        const notificationRoot = document.querySelector('[data-notification-dropdown]');
+        const notificationToggle = notificationRoot?.querySelector('[data-notification-toggle]');
+        const notificationMenu = notificationRoot?.querySelector('[data-notification-menu]');
+
+        const mobileOnly = () => window.innerWidth < 1200;
+
+        const resetSubmenus = () => {
+            toggles.forEach((toggle) => {
+                const submenuId = toggle.dataset.mobileSubmenuToggle;
+                const submenu = submenuId ? document.getElementById(submenuId) : null;
+
+                toggle.classList.remove('is-open');
+                toggle.setAttribute('aria-expanded', 'false');
+
+                if (submenu) {
+                    submenu.classList.remove('is-open');
+                }
+            });
+        };
+
+        if (toggles.length) {
+            toggles.forEach((toggle) => {
+                toggle.addEventListener('click', (event) => {
+                    if (!mobileOnly()) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    const submenuId = toggle.dataset.mobileSubmenuToggle;
+                    const submenu = submenuId ? document.getElementById(submenuId) : null;
+
+                    if (!submenu) {
+                        return;
+                    }
+
+                    const willOpen = !submenu.classList.contains('is-open');
+                    resetSubmenus();
+
+                    if (willOpen) {
+                        toggle.classList.add('is-open');
+                        toggle.setAttribute('aria-expanded', 'true');
+                        submenu.classList.add('is-open');
+                    }
+                });
+            });
+        }
+
+        const closeNotificationDropdown = () => {
+            if (!notificationRoot || !notificationToggle || !notificationMenu) {
+                return;
+            }
+
+            notificationRoot.classList.remove('is-open');
+            notificationToggle.setAttribute('aria-expanded', 'false');
+            notificationMenu.classList.remove('show');
+        };
+
+        const openNotificationDropdown = () => {
+            if (!notificationRoot || !notificationToggle || !notificationMenu) {
+                return;
+            }
+
+            notificationRoot.classList.add('is-open');
+            notificationToggle.setAttribute('aria-expanded', 'true');
+            notificationMenu.classList.add('show');
+        };
+
+        if (notificationToggle && notificationMenu) {
+            notificationToggle.addEventListener('click', (event) => {
+                if (!mobileOnly()) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (notificationRoot.classList.contains('is-open')) {
+                    closeNotificationDropdown();
+                    return;
+                }
+
+                openNotificationDropdown();
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!mobileOnly() || !notificationRoot) {
+                    return;
+                }
+
+                if (notificationRoot.contains(event.target)) {
+                    return;
+                }
+
+                closeNotificationDropdown();
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            if (!mobileOnly()) {
+                resetSubmenus();
+                closeNotificationDropdown();
+            }
+        });
+    });
+</script>

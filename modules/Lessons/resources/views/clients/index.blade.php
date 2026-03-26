@@ -104,6 +104,8 @@
         const progressBarEl = document.querySelector('[data-progress-bar]');
         const progressMetaEl = document.querySelector('[data-progress-meta]');
         const lessonToggleFallbackError = @json(__('lessons::clients/common.completion_error'));
+        const lockedLessonList = document.querySelectorAll('.js-locked-lesson');
+        const lessonPurchaseRequiredMessage = @json(__('courses::clients/common.lesson_purchase_required'));
 
         const setLessonToggleError = (message) => {
             if (!lessonToggleError) {
@@ -178,6 +180,13 @@
                 } finally {
                     button.disabled = false;
                 }
+            });
+        });
+
+        lockedLessonList.forEach((lessonLink) => {
+            lessonLink.addEventListener('click', (event) => {
+                event.preventDefault();
+                alert(lessonLink.dataset.message || lessonPurchaseRequiredMessage);
             });
         });
     </script>
@@ -344,6 +353,14 @@
             column-gap: 10px;
         }
 
+        .accordion .accordion-detail .card-accordion>div .lesson-left.lesson-left--readonly {
+            grid-template-columns: 22px minmax(0, 1fr) auto;
+        }
+
+        .accordion .accordion-detail .card-accordion>div .lesson-left.lesson-left--readonly.lesson-left--trial {
+            grid-template-columns: 22px minmax(0, 1fr) auto auto;
+        }
+
         .lesson-text {
             display: flex;
             flex-direction: column;
@@ -351,6 +368,7 @@
             min-width: 0;
             flex: 1 1 auto;
             text-align: left;
+            padding-left: 4px;
         }
 
         .accordion .accordion-detail .card-accordion>div .lesson-text {
@@ -454,7 +472,151 @@
             color: #dbeafe;
         }
 
+        .video-detail .ratio {
+            overflow: hidden;
+            border-radius: 18px;
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.2);
+            background: #020617;
+        }
+
+        .accordion-title {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 10px;
+        }
+
+        .lesson-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            font-size: 12px;
+            line-height: 1.2;
+            color: #64748b;
+        }
+
+        @media (max-width: 991.98px) and (min-width: 576px) {
+            .lesson-nav {
+                margin-top: 20px !important;
+                margin-bottom: 18px;
+                align-items: center;
+            }
+
+            .lesson-nav>div {
+                display: flex;
+            }
+
+            .btn-lesson {
+                min-height: 48px;
+                padding: 12px 18px;
+                border-radius: 14px;
+            }
+
+            .accordion .accordion-detail .card-accordion>div .lesson-left {
+                grid-template-columns: 20px 22px minmax(0, 1fr) auto auto;
+                column-gap: 10px;
+                row-gap: 0;
+                padding: 14px 12px;
+            }
+
+            .accordion .accordion-detail .card-accordion>div .lesson-left.lesson-left--readonly {
+                grid-template-columns: 22px minmax(0, 1fr) auto;
+            }
+
+            .accordion .accordion-detail .card-accordion>div .lesson-left.lesson-left--readonly.lesson-left--trial {
+                grid-template-columns: 22px minmax(0, 1fr) auto auto;
+            }
+
+            .lesson-text {
+                padding-left: 2px;
+            }
+
+            .lesson-title {
+                font-size: 0.96rem;
+                line-height: 1.4;
+                word-break: normal;
+                overflow-wrap: anywhere;
+            }
+
+            .lesson-time {
+                min-width: 72px;
+                text-align: right;
+                font-size: 12px;
+            }
+
+            .lesson-left .preview.trial-btn {
+                min-width: 54px;
+                margin-left: 2px;
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+        }
+
         @media (max-width: 575.98px) {
+            .video {
+                padding-bottom: 78px;
+            }
+
+            .video .row {
+                row-gap: 14px;
+            }
+
+            .video h3 {
+                margin-bottom: 14px;
+                font-size: 1.05rem;
+                line-height: 1.3;
+                letter-spacing: -0.01em;
+            }
+
+            .video-detail .ratio {
+                border-radius: 14px;
+                box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+            }
+
+            .lesson-nav {
+                gap: 8px;
+                margin-top: 14px !important;
+            }
+
+            .lesson-nav>div {
+                width: 100%;
+            }
+
+            .lesson-nav>div:empty {
+                display: none;
+            }
+
+            .btn-lesson {
+                min-height: 46px;
+                padding: 10px 14px;
+                border-radius: 14px;
+                gap: 8px;
+                font-size: 0.92rem;
+            }
+
+            .lesson-progress-card {
+                padding: 14px;
+                border-radius: 14px;
+                margin-bottom: 12px !important;
+            }
+
+            .lesson-progress-card__head strong,
+            .lesson-progress-card__head span {
+                font-size: 0.92rem;
+            }
+
+            .lesson-progress-card__meta {
+                margin-top: 8px;
+                font-size: 12px;
+            }
+
+            .nav p {
+                min-height: 44px;
+                padding: 10px;
+                font-size: 0.92rem;
+            }
+
             .lesson-left {
                 align-items: flex-start;
             }
@@ -462,6 +624,16 @@
             .accordion .accordion-detail .card-accordion>div .lesson-left {
                 grid-template-columns: 20px 22px minmax(0, 1fr);
                 row-gap: 6px;
+                column-gap: 10px;
+                padding: 12px 10px;
+            }
+
+            .accordion .accordion-detail .card-accordion>div .lesson-left.lesson-left--readonly {
+                grid-template-columns: 22px minmax(0, 1fr) auto;
+            }
+
+            .accordion .accordion-detail .card-accordion>div .lesson-left.lesson-left--readonly.lesson-left--trial {
+                grid-template-columns: 22px minmax(0, 1fr) auto;
             }
 
             .lesson-time {
@@ -469,6 +641,43 @@
                 min-width: auto;
                 width: auto;
                 text-align: left;
+                font-size: 12px;
+            }
+
+            .lesson-left.lesson-left--readonly .lesson-time {
+                grid-column: 3;
+            }
+
+            .lesson-left.lesson-left--readonly .preview.trial-btn {
+                grid-column: 3;
+                justify-self: start;
+                margin-left: 0;
+            }
+
+            .lesson-title {
+                font-size: 0.92rem;
+                line-height: 1.38;
+            }
+
+            .lesson-status {
+                width: 20px;
+                justify-content: center;
+            }
+
+            .accordion-title {
+                padding: 14px 10px;
+                font-size: 1rem;
+                line-height: 1.32;
+            }
+
+            .lesson-count {
+                align-self: start;
+                font-size: 11px;
+                padding-left: 4px;
+            }
+
+            .group {
+                border-radius: 16px;
             }
         }
     </style>

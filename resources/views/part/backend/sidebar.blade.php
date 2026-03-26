@@ -2,14 +2,13 @@
     <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
         <div class="sb-sidenav-menu">
             <div class="nav">
-                <div class="sb-sidenav-menu-heading">Quản lý</div>
+                <div class="sb-sidenav-menu-heading mt-2">Quản lý</div>
 
                 <a class="nav-link" href="{{ route('admin.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                     Tổng quan
                 </a>
 
-                {{-- Nội dung --}}
                 @include('part.backend.menu_item', [
                     'title' => 'Khóa học',
                     'name' => 'courses',
@@ -26,7 +25,6 @@
                     'name' => 'teacher',
                 ])
 
-                {{-- Người dùng --}}
                 @include('part.backend.menu_item', [
                     'title' => 'Học viên',
                     'name' => 'students',
@@ -37,7 +35,6 @@
                     'name' => 'user',
                 ])
 
-                {{-- Bán hàng --}}
                 @include('part.backend.menu_item', [
                     'title' => 'Đơn hàng',
                     'name' => 'orders',
@@ -54,7 +51,7 @@
                 ])
 
                 @include('part.backend.menu_item', [
-                    'title' => 'Cấu hình Website',
+                    'title' => 'Cấu hình website',
                     'name' => 'settings',
                 ])
 

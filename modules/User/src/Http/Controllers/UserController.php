@@ -6,47 +6,127 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\User\src\Http\Requests\UpdateProfileRequest;
 use Modules\User\src\Http\Requests\UserRequest;
-use Modules\User\src\Repositories\UserRepository;
+use Modules\User\src\Models\User;
 use Modules\User\src\Repositories\UserRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
 {
-
     protected $userRepository;
 
     public function __construct(UserRepositoryInterface $userRepository)
     {
         $this->userRepository = $userRepository;
     }
+
     public function index()
     {
         $pageTitle = 'Quản lý người dùng';
-        return view('user::lists', compact('pageTitle'));
+        $groupOptions = User::query()
+            ->select('group_id')
+            ->whereNotNull('group_id')
+            ->distinct()
+            ->orderBy('group_id')
+            ->pluck('group_id');
+
+        return view('user::lists', compact('pageTitle', 'groupOptions'));
     }
 
-    public function data()
+    public function data(Request $request)
     {
         $users = $this->userRepository->getAllUser();
 
+        if ($request->filled('q')) {
+            $keyword = trim((string) $request->input('q'));
+
+            $users->where(function ($query) use ($keyword) {
+                $query->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('email', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        if ($request->filled('group_filter')) {
+            $users->where('group_id', (int) $request->input('group_filter'));
+        }
+
+        if ($request->filled('from_date')) {
+            $users->whereDate('created_at', '>=', $request->input('from_date'));
+        }
+
+        if ($request->filled('to_date')) {
+            $users->whereDate('created_at', '<=', $request->input('to_date'));
+        }
+
         return DataTables::of($users)
+            ->addColumn('select', function ($user) {
+                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $user->id . '"></div>';
+            })
             ->addColumn('logs', function ($user) {
-                return '<a href="' . route('user.logs', $user->id) . '" class="btn btn-info">Lịch sử</a>';
+                return '<a href="' . route('user.logs', $user->id) . '" class="btn btn-light border">Lịch sử</a>';
             })
             ->addColumn('edit', function ($user) {
                 return '<a href="' . route('user.edit', $user->id) . '" class="btn btn-warning">Sửa</a>';
             })
             ->addColumn('delete', function ($user) {
-                return '<a href="' . route('user.delete', $user->id) . '" class="btn btn-danger delete-action">Xóa</a>';
+                return '<a href="' . route('user.delete', $user->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>';
             })
-            ->editColumn('created_at', function ($users) {
-                return Carbon::parse($users->created_at)->format('d/m/Y H:i:s');
+            ->editColumn('group_id', function ($user) {
+                return $this->formatGroupLabel((int) $user->group_id);
             })
-            ->rawColumns(['edit', 'delete', 'logs'])
+            ->editColumn('created_at', function ($user) {
+                return Carbon::parse($user->created_at)->format('d/m/Y H:i:s');
+            })
+            ->rawColumns(['select', 'edit', 'delete', 'logs'])
             ->toJson();
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một người dùng.',
+            ]);
+        }
+
+        $users = $selectedIds
+            ->map(fn($id) => $this->userRepository->find($id))
+            ->filter();
+
+        if ($users->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy người dùng để xử lý.');
+        }
+
+        if ($action === 'delete') {
+            foreach ($users as $user) {
+                $snapshot = $user->toArray();
+                unset($snapshot['password']);
+
+                $this->userRepository->delete($user->id);
+
+                activity_log(
+                    action: 'delete',
+                    subject: $user,
+                    properties: ['data' => $snapshot],
+                    logName: 'Xóa hàng loạt',
+                    description: 'Xóa người dùng'
+                );
+            }
+
+            return back()->with('msg', 'Đã xóa ' . $users->count() . ' người dùng.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
     }
 
     public function create()
@@ -63,7 +143,9 @@ class UserController extends Controller
             'group_id' => $request->group_id,
             'password' => bcrypt($request->password),
         ];
+
         $user = $this->userRepository->create($dataInsert);
+
         activity_log(
             action: 'create',
             subject: $user,
@@ -71,13 +153,15 @@ class UserController extends Controller
             logName: 'Thêm mới',
             description: 'Tạo mới người dùng'
         );
+
         return redirect()->route('user.index')->with('msg', __('user::messages.create.success'));
     }
 
     public function edit($id)
     {
-        $pageTitle = 'Cập nhập người dùng';
+        $pageTitle = 'Cập nhật người dùng';
         $users = $this->userRepository->find($id);
+
         if (empty($users)) {
             abort(404);
         }
@@ -94,7 +178,6 @@ class UserController extends Controller
         }
 
         $old = $this->userRepository->find($id);
-
         $status = $this->userRepository->update($id, $data);
 
         if (!empty($status)) {
@@ -107,31 +190,37 @@ class UserController extends Controller
                     'old' => $old?->toArray(),
                     'new' => $new?->toArray(),
                 ],
-                logName: "Cập nhập",
+                logName: 'Cập nhật',
                 description: 'Cập nhật người dùng'
             );
-            if (!empty($status)) {
-                return back()->with('msg', __('user::messages.update.success'));
-            } else {
-                return back()->with('msg_danger', __('user::messages.update.failure'));
-            }
+
+            return back()->with('msg', __('user::messages.update.success'));
         }
+
+        return back()->with('msg_danger', __('user::messages.update.failure'));
     }
 
     public function delete($id)
     {
         $users = $this->userRepository->find($id);
+
         if (empty($users)) {
             abort(404);
         }
-        $user = $this->userRepository->delete($id);
+
+        $snapshot = $users->toArray();
+        unset($snapshot['password']);
+
+        $this->userRepository->delete($id);
+
         activity_log(
             action: 'delete',
-            subject: $user,
-            properties: ['data' => $user->toArray()],
+            subject: $users,
+            properties: ['data' => $snapshot],
             logName: 'Xóa',
             description: 'Xóa người dùng'
         );
+
         return back()->with('msg', __('user::messages.delete.success'));
     }
 
@@ -146,21 +235,37 @@ class UserController extends Controller
     public function showUpdate(UpdateProfileRequest $request)
     {
         $userId = auth()->id();
-
         $data = $request->except('_token', 'password');
+        $passwordChanged = $request->filled('password');
+        $newPassword = (string) $request->input('password');
 
-        if ($request->filled('password')) {
-            $data['password'] = bcrypt($request->password);
+        if ($passwordChanged) {
+            $data['password'] = bcrypt($newPassword);
         }
 
-        $status =  $this->userRepository->update($userId, $data);
+        $this->userRepository->update($userId, $data);
+
+        if ($passwordChanged) {
+            Auth::logoutOtherDevices($newPassword);
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()
+                ->route('login')
+                ->with('msg', 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại.');
+        }
+
         return back()->with('msg', __('user::messages.update.success'));
     }
 
     public function logs(Request $request, $id)
     {
         $user = $this->userRepository->find($id);
-        if (empty($user)) abort(404);
+
+        if (empty($user)) {
+            abort(404);
+        }
 
         $pageTitle = "Lịch sử: {$user->name}";
 
@@ -168,12 +273,10 @@ class UserController extends Controller
             ->where('subject_type', get_class($user))
             ->where('subject_id', $user->id);
 
-        // 🔹 Filter theo action
         if ($request->filled('action')) {
             $query->where('action', $request->action);
         }
 
-        // 🔹 Filter theo khoảng thời gian
         if ($request->filled('from')) {
             $query->whereDate('created_at', '>=', $request->from);
         }
@@ -182,7 +285,6 @@ class UserController extends Controller
             $query->whereDate('created_at', '<=', $request->to);
         }
 
-        // 🔹 Filter theo keyword (description hoặc log_name)
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($sub) use ($q) {
@@ -197,5 +299,14 @@ class UserController extends Controller
             ->withQueryString();
 
         return view('user::logs', compact('pageTitle', 'user', 'logs'));
+    }
+
+    private function formatGroupLabel(int $groupId): string
+    {
+        return match ($groupId) {
+            1 => 'Quản trị',
+            2 => 'Biên tập',
+            default => 'Nhóm #' . $groupId,
+        };
     }
 }

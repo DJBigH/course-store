@@ -364,6 +364,25 @@
                 font-size: 1.05rem;
             }
         }
+
+        @media (max-width: 575.98px) {
+            .about-page {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+
+            .about-page__hero h2 {
+                font-size: 1.8rem;
+            }
+
+            .about-page__channel {
+                padding: 12px 14px;
+            }
+
+            .about-page__contact-meta p {
+                align-items: flex-start;
+            }
+        }
     </style>
 @endsection
 

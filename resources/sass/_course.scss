@@ -169,3 +169,27 @@
     }
 }
 
+@media (max-width: 575.98px) {
+    .sub-header .sub-title {
+        padding: 16px 0;
+    }
+
+    .sub-header .sub-title p {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px 8px;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+
+    .sub-header .sub-title i {
+        padding: 0;
+    }
+
+    .sub-header .sub-title h2 {
+        font-size: 1.35rem;
+        line-height: 1.35;
+        word-break: break-word;
+    }
+}

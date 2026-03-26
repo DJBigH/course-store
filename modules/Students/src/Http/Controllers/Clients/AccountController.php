@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Modules\ActiveLogs\src\Models\ActiveLog;
@@ -170,19 +171,27 @@ class AccountController extends Controller
             $locale = app()->getLocale();
             $localizedNameColumn = 'name_' . $locale;
             $localizedDescriptionColumn = 'description_' . $locale;
+            $searchableColumns = array_values(array_filter([
+                Schema::hasColumn('courses', 'name') ? 'name' : null,
+                Schema::hasColumn('courses', 'description') ? 'description' : null,
+                Schema::hasColumn('courses', $localizedNameColumn) ? $localizedNameColumn : null,
+                Schema::hasColumn('courses', $localizedDescriptionColumn) ? $localizedDescriptionColumn : null,
+            ]));
 
-            $courses->where(function ($query) use ($keyword, $localizedNameColumn, $localizedDescriptionColumn) {
-                $query->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('description', 'like', '%' . $keyword . '%');
+            if (!empty($searchableColumns)) {
+                $courses->where(function ($query) use ($keyword, $searchableColumns) {
+                    foreach ($searchableColumns as $index => $column) {
+                        if ($index === 0) {
+                            $query->where($column, 'like', '%' . $keyword . '%');
+                            continue;
+                        }
 
-                if (schema_has_column('courses', $localizedNameColumn)) {
-                    $query->orWhere($localizedNameColumn, 'like', '%' . $keyword . '%');
-                }
-
-                if (schema_has_column('courses', $localizedDescriptionColumn)) {
-                    $query->orWhere($localizedDescriptionColumn, 'like', '%' . $keyword . '%');
-                }
-            });
+                        $query->orWhere($column, 'like', '%' . $keyword . '%');
+                    }
+                });
+            } else {
+                $courses->whereRaw('1 = 0');
+            }
         }
 
         $courses = $courses->orderByPivot('created_at', 'desc')->paginate(3)->withQueryString();
@@ -447,6 +456,12 @@ class AccountController extends Controller
         $pageTitle = __('students::clients/account.activity_history.title');
         $pageName = $pageTitle;
         $student = Auth::guard('students')->user();
+        $userAgent = strtolower((string) $request->userAgent());
+        $isMobileDevice = str_contains($userAgent, 'mobile')
+            || str_contains($userAgent, 'iphone')
+            || str_contains($userAgent, 'android');
+        $loginPerPage = $isMobileDevice ? 4 : 5;
+        $activityPerPage = $isMobileDevice ? 4 : 8;
 
         $loginActivitiesQuery = ActiveLog::query()
             ->where('causer_id', $student->id)
@@ -478,8 +493,8 @@ class AccountController extends Controller
             $activitiesQuery->where('action', $request->action);
         }
 
-        $loginLogs = $loginActivitiesQuery->paginate(5, ['*'], 'login_page')->withQueryString();
-        $activityLogs = $activitiesQuery->paginate(8, ['*'], 'activity_page')->withQueryString();
+        $loginLogs = $loginActivitiesQuery->paginate($loginPerPage, ['*'], 'login_page')->withQueryString();
+        $activityLogs = $activitiesQuery->paginate($activityPerPage, ['*'], 'activity_page')->withQueryString();
 
         $availableActions = [
             'profile_updated',

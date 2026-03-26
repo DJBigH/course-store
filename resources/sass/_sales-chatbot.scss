@@ -551,14 +551,31 @@ html[data-theme="dark"] .sales-chatbot__status--local {
 
 @media (max-width: 767.98px) {
     .sales-chatbot {
-        right: 12px;
-        left: 12px;
-        bottom: 12px;
+        right: 10px;
+        left: auto;
+        bottom: 10px;
     }
 
     .sales-chatbot__toggle {
-        width: 100%;
-        justify-content: space-between;
+        width: 50px;
+        min-width: 50px;
+        min-height: 50px;
+        padding: 0;
+        border-radius: 16px;
+        justify-content: center;
+        gap: 0;
+    }
+
+    .sales-chatbot__toggle-copy,
+    .sales-chatbot__toggle-arrow {
+        display: none;
+    }
+
+    .sales-chatbot__toggle-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        font-size: 14px;
     }
 
     .sales-chatbot__panel {
@@ -582,6 +599,27 @@ html[data-theme="dark"] .sales-chatbot__status--local {
 
     .sales-chatbot__send {
         min-height: 48px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .sales-chatbot {
+        right: 8px;
+        bottom: 8px;
+    }
+
+    .sales-chatbot__toggle {
+        width: 46px;
+        min-width: 46px;
+        min-height: 46px;
+        border-radius: 14px;
+    }
+
+    .sales-chatbot__toggle-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        font-size: 13px;
     }
 }
 

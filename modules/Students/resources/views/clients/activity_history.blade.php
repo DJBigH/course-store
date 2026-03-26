@@ -107,18 +107,18 @@
                                         @forelse ($loginLogs as $log)
                                             @php($properties = $log->properties ?? [])
                                             <tr>
-                                                <td>{{ $log->created_at?->format('d/m/Y H:i:s') }}</td>
-                                                <td>
+                                                <td data-label="{{ __('students::clients/account.activity_history.time') }}">{{ $log->created_at?->format('d/m/Y H:i:s') }}</td>
+                                                <td data-label="{{ __('students::clients/account.activity_history.device') }}">
                                                     <div class="fw-semibold">{{ $properties['browser'] ?? 'Unknown browser' }}</div>
                                                     <div class="text-muted small">{{ $properties['platform'] ?? 'Unknown platform' }} - {{ $properties['device'] ?? 'Unknown device' }}</div>
                                                 </td>
-                                                <td>
+                                                <td data-label="{{ __('students::clients/account.activity_history.network') }}">
                                                     <div class="fw-semibold">{{ $properties['ip'] ?? $log->ip ?? '-' }}</div>
                                                     @if (!empty($properties['previous_ip']))
                                                         <div class="text-muted small">{{ __('students::clients/account.activity_history.previous') }}: {{ $properties['previous_ip'] }}</div>
                                                     @endif
                                                 </td>
-                                                <td>
+                                                <td data-label="{{ __('students::clients/account.activity_history.note') }}">
                                                     <span class="{{ $loginBadgeClass($log) }} mb-2">
                                                         {{ !empty($properties['is_unusual']) ? __('students::clients/account.activity_history.unusual') : __('students::clients/account.activity_history.normal') }}
                                                     </span>
@@ -126,7 +126,7 @@
                                                 </td>
                                             </tr>
                                         @empty
-                                            <tr>
+                                            <tr class="activity-history-empty-row">
                                                 <td colspan="4" class="text-center text-muted py-4">{{ __('students::clients/account.activity_history.empty_login') }}</td>
                                             </tr>
                                         @endforelse
@@ -155,14 +155,14 @@
                                         @forelse ($activityLogs as $log)
                                             @php($properties = $log->properties ?? [])
                                             <tr>
-                                                <td>{{ $log->created_at?->format('d/m/Y H:i:s') }}</td>
-                                                <td>
+                                                <td data-label="{{ __('students::clients/account.activity_history.time') }}">{{ $log->created_at?->format('d/m/Y H:i:s') }}</td>
+                                                <td data-label="{{ __('students::clients/account.activity_history.action') }}">
                                                     <span class="{{ $activityBadgeMap[$log->action] ?? 'history-badge history-badge--muted' }} mb-2">
                                                         {{ __('students::clients/account.activity_history.actions.' . $log->action) }}
                                                     </span>
                                                     <div class="text-muted small mt-2">{{ ucfirst(str_replace('_', ' ', $log->log_name)) }}</div>
                                                 </td>
-                                                <td>
+                                                <td data-label="{{ __('students::clients/account.activity_history.detail') }}">
                                                     <div class="small">{{ $log->description }}</div>
 
                                                     @if ($log->action === 'profile_updated' && !empty($properties['old']) && !empty($properties['new']))
@@ -202,7 +202,7 @@
                                                 </td>
                                             </tr>
                                         @empty
-                                            <tr>
+                                            <tr class="activity-history-empty-row">
                                                 <td colspan="3" class="text-center text-muted py-4">{{ __('students::clients/account.activity_history.empty_activity') }}</td>
                                             </tr>
                                         @endforelse
@@ -217,6 +217,100 @@
             </div>
         </div>
     </section>
+@endsection
+
+@section('stylesheets')
+    <style>
+        @media (max-width: 767.98px) {
+            .activity-history-filter .col-md-4,
+            .activity-history-filter .btn,
+            .activity-history-filter a.btn {
+                width: 100%;
+            }
+
+            #login-history-block .table-responsive,
+            #activity-history-block .table-responsive {
+                overflow: visible !important;
+            }
+
+            #login-history-block table,
+            #login-history-block tbody,
+            #login-history-block tr,
+            #login-history-block td,
+            #activity-history-block table,
+            #activity-history-block tbody,
+            #activity-history-block tr,
+            #activity-history-block td {
+                display: block;
+                width: 100%;
+            }
+
+            #login-history-block thead,
+            #activity-history-block thead {
+                display: none;
+            }
+
+            #login-history-block tbody,
+            #activity-history-block tbody {
+                display: grid;
+                gap: 14px;
+            }
+
+            #login-history-block tbody tr,
+            #activity-history-block tbody tr {
+                background: #ffffff;
+                border: 1px solid rgba(148, 163, 184, 0.16);
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            }
+
+            #login-history-block tbody td,
+            #activity-history-block tbody td {
+                border: 0;
+                padding: 12px 14px;
+                text-align: left !important;
+            }
+
+            #login-history-block tbody td + td,
+            #activity-history-block tbody td + td {
+                border-top: 1px solid rgba(203, 213, 225, 0.6);
+            }
+
+            #login-history-block tbody td::before,
+            #activity-history-block tbody td::before {
+                content: attr(data-label);
+                display: block;
+                margin-bottom: 6px;
+                color: #64748b;
+                font-size: 0.78rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+
+            .activity-history-empty-row td::before {
+                display: none !important;
+            }
+
+            html[data-theme="dark"] #login-history-block tbody tr,
+            html[data-theme="dark"] #activity-history-block tbody tr {
+                background: rgba(15, 23, 42, 0.92);
+                border-color: rgba(148, 163, 184, 0.14);
+                box-shadow: 0 12px 30px rgba(2, 6, 23, 0.26);
+            }
+
+            html[data-theme="dark"] #login-history-block tbody td + td,
+            html[data-theme="dark"] #activity-history-block tbody td + td {
+                border-top-color: rgba(148, 163, 184, 0.14);
+            }
+
+            html[data-theme="dark"] #login-history-block tbody td::before,
+            html[data-theme="dark"] #activity-history-block tbody td::before {
+                color: #94a7c0;
+            }
+        }
+    </style>
 @endsection
 
 @section('scripts')

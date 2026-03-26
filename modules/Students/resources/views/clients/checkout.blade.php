@@ -37,7 +37,7 @@
                             <table class="table table-bordered align-middle mb-4">
                                 <tbody>
                                     <tr>
-                                        <th width="30%" class="bg-light">
+                                        <th class="bg-light checkout-summary-label">
                                             {{ __('students::clients/checkout.checkout.order_code') }}</th>
                                         <td>#{{ $order->code }}</td>
                                     </tr>
@@ -94,13 +94,19 @@
                                     <tbody>
                                         @foreach ($order->detail as $key => $item)
                                             <tr>
-                                                <td class="text-muted">{{ $key + 1 }}</td>
-                                                <td class="fw-semibold">{{ $item?->courses?->name_locale }}</td>
+                                                <td class="text-muted" data-label="#"> {{ $key + 1 }}</td>
+                                                <td class="fw-semibold"
+                                                    data-label="{{ __('students::clients/checkout.checkout.course') }}">
+                                                    {{ $item?->courses?->name_locale }}
+                                                </td>
                                                 <td class="text-end text-danger fw-semibold">
                                                     {{ moneyLocale($item?->courses?->sale_price ?: $item?->courses?->price) }}
                                                 </td>
-                                                <td>{{ $item?->courses?->teacher?->name_locale }}</td>
-                                                <td class="text-center">
+                                                <td data-label="{{ __('students::clients/checkout.checkout.instructor') }}">
+                                                    {{ $item?->courses?->teacher?->name_locale }}
+                                                </td>
+                                                <td class="text-center"
+                                                    data-label="{{ __('students::clients/checkout.checkout.course_status') }}">
                                                     <span
                                                         class="badge bg-{{ $item?->courses?->status ? 'success' : 'danger' }}-subtle text-{{ $item?->courses?->status ? 'success' : 'danger' }}">
                                                         {{ $item?->courses?->status ? __('students::clients/checkout.checkout.active') : __('students::clients/checkout.checkout.inactive') }}
@@ -163,7 +169,7 @@
                 </div>
 
                 <div class="col-lg-5">
-                    <div class="card shadow border-0 sticky-top checkout-side-card" style="top:90px">
+                    <div class="card shadow border-0 sticky-top checkout-side-card">
                         <div class="card-body p-4">
                             @if ($isFreeOrder)
                                 <div class="alert alert-success mb-4">
@@ -334,6 +340,149 @@
         .countdown.expired .cd-minute,
         .countdown.expired .cd-second {
             background: linear-gradient(135deg, #dc3545, #ff6b6b);
+        }
+
+        .checkout-side-card {
+            top: 90px;
+        }
+
+        .checkout-summary-label {
+            width: 30%;
+        }
+
+        @media (max-width: 991.98px) {
+            .checkout-side-card {
+                top: 0;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .checkout-page {
+                padding-top: 1.5rem !important;
+                padding-bottom: 1.5rem !important;
+            }
+
+            .checkout-page h2 {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                font-size: 1.5rem;
+                line-height: 1.35;
+            }
+
+            .countdown {
+                font-size: 1rem;
+            }
+
+            .countdown .cd-minute,
+            .countdown .cd-second {
+                min-width: 38px;
+                padding: 4px 8px;
+            }
+
+            .checkout-summary-label {
+                width: 42%;
+            }
+
+            .checkout-main-card .card-body,
+            .checkout-side-card .card-body {
+                padding: 1.25rem !important;
+            }
+
+            .checkout-main-card .table-responsive {
+                overflow: visible;
+            }
+
+            .checkout-main-card .table-responsive thead {
+                display: none;
+            }
+
+            .checkout-main-card .table-responsive table,
+            .checkout-main-card .table-responsive tbody,
+            .checkout-main-card .table-responsive tr,
+            .checkout-main-card .table-responsive td {
+                display: block;
+                width: 100%;
+            }
+
+            .checkout-main-card .table-responsive tr {
+                margin-bottom: 14px;
+                padding: 14px;
+                border: 1px solid #e2e8f0;
+                border-radius: 16px;
+                background: #fff;
+                box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+            }
+
+            .checkout-main-card .table-responsive td {
+                padding: 0;
+                border: 0;
+                text-align: left !important;
+            }
+
+            .checkout-main-card .table-responsive td+td {
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid #e2e8f0;
+            }
+
+            .checkout-main-card .table-responsive td::before {
+                content: attr(data-label);
+                display: block;
+                margin-bottom: 6px;
+                color: #64748b;
+                font-size: 0.78rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+
+            .checkout-main-card .table-responsive td:first-child {
+                color: #64748b;
+                font-weight: 700;
+            }
+
+            .checkout-main-card .table-responsive td:first-child::before {
+                margin-bottom: 0;
+            }
+
+            .checkout-main-card .table-responsive .badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .checkout-qr-card {
+                width: 100%;
+            }
+
+            .qr-image {
+                max-width: min(100%, 220px) !important;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            html[data-theme="dark"] .checkout-main-card .table-responsive tr {
+                border-color: rgba(148, 163, 184, 0.18);
+                background: rgba(15, 23, 42, 0.92);
+                box-shadow: 0 14px 28px rgba(2, 6, 23, 0.28);
+            }
+
+            html[data-theme="dark"] .checkout-main-card .table-responsive td {
+                color: #e2e8f0;
+            }
+
+            html[data-theme="dark"] .checkout-main-card .table-responsive td + td {
+                border-top-color: rgba(148, 163, 184, 0.14);
+            }
+
+            html[data-theme="dark"] .checkout-main-card .table-responsive td::before {
+                color: #93c5fd;
+            }
+
+            html[data-theme="dark"] .checkout-main-card .table-responsive td:first-child {
+                color: #cbd5e1;
+            }
         }
     </style>
 @endsection

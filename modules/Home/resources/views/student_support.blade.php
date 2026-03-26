@@ -307,5 +307,40 @@
                 font-size: 24px;
             }
         }
+
+        @media (max-width: 575.98px) {
+            .support-landing {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+
+            .support-hero h2 {
+                font-size: 1.9rem;
+            }
+
+            .support-hero p,
+            .support-card p,
+            .support-step p {
+                font-size: 15px;
+            }
+
+            .support-contact strong,
+            .support-contact div {
+                font-size: 18px;
+            }
+
+            .support-step {
+                grid-template-columns: 40px 1fr;
+                gap: 12px;
+                padding: 16px;
+            }
+
+            .support-step span {
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                font-size: 16px;
+            }
+        }
     </style>
 @endsection

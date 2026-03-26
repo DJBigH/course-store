@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Notifications\CouponStudentNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Coupons\src\Http\Requests\CouponRequest;
 use Modules\Courses\src\Models\Courses;
@@ -34,6 +36,9 @@ class CouponController extends Controller
     {
         $coupons = $this->couponRepository->getAllCoupons();
         return datatables()->of($coupons)
+            ->addColumn('select', function ($coupon) {
+                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $coupon->id . '"></div>';
+            })
             ->addColumn('logs', function ($coupon) {
                 return '<a href="' . route('coupons.logs', $coupon->id) . '" class="btn btn-sm btn-secondary">
                 <i class="fas fa-clock"></i>
@@ -88,7 +93,7 @@ class CouponController extends Controller
                 return '<a href="' . route('coupons.edit', $coupon->id) . '" class="btn btn-sm btn-warning">Sửa</a>';
             })
             ->addColumn('delete', function ($coupon) {
-                return '<a href="' . route('coupons.delete', $coupon->id) . '" class="btn btn-danger delete-action">Xóa</a>';
+                return '<a href="' . route('coupons.delete', $coupon->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>';
             })
             ->addColumn('bindings', function ($coupon) {
                 return '
@@ -108,8 +113,83 @@ class CouponController extends Controller
                         </a>
                     ';
             })
-            ->rawColumns(['edit', 'delete', 'discount_type', 'discount_value', 'time', 'bindings', 'count', 'logs'])
+            ->rawColumns(['select', 'edit', 'delete', 'discount_type', 'discount_value', 'time', 'bindings', 'count', 'logs'])
             ->make(true);
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một mã giảm giá.',
+            ]);
+        }
+
+        $coupons = Coupons::query()->whereIn('id', $selectedIds)->get();
+
+        if ($coupons->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy mã giảm giá để xử lý.');
+        }
+
+        if ($action === 'duplicate') {
+            $duplicatedCount = 0;
+
+            foreach ($coupons as $coupon) {
+                $newCoupon = Coupons::query()->create([
+                    'code' => $this->duplicateCouponCode($coupon->code),
+                    'discount_type' => $coupon->discount_type,
+                    'discount_value' => $coupon->discount_value,
+                    'total_condition' => $coupon->total_condition,
+                    'count' => $coupon->count,
+                    'start_date' => $coupon->start_date,
+                    'end_date' => $coupon->end_date,
+                ]);
+
+                $newCoupon->students()->sync($coupon->students()->pluck('students.id')->toArray());
+                $newCoupon->courses()->sync($coupon->courses()->pluck('courses.id')->toArray());
+
+                activity_log(
+                    action: 'duplicate',
+                    subject: $newCoupon,
+                    properties: [
+                        'source_coupon_id' => $coupon->id,
+                        'new_coupon_id' => $newCoupon->id,
+                    ],
+                    logName: 'Nhân bản hàng loạt',
+                    description: 'Nhân bản mã giảm giá'
+                );
+
+                $duplicatedCount++;
+            }
+
+            return back()->with('msg', 'Đã nhân bản ' . $duplicatedCount . ' mã giảm giá.');
+        }
+
+        if ($action === 'delete') {
+            foreach ($coupons as $coupon) {
+                $snapshot = $coupon->toArray();
+                $this->couponRepository->delete($coupon->id);
+
+                activity_log(
+                    action: 'delete',
+                    subject: $coupon,
+                    properties: ['data' => $snapshot],
+                    logName: 'Xóa hàng loạt',
+                    description: 'Xóa mã giảm giá'
+                );
+            }
+
+            return back()->with('msg', 'Đã xóa ' . $coupons->count() . ' mã giảm giá.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
     }
 
     public function create()
@@ -192,6 +272,11 @@ class CouponController extends Controller
         return back()->with('msg', __('coupons::messages.delete.success'));
     }
 
+
+    protected function duplicateCouponCode(?string $code): string
+    {
+        return trim(($code ?: 'COUPON') . '-COPY-' . strtoupper(Str::random(4)));
+    }
 
     public function CouponStudent($id)
     {

@@ -18,7 +18,7 @@
         'openLabel' => 'Mở trợ lý',
         'closeLabel' => 'Đóng trợ lý',
         'starterQuestions' => [
-            'Khóa rẻ nhất hiện nay là gì?',
+            'Hiện có mã giảm giá nào không?',
             'Các phương thức thanh toán là gì?',
             'Chính sách hủy/hoàn ở đâu?',
             'Câu hỏi thường gặp ở đâu?',
