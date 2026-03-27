@@ -25,7 +25,7 @@
                         <div class="dashboard-highlight-grid">
                             <div class="dashboard-highlight">
                                 <span class="dashboard-highlight__label">Doanh thu</span>
-                                <strong>{{ money($kpi['revenue'] ?? 0) }}</strong>
+                                <strong>{{ number_format((float) ($kpi['revenue'] ?? 0), 0, ',', '.') }} đ</strong>
                                 <small>
                                     So với {{ $compareLabel ?? 'hôm qua' }}:
                                     <span class="{{ $isUp ? 'text-success' : 'text-danger' }}">
@@ -92,7 +92,7 @@
                             <i class="fa-solid fa-sack-dollar"></i>
                         </div>
                         <p class="dashboard-stat__label">Doanh thu {{ $activeRangeLabel }}</p>
-                        <h4 class="dashboard-stat__value">{{ money($kpi['revenue'] ?? 0) }}</h4>
+                        <h4 class="dashboard-stat__value">{{ number_format((float) ($kpi['revenue'] ?? 0), 0, ',', '.') }} đ</h4>
                         <p class="dashboard-stat__meta mb-0">
                             So với {{ $compareLabel ?? 'hôm qua' }}:
                             <span class="{{ $isUp ? 'text-success' : 'text-danger' }} fw-semibold">

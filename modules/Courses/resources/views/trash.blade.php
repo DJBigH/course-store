@@ -26,25 +26,27 @@
                 <div class="alert alert-danger border-0 rounded-4">{{ $errors->first('bulk_action') }}</div>
             @endif
 
-            <form id="bulk-trash-action-form" action="{{ route('courses.trash.bulk') }}" method="POST" class="mb-4">
-                @csrf
-                <input type="hidden" name="selected_ids" id="selected-trash-course-ids">
-                <input type="hidden" name="bulk_action" id="bulk-trash-action-input">
+            @if (auth()->user()?->hasPermission('courses.publish'))
+                <form id="bulk-trash-action-form" action="{{ route('courses.trash.bulk') }}" method="POST" class="mb-4">
+                    @csrf
+                    <input type="hidden" name="selected_ids" id="selected-trash-course-ids">
+                    <input type="hidden" name="bulk_action" id="bulk-trash-action-input">
 
-                <div class="bulk-toolbar">
-                    <div class="bulk-toolbar__summary">
-                        <span id="selected-trash-count">0</span> khóa học được chọn
+                    <div class="bulk-toolbar">
+                        <div class="bulk-toolbar__summary">
+                            <span id="selected-trash-count">0</span> khóa học được chọn
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-success bulk-trash-action-trigger" data-action="restore">
+                                Khôi phục hàng loạt
+                            </button>
+                            <button type="button" class="btn btn-outline-danger bulk-trash-action-trigger" data-action="force_delete">
+                                Xóa vĩnh viễn
+                            </button>
+                        </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-success bulk-trash-action-trigger" data-action="restore">
-                            Khôi phục hàng loạt
-                        </button>
-                        <button type="button" class="btn btn-outline-danger bulk-trash-action-trigger" data-action="force_delete">
-                            Xóa vĩnh viễn
-                        </button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            @endif
 
             <div class="table-responsive">
                 <table id="trash-datatable" class="table align-middle admin-data-table w-100">

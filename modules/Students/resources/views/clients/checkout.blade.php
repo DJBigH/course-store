@@ -65,6 +65,14 @@
                                             </span>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <th class="bg-light">Phương thức thanh toán</th>
+                                        <td>
+                                            <span class="badge rounded-pill px-3 py-2" style="{{ $order->payment_method_badge_style }}">
+                                                {{ $order->payment_method_label }}
+                                            </span>
+                                        </td>
+                                    </tr>
                                     <tr class="table-secondary">
                                         <th class="fw-bold">{{ __('students::clients/checkout.checkout.total_payment') }}</th>
                                         <td class="fw-bold text-danger fs-4 total_value">

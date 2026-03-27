@@ -57,6 +57,13 @@ class CoursesController extends Controller
     }
     public function data(Request $request)
     {
+        $user = auth()->user();
+        $canPublish = $user?->hasPermission('courses.publish');
+        $canEdit = $user?->hasPermission('courses.edit');
+        $canView = $user?->hasPermission('courses.view');
+        $canSoftDelete = $user?->hasPermission('courses.soft_delete');
+        $canAccessLessons = $user?->canAnyPermission(['lessons.view', 'lessons.create', 'lessons.edit', 'lessons.delete', 'lessons.sort']);
+
         $courses = $this->courseRepository
             ->getAllCourses()
             ->when($request->filled('status_filter'), function ($query) use ($request) {
@@ -136,7 +143,11 @@ class CoursesController extends Controller
                     </div>
                 ';
             })
-            ->addColumn('publish', function ($course) {
+            ->addColumn('publish', function ($course) use ($canPublish) {
+                if (!$canPublish) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
                 $label = (int) $course->status === 1 ? 'Ẩn' : 'Xuất bản';
                 $class = (int) $course->status === 1 ? 'btn btn-light border' : 'btn btn-success';
 
@@ -147,7 +158,11 @@ class CoursesController extends Controller
                     </form>
                 ';
             })
-            ->addColumn('duplicate', function ($course) {
+            ->addColumn('duplicate', function ($course) use ($canEdit) {
+                if (!$canEdit) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
                 return '
                     <form method="POST" action="' . route('courses.duplicate', $course->id) . '" class="d-inline-block">
                         ' . csrf_field() . '
@@ -155,16 +170,32 @@ class CoursesController extends Controller
                     </form>
                 ';
             })
-            ->addColumn('logs', function ($course) {
+            ->addColumn('logs', function ($course) use ($canView) {
+                if (!$canView) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
                 return '<a href="' . route('courses.logs', $course->id) . '" class="btn btn-light border">Lịch sử</a>';
             })
-            ->addColumn('lessions', function ($course) {
+            ->addColumn('lessions', function ($course) use ($canAccessLessons) {
+                if (!$canAccessLessons) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
                 return '<a href="' . route('lessons.index', $course->id) . '" class="btn btn-primary">Bài giảng</a>';
             })
-            ->addColumn('edit', function ($course) {
+            ->addColumn('edit', function ($course) use ($canEdit) {
+                if (!$canEdit) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
                 return '<a href="' . route('courses.edit', $course->id) . '" class="btn btn-warning">Sửa</a>';
             })
-            ->addColumn('delete', function ($course) {
+            ->addColumn('delete', function ($course) use ($canSoftDelete) {
+                if (!$canSoftDelete) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
                 return '<a href="' . route('courses.delete', $course->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>';
             })
             ->editColumn('created_at', function ($course) {
@@ -191,6 +222,9 @@ class CoursesController extends Controller
     }
     public function trashData()
     {
+        $canRestore = auth()->user()?->hasPermission('courses.publish');
+        $canForceDelete = auth()->user()?->hasPermission('courses.force_delete');
+
         $courses = Courses::query()
             ->withoutGlobalScopes()
             ->onlyTrashed()
@@ -240,7 +274,11 @@ class CoursesController extends Controller
                     ? Carbon::parse($course->deleted_at)->format('d/m/Y H:i:s')
                     : '';
             })
-            ->addColumn('restore', function ($course) {
+            ->addColumn('restore', function ($course) use ($canRestore) {
+                if (!$canRestore) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
                 return '
                     <form method="POST" action="' . route('courses.restore', $course->id) . '" class="d-inline-block">
                         ' . csrf_field() . '
@@ -248,7 +286,11 @@ class CoursesController extends Controller
                     </form>
                 ';
             })
-            ->addColumn('force_delete', function ($course) {
+            ->addColumn('force_delete', function ($course) use ($canForceDelete) {
+                if (!$canForceDelete) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
                 return '
                     <form method="POST" action="' . route('courses.force-delete', $course->id) . '" class="d-inline-block" onsubmit="return confirm(\'Xóa vĩnh viễn khóa học này?\');">
                         ' . csrf_field() . method_field('DELETE') . '
@@ -262,6 +304,7 @@ class CoursesController extends Controller
     public function bulkAction(Request $request)
     {
         $action = $request->input('bulk_action');
+        $user = auth()->user();
         $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
             ->map(fn($id) => (int) $id)
             ->filter()
@@ -269,18 +312,19 @@ class CoursesController extends Controller
             ->values();
 
         if ($selectedIds->isEmpty()) {
-            throw ValidationException::withMessages([
-                'bulk_action' => 'Vui lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â²ng chÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Ân ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­t nhÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¥t mÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢t khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc.',
+            return back()->withErrors([
+                'bulk_action' => 'Vui lòng chọn ít nhất một khóa học.',
             ]);
         }
 
         $courses = Courses::query()->whereIn('id', $selectedIds)->get();
 
         if ($courses->isEmpty()) {
-            return back()->with('msg_danger', 'KhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â´ng tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¬m thÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¥y khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc ÃƒÆ’Ã¢â‚¬Å¾ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€ Ã¢â‚¬â„¢ xÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â­ lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â½.');
+            return back()->with('msg_danger', 'Không tìm thấy khóa học hợp lệ cho thao tác này.');
         }
 
         if ($action === 'publish') {
+            abort_unless($user?->hasPermission('courses.publish'), 403);
             Courses::query()->whereIn('id', $selectedIds)->update(['status' => 1]);
 
             foreach ($courses as $course) {
@@ -291,15 +335,15 @@ class CoursesController extends Controller
                         'old' => ['status' => $course->status],
                         'new' => ['status' => 1],
                     ],
-                    logName: 'XuÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¥t bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n hÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â ng loÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡t',
-                    description: 'XuÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¥t bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc'
+                    logName: 'Xuất bản hàng loạt',
+                    description: 'Xuất bản khóa học'
                 );
             }
-
-            return back()->with('msg', 'ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ xuÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¥t bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n ' . $courses->count() . ' khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc.');
+            return back()->with('msg', 'Đã xuất bản ' . $courses->count() . ' khóa học.');
         }
 
         if ($action === 'draft') {
+            abort_unless($user?->hasPermission('courses.publish'), 403);
             Courses::query()->whereIn('id', $selectedIds)->update(['status' => 0]);
 
             foreach ($courses as $course) {
@@ -310,15 +354,15 @@ class CoursesController extends Controller
                         'old' => ['status' => $course->status],
                         'new' => ['status' => 0],
                     ],
-                    logName: 'NhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡p hÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â ng loÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡t',
-                    description: 'ChuyÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€ Ã¢â‚¬â„¢n khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc vÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n nhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡p'
+                    logName: 'Chuyển nháp hàng loạt',
+                    description: 'Chuyển khóa học về bản nháp'
                 );
             }
-
-            return back()->with('msg', 'ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ chuyÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€ Ã¢â‚¬â„¢n ' . $courses->count() . ' khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc vÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n nhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡p.');
+            return back()->with('msg', 'Đã chuyển ' . $courses->count() . ' khóa học về bản nháp.');
         }
 
         if ($action === 'duplicate') {
+            abort_unless($user?->hasPermission('courses.edit'), 403);
             $duplicatedCount = 0;
 
             foreach ($courses as $course) {
@@ -331,38 +375,36 @@ class CoursesController extends Controller
                         'source_course_id' => $course->id,
                         'new_course_id' => $duplicatedCourse->id,
                     ],
-                    logName: 'NhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢n bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n hÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â ng loÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡t',
-                    description: 'NhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢n bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc'
+                    logName: 'Nhân bản hàng loạt',
+                    description: 'Nhân bản khóa học'
                 );
 
                 $duplicatedCount++;
             }
-
-            return back()->with('msg', 'ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ nhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢n bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n ' . $duplicatedCount . ' khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc.');
+            return back()->with('msg', 'Đã nhân bản ' . $duplicatedCount . ' khóa học.');
         }
 
         if ($action === 'soft_delete') {
+            abort_unless($user?->hasPermission('courses.soft_delete'), 403);
             foreach ($courses as $course) {
                 $course->delete();
 
                 activity_log(
                     action: 'delete',
                     subject: $course,
-                    properties: ['data' => $course->toArray()],
-                    logName: 'XÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a mÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âm hÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â ng loÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡t',
-                    description: 'XÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a mÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âm khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc'
+                    logName: 'Xóa mềm hàng loạt',
+                    description: 'Xóa mềm khóa học'
                 );
             }
-
-            return back()->with('msg', 'ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ xÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a mÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âm ' . $courses->count() . ' khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc.');
+            return back()->with('msg', 'Đã xóa mềm ' . $courses->count() . ' khóa học.');
         }
-
-        return back()->with('msg_danger', 'Thao tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡c hÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â ng loÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡t khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â´ng hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â£p lÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡.');
+        return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
     }
 
     public function trashBulkAction(Request $request)
     {
         $action = $request->input('bulk_action');
+        $user = auth()->user();
         $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
             ->map(fn($id) => (int) $id)
             ->filter()
@@ -370,8 +412,8 @@ class CoursesController extends Controller
             ->values();
 
         if ($selectedIds->isEmpty()) {
-            throw ValidationException::withMessages([
-                'bulk_action' => 'Vui lÃƒÆ’Ã‚Â²ng chÃƒÂ¡Ã‚Â»Ã‚Ân ÃƒÆ’Ã‚Â­t nhÃƒÂ¡Ã‚ÂºÃ‚Â¥t mÃƒÂ¡Ã‚Â»Ã¢â€žÂ¢t khÃƒÆ’Ã‚Â³a hÃƒÂ¡Ã‚Â»Ã‚Âc trong thÃƒÆ’Ã‚Â¹ng rÃƒÆ’Ã‚Â¡c.',
+            return back()->withErrors([
+                'bulk_action' => 'Vui lòng chọn ít nhất một khóa học trong thùng rác.',
             ]);
         }
 
@@ -382,10 +424,11 @@ class CoursesController extends Controller
             ->get();
 
         if ($courses->isEmpty()) {
-            return back()->with('msg_danger', 'KhÃƒÆ’Ã‚Â´ng tÃƒÆ’Ã‚Â¬m thÃƒÂ¡Ã‚ÂºÃ‚Â¥y khÃƒÆ’Ã‚Â³a hÃƒÂ¡Ã‚Â»Ã‚Âc Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Â£ xÃƒÆ’Ã‚Â³a mÃƒÂ¡Ã‚Â»Ã‚Âm Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã†â€™ xÃƒÂ¡Ã‚Â»Ã‚Â­ lÃƒÆ’Ã‚Â½.');
+            return back()->with('msg_danger', 'Không tìm thấy khóa học trong thùng rác.');
         }
 
         if ($action === 'restore') {
+            abort_unless($user?->hasPermission('courses.publish'), 403);
             foreach ($courses as $course) {
                 $course->restore();
 
@@ -396,15 +439,15 @@ class CoursesController extends Controller
                         'restored_from_trash' => true,
                         'course_id' => $course->id,
                     ],
-                    logName: 'KhÃƒÆ’Ã‚Â´i phÃƒÂ¡Ã‚Â»Ã‚Â¥c hÃƒÆ’Ã‚Â ng loÃƒÂ¡Ã‚ÂºÃ‚Â¡t',
-                    description: 'KhÃƒÆ’Ã‚Â´i phÃƒÂ¡Ã‚Â»Ã‚Â¥c khÃƒÆ’Ã‚Â³a hÃƒÂ¡Ã‚Â»Ã‚Âc tÃƒÂ¡Ã‚Â»Ã‚Â« thÃƒÆ’Ã‚Â¹ng rÃƒÆ’Ã‚Â¡c'
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục khóa học từ thùng rác'
                 );
             }
-
-            return back()->with('msg', 'Ãƒâ€žÃ‚ÂÃƒÆ’Ã‚Â£ khÃƒÆ’Ã‚Â´i phÃƒÂ¡Ã‚Â»Ã‚Â¥c ' . $courses->count() . ' khÃƒÆ’Ã‚Â³a hÃƒÂ¡Ã‚Â»Ã‚Âc.');
+            return back()->with('msg', 'Đã khôi phục ' . $courses->count() . ' khóa học.');
         }
 
         if ($action === 'force_delete') {
+            abort_unless($user?->hasPermission('courses.force_delete'), 403);
             foreach ($courses as $course) {
                 $snapshot = $course->toArray();
                 $this->permanentlyDeleteCourse($course);
@@ -416,15 +459,13 @@ class CoursesController extends Controller
                         'data' => $snapshot,
                         'deleted_permanently' => true,
                     ],
-                    logName: 'XÃƒÆ’Ã‚Â³a vÃƒâ€žÃ‚Â©nh viÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¦n hÃƒÆ’Ã‚Â ng loÃƒÂ¡Ã‚ÂºÃ‚Â¡t',
-                    description: 'XÃƒÆ’Ã‚Â³a vÃƒâ€žÃ‚Â©nh viÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¦n khÃƒÆ’Ã‚Â³a hÃƒÂ¡Ã‚Â»Ã‚Âc khÃƒÂ¡Ã‚Â»Ã‚Âi thÃƒÆ’Ã‚Â¹ng rÃƒÆ’Ã‚Â¡c'
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn khóa học khỏi thùng rác'
                 );
             }
-
-            return back()->with('msg', 'Ãƒâ€žÃ‚ÂÃƒÆ’Ã‚Â£ xÃƒÆ’Ã‚Â³a vÃƒâ€žÃ‚Â©nh viÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¦n ' . $courses->count() . ' khÃƒÆ’Ã‚Â³a hÃƒÂ¡Ã‚Â»Ã‚Âc.');
+            return back()->with('msg', 'Đã xóa vĩnh viễn ' . $courses->count() . ' khóa học.');
         }
-
-        return back()->with('msg_danger', 'Thao tÃƒÆ’Ã‚Â¡c trong thÃƒÆ’Ã‚Â¹ng rÃƒÆ’Ã‚Â¡c khÃƒÆ’Ã‚Â´ng hÃƒÂ¡Ã‚Â»Ã‚Â£p lÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡.');
+        return back()->with('msg_danger', 'Thao tác trong thùng rác không hợp lệ.');
     }
 
     public function toggleStatus($id)
@@ -448,11 +489,10 @@ class CoursesController extends Controller
                 'old' => ['status' => $oldStatus],
                 'new' => ['status' => $newStatus],
             ],
-            logName: 'CÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â­p nhÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â­t trÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡ng thÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡i',
-            description: $newStatus === 1 ? 'XuÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¥t bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc' : 'ÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¨n khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc'
+            logName: 'Cập nhật trạng thái',
+            description: $newStatus === 1 ? 'Xuất bản khóa học' : 'Ẩn khóa học'
         );
-
-        return back()->with('msg', $newStatus === 1 ? 'ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ xuÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¥t bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc.' : 'ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ chuyÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€ Ã¢â‚¬â„¢n khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc vÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n nhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡p.');
+        return back()->with('msg', $newStatus === 1 ? 'Đã xuất bản khóa học.' : 'Đã chuyển khóa học về bản nháp.');
     }
 
     public function duplicate($id)
@@ -471,13 +511,13 @@ class CoursesController extends Controller
                 'source_course_id' => $course->id,
                 'new_course_id' => $duplicatedCourse->id,
             ],
-            logName: 'NhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢n bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n',
-            description: 'NhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢n bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc'
+            logName: 'Nhân bản',
+            description: 'Nhân bản khóa học'
         );
 
         return redirect()
-            ->route('courses.edit', $duplicatedCourse->id)
-            ->with('msg', 'ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ tÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡o bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n sao khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  chuyÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€ Ã¢â‚¬â„¢n vÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â trÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡ng thÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡i nhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡p.');
+            ->route('courses.index')
+            ->with('msg', 'Đã tạo bản sao khóa học và chuyển về trạng thái nháp.');
     }
 
     public function restore($id)
@@ -500,15 +540,16 @@ class CoursesController extends Controller
                 'restored_from_trash' => true,
                 'course_id' => $course->id,
             ],
-            logName: 'KhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â´i phÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â¥c',
-            description: 'KhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â´i phÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â¥c khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc tÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â« thÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¹ng rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡c'
+            logName: 'Khôi phục',
+            description: 'Khôi phục khóa học từ thùng rác'
         );
-
-        return back()->with('msg', 'KhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â´i phÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â¥c khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc thÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â nh cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â´ng.');
+        return back()->with('msg', 'Khôi phục khóa học thành công.');
     }
 
     public function forceDelete($id)
     {
+        abort_unless(auth()->user()?->hasPermission('courses.force_delete'), 403);
+
         $course = Courses::query()
             ->withoutGlobalScopes()
             ->onlyTrashed()
@@ -528,15 +569,14 @@ class CoursesController extends Controller
                 'data' => $snapshot,
                 'deleted_permanently' => true,
             ],
-            logName: 'XÃ³a vÄ©nh viá»…n',
-            description: 'XÃ³a vÄ©nh viá»…n khÃ³a há»c khá»i thÃ¹ng rÃ¡c'
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn khóa học khỏi thùng rác'
         );
-
-        return back()->with('msg', 'ÄÃ£ xÃ³a vÄ©nh viá»…n khÃ³a há»c.');
+        return back()->with('msg', 'Đã xóa vĩnh viễn khóa học.');
     }
     public function create()
     {
-        $pageTitle = 'ThÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªm mÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»ÃƒÂ¢Ã¢â€šÂ¬Ã‚Âºi khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc';
+        $pageTitle = 'Thêm mới khóa học';
         $categories = $this->categoriesRepository->getAllCategories();
         $teacher = $this->teacherRepository->getAllTeacher()->get();
 
@@ -561,28 +601,28 @@ class CoursesController extends Controller
                 'data' => $payload,
                 'categories' => array_keys($categories),
             ],
-            logName: 'ThÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªm mÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»ÃƒÂ¢Ã¢â€šÂ¬Ã‚Âºi',
-            description: 'TÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡o mÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»ÃƒÂ¢Ã¢â€šÂ¬Ã‚Âºi khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc'
+            logName: 'Thêm mới',
+            description: 'Tạo mới khóa học'
         );
 
         Student::chunk(100, function ($students) use ($course) {
             foreach ($students as $student) {
                 $student->notify(new StudentNotification([
-                    'title' => 'KhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc mÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»ÃƒÂ¢Ã¢â€šÂ¬Ã‚Âºi',
+                    'title' => 'Khóa học mới',
                     'title_translations' => [
-                        'vi' => 'KhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc mÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»ÃƒÂ¢Ã¢â€šÂ¬Ã‚Âºi',
+                        'vi' => 'Khóa học mới',
                         'en' => 'New course',
-                        'ko' => 'ÃƒÆ’Ã‚Â¬Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€¹Ã¢â‚¬Â  ÃƒÆ’Ã‚ÂªÃƒâ€šÃ‚Â°ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒâ€¹Ã…â€œ',
-                        'ja' => 'ÃƒÆ’Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“Ãƒâ€šÃ‚Â°ÃƒÆ’Ã‚Â£Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒÆ’Ã‚Â£Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â£ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â£Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â¼ÃƒÆ’Ã‚Â£ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹',
-                        'zh' => 'ÃƒÆ’Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“Ãƒâ€šÃ‚Â°ÃƒÆ’Ã‚Â¨Ãƒâ€šÃ‚Â¯Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã‚Â§Ãƒâ€šÃ‚Â¨ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹',
+                        'ko' => '새 강좌',
+                        'ja' => '新しいコース',
+                        'zh' => '新课程',
                     ],
-                    'message' => 'KhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc ' . localizedModelField($course, 'name', 'vi') . ' vÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â«a ÃƒÆ’Ã¢â‚¬Å¾ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÆ’Ã¢â‚¬Â Ãƒâ€šÃ‚Â°ÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â£c ÃƒÆ’Ã¢â‚¬Å¾ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€ Ã¢â‚¬â„¢ng',
+                    'message' => 'Khóa học ' . localizedModelField($course, 'name', 'vi') . ' vừa được đăng tải',
                     'message_translations' => [
-                        'vi' => 'KhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc ' . localizedModelField($course, 'name', 'vi') . ' vÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â«a ÃƒÆ’Ã¢â‚¬Å¾ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÆ’Ã¢â‚¬Â Ãƒâ€šÃ‚Â°ÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â£c ÃƒÆ’Ã¢â‚¬Å¾ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€ Ã¢â‚¬â„¢ng',
+                        'vi' => 'Khóa học ' . localizedModelField($course, 'name', 'vi') . ' vừa được đăng tải',
                         'en' => 'Course ' . localizedModelField($course, 'name', 'en') . ' has just been published',
-                        'ko' => localizedModelField($course, 'name', 'ko') . ' ÃƒÆ’Ã‚ÂªÃƒâ€šÃ‚Â°ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒâ€¹Ã…â€œÃƒÆ’Ã‚ÂªÃƒâ€šÃ‚Â°ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’Ã‚Â¬Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â«Ãƒâ€šÃ‚Â¡Ãƒâ€¦Ã¢â‚¬Å“ ÃƒÆ’Ã‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â±ÃƒÆ’Ã‚Â«Ãƒâ€šÃ‚Â¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â«Ãƒâ€šÃ‚ÂÃƒâ€¹Ã…â€œÃƒÆ’Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â¬Ãƒâ€¦Ã‚Â Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹Ãƒâ€šÃ‚Â¤',
-                        'ja' => 'ÃƒÆ’Ã‚Â£ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â£Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â¼ÃƒÆ’Ã‚Â£ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¹ ' . localizedModelField($course, 'name', 'ja') . ' ÃƒÆ’Ã‚Â£Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â©ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã‚Â£Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’Ã‚Â£ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€¦Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â£Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¾ÃƒÆ’Ã‚Â£Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒÆ’Ã‚Â£Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚Â¸',
-                        'zh' => 'ÃƒÆ’Ã‚Â¨Ãƒâ€šÃ‚Â¯Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã‚Â§Ãƒâ€šÃ‚Â¨ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ ' . localizedModelField($course, 'name', 'zh') . ' ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â·Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â¸Ãƒâ€ Ã¢â‚¬â„¢',
+                        'ko' => localizedModelField($course, 'name', 'ko') . ' 강좌가 방금 게시되었습니다',
+                        'ja' => 'コース ' . localizedModelField($course, 'name', 'ja') . ' が公開されました',
+                        'zh' => '课程 ' . localizedModelField($course, 'name', 'zh') . ' 刚刚发布',
                     ],
                     'url' => route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug]),
                 ]));
@@ -594,7 +634,7 @@ class CoursesController extends Controller
 
     public function edit($id)
     {
-        $pageTitle = 'CÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â­p nhÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â­p khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc';
+        $pageTitle = 'Cập nhật khóa học';
         $courses = $this->courseRepository->getCourse($id);
         $categoriesId = $this->courseRepository->getRelatedCategories($courses);
         $categories = $this->categoriesRepository->getAllCategories();
@@ -639,8 +679,8 @@ class CoursesController extends Controller
                 'categories_old' => $oldCategoryIds,
                 'categories_new' => $newCategoryIds,
             ],
-            logName: 'CÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â­p nhÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â­p',
-            description: 'CÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â­p nhÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â­t khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc'
+            logName: 'Cập nhật',
+            description: 'Cập nhật khóa học'
         );
 
         return back()->with('msg', __('courses::messages.update.success'));
@@ -662,6 +702,8 @@ class CoursesController extends Controller
 
     public function delete($id)
     {
+        abort_unless(auth()->user()?->hasPermission('courses.soft_delete'), 403);
+
         $course = $this->courseRepository->getCourse($id);
         if (empty($course)) {
             abort(404);
@@ -679,14 +721,13 @@ class CoursesController extends Controller
                 properties: [
                     'data' => $snapshot,
                 ],
-                logName: 'XÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a',
-                description: 'XÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a khÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a hÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Âc'
+                logName: 'Xóa',
+                description: 'Xóa khóa học'
             );
 
             return back()->with('msg', __('courses::messages.delete.success'));
         }
-
-        return back()->with('msg_danger', 'XÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³a thÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¥t bÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¡i');
+        return back()->with('msg_danger', 'Xóa thất bại');
     }
 
     public function logs(Request $request, $id)
@@ -695,8 +736,7 @@ class CoursesController extends Controller
         if (empty($course)) {
             abort(404);
         }
-
-        $pageTitle = "LÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ch sÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚Â»Ãƒâ€šÃ‚Â­: {$course->name}";
+        $pageTitle = "Lịch sử: {$course->name}";
 
         $query = ActiveLog::query()
             ->withoutGlobalScopes()
@@ -792,12 +832,10 @@ class CoursesController extends Controller
             $courseData = $course->getAttributes();
 
             unset($courseData['id'], $courseData['created_at'], $courseData['updated_at'], $courseData['deleted_at']);
-
-            $courseData['name'] = $this->duplicateTitle($course->name, 'BÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n sao');
-            $courseData['name_en'] = $this->duplicateTitle($course->name_en, 'Copy');
-            $courseData['name_ko'] = $this->duplicateTitle($course->name_ko, 'ÃƒÆ’Ã‚Â«Ãƒâ€šÃ‚Â³Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â«Ãƒâ€šÃ‚Â³Ãƒâ€šÃ‚Â¸');
-            $courseData['name_ja'] = $this->duplicateTitle($course->name_ja, 'ÃƒÆ’Ã‚Â£ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â£Ãƒâ€ Ã¢â‚¬â„¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã‚Â£Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â¼');
-            $courseData['name_zh'] = $this->duplicateTitle($course->name_zh, 'ÃƒÆ’Ã‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‚Â¦Ãƒâ€¦Ã¢â‚¬Å“Ãƒâ€šÃ‚Â¬');
+            $courseData['name'] = $this->duplicateTitle($course->name, 'Bản sao');
+            $courseData['name_ko'] = $this->duplicateTitle($course->name_ko, '복제본');
+            $courseData['name_ja'] = $this->duplicateTitle($course->name_ja, '複製版');
+            $courseData['name_zh'] = $this->duplicateTitle($course->name_zh, '复制版');
             $courseData['slug'] = $this->duplicateSlug($course->slug, 'copy');
             $courseData['slug_en'] = $this->duplicateSlug($course->slug_en, 'copy');
             $courseData['slug_ko'] = $this->duplicateSlug($course->slug_ko, 'copy');
@@ -830,22 +868,32 @@ class CoursesController extends Controller
 
                 $oldParentId = $lessonData['parent_id'] ?? null;
                 $lessonData['course_id'] = $newCourse->id;
-                $lessonData['parent_id'] = $oldParentId ? ($lessonMap[$oldParentId] ?? null) : null;
-                $lessonData['name'] = $this->duplicateTitle($lesson->name, 'BÃƒÆ’Ã‚Â¡Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â£n sao');
-                $lessonData['name_en'] = $this->duplicateTitle($lesson->name_en, 'Copy');
-                $lessonData['name_ko'] = $this->duplicateTitle($lesson->name_ko, 'ÃƒÆ’Ã‚Â«Ãƒâ€šÃ‚Â³Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â«Ãƒâ€šÃ‚Â³Ãƒâ€šÃ‚Â¸');
-                $lessonData['name_ja'] = $this->duplicateTitle($lesson->name_ja, 'ÃƒÆ’Ã‚Â£ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â£Ãƒâ€ Ã¢â‚¬â„¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã‚Â£Ãƒâ€ Ã¢â‚¬â„¢Ãƒâ€šÃ‚Â¼');
-                $lessonData['name_zh'] = $this->duplicateTitle($lesson->name_zh, 'ÃƒÆ’Ã‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã‚Â¦Ãƒâ€¦Ã¢â‚¬Å“Ãƒâ€šÃ‚Â¬');
+                $lessonData['name'] = $this->duplicateTitle($lesson->name, 'Bản sao');
+                $lessonData['name_ko'] = $this->duplicateTitle($lesson->name_ko, '복제본');
+                $lessonData['name_ja'] = $this->duplicateTitle($lesson->name_ja, '複製版');
+                $lessonData['name_zh'] = $this->duplicateTitle($lesson->name_zh, '复制版');
                 $lessonData['slug'] = $this->duplicateSlug($lesson->slug, 'copy');
                 $lessonData['slug_en'] = $this->duplicateSlug($lesson->slug_en, 'copy');
                 $lessonData['slug_ko'] = $this->duplicateSlug($lesson->slug_ko, 'copy');
                 $lessonData['slug_ja'] = $this->duplicateSlug($lesson->slug_ja, 'copy');
                 $lessonData['slug_zh'] = $this->duplicateSlug($lesson->slug_zh, 'copy');
-                $lessonData['view'] = 0;
                 $lessonData['status'] = 0;
+                $lessonData['view'] = 0;
+                $lessonData['parent_id'] = null;
 
                 $newLesson = Lesson::query()->create($lessonData);
-                $lessonMap[$lesson->id] = $newLesson->id;
+                $lessonMap[$lesson->id] = [
+                    'id' => $newLesson->id,
+                    'parent_id' => $oldParentId,
+                ];
+            }
+
+            foreach ($lessonMap as $oldLessonId => $map) {
+                if (!empty($map['parent_id']) && isset($lessonMap[$map['parent_id']])) {
+                    Lesson::query()
+                        ->whereKey($map['id'])
+                        ->update(['parent_id' => $lessonMap[$map['parent_id']]['id']]);
+                }
             }
 
             return $newCourse;
@@ -932,6 +980,3 @@ class CoursesController extends Controller
         }
     }
 }
-
-
-

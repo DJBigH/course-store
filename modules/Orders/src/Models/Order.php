@@ -26,6 +26,7 @@ class Order extends Model
         'status_id',
         'payment_date',
         'payment_complete_date',
+        'payment_method',
         'created_at',
         'updated_at',
     ];
@@ -89,5 +90,39 @@ class Order extends Model
         }
 
         return '';
+    }
+
+    public function getPaymentMethodCodeAttribute(): string
+    {
+        if (!empty($this->payment_method)) {
+            return (string) $this->payment_method;
+        }
+
+        if ((float) max(($this->total ?? 0) - ($this->discount ?? 0), 0) <= 0) {
+            return 'free';
+        }
+
+        return 'unknown';
+    }
+
+    public function getPaymentMethodLabelAttribute(): string
+    {
+        return match ($this->payment_method_code) {
+            'bank', 'bank_transfer' => 'Chuyển khoản ngân hàng',
+            'vnpay' => 'VNPay',
+            'momo' => 'MoMo',
+            'free' => 'Miễn phí',
+            default => 'Chưa xác định',
+        };
+    }
+    public function getPaymentMethodBadgeStyleAttribute(): string
+    {
+        return match ($this->payment_method_code) {
+            'bank', 'bank_transfer' => 'background:#16a34a;color:#ffffff;',
+            'vnpay' => 'background:#0f6cbd;color:#ffffff;',
+            'momo' => 'background:#a21caf;color:#ffffff;',
+            'free' => 'background:#0ea5e9;color:#ffffff;',
+            default => 'background:#64748b;color:#ffffff;',
+        };
     }
 }

@@ -6,7 +6,7 @@
             <div class="admin-page-actions">
                 <div>
                     <h5 class="mb-1">Danh sách đơn hàng</h5>
-                    <p class="text-muted mb-0">Theo dõi mã đơn, tổng tiền, trạng thái thanh toán và truy cập chi tiết nhanh.</p>
+                    <p class="text-muted mb-0">Theo dõi mã đơn, tổng tiền, trạng thái, phương thức thanh toán và truy cập chi tiết nhanh.</p>
                 </div>
             </div>
 
@@ -20,21 +20,41 @@
                 <div class="alert alert-danger border-0 rounded-4">{{ $errors->first('bulk_action') }}</div>
             @endif
 
-            <form id="bulk-action-form" action="{{ route('orders.bulk') }}" method="POST" class="mb-4">
-                @csrf
-                <input type="hidden" name="selected_ids" id="selected-ids">
-                <input type="hidden" name="bulk_action" id="bulk-action-input">
-
-                <div class="bulk-toolbar">
-                    <div class="bulk-toolbar__summary">
-                        <span id="selected-count">0</span> đơn hàng được chọn
-                    </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-light border bulk-action-trigger" data-action="cancel">Hủy đơn</button>
-                        <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
-                    </div>
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Phương thức thanh toán</label>
+                    <select id="payment-method-filter" class="form-select">
+                        <option value="">Tất cả phương thức</option>
+                        <option value="bank_transfer">Chuyển khoản ngân hàng</option>
+                        <option value="vnpay">VNPay</option>
+                        <option value="momo">MoMo</option>
+                        <option value="free">Miễn phí</option>
+                        <option value="unknown">Chưa xác định</option>
+                    </select>
                 </div>
-            </form>
+            </div>
+
+            @if (auth()->user()?->canAnyPermission(['orders.update', 'orders.delete']))
+                <form id="bulk-action-form" action="{{ route('orders.bulk') }}" method="POST" class="mb-4">
+                    @csrf
+                    <input type="hidden" name="selected_ids" id="selected-ids">
+                    <input type="hidden" name="bulk_action" id="bulk-action-input">
+
+                    <div class="bulk-toolbar">
+                        <div class="bulk-toolbar__summary">
+                            <span id="selected-count">0</span> đơn hàng được chọn
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (auth()->user()?->hasPermission('orders.update'))
+                                <button type="button" class="btn btn-light border bulk-action-trigger" data-action="cancel">Hủy đơn</button>
+                            @endif
+                            @if (auth()->user()?->hasPermission('orders.delete'))
+                                <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
+                            @endif
+                        </div>
+                    </div>
+                </form>
+            @endif
 
             <div class="table-responsive">
                 <table id="datatable" class="table align-middle w-100">
@@ -46,6 +66,7 @@
                             <th>Mã đơn hàng</th>
                             <th>Tổng tiền</th>
                             <th>Trạng thái</th>
+                            <th>Phương thức thanh toán</th>
                             <th>Ngày tạo đơn</th>
                             <th>Chi tiết</th>
                             <th>Xóa</th>
@@ -85,13 +106,18 @@
         $(document).ready(function() {
             const selectedIds = new Set();
 
-            $('#datatable').DataTable({
+            const table = $('#datatable').DataTable({
                 autoWidth: false,
                 processing: true,
                 serverSide: true,
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
-                ajax: "{{ route('orders.data') }}",
+                ajax: {
+                    url: "{{ route('orders.data') }}",
+                    data: function(d) {
+                        d.payment_method_filter = $('#payment-method-filter').val();
+                    }
+                },
                 columns: [{
                         data: 'select',
                         orderable: false,
@@ -105,6 +131,11 @@
                     },
                     {
                         data: 'status_id'
+                    },
+                    {
+                        data: 'payment_method',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'created_at'
@@ -187,6 +218,10 @@
                 $('#selected-ids').val(Array.from(selectedIds).join(','));
                 $('#bulk-action-input').val($(this).data('action'));
                 $('#bulk-action-form').trigger('submit');
+            });
+
+            $('#payment-method-filter').on('change', function() {
+                table.ajax.reload();
             });
         });
     </script>

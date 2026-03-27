@@ -1,7 +1,6 @@
 @extends('layouts.backend')
 
 @section('content')
-    {{-- Alert --}}
     @if (session('msg'))
         <div class="alert alert-success">{{ session('msg') }}</div>
     @endif
@@ -15,8 +14,6 @@
     @endif
 
     <div class="container-fluid">
-
-        {{-- Header --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold mb-0">
                 <i class="bi bi-receipt me-1"></i> Chi tiết đơn hàng
@@ -28,11 +25,7 @@
         </div>
 
         <div class="row">
-
-            {{-- LEFT --}}
             <div class="col-lg-8">
-
-                {{-- Order Info --}}
                 <div class="card shadow-sm mb-4">
                     <div class="card-header fw-semibold">
                         Thông tin đơn hàng
@@ -59,14 +52,28 @@
                                 <tr>
                                     <th>Thanh toán</th>
                                     <td>
-                                        @if ($order->payment_date)
+                                        @if ((int) $order->status_id === 2)
                                             <span class="badge bg-success">Đã thanh toán</span>
-                                            <div class="small text-muted">
-                                                {{ format_date_dmy($order->payment_complete_date) ?? '' }}
-                                            </div>
+                                            @if ($order->payment_complete_date || $order->payment_date)
+                                                <div class="small text-muted">
+                                                    {{ format_date_dmy($order->payment_complete_date ?: $order->payment_date) }}
+                                                </div>
+                                            @endif
+                                        @elseif ((int) $order->status_id === 4)
+                                            <span class="badge bg-danger">Hủy thanh toán</span>
+                                        @elseif ((int) $order->status_id === 3)
+                                            <span class="badge bg-danger">Thanh toán thất bại</span>
                                         @else
-                                            <span class="badge bg-warning">Chưa thanh toán</span>
+                                            <span class="badge bg-warning text-dark">Chưa thanh toán</span>
                                         @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Phương thức thanh toán</th>
+                                    <td>
+                                        <span class="badge rounded-pill" style="{{ $order->payment_method_badge_style }}">
+                                            {{ $order->payment_method_label }}
+                                        </span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -74,7 +81,6 @@
                     </div>
                 </div>
 
-                {{-- Course Detail --}}
                 <div class="card shadow-sm">
                     <div class="card-header fw-semibold">
                         Danh sách khóa học
@@ -112,13 +118,9 @@
                         </table>
                     </div>
                 </div>
-
             </div>
 
-            {{-- RIGHT --}}
             <div class="col-lg-4">
-
-                {{-- Customer --}}
                 <div class="card shadow-sm mb-4">
                     <div class="card-header fw-semibold">
                         Thông tin khách hàng
@@ -139,7 +141,6 @@
                     </div>
                 </div>
 
-                {{-- Payment Summary --}}
                 <div class="card shadow-sm">
                     <div class="card-header fw-semibold">
                         Tổng thanh toán
@@ -173,11 +174,7 @@
                         </table>
                     </div>
                 </div>
-
             </div>
-
         </div>
     </div>
 @endsection
-
-

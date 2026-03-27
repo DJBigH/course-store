@@ -20,7 +20,7 @@ return [
     'mark_incomplete' => 'Bỏ đánh dấu đã học',
     'mark_completed_success' => 'Bài học đã được đánh dấu hoàn thành.',
     'mark_incomplete_success' => 'Bài học đã được bỏ khỏi tiến độ hoàn thành.',
-    'completion_error' => 'KhÃ´ng thá»ƒ cáº­p nháº­t tiáº¿n Ä‘á»™ bÃ i há»c. Vui lÃ²ng thá»­ láº¡i.',
-    'lesson_not_found' => 'KhÃ´ng tÃ¬m tháº¥y bÃ i há»c.',
-    'login_required' => 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ cáº­p nháº­t tiáº¿n Ä‘á»™ bÃ i há»c.',
+    'completion_error' => 'Không thể cập nhật tiến độ bài học. Vui lòng thử lại.',
+    'lesson_not_found' => 'Không tìm thấy bài học.',
+    'login_required' => 'Vui lòng đăng nhập để cập nhật tiến độ bài học.',
 ];

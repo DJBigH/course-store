@@ -1,0 +1,44 @@
+ROLE / TEACHER PLAN
+
+1. Role system for admin
+- Create real groups table instead of hard-coded group_id values.
+- Create permissions and group_permission pivot to scale beyond super_admin.
+- Seed default groups: super_admin, content, sale.
+- Allow admin login based on group.is_admin instead of only group_id = 1.
+- Next step later: add UI to manage groups and assign permissions.
+
+2. Suggested admin groups
+- super_admin: full access
+- content: courses, categories, teachers, comments
+- sale: orders, students, coupons, contacts
+- later can add support, accountant, marketing
+
+3. Teacher idea, not implemented yet
+- Keep teacher as a profile table, but later link it to a real login account.
+- Best direction: add teachers.user_id nullable unique to connect one teacher profile to one user account.
+- Teacher account should use a separate teacher/admin-like portal, not the internal admin full portal.
+
+4. Teacher business flow idea
+- Teacher registers an account
+- Teacher submits profile / payout info / identity info
+- Admin reviews and approves teacher
+- Teacher creates draft courses
+- Admin reviews course quality before publishing
+- Revenue is split by commission rate
+
+5. Revenue model suggestion
+- Phase 1: commission only, for example teacher 70 percent / platform 30 percent
+- Phase 2: optional paid instructor plan plus lower commission
+
+6. Suggested teacher statuses
+- pending
+- active
+- rejected
+- suspended
+
+7. Suggested course workflow for teacher marketplace
+- draft
+- pending_review
+- published
+- rejected
+- hidden

@@ -2,22 +2,20 @@
 
 @section('content')
     <div class="card shadow-sm">
-
-        {{-- Thông báo --}}
         @if (session('msg'))
-            <div class="alert alert-success">{{ session('msg') }}</div>
+            <div class="alert alert-success m-3 mb-0">{{ session('msg') }}</div>
         @endif
         @if (session('msg_danger'))
-            <div class="alert alert-danger">{{ session('msg_danger') }}</div>
+            <div class="alert alert-danger m-3 mb-0">{{ session('msg_danger') }}</div>
         @endif
 
         <div class="card-header d-flex justify-content-between">
             <h5>
-                📚 Cấp mã cho khóa học
+                Cấp mã cho khóa học
                 <span class="text-primary">({{ $coupon->code }})</span>
             </h5>
             <a href="{{ route('coupons.index') }}" class="btn btn-sm btn-secondary">
-                ← Quay lại
+                Quay lại
             </a>
         </div>
 
@@ -25,7 +23,6 @@
             @csrf
 
             <div class="card-body">
-                {{-- Thông tin mã --}}
                 <div class="alert alert-info">
                     <strong>Loại giảm:</strong>
                     @if ($coupon->discount_type === 'percent')
@@ -65,11 +62,10 @@
                             </th>
                             <th>Tên khóa học</th>
                             <th>Giá</th>
-                            <th>Giá khuyễn mãi</th>
+                            <th>Giá khuyến mãi</th>
                             <th>Trạng thái</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         @foreach ($courses as $course)
                             <tr>
@@ -90,13 +86,12 @@
                             </tr>
                         @endforeach
                     </tbody>
-
                 </table>
             </div>
 
             <div class="card-footer text-end">
                 <button class="btn btn-primary">
-                    💾 Lưu thay đổi
+                    Lưu thay đổi
                 </button>
             </div>
         </form>
@@ -106,7 +101,7 @@
 @section('scripts')
     <script>
         document.getElementById('checkAll').addEventListener('change', function() {
-            document.querySelectorAll('input[name="courses[]"]').forEach(cb => {
+            document.querySelectorAll('input[name="courses[]"]').forEach((cb) => {
                 cb.checked = this.checked;
             });
         });

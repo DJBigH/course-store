@@ -444,7 +444,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Tạo thêm 1 nơi để setting phân trang được (Không biết có nên làm không)
 - Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa ) (Done)
 - Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db (Done)
+- Thêm remember login ( Done )
 - Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
+- Thêm cái nhận biết là thành toán = j ( Nếu sửa ở admin thì bên clients cần sửa luôn không)
 - Chỉnh lại khóa học khi chuyển thành đã ra mắt thì bên clients những người đã mua khóa học ấn vào sẽ bị trang 404 ( tìm xem hướng giải nào ok nhất )
 - Check lại mã giảm giá
 - Trong config thêm cái kiểm soát momo, vnpay, captcha
@@ -452,8 +454,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm bên admin bảo mật hơn
 - Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không)
 - Config gắn token hay api của bot telegram nếu đẩy lên production ( Hiện tại hướng dùng con botfather trên tele để thây tất cả thông tin ) làm chuẩn chỉ vì khi đẩy lên lại phải vào fix lại và có cách nào test được mình ở local mà test được nó kết nối được chưa không
-- Thêm remember login
-
+- Thêm chức năng light mode/ dark mode
+- Check lại responsive
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -491,7 +493,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Kết nối với api của con gemeni thêm cho nó các api xem khóa học, đa ngôn ngữ (nếu thấy ổn thì làm)
 - Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không 
 - Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi ) ( Done )
-- Check lại responsive
+- Check lại responsive ( Done )
+- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy )
 
 Tổng kết
 - check lại lần cuối trước khi đẩy lên production

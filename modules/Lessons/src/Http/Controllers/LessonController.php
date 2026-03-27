@@ -89,6 +89,67 @@ class LessonController extends Controller
 
     public function getLessonTable($lessons, $char = '', &$result = [])
     {
+        $user = auth()->user();
+        $canCreateLessons = $user?->hasPermission('lessons.create');
+        $canEditLessons = $user?->hasPermission('lessons.edit');
+        $canDeleteLessons = $user?->hasPermission('lessons.delete');
+
+        if (empty($lessons)) {
+            return $result;
+        }
+
+        foreach ($lessons as $key => $lesson) {
+            $row = $lesson;
+            $row['name'] = $char . $lesson['name'];
+
+            if ($row['parent_id'] == null) {
+                $row['is_trial'] = '';
+                $row['document_id'] = $row['document_id'] != null ? 'Có' : 'Không';
+                $row['view'] = '';
+                $row['durations'] = '';
+                $row['status'] = $row['status'] == 1
+                    ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i>Kích hoạt</span>'
+                    : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i>Chưa kích hoạt</span>';
+
+                $row['add'] = $canCreateLessons
+                    ? '<a href="' . route('lessons.add', $row['course_id']) . '?module=' . $row['id'] . '" class="btn btn-primary btn-sm">Thêm bài</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+                $row['edit'] = $canEditLessons
+                    ? '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+                $row['delete'] = $canDeleteLessons
+                    ? '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+            } else {
+                $row['is_trial'] = $row['is_trial'] == 1 ? 'Có' : 'Không';
+                $row['document_id'] = $row['document_id']  != null ? 'Có' : 'Không';
+                $row['view'] = $lesson['view'];
+                $row['durations'] = getTime($row['durations']);
+                $row['status'] = $row['status'] == 1
+                    ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i>Kích hoạt</span>'
+                    : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i>Chưa kích hoạt</span>';
+                $row['add'] = '';
+                $row['edit'] = $canEditLessons
+                    ? '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+                $row['delete'] = $canDeleteLessons
+                    ? '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+            }
+
+            unset($row['sub_lessons']);
+            unset($row['course_id']);
+            unset($row['created_at']);
+            unset($row['updated_at']);
+            $result[] = $row;
+
+            if (!empty($lesson['sub_lessons'])) {
+                $this->getLessonTable($lesson['sub_lessons'], $char . '|--', $result);
+            }
+        }
+
+        return $result;
+
         if (!empty($lessons)) {
             foreach ($lessons as $key => $lesson) {
                 $row = $lesson;

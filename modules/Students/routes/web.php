@@ -5,17 +5,17 @@ use Modules\Students\src\Http\Controllers\Clients\TwoFactorController;
 
 Route::prefix('admin')->group(function () {
    Route::prefix('students')->name('students.')->group(function () {
-      Route::get('/', 'StudentController@index')->name('index');
-      Route::get('data', 'StudentController@data')->name('data');
-      Route::post('/bulk', 'StudentController@bulkAction')->name('bulk');
-      Route::get('/create', 'StudentController@create')->name('add');
-      Route::post('/create', 'StudentController@store')->name('post-add');
-      Route::get('/edit/{student}', 'StudentController@edit')->name('edit');
-      Route::post('/edit/{student}', 'StudentController@update')->name('post-edit');
-      Route::delete('/delete/{student}', 'StudentController@delete')->name('delete');
-      Route::get('/{id}/coupon-history', 'StudentController@CouponHistory')->name('coupon-history');
-      Route::get('/{id}/purchased-courses', 'StudentController@purchasedCourses')->name('purchased-courses');
-      Route::get('logs/{student}', 'StudentController@logs')->name('logs');
+      Route::get('/', 'StudentController@index')->middleware('permission:students.view,students.create,students.edit,students.delete,students.logs')->name('index');
+      Route::get('data', 'StudentController@data')->middleware('permission:students.view,students.create,students.edit,students.delete,students.logs')->name('data');
+      Route::post('/bulk', 'StudentController@bulkAction')->middleware('permission:students.edit,students.delete')->name('bulk');
+      Route::get('/create', 'StudentController@create')->middleware('permission:students.create')->name('add');
+      Route::post('/create', 'StudentController@store')->middleware('permission:students.create')->name('post-add');
+      Route::get('/edit/{student}', 'StudentController@edit')->middleware('permission:students.edit')->name('edit');
+      Route::post('/edit/{student}', 'StudentController@update')->middleware('permission:students.edit')->name('post-edit');
+      Route::delete('/delete/{student}', 'StudentController@delete')->middleware('permission:students.delete')->name('delete');
+      Route::get('/{id}/coupon-history', 'StudentController@CouponHistory')->middleware('permission:students.view')->name('coupon-history');
+      Route::get('/{id}/purchased-courses', 'StudentController@purchasedCourses')->middleware('permission:students.view')->name('purchased-courses');
+      Route::get('logs/{student}', 'StudentController@logs')->middleware('permission:students.logs')->name('logs');
    });
 });
 
@@ -101,8 +101,8 @@ Route::get('students/notifications/read/{id}', function ($id) {
 
 Route::get('students/notifications', function () {
    return view('students.notifications.index', [
-      'pageTitle' => 'Thông báo',
-      'pageName' => 'Thông báo',
+      'pageTitle' => 'ThÃ´ng bÃ¡o',
+      'pageName' => 'ThÃ´ng bÃ¡o',
       'notifications' => auth('students')->user()->notifications()->latest()->paginate(100),
    ]);
 })->middleware(['auth:students', 'verified', 'user.block'])->name('students.notifications.index');

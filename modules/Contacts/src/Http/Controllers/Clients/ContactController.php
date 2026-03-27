@@ -58,7 +58,7 @@ class ContactController extends Controller
 
         $contacts = $request->except(['_token', 'g-recaptcha-response']);
         $contacts = $this->contactrepository->create($contacts);
-        $admins = User::where('group_id', 1)->get();
+        $admins = User::query()->inGroup('super_admin')->get();
 
         foreach ($admins as $admin) {
             $admin->notify(new NewContactNotification($contacts));

@@ -8,10 +8,12 @@
                     <h5 class="mb-1">Danh sách mã giảm giá</h5>
                     <p class="text-muted mb-0">Quản lý ưu đãi, điều kiện áp dụng, số lượng còn lại và lịch sử gán mã.</p>
                 </div>
-                <a href="{{ route('coupons.add') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>
-                    Thêm mã giảm giá
-                </a>
+                @if (auth()->user()?->hasPermission('coupons.create'))
+                    <a href="{{ route('coupons.add') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        Thêm mã giảm giá
+                    </a>
+                @endif
             </div>
 
             @if (session('msg'))
@@ -24,21 +26,27 @@
                 <div class="alert alert-danger border-0 rounded-4">{{ $errors->first('bulk_action') }}</div>
             @endif
 
-            <form id="bulk-action-form" action="{{ route('coupons.bulk') }}" method="POST" class="mb-4">
-                @csrf
-                <input type="hidden" name="selected_ids" id="selected-ids">
-                <input type="hidden" name="bulk_action" id="bulk-action-input">
+            @if (auth()->user()?->canAnyPermission(['coupons.edit', 'coupons.delete']))
+                <form id="bulk-action-form" action="{{ route('coupons.bulk') }}" method="POST" class="mb-4">
+                    @csrf
+                    <input type="hidden" name="selected_ids" id="selected-ids">
+                    <input type="hidden" name="bulk_action" id="bulk-action-input">
 
-                <div class="bulk-toolbar">
-                    <div class="bulk-toolbar__summary">
-                        <span id="selected-count">0</span> mã giảm giá được chọn
+                    <div class="bulk-toolbar">
+                        <div class="bulk-toolbar__summary">
+                            <span id="selected-count">0</span> mã giảm giá được chọn
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (auth()->user()?->hasPermission('coupons.edit'))
+                                <button type="button" class="btn btn-outline-secondary bulk-action-trigger" data-action="duplicate">Nhân bản</button>
+                            @endif
+                            @if (auth()->user()?->hasPermission('coupons.delete'))
+                                <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
+                            @endif
+                        </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-outline-secondary bulk-action-trigger" data-action="duplicate">Nhân bản</button>
-                        <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            @endif
 
             <div class="table-responsive">
                 <table id="datatable" class="table align-middle w-100">

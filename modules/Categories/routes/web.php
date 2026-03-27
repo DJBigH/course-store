@@ -5,15 +5,15 @@ use Modules\Courses\src\Http\Controllers\Clients\CoursesController;
 
 Route::prefix('admin')->group(function () {
   Route::prefix('categories')->name('categories.')->group(function () {
-    Route::get('/', 'CategoriesController@index')->name('index');
-    Route::get('data', 'CategoriesController@data')->name('data');
-    Route::post('/bulk', 'CategoriesController@bulkAction')->name('bulk');
-    Route::get('/create', 'CategoriesController@create')->name('add');
-    Route::post('/create', 'CategoriesController@store')->name('post-add');
-    Route::get('/edit/{category}', 'CategoriesController@edit')->name('edit');
-    Route::post('/edit/{category}', 'CategoriesController@update')->name('post-edit');
-    Route::delete('/delete/{category}', 'CategoriesController@delete')->name('delete');
-    Route::get('logs/{category}', 'CategoriesController@logs')->name('logs');
+    Route::get('/', 'CategoriesController@index')->middleware('permission:categories.view,categories.create,categories.edit,categories.delete,categories.logs')->name('index');
+    Route::get('data', 'CategoriesController@data')->middleware('permission:categories.view,categories.create,categories.edit,categories.delete,categories.logs')->name('data');
+    Route::post('/bulk', 'CategoriesController@bulkAction')->middleware('permission:categories.delete')->name('bulk');
+    Route::get('/create', 'CategoriesController@create')->middleware('permission:categories.create')->name('add');
+    Route::post('/create', 'CategoriesController@store')->middleware('permission:categories.create')->name('post-add');
+    Route::get('/edit/{category}', 'CategoriesController@edit')->middleware('permission:categories.edit')->name('edit');
+    Route::post('/edit/{category}', 'CategoriesController@update')->middleware('permission:categories.edit')->name('post-edit');
+    Route::delete('/delete/{category}', 'CategoriesController@delete')->middleware('permission:categories.delete')->name('delete');
+    Route::get('logs/{category}', 'CategoriesController@logs')->middleware('permission:categories.logs')->name('logs');
   });
 });
 

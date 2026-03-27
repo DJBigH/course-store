@@ -12,7 +12,7 @@ class AdminAccess
     {
         $user = $request->user();
 
-        if (!$user || (int) ($user->group_id ?? 0) !== 1) {
+        if (!$user || !$user->canAccessAdmin()) {
             auth()->logout();
 
             $request->session()->invalidate();

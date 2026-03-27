@@ -153,7 +153,10 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
 
     public function getCategories()
     {
-        return $this->model->with(['detail', 'status'])->select(['id', 'code', 'total', 'discount', 'coupon', 'status_id', 'created_at'])->latest();
+        return $this->model
+            ->with(['detail', 'status'])
+            ->select(['id', 'code', 'total', 'discount', 'coupon', 'status_id', 'payment_method', 'created_at'])
+            ->latest();
     }
 
     protected function enrichCustomerSnapshot(array $data): array

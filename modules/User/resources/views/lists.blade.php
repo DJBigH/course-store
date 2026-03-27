@@ -6,12 +6,14 @@
             <div class="admin-page-actions">
                 <div>
                     <h5 class="mb-1">Danh sách người dùng</h5>
-                    <p class="text-muted mb-0">Theo dõi tài khoản quản trị, nhóm quyền và lịch sử thao tác.</p>
+                    <p class="text-muted mb-0">Theo dõi tài khoản nội bộ, nhóm quyền và lịch sử thao tác.</p>
                 </div>
-                <a href="{{ route('user.add') }}" class="btn btn-primary">
-                    <i class="fa-solid fa-plus me-2"></i>
-                    Thêm người dùng
-                </a>
+                @if (auth()->user()?->hasPermission('users.create'))
+                    <a href="{{ route('user.add') }}" class="btn btn-primary">
+                        <i class="fa-solid fa-plus me-2"></i>
+                        Thêm người dùng
+                    </a>
+                @endif
             </div>
 
             @if (session('msg'))
@@ -35,16 +37,8 @@
                         <label class="form-label">Nhóm quyền</label>
                         <select class="form-select" id="filter-group" name="group_filter">
                             <option value="">Tất cả</option>
-                            @foreach ($groupOptions as $groupId)
-                                <option value="{{ $groupId }}">
-                                    @if ((int) $groupId === 1)
-                                        Quản trị
-                                    @elseif ((int) $groupId === 2)
-                                        Biên tập
-                                    @else
-                                        Nhóm #{{ $groupId }}
-                                    @endif
-                                </option>
+                            @foreach ($groupOptions as $group)
+                                <option value="{{ $group->id }}">{{ $group->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -65,18 +59,20 @@
                 </div>
             </form>
 
-            <form id="bulk-action-form" action="{{ route('user.bulk') }}" method="POST" class="mb-4">
-                @csrf
-                <input type="hidden" name="selected_ids" id="selected-ids">
-                <input type="hidden" name="bulk_action" id="bulk-action-input">
+            @if (auth()->user()?->hasPermission('users.delete'))
+                <form id="bulk-action-form" action="{{ route('user.bulk') }}" method="POST" class="mb-4">
+                    @csrf
+                    <input type="hidden" name="selected_ids" id="selected-ids">
+                    <input type="hidden" name="bulk_action" id="bulk-action-input">
 
-                <div class="bulk-toolbar">
-                    <div class="bulk-toolbar__summary">
-                        <span id="selected-count">0</span> người dùng được chọn
+                    <div class="bulk-toolbar">
+                        <div class="bulk-toolbar__summary">
+                            <span id="selected-count">0</span> người dùng được chọn
+                        </div>
+                        <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
                     </div>
-                    <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
-                </div>
-            </form>
+                </form>
+            @endif
 
             <div class="table-responsive">
                 <table id="datatable" class="table align-middle w-100">

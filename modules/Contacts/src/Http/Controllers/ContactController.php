@@ -29,6 +29,10 @@ class ContactController extends Controller
     public function data(Request $request)
     {
         $contacts = $this->contactrepository->getContacts();
+        $user = auth()->user();
+        $canLogs = $user?->hasPermission('contacts.logs');
+        $canView = $user?->hasPermission('contacts.view');
+        $canDelete = $user?->hasPermission('contacts.delete');
 
         if ($request->filled('q')) {
             $keyword = trim((string) $request->input('q'));
@@ -52,6 +56,37 @@ class ContactController extends Controller
         if ($request->filled('to_date')) {
             $contacts->whereDate('created_at', '<=', $request->input('to_date'));
         }
+
+        return datatables()->of($contacts)
+            ->addColumn(
+                'select',
+                fn($c) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $c->id . '"></div>'
+            )
+            ->addColumn(
+                'logs',
+                fn($c) => $canLogs ? '<a href="' . route('contacts.logs', $c->id) . '" class="btn btn-sm btn-secondary"><i class="fas fa-clock"></i></a>' : '<span class="text-muted small">-</span>'
+            )
+            ->addColumn('name', fn($c) => $c->name)
+            ->addColumn('phone', fn($c) => $c->phone)
+            ->addColumn('email', fn($c) => $c->email)
+            ->addColumn('status', function ($c) {
+                return $c->status == 1
+                    ? '<span class="badge bg-success">ÄÃ£ tiáº¿p nháº­n</span>'
+                    : '<span class="badge bg-warning text-dark">Chá» tiáº¿p xá»­</span>';
+            })
+            ->addColumn('created_at', function ($c) {
+                return Carbon::parse($c->created_at)->format('d/m/Y H:i:s');
+            })
+            ->addColumn(
+                'view',
+                fn($c) => $canView ? '<a href="' . route('contacts.show', $c->id) . '" class="btn btn-sm btn-primary">Xem</a>' : '<span class="text-muted small">Không có quyền</span>'
+            )
+            ->addColumn(
+                'delete',
+                fn($c) => $canDelete ? '<a href="' . route('contacts.delete', $c->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>' : '<span class="text-muted small">Không có quyền</span>'
+            )
+            ->rawColumns(['select', 'status', 'view', 'delete', 'logs'])
+            ->make(true);
 
         return datatables()->of($contacts)
             ->addColumn(

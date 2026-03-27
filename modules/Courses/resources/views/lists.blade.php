@@ -48,18 +48,24 @@
                     <p class="text-muted mb-0">Quản lý nội dung, giá bán, trạng thái và truy cập nhanh đến bài giảng.</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="{{ route('courses.trash') }}" class="btn btn-light border">
-                        <i class="fa-solid fa-trash-can-arrow-up me-2"></i>
-                        Thùng rác
-                    </a>
-                    <a href="{{ route('courses.comments.admin') }}" class="btn btn-light border">
-                        <i class="fa-solid fa-comments me-2"></i>
-                        Bình luận
-                    </a>
-                    <a href="{{ route('courses.add') }}" class="btn btn-primary">
-                        <i class="fa-solid fa-plus me-2"></i>
-                        Thêm khóa học
-                    </a>
+                    @if (auth()->user()?->hasPermission('courses.view'))
+                        <a href="{{ route('courses.trash') }}" class="btn btn-light border">
+                            <i class="fa-solid fa-trash-can-arrow-up me-2"></i>
+                            Thùng rác
+                        </a>
+                    @endif
+                    @if (auth()->user()?->hasPermission('comments.moderate'))
+                        <a href="{{ route('courses.comments.admin') }}" class="btn btn-light border">
+                            <i class="fa-solid fa-comments me-2"></i>
+                            Bình luận
+                        </a>
+                    @endif
+                    @if (auth()->user()?->hasPermission('courses.create'))
+                        <a href="{{ route('courses.add') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-plus me-2"></i>
+                            Thêm khóa học
+                        </a>
+                    @endif
                 </div>
             </div>
 
@@ -129,23 +135,25 @@
                 </button>
             </div>
 
-            <form id="bulk-action-form" action="{{ route('courses.bulk') }}" method="POST" class="mb-4">
-                @csrf
-                <input type="hidden" name="selected_ids" id="selected-course-ids">
-                <input type="hidden" name="bulk_action" id="bulk-action-input">
+            @if (auth()->user()?->hasPermission('courses.publish'))
+                <form id="bulk-action-form" action="{{ route('courses.bulk') }}" method="POST" class="mb-4">
+                    @csrf
+                    <input type="hidden" name="selected_ids" id="selected-course-ids">
+                    <input type="hidden" name="bulk_action" id="bulk-action-input">
 
-                <div class="bulk-toolbar">
-                    <div class="bulk-toolbar__summary">
-                        <span id="selected-count">0</span> khóa học được chọn
+                    <div class="bulk-toolbar">
+                        <div class="bulk-toolbar__summary">
+                            <span id="selected-count">0</span> khóa học được chọn
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-success bulk-action-trigger" data-action="publish">Xuất bản hàng loạt</button>
+                            <button type="button" class="btn btn-light border bulk-action-trigger" data-action="draft">Chuyển về nháp</button>
+                            <button type="button" class="btn btn-outline-secondary bulk-action-trigger" data-action="duplicate">Nhân bản hàng loạt</button>
+                            <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="soft_delete">Xóa mềm</button>
+                        </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-success bulk-action-trigger" data-action="publish">Xuất bản hàng loạt</button>
-                        <button type="button" class="btn btn-light border bulk-action-trigger" data-action="draft">Chuyển về nháp</button>
-                        <button type="button" class="btn btn-outline-secondary bulk-action-trigger" data-action="duplicate">Nhân bản hàng loạt</button>
-                        <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="soft_delete">Xóa mềm</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            @endif
 
             <div class="table-responsive">
                 <table id="datatable" class="table align-middle admin-data-table w-100">

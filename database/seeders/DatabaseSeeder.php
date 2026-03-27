@@ -13,6 +13,8 @@ use Modules\Orders\seeders\OrderStatusSeeder;
 use Modules\Settings\seeders\SettingSeeder;
 use Modules\Settings\src\Http\Requests\SettingRequest;
 use Modules\Settings\src\Models\Setting;
+use Modules\User\seeders\GroupSeeder;
+use Modules\User\seeders\PermissionSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -28,6 +30,8 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
         $this->call([
+            GroupSeeder::class,
+            PermissionSeeder::class,
             UserSeeder::class,
             TeacherSeeder::class,
             OrderStatusSeeder::class,

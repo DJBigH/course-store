@@ -27,7 +27,7 @@
                         </h3>
 
                         <p class="text-muted">
-                            {{ $user->role->name ?? 'Quản trị viên' }}
+                            {{ $user->group?->name ?? 'Quản trị viên' }}
                         </p>
 
                         <ul class="list-group list-group-unbordered mb-3 text-start">
@@ -58,41 +58,34 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="">Tên</label>
+                                    <label>Tên</label>
                                     <input type="text"
                                         class="form-control{{ $errors->has('name') ? ' is-invalid' : '' }}" name="name"
                                         placeholder="Tên..." value="{{ old('name') ?? $user->name }}">
                                     @error('name')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="">Email</label>
+                                    <label>Email</label>
                                     <input type="text"
                                         class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}" name="email"
                                         placeholder="Email..." readonly value="{{ old('email') ?? $user->email }}">
                                     @error('email')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="">Mất khẩu</label>
+                                    <label>Mật khẩu</label>
                                     <input type="password"
                                         class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}"
-                                        name="password" placeholder="Mất khẩu...">
+                                        name="password" placeholder="Mật khẩu...">
                                     @error('password')
-                                        <div class="invalid-feedback">
-                                            {{ $message }}
-                                        </div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-
                             </div>
                         </div>
 

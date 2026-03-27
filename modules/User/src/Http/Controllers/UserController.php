@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\User\src\Http\Requests\UpdateProfileRequest;
 use Modules\User\src\Http\Requests\UserRequest;
-use Modules\User\src\Models\User;
+use Modules\User\src\Models\Group;
 use Modules\User\src\Repositories\UserRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -26,12 +26,7 @@ class UserController extends Controller
     public function index()
     {
         $pageTitle = 'Quản lý người dùng';
-        $groupOptions = User::query()
-            ->select('group_id')
-            ->whereNotNull('group_id')
-            ->distinct()
-            ->orderBy('group_id')
-            ->pluck('group_id');
+        $groupOptions = Group::query()->orderBy('id')->get(['id', 'name', 'slug']);
 
         return view('user::lists', compact('pageTitle', 'groupOptions'));
     }
@@ -39,6 +34,9 @@ class UserController extends Controller
     public function data(Request $request)
     {
         $users = $this->userRepository->getAllUser();
+        $canLogs = auth()->user()?->hasPermission('users.logs');
+        $canEdit = auth()->user()?->hasPermission('users.edit');
+        $canDelete = auth()->user()?->hasPermission('users.delete');
 
         if ($request->filled('q')) {
             $keyword = trim((string) $request->input('q'));
@@ -65,17 +63,23 @@ class UserController extends Controller
             ->addColumn('select', function ($user) {
                 return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $user->id . '"></div>';
             })
-            ->addColumn('logs', function ($user) {
-                return '<a href="' . route('user.logs', $user->id) . '" class="btn btn-light border">Lịch sử</a>';
+            ->addColumn('logs', function ($user) use ($canLogs) {
+                return $canLogs
+                    ? '<a href="' . route('user.logs', $user->id) . '" class="btn btn-light border">Lịch sử</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
             })
-            ->addColumn('edit', function ($user) {
-                return '<a href="' . route('user.edit', $user->id) . '" class="btn btn-warning">Sửa</a>';
+            ->addColumn('edit', function ($user) use ($canEdit) {
+                return $canEdit
+                    ? '<a href="' . route('user.edit', $user->id) . '" class="btn btn-warning">Sửa</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
             })
-            ->addColumn('delete', function ($user) {
-                return '<a href="' . route('user.delete', $user->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>';
+            ->addColumn('delete', function ($user) use ($canDelete) {
+                return $canDelete
+                    ? '<a href="' . route('user.delete', $user->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
             })
             ->editColumn('group_id', function ($user) {
-                return $this->formatGroupLabel((int) $user->group_id);
+                return $user->group?->name ?: ('Nhóm #' . $user->group_id);
             })
             ->editColumn('created_at', function ($user) {
                 return Carbon::parse($user->created_at)->format('d/m/Y H:i:s');
@@ -132,7 +136,9 @@ class UserController extends Controller
     public function create()
     {
         $pageTitle = 'Thêm mới người dùng';
-        return view('user::create', compact('pageTitle'));
+        $groups = Group::query()->orderBy('id')->get(['id', 'name']);
+
+        return view('user::create', compact('pageTitle', 'groups'));
     }
 
     public function store(UserRequest $request)
@@ -154,19 +160,20 @@ class UserController extends Controller
             description: 'Tạo mới người dùng'
         );
 
-        return redirect()->route('user.index')->with('msg', __('user::messages.create.success'));
+        return redirect()->route('user.index')->with('msg', 'Đã tạo người dùng thành công.');
     }
 
     public function edit($id)
     {
         $pageTitle = 'Cập nhật người dùng';
         $users = $this->userRepository->find($id);
+        $groups = Group::query()->orderBy('id')->get(['id', 'name']);
 
         if (empty($users)) {
             abort(404);
         }
 
-        return view('user::edit', compact('users', 'pageTitle'));
+        return view('user::edit', compact('users', 'pageTitle', 'groups'));
     }
 
     public function update(UserRequest $request, $id)
@@ -194,10 +201,10 @@ class UserController extends Controller
                 description: 'Cập nhật người dùng'
             );
 
-            return back()->with('msg', __('user::messages.update.success'));
+            return back()->with('msg', 'Đã cập nhật người dùng thành công.');
         }
 
-        return back()->with('msg_danger', __('user::messages.update.failure'));
+        return back()->with('msg_danger', 'Cập nhật người dùng thất bại.');
     }
 
     public function delete($id)
@@ -221,7 +228,7 @@ class UserController extends Controller
             description: 'Xóa người dùng'
         );
 
-        return back()->with('msg', __('user::messages.delete.success'));
+        return back()->with('msg', 'Đã xóa người dùng thành công.');
     }
 
     public function show()
@@ -256,7 +263,7 @@ class UserController extends Controller
                 ->with('msg', 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại.');
         }
 
-        return back()->with('msg', __('user::messages.update.success'));
+        return back()->with('msg', 'Cập nhật thông tin thành công.');
     }
 
     public function logs(Request $request, $id)
@@ -299,14 +306,5 @@ class UserController extends Controller
             ->withQueryString();
 
         return view('user::logs', compact('pageTitle', 'user', 'logs'));
-    }
-
-    private function formatGroupLabel(int $groupId): string
-    {
-        return match ($groupId) {
-            1 => 'Quản trị',
-            2 => 'Biên tập',
-            default => 'Nhóm #' . $groupId,
-        };
     }
 }

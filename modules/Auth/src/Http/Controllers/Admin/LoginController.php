@@ -32,8 +32,22 @@ class LoginController extends Controller
         return [
             $this->username() => $request->get($this->username()),
             'password' => $request->get('password'),
-            'group_id' => 1,
         ];
+    }
+
+    protected function authenticated(Request $request, $user)
+    {
+        if ($user->canAccessAdmin()) {
+            return null;
+        }
+
+        $this->guard()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        throw ValidationException::withMessages([
+            $this->username() => ['Tài khoản này không có quyền truy cập trang quản trị.'],
+        ]);
     }
 
     protected function sendFailedLoginResponse(Request $request)

@@ -31,6 +31,39 @@ class StudentController extends Controller
     public function data()
     {
         $students = $this->studentRepository->getAllStudents();
+        $user = auth()->user();
+        $canLogs = $user?->hasPermission('students.logs');
+        $canView = $user?->hasPermission('students.view');
+        $canEdit = $user?->hasPermission('students.edit');
+        $canDelete = $user?->hasPermission('students.delete');
+
+        return DataTables::of($students)
+            ->addColumn('select', function ($student) {
+                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $student->id . '"></div>';
+            })
+            ->addColumn('logs', function ($student) use ($canLogs) {
+                return $canLogs ? '<a href="' . route('students.logs', $student->id) . '" class="btn btn-light border">Lịch sử</a>' : '<span class="text-muted small">Không có quyền</span>';
+            })
+            ->addColumn('courses', function ($student) use ($canView) {
+                return $canView ? '<a href="' . route('students.purchased-courses', $student->id) . '" class="btn btn-light border">Khóa học</a>' : '<span class="text-muted small">Không có quyền</span>';
+            })
+            ->addColumn('link', function ($student) use ($canView) {
+                return $canView ? '<a href="' . route('students.coupon-history', $student->id) . '" class="btn btn-primary">Lịch sử mã</a>' : '<span class="text-muted small">Không có quyền</span>';
+            })
+            ->addColumn('edit', function ($student) use ($canEdit) {
+                return $canEdit ? '<a href="' . route('students.edit', $student->id) . '" class="btn btn-warning">Sửa</a>' : '<span class="text-muted small">Không có quyền</span>';
+            })
+            ->addColumn('delete', function ($student) use ($canDelete) {
+                return $canDelete ? '<a href="' . route('students.delete', $student->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>' : '<span class="text-muted small">Không có quyền</span>';
+            })
+            ->editColumn('created_at', function ($students) {
+                return Carbon::parse($students->created_at)->format('d/m/Y H:i:s');
+            })
+            ->editColumn('status', function ($students) {
+                return $students->status == 1 ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i>Kích hoạt</span>' : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i>Chưa kích hoạt</span>';
+            })
+            ->rawColumns(['select', 'edit', 'delete', 'status', 'link', 'courses', 'logs'])
+            ->toJson();
 
         return DataTables::of($students)
             ->addColumn('select', function ($student) {

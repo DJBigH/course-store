@@ -54,6 +54,67 @@ class CategoriesController extends Controller
 
     public function getCategoriesTable($categories, $char = '', &$result = [])
     {
+        $user = auth()->user();
+        $canLogs = $user?->hasPermission('categories.logs');
+        $canEdit = $user?->hasPermission('categories.edit');
+        $canDelete = $user?->hasPermission('categories.delete');
+
+        if (empty($categories)) {
+            return $result;
+        }
+
+        foreach ($categories as $key => $category) {
+            $row = $category;
+            $localizedName = $category['name'] ?? '';
+            if (app()->getLocale() === 'zh') {
+                $localizedName = $category['name_zh'] ?? $category['name'] ?? $category['name_en'] ?? $category['name_ko'] ?? $category['name_ja'] ?? '';
+            } elseif (app()->getLocale() === 'ja') {
+                $localizedName = $category['name_ja'] ?? $category['name'] ?? $category['name_en'] ?? $category['name_ko'] ?? $category['name_zh'] ?? '';
+            } elseif (app()->getLocale() === 'ko') {
+                $localizedName = $category['name_ko'] ?? $category['name'] ?? $category['name_en'] ?? $category['name_ja'] ?? $category['name_zh'] ?? '';
+            } elseif (app()->getLocale() === 'en') {
+                $localizedName = $category['name_en'] ?? $category['name'] ?? $category['name_ko'] ?? $category['name_ja'] ?? $category['name_zh'] ?? '';
+            }
+            $row['name'] = $char . $localizedName;
+            $row['select'] = '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $category['id'] . '"></div>';
+            $row['logs'] = $canLogs
+                ? '<a href="' . route('categories.logs', $category['id']) . '" class="btn btn-light border">Lịch sử</a>'
+                : '<span class="text-muted small">Không có quyền</span>';
+            $row['edit'] = $canEdit
+                ? '<a href="' . route('categories.edit', $category['id']) . '" class="btn btn-warning">Sửa</a>'
+                : '<span class="text-muted small">Không có quyền</span>';
+            $row['delete'] = $canDelete
+                ? '<a href="' . route('categories.delete', $category['id']) . '" class="btn btn-outline-danger delete-action">Xóa</a>'
+                : '<span class="text-muted small">Không có quyền</span>';
+            $locale = app()->getLocale();
+            if ($locale === 'zh') {
+                $slug = $category['slug_zh'] ?? $category['slug'] ?? $category['slug_en'] ?? $category['slug_ko'] ?? $category['slug_ja'];
+            } elseif ($locale === 'ja') {
+                $slug = $category['slug_ja'] ?? $category['slug'] ?? $category['slug_en'] ?? $category['slug_ko'] ?? $category['slug_zh'];
+            } elseif ($locale === 'ko') {
+                $slug = $category['slug_ko'] ?? $category['slug'] ?? $category['slug_en'] ?? $category['slug_ja'] ?? $category['slug_zh'];
+            } elseif ($locale === 'en') {
+                $slug = $category['slug_en'] ?? $category['slug'] ?? $category['slug_ko'] ?? $category['slug_ja'] ?? $category['slug_zh'];
+            } else {
+                $slug = $category['slug'] ?? $category['slug_en'] ?? $category['slug_ko'] ?? $category['slug_ja'] ?? $category['slug_zh'];
+            }
+
+            $row['link'] = '<a href="' . route('categories.category', [
+                'locale' => $locale,
+                'slug' => $slug
+            ]) . '" class="btn btn-primary" target="_blank">Xem</a>';
+
+            $row['created_at'] = Carbon::parse($category['created_at'])->format('d/m/Y H:i:s');
+            unset($row['sub_categories']);
+            unset($row['updated_at']);
+            $result[] = $row;
+            if (!empty($category['sub_categories'])) {
+                $this->getCategoriesTable($category['sub_categories'], $char . '|--', $result);
+            }
+        }
+
+        return $result;
+
         if (!empty($categories)) {
             foreach ($categories as $key => $category) {
                 $row = $category;

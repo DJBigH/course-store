@@ -16,20 +16,13 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // $faker = Factory::create();
-        // for ($index = 1; $index <=10; $index++){
-        //     $user = new User();
-        //     $user->name = $faker->name;
-        //     $user->email = $faker->email;
-        //     $user->password = Hash::make('123456');
-        //     $user->group_id = 1;
-        //     $user->save();
-        // }
-            $user = new User();
-            $user->name = "Admin";
-            $user->email = "admin@gmail.com";
-            $user->password = Hash::make('12345678');
-            $user->group_id = 1;
-            $user->save();
+        User::query()->updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Admin',
+                'password' => Hash::make('12345678'),
+                'group_id' => 1,
+            ]
+        );
     }
 }

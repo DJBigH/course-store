@@ -64,6 +64,7 @@ class CheckoutController extends Controller
             abort(404);
         }
 
+        $this->setOrderPaymentMethod($order, $this->getPayableAmount($order) <= 0 ? 'free' : 'bank_transfer');
         $this->markOrderAsPaid($order);
 
         return redirect()->route('students.account.checkout-thankyou', [
@@ -81,7 +82,7 @@ class CheckoutController extends Controller
         }
 
         $this->orderRepository->cancelOrder($order);
-        $admins = User::where('group_id', 1)->get();
+        $admins = User::query()->inGroup('super_admin')->get();
 
         foreach ($admins as $admin) {
             $admin->notify(new OrderPaidNotification($order));
@@ -109,6 +110,8 @@ class CheckoutController extends Controller
         if (!$order || $order->status->is_success) {
             abort(404);
         }
+
+        $this->setOrderPaymentMethod($order, 'vnpay');
 
         $config = config('services.vnpay');
         if (empty($config['tmn_code']) || empty($config['hash_secret']) || empty($config['url'])) {
@@ -227,6 +230,8 @@ class CheckoutController extends Controller
         if (!$order || $order->status->is_success) {
             abort(404);
         }
+
+        $this->setOrderPaymentMethod($order, 'momo');
 
         $config = config('services.momo');
         if (
@@ -475,7 +480,7 @@ class CheckoutController extends Controller
         $this->orderRepository->completePayment($order);
         $order->refresh()->loadMissing(['status', 'detail.courses']);
 
-        $admins = User::where('group_id', 1)->get();
+        $admins = User::query()->inGroup('super_admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new OrderPaidNotification($order));
         }
@@ -545,5 +550,14 @@ class CheckoutController extends Controller
     private function getPayableAmount(Order $order): float
     {
         return (float) max($order->total - ($order->discount ?? 0), 0);
+    }
+
+    private function setOrderPaymentMethod(Order $order, string $paymentMethod): void
+    {
+        if ($order->payment_method === $paymentMethod) {
+            return;
+        }
+
+        $order->update(['payment_method' => $paymentMethod]);
     }
 }

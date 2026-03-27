@@ -9,7 +9,7 @@
         'entityItems' => [
             'Tên' => $student->name ?? 'N/A',
             'Email' => $student->email ?? 'N/A',
-            'Kinh nghiệm' => $student->exp ?? 'N/A',
+            'Trạng thái' => isset($student->status) ? ($student->status ? 'Kích hoạt' : 'Chưa kích hoạt') : 'N/A',
         ],
         'filterActions' => [
             'create' => 'Tạo mới',

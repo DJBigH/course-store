@@ -104,6 +104,15 @@
                                                     @endif
                                                 </td>
                                             </tr>
+
+                                            <tr class="order-detail-summary-row">
+                                                <th>Phương thức thanh toán</th>
+                                                <td>
+                                                    <span class="badge rounded-pill" style="{{ $order->payment_method_badge_style }}">
+                                                        {{ $order->payment_method_label }}
+                                                    </span>
+                                                </td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                     @if ($order->discount)

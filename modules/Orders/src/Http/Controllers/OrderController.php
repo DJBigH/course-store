@@ -26,35 +26,52 @@ class OrderController extends Controller
 
     public function data()
     {
-        $orders = $this->orderRepository->getCategories();
+        $canView = auth()->user()?->hasPermission('orders.view');
+        $canDelete = auth()->user()?->hasPermission('orders.delete');
+        $orders = $this->orderRepository
+            ->getCategories()
+            ->when(request()->filled('payment_method_filter'), function ($query) {
+                $query->where('payment_method', request()->input('payment_method_filter'));
+            });
 
         return DataTables::of($orders)
             ->addColumn('select', function ($order) {
                 return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $order->id . '"></div>';
             })
-            ->editColumn('status_id', function ($orders) {
-                $name = $orders->status->name_locale;
-                $color = $orders->status->color;
+            ->editColumn('status_id', function ($order) {
+                $name = $order->status->name_locale;
+                $color = $order->status->color;
+
                 return '<button class="btn btn-' . $color . '">' . $name . '</button>';
             })
             ->addColumn('total', function ($order) {
                 if (!empty($order->discount) && $order->discount > 0) {
                     return number_format($order->total - $order->discount);
                 }
+
                 return number_format($order->total);
+            })
+            ->addColumn('payment_method', function ($order) {
+                return '<span class="badge rounded-pill" style="' . e($order->payment_method_badge_style) . '">' . e($order->payment_method_label) . '</span>';
             })
             ->addColumn('created_at', function ($order) {
                 return $order->created_at
                     ? date('d/m/Y H:i:s', strtotime($order->created_at))
                     : '';
             })
-            ->addColumn('detail', function ($order) {
-                return '<a href="' . route('orders.show', $order->id) . '" class="btn btn-primary btn-sm">Xem</a>';
+            ->addColumn('detail', function ($order) use ($canView) {
+                return $canView
+                    ? '<a href="' . route('orders.show', $order->id) . '" class="btn btn-primary btn-sm">Xem</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
             })
-            ->addColumn('delete', function ($order) {
+            ->addColumn('delete', function ($order) use ($canDelete) {
+                if (!$canDelete) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
                 return '<a href="' . route('orders.delete', $order->id) . '" class="btn btn-outline-danger btn-sm delete-action">Xóa</a>';
             })
-            ->rawColumns(['select', 'detail', 'delete', 'status_id'])
+            ->rawColumns(['select', 'detail', 'delete', 'status_id', 'payment_method'])
             ->make(true);
     }
 
@@ -105,6 +122,7 @@ class OrderController extends Controller
         if (!$order) {
             abort(404);
         }
+
         $pageTitle = 'Chi tiết đơn hàng #' . $order->code;
         return view('orders::show', compact('pageTitle', 'order'));
     }
@@ -115,7 +133,7 @@ class OrderController extends Controller
         if (!$order) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Đơn hàng không tồn tại'
+                'message' => 'Đơn hàng không tồn tại',
             ], 404);
         }
 
@@ -124,4 +142,3 @@ class OrderController extends Controller
         return back()->with('msg', __('orders::messages.delete.success'));
     }
 }
-

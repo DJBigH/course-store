@@ -65,6 +65,35 @@ class TeacherController extends Controller
             $teacher->whereDate('created_at', '<=', $request->input('to_date'));
         }
 
+        $user = auth()->user();
+        $canLogs = $user?->hasPermission('teachers.logs');
+        $canEdit = $user?->hasPermission('teachers.edit');
+        $canDelete = $user?->hasPermission('teachers.delete');
+
+        return DataTables::of($teacher)
+            ->addColumn('select', function ($teachers) {
+                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teachers->id . '"></div>';
+            })
+            ->addColumn('logs', function ($teachers) use ($canLogs) {
+                return $canLogs ? '<a href="' . route('teacher.logs', $teachers->id) . '" class="btn btn-light border">Lịch sử</a>' : '<span class="text-muted small">Không có quyền</span>';
+            })
+            ->addColumn('edit', function ($teachers) use ($canEdit) {
+                return $canEdit ? '<a href="' . route('teacher.edit', $teachers->id) . '" class="btn btn-warning">Sửa</a>' : '<span class="text-muted small">Không có quyền</span>';
+            })
+            ->addColumn('delete', function ($teachers) use ($canDelete) {
+                return $canDelete ? '<a href="' . route('teacher.delete', $teachers->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>' : '<span class="text-muted small">Không có quyền</span>';
+            })
+            ->editColumn('created_at', function ($teachers) {
+                return Carbon::parse($teachers->created_at)->format('d/m/Y H:i:s');
+            })
+            ->editColumn('image', function ($teachers) {
+                return $teachers->image
+                    ? '<img src="' . $teachers->image . '" style="width: 80px; border-radius: 12px;">'
+                    : 'Không có ảnh';
+            })
+            ->rawColumns(['select', 'edit', 'delete', 'image', 'logs'])
+            ->toJson();
+
         return DataTables::of($teacher)
             ->addColumn('select', function ($teachers) {
                 return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teachers->id . '"></div>';

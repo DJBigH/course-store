@@ -17,7 +17,9 @@
                 <h5 class="mb-1">Cấu hình hệ thống</h5>
                 <p class="text-muted mb-0">Quản lý thông tin website, banner, tỷ giá và thông báo toàn hệ thống.</p>
             </div>
-            <a href="{{ route('settings.logs') }}" class="btn btn-light border">Lịch sử</a>
+            @if (auth()->user()?->hasPermission('settings.logs'))
+                <a href="{{ route('settings.logs') }}" class="btn btn-light border">Lịch sử</a>
+            @endif
         </div>
         @if (session('msg'))
             <div class="alert alert-success border-0 rounded-4">
@@ -112,7 +114,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Banner Slider (Nhiều ảnh)</label>
+                        <label class="form-label">Banner slider (nhiều ảnh)</label>
                         <input type="file" name="banner_slider[]" class="form-control" multiple>
 
                         @if (!empty($settings['banner_slider']))
@@ -125,7 +127,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Banner bên phải (Tối đa 3 ảnh)</label>
+                        <label class="form-label">Banner bên phải (tối đa 3 ảnh)</label>
                         <input type="file" name="banner_right[]" class="form-control" multiple>
 
                         @if (!empty($settings['banner_right']))
@@ -335,10 +337,14 @@
             </div>
 
             <div class="admin-form__footer">
-                <a href="{{ route('settings.logs') }}" class="btn btn-warning">Lịch sử</a>
-                <button type="submit" class="btn btn-primary">
-                    Lưu cấu hình
-                </button>
+                @if (auth()->user()?->hasPermission('settings.logs'))
+                    <a href="{{ route('settings.logs') }}" class="btn btn-warning">Lịch sử</a>
+                @endif
+                @if (auth()->user()?->hasPermission('settings.update'))
+                    <button type="submit" class="btn btn-primary">
+                        Lưu cấu hình
+                    </button>
+                @endif
             </div>
         </form>
     </div>

@@ -119,7 +119,7 @@ class ChatbotController extends Controller
             'status' => 0,
         ]);
 
-        User::where('group_id', 1)->get()->each(function ($admin) use ($lead) {
+        User::query()->inGroup('super_admin')->get()->each(function ($admin) use ($lead) {
             $admin->notify(new NewContactNotification($lead));
         });
 

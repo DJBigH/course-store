@@ -8,10 +8,12 @@
                     <h5 class="mb-1">Danh sách chuyên mục</h5>
                     <p class="text-muted mb-0">Quản lý cấu trúc danh mục, liên kết và lịch sử cập nhật.</p>
                 </div>
-                <a href="{{ route('categories.add') }}" class="btn btn-primary">
-                    <i class="fa-solid fa-plus me-2"></i>
-                    Thêm chuyên mục
-                </a>
+                @if (auth()->user()?->hasPermission('categories.create'))
+                    <a href="{{ route('categories.add') }}" class="btn btn-primary">
+                        <i class="fa-solid fa-plus me-2"></i>
+                        Thêm chuyên mục
+                    </a>
+                @endif
             </div>
 
             @if (session('msg'))
@@ -24,18 +26,20 @@
                 <div class="alert alert-danger border-0 rounded-4">{{ $errors->first('bulk_action') }}</div>
             @endif
 
-            <form id="bulk-action-form" action="{{ route('categories.bulk') }}" method="POST" class="mb-4">
-                @csrf
-                <input type="hidden" name="selected_ids" id="selected-ids">
-                <input type="hidden" name="bulk_action" id="bulk-action-input">
+            @if (auth()->user()?->hasPermission('categories.delete'))
+                <form id="bulk-action-form" action="{{ route('categories.bulk') }}" method="POST" class="mb-4">
+                    @csrf
+                    <input type="hidden" name="selected_ids" id="selected-ids">
+                    <input type="hidden" name="bulk_action" id="bulk-action-input">
 
-                <div class="bulk-toolbar">
-                    <div class="bulk-toolbar__summary">
-                        <span id="selected-count">0</span> chuyên mục được chọn
+                    <div class="bulk-toolbar">
+                        <div class="bulk-toolbar__summary">
+                            <span id="selected-count">0</span> chuyên mục được chọn
+                        </div>
+                        <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
                     </div>
-                    <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
-                </div>
-            </form>
+                </form>
+            @endif
 
             <div class="table-responsive">
                 <table id="datatable" class="table align-middle w-100">

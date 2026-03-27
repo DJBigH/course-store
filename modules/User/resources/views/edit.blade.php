@@ -18,7 +18,7 @@
         <div class="admin-form__header">
             <div>
                 <h5 class="mb-1">Cập nhật người dùng</h5>
-                <p class="text-muted mb-0">Chỉnh sửa thông tin tài khoản quản trị.</p>
+                <p class="text-muted mb-0">Chỉnh sửa tài khoản nội bộ và nhóm quyền đang được gán.</p>
             </div>
         </div>
 
@@ -42,11 +42,14 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label">Nhóm</label>
+                <label class="form-label">Nhóm quyền</label>
                 <select name="group_id" class="form-select{{ $errors->has('group_id') ? ' is-invalid' : '' }}">
-                    <option value="0">Chọn nhóm</option>
-                    <option value="1" @selected((int) old('group_id', $users->group_id) === 1)>Quản trị</option>
-                    <option value="2" @selected((int) old('group_id', $users->group_id) === 2)>Biên tập</option>
+                    <option value="">Chọn nhóm quyền</option>
+                    @foreach ($groups as $group)
+                        <option value="{{ $group->id }}" @selected((int) old('group_id', $users->group_id) === (int) $group->id)>
+                            {{ $group->name }}
+                        </option>
+                    @endforeach
                 </select>
                 @error('group_id')
                     <div class="invalid-feedback">{{ $message }}</div>

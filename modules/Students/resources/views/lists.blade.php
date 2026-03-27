@@ -8,10 +8,12 @@
                     <h5 class="mb-1">Danh sách học viên</h5>
                     <p class="text-muted mb-0">Theo dõi trạng thái tài khoản, khóa học đã mua và lịch sử mã giảm giá.</p>
                 </div>
-                <a href="{{ route('students.add') }}" class="btn btn-primary">
-                    <i class="fa-solid fa-plus me-2"></i>
-                    Thêm học viên
-                </a>
+                @if (auth()->user()?->hasPermission('students.create'))
+                    <a href="{{ route('students.add') }}" class="btn btn-primary">
+                        <i class="fa-solid fa-plus me-2"></i>
+                        Thêm học viên
+                    </a>
+                @endif
             </div>
 
             @if (session('msg'))
@@ -24,22 +26,28 @@
                 <div class="alert alert-danger border-0 rounded-4">{{ $errors->first('bulk_action') }}</div>
             @endif
 
-            <form id="bulk-action-form" action="{{ route('students.bulk') }}" method="POST" class="mb-4">
-                @csrf
-                <input type="hidden" name="selected_ids" id="selected-ids">
-                <input type="hidden" name="bulk_action" id="bulk-action-input">
+            @if (auth()->user()?->canAnyPermission(['students.edit', 'students.delete']))
+                <form id="bulk-action-form" action="{{ route('students.bulk') }}" method="POST" class="mb-4">
+                    @csrf
+                    <input type="hidden" name="selected_ids" id="selected-ids">
+                    <input type="hidden" name="bulk_action" id="bulk-action-input">
 
-                <div class="bulk-toolbar">
-                    <div class="bulk-toolbar__summary">
-                        <span id="selected-count">0</span> học viên được chọn
+                    <div class="bulk-toolbar">
+                        <div class="bulk-toolbar__summary">
+                            <span id="selected-count">0</span> học viên được chọn
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (auth()->user()?->hasPermission('students.edit'))
+                                <button type="button" class="btn btn-success bulk-action-trigger" data-action="activate">Kích hoạt</button>
+                                <button type="button" class="btn btn-light border bulk-action-trigger" data-action="deactivate">Tạm khóa</button>
+                            @endif
+                            @if (auth()->user()?->hasPermission('students.delete'))
+                                <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
+                            @endif
+                        </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-success bulk-action-trigger" data-action="activate">Kích hoạt</button>
-                        <button type="button" class="btn btn-light border bulk-action-trigger" data-action="deactivate">Tạm khóa</button>
-                        <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            @endif
 
             <div class="table-responsive">
                 <table id="datatable" class="table align-middle w-100">

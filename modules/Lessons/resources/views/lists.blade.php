@@ -1,13 +1,20 @@
 @extends('layouts.backend')
+
 @section('content')
     <p class="text-end">
         <a href="{{ route('courses.index') }}" class="btn btn-info text-white">Quay lại</a>
-        <a href="{{ route('lessons.sort', $courses) }}" class="btn btn-success">Sắp xếp bài giảng</a>
-        <a href="{{ route('lessons.add', $courses) }}" class="btn btn-primary">Thêm mới</a>
+        @if (auth()->user()?->hasPermission('lessons.sort'))
+            <a href="{{ route('lessons.sort', $courses) }}" class="btn btn-success">Sắp xếp bài giảng</a>
+        @endif
+        @if (auth()->user()?->hasPermission('lessons.create'))
+            <a href="{{ route('lessons.add', $courses) }}" class="btn btn-primary">Thêm mới</a>
+        @endif
     </p>
+
     @if (session('msg'))
         <div class="alert alert-success">{{ session('msg') }}</div>
     @endif
+
     <table id="datatable" class="table table-bordered">
         <thead>
             <tr>
@@ -36,6 +43,7 @@
             </tr>
         </tfoot>
     </table>
+
     @include('part.backend.delete')
 @endsection
 
@@ -88,12 +96,6 @@
                     loadingRecords: "Đang tải...",
                     zeroRecords: "Không tìm thấy bản ghi nào",
                     emptyTable: "Không có dữ liệu trong bảng",
-                    // paginate: {
-                    //     first:      "Đầu",
-                    //     previous:   "Trước",
-                    //     next:       "Tiếp",
-                    //     last:       "Cuối"
-                    // },
                     aria: {
                         sortAscending: ": sắp xếp tăng dần",
                         sortDescending: ": sắp xếp giảm dần"
