@@ -16,14 +16,16 @@ class GroupController extends Controller
         $pageTitle = 'Nhóm quyền';
         $groups = Group::query()->withCount(['permissions', 'users'])->orderBy('id')->get();
         $syncStatus = $this->getPermissionSyncStatus();
+        $currentUser = auth()->user();
 
-        return view('user::groups.index', compact('pageTitle', 'groups', 'syncStatus'));
+        return view('user::groups.index', compact('pageTitle', 'groups', 'syncStatus', 'currentUser'));
     }
 
     public function create()
     {
         $pageTitle = 'Thêm nhóm quyền';
         [$permissions, $permissionMatrix, $matrixActions] = $this->buildPermissionData();
+        $matrixActionLabels = $this->getMatrixActionLabels();
         $rolePresets = $this->getRolePresets();
         $syncStatus = $this->getPermissionSyncStatus();
 
@@ -32,6 +34,7 @@ class GroupController extends Controller
             'permissions',
             'permissionMatrix',
             'matrixActions',
+            'matrixActionLabels',
             'rolePresets',
             'syncStatus'
         ));
@@ -64,7 +67,9 @@ class GroupController extends Controller
     {
         $pageTitle = 'Cập nhật nhóm quyền';
         $group = Group::query()->with('permissions:id')->findOrFail($group);
+        $this->authorizeGroupAccess($group, 'chỉnh sửa');
         [$permissions, $permissionMatrix, $matrixActions] = $this->buildPermissionData();
+        $matrixActionLabels = $this->getMatrixActionLabels();
         $syncStatus = $this->getPermissionSyncStatus();
 
         return view('user::groups.edit', compact(
@@ -73,6 +78,7 @@ class GroupController extends Controller
             'permissions',
             'permissionMatrix',
             'matrixActions',
+            'matrixActionLabels',
             'syncStatus'
         ));
     }
@@ -80,6 +86,7 @@ class GroupController extends Controller
     public function update(Request $request, $group)
     {
         $group = Group::query()->findOrFail($group);
+        $this->authorizeGroupAccess($group, 'cập nhật');
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -117,6 +124,7 @@ class GroupController extends Controller
     public function destroy($group)
     {
         $group = Group::query()->withCount('users')->findOrFail($group);
+        $this->authorizeGroupAccess($group, 'xóa');
 
         if ($group->slug === 'super_admin') {
             return back()->withErrors(['group' => 'Không thể xóa nhóm quyền Super Admin.']);
@@ -136,15 +144,43 @@ class GroupController extends Controller
         return redirect()->route('groups.index')->with('msg', 'Đã xóa nhóm quyền thành công.');
     }
 
+    public function canManageGroup(?Group $group): bool
+    {
+        $user = auth()->user();
+
+        if (!$user || !$group) {
+            return false;
+        }
+
+        if ($this->isSuperAdmin($user)) {
+            return true;
+        }
+
+        if ($group->slug === 'super_admin') {
+            return false;
+        }
+
+        if ((int) $user->group_id === (int) $group->id) {
+            return false;
+        }
+
+        return true;
+    }
+
     private function buildPermissionData(): array
     {
         $permissions = Permission::query()
             ->orderBy('module')
             ->orderBy('name')
             ->get()
-            ->groupBy(fn($permission) => $permission->module ?: 'other');
+            ->map(function ($permission) {
+                $permission->display_module = $this->resolvePermissionModule($permission);
 
-        $actionOrder = collect(['view', 'create', 'edit', 'update', 'delete', 'soft_delete', 'force_delete', 'publish', 'logs', 'moderate', 'manage']);
+                return $permission;
+            })
+            ->groupBy(fn($permission) => $permission->display_module ?: 'other');
+
+        $actionOrder = collect(['manage', 'view', 'create', 'edit', 'update', 'delete', 'soft_delete', 'force_delete', 'publish', 'logs', 'moderate']);
         $derivedActions = $permissions->flatten()
             ->map(fn($permission) => $this->extractActionFromSlug($permission->slug))
             ->unique()
@@ -185,7 +221,7 @@ class GroupController extends Controller
             ->map(fn($permission) => [
                 'slug' => $permission['slug'],
                 'name' => $permission['name'],
-                'module' => $permission['module'] ?? 'other',
+                'module' => $this->resolveDefinitionModule($permission),
             ])
             ->values();
 
@@ -210,16 +246,22 @@ class GroupController extends Controller
                     'orders.view',
                     'orders.update',
                     'orders.delete',
+                    'orders.soft_delete',
+                    'orders.force_delete',
                     'students.view',
                     'students.create',
                     'students.edit',
                     'students.delete',
+                    'students.soft_delete',
+                    'students.force_delete',
                     'students.logs',
                     'coupons.view',
                     'coupons.logs',
                     'contacts.view',
                     'contacts.update',
                     'contacts.delete',
+                    'contacts.soft_delete',
+                    'contacts.force_delete',
                     'contacts.logs',
                 ],
             ],
@@ -246,16 +288,22 @@ class GroupController extends Controller
                     'categories.create',
                     'categories.edit',
                     'categories.delete',
+                    'categories.soft_delete',
+                    'categories.force_delete',
                     'categories.logs',
                     'teachers.view',
                     'teachers.create',
                     'teachers.edit',
                     'teachers.delete',
+                    'teachers.soft_delete',
+                    'teachers.force_delete',
                     'teachers.logs',
                     'coupons.view',
                     'coupons.create',
                     'coupons.edit',
                     'coupons.delete',
+                    'coupons.soft_delete',
+                    'coupons.force_delete',
                     'coupons.assign',
                     'coupons.logs',
                     'comments.moderate',
@@ -289,6 +337,8 @@ class GroupController extends Controller
                     'teachers.create',
                     'teachers.edit',
                     'teachers.delete',
+                    'teachers.soft_delete',
+                    'teachers.force_delete',
                     'teachers.logs',
                     'courses.view',
                     'courses.soft_delete',
@@ -301,5 +351,58 @@ class GroupController extends Controller
                 ],
             ],
         ];
+    }
+
+    private function resolvePermissionModule(Permission $permission): string
+    {
+        return $this->resolveModuleFromSlug($permission->slug, $permission->module);
+    }
+
+    private function getMatrixActionLabels(): array
+    {
+        return [
+            'manage' => 'Toàn quyền',
+            'view' => 'Xem',
+            'create' => 'Thêm',
+            'edit' => 'Sửa',
+            'update' => 'Cập nhật',
+            'delete' => 'Xóa cũ',
+            'soft_delete' => 'Xóa mềm',
+            'force_delete' => 'Xóa vĩnh viễn',
+            'publish' => 'Xuất bản',
+            'logs' => 'Nhật ký',
+            'moderate' => 'Kiểm duyệt',
+        ];
+    }
+
+    private function resolveDefinitionModule(array $permission): string
+    {
+        return $this->resolveModuleFromSlug(
+            $permission['slug'] ?? '',
+            $permission['module'] ?? 'other'
+        );
+    }
+
+    private function resolveModuleFromSlug(string $slug, ?string $fallback = 'other'): string
+    {
+        return match (true) {
+            Str::startsWith($slug, 'groups.') => 'groups',
+            Str::startsWith($slug, 'permissions.') => 'permissions',
+            default => $fallback ?: 'other',
+        };
+    }
+
+    private function authorizeGroupAccess(Group $group, string $action): void
+    {
+        if ($this->canManageGroup($group)) {
+            return;
+        }
+
+        abort(403, 'Bạn không có quyền ' . $action . ' nhóm quyền này.');
+    }
+
+    private function isSuperAdmin($user): bool
+    {
+        return optional($user->group)->slug === 'super_admin';
     }
 }

@@ -8,6 +8,12 @@
                     <h5 class="mb-1">Danh sách liên hệ</h5>
                     <p class="text-muted mb-0">Theo dõi yêu cầu liên hệ, trạng thái tiếp nhận và lịch sử xử lý.</p>
                 </div>
+                @if (auth()->user()?->canAnyPermission(['contacts.soft_delete', 'contacts.delete', 'contacts.force_delete']))
+                    <a href="{{ route('contacts.trash') }}" class="btn btn-light border">
+                        <i class="fa-solid fa-trash-can me-2"></i>
+                        Thùng rác
+                    </a>
+                @endif
             </div>
 
             @if (session('msg'))
@@ -52,7 +58,7 @@
                 </div>
             </form>
 
-            @if (auth()->user()?->canAnyPermission(['contacts.update', 'contacts.delete']))
+            @if (auth()->user()?->canAnyPermission(['contacts.update', 'contacts.soft_delete', 'contacts.delete']))
                 <form id="bulk-action-form" action="{{ route('contacts.bulk') }}" method="POST" class="mb-4">
                     @csrf
                     <input type="hidden" name="selected_ids" id="selected-ids">
@@ -60,13 +66,13 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-count">0</span> liên hệ được chọn
+                            <span id="selected-count">0</span> Liên hệ được chọn
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @if (auth()->user()?->hasPermission('contacts.update'))
                                 <button type="button" class="btn btn-success bulk-action-trigger" data-action="accept">Tiếp nhận</button>
                             @endif
-                            @if (auth()->user()?->hasPermission('contacts.delete'))
+                            @if (auth()->user()?->canAnyPermission(['contacts.soft_delete', 'contacts.delete']))
                                 <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
                             @endif
                         </div>

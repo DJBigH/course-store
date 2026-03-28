@@ -23,7 +23,7 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
     {
         return $this->model
             ->with(['group:id,name,slug,is_admin'])
-            ->select(['id', 'name', 'email', 'group_id', 'created_at'])
+            ->select(['id', 'name', 'email', 'group_id', 'is_locked', 'two_factor_email_enabled', 'created_at'])
             ->latest();
     }
 

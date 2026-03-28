@@ -4,12 +4,15 @@ namespace Modules\Students\src\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Courses\src\Models\Courses;
 use Modules\Orders\src\Models\Order;
 
 class Coupons extends Model
 {
     use HasFactory;
+    use SoftDeletes;
+
     protected $table = 'coupons';
 
     protected $fillable = [
@@ -20,6 +23,7 @@ class Coupons extends Model
         'count',
         'start_date',
         'end_date',
+        'deleted_at',
         'created_at',
         'updated_at',
     ];

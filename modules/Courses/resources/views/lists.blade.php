@@ -34,7 +34,7 @@
                 <div class="card-body">
                     <div class="course-stat__label">Miễn phí</div>
                     <div class="course-stat__value">{{ number_format($stats['free'] ?? 0) }}</div>
-                    <div class="course-stat__meta">Khóa học đang mở học thử miễn phí</div>
+                    <div class="course-stat__meta">Khóa học đang mở vì học thử hoặc miễn phí­</div>
                 </div>
             </div>
         </div>
@@ -146,10 +146,14 @@
                             <span id="selected-count">0</span> khóa học được chọn
                         </div>
                         <div class="d-flex flex-wrap gap-2">
-                            <button type="button" class="btn btn-success bulk-action-trigger" data-action="publish">Xuất bản hàng loạt</button>
-                            <button type="button" class="btn btn-light border bulk-action-trigger" data-action="draft">Chuyển về nháp</button>
-                            <button type="button" class="btn btn-outline-secondary bulk-action-trigger" data-action="duplicate">Nhân bản hàng loạt</button>
-                            <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="soft_delete">Xóa mềm</button>
+                            <button type="button" class="btn btn-success bulk-action-trigger" data-action="publish">Xuất
+                                bản hàng loạt</button>
+                            <button type="button" class="btn btn-light border bulk-action-trigger"
+                                data-action="draft">Chuyển về nháp</button>
+                            <button type="button" class="btn btn-outline-secondary bulk-action-trigger"
+                                data-action="duplicate">Nhân bản hàng loạt</button>
+                            <button type="button" class="btn btn-outline-danger bulk-action-trigger"
+                                data-action="soft_delete">Xóa mềm</button>
                         </div>
                     </div>
                 </form>
@@ -210,6 +214,20 @@
             margin-bottom: 0.35rem;
         }
 
+        .course-cell__link {
+            display: inline-block;
+            position: relative;
+            z-index: 2;
+            color: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .course-cell__link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
         .course-cell__meta,
         .course-learning {
             display: flex;
@@ -249,6 +267,18 @@
             color: #94a3b8;
             text-decoration: line-through;
             font-size: 0.88rem;
+        }
+
+        .course-free-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.38rem 0.8rem;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 0.88rem;
+            font-weight: 700;
+            white-space: nowrap;
         }
 
         .admin-data-table td {
@@ -390,7 +420,8 @@
 
                 const visibleCheckboxes = $('.course-row-checkbox');
                 const checkedVisible = visibleCheckboxes.filter(':checked').length;
-                $('#select-all-courses').prop('checked', visibleCheckboxes.length > 0 && visibleCheckboxes.length === checkedVisible);
+                $('#select-all-courses').prop('checked', visibleCheckboxes.length > 0 && visibleCheckboxes
+                    .length === checkedVisible);
             }
 
             $('#datatable').on('change', '.course-row-checkbox', function() {
@@ -423,9 +454,10 @@
                 table.ajax.reload();
             });
 
-            $('#status-filter, #teacher-filter, #category-filter, #price-filter, #trial-filter').on('change', function() {
-                table.ajax.reload();
-            });
+            $('#status-filter, #teacher-filter, #category-filter, #price-filter, #trial-filter').on('change',
+                function() {
+                    table.ajax.reload();
+                });
 
             $('#reset-filters').on('click', function() {
                 $('#status-filter').val('');

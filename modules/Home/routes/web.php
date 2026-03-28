@@ -14,7 +14,7 @@ Route::get('/', function () {
 Route::group([
    'prefix' => '{locale}',
    'where' => ['locale' => 'vi|en|ko|ja|zh'],
-   'middleware' => 'setLocale',
+   'middleware' => ['setLocale'],
 ], function () {
    Route::get('/', 'HomeController@index')->name('home');
    Route::post('/tro-ly-ban-hang/lien-he', 'ChatbotController@saveLead')->name('home.sales-chatbot.lead');

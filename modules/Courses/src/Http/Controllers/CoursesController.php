@@ -124,16 +124,29 @@ class CoursesController extends Controller
                 $name = e($course->name ?: 'Chưa có tên');
                 $teacher = e(optional($course->teacher)->name ?: 'Chưa gán giảng viên');
                 $views = number_format((int) ($course->view ?? 0));
+                $courseSlug = trim((string) ($course->slug_locale ?: $course->slug ?: ''));
+                $publicLocale = in_array(app()->getLocale(), ['vi', 'en', 'ko', 'ja', 'zh'], true)
+                    ? app()->getLocale()
+                    : 'vi';
+
+                $titleHtml = $name;
+
+                if ($courseSlug !== '') {
+                    $titleHtml = '<a href="' . route('courses.detail', [
+                        'locale' => $publicLocale,
+                        'slug' => $courseSlug,
+                    ]) . '" target="_blank" rel="noopener noreferrer" class="course-cell__link">' . $name . '</a>';
+                }
 
                 return '
-                    <div class="course-cell">
-                        <div class="course-cell__title">' . $name . '</div>
-                        <div class="course-cell__meta">
-                            <span><i class="fa-solid fa-chalkboard-user"></i> ' . $teacher . '</span>
-                            <span><i class="fa-solid fa-eye"></i> ' . $views . ' lượt xem</span>
-                        </div>
-                    </div>
-                ';
+        <div class="course-cell">
+            <div class="course-cell__title">' . $titleHtml . '</div>
+            <div class="course-cell__meta">
+                <span><i class="fa-solid fa-chalkboard-user"></i> ' . $teacher . '</span>
+                <span><i class="fa-solid fa-eye"></i> ' . $views . ' lượt xem</span>
+            </div>
+        </div>
+    ';
             })
             ->addColumn('learning', function ($course) {
                 return '
@@ -215,7 +228,7 @@ class CoursesController extends Controller
                     return '<div class="course-price"><strong>' . number_format($course->price, 0) . ' đ</strong></div>';
                 }
 
-                return '<span class="badge rounded-pill text-success-emphasis bg-success-subtle">Miễn phí</span>';
+                return '<span class="course-free-badge">Miễn phí</span>';
             })
             ->rawColumns(['select', 'overview', 'learning', 'publish', 'duplicate', 'logs', 'lessions', 'edit', 'delete', 'status', 'price'])
             ->toJson();
@@ -242,7 +255,9 @@ class CoursesController extends Controller
 
                 return '
                     <div class="course-cell">
-                        <div class="course-cell__title">' . $name . '</div>
+                        <div class="course-cell__title">
+                        <a href="' . route('courses.home', ['locale' => app()->getLocale(), 'slug' => $course->slug]) . '">' . $name . '</a>
+                    </div>
                         <div class="course-cell__meta">
                             <span><i class="fa-solid fa-chalkboard-user"></i> ' . $teacher . '</span>
                             <span><i class="fa-solid fa-trash"></i> Đã xóa mềm</span>
@@ -267,7 +282,7 @@ class CoursesController extends Controller
                     return '<div class="course-price"><strong>' . number_format($course->price, 0) . ' đ</strong></div>';
                 }
 
-                return '<span class="badge rounded-pill text-success-emphasis bg-success-subtle">Miễn phí</span>';
+                return '<span class="course-free-badge">Miễn phí</span>';
             })
             ->addColumn('deleted_at', function ($course) {
                 return $course->deleted_at
@@ -292,11 +307,11 @@ class CoursesController extends Controller
                 }
 
                 return '
-                    <form method="POST" action="' . route('courses.force-delete', $course->id) . '" class="d-inline-block" onsubmit="return confirm(\'Xóa vĩnh viễn khóa học này?\');">
-                        ' . csrf_field() . method_field('DELETE') . '
-                        <button type="submit" class="btn btn-outline-danger">Xóa vĩnh viễn</button>
-                    </form>
-                ';
+    <form method="POST" action="' . route('courses.force-delete', $course->id) . '" class="d-inline-block" onsubmit="return confirm(\'Xóa vĩnh viễn khóa học này?\');">
+        ' . csrf_field() . method_field('DELETE') . '
+        <button type="submit" class="btn btn-outline-danger">Xóa vĩnh viễn</button>
+    </form>
+';
             })
             ->rawColumns(['select', 'overview', 'learning', 'price', 'restore', 'force_delete'])
             ->toJson();
@@ -541,7 +556,7 @@ class CoursesController extends Controller
                 'course_id' => $course->id,
             ],
             logName: 'Khôi phục',
-            description: 'Khôi phục khóa học từ thùng rác'
+            description: 'Khôi phục khóa học thành công.'
         );
         return back()->with('msg', 'Khôi phục khóa học thành công.');
     }
@@ -572,6 +587,7 @@ class CoursesController extends Controller
             logName: 'Xóa vĩnh viễn',
             description: 'Xóa vĩnh viễn khóa học khỏi thùng rác'
         );
+
         return back()->with('msg', 'Đã xóa vĩnh viễn khóa học.');
     }
     public function create()
@@ -620,11 +636,14 @@ class CoursesController extends Controller
                     'message_translations' => [
                         'vi' => 'Khóa học ' . localizedModelField($course, 'name', 'vi') . ' vừa được đăng tải',
                         'en' => 'Course ' . localizedModelField($course, 'name', 'en') . ' has just been published',
-                        'ko' => localizedModelField($course, 'name', 'ko') . ' 강좌가 방금 게시되었습니다',
+                        'ko' => '강좌 ' . localizedModelField($course, 'name', 'ko') . '가 방금 게시되었습니다',
                         'ja' => 'コース ' . localizedModelField($course, 'name', 'ja') . ' が公開されました',
                         'zh' => '课程 ' . localizedModelField($course, 'name', 'zh') . ' 刚刚发布',
                     ],
-                    'url' => route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug]),
+                    'url' => route('courses.detail', [
+                        'locale' => app()->getLocale(),
+                        'slug' => $course->slug
+                    ]),
                 ]));
             }
         });
@@ -727,7 +746,7 @@ class CoursesController extends Controller
 
             return back()->with('msg', __('courses::messages.delete.success'));
         }
-        return back()->with('msg_danger', 'Xóa thất bại');
+        return back()->with('msg_danger', 'Xóa tháº¥t báº¡i');
     }
 
     public function logs(Request $request, $id)
@@ -833,9 +852,9 @@ class CoursesController extends Controller
 
             unset($courseData['id'], $courseData['created_at'], $courseData['updated_at'], $courseData['deleted_at']);
             $courseData['name'] = $this->duplicateTitle($course->name, 'Bản sao');
-            $courseData['name_ko'] = $this->duplicateTitle($course->name_ko, '복제본');
-            $courseData['name_ja'] = $this->duplicateTitle($course->name_ja, '複製版');
-            $courseData['name_zh'] = $this->duplicateTitle($course->name_zh, '复制版');
+            $courseData['name_ko'] = $this->duplicateTitle($course->name_ko, 'ë³µì œë³¸');
+            $courseData['name_ja'] = $this->duplicateTitle($course->name_ja, 'è¤‡è£½ç‰ˆ');
+            $courseData['name_zh'] = $this->duplicateTitle($course->name_zh, 'Ã¥Â¤ÂÃ¥Ë†Â¶Ã§â€°Ë†');
             $courseData['slug'] = $this->duplicateSlug($course->slug, 'copy');
             $courseData['slug_en'] = $this->duplicateSlug($course->slug_en, 'copy');
             $courseData['slug_ko'] = $this->duplicateSlug($course->slug_ko, 'copy');
@@ -843,6 +862,7 @@ class CoursesController extends Controller
             $courseData['slug_zh'] = $this->duplicateSlug($course->slug_zh, 'copy');
             $courseData['code'] = $this->duplicateCode($course->code);
             $courseData['status'] = 0;
+            $courseData['is_learning_locked'] = 0;
             $courseData['view'] = 0;
 
             $newCourse = $this->courseRepository->create($courseData);
@@ -869,9 +889,9 @@ class CoursesController extends Controller
                 $oldParentId = $lessonData['parent_id'] ?? null;
                 $lessonData['course_id'] = $newCourse->id;
                 $lessonData['name'] = $this->duplicateTitle($lesson->name, 'Bản sao');
-                $lessonData['name_ko'] = $this->duplicateTitle($lesson->name_ko, '복제본');
-                $lessonData['name_ja'] = $this->duplicateTitle($lesson->name_ja, '複製版');
-                $lessonData['name_zh'] = $this->duplicateTitle($lesson->name_zh, '复制版');
+                $lessonData['name_ko'] = $this->duplicateTitle($lesson->name_ko, 'ë³µì œë³¸');
+                $lessonData['name_ja'] = $this->duplicateTitle($lesson->name_ja, 'è¤‡è£½ç‰ˆ');
+                $lessonData['name_zh'] = $this->duplicateTitle($lesson->name_zh, 'Ã¥Â¤ÂÃ¥Ë†Â¶Ã§â€°Ë†');
                 $lessonData['slug'] = $this->duplicateSlug($lesson->slug, 'copy');
                 $lessonData['slug_en'] = $this->duplicateSlug($lesson->slug_en, 'copy');
                 $lessonData['slug_ko'] = $this->duplicateSlug($lesson->slug_ko, 'copy');

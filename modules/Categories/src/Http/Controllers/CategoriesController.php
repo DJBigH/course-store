@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Modules\ActiveLogs\src\Models\ActiveLog;
+use Modules\Categories\src\Models\Category;
 use Modules\Categories\src\Repositories\CategoriesRepositoryInterface;
 use Modules\Categories\src\Requests\CategoriesRequest;
 
@@ -27,6 +28,13 @@ class CategoriesController extends Controller
         $pageTitle = 'Quản lý chuyên mục';
 
         return view('categories::lists', compact('pageTitle'));
+    }
+
+    public function trash()
+    {
+        $pageTitle = 'Thùng rác danh mục';
+
+        return view('categories::trash', compact('pageTitle'));
     }
 
     public function data()
@@ -52,12 +60,56 @@ class CategoriesController extends Controller
         return $categories;
     }
 
+    public function trashData()
+    {
+        $canRestore = auth()->user()?->canAnyPermission(['categories.soft_delete', 'categories.delete']);
+        $canForceDelete = auth()->user()?->hasPermission('categories.force_delete');
+
+        $categories = Category::query()
+            ->onlyTrashed()
+            ->latest('deleted_at');
+
+        return DataTables::of($categories)
+            ->addColumn('select', fn($category) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $category->id . '"></div>')
+            ->addColumn('name', fn($category) => e($category->name_locale))
+            ->addColumn('link', function ($category) {
+                return '<a href="' . route('categories.category', [
+                    'locale' => app()->getLocale(),
+                    'slug' => $category->slug_locale,
+                ]) . '" class="btn btn-primary" target="_blank">Xem</a>';
+            })
+            ->addColumn('deleted_at', fn($category) => Carbon::parse($category->deleted_at)->format('d/m/Y H:i:s'))
+            ->addColumn('restore', function ($category) use ($canRestore) {
+                if (!$canRestore) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
+                return '<form method="POST" action="' . route('categories.restore', $category->id) . '" class="d-inline-block">'
+                    . csrf_field()
+                    . '<button type="submit" class="btn btn-success">Khôi phục</button>'
+                    . '</form>';
+            })
+            ->addColumn('force_delete', function ($category) use ($canForceDelete) {
+                if (!$canForceDelete) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
+                return '<form method="POST" action="' . route('categories.force-delete', $category->id) . '" class="d-inline-block" onsubmit="return confirm(\'Xóa vĩnh viễn danh mục này?\');">'
+                    . csrf_field()
+                    . method_field('DELETE')
+                    . '<button type="submit" class="btn btn-outline-danger">Xóa vĩnh viễn</button>'
+                    . '</form>';
+            })
+            ->rawColumns(['select', 'link', 'restore', 'force_delete'])
+            ->toJson();
+    }
+
     public function getCategoriesTable($categories, $char = '', &$result = [])
     {
         $user = auth()->user();
         $canLogs = $user?->hasPermission('categories.logs');
         $canEdit = $user?->hasPermission('categories.edit');
-        $canDelete = $user?->hasPermission('categories.delete');
+        $canDelete = $user?->canAnyPermission(['categories.soft_delete', 'categories.delete']);
 
         if (empty($categories)) {
             return $result;
@@ -200,7 +252,7 @@ class CategoriesController extends Controller
         if ($action === 'delete') {
             foreach ($categories as $category) {
                 $snapshot = method_exists($category, 'toArray') ? $category->toArray() : (array) $category;
-                $this->category->delete($category->id);
+                $this->softDeleteCategory($category);
 
                 activity_log(
                     action: 'delete',
@@ -217,6 +269,46 @@ class CategoriesController extends Controller
         }
 
         return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
+    }
+
+    public function trashBulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một chuyên mục trong thùng rác.',
+            ]);
+        }
+
+        $categories = Category::query()->onlyTrashed()->whereIn('id', $selectedIds)->get();
+
+        if ($categories->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy chuyên mục hợp lệ trong thùng rác.');
+        }
+
+        if ($action === 'restore') {
+            foreach ($categories as $category) {
+                $this->restoreCategory($category);
+            }
+
+            return back()->with('msg', 'Đã khôi phục ' . $categories->count() . ' chuyên mục.');
+        }
+
+        if ($action === 'force_delete') {
+            foreach ($categories as $category) {
+                $this->forceDeleteCategory($category);
+            }
+
+            return back()->with('msg', 'Đã xóa vĩnh viễn ' . $categories->count() . ' chuyên mục.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác trong thùng rác không hợp lệ.');
     }
 
     public function store(CategoriesRequest $request)
@@ -307,7 +399,7 @@ class CategoriesController extends Controller
 
         $snapshot = is_object($cate) && method_exists($cate, 'toArray') ? $cate->toArray() : (array) $cate;
 
-        $status = $this->category->delete($id);
+        $status = $this->softDeleteCategory($cate);
 
         if ($status) {
             activity_log(
@@ -324,6 +416,33 @@ class CategoriesController extends Controller
         }
 
         return back()->with('msg_danger', 'Xóa thất bại');
+    }
+
+
+    public function restore($id)
+    {
+        $category = Category::query()->onlyTrashed()->find($id);
+
+        if (!$category) {
+            abort(404);
+        }
+
+        $this->restoreCategory($category);
+
+        return back()->with('msg', 'Khôi phục chuyên mục thành công.');
+    }
+
+    public function forceDelete($id)
+    {
+        $category = Category::query()->onlyTrashed()->find($id);
+
+        if (!$category) {
+            abort(404);
+        }
+
+        $this->forceDeleteCategory($category);
+
+        return back()->with('msg', 'Đã xóa vĩnh viễn chuyên mục.');
     }
 
 
@@ -367,5 +486,33 @@ class CategoriesController extends Controller
             ->withQueryString();
 
         return view('categories::logs', compact('pageTitle', 'cate', 'logs'));
+    }
+
+    protected function softDeleteCategory(Category $category): bool
+    {
+        foreach (Category::query()->where('parent_id', $category->id)->get() as $child) {
+            $this->softDeleteCategory($child);
+        }
+
+        return (bool) $category->delete();
+    }
+
+    protected function restoreCategory(Category $category): void
+    {
+        $category->restore();
+
+        foreach (Category::query()->onlyTrashed()->where('parent_id', $category->id)->get() as $child) {
+            $this->restoreCategory($child);
+        }
+    }
+
+    protected function forceDeleteCategory(Category $category): void
+    {
+        foreach (Category::query()->withTrashed()->where('parent_id', $category->id)->get() as $child) {
+            $this->forceDeleteCategory($child);
+        }
+
+        $category->courses()->detach();
+        $category->forceDelete();
     }
 }

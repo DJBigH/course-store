@@ -6,14 +6,22 @@
             <div class="admin-page-actions">
                 <div>
                     <h5 class="mb-1">Danh sách người dùng</h5>
-                    <p class="text-muted mb-0">Theo dõi tài khoản nội bộ, nhóm quyền và lịch sử thao tác.</p>
+                    <p class="text-muted mb-0">Theo dõi tài khoản nội bộ, trạng thái truy cập admin, 2FA và lịch sử thao tác.</p>
                 </div>
-                @if (auth()->user()?->hasPermission('users.create'))
-                    <a href="{{ route('user.add') }}" class="btn btn-primary">
-                        <i class="fa-solid fa-plus me-2"></i>
-                        Thêm người dùng
-                    </a>
-                @endif
+                <div class="d-flex flex-wrap gap-2">
+                    @if (auth()->user()?->canAnyPermission(['users.soft_delete', 'users.delete', 'users.force_delete']))
+                        <a href="{{ route('user.trash') }}" class="btn btn-light border">
+                            <i class="fa-solid fa-trash-can me-2"></i>
+                            Thùng rác
+                        </a>
+                    @endif
+                    @if (auth()->user()?->hasPermission('users.create'))
+                        <a href="{{ route('user.add') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-plus me-2"></i>
+                            Thêm người dùng
+                        </a>
+                    @endif
+                </div>
             </div>
 
             @if (session('msg'))
@@ -30,8 +38,7 @@
                 <div class="row g-3">
                     <div class="col-lg-4 col-md-6">
                         <label class="form-label">Từ khóa</label>
-                        <input type="text" class="form-control" id="filter-q" name="q"
-                            placeholder="Tên hoặc email...">
+                        <input type="text" class="form-control" id="filter-q" name="q" placeholder="Tên hoặc email...">
                     </div>
                     <div class="col-lg-3 col-md-6">
                         <label class="form-label">Nhóm quyền</label>
@@ -59,7 +66,7 @@
                 </div>
             </form>
 
-            @if (auth()->user()?->hasPermission('users.delete'))
+            @if (auth()->user()?->hasPermission('users.edit') || auth()->user()?->canAnyPermission(['users.soft_delete', 'users.delete']))
                 <form id="bulk-action-form" action="{{ route('user.bulk') }}" method="POST" class="mb-4">
                     @csrf
                     <input type="hidden" name="selected_ids" id="selected-ids">
@@ -67,9 +74,23 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-count">0</span> người dùng được chọn
+                            <span id="selected-count">0</span> Người dùng được chọn
                         </div>
-                        <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (auth()->user()?->hasPermission('users.edit'))
+                                <button type="button" class="btn btn-outline-secondary bulk-action-trigger" data-action="lock">
+                                    Khóa
+                                </button>
+                                <button type="button" class="btn btn-success bulk-action-trigger" data-action="unlock">
+                                    Mở khóa
+                                </button>
+                            @endif
+                            @if (auth()->user()?->canAnyPermission(['users.soft_delete', 'users.delete']))
+                                <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">
+                                    Xóa
+                                </button>
+                            @endif
+                        </div>
                     </div>
                 </form>
             @endif
@@ -83,10 +104,12 @@
                             </th>
                             <th>Tên</th>
                             <th>Email</th>
+                            <th>2FA</th>
                             <th>Nhóm</th>
                             <th>Ngày tạo</th>
                             <th>Lịch sử</th>
                             <th>Sửa</th>
+                            <th>Khóa</th>
                             <th>Xóa</th>
                         </tr>
                     </thead>
@@ -158,6 +181,11 @@
                         data: 'email'
                     },
                     {
+                        data: 'two_factor',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
                         data: 'group_id'
                     },
                     {
@@ -168,6 +196,9 @@
                     },
                     {
                         data: 'edit'
+                    },
+                    {
+                        data: 'lock'
                     },
                     {
                         data: 'delete'
@@ -246,17 +277,27 @@
             });
 
             $('.bulk-action-trigger').on('click', function() {
+                const action = $(this).data('action');
+
                 if (selectedIds.size === 0) {
                     alert('Vui lòng chọn ít nhất một người dùng.');
                     return;
                 }
 
-                if ($(this).data('action') === 'delete' && !confirm('Xóa các người dùng đã chọn?')) {
+                if (action === 'delete' && !confirm('Xóa các người dùng đã chọn?')) {
+                    return;
+                }
+
+                if (action === 'lock' && !confirm('Khóa các người dùng đã chọn khỏi admin panel?')) {
+                    return;
+                }
+
+                if (action === 'unlock' && !confirm('Mở khóa các người dùng đã chọn?')) {
                     return;
                 }
 
                 $('#selected-ids').val(Array.from(selectedIds).join(','));
-                $('#bulk-action-input').val($(this).data('action'));
+                $('#bulk-action-input').val(action);
                 $('#bulk-action-form').trigger('submit');
             });
         });

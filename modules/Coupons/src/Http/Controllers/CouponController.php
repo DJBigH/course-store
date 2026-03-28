@@ -32,12 +32,19 @@ class CouponController extends Controller
         return view('coupons::lists', compact('pageTitle'));
     }
 
+    public function trash()
+    {
+        $pageTitle = 'Thùng rác mã giảm giá';
+
+        return view('coupons::trash', compact('pageTitle'));
+    }
+
     public function data()
     {
         $coupons = $this->couponRepository->getAllCoupons();
         $canLogs = auth()->user()?->hasPermission('coupons.logs');
         $canEdit = auth()->user()?->hasPermission('coupons.edit');
-        $canDelete = auth()->user()?->hasPermission('coupons.delete');
+        $canDelete = auth()->user()?->canAnyPermission(['coupons.soft_delete', 'coupons.delete']);
         $canAssign = auth()->user()?->hasPermission('coupons.assign');
 
         return datatables()->of($coupons)
@@ -197,6 +204,98 @@ class CouponController extends Controller
         return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
     }
 
+    public function trashData()
+    {
+        $canRestore = auth()->user()?->canAnyPermission(['coupons.soft_delete', 'coupons.delete']);
+        $canForceDelete = auth()->user()?->hasPermission('coupons.force_delete');
+        $coupons = Coupons::query()->onlyTrashed()->withCount('usagescoupon')->latest('deleted_at');
+
+        return datatables()->of($coupons)
+            ->addColumn('select', fn($coupon) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $coupon->id . '"></div>')
+            ->addColumn('discount_type', function ($coupon) {
+                return $coupon->discount_type === 'percent'
+                    ? '<span class="badge bg-info">%</span>'
+                    : '<span class="badge bg-success">Tiền</span>';
+            })
+            ->addColumn('discount_value', function ($coupon) {
+                if ($coupon->discount_type === 'value') {
+                    return '- ' . money($coupon->discount_value);
+                }
+
+                if ($coupon->discount_type === 'percent') {
+                    return '- ' . $coupon->discount_value . ' %';
+                }
+
+                return '';
+            })
+            ->addColumn('deleted_at', fn($coupon) => Carbon::parse($coupon->deleted_at)->format('d/m/Y H:i:s'))
+            ->addColumn('restore', function ($coupon) use ($canRestore) {
+                if (!$canRestore) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
+                return '<form method="POST" action="' . route('coupons.restore', $coupon->id) . '" class="d-inline-block">'
+                    . csrf_field()
+                    . '<button type="submit" class="btn btn-success btn-sm">Khôi phục</button>'
+                    . '</form>';
+            })
+            ->addColumn('force_delete', function ($coupon) use ($canForceDelete) {
+                if (!$canForceDelete) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
+                return '<form method="POST" action="' . route('coupons.force-delete', $coupon->id) . '" class="d-inline-block" onsubmit="return confirm(\'Xóa vĩnh viễn mã giảm giá này?\');">'
+                    . csrf_field()
+                    . method_field('DELETE')
+                    . '<button type="submit" class="btn btn-outline-danger btn-sm">Xóa vĩnh viễn</button>'
+                    . '</form>';
+            })
+            ->rawColumns(['select', 'discount_type', 'discount_value', 'restore', 'force_delete'])
+            ->toJson();
+    }
+
+    public function trashBulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một mã giảm giá trong thùng rác.',
+            ]);
+        }
+
+        $coupons = Coupons::query()->onlyTrashed()->whereIn('id', $selectedIds)->get();
+
+        if ($coupons->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy mã giảm giá hợp lệ trong thùng rác.');
+        }
+
+        if ($action === 'restore') {
+            foreach ($coupons as $coupon) {
+                $coupon->restore();
+            }
+
+            return back()->with('msg', 'Đã khôi phục ' . $coupons->count() . ' mã giảm giá.');
+        }
+
+        if ($action === 'force_delete') {
+            foreach ($coupons as $coupon) {
+                $coupon->students()->detach();
+                $coupon->courses()->detach();
+                $coupon->forceDelete();
+            }
+
+            return back()->with('msg', 'Đã xóa vĩnh viễn ' . $coupons->count() . ' mã giảm giá.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác trong thùng rác không hợp lệ.');
+    }
+
     public function create()
     {
         $pageTitle = 'Thêm mã giảm giá';
@@ -278,6 +377,34 @@ class CouponController extends Controller
         );
 
         return back()->with('msg', __('coupons::messages.delete.success'));
+    }
+
+    public function restore($id)
+    {
+        $coupon = Coupons::query()->onlyTrashed()->find($id);
+
+        if (!$coupon) {
+            abort(404);
+        }
+
+        $coupon->restore();
+
+        return back()->with('msg', 'Khôi phục mã giảm giá thành công.');
+    }
+
+    public function forceDelete($id)
+    {
+        $coupon = Coupons::query()->onlyTrashed()->find($id);
+
+        if (!$coupon) {
+            abort(404);
+        }
+
+        $coupon->students()->detach();
+        $coupon->courses()->detach();
+        $coupon->forceDelete();
+
+        return back()->with('msg', 'Đã xóa vĩnh viễn mã giảm giá.');
     }
 
     protected function duplicateCouponCode(?string $code): string

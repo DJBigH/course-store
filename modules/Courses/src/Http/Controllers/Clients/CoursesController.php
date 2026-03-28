@@ -61,9 +61,27 @@ class CoursesController extends Controller
 
     public function detail($locale, $slug_locale)
     {
-        $course = $this->courseRepository->getCourseActive($slug_locale);
+        $student = Auth::guard('students')->user();
+        $course = $this->courseRepository->getCourseForClientAccess($slug_locale, $student?->id);
+
         if (!$course) {
             abort(404);
+        }
+
+        $hasCourse = $student
+            ? $student
+                ->courses()
+                ->where('courses.id', $course->id)
+                ->wherePivot('status', 1)
+                ->exists()
+            : false;
+
+        if ((int) $course->status !== 1 && !$hasCourse) {
+            abort(404);
+        }
+
+        if ((int) $course->is_learning_locked === 1 && $hasCourse) {
+            abort(403, 'Khóa học này đang tạm thời bị khóa học tập.');
         }
 
         $cacheKey = 'course_view_' . $course->id . '_' . request()->ip();
@@ -76,14 +94,6 @@ class CoursesController extends Controller
         $pageTitle = $course->name_locale;
         $pageName = $course->name_locale;
         $index = 0;
-        $student = Auth::guard('students')->user();
-        $hasCourse = $student
-            ? $student
-                ->courses()
-                ->where('courses.id', $course->id)
-                ->wherePivot('status', 1)
-                ->exists()
-            : false;
         $canComment = $hasCourse;
         $viewerIsAdmin = Auth::check();
         $threads = courseCommentThreads($course->id, $viewerIsAdmin);
@@ -115,6 +125,35 @@ class CoursesController extends Controller
             return ['success' => false];
         }
 
+        $student = Auth::guard('students')->user();
+        $course = Courses::query()->withoutGlobalScopes()->find($lesson->course_id);
+
+        if (!$course) {
+            return ['success' => false];
+        }
+
+        $hasCourse = $student
+            ? $student
+                ->courses()
+                ->where('courses.id', $course->id)
+                ->wherePivot('status', 1)
+                ->exists()
+            : false;
+
+        if ((int) $course->status !== 1 && !$hasCourse) {
+            return [
+                'success' => false,
+                'message' => 'Khóa học này hiện không khả dụng.',
+            ];
+        }
+
+        if ((int) $course->is_learning_locked === 1) {
+            return [
+                'success' => false,
+                'message' => 'Khóa học này đang tạm thời bị khóa học tập.',
+            ];
+        }
+
         return [
             'success' => true,
             'data' => [
@@ -141,6 +180,14 @@ class CoursesController extends Controller
 
         if (!$course) {
             abort(404);
+        }
+
+        if ((int) $course->status !== 1) {
+            abort(404);
+        }
+
+        if ((int) $course->is_learning_locked === 1) {
+            abort(403, 'Khóa học này đang tạm thời bị khóa học tập.');
         }
 
         $price = $course->sale_price && $course->sale_price > 0

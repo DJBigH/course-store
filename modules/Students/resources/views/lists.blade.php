@@ -6,14 +6,22 @@
             <div class="admin-page-actions">
                 <div>
                     <h5 class="mb-1">Danh sách học viên</h5>
-                    <p class="text-muted mb-0">Theo dõi trạng thái tài khoản, khóa học đã mua và lịch sử mã giảm giá.</p>
+                    <p class="text-muted mb-0">Theo dõi trạng thái tài khoản, 2FA, khóa học đã mua và lịch sử mã giảm giá.</p>
                 </div>
-                @if (auth()->user()?->hasPermission('students.create'))
-                    <a href="{{ route('students.add') }}" class="btn btn-primary">
-                        <i class="fa-solid fa-plus me-2"></i>
-                        Thêm học viên
-                    </a>
-                @endif
+                <div class="d-flex flex-wrap gap-2">
+                    @if (auth()->user()?->canAnyPermission(['students.soft_delete', 'students.delete', 'students.force_delete']))
+                        <a href="{{ route('students.trash') }}" class="btn btn-light border">
+                            <i class="fa-solid fa-trash-can me-2"></i>
+                            Thùng rác
+                        </a>
+                    @endif
+                    @if (auth()->user()?->hasPermission('students.create'))
+                        <a href="{{ route('students.add') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-plus me-2"></i>
+                            Thêm học viên
+                        </a>
+                    @endif
+                </div>
             </div>
 
             @if (session('msg'))
@@ -26,7 +34,7 @@
                 <div class="alert alert-danger border-0 rounded-4">{{ $errors->first('bulk_action') }}</div>
             @endif
 
-            @if (auth()->user()?->canAnyPermission(['students.edit', 'students.delete']))
+            @if (auth()->user()?->canAnyPermission(['students.edit', 'students.soft_delete', 'students.delete']))
                 <form id="bulk-action-form" action="{{ route('students.bulk') }}" method="POST" class="mb-4">
                     @csrf
                     <input type="hidden" name="selected_ids" id="selected-ids">
@@ -34,14 +42,14 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-count">0</span> học viên được chọn
+                            <span id="selected-count">0</span> Học viên được chọn
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @if (auth()->user()?->hasPermission('students.edit'))
                                 <button type="button" class="btn btn-success bulk-action-trigger" data-action="activate">Kích hoạt</button>
                                 <button type="button" class="btn btn-light border bulk-action-trigger" data-action="deactivate">Tạm khóa</button>
                             @endif
-                            @if (auth()->user()?->hasPermission('students.delete'))
+                            @if (auth()->user()?->canAnyPermission(['students.soft_delete', 'students.delete']))
                                 <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
                             @endif
                         </div>
@@ -58,6 +66,7 @@
                             </th>
                             <th>Tên</th>
                             <th>Email</th>
+                            <th>2FA</th>
                             <th>Trạng thái</th>
                             <th>Ngày tạo</th>
                             <th>Khóa học</th>
@@ -118,6 +127,11 @@
                     },
                     {
                         data: 'email'
+                    },
+                    {
+                        data: 'two_factor',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'status'

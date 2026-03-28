@@ -445,13 +445,18 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa ) (Done)
 - Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db (Done)
 - Thêm remember login ( Done )
-- Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
-- Thêm cái nhận biết là thành toán = j ( Nếu sửa ở admin thì bên clients cần sửa luôn không)
-- Chỉnh lại khóa học khi chuyển thành đã ra mắt thì bên clients những người đã mua khóa học ấn vào sẽ bị trang 404 ( tìm xem hướng giải nào ok nhất )
-- Check lại mã giảm giá
+- Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán ( Done )
+- Thêm cái nhận biết là thành toán = j ( Nếu sửa ở admin thì bên clients cần sửa luôn không) ( Done )
+- Chỉnh lại khóa học khi chuyển thành đã ra mắt thì bên clients những người đã mua khóa học ấn vào sẽ bị trang 404 ( tìm xem hướng giải nào ok nhất ) ( Hướng tạo thêm 1 trường là khóa nhưng học viên đã mua vẫn xem được và khóa học viên đã mua ko xem dc) ( Done )
+- Cái phần bảo mật nếu tài khoản admin bị lộ như kiểu sale, content bị lộ thì sử lý như nào ( Có bước khóa tài khoản rồi còn j nx...) ( Done )
+- Chỉ có super admin chỉnh được tất cả các nhóm quyền khác mà có quyền chỉnh quyền thì không chỉnh được quyền của super admin ( super admin là quyền cao nhất chỉ đăng nhập vào super admin mới chỉnh được quyền của nó còn đâu không quyền nào chỉnh đươc nó) ( Done )
+- ở trang danh sách khóa học, bài giảng khi click vào tên thì mở thêm 1 trang mở link đó ( Làm sau )
+- Trong tất cả module thì module nào có xóa thì thêm cái xóa mềm cho tôi và với tất cả cái xóa hiện lên trên thì sẽ là xóa mềm hết ở trong thùng rác có hiện button xóa vĩnh viễn ( Done )
+- Thêm quyền xóa mềm ( Done )
+- Check lại mã giảm giá ( Done )
+- Thêm phần quản lý học viên xem học viên đã bật 2FA chưa ( Done )
+- Làm bên admin bảo mật hơn ( Done )
 - Trong config thêm cái kiểm soát momo, vnpay, captcha
-- Thêm phần quản lý học viên xem học viên đã bật 2FA chưa
-- Làm bên admin bảo mật hơn
 - Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không)
 - Config gắn token hay api của bot telegram nếu đẩy lên production ( Hiện tại hướng dùng con botfather trên tele để thây tất cả thông tin ) làm chuẩn chỉ vì khi đẩy lên lại phải vào fix lại và có cách nào test được mình ở local mà test được nó kết nối được chưa không
 - Thêm chức năng light mode/ dark mode
@@ -494,7 +499,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không 
 - Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi ) ( Done )
 - Check lại responsive ( Done )
+- Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị
 - Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy )
-
 Tổng kết
 - check lại lần cuối trước khi đẩy lên production

@@ -55,6 +55,35 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->first();
     }
 
+    public function getCourseForClientAccess($slug, ?int $studentId = null)
+    {
+        $course = $this->getCourseActive($slug);
+
+        if ($course) {
+            return $course;
+        }
+
+        if (!$studentId) {
+            return null;
+        }
+
+        return $this->model
+            ->withoutGlobalScope(ActiveScope::class)
+            ->withCount('students')
+            ->where(function ($query) use ($slug) {
+                $query->where('slug', $slug)
+                    ->orWhere('slug_en', $slug)
+                    ->orWhere('slug_ko', $slug)
+                    ->orWhere('slug_ja', $slug)
+                    ->orWhere('slug_zh', $slug);
+            })
+            ->whereHas('students', function ($query) use ($studentId) {
+                $query->where('student_id', $studentId)
+                    ->wherePivot('status', 1);
+            })
+            ->first();
+    }
+
 
     public function createCoursesCategory($course, $data = [])
     {

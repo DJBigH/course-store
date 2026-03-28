@@ -34,7 +34,16 @@
             }
 
             function canAccessModuleActions(moduleName) {
-                return getManageCheckbox(moduleName).is(':checked') || getViewCheckbox(moduleName).is(':checked');
+                const manageCheckbox = getManageCheckbox(moduleName);
+                const viewCheckbox = getViewCheckbox(moduleName);
+                const moduleCheckboxes = getModuleCheckboxes(moduleName);
+                const hasGate = manageCheckbox.length || viewCheckbox.length;
+
+                if (!hasGate) {
+                    return true;
+                }
+
+                return manageCheckbox.is(':checked') || viewCheckbox.is(':checked');
             }
 
             function toggleModulePermissions(moduleName, checked) {
@@ -54,8 +63,13 @@
                     return;
                 }
 
-                const allChecked = otherCheckboxes.length === otherCheckboxes.filter(':checked').length;
-                manageCheckbox.prop('checked', allChecked);
+                const checkedCount = otherCheckboxes.filter(':checked').length;
+                const allChecked = otherCheckboxes.length === checkedCount;
+                const partiallyChecked = checkedCount > 0 && checkedCount < otherCheckboxes.length;
+
+                manageCheckbox
+                    .prop('checked', allChecked)
+                    .prop('indeterminate', partiallyChecked);
             }
 
             function syncModuleActionAvailability(moduleName) {
@@ -104,6 +118,21 @@
                     const checked = $('.permission-checkbox[value="' + permissionId + '"]').is(':checked');
                     $(this).toggleClass('is-active', checked);
                 });
+
+                $('.permission-module').each(function() {
+                    const moduleName = String($(this).data('module') || '');
+                    const manageCheckbox = getManageCheckbox(moduleName);
+
+                    if (!manageCheckbox.length) {
+                        return;
+                    }
+
+                    const manageButton = $('.permission-matrix__toggle').filter(function() {
+                        return String($(this).data('module')) === moduleName && String($(this).data('action')) === 'manage';
+                    });
+
+                    manageButton.toggleClass('is-partial', manageCheckbox.prop('indeterminate') === true);
+                });
             }
 
             function filterPermissions(keyword) {
@@ -137,6 +166,7 @@
 
             function clearPermissions() {
                 permissionCheckboxes.prop('checked', false);
+                permissionCheckboxes.prop('indeterminate', false);
                 $('.permission-matrix__toggle').prop('disabled', false);
                 $('.permission-module').each(function() {
                     syncModuleActionAvailability(String($(this).data('module') || ''));
@@ -199,6 +229,7 @@
                     toggleModulePermissions(moduleName, nextState);
                 } else {
                     checkbox.prop('checked', nextState);
+                    checkbox.prop('indeterminate', false);
                     syncManagePermissionState(moduleName);
                 }
 

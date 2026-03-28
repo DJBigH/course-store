@@ -34,10 +34,12 @@
         <div class="admin-form__header permission-builder__header">
             <div>
                 <h5 class="mb-1">Thêm nhóm quyền</h5>
-                <p class="text-muted mb-0">Tạo role mới, gán nhanh bằng ma trận quyền rồi tinh chỉnh sâu ở danh sách chi tiết.</p>
+                <p class="text-muted mb-0">Tạo role mới, gán nhanh bằng ma trận quyền rồi tinh chỉnh sâu ở danh sách chi
+                    tiết.</p>
             </div>
             <div class="permission-builder__actions">
-                <input type="text" class="form-control" id="permission-search" placeholder="Tìm permission theo tên hoặc slug...">
+                <input type="text" class="form-control" id="permission-search"
+                    placeholder="Tìm permission theo tên hoặc slug...">
             </div>
         </div>
 
@@ -67,7 +69,8 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Slug</label>
-                        <input type="text" name="slug" class="form-control" value="{{ old('slug') }}" placeholder="vd: support">
+                        <input type="text" name="slug" class="form-control" value="{{ old('slug') }}"
+                            placeholder="vd: support">
                     </div>
                     <div class="col-12">
                         <label class="form-label">Mô tả</label>
@@ -75,7 +78,8 @@
                     </div>
                     <div class="col-12">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="is_admin" name="is_admin" value="1" @checked(old('is_admin', 1))>
+                            <input class="form-check-input" type="checkbox" id="is_admin" name="is_admin" value="1"
+                                @checked(old('is_admin', 1))>
                             <label class="form-check-label" for="is_admin">Cho phép truy cập admin panel</label>
                         </div>
                     </div>
@@ -90,7 +94,8 @@
                         <div class="permission-matrix__header">
                             <div>
                                 <h6 class="mb-1">Ma trận quyền nhanh</h6>
-                                <p class="text-muted mb-0">Tick trực tiếp theo module x action để gán quyền nhanh.</p>
+                                <p class="text-muted mb-0">Tick trực tiếp theo module x action để gán quyền nhanh.
+                                </p>
                             </div>
                             <button type="button" class="btn btn-light border btn-sm permission-matrix__collapse-toggle"
                                 id="permission-matrix-toggle" aria-expanded="true" aria-controls="permission-matrix-body">
@@ -99,73 +104,57 @@
                         </div>
 
                         <div class="permission-matrix__body" id="permission-matrix-body">
-                        <div class="table-responsive">
-                            <table class="table permission-matrix__table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Module</th>
-                                        @foreach ($matrixActions as $action)
-                                            <th class="text-center text-capitalize">{{ $action }}</th>
-                                        @endforeach
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($permissionMatrix as $module => $actionPermissions)
+                            <div class="table-responsive">
+                                <table class="table permission-matrix__table align-middle">
+                                    <thead>
                                         <tr>
-                                            <td class="fw-semibold text-capitalize">{{ $module }}</td>
+                                            <th>Module</th>
                                             @foreach ($matrixActions as $action)
-                                                @php($permission = $actionPermissions[$action] ?? null)
-                                                <td class="text-center">
-                                                    @if ($permission)
-                                                        <button type="button"
-                                                            class="btn btn-sm permission-matrix__toggle {{ in_array($permission->id, old('permissions', [])) ? 'is-active' : '' }}"
-                                                            data-permission-id="{{ $permission->id }}"
-                                                            data-module="{{ strtolower($module ?: 'other') }}"
-                                                            data-action="{{ $action }}">
-                                                            {{ \Illuminate\Support\Str::headline(str_replace('_', ' ', $action)) }}
-                                                        </button>
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
-                                                </td>
+                                                <th class="text-center">
+                                                    {{ $matrixActionLabels[$action] ?? \Illuminate\Support\Str::headline(str_replace('_', ' ', $action)) }}
+                                                </th>
                                             @endforeach
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($permissionMatrix as $module => $actionPermissions)
+                                            <tr>
+                                                <td class="fw-semibold text-capitalize">{{ $module }}</td>
+                                                @foreach ($matrixActions as $action)
+                                                    @php($permission = $actionPermissions[$action] ?? null)
+                                                    <td class="text-center">
+                                                        @if ($permission)
+                                                            <button type="button"
+                                                                class="btn btn-sm permission-matrix__toggle {{ in_array($permission->id, old('permissions', [])) ? 'is-active' : '' }}"
+                                                                data-permission-id="{{ $permission->id }}"
+                                                                data-module="{{ strtolower($module ?: 'other') }}"
+                                                                data-action="{{ $action }}">
+                                                                {{ $matrixActionLabels[$action] ?? \Illuminate\Support\Str::headline(str_replace('_', ' ', $action)) }}
+                                                            </button>
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </section>
-
-                    <div class="permission-builder__list mt-4">
+                    <div class="permission-builder__list d-none" aria-hidden="true">
                         @foreach ($permissions as $module => $modulePermissions)
                             <section class="permission-module" data-module="{{ strtolower($module ?: 'other') }}">
-                                <div class="permission-module__header">
-                                    <div>
-                                        <h6 class="mb-1 text-capitalize">{{ $module ?: 'other' }}</h6>
-                                        <p class="text-muted mb-0">{{ $modulePermissions->count() }} permission</p>
+                                @foreach ($modulePermissions as $permission)
+                                    <div class="permission-item"
+                                        data-filter="{{ strtolower($permission->name . ' ' . $permission->slug) }}">
+                                        <input class="form-check-input permission-checkbox" type="checkbox"
+                                            name="permissions[]" value="{{ $permission->id }}"
+                                            data-module="{{ strtolower($module ?: 'other') }}"
+                                            data-slug="{{ $permission->slug }}" @checked(in_array($permission->id, old('permissions', [])))>
                                     </div>
-                                    <div class="d-flex gap-2">
-                                        <button type="button" class="btn btn-light border btn-sm permission-select-module">Chọn hết</button>
-                                        <button type="button" class="btn btn-light border btn-sm permission-clear-module">Bỏ chọn</button>
-                                    </div>
-                                </div>
-                                <div class="row g-3">
-                                    @foreach ($modulePermissions as $permission)
-                                        <div class="col-lg-6 permission-item" data-filter="{{ strtolower($permission->name . ' ' . $permission->slug) }}">
-                                            <label class="permission-card">
-                                                <input class="form-check-input permission-checkbox" type="checkbox" name="permissions[]" value="{{ $permission->id }}"
-                                                    data-module="{{ strtolower($module ?: 'other') }}"
-                                                    data-slug="{{ $permission->slug }}"
-                                                    @checked(in_array($permission->id, old('permissions', [])))>
-                                                <span class="permission-card__body">
-                                                    <strong>{{ $permission->name }}</strong>
-                                                    <small>{{ $permission->slug }}</small>
-                                                </span>
-                                            </label>
-                                        </div>
-                                    @endforeach
-                                </div>
+                                @endforeach
                             </section>
                         @endforeach
                     </div>
@@ -179,8 +168,10 @@
                             <div class="text-muted">permission đang được chọn</div>
                         </div>
                         <div class="d-grid gap-2 mt-3">
-                            <button type="button" class="btn btn-light border" id="select-all-permissions">Chọn tất cả</button>
-                            <button type="button" class="btn btn-light border" id="clear-all-permissions">Bỏ chọn tất cả</button>
+                            <button type="button" class="btn btn-light border" id="select-all-permissions">Chọn tất
+                                cả</button>
+                            <button type="button" class="btn btn-light border" id="clear-all-permissions">Bỏ chọn tất
+                                cả</button>
                         </div>
                     </aside>
                 </div>

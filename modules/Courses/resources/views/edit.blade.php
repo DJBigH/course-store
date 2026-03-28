@@ -295,6 +295,31 @@
                 </div>
             </div>
 
+            <div class="col-6">
+                <div class="mb-3">
+                    <label for="">Khóa học tập</label>
+                    <select name="is_learning_locked"
+                        class="form-select{{ $errors->has('is_learning_locked') ? ' is-invalid' : '' }}">
+                        <option value="0"
+                            {{ (string) old('is_learning_locked', $courses->is_learning_locked ?? 0) === '0' ? 'selected' : '' }}>
+                            Không khóa, học viên đã mua vẫn được học
+                        </option>
+                        <option value="1"
+                            {{ (string) old('is_learning_locked', $courses->is_learning_locked ?? 0) === '1' ? 'selected' : '' }}>
+                            Khóa học tập, chặn cả học viên đã mua
+                        </option>
+                    </select>
+                    <small class="text-muted d-block mt-2">
+                        Ẩn khóa học chỉ ngừng hiển thị ngoài public. Tùy chọn này mới là phần chặn học tập thật sự.
+                    </small>
+                    @error('is_learning_locked')
+                        <div class="invalid-feedback">
+                            {{ $message }}
+                        </div>
+                    @enderror
+                </div>
+            </div>
+
             <div class="col-12">
                 {{-- VI --}}
                 <div class="lang-block lang-vi">

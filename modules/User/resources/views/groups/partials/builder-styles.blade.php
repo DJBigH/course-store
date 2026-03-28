@@ -115,6 +115,12 @@
             color: #fff;
         }
 
+        .permission-matrix__toggle.is-partial {
+            background: #fff7ed;
+            border-color: #fb923c;
+            color: #c2410c;
+        }
+
         .permission-module {
             border: 1px solid #dbe4f0;
             border-radius: 24px;

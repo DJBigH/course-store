@@ -59,6 +59,7 @@ class CoursesRequest extends FormRequest
             'supports_ja' => 'nullable',
             'supports_zh' => 'nullable',
             'status' => 'required|integer',
+            'is_learning_locked' => 'required|integer|in:0,1',
             'categories' => 'required',
         ];
         return $rules;

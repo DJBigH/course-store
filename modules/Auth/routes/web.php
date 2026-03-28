@@ -1,20 +1,19 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use Modules\Auth\Src\Http\Controllers\Admin\LoginController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Modules\Students\src\Http\Controllers\Clients\TwoFactorController;
 
-
-Route::get('/login', "Admin\LoginController@showLoginForm")->middleware('web')->name('login');
-Route::post('/login', "Admin\LoginController@login")->middleware('web')->name('login');
-Route::post('/logout', "Admin\LoginController@logout")->middleware('web')->name('logout');
+Route::get('/login', 'Admin\LoginController@showLoginForm')->middleware('web')->name('login');
+Route::post('/login', 'Admin\LoginController@login')->middleware('web')->name('login');
+Route::post('/logout', 'Admin\LoginController@logout')->middleware('web')->name('logout');
 Route::get('/admin/forgot-password', 'Admin\ForgotPasswordController@showLinkRequestForm')->middleware('web')->name('admin.password.request');
 Route::post('/admin/forgot-password', 'Admin\ForgotPasswordController@sendResetLinkEmail')->middleware(['web', 'throttle:3,1'])->name('admin.password.email');
 Route::get('/admin/reset-password/{token}', 'Admin\ResetPasswordController@showResetForm')->middleware('web')->name('admin.password.reset');
 Route::post('/admin/reset-password', 'Admin\ResetPasswordController@reset')->middleware(['web', 'throttle:5,1'])->name('admin.password.update');
+Route::get('/admin/two-factor', 'Admin\TwoFactorController@showChallenge')->middleware('web')->name('admin.2fa.challenge');
+Route::post('/admin/two-factor', 'Admin\TwoFactorController@verify')->middleware('web')->name('admin.2fa.verify');
+Route::post('/admin/two-factor/resend', 'Admin\TwoFactorController@resend')->middleware('web')->name('admin.2fa.resend');
 
 Route::group([
     'prefix' => '{locale}',

@@ -6,14 +6,23 @@
             <div class="admin-page-actions">
                 <div>
                     <h5 class="mb-1">Danh sách mã giảm giá</h5>
-                    <p class="text-muted mb-0">Quản lý ưu đãi, điều kiện áp dụng, số lượng còn lại và lịch sử gán mã.</p>
+                    <p class="text-muted mb-0">Quản lý ưu đãi, điều kiện áp dụng, số lượng còn lại và lịch sử gắn mã.</p>
                 </div>
-                @if (auth()->user()?->hasPermission('coupons.create'))
-                    <a href="{{ route('coupons.add') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>
-                        Thêm mã giảm giá
-                    </a>
-                @endif
+                <div class="d-flex flex-wrap gap-2">
+                    @if (auth()->user()
+                            ?->canAnyPermission(['coupons.soft_delete', 'coupons.delete', 'coupons.force_delete']))
+                        <a href="{{ route('coupons.trash') }}" class="btn btn-light border">
+                            <i class="fa-solid fa-trash-can me-2"></i>
+                            Thùng rác
+                        </a>
+                    @endif
+                    @if (auth()->user()?->hasPermission('coupons.create'))
+                        <a href="{{ route('coupons.add') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            Thêm mã giảm giá
+                        </a>
+                    @endif
+                </div>
             </div>
 
             @if (session('msg'))
@@ -26,7 +35,8 @@
                 <div class="alert alert-danger border-0 rounded-4">{{ $errors->first('bulk_action') }}</div>
             @endif
 
-            @if (auth()->user()?->canAnyPermission(['coupons.edit', 'coupons.delete']))
+            @if (auth()->user()
+                    ?->canAnyPermission(['coupons.edit', 'coupons.soft_delete', 'coupons.delete']))
                 <form id="bulk-action-form" action="{{ route('coupons.bulk') }}" method="POST" class="mb-4">
                     @csrf
                     <input type="hidden" name="selected_ids" id="selected-ids">
@@ -34,14 +44,17 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-count">0</span> mã giảm giá được chọn
+                            <span id="selected-count">0</span> Mã giảm giá được chọn
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @if (auth()->user()?->hasPermission('coupons.edit'))
-                                <button type="button" class="btn btn-outline-secondary bulk-action-trigger" data-action="duplicate">Nhân bản</button>
+                                <button type="button" class="btn btn-outline-secondary bulk-action-trigger"
+                                    data-action="duplicate">Nhân bản</button>
                             @endif
-                            @if (auth()->user()?->hasPermission('coupons.delete'))
-                                <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
+                            @if (auth()->user()
+                                    ?->canAnyPermission(['coupons.soft_delete', 'coupons.delete']))
+                                <button type="button" class="btn btn-outline-danger bulk-action-trigger"
+                                    data-action="delete">Xóa</button>
                             @endif
                         </div>
                     </div>
@@ -177,7 +190,8 @@
 
                 const visibleCheckboxes = $('.bulk-row-checkbox');
                 const checkedVisible = visibleCheckboxes.filter(':checked').length;
-                $('#select-all-records').prop('checked', visibleCheckboxes.length > 0 && visibleCheckboxes.length === checkedVisible);
+                $('#select-all-records').prop('checked', visibleCheckboxes.length > 0 && visibleCheckboxes
+                    .length === checkedVisible);
             }
 
             $('#datatable').on('change', '.bulk-row-checkbox', function() {

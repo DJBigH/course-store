@@ -24,7 +24,7 @@ const decodeEntities = (value = "") => {
 };
 
 const looksCorruptedText = (value = "") =>
-    /(?:Ãƒ.|Ã‚.|Ã„.|Ã†.|Ã¢â‚¬Â¦|Ã¢â‚¬Å“|Ã¢â‚¬|hÃ¡Â»|giÃ¡Âº|liÃƒÂªn|trÃ¡Â»|khÃƒÂ³a|mÃ¡Â»|ÃƒÂ¡|Ã†Â°)/u.test(value);
+    /(?:Ã.|Â.|Ä.|Æ.|â€¦|â€œ|â€|há»|giáº|liÃªn|trá»|khÃ³a|má»|Ã¡|Æ°)/u.test(value);
 
 const repairMojibake = (value = "") => {
     if (!value || !looksCorruptedText(value)) {

@@ -1,6 +1,23 @@
 @extends('layouts.backend')
 
 @section('content')
+    <style>
+        .lesson-name-link {
+            display: inline-block;
+            position: relative;
+            z-index: 2;
+            color: #0f172a;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .lesson-name-link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+    </style>
+
     <p class="text-end">
         <a href="{{ route('courses.index') }}" class="btn btn-info text-white">Quay lại</a>
         @if (auth()->user()?->hasPermission('lessons.sort'))

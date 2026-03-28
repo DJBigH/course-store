@@ -20,6 +20,7 @@ class UserRequest extends FormRequest
             'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'required|min:6',
             'group_id' => 'required|integer|exists:groups,id',
+            'is_locked' => 'required|in:0,1',
         ];
 
         if ($id) {
@@ -51,6 +52,7 @@ class UserRequest extends FormRequest
             'email' => __('user::validation.attributes.email'),
             'password' => __('user::validation.attributes.password'),
             'group_id' => __('user::validation.attributes.group_id'),
+            'is_locked' => 'trạng thái tài khoản',
         ];
     }
 }

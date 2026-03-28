@@ -5,14 +5,19 @@ use Modules\Students\src\Http\Controllers\Clients\TwoFactorController;
 
 Route::prefix('admin')->group(function () {
    Route::prefix('students')->name('students.')->group(function () {
-      Route::get('/', 'StudentController@index')->middleware('permission:students.view,students.create,students.edit,students.delete,students.logs')->name('index');
-      Route::get('data', 'StudentController@data')->middleware('permission:students.view,students.create,students.edit,students.delete,students.logs')->name('data');
-      Route::post('/bulk', 'StudentController@bulkAction')->middleware('permission:students.edit,students.delete')->name('bulk');
+      Route::get('/', 'StudentController@index')->middleware('permission:students.view,students.create,students.edit,students.delete,students.soft_delete,students.force_delete,students.logs')->name('index');
+      Route::get('/trash', 'StudentController@trash')->middleware('permission:students.view,students.soft_delete,students.force_delete')->name('trash');
+      Route::get('data', 'StudentController@data')->middleware('permission:students.view,students.create,students.edit,students.delete,students.soft_delete,students.force_delete,students.logs')->name('data');
+      Route::get('/trash/data', 'StudentController@trashData')->middleware('permission:students.view,students.soft_delete,students.force_delete')->name('trash.data');
+      Route::post('/bulk', 'StudentController@bulkAction')->middleware('permission:students.edit,students.delete,students.soft_delete')->name('bulk');
+      Route::post('/trash/bulk', 'StudentController@trashBulkAction')->middleware('permission:students.delete,students.soft_delete,students.force_delete')->name('trash.bulk');
       Route::get('/create', 'StudentController@create')->middleware('permission:students.create')->name('add');
       Route::post('/create', 'StudentController@store')->middleware('permission:students.create')->name('post-add');
+      Route::post('/restore/{student}', 'StudentController@restore')->middleware('permission:students.delete,students.soft_delete')->name('restore');
+      Route::delete('/force-delete/{student}', 'StudentController@forceDelete')->middleware('permission:students.force_delete')->name('force-delete');
       Route::get('/edit/{student}', 'StudentController@edit')->middleware('permission:students.edit')->name('edit');
       Route::post('/edit/{student}', 'StudentController@update')->middleware('permission:students.edit')->name('post-edit');
-      Route::delete('/delete/{student}', 'StudentController@delete')->middleware('permission:students.delete')->name('delete');
+      Route::delete('/delete/{student}', 'StudentController@delete')->middleware('permission:students.delete,students.soft_delete')->name('delete');
       Route::get('/{id}/coupon-history', 'StudentController@CouponHistory')->middleware('permission:students.view')->name('coupon-history');
       Route::get('/{id}/purchased-courses', 'StudentController@purchasedCourses')->middleware('permission:students.view')->name('purchased-courses');
       Route::get('logs/{student}', 'StudentController@logs')->middleware('permission:students.logs')->name('logs');
@@ -101,8 +106,8 @@ Route::get('students/notifications/read/{id}', function ($id) {
 
 Route::get('students/notifications', function () {
    return view('students.notifications.index', [
-      'pageTitle' => 'ThÃ´ng bÃ¡o',
-      'pageName' => 'ThÃ´ng bÃ¡o',
+      'pageTitle' => 'Thông báo',
+      'pageName' => 'Thông báo',
       'notifications' => auth('students')->user()->notifications()->latest()->paginate(100),
    ]);
 })->middleware(['auth:students', 'verified', 'user.block'])->name('students.notifications.index');

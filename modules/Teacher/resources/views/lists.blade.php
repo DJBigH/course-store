@@ -6,14 +6,24 @@
             <div class="admin-page-actions">
                 <div>
                     <h5 class="mb-1">Danh sách giảng viên</h5>
-                    <p class="text-muted mb-0">Quản lý hồ sơ giảng viên, kinh nghiệm và ảnh đại diện theo layout admin mới.</p>
+                    <p class="text-muted mb-0">Quản lý hồ sơ giảng viên, kinh nghiệm và ảnh đại diện theo layout admin mới.
+                    </p>
                 </div>
-                @if (auth()->user()?->hasPermission('teachers.create'))
-                    <a href="{{ route('teacher.add') }}" class="btn btn-primary">
-                        <i class="fa-solid fa-plus me-2"></i>
-                        Thêm giảng viên
-                    </a>
-                @endif
+                <div class="d-flex flex-wrap gap-2">
+                    @if (auth()->user()
+                            ?->canAnyPermission(['teachers.soft_delete', 'teachers.delete', 'teachers.force_delete']))
+                        <a href="{{ route('teacher.trash') }}" class="btn btn-light border">
+                            <i class="fa-solid fa-trash-can me-2"></i>
+                            Thùng rác
+                        </a>
+                    @endif
+                    @if (auth()->user()?->hasPermission('teachers.create'))
+                        <a href="{{ route('teacher.add') }}" class="btn btn-primary">
+                            <i class="fa-solid fa-plus me-2"></i>
+                            Thêm giảng viên
+                        </a>
+                    @endif
+                </div>
             </div>
 
             @if (session('msg'))
@@ -58,7 +68,8 @@
                 </div>
             </form>
 
-            @if (auth()->user()?->hasPermission('teachers.delete'))
+            @if (auth()->user()
+                    ?->canAnyPermission(['teachers.soft_delete', 'teachers.delete']))
                 <form id="bulk-action-form" action="{{ route('teacher.bulk') }}" method="POST" class="mb-4">
                     @csrf
                     <input type="hidden" name="selected_ids" id="selected-ids">
@@ -68,7 +79,8 @@
                         <div class="bulk-toolbar__summary">
                             <span id="selected-count">0</span> giảng viên được chọn
                         </div>
-                        <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
+                        <button type="button" class="btn btn-outline-danger bulk-action-trigger"
+                            data-action="delete">Xóa</button>
                     </div>
                 </form>
             @endif
@@ -205,7 +217,8 @@
 
                 const visibleCheckboxes = $('.bulk-row-checkbox');
                 const checkedVisible = visibleCheckboxes.filter(':checked').length;
-                $('#select-all-records').prop('checked', visibleCheckboxes.length > 0 && visibleCheckboxes.length === checkedVisible);
+                $('#select-all-records').prop('checked', visibleCheckboxes.length > 0 && visibleCheckboxes
+                    .length === checkedVisible);
             }
 
             $('#teacher-filter-form').on('submit', function(event) {

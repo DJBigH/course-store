@@ -4,12 +4,15 @@ namespace Modules\Orders\src\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\Student;
 
 class Order extends Model
 {
     use HasFactory;
+    use SoftDeletes;
+
     protected $table = 'orders';
 
     protected $fillable = [
@@ -27,6 +30,7 @@ class Order extends Model
         'payment_date',
         'payment_complete_date',
         'payment_method',
+        'deleted_at',
         'created_at',
         'updated_at',
     ];

@@ -24,6 +24,15 @@ class CouponRequest extends FormRequest
     public function rules()
     {
         $id = $this->route('id');
+        $startDateRules = [
+            'nullable',
+            'date',
+            'required_with:end_date',
+        ];
+
+        if (!$id) {
+            $startDateRules[] = 'after_or_equal:today';
+        }
 
         return [
             'code' => 'required|unique:coupons,code,' . $id,
@@ -43,12 +52,7 @@ class CouponRequest extends FormRequest
             ],
             'total_condition' => 'integer|nullable|min:0',
             'count' => 'integer|nullable|min:0',
-            'start_date' => [
-                'nullable',
-                'date',
-                'after_or_equal:today',
-                'required_with:end_date',
-            ],
+            'start_date' => $startDateRules,
             'end_date' => [
                 'nullable',
                 'date',

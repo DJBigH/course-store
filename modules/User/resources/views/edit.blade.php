@@ -18,7 +18,7 @@
         <div class="admin-form__header">
             <div>
                 <h5 class="mb-1">Cập nhật người dùng</h5>
-                <p class="text-muted mb-0">Chỉnh sửa tài khoản nội bộ và nhóm quyền đang được gán.</p>
+                <p class="text-muted mb-0">Chỉnh sửa tài khoản nội bộ, nhóm quyền và quyền truy cập admin panel.</p>
             </div>
         </div>
 
@@ -61,6 +61,20 @@
                 <input type="password" class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}"
                     name="password" placeholder="Để trống nếu không đổi">
                 @error('password')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Trạng thái tài khoản</label>
+                <select name="is_locked" class="form-select{{ $errors->has('is_locked') ? ' is-invalid' : '' }}">
+                    <option value="0" @selected((string) old('is_locked', $users->is_locked ?? 0) === '0')>Hoạt động bình thường</option>
+                    <option value="1" @selected((string) old('is_locked', $users->is_locked ?? 0) === '1')>Khóa, không cho vào admin panel</option>
+                </select>
+                @if ((int) auth()->id() === (int) $users->id)
+                    <small class="text-muted d-block mt-2">Không nên tự khóa chính tài khoản đang đăng nhập.</small>
+                @endif
+                @error('is_locked')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>

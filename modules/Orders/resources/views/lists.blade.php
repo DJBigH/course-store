@@ -6,8 +6,16 @@
             <div class="admin-page-actions">
                 <div>
                     <h5 class="mb-1">Danh sách đơn hàng</h5>
-                    <p class="text-muted mb-0">Theo dõi mã đơn, tổng tiền, trạng thái, phương thức thanh toán và truy cập chi tiết nhanh.</p>
+                    <p class="text-muted mb-0">Theo dõi mã đơn, tổng tiền, trạng thái, phương thức thanh toán và truy cập chi
+                        tiết nhanh.</p>
                 </div>
+                @if (auth()->user()
+                        ?->canAnyPermission(['orders.soft_delete', 'orders.delete', 'orders.force_delete']))
+                    <a href="{{ route('orders.trash') }}" class="btn btn-light border">
+                        <i class="fa-solid fa-trash-can me-2"></i>
+                        Thùng rác
+                    </a>
+                @endif
             </div>
 
             @if (session('msg'))
@@ -34,7 +42,8 @@
                 </div>
             </div>
 
-            @if (auth()->user()?->canAnyPermission(['orders.update', 'orders.delete']))
+            @if (auth()->user()
+                    ?->canAnyPermission(['orders.update', 'orders.soft_delete', 'orders.delete']))
                 <form id="bulk-action-form" action="{{ route('orders.bulk') }}" method="POST" class="mb-4">
                     @csrf
                     <input type="hidden" name="selected_ids" id="selected-ids">
@@ -42,14 +51,17 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-count">0</span> đơn hàng được chọn
+                            <span id="selected-count">0</span> Đơn hàng được chọn
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @if (auth()->user()?->hasPermission('orders.update'))
-                                <button type="button" class="btn btn-light border bulk-action-trigger" data-action="cancel">Hủy đơn</button>
+                                <button type="button" class="btn btn-light border bulk-action-trigger"
+                                    data-action="cancel">Hủy đơn</button>
                             @endif
-                            @if (auth()->user()?->hasPermission('orders.delete'))
-                                <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
+                            @if (auth()->user()
+                                    ?->canAnyPermission(['orders.soft_delete', 'orders.delete']))
+                                <button type="button" class="btn btn-outline-danger bulk-action-trigger"
+                                    data-action="delete">Xóa</button>
                             @endif
                         </div>
                     </div>
@@ -180,7 +192,8 @@
 
                 const visibleCheckboxes = $('.bulk-row-checkbox');
                 const checkedVisible = visibleCheckboxes.filter(':checked').length;
-                $('#select-all-records').prop('checked', visibleCheckboxes.length > 0 && visibleCheckboxes.length === checkedVisible);
+                $('#select-all-records').prop('checked', visibleCheckboxes.length > 0 && visibleCheckboxes
+                    .length === checkedVisible);
             }
 
             $('#datatable').on('change', '.bulk-row-checkbox', function() {

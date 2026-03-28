@@ -26,13 +26,21 @@ class ContactController extends Controller
         return view('contacts::index', compact('pageName', 'pageTitle'));
     }
 
+    public function trash()
+    {
+        $pageTitle = 'Thùng rác liên hệ';
+        $pageName = 'Liên hệ';
+
+        return view('contacts::trash', compact('pageName', 'pageTitle'));
+    }
+
     public function data(Request $request)
     {
         $contacts = $this->contactrepository->getContacts();
         $user = auth()->user();
         $canLogs = $user?->hasPermission('contacts.logs');
         $canView = $user?->hasPermission('contacts.view');
-        $canDelete = $user?->hasPermission('contacts.delete');
+        $canDelete = $user?->canAnyPermission(['contacts.soft_delete', 'contacts.delete']);
 
         if ($request->filled('q')) {
             $keyword = trim((string) $request->input('q'));
@@ -71,8 +79,8 @@ class ContactController extends Controller
             ->addColumn('email', fn($c) => $c->email)
             ->addColumn('status', function ($c) {
                 return $c->status == 1
-                    ? '<span class="badge bg-success">ÄÃ£ tiáº¿p nháº­n</span>'
-                    : '<span class="badge bg-warning text-dark">Chá» tiáº¿p xá»­</span>';
+                    ? '<span class="badge bg-success">Đã tiếp nhận</span>'
+                    : '<span class="badge bg-warning text-dark">Chờ tiếp xử</span>';
             })
             ->addColumn('created_at', function ($c) {
                 return Carbon::parse($c->created_at)->format('d/m/Y H:i:s');
@@ -118,6 +126,43 @@ class ContactController extends Controller
             )
             ->rawColumns(['select', 'status', 'view', 'delete', 'logs'])
             ->make(true);
+    }
+
+    public function trashData()
+    {
+        $canRestore = auth()->user()?->canAnyPermission(['contacts.soft_delete', 'contacts.delete']);
+        $canForceDelete = auth()->user()?->hasPermission('contacts.force_delete');
+        $contacts = \Modules\Contacts\src\Models\Contacts::query()->onlyTrashed()->latest('deleted_at');
+
+        return datatables()->of($contacts)
+            ->addColumn('select', fn($c) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $c->id . '"></div>')
+            ->addColumn('name', fn($c) => e($c->name))
+            ->addColumn('email', fn($c) => e($c->email))
+            ->addColumn('phone', fn($c) => e($c->phone))
+            ->addColumn('deleted_at', fn($c) => Carbon::parse($c->deleted_at)->format('d/m/Y H:i:s'))
+            ->addColumn('restore', function ($c) use ($canRestore) {
+                if (!$canRestore) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
+                return '<form method="POST" action="' . route('contacts.restore', $c->id) . '" class="d-inline-block">'
+                    . csrf_field()
+                    . '<button type="submit" class="btn btn-success btn-sm">Khôi phục</button>'
+                    . '</form>';
+            })
+            ->addColumn('force_delete', function ($c) use ($canForceDelete) {
+                if (!$canForceDelete) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
+                return '<form method="POST" action="' . route('contacts.force-delete', $c->id) . '" class="d-inline-block" onsubmit="return confirm(\'Xóa vĩnh viễn liên hệ này?\');">'
+                    . csrf_field()
+                    . method_field('DELETE')
+                    . '<button type="submit" class="btn btn-outline-danger btn-sm">Xóa vĩnh viễn</button>'
+                    . '</form>';
+            })
+            ->rawColumns(['select', 'restore', 'force_delete'])
+            ->toJson();
     }
 
     public function show($id)
@@ -206,6 +251,46 @@ class ContactController extends Controller
         return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
     }
 
+    public function trashBulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một liên hệ trong thùng rác.',
+            ]);
+        }
+
+        $contacts = \Modules\Contacts\src\Models\Contacts::query()->onlyTrashed()->whereIn('id', $selectedIds)->get();
+
+        if ($contacts->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy liên hệ hợp lệ trong thùng rác.');
+        }
+
+        if ($action === 'restore') {
+            foreach ($contacts as $contact) {
+                $contact->restore();
+            }
+
+            return back()->with('msg', 'Đã khôi phục ' . $contacts->count() . ' liên hệ.');
+        }
+
+        if ($action === 'force_delete') {
+            foreach ($contacts as $contact) {
+                $contact->forceDelete();
+            }
+
+            return back()->with('msg', 'Đã xóa vĩnh viễn ' . $contacts->count() . ' liên hệ.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác trong thùng rác không hợp lệ.');
+    }
+
     public function accept($id)
     {
         $contact = $this->contactrepository->find($id);
@@ -277,6 +362,32 @@ class ContactController extends Controller
         }
 
         return back()->with('msg_danger', 'Xóa thất bại');
+    }
+
+    public function restore($id)
+    {
+        $contact = \Modules\Contacts\src\Models\Contacts::query()->onlyTrashed()->find($id);
+
+        if (!$contact) {
+            abort(404);
+        }
+
+        $contact->restore();
+
+        return back()->with('msg', 'Khôi phục liên hệ thành công.');
+    }
+
+    public function forceDelete($id)
+    {
+        $contact = \Modules\Contacts\src\Models\Contacts::query()->onlyTrashed()->find($id);
+
+        if (!$contact) {
+            abort(404);
+        }
+
+        $contact->forceDelete();
+
+        return back()->with('msg', 'Đã xóa vĩnh viễn liên hệ.');
     }
 
     public function logs(Request $request, $id)

@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Modules\ActiveLogs\src\Models\ActiveLog;
+use Modules\Courses\src\Models\Courses;
 use Modules\Teacher\src\Http\Requests\TeacherRequest;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
@@ -25,6 +26,13 @@ class TeacherController extends Controller
         $pageTitle = 'Quản lý giáo viên';
 
         return view('teacher::lists', compact('pageTitle'));
+    }
+
+    public function trash()
+    {
+        $pageTitle = 'Thùng rác giảng viên';
+
+        return view('teacher::trash', compact('pageTitle'));
     }
 
     public function data(Request $request)
@@ -68,7 +76,7 @@ class TeacherController extends Controller
         $user = auth()->user();
         $canLogs = $user?->hasPermission('teachers.logs');
         $canEdit = $user?->hasPermission('teachers.edit');
-        $canDelete = $user?->hasPermission('teachers.delete');
+        $canDelete = $user?->canAnyPermission(['teachers.soft_delete', 'teachers.delete']);
 
         return DataTables::of($teacher)
             ->addColumn('select', function ($teachers) {
@@ -119,6 +127,46 @@ class TeacherController extends Controller
             ->toJson();
     }
 
+    public function trashData()
+    {
+        $canRestore = auth()->user()?->canAnyPermission(['teachers.soft_delete', 'teachers.delete']);
+        $canForceDelete = auth()->user()?->hasPermission('teachers.force_delete');
+        $teachers = \Modules\Teacher\src\Models\Teacher::query()->onlyTrashed()->latest('deleted_at');
+
+        return DataTables::of($teachers)
+            ->addColumn('select', fn($teacher) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teacher->id . '"></div>')
+            ->addColumn('image', function ($teacher) {
+                return $teacher->image
+                    ? '<img src="' . $teacher->image . '" style="width: 80px; border-radius: 12px;">'
+                    : 'Không có ảnh';
+            })
+            ->addColumn('name', fn($teacher) => e($teacher->name_locale))
+            ->addColumn('deleted_at', fn($teacher) => Carbon::parse($teacher->deleted_at)->format('d/m/Y H:i:s'))
+            ->addColumn('restore', function ($teacher) use ($canRestore) {
+                if (!$canRestore) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
+                return '<form method="POST" action="' . route('teacher.restore', $teacher->id) . '" class="d-inline-block">'
+                    . csrf_field()
+                    . '<button type="submit" class="btn btn-success">Khôi phục</button>'
+                    . '</form>';
+            })
+            ->addColumn('force_delete', function ($teacher) use ($canForceDelete) {
+                if (!$canForceDelete) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
+
+                return '<form method="POST" action="' . route('teacher.force-delete', $teacher->id) . '" class="d-inline-block" onsubmit="return confirm(\'Xóa vĩnh viễn giảng viên này?\');">'
+                    . csrf_field()
+                    . method_field('DELETE')
+                    . '<button type="submit" class="btn btn-outline-danger">Xóa vĩnh viễn</button>'
+                    . '</form>';
+            })
+            ->rawColumns(['select', 'image', 'restore', 'force_delete'])
+            ->toJson();
+    }
+
     public function create()
     {
         $pageTitle = 'Thêm mới giáo viên';
@@ -155,11 +203,7 @@ class TeacherController extends Controller
                 unset($snapshot['password']);
                 $image = $teacher->image;
 
-                $this->teacherRepository->delete($teacher->id);
-
-                if ($image) {
-                    deleteFileStorage($image);
-                }
+                $teacher->delete();
 
                 activity_log(
                     action: 'delete',
@@ -271,13 +315,9 @@ class TeacherController extends Controller
         unset($snapshot['password']);
         $image = $teacher->image;
 
-        $status = $this->teacherRepository->delete($id);
+        $status = $teacher->delete();
 
         if ($status) {
-            if ($image) {
-                deleteFileStorage($image);
-            }
-
             activity_log(
                 action: 'delete',
                 subject: $teacher,
@@ -293,6 +333,90 @@ class TeacherController extends Controller
         }
 
         return back()->with('msg_danger', 'Xóa thất bại');
+    }
+
+    public function trashBulkAction(Request $request)
+    {
+        $action = $request->input('bulk_action');
+        $selectedIds = collect(explode(',', (string) $request->input('selected_ids', '')))
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            throw ValidationException::withMessages([
+                'bulk_action' => 'Vui lòng chọn ít nhất một giảng viên trong thùng rác.',
+            ]);
+        }
+
+        $teachers = \Modules\Teacher\src\Models\Teacher::query()->onlyTrashed()->whereIn('id', $selectedIds)->get();
+
+        if ($teachers->isEmpty()) {
+            return back()->with('msg_danger', 'Không tìm thấy giảng viên hợp lệ trong thùng rác.');
+        }
+
+        if ($action === 'restore') {
+            foreach ($teachers as $teacher) {
+                $teacher->restore();
+            }
+
+            return back()->with('msg', 'Đã khôi phục ' . $teachers->count() . ' giảng viên.');
+        }
+
+        if ($action === 'force_delete') {
+            $teacherHasCourses = $teachers->first(fn($teacher) => $this->teacherHasCourses($teacher->id));
+
+            if ($teacherHasCourses) {
+                return back()->with('msg_danger', 'Không thể xóa vĩnh viễn giáo viên còn khóa học đang gắn.');
+            }
+
+            foreach ($teachers as $teacher) {
+                if ($teacher->image) {
+                    deleteFileStorage($teacher->image);
+                }
+
+                $teacher->forceDelete();
+            }
+
+            return back()->with('msg', 'Đã xóa vĩnh viễn ' . $teachers->count() . ' giảng viên.');
+        }
+
+        return back()->with('msg_danger', 'Thao tác trong thùng rác không hợp lệ.');
+    }
+
+    public function restore($id)
+    {
+        $teacher = \Modules\Teacher\src\Models\Teacher::query()->onlyTrashed()->find($id);
+
+        if (!$teacher) {
+            abort(404);
+        }
+
+        $teacher->restore();
+
+        return back()->with('msg', 'Khôi phục giảng viên thành công.');
+    }
+
+    public function forceDelete($id)
+    {
+        $teacher = \Modules\Teacher\src\Models\Teacher::query()->onlyTrashed()->find($id);
+
+        if (!$teacher) {
+            abort(404);
+        }
+
+        if ($this->teacherHasCourses($teacher->id)) {
+            return back()->with('msg_danger', 'Không thể xóa vĩnh viễn giáo viên còn khóa học đang gắn.');
+        }
+
+        if ($teacher->image) {
+            deleteFileStorage($teacher->image);
+        }
+
+        $teacher->forceDelete();
+
+        return back()->with('msg', 'Đã xóa vĩnh viễn giảng viên.');
     }
 
     public function logs(Request $request, $id)
@@ -336,5 +460,10 @@ class TeacherController extends Controller
             ->withQueryString();
 
         return view('teacher::logs', compact('pageTitle', 'teacher', 'logs'));
+    }
+
+    protected function teacherHasCourses(int $teacherId): bool
+    {
+        return Courses::query()->withTrashed()->where('teacher_id', $teacherId)->exists();
     }
 }

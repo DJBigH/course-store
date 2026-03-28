@@ -100,7 +100,26 @@ class LessonController extends Controller
 
         foreach ($lessons as $key => $lesson) {
             $row = $lesson;
-            $row['name'] = $char . $lesson['name'];
+            $lessonName = e($lesson['name'] ?? '');
+            $publicLocale = in_array(app()->getLocale(), ['vi', 'en', 'ko', 'ja', 'zh'], true)
+                ? app()->getLocale()
+                : 'vi';
+
+            if ($row['parent_id'] == null) {
+                $row['name'] = $char . $lessonName;
+            } else {
+                $lessonSlug = trim((string) (($lesson['slug_locale'] ?? '') ?: ($lesson['slug'] ?? '')));
+
+                if ($lessonSlug !== '') {
+                    $lessonUrl = route('lessons.home', [
+                        'locale' => $publicLocale,
+                        'slug' => $lessonSlug,
+                    ]);
+                    $row['name'] = $char . '<a href="' . $lessonUrl . '" target="_blank" rel="noopener noreferrer" class="lesson-name-link">' . $lessonName . '</a>';
+                } else {
+                    $row['name'] = $char . $lessonName;
+                }
+            }
 
             if ($row['parent_id'] == null) {
                 $row['is_trial'] = '';

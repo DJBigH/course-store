@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Modules\Courses\src\Models\Courses;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Students\src\Models\StudentLessonProgress;
@@ -27,7 +28,7 @@ class LessonController extends Controller
         }
 
         $student = Auth::guard('students')->user();
-        $course = $lesson->course;
+        $course = Courses::query()->withoutGlobalScopes()->find($lesson->course_id);
 
         if (!$course) {
             abort(404);
@@ -40,6 +41,14 @@ class LessonController extends Controller
                 ->wherePivot('status', 1)
                 ->exists()
             : false;
+
+        if ((int) $course->status !== 1 && !$hasCourse) {
+            abort(404);
+        }
+
+        if ((int) $course->is_learning_locked === 1) {
+            abort(403, 'Khóa học này đang tạm thời bị khóa học tập.');
+        }
 
         if (!$hasCourse && (int) $lesson->is_trial !== 1) {
             return redirect()->route('courses.detail', [
@@ -114,7 +123,7 @@ class LessonController extends Controller
         }
 
         $student = Auth::guard('students')->user();
-        $course = $lesson->course;
+        $course = Courses::query()->withoutGlobalScopes()->find($lesson->course_id);
 
         if (!$student || !$course) {
             return $this->completionErrorResponse($request, 401, __('lessons::clients/common.login_required'));
@@ -128,6 +137,10 @@ class LessonController extends Controller
 
         if (!$hasCourse) {
             return $this->completionErrorResponse($request, 403, __('courses::clients/common.lesson_purchase_required'));
+        }
+
+        if ((int) $course->is_learning_locked === 1) {
+            return $this->completionErrorResponse($request, 403, 'Khóa học này đang tạm thời bị khóa học tập.');
         }
 
         $progress = StudentLessonProgress::query()->where([

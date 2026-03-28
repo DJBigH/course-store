@@ -48,6 +48,7 @@ class Courses extends Model
         'supports_ja',
         'supports_zh',
         'status',
+        'is_learning_locked',
         'view',
         'created_at',
         'updated_at',

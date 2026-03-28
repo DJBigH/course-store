@@ -54,13 +54,26 @@ class LoginController extends Controller
         $studentId = $student?->id;
         $maxDevices = config('auth.max_devices', 1);
 
+        // if ($student && (int) $student->status === 0) {
+        //     $redirect = route('block-index', ['locale' => app()->getLocale()]);
+
+        //     if ($request->expectsJson()) {
+        //         return response()->json([
+        //             'message' => 'Tài khoản của bạn hiện đang bị khóa.',
+        //             'redirect' => $redirect,
+        //         ], 403);
+        //     }
+
+        //     return redirect($redirect);
+        // }
+
         $activeSessions = DB::table('sessions')
             ->where('user_id', $studentId)
             ->count();
 
         if ($activeSessions > $maxDevices) {
             Auth::guard('students')->logout();
-            abort(403, 'TÃ i kho?n dÃ£ dang nh?p trÃªn thi?t b? khÃ¡c');
+            abort(403, 'Tài khoản của bạn đang được đăng nhập trên 1 thiết bị khác');
         }
 
         if ($student?->two_factor_email_enabled) {

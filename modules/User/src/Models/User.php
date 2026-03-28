@@ -3,11 +3,11 @@
 namespace Modules\User\src\Models;
 
 use App\Notifications\AdminResetPasswordQueued;
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Contracts\Translation\HasLocalePreference;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
@@ -15,39 +15,46 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements HasLocalePreference
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'users';
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+
     protected $fillable = [
         'name',
         'email',
         'password',
-        'group_id'
+        'group_id',
+        'is_locked',
+        'two_factor_email_enabled',
+        'two_factor_email_enabled_at',
+        'two_factor_email_code',
+        'two_factor_email_code_expires_at',
+        'two_factor_email_code_sent_at',
+        'last_login_at',
+        'last_login_ip',
+        'last_login_user_agent',
+        'last_login_browser',
+        'last_login_platform',
+        'last_login_device',
+        'deleted_at',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_email_code',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_locked' => 'boolean',
+        'two_factor_email_enabled' => 'boolean',
+        'two_factor_email_enabled_at' => 'datetime',
+        'two_factor_email_code_expires_at' => 'datetime',
+        'two_factor_email_code_sent_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function group(): BelongsTo
@@ -64,8 +71,17 @@ class User extends Authenticatable implements HasLocalePreference
         return $this->group?->slug === 'super_admin' || (int) ($this->group_id ?? 0) === 1;
     }
 
+    public function isLocked(): bool
+    {
+        return (bool) ($this->is_locked ?? false);
+    }
+
     public function canAccessAdmin(): bool
     {
+        if ($this->isLocked()) {
+            return false;
+        }
+
         if (!Schema::hasTable('groups')) {
             return in_array((int) ($this->group_id ?? 0), [1, 2, 3], true);
         }
@@ -115,12 +131,16 @@ class User extends Authenticatable implements HasLocalePreference
                     'categories.create',
                     'categories.edit',
                     'categories.delete',
+                    'categories.soft_delete',
+                    'categories.force_delete',
                     'categories.logs',
                     'categories.manage',
                     'teachers.view',
                     'teachers.create',
                     'teachers.edit',
                     'teachers.delete',
+                    'teachers.soft_delete',
+                    'teachers.force_delete',
                     'teachers.logs',
                     'teachers.manage',
                     'comments.moderate',
@@ -133,12 +153,16 @@ class User extends Authenticatable implements HasLocalePreference
                     'students.create',
                     'students.edit',
                     'students.delete',
+                    'students.soft_delete',
+                    'students.force_delete',
                     'students.logs',
                     'students.manage',
                     'coupons.manage',
                     'contacts.view',
                     'contacts.update',
                     'contacts.delete',
+                    'contacts.soft_delete',
+                    'contacts.force_delete',
                     'contacts.logs',
                     'contacts.manage',
                 ],

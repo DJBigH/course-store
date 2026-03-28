@@ -22,10 +22,10 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
         $orderId = $order->id;
         $now = Carbon::now()->format('Y-m-d H:i:s');
         $coupon = $this->model->whereCode($code)->first();
-        $students = $coupon->students;
         if (!$coupon) {
             return false;
         }
+        $students = $coupon->students;
 
         if ($coupon->count && $coupon->usages->count() >= $coupon->count) {
             return false;
@@ -47,7 +47,6 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
 
                 $usedCount = DB::table('coupons_usage')
                     ->where('coupon_id', $coupon->id)
-                    ->where('student_id', $studentId)
                     ->count();
             }
             // CASE 2: Coupon KHÔNG ràng buộc học viên
@@ -55,7 +54,6 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
 
                 $usedCount = DB::table('coupons_usage')
                     ->where('coupon_id', $coupon->id)
-                    ->where('order_id', $orderId)
                     ->count();
             }
 

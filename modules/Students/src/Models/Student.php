@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Courses\src\Models\Courses;
@@ -17,6 +18,7 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
 {
     use HasFactory;
     use Notifiable;
+    use SoftDeletes;
 
     protected $table = 'students';
 
@@ -41,6 +43,7 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
         'last_login_browser',
         'last_login_platform',
         'last_login_device',
+        'deleted_at',
     ];
 
     protected $casts = [
@@ -50,6 +53,7 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
         'two_factor_email_code_expires_at' => 'datetime',
         'two_factor_email_code_sent_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function sendEmailVerificationNotification()

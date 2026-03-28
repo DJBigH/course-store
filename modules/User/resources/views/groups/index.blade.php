@@ -1,6 +1,10 @@
 @extends('layouts.backend')
 
 @section('content')
+    @php
+        $isSuperAdmin = optional($currentUser?->group)->slug === 'super_admin';
+    @endphp
+
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
             <div class="admin-page-actions">
@@ -58,8 +62,14 @@
 
             <div class="row g-3">
                 @forelse ($groups as $group)
+                    @php
+                        $isCurrentGroup = (int) ($currentUser?->group_id ?? 0) === (int) $group->id;
+                        $isProtectedSuperAdmin = $group->slug === 'super_admin' && !$isSuperAdmin;
+                        $canManageThisGroup = $isSuperAdmin || (!$isProtectedSuperAdmin && !$isCurrentGroup);
+                    @endphp
+
                     <div class="col-12 col-lg-6">
-                        <article class="group-card">
+                        <article class="group-card {{ !$canManageThisGroup ? 'group-card--locked' : '' }}">
                             <div class="group-card__header">
                                 <div>
                                     <h6 class="mb-1">{{ $group->name }}</h6>
@@ -89,19 +99,33 @@
                                 </div>
                             </div>
 
+                            @if (!$canManageThisGroup)
+                                <div class="group-card__note mt-3">
+                                    @if ($isProtectedSuperAdmin)
+                                        Chỉ tài khoản thuộc nhóm Super Admin mới được chỉnh quyền của Super Admin.
+                                    @elseif ($isCurrentGroup)
+                                        Bạn không thể tự chỉnh nhóm quyền mà tài khoản hiện tại đang sử dụng.
+                                    @endif
+                                </div>
+                            @endif
+
                             <div class="mt-3 d-flex flex-wrap gap-2">
-                                <a href="{{ route('groups.edit', $group->id) }}" class="btn btn-warning">
-                                    Sửa quyền
-                                </a>
-                                <form action="{{ route('groups.delete', $group->id) }}" method="post"
-                                    onsubmit="return confirm('Bạn có chắc muốn xóa nhóm quyền này không?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger"
-                                        @disabled($group->users_count > 0 || $group->slug === 'super_admin' || (int) auth()->user()?->group_id === (int) $group->id)>
-                                        Xóa nhóm
-                                    </button>
-                                </form>
+                                @if ($canManageThisGroup)
+                                    <a href="{{ route('groups.edit', $group->id) }}" class="btn btn-warning">
+                                        Sửa quyền
+                                    </a>
+                                    <form action="{{ route('groups.delete', $group->id) }}" method="post"
+                                        onsubmit="return confirm('Bạn có chắc muốn xóa nhóm quyền này không?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-outline-danger"
+                                            @disabled($group->users_count > 0 || $group->slug === 'super_admin' || $isCurrentGroup)>
+                                            Xóa nhóm
+                                        </button>
+                                    </form>
+                                @else
+                                    <button type="button" class="btn btn-light border" disabled>Không được phép chỉnh</button>
+                                @endif
                             </div>
                         </article>
                     </div>
@@ -123,6 +147,11 @@
             border-radius: 24px;
             padding: 1.25rem;
             background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .group-card--locked {
+            border-color: #fde68a;
+            background: linear-gradient(180deg, #fffdf5 0%, #fffaf0 100%);
         }
 
         .group-card__header {
@@ -172,6 +201,15 @@
         .group-card__stat span {
             color: #64748b;
             font-size: 0.88rem;
+        }
+
+        .group-card__note {
+            padding: 0.8rem 1rem;
+            border-radius: 16px;
+            border: 1px solid #fde68a;
+            background: #fffbeb;
+            color: #92400e;
+            font-size: 0.92rem;
         }
     </style>
 @endsection
