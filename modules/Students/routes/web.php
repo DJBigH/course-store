@@ -13,7 +13,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/trash/bulk', 'StudentController@trashBulkAction')->middleware('permission:students.delete,students.soft_delete,students.force_delete')->name('trash.bulk');
       Route::get('/create', 'StudentController@create')->middleware('permission:students.create')->name('add');
       Route::post('/create', 'StudentController@store')->middleware('permission:students.create')->name('post-add');
-      Route::post('/restore/{student}', 'StudentController@restore')->middleware('permission:students.delete,students.soft_delete')->name('restore');
+      Route::post('/restore/{student}', 'StudentController@restore')->middleware('permission:students.restore,students.delete,students.soft_delete')->name('restore');
       Route::delete('/force-delete/{student}', 'StudentController@forceDelete')->middleware('permission:students.force_delete')->name('force-delete');
       Route::get('/edit/{student}', 'StudentController@edit')->middleware('permission:students.edit')->name('edit');
       Route::post('/edit/{student}', 'StudentController@update')->middleware('permission:students.edit')->name('post-edit');

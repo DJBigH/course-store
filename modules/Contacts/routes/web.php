@@ -12,7 +12,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/trash/bulk', 'ContactController@trashBulkAction')->middleware('permission:contacts.delete,contacts.soft_delete,contacts.force_delete')->name('trash.bulk');
       Route::get('/{id}', 'ContactController@show')->middleware('permission:contacts.view')->name('show');
       Route::post('accpect/{id}', 'ContactController@accept')->middleware('permission:contacts.update')->name('accept');
-      Route::post('/restore/{id}', 'ContactController@restore')->middleware('permission:contacts.delete,contacts.soft_delete')->name('restore');
+      Route::post('/restore/{id}', 'ContactController@restore')->middleware('permission:contacts.restore,contacts.delete,contacts.soft_delete')->name('restore');
       Route::delete('/force-delete/{id}', 'ContactController@forceDelete')->middleware('permission:contacts.force_delete')->name('force-delete');
       Route::delete('delete/{id}', 'ContactController@delete')->middleware('permission:contacts.delete,contacts.soft_delete')->name('delete');
       Route::get('logs/{id}', 'ContactController@logs')->middleware('permission:contacts.logs')->name('logs');

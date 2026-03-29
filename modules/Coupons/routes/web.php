@@ -12,7 +12,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/trash/bulk', 'CouponController@trashBulkAction')->middleware('permission:coupons.delete,coupons.soft_delete,coupons.force_delete')->name('trash.bulk');
       Route::get('/create', 'CouponController@create')->middleware('permission:coupons.create')->name('add');
       Route::post('/create', 'CouponController@store')->middleware('permission:coupons.create')->name('store');
-      Route::post('/restore/{id}', 'CouponController@restore')->middleware('permission:coupons.delete,coupons.soft_delete')->name('restore');
+      Route::post('/restore/{id}', 'CouponController@restore')->middleware('permission:coupons.restore,coupons.delete,coupons.soft_delete')->name('restore');
       Route::delete('/force-delete/{id}', 'CouponController@forceDelete')->middleware('permission:coupons.force_delete')->name('force-delete');
       Route::get('/edit/{id}', 'CouponController@edit')->middleware('permission:coupons.edit')->name('edit');
       Route::post('/edit/{id}', 'CouponController@update')->middleware('permission:coupons.edit')->name('update');

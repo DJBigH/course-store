@@ -7,9 +7,10 @@ use App\Notifications\NewContactNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Modules\Contacts\src\Models\Contacts;
+use Modules\Home\src\Models\ChatbotUnresolvedQuestion;
 use Modules\Home\src\Support\GeminiSalesChatbotService;
+use Modules\Home\src\Support\GeminiHealthService;
 use Modules\Home\src\Support\SalesChatbotService;
 use Modules\User\src\Models\User;
 
@@ -23,6 +24,7 @@ class ChatbotController extends Controller
     public function __construct(
         private SalesChatbotService $salesChatbotService,
         private GeminiSalesChatbotService $geminiSalesChatbotService,
+        private GeminiHealthService $geminiHealthService,
     ) {
     }
 
@@ -35,6 +37,10 @@ class ChatbotController extends Controller
         $message = trim((string) $data['message']);
         $memory = $this->getChatMemory();
         $localReply = $this->salesChatbotService->reply($message, $memory);
+        $this->logWeakReplyIfNeeded($request, $message, array_merge($localReply, [
+            'source' => 'local',
+            'fallback_reason' => 'local_rule_bot',
+        ]));
 
         if ($this->salesChatbotService->isSensitiveRequest($message)) {
             $finalPayload = array_merge($localReply, [
@@ -43,7 +49,6 @@ class ChatbotController extends Controller
             ]);
 
             $this->rememberChatState($message, $finalPayload['intent_tags'] ?? []);
-            $this->logWeakReplyIfNeeded($request, $message, $finalPayload);
 
             return response()->json($finalPayload);
         }
@@ -52,16 +57,19 @@ class ChatbotController extends Controller
         $geminiReply = $this->geminiSalesChatbotService->reply($message, $safeContext);
 
         if (!($geminiReply['ok'] ?? false)) {
+            $this->geminiHealthService->recordFailure((string) ($geminiReply['reason'] ?? 'api_error'));
+
             $finalPayload = array_merge($localReply, [
                 'source' => 'local',
                 'fallback_reason' => $geminiReply['reason'] ?? 'fallback_local',
             ]);
 
             $this->rememberChatState($message, $finalPayload['intent_tags'] ?? []);
-            $this->logWeakReplyIfNeeded($request, $message, $finalPayload);
 
             return response()->json($finalPayload);
         }
+
+        $this->geminiHealthService->recordSuccess();
 
         $finalPayload = array_merge($localReply, [
             'answer' => $geminiReply['answer'],
@@ -188,16 +196,46 @@ class ChatbotController extends Controller
             return;
         }
 
-        Log::info('sales_chatbot.weak_reply', [
+        $studentId = optional(Auth::guard('students')->user())->id;
+        $normalizedMessage = $this->salesChatbotService->normalizeForLogging($message);
+
+        $existingLog = ChatbotUnresolvedQuestion::query()
+            ->where('normalized_message', $normalizedMessage)
+            ->where('locale', app()->getLocale())
+            ->where('status', 'pending')
+            ->first();
+
+        if ($existingLog) {
+            $existingLog->update([
+                'message' => $message,
+                'resolved_message' => $payload['resolved_message'] ?? null,
+                'intent_tags' => $payload['intent_tags'] ?? [],
+                'source' => $payload['source'] ?? 'local',
+                'fallback_reason' => $payload['fallback_reason'] ?? null,
+                'student_id' => $studentId ?: $existingLog->student_id,
+                'hit_count' => (int) $existingLog->hit_count + 1,
+                'last_asked_at' => now(),
+                'ip' => $request->ip(),
+                'user_agent' => (string) $request->userAgent(),
+            ]);
+
+            return;
+        }
+
+        ChatbotUnresolvedQuestion::query()->create([
             'message' => $message,
+            'normalized_message' => $normalizedMessage,
             'resolved_message' => $payload['resolved_message'] ?? null,
             'intent_tags' => $payload['intent_tags'] ?? [],
             'source' => $payload['source'] ?? 'local',
             'fallback_reason' => $payload['fallback_reason'] ?? null,
-            'student_id' => optional(Auth::guard('students')->user())->id,
+            'student_id' => $studentId,
+            'status' => 'pending',
+            'hit_count' => 1,
+            'last_asked_at' => now(),
+            'locale' => app()->getLocale(),
             'ip' => $request->ip(),
             'user_agent' => (string) $request->userAgent(),
-            'locale' => app()->getLocale(),
         ]);
     }
 

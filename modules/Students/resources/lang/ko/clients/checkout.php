@@ -31,8 +31,8 @@ return [
 
         // Payment methods
         'choose_payment_method' => '결제 수단 선택',
-        'qr_transfer' => 'QR 계좌이체',
-        'maintenance' => '점검 중',
+        
+        'payment_under_maintenance' => ':gateway is currently under maintenance.',
 
         // Bank transfer
         'bank_transfer' => '계좌이체 결제',
@@ -78,3 +78,4 @@ return [
     ],
 
 ];
+

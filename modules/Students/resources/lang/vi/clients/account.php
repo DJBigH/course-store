@@ -257,6 +257,7 @@ return [
         'already_disabled' => 'Xác thực 2 lớp qua email hiện đang tắt.',
         'enabled_success' => 'Bạn đã bật xác thực 2 lớp qua email thành công.',
         'disabled_success' => 'Bạn đã tắt xác thực 2 lớp qua email thành công.',
+        'mail_disabled' => 'Tính năng xác thực qua email đang tạm bảo trì. Vui lòng thử lại sau.',
         'reauth_required' => 'Vui lòng xác thực lại bằng mã email trước khi tiếp tục thao tác này.',
         'reauth_success' => 'Xác thực thành công. Bạn có thể tiếp tục thao tác.',
         'login_success' => 'Xác thực thành công. Bạn đã đăng nhập vào tài khoản.',

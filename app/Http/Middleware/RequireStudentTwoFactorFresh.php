@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\SystemMailManager;
 use App\Support\StudentTwoFactorService;
 use Closure;
 use Illuminate\Http\Request;
@@ -10,7 +11,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RequireStudentTwoFactorFresh
 {
-    public function __construct(protected StudentTwoFactorService $twoFactorService)
+    public function __construct(
+        protected StudentTwoFactorService $twoFactorService,
+        protected SystemMailManager $systemMailManager
+    )
     {
     }
 
@@ -30,6 +34,18 @@ class RequireStudentTwoFactorFresh
             }
         } elseif ($this->twoFactorService->hasFreshVerification($request)) {
             return $next($request);
+        }
+
+        if (!$this->systemMailManager->isEnabled() || !$this->systemMailManager->isConfigured()) {
+            $message = __('students::clients/account.two_factor.mail_disabled');
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                ], 503);
+            }
+
+            return back()->with('msg_danger', $message);
         }
 
         $locale = app()->getLocale();

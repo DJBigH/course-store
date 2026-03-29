@@ -24,20 +24,26 @@ class ContactRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+        $captchaEnabled = (int) setting('captcha_enabled', '1') === 1;
+        $rules = [
             'name' => 'required|max:225',
             'email' => 'email|nullable',
             'phone' => 'required|regex:/(0)[0-9]{9}/',
             'message' => 'required|max:225',
-            'g-recaptcha-response' => [
+        ];
+
+        if ($captchaEnabled) {
+            $rules['g-recaptcha-response'] = [
                 'required',
                 function ($attribute, $value, $fail) {
                     if (!$this->passesRecaptcha($value)) {
                         $fail(__('contacts::clients/validation.recaptcha'));
                     }
                 },
-            ],
-        ];
+            ];
+        }
+
+        return $rules;
     }
 
     public function messages()

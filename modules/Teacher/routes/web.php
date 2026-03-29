@@ -12,7 +12,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/trash/bulk', 'TeacherController@trashBulkAction')->middleware('permission:teachers.delete,teachers.soft_delete,teachers.force_delete')->name('trash.bulk');
       Route::get('/create', 'TeacherController@create')->middleware('permission:teachers.create')->name('add');
       Route::post('/create', 'TeacherController@store')->middleware('permission:teachers.create')->name('post-add');
-      Route::post('/restore/{teacher}', 'TeacherController@restore')->middleware('permission:teachers.delete,teachers.soft_delete')->name('restore');
+      Route::post('/restore/{teacher}', 'TeacherController@restore')->middleware('permission:teachers.restore,teachers.delete,teachers.soft_delete')->name('restore');
       Route::delete('/force-delete/{teacher}', 'TeacherController@forceDelete')->middleware('permission:teachers.force_delete')->name('force-delete');
       Route::get('/edit/{teacher}', 'TeacherController@edit')->middleware('permission:teachers.edit')->name('edit');
       Route::post('/edit/{teacher}', 'TeacherController@update')->middleware('permission:teachers.edit')->name('post-edit');

@@ -244,6 +244,7 @@ class User extends Authenticatable implements HasLocalePreference
             'coupons.' => 'coupons.manage',
             'users.' => 'users.manage',
             'settings.' => 'settings.manage',
+            'chatbot.' => 'chatbot.manage',
         ];
 
         foreach ($manageFallbackMap as $prefix => $manageSlug) {

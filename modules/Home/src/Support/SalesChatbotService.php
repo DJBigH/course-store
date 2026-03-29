@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
+use Modules\Home\src\Models\ChatbotKnowledge;
 use Modules\Students\src\Models\Coupons;
 
 class SalesChatbotService
@@ -236,6 +237,10 @@ class SalesChatbotService
         }
 
         $intent = $this->normalizeForIntent($normalized);
+
+        if ($knowledgeReply = $this->buildKnowledgeReply($normalized, $context['tags'])) {
+            return $this->appendMeta($knowledgeReply, $context);
+        }
 
         if ($faqReply = $this->buildFaqReply($intent, $context['tags'])) {
             return $this->appendMeta($faqReply, $context);
@@ -1647,6 +1652,11 @@ class SalesChatbotService
         return $this->containsAny($normalized, $this->goodbyeKeywords);
     }
 
+    public function normalizeForLogging(string $message): string
+    {
+        return $this->normalizeForIntent($this->normalize($message));
+    }
+
     private function buildThanksReply(): array
     {
         return $this->baseResponse(
@@ -1674,4 +1684,89 @@ class SalesChatbotService
             ]
         );
     }
+    private function buildKnowledgeReply(string $normalized, array $tags = []): ?array
+    {
+        $intent = $this->normalizeForIntent($normalized);
+        $terms = $this->extractSearchTerms($normalized);
+
+        $candidates = ChatbotKnowledge::query()
+            ->where('is_active', true)
+            ->when(!empty($terms), function ($query) use ($terms) {
+                $query->where(function ($subQuery) use ($terms) {
+                    foreach ($terms as $term) {
+                        $subQuery->orWhere('question', 'like', '%' . $term . '%')
+                            ->orWhere('keywords', 'like', '%' . $term . '%')
+                            ->orWhere('answer', 'like', '%' . $term . '%');
+                    }
+                });
+            })
+            ->orderByDesc('priority')
+            ->latest('id')
+            ->limit(20)
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+
+        $bestMatch = $candidates
+            ->map(function (ChatbotKnowledge $knowledge) use ($intent, $terms) {
+                $score = 0;
+                $questionIntent = $this->normalizeForIntent($knowledge->question);
+                $questionTerms = $this->extractSearchTerms($knowledge->question);
+                $keywordList = collect($knowledge->keywordList())
+                    ->map(fn ($keyword) => $this->normalizeForIntent($keyword))
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                if ($questionIntent !== '' && $intent === $questionIntent) {
+                    $score += 120;
+                }
+
+                if ($questionIntent !== '' && (Str::contains($intent, $questionIntent) || Str::contains($questionIntent, $intent))) {
+                    $score += 60;
+                }
+
+                foreach ($keywordList as $keyword) {
+                    if ($keyword !== '' && Str::contains($intent, $keyword)) {
+                        $score += 18;
+                    }
+                }
+
+                foreach ($terms as $term) {
+                    if (in_array($term, $questionTerms, true)) {
+                        $score += 10;
+                    }
+
+                    if (collect($keywordList)->contains(fn ($keyword) => Str::contains($keyword, $term))) {
+                        $score += 8;
+                    }
+                }
+
+                $score += (int) $knowledge->priority * 2;
+
+                return [
+                    'knowledge' => $knowledge,
+                    'score' => $score,
+                ];
+            })
+            ->sortByDesc('score')
+            ->first();
+
+        if (!$bestMatch || ($bestMatch['score'] ?? 0) < 30) {
+            return null;
+        }
+
+        /** @var \Modules\Home\src\Models\ChatbotKnowledge $knowledge */
+        $knowledge = $bestMatch['knowledge'];
+
+        return $this->baseResponse(
+            $this->cleanPublicText($knowledge->answer),
+            [
+                'intent_tags' => array_merge($tags, ['tri thuc bot thuong']),
+            ]
+        );
+    }
 }
+

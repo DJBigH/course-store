@@ -6,21 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class SettingRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, mixed>
-     */
     public function rules(): array
     {
         return [
@@ -36,6 +26,15 @@ class SettingRequest extends FormRequest
             'currency_rate_krw' => ['nullable', 'numeric', 'gt:0'],
             'currency_rate_jpy' => ['nullable', 'numeric', 'gt:0'],
             'currency_rate_cny' => ['nullable', 'numeric', 'gt:0'],
+            'mail_enabled' => ['nullable', 'boolean'],
+            'chatbot_widget_enabled' => ['nullable', 'boolean'],
+            'checkout_countdown_minutes' => ['nullable', 'integer', 'min:0', 'max:10080'],
+            'max_devices' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'chatbot_enabled' => ['nullable', 'boolean'],
+            'chatbot_message_ttl_minutes' => ['nullable', 'integer', 'min:5', 'max:1440'],
+            'student_two_factor_timeout' => ['nullable', 'integer', 'min:60', 'max:86400'],
+            'student_two_factor_code_expire' => ['nullable', 'integer', 'min:60', 'max:86400'],
+            'student_two_factor_resend_cooldown' => ['nullable', 'integer', 'min:10', 'max:3600'],
             'global_notice_enabled' => ['nullable', 'boolean'],
             'global_notice_title' => ['nullable', 'string', 'max:255'],
             'global_notice_title_en' => ['nullable', 'string', 'max:255'],
@@ -90,9 +89,9 @@ class SettingRequest extends FormRequest
 
     public function messages(): array
     {
-       return [
+        return [
             'banner_right.max' => 'Banner ben phai chi duoc toi da 3 anh.',
-       ];
+        ];
     }
-
 }
+

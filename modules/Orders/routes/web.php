@@ -11,7 +11,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/bulk', 'OrderController@bulkAction')->middleware('permission:orders.update,orders.delete,orders.soft_delete')->name('bulk');
       Route::post('/trash/bulk', 'OrderController@trashBulkAction')->middleware('permission:orders.delete,orders.soft_delete,orders.force_delete')->name('trash.bulk');
       Route::get('/{orderId}', 'OrderController@show')->middleware('permission:orders.view')->name('show');
-      Route::post('/restore/{orderId}', 'OrderController@restore')->middleware('permission:orders.delete,orders.soft_delete')->name('restore');
+      Route::post('/restore/{orderId}', 'OrderController@restore')->middleware('permission:orders.restore,orders.delete,orders.soft_delete')->name('restore');
       Route::delete('/force-delete/{orderId}', 'OrderController@forceDelete')->middleware('permission:orders.force_delete')->name('force-delete');
       Route::delete('/delete/{orderId}', 'OrderController@delete')->middleware('permission:orders.delete,orders.soft_delete')->name('delete');
    });

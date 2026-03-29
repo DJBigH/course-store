@@ -4,6 +4,7 @@ namespace Modules\Auth\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
 use App\Support\ClientMailThrottle;
+use App\Support\SystemMailManager;
 use App\Support\StudentTwoFactorService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
@@ -19,7 +20,8 @@ class LoginController extends Controller
 {
     public function __construct(
         protected StudentTwoFactorService $twoFactorService,
-        protected ClientMailThrottle $mailThrottle
+        protected ClientMailThrottle $mailThrottle,
+        protected SystemMailManager $systemMailManager
     ) {
         $this->middleware('guest:students', ['except' => 'logout']);
     }
@@ -52,7 +54,7 @@ class LoginController extends Controller
 
         $student = Auth::guard('students')->user();
         $studentId = $student?->id;
-        $maxDevices = config('auth.max_devices', 1);
+        $maxDevices = (int) setting('max_devices', config('auth.max_devices', 1));
 
         // if ($student && (int) $student->status === 0) {
         //     $redirect = route('block-index', ['locale' => app()->getLocale()]);
@@ -77,6 +79,19 @@ class LoginController extends Controller
         }
 
         if ($student?->two_factor_email_enabled) {
+            if (!$this->systemMailManager->isEnabled() || !$this->systemMailManager->isConfigured()) {
+                Auth::guard('students')->logout();
+                $message = __('students::clients/account.two_factor.mail_disabled');
+
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => $message,
+                    ], 503);
+                }
+
+                return back()->with('msg_danger', $message);
+            }
+
             Auth::guard('students')->logout();
 
             $request->session()->put('students.two_factor.pending_login_id', $student->id);
@@ -135,6 +150,21 @@ class LoginController extends Controller
     public function handleSendForgotLink(Request $request, $locale)
     {
         $request->validate(['email' => 'required|email']);
+
+        if (!$this->systemMailManager->isEnabled() || !$this->systemMailManager->isConfigured()) {
+            $message = __('auth::clients/messages.mail_disabled');
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                    'errors' => [
+                        'email' => [$message],
+                    ],
+                ], 503);
+            }
+
+            return back()->with('msg_danger', $message);
+        }
 
         $throttle = config('mail.throttle.forgot_password');
         $throttleKey = $this->mailThrottle->key('forgot-password', [

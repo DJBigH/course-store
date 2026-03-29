@@ -38,6 +38,10 @@
                     <h5 class="mb-1">Danh sách quyền</h5>
                     <p class="text-muted mb-0">Tạo, chỉnh sửa và kiểm soát các quyền chi tiết để gán cho từng nhóm nội bộ.</p>
                 </div>
+                <a href="{{ route('permissions.trash') }}" class="btn btn-light border">
+                    <i class="fa-solid fa-trash-can me-2"></i>
+                    Thùng rác
+                </a>
                 <a href="{{ route('permissions.create') }}" class="btn btn-primary">
                     <i class="fa-solid fa-plus me-2"></i>
                     Thêm quyền

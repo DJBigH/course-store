@@ -1,3 +1,113 @@
+<style>
+    #layoutSidenav_nav {
+        overflow: hidden;
+    }
+
+    #layoutSidenav_nav .sb-sidenav {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu {
+        padding-bottom: 5rem;
+        overflow-x: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.35);
+        border-radius: 999px;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu .nav {
+        gap: 0.18rem;
+        padding: 0 0.5rem 0.75rem;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu .sb-sidenav-menu-heading {
+        margin: 0.2rem 0 0.1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu .nav > .nav-link,
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu .nav > a.nav-link {
+        min-height: 46px;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu .nav .nav-link {
+        width: calc(100% - 0.5rem);
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+        box-sizing: border-box;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-collapse-arrow {
+        flex-shrink: 0;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-footer {
+        min-height: 72px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.25rem;
+        line-height: 1.35;
+        overflow: hidden;
+        border-top: 1px solid rgba(148, 163, 184, 0.14);
+        padding-left: 1rem;
+        padding-right: 1rem;
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(6px);
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-footer .small {
+        margin-bottom: 0;
+        font-size: 0.76rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.56);
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sidebar-user-name,
+    #layoutSidenav_nav .sb-sidenav .sidebar-link-label {
+        display: block;
+        min-width: 0;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sidebar-user-name {
+        color: rgba(255, 255, 255, 0.92);
+        font-weight: 600;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu-nested {
+        margin-left: 0.5rem;
+        margin-right: 0.25rem;
+        padding-bottom: 0.55rem;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu-nested .nav-link {
+        width: auto;
+        min-height: 40px;
+        padding-right: 1rem;
+        border-radius: 12px;
+    }
+
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu-nested .nav-link:hover,
+    #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu-nested .nav-link.active {
+        background: rgba(255, 255, 255, 0.08);
+    }
+</style>
 <div id="layoutSidenav_nav">
     <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
         <div class="sb-sidenav-menu">
@@ -121,6 +231,14 @@
                     ])
                 @endif
 
+                @if (auth()->user()
+                        ?->canAnyPermission(['chatbot.view', 'chatbot.create', 'chatbot.edit', 'chatbot.delete', 'chatbot.logs']))
+                    @include('part.backend.menu_item', [
+                        'title' => 'Train bot',
+                        'name' => 'chatbot-knowledge',
+                    ])
+                @endif
+
                 @if (auth()->user()?->hasPermission('logs.view'))
                     @include('part.backend.menu_item', [
                         'title' => 'Logs',
@@ -132,7 +250,9 @@
 
         <div class="sb-sidenav-footer">
             <div class="small">Đăng nhập:</div>
-            {{ Auth::user()->name ?? 'Admin' }}
+            <div class="sidebar-user-name">{{ Auth::user()->name ?? 'Admin' }}</div>
         </div>
     </nav>
 </div>
+
+

@@ -41,10 +41,17 @@
                             </div>
 
                             <div class="flex-grow-1">
-                                <div class="notification-text">
-                                    {{ notificationText($notification, 'message', 'Bạn có thông báo mới') }}
+                                @php
+                                    $notificationTitle = notificationText($notification, 'title', 'Thong bao moi');
+                                    $notificationMessage = notificationText($notification, 'message', 'Ban co thong bao moi');
+                                @endphp
+                                @if ($notificationTitle !== '')
+                                    <div class="fw-semibold small mb-1">{{ $notificationTitle }}</div>
+                                @endif
+                                <div class="notification-text small">
+                                    {{ $notificationMessage }}
                                 </div>
-                                <div class="notification-time text-muted small">
+                                <div class="notification-time text-muted small mt-1">
                                     {{ $notification->created_at->diffForHumans() }}
                                 </div>
                             </div>

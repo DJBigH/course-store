@@ -10,6 +10,8 @@
             'email' => old('email', $studentData->email ?? ''),
             'message' => old('message'),
         ];
+        $captchaEnabled = (int) setting('captcha_enabled', '1') === 1;
+        $captchaSiteKey = config('services.recaptcha.site_key');
     @endphp
 
     <section class="contact-page">
@@ -123,18 +125,20 @@
                                 @enderror
                             </div>
 
-                            <div class="form-group">
-                                <div
-                                    class="contact-captcha-panel {{ $errors->has('g-recaptcha-response') ? 'is-invalid' : '' }}">
-                                    <div class="contact-captcha-box">
-                                        <div id="contact-captcha" class="g-recaptcha"
-                                            data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                            @if ($captchaEnabled && !blank($captchaSiteKey))
+                                <div class="form-group">
+                                    <div
+                                        class="contact-captcha-panel {{ $errors->has('g-recaptcha-response') ? 'is-invalid' : '' }}">
+                                        <div class="contact-captcha-box">
+                                            <div id="contact-captcha" class="g-recaptcha"
+                                                data-sitekey="{{ $captchaSiteKey }}"></div>
+                                        </div>
                                     </div>
+                                    @error('g-recaptcha-response')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                @error('g-recaptcha-response')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            @endif
 
                             <button type="submit" class="btn-submit"
                                 data-submit-label="{{ __('contacts::clients/common.submit_form') }}">
@@ -492,7 +496,9 @@
 @endsection
 
 @section('scripts')
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @if ($captchaEnabled && !blank($captchaSiteKey))
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('.js-contact-form');

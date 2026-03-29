@@ -21,6 +21,19 @@ class GroupController extends Controller
         return view('user::groups.index', compact('pageTitle', 'groups', 'syncStatus', 'currentUser'));
     }
 
+    public function trash()
+    {
+        $pageTitle = 'Thùng rác nhóm quyền';
+        $groups = Group::query()
+            ->onlyTrashed()
+            ->withCount(['permissions', 'users'])
+            ->orderByDesc('deleted_at')
+            ->get();
+        $currentUser = auth()->user();
+
+        return view('user::groups.trash', compact('pageTitle', 'groups', 'currentUser'));
+    }
+
     public function create()
     {
         $pageTitle = 'Thêm nhóm quyền';
@@ -138,10 +151,41 @@ class GroupController extends Controller
             return back()->withErrors(['group' => 'Không thể xóa nhóm quyền đang có người dùng.']);
         }
 
-        $group->permissions()->detach();
         $group->delete();
 
         return redirect()->route('groups.index')->with('msg', 'Đã xóa nhóm quyền thành công.');
+    }
+
+    public function restore($group)
+    {
+        $group = Group::query()->onlyTrashed()->withCount('users')->findOrFail($group);
+        $this->authorizeGroupAccess($group, 'khôi phục');
+        $group->restore();
+
+        return redirect()->route('groups.trash')->with('msg', 'Đã khôi phục nhóm quyền thành công.');
+    }
+
+    public function forceDelete($group)
+    {
+        $group = Group::query()->onlyTrashed()->withCount('users')->findOrFail($group);
+        $this->authorizeGroupAccess($group, 'xóa vĩnh viễn');
+
+        if ($group->slug === 'super_admin') {
+            return back()->withErrors(['group' => 'Không thể xóa vĩnh viễn nhóm quyền Super Admin.']);
+        }
+
+        if ((int) auth()->user()?->group_id === (int) $group->id) {
+            return back()->withErrors(['group' => 'Không thể xóa vĩnh viễn nhóm quyền mà tài khoản hiện tại đang sử dụng.']);
+        }
+
+        if ($group->users_count > 0) {
+            return back()->withErrors(['group' => 'Không thể xóa vĩnh viễn nhóm quyền đang có người dùng.']);
+        }
+
+        $group->permissions()->detach();
+        $group->forceDelete();
+
+        return redirect()->route('groups.trash')->with('msg', 'Đã xóa vĩnh viễn nhóm quyền thành công.');
     }
 
     public function canManageGroup(?Group $group): bool
@@ -180,7 +224,7 @@ class GroupController extends Controller
             })
             ->groupBy(fn($permission) => $permission->display_module ?: 'other');
 
-        $actionOrder = collect(['manage', 'view', 'create', 'edit', 'update', 'delete', 'soft_delete', 'force_delete', 'publish', 'logs', 'moderate']);
+        $actionOrder = collect(['manage', 'view', 'create', 'edit', 'update', 'payment', 'captcha', 'delete', 'soft_delete', 'restore', 'force_delete', 'publish', 'logs', 'moderate']);
         $derivedActions = $permissions->flatten()
             ->map(fn($permission) => $this->extractActionFromSlug($permission->slug))
             ->unique()
@@ -366,7 +410,8 @@ class GroupController extends Controller
             'create' => 'Thêm',
             'edit' => 'Sửa',
             'update' => 'Cập nhật',
-            'delete' => 'Xóa cũ',
+            'delete' => 'Xóa',
+            'restore' => 'Khôi phục',
             'soft_delete' => 'Xóa mềm',
             'force_delete' => 'Xóa vĩnh viễn',
             'publish' => 'Xuất bản',
@@ -406,3 +451,9 @@ class GroupController extends Controller
         return optional($user->group)->slug === 'super_admin';
     }
 }
+
+
+
+
+
+

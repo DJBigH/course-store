@@ -21,7 +21,7 @@ class LimitDeviceLogin
         if (Auth::guard('students')->check()) {
 
             $studentId = Auth::guard('students')->id();
-            $maxDevices = config('auth.max_devices', 1);
+            $maxDevices = (int) setting('max_devices', config('auth.max_devices', 1));
 
             $sessions = DB::table('sessions')
                 ->where('user_id', $studentId)

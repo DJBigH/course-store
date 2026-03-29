@@ -2,6 +2,19 @@
 
 use Illuminate\Support\Facades\Route;
 
+Route::prefix('admin')->group(function () {
+   Route::prefix('chatbot-knowledge')->name('chatbot-knowledge.')->group(function () {
+      Route::get('/', 'ChatbotKnowledgeController@index')->middleware('permission:chatbot.view,chatbot.create,chatbot.edit,chatbot.delete,chatbot.logs')->name('index');
+      Route::get('/create', 'ChatbotKnowledgeController@create')->middleware('permission:chatbot.create')->name('add');
+      Route::post('/create', 'ChatbotKnowledgeController@store')->middleware('permission:chatbot.create')->name('store');
+      Route::get('/edit/{id}', 'ChatbotKnowledgeController@edit')->middleware('permission:chatbot.edit')->name('edit');
+      Route::post('/edit/{id}', 'ChatbotKnowledgeController@update')->middleware('permission:chatbot.edit')->name('update');
+      Route::delete('/delete/{id}', 'ChatbotKnowledgeController@destroy')->middleware('permission:chatbot.delete')->name('delete');
+      Route::get('/unresolved', 'ChatbotKnowledgeController@unresolved')->middleware('permission:chatbot.logs')->name('unresolved');
+      Route::post('/unresolved/{id}/status', 'ChatbotKnowledgeController@updateUnresolvedStatus')->middleware('permission:chatbot.logs')->name('unresolved.status');
+   });
+});
+
 Route::get('/', function () {
    $locale = session('locale');
 

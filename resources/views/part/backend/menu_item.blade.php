@@ -6,7 +6,7 @@
     data-bs-target="#collapse{{ $name }}" aria-expanded="{{ $isExpanded ? 'true' : 'false' }}"
     aria-controls="collapse{{ $name }}">
     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
-    {{ $title }}
+    <span class="sidebar-link-label">{{ $title }}</span>
     <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
 </a>
 
@@ -18,14 +18,15 @@
 
         @if (Route::has($name . '.index'))
             <a class="nav-link {{ activeMenu($name . '.index') ? 'active' : '' }}" href="{{ route($name . '.index') }}">
-                Danh sách
+                <span class="sidebar-link-label">Danh sách</span>
             </a>
         @endif
 
         @if (Route::has($name . '.add'))
             <a class="nav-link {{ activeMenu($name . '.add') ? 'active' : '' }}" href="{{ route($name . '.add') }}">
-                Thêm mới
+                <span class="sidebar-link-label">Thêm mới</span>
             </a>
         @endif
     </nav>
 </div>
+

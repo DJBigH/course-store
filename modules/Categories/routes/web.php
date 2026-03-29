@@ -13,7 +13,7 @@ Route::prefix('admin')->group(function () {
     Route::post('/trash/bulk', 'CategoriesController@trashBulkAction')->middleware('permission:categories.delete,categories.soft_delete,categories.force_delete')->name('trash.bulk');
     Route::get('/create', 'CategoriesController@create')->middleware('permission:categories.create')->name('add');
     Route::post('/create', 'CategoriesController@store')->middleware('permission:categories.create')->name('post-add');
-    Route::post('/restore/{category}', 'CategoriesController@restore')->middleware('permission:categories.delete,categories.soft_delete')->name('restore');
+    Route::post('/restore/{category}', 'CategoriesController@restore')->middleware('permission:categories.restore,categories.delete,categories.soft_delete')->name('restore');
     Route::delete('/force-delete/{category}', 'CategoriesController@forceDelete')->middleware('permission:categories.force_delete')->name('force-delete');
     Route::get('/edit/{category}', 'CategoriesController@edit')->middleware('permission:categories.edit')->name('edit');
     Route::post('/edit/{category}', 'CategoriesController@update')->middleware('permission:categories.edit')->name('post-edit');

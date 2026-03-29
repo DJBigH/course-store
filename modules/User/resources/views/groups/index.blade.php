@@ -13,6 +13,10 @@
                     <p class="text-muted mb-0">Quản lý vai trò nội bộ và mở nhanh màn gán quyền cho từng nhóm.</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ route('groups.trash') }}" class="btn btn-light border">
+                        <i class="fa-solid fa-trash-can me-2"></i>
+                        Thùng rác
+                    </a>
                     @if (auth()->user()?->hasPermission('permissions.manage'))
                         <form action="{{ route('groups.sync-permissions') }}" method="post" class="d-inline-block">
                             @csrf

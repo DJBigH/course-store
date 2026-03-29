@@ -25,6 +25,7 @@ return [
         'choose_payment_method' => 'Choose Payment Method',
         'qr_transfer' => 'QR Bank Transfer',
         'maintenance' => 'Under Maintenance',
+        'payment_under_maintenance' => ':gateway is currently under maintenance.',
         'bank_transfer' => 'Bank Transfer Payment',
         'bank_name' => 'Bank',
         'bank_account' => 'Account Number',

@@ -26,6 +26,18 @@ class PermissionController extends Controller
         return view('user::permissions.index', compact('pageTitle', 'permissions', 'stats'));
     }
 
+    public function trash()
+    {
+        $pageTitle = 'Thùng rác quyền';
+        $permissions = Permission::query()
+            ->onlyTrashed()
+            ->withCount('groups')
+            ->orderByDesc('deleted_at')
+            ->paginate(30);
+
+        return view('user::permissions.trash', compact('pageTitle', 'permissions'));
+    }
+
     public function create()
     {
         $pageTitle = 'Thêm quyền';
@@ -82,5 +94,26 @@ class PermissionController extends Controller
         $permission->delete();
 
         return redirect()->route('permissions.index')->with('msg', 'Đã xóa quyền thành công.');
+    }
+    public function restore($permission)
+    {
+        $permission = Permission::query()->onlyTrashed()->findOrFail($permission);
+        $permission->restore();
+
+        return redirect()->route('permissions.trash')->with('msg', 'Đã khôi phục quyền thành công.');
+    }
+
+    public function forceDelete($permission)
+    {
+        $permission = Permission::query()->onlyTrashed()->withCount('groups')->findOrFail($permission);
+
+        if ($permission->groups_count > 0) {
+            return back()->with('msg_danger', 'Không thể xóa vĩnh viễn quyền đang được gán cho nhóm quyền.');
+        }
+
+        $permission->groups()->detach();
+        $permission->forceDelete();
+
+        return redirect()->route('permissions.trash')->with('msg', 'Đã xóa vĩnh viễn quyền thành công.');
     }
 }

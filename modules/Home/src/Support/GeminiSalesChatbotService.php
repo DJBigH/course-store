@@ -10,7 +10,9 @@ class GeminiSalesChatbotService
 {
     public function isEnabled(): bool
     {
-        return filled(config('services.gemini.api_key'));
+        return (int) setting('chatbot_widget_enabled', '1') === 1
+            && (int) setting('chatbot_enabled', '1') === 1
+            && filled(config('services.gemini.api_key'));
     }
 
     public function reply(string $message, string $context): array
@@ -25,6 +27,7 @@ class GeminiSalesChatbotService
         $model = config('services.gemini.model', 'gemini-flash-latest');
         $endpointTemplate = config('services.gemini.endpoint', 'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent');
         $endpoint = sprintf($endpointTemplate, $model);
+        $timeout = max(1, (int) config('services.gemini.timeout', 12));
 
         $prompt = implode("\n\n", [
             'Bạn là trợ lý bán hàng cho website khóa học BigK Udemy.',
@@ -39,7 +42,7 @@ class GeminiSalesChatbotService
         ]);
 
         try {
-            $response = Http::timeout((int) config('services.gemini.timeout', 12))
+            $response = Http::timeout($timeout)
                 ->acceptJson()
                 ->post($endpoint . '?key=' . config('services.gemini.api_key'), [
                     'contents' => [
@@ -86,3 +89,6 @@ class GeminiSalesChatbotService
         ];
     }
 }
+
+
+

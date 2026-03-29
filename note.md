@@ -456,10 +456,15 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check lại mã giảm giá ( Done )
 - Thêm phần quản lý học viên xem học viên đã bật 2FA chưa ( Done )
 - Làm bên admin bảo mật hơn ( Done )
-- Trong config thêm cái kiểm soát momo, vnpay, captcha
-- Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không)
-- Config gắn token hay api của bot telegram nếu đẩy lên production ( Hiện tại hướng dùng con botfather trên tele để thây tất cả thông tin ) làm chuẩn chỉ vì khi đẩy lên lại phải vào fix lại và có cách nào test được mình ở local mà test được nó kết nối được chưa không
+- Trong config thêm cái kiểm soát momo, vnpay, captcha ( Done )
+- Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không) ( Done )
+- Check xem còn thiếu config nào không ( Done hiện tại 29-03-2026 có thể thấy cần j thêm sau khi test case)
+- Trong config chatbot xem có cách nào train được con bot thẳng trên website quản trị không ko được thì thôi ( Bỏ )
+- Check lại xem có thiếu quyền nào không, có quyền nào bị trùng nhau ko ( quyền trong nhóm cấu hình )
+- Cái seed group thì tạo super admin và admin ( Done )
 - Thêm chức năng light mode/ dark mode
+- check lại cái log xem có thiếu j không
+- Đổi Chỉnh sửa lại log và với tên log thì sẽ là tên ( quyền hạn kiểu: bigk(super-admin), còn không có quyên là học viên)
 - Check lại responsive
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )

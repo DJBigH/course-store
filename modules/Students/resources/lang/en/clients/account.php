@@ -256,6 +256,7 @@ return [
         'already_disabled' => 'Email two-factor authentication is already disabled.',
         'enabled_success' => 'Email two-factor authentication has been enabled successfully.',
         'disabled_success' => 'Email two-factor authentication has been disabled successfully.',
+        'mail_disabled' => 'Email authentication is temporarily under maintenance. Please try again later.',
         'reauth_required' => 'Please verify the email code again before continuing this action.',
         'reauth_success' => 'Verification successful. You can continue now.',
         'login_success' => 'Verification successful. You are now signed in.',

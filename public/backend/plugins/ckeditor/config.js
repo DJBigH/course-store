@@ -7,8 +7,12 @@ CKEDITOR.editorConfig = function( config ) {
 	// Define changes to default configuration here. For example:
 	// config.language = 'fr';
 	// config.uiColor = '#AADC6E';
-			config.filebrowserImageBrowseUrl='/filemanager?type=Images',
-            config.filebrowserImageUploadUrl='/filemanager/upload?type=Images&_token=',
-            config.filebrowserBrowseUrl='/filemanager?type=Files',
-            config.filebrowserUploadUrl='/filemanager/upload?type=Files&_token='
+	config.filebrowserImageBrowseUrl = '/filemanager?type=Images';
+	config.filebrowserImageUploadUrl = '/filemanager/upload?type=Images&_token=';
+	config.filebrowserBrowseUrl = '/filemanager?type=Files';
+	config.filebrowserUploadUrl = '/filemanager/upload?type=Files&_token=';
+
+	// The current project does not configure CKEditor Cloud Services export PDF
+	// or clipboard image uploads, so disable these plugins to avoid warnings.
+	config.removePlugins = 'exportpdf,uploadimage';
 };

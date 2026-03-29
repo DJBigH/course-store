@@ -16,4 +16,5 @@ return [
     'passwords.token' => 'This password reset token is invalid. Please request a new one.',
     'passwords.user' => "We can't find a user with that email address.",
     'mail_throttled' => 'You are requesting emails too quickly. Please try again in :seconds seconds.',
+    'mail_disabled' => 'The email feature is temporarily under maintenance. Please try again later.',
 ];

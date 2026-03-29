@@ -17,7 +17,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/trash/bulk', 'CoursesController@trashBulkAction')->middleware('permission:courses.publish,courses.force_delete')->name('trash.bulk');
       Route::post('/toggle-status/{courses}', 'CoursesController@toggleStatus')->middleware('permission:courses.publish')->name('toggle-status');
       Route::post('/duplicate/{courses}', 'CoursesController@duplicate')->middleware('permission:courses.edit')->name('duplicate');
-      Route::post('/restore/{courses}', 'CoursesController@restore')->middleware('permission:courses.publish')->name('restore');
+      Route::post('/restore/{courses}', 'CoursesController@restore')->middleware('permission:courses.restore,courses.publish')->name('restore');
       Route::delete('/force-delete/{courses}', 'CoursesController@forceDelete')->middleware('permission:courses.force_delete')->name('force-delete');
       Route::get('/edit/{courses}', 'CoursesController@edit')->middleware('permission:courses.edit')->name('edit');
       Route::post('/edit/{courses}', 'CoursesController@update')->middleware('permission:courses.edit')->name('post-edit');

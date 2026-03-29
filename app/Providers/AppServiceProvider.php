@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\SystemMailManager;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -18,8 +19,10 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-    public function boot(): void
+    public function boot(SystemMailManager $systemMailManager): void
     {
+        $systemMailManager->apply();
+
         VerifyEmail::createUrlUsing(function ($notifiable) {
             return URL::temporarySignedRoute(
                 'verification.verify',

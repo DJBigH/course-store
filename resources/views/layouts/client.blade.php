@@ -87,7 +87,9 @@
         @yield('content')
     </main>
     @include ('part.clients.footer')
-    @include('part.clients.sales-chatbot')
+    @if ((int) setting('chatbot_widget_enabled', '1') === 1)
+        @include('part.clients.sales-chatbot')
+    @endif
     @yield('modals')
     <div class="modal fade" id="modal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -113,3 +115,4 @@
 @yield('scripts')
 
 </html>
+

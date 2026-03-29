@@ -3,6 +3,17 @@
 @section('content')
     @include('part.clients.page_title')
 
+    @php
+        $vnpayEnabled = (int) setting('payment_vnpay_enabled', '1') === 1;
+        $momoEnabled = (int) setting('payment_momo_enabled', '0') === 1;
+        $bankTransferBankName = setting('bank_transfer_bank_name', 'Techcombank');
+        $bankTransferBankBin = setting('bank_transfer_bank_bin', 'techcombank');
+        $bankTransferAccountNumber = setting('bank_transfer_account_number', '61043040524');
+        $bankTransferAccountName = setting('bank_transfer_account_name', __('students::clients/checkout.checkout.bank_account_name_bank'));
+        $bankTransferNotePrefix = trim((string) setting('bank_transfer_note_prefix', __('students::clients/checkout.checkout.transfer_note_qr')));
+        $bankTransferNote = trim($bankTransferNotePrefix . ' ' . $order->code);
+    @endphp
+
     <section class="account-page py-5 bg-light checkout-page">
         <div class="container">
             @if (session('msg'))
@@ -153,21 +164,35 @@
                                         </label>
                                     </div>
 
-                                    <div class="form-check mb-2">
+                                    <div class="form-check mb-2 payment-method-option {{ $vnpayEnabled ? '' : 'is-maintenance' }}">
                                         <input class="form-check-input payment-method" type="radio" name="payment_method"
-                                            value="vnpay">
-                                        <img src="{{ asset('clients/assets/vnpay.png') }}" alt="VNPay" style="width: 40px;">
-                                        <label class="form-check-label">VNPay</label>
+                                            value="vnpay" data-enabled="{{ $vnpayEnabled ? 1 : 0 }}"
+                                            data-maintenance-message="{{ __('students::clients/checkout.checkout.payment_under_maintenance', ['gateway' => 'VNPay']) }}">
+                                        <img src="{{ asset('clients/assets/vnpay.png') }}" alt="VNPay"
+                                            style="width: 40px;">
+                                        <label class="form-check-label d-inline-flex align-items-center gap-2">
+                                            <span>VNPay</span>
+                                            @unless ($vnpayEnabled)
+                                                <span class="badge bg-warning text-dark">
+                                                    {{ __('students::clients/checkout.checkout.maintenance') }}
+                                                </span>
+                                            @endunless
+                                        </label>
                                     </div>
 
-                                    <div class="form-check">
+                                    <div class="form-check payment-method-option {{ $momoEnabled ? '' : 'is-maintenance' }}">
                                         <input class="form-check-input payment-method" type="radio" name="payment_method"
-                                            value="momo">
-                                        <img src="{{ asset('clients/assets/momo.png') }}" alt="MoMo" style="width: 30px;">
-                                        <label class="form-check-label">
-                                            MoMo
-                                            <strong
-                                                style="color: red">({{ __('students::clients/checkout.checkout.maintenance') }})</strong>
+                                            value="momo" data-enabled="{{ $momoEnabled ? 1 : 0 }}"
+                                            data-maintenance-message="{{ __('students::clients/checkout.checkout.payment_under_maintenance', ['gateway' => 'MoMo']) }}">
+                                        <img src="{{ asset('clients/assets/momo.png') }}" alt="MoMo"
+                                            style="width: 30px;">
+                                        <label class="form-check-label d-inline-flex align-items-center gap-2">
+                                            <span>MoMo</span>
+                                            @unless ($momoEnabled)
+                                                <span class="badge bg-warning text-dark">
+                                                    {{ __('students::clients/checkout.checkout.maintenance') }}
+                                                </span>
+                                            @endunless
                                         </label>
                                     </div>
                                 </div>
@@ -202,15 +227,15 @@
                                     @include('students::clients.partials.coupons')
                                     <ul class="list-unstyled small mb-3">
                                         <li>🏦 <strong>{{ __('students::clients/checkout.checkout.bank_name') }}:</strong>
-                                            Techcombank</li>
+                                            {{ $bankTransferBankName }}</li>
                                         <li>
                                             🔢 <strong>{{ __('students::clients/checkout.checkout.bank_account') }}:</strong>
-                                            <span class="copy-text" data-copy="61043040524">61043040524</span>
+                                            <span class="copy-text" data-copy="{{ $bankTransferAccountNumber }}">{{ $bankTransferAccountNumber }}</span>
                                             <i class="bank-copy fa-regular fa-copy"></i>
                                         </li>
                                         <li>👤
                                             <strong>{{ __('students::clients/checkout.checkout.bank_account_name') }}:</strong>
-                                            {{ __('students::clients/checkout.checkout.bank_account_name_bank') }}
+                                            {{ $bankTransferAccountName }}
                                         </li>
                                         <li>💰 <strong>{{ __('students::clients/checkout.checkout.amount') }}:</strong>
                                             <span class="text-danger fw-bold total_value">{{ moneyLocale($payableAmount) }}</span>
@@ -219,9 +244,8 @@
                                             📝
                                             <strong>{{ __('students::clients/checkout.checkout.transfer_content') }}:</strong>
                                             <span class="copy-text"
-                                                data-copy="{{ __('students::clients/checkout.checkout.transfer_note_qr') }} {{ $order->code }}">
-                                                {{ __('students::clients/checkout.checkout.transfer_note_qr') }}
-                                                {{ $order->code }}
+                                                data-copy="{{ $bankTransferNote }}">
+                                                {{ $bankTransferNote }}
                                             </span>
                                             <i class="bank-copy fa-regular fa-copy"></i>
                                         </li>
@@ -230,7 +254,7 @@
                                     <div class="text-center my-4">
                                         <div class="border rounded-3 p-3 bg-light d-inline-block checkout-qr-card">
                                             <img id="vietqr-img"
-                                                src="https://img.vietqr.io/image/techcombank-61043040524-compact2.jpg?amount={{ $payableAmount }}&addInfo={{ rawurlencode(__('students::clients/checkout.checkout.transfer_note_qr') . ' ' . $order->code) }}"
+                                                src="https://img.vietqr.io/image/{{ $bankTransferBankBin }}-{{ $bankTransferAccountNumber }}-compact2.jpg?amount={{ $payableAmount }}&addInfo={{ rawurlencode($bankTransferNote) }}"
                                                 class="img-fluid mb-2 qr-image" style="max-width: 220px" alt="VietQR">
                                             <div>
                                                 <button type="button" class="btn btn-outline-primary btn-sm download-qr">
@@ -274,35 +298,39 @@
                                     @endif
                                 </div>
 
-                                <div id="payment-vnpay" class="d-none">
-                                    @include('students::clients.partials.coupons')
-                                    <p class="text-muted small">
-                                        {{ __('students::clients/checkout.checkout.vnpay_notice') }}
-                                    </p>
+                                @if ($vnpayEnabled)
+                                    <div id="payment-vnpay" class="d-none">
+                                        @include('students::clients.partials.coupons')
+                                        <p class="text-muted small">
+                                            {{ __('students::clients/checkout.checkout.vnpay_notice') }}
+                                        </p>
 
-                                    <form method="POST"
-                                        action="{{ route('students.account.checkout-vnpay', ['locale' => app()->getLocale(), 'id' => $order->id]) }}">
-                                        @csrf
-                                        <button class="btn btn-primary w-100">
-                                            {{ __('students::clients/checkout.checkout.pay_with_vnpay') }}
-                                        </button>
-                                    </form>
-                                </div>
+                                        <form method="POST"
+                                            action="{{ route('students.account.checkout-vnpay', ['locale' => app()->getLocale(), 'id' => $order->id]) }}">
+                                            @csrf
+                                            <button class="btn btn-primary w-100">
+                                                {{ __('students::clients/checkout.checkout.pay_with_vnpay') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
 
-                                <div id="payment-momo" class="d-none">
-                                    @include('students::clients.partials.coupons')
-                                    <p class="text-muted small">
-                                        {{ __('students::clients/checkout.checkout.momo_notice') }}
-                                    </p>
+                                @if ($momoEnabled)
+                                    <div id="payment-momo" class="d-none">
+                                        @include('students::clients.partials.coupons')
+                                        <p class="text-muted small">
+                                            {{ __('students::clients/checkout.checkout.momo_notice') }}
+                                        </p>
 
-                                    <form method="POST"
-                                        action="{{ route('students.account.checkout-momo', ['locale' => app()->getLocale(), 'id' => $order->id]) }}">
-                                        @csrf
-                                        <button class="btn btn-danger w-100">
-                                            {{ __('students::clients/checkout.checkout.pay_with_momo') }}
-                                        </button>
-                                    </form>
-                                </div>
+                                        <form method="POST"
+                                            action="{{ route('students.account.checkout-momo', ['locale' => app()->getLocale(), 'id' => $order->id]) }}">
+                                            @csrf
+                                            <button class="btn btn-danger w-100">
+                                                {{ __('students::clients/checkout.checkout.pay_with_momo') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -356,6 +384,14 @@
 
         .checkout-summary-label {
             width: 30%;
+        }
+
+        .payment-method-option.is-maintenance {
+            opacity: 0.8;
+        }
+
+        .payment-method-option .form-check-label {
+            cursor: pointer;
         }
 
         @media (max-width: 991.98px) {
@@ -497,21 +533,37 @@
 
 @section('scripts')
     <script>
-        document.querySelectorAll('.payment-method').forEach(el => {
-            el.addEventListener('change', function() {
-                document.getElementById('payment-bank')?.classList.add('d-none');
-                document.getElementById('payment-vnpay')?.classList.add('d-none');
-                document.getElementById('payment-momo')?.classList.add('d-none');
+        const paymentMethods = document.querySelectorAll('.payment-method');
+        const bankMethod = document.querySelector('.payment-method[value="bank"]');
 
-                if (this.value === 'bank') {
-                    document.getElementById('payment-bank')?.classList.remove('d-none');
+        function showPaymentSection(method) {
+            document.getElementById('payment-bank')?.classList.add('d-none');
+            document.getElementById('payment-vnpay')?.classList.add('d-none');
+            document.getElementById('payment-momo')?.classList.add('d-none');
+
+            if (method === 'bank') {
+                document.getElementById('payment-bank')?.classList.remove('d-none');
+            }
+            if (method === 'vnpay') {
+                document.getElementById('payment-vnpay')?.classList.remove('d-none');
+            }
+            if (method === 'momo') {
+                document.getElementById('payment-momo')?.classList.remove('d-none');
+            }
+        }
+
+        paymentMethods.forEach(el => {
+            el.addEventListener('change', function() {
+                if (this.dataset.enabled === '0') {
+                    alert(this.dataset.maintenanceMessage);
+                    if (bankMethod) {
+                        bankMethod.checked = true;
+                    }
+                    showPaymentSection('bank');
+                    return;
                 }
-                if (this.value === 'vnpay') {
-                    document.getElementById('payment-vnpay')?.classList.remove('d-none');
-                }
-                if (this.value === 'momo') {
-                    document.getElementById('payment-momo')?.classList.remove('d-none');
-                }
+
+                showPaymentSection(this.value);
             });
         });
     </script>

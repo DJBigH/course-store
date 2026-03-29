@@ -25,6 +25,7 @@ return [
         'choose_payment_method' => 'Chọn hình thức thanh toán',
         'qr_transfer' => 'Chuyển khoản QR',
         'maintenance' => 'Bảo trì',
+        'payment_under_maintenance' => ':gateway đang được bảo trì.',
         'bank_transfer' => 'Thanh toán chuyển khoản',
         'bank_name' => 'Ngân hàng',
         'bank_account' => 'STK',
@@ -74,3 +75,4 @@ return [
         'apply' => 'Áp dụng',
     ],
 ];
+
