@@ -9,6 +9,7 @@
 
         .permission-builder__actions {
             min-width: min(100%, 320px);
+            display: none;
         }
 
         .preset-panel {
@@ -182,9 +183,117 @@
             margin-bottom: 0.35rem;
         }
 
+        html[data-theme='dark'] .preset-panel,
+        html[data-theme='dark'] .permission-matrix,
+        html[data-theme='dark'] .permission-module,
+        html[data-theme='dark'] .permission-builder__aside {
+            border-color: rgba(148, 163, 184, 0.18);
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 24, 39, 0.92) 100%);
+            box-shadow: 0 18px 36px rgba(2, 6, 23, 0.24);
+        }
+
+        html[data-theme='dark'] .permission-builder__admin-state {
+            border-color: rgba(148, 163, 184, 0.24);
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.92) 100%);
+            color: #cbd5e1;
+        }
+
+        html[data-theme='dark'] .permission-card {
+            border-color: rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.88);
+            color: #e2e8f0;
+        }
+
+        html[data-theme='dark'] .permission-card__body small,
+        html[data-theme='dark'] .preset-panel .text-muted,
+        html[data-theme='dark'] .permission-matrix .text-muted,
+        html[data-theme='dark'] .permission-builder__aside .text-muted {
+            color: #94a3b8 !important;
+        }
+
+        html[data-theme='dark'] .permission-matrix__table {
+            color: #e2e8f0;
+        }
+
+        html[data-theme='dark'] .permission-matrix__table thead th {
+            color: #cbd5e1;
+            border-bottom-color: rgba(148, 163, 184, 0.2);
+            background: rgba(30, 41, 59, 0.72);
+        }
+
+        html[data-theme='dark'] .permission-matrix__table td {
+            border-color: rgba(148, 163, 184, 0.14);
+        }
+
+        html[data-theme='dark'] .permission-matrix__toggle {
+            border-color: #dbe4f0;
+            background: #ffffff;
+            color: #475569;
+            box-shadow: none;
+        }
+
+        html[data-theme='dark'] .permission-matrix__toggle.is-active {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            color: #ffffff;
+            box-shadow: none;
+        }
+
         .permission-item.is-hidden,
         .permission-module.is-hidden {
             display: none;
+        }
+
+        html[data-theme='dark'] .permission-matrix__toggle:hover,
+        html[data-theme='dark'] .preset-role-trigger:hover,
+        html[data-theme='dark'] #select-all-permissions:hover,
+        html[data-theme='dark'] #clear-all-permissions:hover,
+        html[data-theme='dark'] .permission-matrix__collapse-toggle:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        html[data-theme='dark'] .permission-matrix__toggle.is-partial {
+            background: rgba(124, 45, 18, 0.28);
+            border-color: rgba(251, 146, 60, 0.62);
+            color: #fdba74;
+        }
+
+        html[data-theme='dark'] .permission-matrix__toggle:disabled,
+        html[data-theme='dark'] .permission-matrix__toggle[disabled] {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(203, 213, 225, 0.18);
+            color: rgba(226, 232, 240, 0.35);
+            box-shadow: none;
+            opacity: 1;
+        }
+
+        html[data-theme='dark'] .permission-summary {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid rgba(96, 165, 250, 0.14);
+        }
+
+        html[data-theme='dark'] .permission-summary__number {
+            color: #60a5fa;
+        }
+
+        html[data-theme='dark'] .preset-role-trigger,
+        html[data-theme='dark'] #select-all-permissions,
+        html[data-theme='dark'] #clear-all-permissions,
+        html[data-theme='dark'] .permission-matrix__collapse-toggle {
+            border-color: rgba(148, 163, 184, 0.22) !important;
+            background: rgba(15, 23, 42, 0.84) !important;
+            color: #e2e8f0 !important;
+        }
+
+        html[data-theme='dark'] .preset-panel h6,
+        html[data-theme='dark'] .permission-matrix h6,
+        html[data-theme='dark'] .permission-builder__aside h6,
+        html[data-theme='dark'] .permission-matrix__table .fw-semibold,
+        html[data-theme='dark'] .permission-matrix__table td,
+        html[data-theme='dark'] .permission-matrix__table th {
+            color: #e2e8f0;
         }
 
         @keyframes fadeInUp {
@@ -196,6 +305,51 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1199.98px) {
+            .permission-builder__aside {
+                position: static;
+                top: auto;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .permission-builder .row.p-4,
+            .permission-builder .row.px-4.pb-4 {
+                --bs-gutter-x: 1rem;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+
+            .permission-builder__header {
+                align-items: stretch;
+            }
+
+            .preset-panel,
+            .permission-matrix,
+            .permission-module,
+            .permission-builder__aside {
+                padding: 1rem;
+                border-radius: 18px;
+            }
+
+            .permission-matrix__header {
+                align-items: stretch;
+            }
+
+            .permission-matrix__collapse-toggle,
+            .preset-role-trigger,
+            #select-all-permissions,
+            #clear-all-permissions,
+            .admin-form__footer .btn {
+                width: 100%;
+            }
+
+            .permission-matrix__toggle {
+                min-width: 76px;
+                padding-inline: 0.75rem;
             }
         }
     </style>

@@ -9,8 +9,7 @@
                     <p class="text-muted mb-0">Quản lý ưu đãi, điều kiện áp dụng, số lượng còn lại và lịch sử gắn mã.</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    @if (auth()->user()
-                            ?->canAnyPermission(['coupons.soft_delete', 'coupons.delete', 'coupons.force_delete']))
+                    @if (auth()->user()?->canAnyPermission(['coupons.soft_delete', 'coupons.delete', 'coupons.force_delete']))
                         <a href="{{ route('coupons.trash') }}" class="btn btn-light border">
                             <i class="fa-solid fa-trash-can me-2"></i>
                             Thùng rác
@@ -35,8 +34,7 @@
                 <div class="alert alert-danger border-0 rounded-4">{{ $errors->first('bulk_action') }}</div>
             @endif
 
-            @if (auth()->user()
-                    ?->canAnyPermission(['coupons.edit', 'coupons.soft_delete', 'coupons.delete']))
+            @if (auth()->user()?->canAnyPermission(['coupons.edit', 'coupons.soft_delete', 'coupons.delete']))
                 <form id="bulk-action-form" action="{{ route('coupons.bulk') }}" method="POST" class="mb-4">
                     @csrf
                     <input type="hidden" name="selected_ids" id="selected-ids">
@@ -44,15 +42,14 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-count">0</span> Mã giảm giá được chọn
+                            <span id="selected-count">0</span> mã giảm giá được chọn
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @if (auth()->user()?->hasPermission('coupons.edit'))
                                 <button type="button" class="btn btn-outline-secondary bulk-action-trigger"
                                     data-action="duplicate">Nhân bản</button>
                             @endif
-                            @if (auth()->user()
-                                    ?->canAnyPermission(['coupons.soft_delete', 'coupons.delete']))
+                            @if (auth()->user()?->canAnyPermission(['coupons.soft_delete', 'coupons.delete']))
                                 <button type="button" class="btn btn-outline-danger bulk-action-trigger"
                                     data-action="delete">Xóa</button>
                             @endif
@@ -71,6 +68,7 @@
                             <th>Mã</th>
                             <th>Loại giảm</th>
                             <th>Giá trị</th>
+                            <th>Cách dùng</th>
                             <th>Số lượng</th>
                             <th>Thời gian</th>
                             <th>Tối thiểu</th>
@@ -106,6 +104,15 @@
             font-weight: 600;
             color: #334155;
         }
+
+        html[data-theme='dark'] .bulk-toolbar {
+            background: rgba(15, 23, 42, 0.88);
+            border-color: rgba(148, 163, 184, 0.18);
+        }
+
+        html[data-theme='dark'] .bulk-toolbar__summary {
+            color: #e2e8f0;
+        }
     </style>
 @endsection
 
@@ -134,6 +141,9 @@
                     },
                     {
                         data: 'discount_value'
+                    },
+                    {
+                        data: 'usage_mode'
                     },
                     {
                         data: 'count'

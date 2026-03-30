@@ -72,6 +72,11 @@ class CouponController extends Controller
 
                 return '';
             })
+            ->addColumn('usage_mode', function ($coupon) {
+                return $coupon->per_student_once
+                    ? '<span class="badge bg-warning text-dark">1 lần / học viên</span>'
+                    : '<span class="badge bg-secondary">Nhiều lần</span>';
+            })
             ->addColumn('count', function ($coupon) {
                 if (empty($coupon->count)) {
                     return '<span class="badge bg-secondary">Không giới hạn</span>';
@@ -125,7 +130,7 @@ class CouponController extends Controller
                     </a>
                 ';
             })
-            ->rawColumns(['select', 'edit', 'delete', 'discount_type', 'discount_value', 'time', 'bindings', 'count', 'logs'])
+            ->rawColumns(['select', 'edit', 'delete', 'discount_type', 'discount_value', 'usage_mode', 'time', 'bindings', 'count', 'logs'])
             ->make(true);
     }
 
@@ -228,6 +233,11 @@ class CouponController extends Controller
 
                 return '';
             })
+            ->addColumn('usage_mode', function ($coupon) {
+                return $coupon->per_student_once
+                    ? '<span class="badge bg-warning text-dark">1 lần / học viên</span>'
+                    : '<span class="badge bg-secondary">Nhiều lần</span>';
+            })
             ->addColumn('deleted_at', fn($coupon) => Carbon::parse($coupon->deleted_at)->format('d/m/Y H:i:s'))
             ->addColumn('restore', function ($coupon) use ($canRestore) {
                 if (!$canRestore) {
@@ -250,7 +260,7 @@ class CouponController extends Controller
                     . '<button type="submit" class="btn btn-outline-danger btn-sm">Xóa vĩnh viễn</button>'
                     . '</form>';
             })
-            ->rawColumns(['select', 'discount_type', 'discount_value', 'restore', 'force_delete'])
+            ->rawColumns(['select', 'discount_type', 'discount_value', 'usage_mode', 'restore', 'force_delete'])
             ->toJson();
     }
 
@@ -277,7 +287,16 @@ class CouponController extends Controller
 
         if ($action === 'restore') {
             foreach ($coupons as $coupon) {
+                $snapshot = $coupon->toArray();
                 $coupon->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $coupon,
+                    properties: ['data' => $snapshot],
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục mã giảm giá'
+                );
             }
 
             return back()->with('msg', 'Đã khôi phục ' . $coupons->count() . ' mã giảm giá.');
@@ -285,9 +304,18 @@ class CouponController extends Controller
 
         if ($action === 'force_delete') {
             foreach ($coupons as $coupon) {
+                $snapshot = $coupon->toArray();
                 $coupon->students()->detach();
                 $coupon->courses()->detach();
                 $coupon->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $coupon,
+                    properties: ['data' => $snapshot],
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn mã giảm giá'
+                );
             }
 
             return back()->with('msg', 'Đã xóa vĩnh viễn ' . $coupons->count() . ' mã giảm giá.');
@@ -304,7 +332,7 @@ class CouponController extends Controller
 
     public function store(CouponRequest $request)
     {
-        $data = $request->except(['_token']);
+        $data = $request->validated();
 
         $coupon = $this->couponRepository->create($data);
         if (!$coupon) {
@@ -338,7 +366,7 @@ class CouponController extends Controller
         }
 
         $old = $coupon->toArray();
-        $data = $request->except(['_token']);
+        $data = $request->validated();
         $this->couponRepository->update($id, $data);
 
         $fresh = $this->couponRepository->find($id);
@@ -387,7 +415,16 @@ class CouponController extends Controller
             abort(404);
         }
 
+        $snapshot = $coupon->toArray();
         $coupon->restore();
+
+        activity_log(
+            action: 'restore',
+            subject: $coupon,
+            properties: ['data' => $snapshot],
+            logName: 'Khôi phục',
+            description: 'Khôi phục mã giảm giá'
+        );
 
         return back()->with('msg', 'Khôi phục mã giảm giá thành công.');
     }
@@ -400,9 +437,18 @@ class CouponController extends Controller
             abort(404);
         }
 
+        $snapshot = $coupon->toArray();
         $coupon->students()->detach();
         $coupon->courses()->detach();
         $coupon->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $coupon,
+            properties: ['data' => $snapshot],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn mã giảm giá'
+        );
 
         return back()->with('msg', 'Đã xóa vĩnh viễn mã giảm giá.');
     }
@@ -521,7 +567,7 @@ class CouponController extends Controller
                         'email' => $s->email,
                     ])->values()->all(),
                 ],
-                logName: 'Hủy mã',
+                logName: 'Hủy gán mã',
                 description: 'Hủy gán mã khỏi học viên'
             );
 
@@ -534,7 +580,7 @@ class CouponController extends Controller
                         'coupon_code' => $coupon->code ?? $coupon->name ?? null,
                         'coupon_name' => $coupon->name ?? null,
                     ],
-                    logName: 'Hủy mã',
+                    logName: 'Hủy gán mã',
                     description: 'Bị hủy mã giảm giá'
                 );
             }
@@ -599,7 +645,17 @@ class CouponController extends Controller
             activity_log(
                 action: 'assign_courses',
                 subject: $coupon,
-                properties: ['course_ids' => $attachedCourseIds],
+                properties: [
+                    'coupon_id' => $coupon->id,
+                    'coupon_code' => $coupon->code ?? null,
+                    'courses' => Courses::select('id', 'name')
+                        ->whereIn('id', $attachedCourseIds)
+                        ->get()
+                        ->map(fn($course) => [
+                            'id' => $course->id,
+                            'name' => $course->name,
+                        ])->values()->all(),
+                ],
                 logName: 'Gán mã',
                 description: 'Gán mã cho khóa học'
             );
@@ -609,9 +665,19 @@ class CouponController extends Controller
             activity_log(
                 action: 'revoke_courses',
                 subject: $coupon,
-                properties: ['course_ids' => $detachedCourseIds],
+                properties: [
+                    'coupon_id' => $coupon->id,
+                    'coupon_code' => $coupon->code ?? null,
+                    'courses' => Courses::select('id', 'name')
+                        ->whereIn('id', $detachedCourseIds)
+                        ->get()
+                        ->map(fn($course) => [
+                            'id' => $course->id,
+                            'name' => $course->name,
+                        ])->values()->all(),
+                ],
                 logName: 'Hủy gán mã',
-                description: 'Hủy mã khỏi khóa học'
+                description: 'Hủy gán mã khỏi khóa học'
             );
         }
 
@@ -642,21 +708,25 @@ class CouponController extends Controller
         $pageTitle = __('coupons::clients/common.pageName');
         $pageName = __('coupons::clients/common.pageName');
         $student = Auth::guard('students')->user();
+        $studentId = $student?->id;
 
         $myCoupons = $student
             ? $student->coupons()
-                ->active()
-                ->paginate(config('paginate.mycoupon_limit'), ['*'], 'my_page')
+            ->active()
+            ->visibleForStudent($studentId)
+            ->paginate(config('paginate.mycoupon_limit'), ['*'], 'my_page')
             : null;
 
         $courseCoupons = Coupons::query()
             ->active()
+            ->visibleForStudent($studentId)
             ->whereHas('courses')
             ->with('courses')
             ->paginate(config('paginate.mycoupon_limit'), ['*'], 'course_page');
 
         $publicCoupons = Coupons::query()
             ->active()
+            ->visibleForStudent($studentId)
             ->whereDoesntHave('students')
             ->whereDoesntHave('courses')
             ->paginate(config('paginate.mycoupon_limit'), ['*'], 'public_page');

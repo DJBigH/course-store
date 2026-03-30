@@ -5,6 +5,7 @@ namespace Modules\Lessons\src\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
 use Modules\Document\src\Models\Document;
@@ -12,7 +13,7 @@ use Modules\Video\src\Models\Video;
 
 class Lesson extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'lessons';
     protected $fillable = [
@@ -43,6 +44,10 @@ class Lesson extends Model
     ];
 
     protected $with = ['video', 'document'];
+
+    protected $casts = [
+        'deleted_at' => 'datetime',
+    ];
 
     public function children()
     {

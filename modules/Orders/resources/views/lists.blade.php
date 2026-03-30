@@ -110,6 +110,15 @@
             font-weight: 600;
             color: #334155;
         }
+
+        html[data-theme='dark'] .bulk-toolbar {
+            background: rgba(15, 23, 42, 0.88);
+            border-color: rgba(148, 163, 184, 0.18);
+        }
+
+        html[data-theme='dark'] .bulk-toolbar__summary {
+            color: #e2e8f0;
+        }
     </style>
 @endsection
 

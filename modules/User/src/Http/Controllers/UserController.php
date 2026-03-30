@@ -441,7 +441,28 @@ class UserController extends Controller
         $user = auth()->user();
         $activeAdminSessions = $this->adminSecurityService->activeSessionCount($user);
 
-        return view('user::show', compact('pageTitle', 'user', 'activeAdminSessions'));
+        $loginHistories = ActiveLog::query()
+            ->where('subject_type', get_class($user))
+            ->where('subject_id', $user->id)
+            ->where(function ($query) {
+                $query->where('log_name', 'auth_login')
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('log_name', 'admin_security')
+                            ->whereIn('action', ['two_factor_code_sent', 'login_context_changed']);
+                    });
+            })
+            ->latest()
+            ->limit(8)
+            ->get();
+
+        $actionHistories = ActiveLog::query()
+            ->where('causer_id', $user->id)
+            ->whereNotIn('action', ['login', 'two_factor_code_sent', 'login_context_changed'])
+            ->latest()
+            ->limit(8)
+            ->get();
+
+        return view('user::show', compact('pageTitle', 'user', 'activeAdminSessions', 'loginHistories', 'actionHistories'));
     }
 
     public function showUpdate(UpdateProfileRequest $request)
@@ -450,15 +471,48 @@ class UserController extends Controller
         $data = $request->except('_token', 'password');
         $passwordChanged = $request->filled('password');
         $newPassword = (string) $request->input('password');
+        $oldUser = $this->userRepository->find($userId);
 
         if ($passwordChanged) {
             $data['password'] = bcrypt($newPassword);
         }
 
         $this->userRepository->update($userId, $data);
+        $updatedUser = $this->userRepository->find($userId);
+
+        if ($oldUser && $updatedUser) {
+            $oldSnapshot = $oldUser->toArray();
+            $newSnapshot = $updatedUser->toArray();
+
+            unset($oldSnapshot['password'], $newSnapshot['password']);
+
+            activity_log(
+                action: 'update',
+                subject: $updatedUser,
+                properties: [
+                    'old' => $oldSnapshot,
+                    'new' => $newSnapshot,
+                ],
+                logName: 'Cập nhật hồ sơ admin',
+                description: $passwordChanged
+                    ? 'Cập nhật thông tin cá nhân và đổi mật khẩu admin'
+                    : 'Cập nhật thông tin cá nhân admin'
+            );
+        }
 
         if ($passwordChanged) {
-            $user = $this->userRepository->find($userId);
+            $user = $updatedUser;
+
+            activity_log(
+                action: 'password_changed',
+                subject: $user,
+                properties: [
+                    'changed_at' => now()->toDateTimeString(),
+                ],
+                logName: 'Đổi mật khẩu admin',
+                description: 'Đổi mật khẩu tài khoản admin'
+            );
+
             $this->adminSecurityService->logoutAllSessions($user);
             Auth::logoutOtherDevices($newPassword);
             Auth::guard('web')->logout();

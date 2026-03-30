@@ -460,12 +460,16 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không) ( Done )
 - Check xem còn thiếu config nào không ( Done hiện tại 29-03-2026 có thể thấy cần j thêm sau khi test case)
 - Trong config chatbot xem có cách nào train được con bot thẳng trên website quản trị không ko được thì thôi ( Bỏ )
-- Check lại xem có thiếu quyền nào không, có quyền nào bị trùng nhau ko ( quyền trong nhóm cấu hình )
+- Check lại xem có thiếu quyền nào không, có quyền nào bị trùng nhau ko ( quyền trong nhóm cấu hình ) ( Done )
 - Cái seed group thì tạo super admin và admin ( Done )
-- Thêm chức năng light mode/ dark mode
-- check lại cái log xem có thiếu j không
-- Đổi Chỉnh sửa lại log và với tên log thì sẽ là tên ( quyền hạn kiểu: bigk(super-admin), còn không có quyên là học viên)
-- Check lại responsive
+- Thêm chức năng light mode/ dark mode ( Done )
+- check lại cái log xem có thiếu j không ( Done hiện tại 30-03-2026 có thể thấy cần j thêm sau khi test case )
+- Đổi Chỉnh sửa lại Người thực hiện thì sẽ là tên ( quyền hạn kiểu: bigk(super-admin))
+- Check cái notify thì cần thêm cái j nx ko ( Done )
+- Thêm cái lịch sử đăng nhập, lịch sử thao tác ở bên admin và thêm 1 cái nữa check đăng nhập khác thiếp bị hoặc khác ip sẽ báo lên notify ( không dùng email để gửi, gửi lên log là được) ( Done )
+- Check lại responsive ( Done)
+- Viết seed quyền cho giáo viên
+- Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó))
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -504,7 +508,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không 
 - Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi ) ( Done )
 - Check lại responsive ( Done )
-- Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị
-- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy )
+- Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị ( Done )
+- Check cái notify của học viên xem thiếu hay thừa cái j
+- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký  )
 Tổng kết
 - check lại lần cuối trước khi đẩy lên production

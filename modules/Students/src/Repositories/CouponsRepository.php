@@ -39,6 +39,17 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
             return false;
         }
 
+        if ($coupon->per_student_once) {
+            $alreadyUsed = DB::table('coupons_usage')
+                ->where('coupon_id', $coupon->id)
+                ->where('student_id', $studentId)
+                ->exists();
+
+            if ($alreadyUsed) {
+                return false;
+            }
+        }
+
         // Coupon có giới hạn lượt dùng
         if ($coupon->count) {
 
@@ -98,7 +109,7 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
 
     public function getAllCoupons()
     {
-        return $this->model->with(['usages', 'students', 'courses'])->withCount('usagescoupon')->select('id', 'code', 'discount_type', 'discount_value', 'total_condition', 'count', 'start_date', 'end_date')->latest();
+        return $this->model->with(['usages', 'students', 'courses'])->withCount('usagescoupon')->select('id', 'code', 'discount_type', 'discount_value', 'total_condition', 'count', 'per_student_once', 'start_date', 'end_date')->latest();
     }
 
     public function createCouponsStudent($coupon, $students)

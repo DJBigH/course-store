@@ -73,5 +73,21 @@
         </div>
     </div>
 
-    @include('part.backend.delete')
+@include('part.backend.delete')
+@endsection
+
+@section('stylesheets')
+    <style>
+        html[data-theme="dark"] .bg-light {
+            background: #162033 !important;
+            border-color: #2b3b53 !important;
+            color: #e2e8f0;
+        }
+
+        html[data-theme="dark"] .table tbody th,
+        html[data-theme="dark"] .table tbody td,
+        html[data-theme="dark"] .table tbody a {
+            color: #e2e8f0;
+        }
+    </style>
 @endsection

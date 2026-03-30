@@ -245,8 +245,8 @@ class SettingController extends Controller
                     'old' => $this->formatSettingLogValues(Arr::only($old, $changed), $sensitiveKeys),
                     'new' => $this->formatSettingLogValues(Arr::only($newDb, $changed), $sensitiveKeys),
                 ],
-                logName: 'Cap nhat',
-                description: 'Cap nhat cau hinh website'
+                logName: 'Cập nhập',
+                description: 'Cập nhập cấu hình'
             );
         }
 
@@ -295,7 +295,7 @@ class SettingController extends Controller
         $pageTitle = 'Lịch sử cấu hình website';
 
         $query = ActiveLog::query()
-            ->where('log_name', 'Cập nhật')
+            ->where('action', 'update_settings')
             ->withoutGlobalScopes();
 
         if ($request->filled('action')) {
@@ -391,15 +391,15 @@ class SettingController extends Controller
         }
 
         if (str_starts_with($key, 'global_notice_')) {
-            return 'Thong bao toan website';
+            return 'Thông báo toàn website';
         }
 
         if (str_starts_with($key, 'popup_notice_')) {
-            return 'Popup thong bao';
+            return 'Popup thông báo';
         }
 
         if (str_starts_with($key, 'currency_rate_')) {
-            return 'Ty gia tien te';
+            return 'Tỷ giá tiền tệ';
         }
 
         return ucwords(str_replace('_', ' ', $key));

@@ -14,14 +14,21 @@ class GroupSeeder extends Seeder
                 'id' => 1,
                 'name' => 'Super Admin',
                 'slug' => 'super_admin',
-                'description' => 'Toan quyen quan tri he thong.',
+                'description' => 'Toàn quyền quản trị hệ thống.',
                 'is_admin' => true,
             ],
             [
                 'id' => 2,
                 'name' => 'Admin',
                 'slug' => 'admin',
-                'description' => 'Quan tri vien van hanh he thong.',
+                'description' => 'Quản trị viên vận hành hệ thống.',
+                'is_admin' => true,
+            ],
+            [
+                'id' => 3,
+                'name' => 'Teacher',
+                'slug' => 'teacher',
+                'description' => 'Giáo viên phụ trách nội dung khóa học và bài giảng.',
                 'is_admin' => true,
             ],
         ];

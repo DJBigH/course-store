@@ -97,5 +97,29 @@
             color: #64748b;
             font-size: 0.92rem;
         }
+
+        html[data-theme='dark'] .permission-form__aside {
+            border-color: rgba(148, 163, 184, 0.18);
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 24, 39, 0.92) 100%);
+            box-shadow: 0 18px 36px rgba(2, 6, 23, 0.24);
+        }
+
+        html[data-theme='dark'] .permission-form__aside h6 {
+            color: #e2e8f0;
+        }
+
+        html[data-theme='dark'] .permission-form__tip {
+            background: rgba(15, 23, 42, 0.84);
+            border-color: rgba(148, 163, 184, 0.18);
+        }
+
+        html[data-theme='dark'] .permission-form__tip strong {
+            color: #f8fafc;
+        }
+
+        html[data-theme='dark'] .permission-form__tip span,
+        html[data-theme='dark'] .permission-form__tip code {
+            color: #94a3b8;
+        }
     </style>
 @endsection

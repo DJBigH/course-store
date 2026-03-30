@@ -32,10 +32,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             GroupSeeder::class,
             PermissionSeeder::class,
-            UserSeeder::class,
-            TeacherSeeder::class,
-            OrderStatusSeeder::class,
-            SettingSeeder::class,
+            // UserSeeder::class,
+            // TeacherSeeder::class,
+            // OrderStatusSeeder::class,
+            // SettingSeeder::class,
             // CategoriesSeeder::class,
             // CoursesSeeder::class,
         ]);

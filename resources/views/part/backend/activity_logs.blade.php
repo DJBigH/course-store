@@ -112,6 +112,63 @@
             border-top: 1px dashed #dbe3ec;
             padding-top: .9rem;
         }
+
+        html[data-theme="dark"] .activity-log-summary {
+            background: linear-gradient(180deg, #162033 0%, #111827 100%);
+            border-color: #2b3b53;
+        }
+
+        html[data-theme="dark"] .activity-log-meta,
+        html[data-theme="dark"] .activity-log-topline {
+            color: #9fb0c7;
+        }
+
+        html[data-theme="dark"] .activity-log-detail-box,
+        html[data-theme="dark"] .activity-log-description {
+            background: #162033;
+            border-color: #2b3b53;
+        }
+
+        html[data-theme="dark"] .activity-log-cell-old {
+            background: rgba(245, 158, 11, 0.14);
+            border-color: rgba(245, 158, 11, 0.34);
+            color: #fde68a;
+        }
+
+        html[data-theme="dark"] .activity-log-cell-new {
+            background: rgba(34, 197, 94, 0.14);
+            border-color: rgba(34, 197, 94, 0.34);
+            color: #86efac;
+        }
+
+        html[data-theme="dark"] .activity-log-cell-single {
+            background: rgba(59, 130, 246, 0.14);
+            border-color: rgba(59, 130, 246, 0.34);
+            color: #bfdbfe;
+        }
+
+        html[data-theme="dark"] .activity-log-empty {
+            color: #94a3b8;
+        }
+
+        html[data-theme="dark"] .activity-log-actions {
+            border-top-color: #2b3b53;
+        }
+
+        html[data-theme="dark"] .activity-log-table th,
+        html[data-theme="dark"] .activity-log-table td,
+        html[data-theme="dark"] .activity-log-description .fw-semibold,
+        html[data-theme="dark"] .activity-log-summary .fw-semibold,
+        html[data-theme="dark"] .activity-log-detail-box .fw-semibold,
+        html[data-theme="dark"] .activity-log-item .fw-semibold {
+            color: #e2e8f0;
+        }
+
+        html[data-theme="dark"] .activity-log-item .badge.text-bg-light.border {
+            background: #162033 !important;
+            border-color: #2b3b53 !important;
+            color: #cbd5e1 !important;
+        }
     </style>
 @endonce
 
@@ -228,12 +285,12 @@
                             <div class="activity-log-topline mb-1">Mô tả thao tác</div>
                             <div class="fw-semibold">{{ $log->description ?: 'Không có mô tả' }}</div>
                             <div class="activity-log-meta mt-1">
-                                {{ $log->causer_type ?: 'System' }}
-                                @if ($log->causer_id)
-                                    · ID {{ $log->causer_id }}
-                                @endif
+                                <span class="fw-semibold">Người thực hiện:</span> {{ logCauserDisplay($log) }}
+                                {{-- @if ($log->causer_id)
+                                    - ID {{ $log->causer_id }}
+                                @endif --}}
                                 @if ($log->ip)
-                                    · IP {{ $log->ip }}
+                                    - IP {{ $log->ip }}
                                 @endif
                             </div>
                         </div>

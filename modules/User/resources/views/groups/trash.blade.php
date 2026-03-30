@@ -179,5 +179,48 @@
             color: #92400e;
             font-size: 0.92rem;
         }
+
+        html[data-theme="dark"] .group-card {
+            border-color: #2b3b53;
+            background: linear-gradient(180deg, #162033 0%, #111827 100%);
+        }
+
+        html[data-theme="dark"] .group-card--locked {
+            border-color: rgba(245, 158, 11, 0.34);
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, rgba(17, 24, 39, 0.98) 100%);
+        }
+
+        html[data-theme="dark"] .group-card__badge {
+            background: #1e293b;
+            color: #cbd5e1;
+        }
+
+        html[data-theme="dark"] .group-card__badge.is-admin {
+            background: rgba(34, 197, 94, 0.16);
+            color: #86efac;
+        }
+
+        html[data-theme="dark"] .group-card__stat {
+            background: #0f172a;
+            border-color: #2b3b53;
+        }
+
+        html[data-theme="dark"] .group-card__stat strong,
+        html[data-theme="dark"] .group-card h6,
+        html[data-theme="dark"] .group-card code {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .group-card__stat span,
+        html[data-theme="dark"] .group-card p.text-muted,
+        html[data-theme="dark"] .group-card .text-muted {
+            color: #9fb0c7 !important;
+        }
+
+        html[data-theme="dark"] .group-card__note {
+            border-color: rgba(245, 158, 11, 0.34);
+            background: rgba(245, 158, 11, 0.14);
+            color: #fde68a;
+        }
     </style>
 @endsection

@@ -21,11 +21,19 @@ class Coupons extends Model
         'discount_value',
         'total_condition',
         'count',
+        'per_student_once',
         'start_date',
         'end_date',
         'deleted_at',
         'created_at',
         'updated_at',
+    ];
+
+    protected $casts = [
+        'per_student_once' => 'boolean',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function students()
@@ -64,5 +72,19 @@ class Coupons extends Model
             ->whereRaw(
                 '(coupons.count is null or coupons.count = 0 or (select count(*) from coupons_usage where coupons_usage.coupon_id = coupons.id) < coupons.count)'
             );
+    }
+
+    public function scopeVisibleForStudent($query, ?int $studentId = null)
+    {
+        if (!$studentId) {
+            return $query;
+        }
+
+        return $query->where(function ($subQuery) use ($studentId) {
+            $subQuery->where('per_student_once', false)
+                ->orWhereDoesntHave('usagescoupon', function ($usageQuery) use ($studentId) {
+                    $usageQuery->where('student_id', $studentId);
+                });
+        });
     }
 }

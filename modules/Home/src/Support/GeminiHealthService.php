@@ -34,16 +34,16 @@ class GeminiHealthService
             action: 'update_settings',
             subject: null,
             properties: [
-                'changed_keys' => ['Trang thai Gemini chatbot'],
+                'changed_keys' => ['Trạng thái Gemini chatbot'],
                 'old' => [
-                    'Trang thai Gemini chatbot' => $this->presentSnapshot($snapshot),
+                    'Trạng thái Gemini chatbot' => $this->presentSnapshot($snapshot),
                 ],
                 'new' => [
-                    'Trang thai Gemini chatbot' => 'Da phuc hoi binh thuong',
+                    'Trạng thái Gemini chatbot' => 'Đã hồi phục bình thường',
                 ],
             ],
             logName: 'Gemini chatbot',
-            description: 'Gemini chatbot da phuc hoi sau su co'
+            description: 'Gemini chatbot đã hồi phục sau sự cố'
         );
     }
 
@@ -73,25 +73,25 @@ class GeminiHealthService
                     'disabled',
                     $reason,
                     $count,
-                    "Gemini da bi tu dong tat sau {$count}/" . self::FAILURE_THRESHOLD . " lan loi {$statusLabel} lien tiep."
+                    "Gemini đã bị tự động tắt sua {$count}/" . self::FAILURE_THRESHOLD . " lần lỗi {$statusLabel} liên tiếp."
                 );
 
                 activity_log(
                     action: 'update_settings',
                     subject: null,
                     properties: [
-                        'changed_keys' => ['Bat chatbot Gemini', 'Trang thai Gemini chatbot'],
+                        'changed_keys' => ['Bật chatbot Gemini', 'Trạng thái Gemini chatbot'],
                         'old' => [
-                            'Bat chatbot Gemini' => '1',
-                            'Trang thai Gemini chatbot' => 'Dang hoat dong',
+                            'Bật chatbot Gemini' => '1',
+                            'Trạng thái Gemini chatbot' => 'Đang hoạt động',
                         ],
                         'new' => [
-                            'Bat chatbot Gemini' => '0',
-                            'Trang thai Gemini chatbot' => "Da tu dong tat do {$statusLabel} {$count}/" . self::FAILURE_THRESHOLD,
+                            'Bật chatbot Gemini' => '0',
+                            'Trạng thái Gemini chatbot' => "Đã tự động tắt do {$statusLabel} {$count}/" . self::FAILURE_THRESHOLD,
                         ],
                     ],
                     logName: 'Gemini chatbot',
-                    description: 'Tu dong tat Gemini chatbot do loi quota/auth lap lai'
+                    description: 'Tự động tắt Gemini chatbot do lỗi quota/auth lặp lại'
                 );
             }
 
@@ -105,23 +105,23 @@ class GeminiHealthService
                 'warning',
                 $reason,
                 $count,
-                "Gemini dang gap {$statusLabel} {$count}/" . self::FAILURE_THRESHOLD . " lan. Neu lap lai them se tu dong tat."
+                "Gemini đang gặp {$statusLabel} {$count}/" . self::FAILURE_THRESHOLD . " lần. Nếu lặp lại thêm sẽ tự động tắt."
             );
 
             activity_log(
                 action: 'update_settings',
                 subject: null,
                 properties: [
-                    'changed_keys' => ['Trang thai Gemini chatbot'],
+                    'changed_keys' => ['Trạng thái Gemini chatbot'],
                     'old' => [
-                        'Trang thai Gemini chatbot' => $this->presentSnapshot($snapshot),
+                        'Trạng thái Gemini chatbot' => $this->presentSnapshot($snapshot),
                     ],
                     'new' => [
-                        'Trang thai Gemini chatbot' => "Canh bao {$statusLabel} {$count}/" . self::FAILURE_THRESHOLD,
+                        'Trạng thái Gemini chatbot' => "Cảnh báo {$statusLabel} {$count}/" . self::FAILURE_THRESHOLD,
                     ],
                 ],
                 logName: 'Gemini chatbot',
-                description: 'Canh bao Gemini chatbot sap bi tat do loi quota/auth'
+                description: 'Cảnh báo Gemini chatbot sắp bị tắt do lỗi quota/auth'
             );
 
             $this->put(self::KEY_NOTIFIED_STAGE, 'warning');
@@ -206,15 +206,15 @@ class GeminiHealthService
     {
         return match ($reason) {
             'quota_exceeded' => 'quota',
-            'auth_error' => 'xac thuc API',
-            default => 'su co',
+            'auth_error' => 'xác thực API',
+            default => 'sự cố',
         };
     }
 
     private function presentSnapshot(array $snapshot): string
     {
         if (!$snapshot['has_issue']) {
-            return 'Dang hoat dong';
+            return 'Đang hoạt động';
         }
 
         return sprintf(

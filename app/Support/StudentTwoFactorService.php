@@ -329,7 +329,7 @@ class StudentTwoFactorService
             'action' => $action,
             'subject_type' => Student::class,
             'subject_id' => $student->id,
-            'causer_type' => $student->name . ' (Học viên)',
+            'causer_type' => buildLogCauserLabel($student, 'student'),
             'causer_id' => $student->id,
             'properties' => $properties,
             'description' => $description,
@@ -338,3 +338,4 @@ class StudentTwoFactorService
         ]);
     }
 }
+

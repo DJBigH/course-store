@@ -16,10 +16,21 @@
             color: #2563eb;
             text-decoration: underline;
         }
+
+        html[data-theme="dark"] .lesson-name-link {
+            color: #e2e8f0;
+        }
+
+        html[data-theme="dark"] .lesson-name-link:hover {
+            color: #93c5fd;
+        }
     </style>
 
     <p class="text-end">
         <a href="{{ route('courses.index') }}" class="btn btn-info text-white">Quay lại</a>
+        @if (auth()->user()?->canAnyPermission(['lessons.soft_delete', 'lessons.delete', 'lessons.restore', 'lessons.force_delete']))
+            <a href="{{ route('lessons.trash', $courses) }}" class="btn btn-light border">Thùng rác</a>
+        @endif
         @if (auth()->user()?->hasPermission('lessons.sort'))
             <a href="{{ route('lessons.sort', $courses) }}" class="btn btn-success">Sắp xếp bài giảng</a>
         @endif

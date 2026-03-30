@@ -63,12 +63,35 @@ Route::get('admin/notifications/read/{id}', function ($id) {
    return redirect($notification->data['url'] ?? route('admin.index'));
 })->middleware(['auth', 'permission:dashboard.view'])->name('admin.notifications.read');
 
-Route::get('admin/notifications', function () {
+Route::post('admin/notifications/mark-all-read', function () {
+   auth()->user()?->unreadNotifications->markAsRead();
+
+   return back()->with('msg', 'Đã đánh dấu tất cả thông báo là đã đọc');
+})->middleware(['auth', 'permission:dashboard.view'])->name('admin.notifications.mark-all-read');
+
+Route::get('admin/notifications', function (\Illuminate\Http\Request $request) {
+   $query = auth()->user()->notifications()->latest();
+
+   if ($request->input('status') === 'unread') {
+      $query->whereNull('read_at');
+   }
+
+   if ($request->filled('type')) {
+      $query->where('type', $request->type);
+   }
+
+   $notifications = $query->paginate(10)->withQueryString();
+
+   $types = auth()->user()->notifications()
+      ->select('type')
+      ->whereNotNull('type')
+      ->distinct()
+      ->orderBy('type')
+      ->pluck('type');
+
    return view('admin.notifications.index', [
       'pageTitle' => 'Thông báo',
-      'notifications' => auth()->user()
-         ->notifications()
-         ->latest()
-         ->paginate(50)
+      'notifications' => $notifications,
+      'types' => $types,
    ]);
 })->middleware(['auth', 'permission:dashboard.view'])->name('admin.notifications.index');

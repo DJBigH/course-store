@@ -88,6 +88,23 @@
                         @enderror
                     </div>
 
+                    <div class="col-12">
+                        <div class="border rounded-3 px-3 py-3">
+                            <div class="form-check form-switch d-flex align-items-start gap-3 mb-0 ps-0">
+                                <input class="form-check-input flex-shrink-0 ms-0 mt-1" type="checkbox" role="switch"
+                                    id="per_student_once" name="per_student_once" value="1"
+                                    {{ old('per_student_once') ? 'checked' : '' }}>
+                                <label class="form-check-label ms-0" for="per_student_once">
+                                <span class="d-block fw-semibold">Mỗi học viên chỉ dùng 1 lần</span>
+                                <span class="text-muted small">Nếu học viên đã dùng coupon này thành công, mã sẽ tự ẩn khỏi màn client của chính học viên đó.</span>
+                                </label>
+                            </div>
+                        </div>
+                        @error('per_student_once')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Ngày bắt đầu</label>
                         <input type="date" class="form-control {{ $errors->has('start_date') ? 'is-invalid' : '' }}"

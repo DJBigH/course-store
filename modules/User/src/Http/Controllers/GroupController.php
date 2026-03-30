@@ -224,9 +224,9 @@ class GroupController extends Controller
             })
             ->groupBy(fn($permission) => $permission->display_module ?: 'other');
 
-        $actionOrder = collect(['manage', 'view', 'create', 'edit', 'update', 'payment', 'captcha', 'delete', 'soft_delete', 'restore', 'force_delete', 'publish', 'logs', 'moderate']);
+        $actionOrder = collect(['manage', 'view', 'create', 'edit', 'update', 'payment', 'captcha', 'delete', 'restore', 'force_delete', 'publish', 'logs', 'moderate']);
         $derivedActions = $permissions->flatten()
-            ->map(fn($permission) => $this->extractActionFromSlug($permission->slug))
+            ->map(fn($permission) => $this->normalizeMatrixAction($this->extractActionFromSlug($permission->slug)))
             ->unique()
             ->sortBy(function ($action) use ($actionOrder) {
                 $index = $actionOrder->search($action);
@@ -237,9 +237,11 @@ class GroupController extends Controller
 
         $permissionMatrix = $permissions->map(function ($modulePermissions) use ($derivedActions) {
             return $derivedActions->mapWithKeys(function ($action) use ($modulePermissions) {
-                $permission = $modulePermissions->first(function ($item) use ($action) {
-                    return $this->extractActionFromSlug($item->slug) === $action;
-                });
+                $permission = $modulePermissions
+                    ->sortBy(fn($item) => $this->extractActionFromSlug($item->slug) === 'delete' ? 0 : 1)
+                    ->first(function ($item) use ($action) {
+                        return $this->normalizeMatrixAction($this->extractActionFromSlug($item->slug)) === $action;
+                    });
 
                 return [$action => $permission];
             });
@@ -251,6 +253,11 @@ class GroupController extends Controller
     private function extractActionFromSlug(string $slug): string
     {
         return Str::contains($slug, '.') ? Str::afterLast($slug, '.') : $slug;
+    }
+
+    private function normalizeMatrixAction(string $action): string
+    {
+        return $action === 'soft_delete' ? 'delete' : $action;
     }
 
     private function getPermissionSyncStatus(): array
@@ -327,6 +334,9 @@ class GroupController extends Controller
                     'lessons.create',
                     'lessons.edit',
                     'lessons.delete',
+                    'lessons.soft_delete',
+                    'lessons.restore',
+                    'lessons.force_delete',
                     'lessons.sort',
                     'categories.view',
                     'categories.create',
@@ -370,10 +380,10 @@ class GroupController extends Controller
                 ],
             ],
             [
-                'label' => 'Teacher Manager',
-                'name' => 'Teacher Manager',
-                'slug' => 'teacher_manager',
-                'description' => 'Quản lý hồ sơ giảng viên và nội dung liên quan đến giảng viên.',
+                'label' => 'Teacher',
+                'name' => 'Teacher',
+                'slug' => 'teacher',
+                'description' => 'Giáo viên phụ trách nội dung khóa học và bài giảng.',
                 'is_admin' => true,
                 'permissions' => [
                     'dashboard.view',
@@ -390,6 +400,9 @@ class GroupController extends Controller
                     'lessons.create',
                     'lessons.edit',
                     'lessons.delete',
+                    'lessons.soft_delete',
+                    'lessons.restore',
+                    'lessons.force_delete',
                     'lessons.sort',
                     'comments.moderate',
                 ],
@@ -412,7 +425,6 @@ class GroupController extends Controller
             'update' => 'Cập nhật',
             'delete' => 'Xóa',
             'restore' => 'Khôi phục',
-            'soft_delete' => 'Xóa mềm',
             'force_delete' => 'Xóa vĩnh viễn',
             'publish' => 'Xuất bản',
             'logs' => 'Nhật ký',

@@ -14,6 +14,15 @@
             $admin = auth()->user();
         @endphp
 
+        <li class="nav-item me-2">
+            <button type="button" class="theme-toggle-admin" data-admin-theme-toggle
+                title="Switch to dark mode" aria-label="Switch to dark mode" aria-pressed="false">
+                <i class="fas fa-moon theme-toggle-admin__icon-dark" aria-hidden="true"></i>
+                <i class="fas fa-sun theme-toggle-admin__icon-light" aria-hidden="true"></i>
+                <span data-admin-theme-label>Dark mode</span>
+            </button>
+        </li>
+
         <li class="nav-item dropdown me-3">
             <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
@@ -26,33 +35,35 @@
                 @endif
             </a>
 
-            <div class="dropdown-menu dropdown-menu-end shadow p-0" aria-labelledby="notificationDropdown"
-                style="width: 360px;">
+            <div class="dropdown-menu dropdown-menu-end shadow p-0 notification-dropdown-menu"
+                aria-labelledby="notificationDropdown">
                 <div class="dropdown-header fw-bold border-bottom px-3 py-2">
                     Thông báo
                 </div>
-
                 <div class="notification-list">
                     @forelse($admin->notifications()->latest()->limit(20)->get() as $notification)
+                        @php
+                            $notificationTitle = notificationText($notification, 'title', 'Thông báo mới');
+                            $notificationMessage = notificationText($notification, 'message', 'Bạn có thông báo mới');
+                            $notificationType = notificationTypeLabel($notification->type);
+                            $severityClass = notificationSeverityClass($notification);
+                        @endphp
                         <a href="{{ route('admin.notifications.read', $notification->id) }}"
                             class="notification-item d-flex px-3 py-2 {{ $notification->read_at ? '' : 'unread' }}">
-                            <div class="me-2 mt-1">
-                                <i class="fas fa-circle text-primary" style="font-size: 6px"></i>
+                            <div class="me-2 mt-1 text-{{ $severityClass }}">
+                                <i class="{{ notificationIconClass($notification) }}"></i>
                             </div>
 
-                            <div class="flex-grow-1">
-                                @php
-                                    $notificationTitle = notificationText($notification, 'title', 'Thong bao moi');
-                                    $notificationMessage = notificationText($notification, 'message', 'Ban co thong bao moi');
-                                @endphp
+                            <div class="flex-grow-1 min-w-0">
                                 @if ($notificationTitle !== '')
                                     <div class="fw-semibold small mb-1">{{ $notificationTitle }}</div>
                                 @endif
                                 <div class="notification-text small">
                                     {{ $notificationMessage }}
                                 </div>
-                                <div class="notification-time text-muted small mt-1">
-                                    {{ $notification->created_at->diffForHumans() }}
+                                <div class="notification-time text-muted small mt-1 d-flex justify-content-between gap-2 flex-wrap">
+                                    <span>{{ $notification->created_at->diffForHumans() }}</span>
+                                    <span class="badge bg-{{ $severityClass }}">{{ $notificationType }}</span>
                                 </div>
                             </div>
                         </a>
@@ -61,6 +72,15 @@
                             Không có thông báo
                         </div>
                     @endforelse
+                </div>
+                <div class="border-top px-3 py-2 d-flex justify-content-between align-items-center gap-2 notification-dropdown-footer">
+                    <a href="{{ route('admin.notifications.index') }}" class="small fw-semibold">Xem tất cả</a>
+                    @if ($admin->unreadNotifications->count())
+                        <form action="{{ route('admin.notifications.mark-all-read') }}" method="POST" class="m-0">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none">Đánh dấu đã đọc</button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </li>

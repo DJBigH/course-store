@@ -32,7 +32,7 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-trash-count">0</span> Mã giảm giá được chọn
+                            <span id="selected-trash-count">0</span> mã giảm giá được chọn
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @if (auth()->user()?->canAnyPermission(['coupons.soft_delete', 'coupons.delete']))
@@ -56,6 +56,7 @@
                             <th>Mã</th>
                             <th>Loại giảm</th>
                             <th>Giá trị</th>
+                            <th>Cách dùng</th>
                             <th>Thời gian xóa</th>
                             <th>Khôi phục</th>
                             <th>Xóa vĩnh viễn</th>
@@ -85,6 +86,15 @@
             font-weight: 600;
             color: #334155;
         }
+
+        html[data-theme='dark'] .bulk-toolbar {
+            background: rgba(15, 23, 42, 0.88);
+            border-color: rgba(148, 163, 184, 0.18);
+        }
+
+        html[data-theme='dark'] .bulk-toolbar__summary {
+            color: #e2e8f0;
+        }
     </style>
 @endsection
 
@@ -100,7 +110,7 @@
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
                 order: [
-                    [4, 'desc']
+                    [5, 'desc']
                 ],
                 ajax: "{{ route('coupons.trash.data') }}",
                 columns: [{
@@ -116,6 +126,9 @@
                     },
                     {
                         data: 'discount_value'
+                    },
+                    {
+                        data: 'usage_mode'
                     },
                     {
                         data: 'deleted_at'

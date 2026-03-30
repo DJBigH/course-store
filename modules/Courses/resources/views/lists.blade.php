@@ -303,6 +303,81 @@
             font-weight: 600;
             color: #334155;
         }
+
+        html[data-theme="dark"] .course-stat__label,
+        html[data-theme="dark"] .course-stat__meta,
+        html[data-theme="dark"] .course-cell__meta,
+        html[data-theme="dark"] .course-learning,
+        html[data-theme="dark"] .bulk-toolbar__summary {
+            color: #9fb0c7;
+        }
+
+        html[data-theme="dark"] .course-stat__value,
+        html[data-theme="dark"] .course-cell__title,
+        html[data-theme="dark"] .course-price strong {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .course-price span {
+            color: #94a3b8;
+        }
+
+        html[data-theme="dark"] .course-pill {
+            background: #162033;
+            color: #e2e8f0;
+            border-color: #2b3b53;
+        }
+
+        html[data-theme="dark"] .course-free-badge {
+            background: rgba(34, 197, 94, 0.16);
+            color: #86efac;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar {
+            background: #162033;
+            border-color: #2b3b53;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar .btn-success {
+            background: #15803d;
+            border-color: #15803d;
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar .btn-light,
+        html[data-theme="dark"] .bulk-toolbar .btn-outline-secondary {
+            background: #0f172a;
+            color: #f8fafc;
+            border-color: #334155;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar .btn-outline-danger {
+            background: transparent;
+            color: #f87171;
+            border-color: #f87171;
+        }
+
+        html[data-theme="dark"] #datatable tbody td {
+            color: #e2e8f0;
+        }
+
+        html[data-theme="dark"] #datatable tbody a {
+            color: inherit;
+        }
+
+        @media (max-width: 1199.98px) {
+            #datatable {
+                min-width: 1180px !important;
+                width: 1180px !important;
+            }
+
+            .dataTables_scrollHeadInner,
+            .dataTables_scrollHeadInner table,
+            .dataTables_scrollBody table {
+                min-width: 1180px !important;
+                width: 1180px !important;
+            }
+        }
     </style>
 @endsection
 
@@ -313,6 +388,7 @@
 
             const table = $('#datatable').DataTable({
                 autoWidth: false,
+                scrollX: true,
                 processing: true,
                 serverSide: true,
                 pageLength: 10,

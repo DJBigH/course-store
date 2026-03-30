@@ -130,6 +130,25 @@
             font-weight: 600;
             color: #334155;
         }
+
+        html[data-theme="dark"] .admin-filter-panel {
+            background: linear-gradient(180deg, #162033 0%, #111827 100%);
+            border-color: #2b3b53;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar {
+            background: #162033;
+            border-color: #2b3b53;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar__summary {
+            color: #cbd5e1;
+        }
+
+        html[data-theme="dark"] #datatable tbody td,
+        html[data-theme="dark"] #datatable tbody a {
+            color: #e2e8f0;
+        }
     </style>
 @endsection
 

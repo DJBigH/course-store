@@ -468,9 +468,6 @@
             </div>
 
             <div class="admin-form__footer">
-                @if (auth()->user()?->hasPermission('settings.logs'))
-                    <a href="{{ route('settings.logs') }}" class="btn btn-warning">Lịch sử</a>
-                @endif
                 @if ($canSubmitSettings)
                     <button type="submit" class="btn btn-primary">
                         Lưu cấu hình
@@ -521,6 +518,41 @@
             box-shadow: 0 12px 32px rgba(29, 78, 216, 0.18);
         }
 
+        html[data-theme='dark'] .settings-sidebar {
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        html[data-theme='dark'] .settings-sidebar__title {
+            color: #64748b;
+        }
+
+        html[data-theme='dark'] .settings-tab-btn {
+            background: rgba(15, 23, 42, 0.84);
+            border-color: rgba(148, 163, 184, 0.18);
+            color: #cbd5e1;
+        }
+
+        html[data-theme='dark'] .settings-tab-btn:hover {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(96, 165, 250, 0.34);
+            color: #f8fafc;
+        }
+
+        html[data-theme='dark'] .settings-tab-btn.is-active {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 12px 32px rgba(37, 99, 235, 0.2);
+        }
+
+        html[data-theme='dark'] .settings-panel .border.rounded-3,
+        html[data-theme='dark'] .settings-panel .rounded-3.border,
+        html[data-theme='dark'] .settings-panel .border {
+            border-color: rgba(148, 163, 184, 0.18) !important;
+            background: rgba(15, 23, 42, 0.52);
+        }
+
         .settings-panel {
             display: none;
         }
@@ -538,14 +570,56 @@
         }
 
         .settings-toggle-panel.is-disabled {
-            opacity: 0.45;
-            filter: grayscale(0.2);
-            pointer-events: none;
+            display: none;
         }
 
         @media (max-width: 1199.98px) {
             .settings-sidebar {
                 position: static;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .admin-form__header {
+                gap: 0.75rem;
+            }
+
+            .admin-form__header .btn {
+                width: 100%;
+            }
+
+            .settings-sidebar__nav {
+                grid-auto-flow: column;
+                grid-auto-columns: minmax(140px, 1fr);
+                overflow-x: auto;
+                padding-bottom: 0.25rem;
+            }
+
+            .settings-tab-btn {
+                white-space: nowrap;
+            }
+
+            .settings-panel .card {
+                margin-top: 0 !important;
+            }
+
+            .settings-panel .btn-group {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                width: 100%;
+            }
+
+            .settings-panel img {
+                max-width: 100%;
+                height: auto;
+            }
+
+            .settings-panel .d-flex.gap-2.mt-2 {
+                flex-wrap: wrap;
+            }
+
+            .admin-form__footer .btn {
+                width: 100%;
             }
         }
     </style>
@@ -593,7 +667,7 @@
                     const enabled = toggle.checked;
                     panel.classList.toggle('is-disabled', !enabled);
 
-                    panel.querySelectorAll('input, select, textarea').forEach((field) => {
+                    panel.querySelectorAll('input, select, textarea, button').forEach((field) => {
                         field.disabled = !enabled;
                     });
                 };

@@ -140,6 +140,43 @@
             font-weight: 600;
             color: #334155;
         }
+
+        html[data-theme="dark"] .course-cell__title,
+        html[data-theme="dark"] .course-price strong {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .course-cell__meta,
+        html[data-theme="dark"] .course-learning,
+        html[data-theme="dark"] .bulk-toolbar__summary {
+            color: #9fb0c7;
+        }
+
+        html[data-theme="dark"] .course-price span {
+            color: #94a3b8;
+        }
+
+        html[data-theme="dark"] .course-pill {
+            background: #f8fafc;
+            color: #1e293b;
+            border-color: #e2e8f0;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar .btn-outline-danger {
+            background: transparent;
+            color: #f87171;
+            border-color: #f87171;
+        }
+
+        html[data-theme="dark"] #trash-datatable tbody td,
+        html[data-theme="dark"] #trash-datatable tbody a {
+            color: #e2e8f0;
+        }
     </style>
 @endsection
 

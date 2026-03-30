@@ -50,13 +50,20 @@
                         <div class="dashboard-toolbar mb-3">
                             <form method="GET" class="dashboard-filter">
                                 <label for="dashboard-range" class="form-label mb-2">Khoảng thời gian</label>
-                                <select id="dashboard-range" name="range" class="form-select" onchange="this.form.submit()">
+                                <select id="dashboard-range" name="range" class="form-select dashboard-range-select" onchange="this.form.submit()">
                                     <option value="today" @selected(($range ?? 'today') === 'today')>Hôm nay</option>
                                     <option value="7d" @selected(($range ?? '') === '7d')>7 ngày</option>
                                     <option value="14d" @selected(($range ?? '') === '14d')>14 ngày</option>
                                     <option value="1m" @selected(($range ?? '') === '1m')>1 tháng</option>
                                     <option value="1y" @selected(($range ?? '') === '1y')>1 năm</option>
                                 </select>
+                                <div class="dashboard-range-buttons" role="group" aria-label="Kho?ng th?i gian">
+                                    <button type="submit" name="range" value="today" class="btn {{ ($range ?? 'today') === 'today' ? 'is-active' : '' }}">Hôm nay</button>
+                                    <button type="submit" name="range" value="7d" class="btn {{ ($range ?? '') === '7d' ? 'is-active' : '' }}">7 ngày</button>
+                                    <button type="submit" name="range" value="14d" class="btn {{ ($range ?? '') === '14d' ? 'is-active' : '' }}">14 ngày</button>
+                                    <button type="submit" name="range" value="1m" class="btn {{ ($range ?? '') === '1m' ? 'is-active' : '' }}">1 tháng</button>
+                                    <button type="submit" name="range" value="1y" class="btn {{ ($range ?? '') === '1y' ? 'is-active' : '' }}">1 năm</button>
+                                </div>
                             </form>
 
                             <a href="{{ url()->full() }}" class="btn btn-light dashboard-refresh">
@@ -68,7 +75,7 @@
                         <div class="dashboard-quickstats">
                             <div class="dashboard-quickstats__item">
                                 <span>AOV</span>
-                                <strong>{{ money($kpi['aov'] ?? 0) }}</strong>
+                                <strong>{{ money($kpi['aov'] ?? 0, 'đ', '0 đ') }}</strong>
                             </div>
                             <div class="dashboard-quickstats__item">
                                 <span>Bắt đầu thanh toán</span>
@@ -201,7 +208,7 @@
                         <a href="{{ route('orders.index') }}" class="small text-decoration-none">Xem tất cả</a>
                     </div>
                     <div class="card-body p-0">
-                        <div class="table-responsive">
+                        <div class="table-responsive dashboard-orders-table">
                             <table class="table table-hover mb-0 align-middle">
                                 <thead class="table-light">
                                     <tr>
@@ -238,6 +245,39 @@
                                     @endif
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="dashboard-orders-mobile d-none p-3">
+                            @foreach ($recentOrders as $od)
+                                @php
+                                    $badge = match ((int) $od['status_id']) {
+                                        2 => 'success',
+                                        1 => 'warning',
+                                        3 => 'danger',
+                                        4 => 'secondary',
+                                        default => 'light',
+                                    };
+                                @endphp
+                                <article class="dashboard-order-card">
+                                    <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                        <div>
+                                            <div class="fw-semibold">{{ $od['code'] }}</div>
+                                            <div class="small text-muted">{{ $od['customer'] }}</div>
+                                        </div>
+                                        <span class="badge rounded-pill bg-{{ $badge }}">{{ $od['status'] }}</span>
+                                    </div>
+                                    <div class="small text-muted d-flex justify-content-between gap-3">
+                                        <span>Tổng tiền</span>
+                                        <strong class="text-reset">{{ money($od['total']) }}</strong>
+                                    </div>
+                                    <div class="small text-muted d-flex justify-content-between gap-3 mt-1">
+                                        <span>Thời gian</span>
+                                        <span>{{ $od['created_at']->diffForHumans() }}</span>
+                                    </div>
+                                </article>
+                            @endforeach
+                            @if ($recentOrders->isEmpty())
+                                <div class="text-center text-muted py-4">ChÆ°a cÃ³ Ä‘Æ¡n hÃ ng trong khoáº£ng thá»i gian nÃ y</div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -282,11 +322,12 @@
             font-size: clamp(1.8rem, 2vw, 2.6rem);
             font-weight: 700;
             line-height: 1.2;
+            color: #f8fafc !important;
         }
 
         .dashboard-hero__desc {
             max-width: 680px;
-            color: rgba(255, 255, 255, 0.82);
+            color: rgba(255, 255, 255, 0.82) !important;
         }
 
         .dashboard-highlight-grid {
@@ -310,11 +351,12 @@
             font-size: 1.2rem;
             line-height: 1.3;
             margin: 0.25rem 0;
+            color: #f8fafc !important;
         }
 
         .dashboard-highlight small,
         .dashboard-quickstats__item span {
-            color: rgba(255, 255, 255, 0.78);
+            color: rgba(255, 255, 255, 0.78) !important;
         }
 
         .dashboard-highlight__label {
@@ -323,7 +365,7 @@
             font-weight: 700;
             letter-spacing: 0.04em;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.66);
+            color: rgba(255, 255, 255, 0.66) !important;
         }
 
         .dashboard-toolbar,
@@ -333,8 +375,28 @@
         }
 
         .dashboard-filter label {
-            color: rgba(255, 255, 255, 0.78);
+            color: rgba(255, 255, 255, 0.78) !important;
             font-size: 0.9rem;
+        }
+
+        .dashboard-hero .dashboard-kicker,
+        .dashboard-hero .dashboard-hero__title,
+        .dashboard-hero .dashboard-hero__desc,
+        .dashboard-hero .dashboard-highlight,
+        .dashboard-hero .dashboard-highlight *,
+        .dashboard-hero .dashboard-quickstats__item,
+        .dashboard-hero .dashboard-quickstats__item * {
+            color: #f8fafc;
+        }
+
+        .dashboard-hero .form-select,
+        .dashboard-hero .dashboard-refresh {
+            background: #ffffff !important;
+            color: #0f172a !important;
+        }
+
+        .dashboard-hero .form-select option {
+            color: #0f172a;
         }
 
         .dashboard-filter .form-select,
@@ -342,6 +404,28 @@
             border: 0;
             min-height: 48px;
             border-radius: 14px;
+        }
+
+        .dashboard-range-buttons {
+            display: none;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.65rem;
+            margin-top: 0.75rem;
+        }
+
+        .dashboard-range-buttons .btn {
+            min-height: 44px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .dashboard-range-buttons .btn.is-active {
+            background: #ffffff;
+            color: #0f172a;
+            border-color: #ffffff;
         }
 
         .dashboard-refresh {
@@ -417,9 +501,109 @@
             min-height: 320px;
         }
 
+        .dashboard-order-card {
+            padding: 1rem;
+            border: 1px solid var(--admin-border);
+            border-radius: 16px;
+            background: var(--admin-surface);
+        }
+
+        .dashboard-order-card + .dashboard-order-card {
+            margin-top: 0.75rem;
+        }
+
+        html[data-theme="dark"] .dashboard-shell {
+            position: relative;
+        }
+
+        html[data-theme="dark"] .dashboard-stat {
+            background:
+                linear-gradient(180deg, rgba(17, 24, 39, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%);
+        }
+
+        html[data-theme="dark"] .dashboard-stat__icon {
+            background: rgba(96, 165, 250, 0.14);
+            color: #93c5fd;
+        }
+
+        html[data-theme="dark"] .dashboard-stat--revenue .dashboard-stat__icon {
+            background: rgba(34, 197, 94, 0.16);
+            color: #86efac;
+        }
+
+        html[data-theme="dark"] .dashboard-stat__label,
+        html[data-theme="dark"] .dashboard-stat__meta {
+            color: #9fb0c7;
+        }
+
+        html[data-theme="dark"] .dashboard-stat__value {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .dashboard-chip {
+            background: rgba(96, 165, 250, 0.16);
+            color: #bfdbfe;
+        }
+
+        html[data-theme="dark"] .dashboard-chip--muted {
+            background: rgba(148, 163, 184, 0.16);
+            color: #cbd5e1;
+        }
+
+        html[data-theme="dark"] .dashboard-chip--accent {
+            background: rgba(245, 158, 11, 0.16);
+            color: #fde68a;
+        }
+
+        html[data-theme="dark"] .dashboard-refresh {
+            background: rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .dashboard-refresh:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+        }
+
+        @media (max-width: 767.98px) {
+            .dashboard-orders-table {
+                display: none;
+            }
+
+            .dashboard-orders-mobile {
+                display: block !important;
+            }
+        }
+
+        @media (max-width: 1199.98px) {
+            .dashboard-range-select {
+                display: none;
+            }
+
+            .dashboard-range-buttons {
+                display: grid;
+            }
+        }
+
         @media (max-width: 991.98px) {
             .dashboard-hero__title {
                 font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .dashboard-shell .card-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 0.75rem;
+            }
+
+            .dashboard-shell .card-header > a {
+                align-self: flex-start;
+            }
+
+            .dashboard-range-buttons {
+                grid-template-columns: 1fr;
             }
         }
     </style>

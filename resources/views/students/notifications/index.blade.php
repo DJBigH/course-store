@@ -11,22 +11,22 @@
                         <div class="border-bottom py-3">
                             <div class="d-flex justify-content-between align-items-start gap-3">
                                 <div>
-                                    <h5 class="mb-1">{{ notificationText($notification, 'title', 'Thong bao moi') }}</h5>
-                                    <p class="mb-1 text-muted">{{ notificationText($notification, 'message', 'Khong co noi dung.') }}</p>
+                                    <h5 class="mb-1">{{ notificationText($notification, 'title', 'Thông báo mới') }}</h5>
+                                    <p class="mb-1 text-muted">{{ notificationText($notification, 'message', 'Không có nội dung.') }}</p>
                                     <small class="text-muted">{{ $notification->created_at?->format('d/m/Y H:i') }}</small>
                                 </div>
                                 @if (is_null($notification->read_at))
-                                    <span class="badge bg-warning text-dark">Chua doc</span>
+                                    <span class="badge bg-warning text-dark">Chưa đọc</span>
                                 @else
                                     <span class="badge bg-success">Da doc</span>
                                 @endif
                             </div>
                             <div class="mt-2">
-                                <a href="{{ route('students.notifications.read', $notification->id) }}">Xem chi tiet</a>
+                                <a href="{{ route('students.notifications.read', $notification->id) }}">Xem chi tiết</a>
                             </div>
                         </div>
                     @empty
-                        <p class="mb-0 text-muted">Ban chua co thong bao nao.</p>
+                        <p class="mb-0 text-muted">Bạn chưa có thông báo nào.</p>
                     @endforelse
 
                     <div class="mt-4">

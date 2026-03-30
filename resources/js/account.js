@@ -84,7 +84,7 @@ if (profileForm) {
         if (rows[0]) rows[0].innerText = student.name || "";
         if (rows[1]) rows[1].innerText = student.email || "";
         if (rows[2]) rows[2].innerText = student.phone || "";
-        if (rows[3]) rows[3].innerText = student.address || "Chua cap nhat";
+        if (rows[3]) rows[3].innerText = student.address || "Chưa cập nhật";
     };
 
     const updateProfile = async (formData, token) => {

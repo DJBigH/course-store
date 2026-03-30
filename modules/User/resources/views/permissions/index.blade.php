@@ -169,5 +169,33 @@
             border-color: #bfdbfe;
             color: #1d4ed8;
         }
+
+        html[data-theme="dark"] .permission-stat__label,
+        html[data-theme="dark"] .permission-stat__meta {
+            color: #9fb0c7;
+        }
+
+        html[data-theme="dark"] .permission-stat__value,
+        html[data-theme="dark"] .permission-row__title {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .permission-module-badge,
+        html[data-theme="dark"] .permission-usage {
+            background: #162033;
+            border-color: #2b3b53;
+            color: #cbd5e1;
+        }
+
+        html[data-theme="dark"] .permission-usage.is-active {
+            background: rgba(59, 130, 246, 0.16);
+            border-color: rgba(59, 130, 246, 0.34);
+            color: #93c5fd;
+        }
+
+        html[data-theme="dark"] .permission-table tbody td,
+        html[data-theme="dark"] .permission-table tbody code {
+            color: #e2e8f0;
+        }
     </style>
 @endsection

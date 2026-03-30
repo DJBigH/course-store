@@ -102,6 +102,26 @@
             font-weight: 600;
             color: #334155;
         }
+
+        html[data-theme="dark"] .bulk-toolbar {
+            background: #162033;
+            border-color: #2b3b53;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar__summary {
+            color: #cbd5e1;
+        }
+
+        html[data-theme="dark"] .bulk-toolbar .btn-light.border {
+            background: #0f172a;
+            color: #f8fafc;
+            border-color: #334155 !important;
+        }
+
+        html[data-theme="dark"] #datatable tbody td,
+        html[data-theme="dark"] #datatable tbody a {
+            color: #e2e8f0;
+        }
     </style>
 @endsection
 
