@@ -32,12 +32,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             GroupSeeder::class,
             PermissionSeeder::class,
-            // UserSeeder::class,
-            // TeacherSeeder::class,
-            // OrderStatusSeeder::class,
-            // SettingSeeder::class,
-            // CategoriesSeeder::class,
-            // CoursesSeeder::class,
+            UserSeeder::class,
+            TeacherSeeder::class,
+            OrderStatusSeeder::class,
+            SettingSeeder::class,
+            CategoriesSeeder::class,
+            CoursesSeeder::class,
         ]);
     }
 }
