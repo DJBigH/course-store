@@ -509,7 +509,24 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi ) ( Done )
 - Check lại responsive ( Done )
 - Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị ( Done )
-- Check cái notify của học viên xem thiếu hay thừa cái j
+- Check cái notify của học viên xem thiếu hay thừa cái j ( Done )
 - Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký  )
 Tổng kết
 - check lại lần cuối trước khi đẩy lên production
+
+
+1. Cái landing page mấy cái ở dầu nhìn nó trật quá fix lại cho tôi ( Done )
+2. Với cái kênh giảng viên thì chỉ khi người dùng là giảng viên mới được quyền thấy nó                          
+3. Cho phép người dùng khi chưa tạo tài khoản sẽ được phép đăng ký làm giáo viên ( khi đăng ký yêu cầu có email rồi khi accpet thì gửi theo email đó làm tài khoản và mk tự random gửi về email và thông báo nên đổi mật khẩu)
+4. Khi đăng ký mà chưa lập tài khoản thì sẽ gửi mail thành công về email đó và thêm lời cảm ơn và chờ đợi
+5. Đối với tài khoản học viên khi đăng ký sang làm giảng viên thì cái kênh giáo viên chuyển thành đơn đăng ký ko được rediect sang trang teacher và chờ khi nào admin duyệt thì nó sẽ chuyển thành kênh giáo viên
+6. Nếu học viên không đăng ký mà chỉ dùng thì ẩn cái đơn đăng ký chỉ khi có đơn đăng ký thì mới hiện ra
+7. Với các đơn accpet hay reject thì đều được gửi mail về ( mail phải trong queue )
+8. Phải vào trang trở thành giáo viên ấn đăng ký thì mới có thể đăng ký
+9. Với cái form đăng ký thì làm thêm 1 trang nào đó phía clients không để nó vào luôn màn teacher đăng ký 
+10. phần chọn các gói đăng ký thêm hiệu ứng hover
+11. Trang lading page thêm 1 số hiệu ứng trong trang vào nhìn nó đơ quá
+12. Khi đăng ký thêm các phường thức thanh toán giống ở bên học viên
+13. bỏ cái bật kênh giáo viên và fix lại khi ở light mode mà 2 nút đăng ký/đăng nhập nó bị tối
+14. Thêm dòng chữ nếu bạn đã là giáo viên vui lòng đăng nhập ở đây hoặc 1 câu j đó để đăng nhập với tư cách giáo viên cho dễ 
+BẠN HAY XỬ LÝ HẾT CÁC TASK TÔI ĐÃ GIAO NHÉ

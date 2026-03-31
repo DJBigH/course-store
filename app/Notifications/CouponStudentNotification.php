@@ -23,9 +23,7 @@ class CouponStudentNotification extends Notification
 
     public function toArray($notifiable)
     {
-        $locale = method_exists($notifiable, 'preferredLocale')
-            ? $notifiable->preferredLocale()
-            : app()->getLocale();
+        $locale = app()->getLocale();
 
         $titleTranslations = [
             'vi' => 'Mã giảm giá mới',

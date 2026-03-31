@@ -208,7 +208,7 @@
 @endsection
 
 @section('stylesheets')
-    <style>
+    <style data-account-page-style>
         @media (max-width: 767.98px) {
             .account-orders-content .card-body {
                 padding: 1.25rem !important;

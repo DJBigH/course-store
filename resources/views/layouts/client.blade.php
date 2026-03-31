@@ -90,7 +90,9 @@
     @if ((int) setting('chatbot_widget_enabled', '1') === 1)
         @include('part.clients.sales-chatbot')
     @endif
-    @yield('modals')
+    <div id="page-modals">
+        @yield('modals')
+    </div>
     <div class="modal fade" id="modal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -112,7 +114,8 @@
     </script>
 @endif
 @vite(['resources/js/app.js'])
-@yield('scripts')
+<div id="page-inline-scripts" hidden>
+    @yield('scripts')
+</div>
 
 </html>
-

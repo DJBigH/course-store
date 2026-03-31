@@ -222,7 +222,7 @@
 @endsection
 
 @section('stylesheets')
-    <style>
+    <style data-account-page-style>
         .order-detail {
             font-size: 15px;
         }

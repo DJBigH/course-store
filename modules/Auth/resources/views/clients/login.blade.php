@@ -77,6 +77,10 @@
                     {{ __('auth::clients/auth.login.register_now') }}
                 </a>
             </p>
+
+            <p class="sign-up register" style="margin-top: 12px;">
+                Nếu bạn đã là giảng viên, hãy đăng nhập bằng email đã đăng ký ở đây rồi vào kênh giảng viên sau khi được duyệt.
+            </p>
         </div>
     </div>
 @endsection

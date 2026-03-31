@@ -84,6 +84,10 @@
                     {{ __('auth::clients/auth.register.login_now') }}
                 </a>
             </p>
+
+            <p class="sign-in login" style="margin-top: 12px;">
+                Nếu bạn đã gửi đơn giảng viên rồi thì không cần tạo thêm tài khoản mới. Chỉ cần đăng nhập bằng email đó khi hồ sơ được duyệt.
+            </p>
         </div>
     </div>
 @endsection

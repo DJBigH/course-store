@@ -3,7 +3,6 @@
 namespace Modules\Lessons\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Notifications\NewLessonNotification;
 use App\Notifications\StudentNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;

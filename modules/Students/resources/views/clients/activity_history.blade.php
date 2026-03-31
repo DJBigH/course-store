@@ -220,7 +220,7 @@
 @endsection
 
 @section('stylesheets')
-    <style>
+    <style data-account-page-style>
         @media (max-width: 767.98px) {
             .activity-history-filter .col-md-4,
             .activity-history-filter .btn,

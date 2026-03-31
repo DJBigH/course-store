@@ -150,6 +150,26 @@
                         'title' => 'Giảng viên',
                         'name' => 'teacher',
                     ])
+                    <a class="nav-link {{ request()->is('admin/teacher-applications*') ? 'active' : '' }}"
+                        href="{{ route('teacher-applications.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-user-check"></i></div>
+                        Ung tuyen giang vien
+                    </a>
+                    <a class="nav-link {{ request()->is('admin/teacher-packages*') ? 'active' : '' }}"
+                        href="{{ route('teacher-packages.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-layer-group"></i></div>
+                        Goi giang vien
+                    </a>
+                    <a class="nav-link {{ request()->is('admin/teacher-finance/earnings*') ? 'active' : '' }}"
+                        href="{{ route('teacher-finance.earnings') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
+                        Doi soat doanh thu
+                    </a>
+                    <a class="nav-link {{ request()->is('admin/teacher-finance/payouts*') ? 'active' : '' }}"
+                        href="{{ route('teacher-finance.payouts') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-money-check-dollar"></i></div>
+                        Xu ly rut tien
+                    </a>
                 @endif
 
                 @if (auth()->user()

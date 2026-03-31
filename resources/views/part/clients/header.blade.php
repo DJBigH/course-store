@@ -12,11 +12,11 @@
     ];
     $supportedLocales = array_keys($localeOptions);
     $localeFlags = [
-        'vi' => '🇻🇳',
-        'en' => '🇺🇸',
-        'ko' => '🇰🇷',
-        'ja' => '🇯🇵',
-        'zh' => '🇨🇳',
+        'vi' => 'VN',
+        'en' => 'EN',
+        'ko' => 'KO',
+        'ja' => 'JA',
+        'zh' => 'ZH',
     ];
 
     foreach ($localeFlags as $locale => $flag) {
@@ -36,7 +36,41 @@
     $phone = setting('phone', '012345678');
     $email = setting('email', 'bigk@gmail.com');
     $phoneHref = 'tel:' . preg_replace('/[^\d+]/', '', (string) $phone);
-
+    $teacherLabels = [
+        'vi' => [
+            'portal' => 'Kênh giảng viên',
+            'become' => 'Trở thành giảng viên',
+            'application' => 'Đơn đăng ký giảng viên',
+        ],
+        'en' => [
+            'portal' => 'Instructor Hub',
+            'become' => 'Become an Instructor',
+            'application' => 'Instructor Application',
+        ],
+        'ko' => [
+            'portal' => '강사 채널',
+            'become' => '강사 되기',
+            'application' => '강사 신청서',
+        ],
+        'ja' => [
+            'portal' => '講師チャンネル',
+            'become' => '講師になる',
+            'application' => '講師申請',
+        ],
+        'zh' => [
+            'portal' => '讲师频道',
+            'become' => '成为讲师',
+            'application' => '讲师申请',
+        ],
+    ];
+    $teacherUi = $teacherLabels[$currentLocale] ?? $teacherLabels['en'];
+    $latestTeacherApplication = $student?->teacherApplications()?->latest('id')->first();
+    $teacherPortalHeaderUrl = $student && $student->teacher && $student->teacher->status === 'active'
+        ? route('teacher.dashboard.index')
+        : null;
+    $teacherApplicationHeaderUrl = $latestTeacherApplication
+        ? route('teacher.account.status', ['locale' => $currentLocale])
+        : route('teacher.account.begin', ['locale' => $currentLocale]);
     $fallbackLocaleUrl = function (string $locale): string {
         $path = trim(request()->path(), '/');
         $segments = $path === '' ? [] : explode('/', $path);
@@ -125,7 +159,17 @@
                 'students.account.deactivate',
                 'students.account.delete',
                 'students.account.order-detail',
-                'students.account.checkout' => route($currentRouteName, array_merge(['locale' => $locale], $params)),
+                'students.account.checkout',
+                'teacher.portal.index' => route('teacher.portal.index', ['locale' => $locale]),
+                'teacher.account.begin',
+                'teacher.account.apply',
+                'teacher.account.status',
+                'teacher.account.edit',
+                'teacher.account.mark-paid' => route($currentRouteName, array_merge(['locale' => $locale], $params)),
+                'teacher.dashboard.index',
+                'teacher.dashboard.courses',
+                'teacher.dashboard.earnings',
+                'teacher.dashboard.payouts' => route($currentRouteName, $params),
                 'courses.detail' => (($course = $findByLocalizedSlug(\Modules\Courses\src\Models\Courses::class, $params['slug'] ?? null)) && ($slug = $resolveLocalizedSlug($course, $locale)))
                     ? route('courses.detail', ['locale' => $locale, 'slug' => $slug])
                     : route('courses.home', ['locale' => $locale]),
@@ -246,7 +290,8 @@
                                         {{-- Notification count badge --}}
                                         @if ($unreadCount > 0)
                                             <span
-                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                                data-unread-badge>
                                                 {{ $unreadCount }}
                                             </span>
                                         @endif
@@ -263,7 +308,7 @@
                                         @forelse($notifications as $notification)
                                             <li>
                                                 <a class="dropdown-item notification-item {{ is_null($notification->read_at) ? 'unread' : '' }}"
-                                                    href="{{ route('students.notifications.read', $notification->id) }}">
+                                                    href="{{ route('students.notifications.read', ['locale' => app()->getLocale(), 'id' => $notification->id]) }}">
 
                                                     <div class="notification-content">
                                                         <div class="notification-title">
@@ -287,6 +332,26 @@
                                             </li>
                                         @endforelse
 
+                                        @if ($student)
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="px-3 py-2 d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                                <a class="small fw-semibold"
+                                                    href="{{ route('students.notifications.index', ['locale' => app()->getLocale()]) }}">
+                                                    Xem tất cả
+                                                </a>
+                                                @if ($unreadCount > 0)
+                                                    <form action="{{ route('students.notifications.mark-all-read', ['locale' => app()->getLocale()]) }}"
+                                                        method="POST" class="m-0" data-mark-all-read-form>
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary"
+                                                            data-mark-all-read-button>
+                                                            Đánh dấu đã đọc
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </li>
+                                        @endif
+
                                     </ul>
                                 </div>
                                 {{-- User dropdown --}}
@@ -306,6 +371,23 @@
                                                 {{ __('clients/common.my_account') }}
                                             </a>
                                         </li>
+                                        @if ($teacherPortalHeaderUrl)
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center gap-2"
+                                                    href="{{ $teacherPortalHeaderUrl }}">
+                                                    <i class="fas fa-chalkboard-user"></i>
+                                                    {{ $teacherUi['portal'] }}
+                                                </a>
+                                            </li>
+                                        @elseif ($latestTeacherApplication)
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center gap-2"
+                                                    href="{{ $teacherApplicationHeaderUrl }}">
+                                                    <i class="fas fa-file-signature"></i>
+                                                    {{ $teacherUi['application'] }}
+                                                </a>
+                                            </li>
+                                        @endif
                                         <li>
                                             <a class="dropdown-item d-flex align-items-center gap-2 text-danger"
                                                 href="#"
@@ -407,6 +489,14 @@
                             href="{{ route('coupons.home', ['locale' => app()->getLocale()]) }}">
                             <i class="fas fa-ticket-alt"></i>
                             {{ __('clients/common.coupons') }}
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('teacher.portal.*', 'teacher.account.*', 'teacher.dashboard.*') ? 'active' : '' }}"
+                            href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}">
+                            <i class="fas fa-chalkboard-user"></i>
+                            {{ $teacherUi['become'] }}
                         </a>
                     </li>
 
@@ -533,5 +623,85 @@
                 closeNotificationDropdown();
             }
         });
+
+        const updateNotificationUiAfterMarkAllRead = () => {
+            document.querySelectorAll('[data-unread-badge]').forEach((badge) => badge.remove());
+
+            document.querySelectorAll('.notification-item.unread').forEach((item) => {
+                item.classList.remove('unread');
+            });
+
+            document.querySelectorAll('[data-notification-status]').forEach((badge) => {
+                badge.className = 'badge bg-success';
+                badge.textContent = badge.dataset.readLabel || 'Da doc';
+            });
+
+            document.querySelectorAll('[data-mark-all-read-form]').forEach((form) => {
+                form.remove();
+            });
+        };
+
+        document.querySelectorAll('[data-mark-all-read-form]').forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const submitButton = form.querySelector('[data-mark-all-read-button]');
+                const token = form.querySelector('input[name="_token"]')?.value;
+
+                if (!token) {
+                    form.submit();
+                    return;
+                }
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({}),
+                        credentials: 'same-origin',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Request failed');
+                    }
+
+                    updateNotificationUiAfterMarkAllRead();
+                } catch (error) {
+                    form.submit();
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                }
+            });
+        });
     });
 </script>
+<style>
+    .header-auth-actions .header-auth-btn.btn-primary {
+        color: #fff !important;
+        border-color: var(--bs-primary);
+    }
+    .header-auth-actions .header-auth-btn.btn-primary:hover,
+    .header-auth-actions .header-auth-btn.btn-primary:focus {
+        color: #fff !important;
+    }
+    .header-auth-actions .header-auth-btn.btn-outline-primary {
+        color: var(--bs-primary) !important;
+        background: #fff;
+    }
+    html[data-theme="dark"] .header-auth-actions .header-auth-btn.btn-outline-primary {
+        background: transparent;
+        color: #dbeafe !important;
+    }
+</style>
+

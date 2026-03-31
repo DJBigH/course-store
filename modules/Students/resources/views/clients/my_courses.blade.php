@@ -177,7 +177,7 @@
 @endsection
 
 @section('stylesheets')
-    <style>
+    <style data-account-page-style>
         .account-courses-table {
             border-collapse: separate;
             border-spacing: 0 12px;

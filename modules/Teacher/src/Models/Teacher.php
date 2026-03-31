@@ -4,6 +4,7 @@ namespace Modules\Teacher\src\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Students\src\Models\Student;
 
 class Teacher extends Model
 {
@@ -30,10 +31,36 @@ class Teacher extends Model
         'description_zh',
         'exp',
         'image',
+        'student_id',
+        'application_id',
+        'status',
+        'commission_rate',
+        'approved_at',
+        'approved_by',
         'deleted_at',
         'created_at',
         'updated_at',
     ];
+
+    protected $casts = [
+        'approved_at' => 'datetime',
+        'commission_rate' => 'float',
+    ];
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'student_id', 'id');
+    }
+
+    public function application()
+    {
+        return $this->belongsTo(TeacherApplication::class, 'application_id', 'id');
+    }
+
+    public function payoutRequests()
+    {
+        return $this->hasMany(TeacherPayoutRequest::class, 'teacher_id', 'id');
+    }
 
     public function getDescriptionLocaleAttribute(): string
     {

@@ -13,6 +13,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Courses\src\Models\Courses;
 use Modules\Orders\src\Models\Order;
+use Modules\Teacher\src\Models\Teacher;
+use Modules\Teacher\src\Models\TeacherApplication;
 
 class Student extends Authenticatable implements MustVerifyEmail, CanResetPassword, HasLocalePreference
 {
@@ -94,5 +96,15 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
     public function orders()
     {
         return $this->hasMany(Order::class, 'student_id', 'id');
+    }
+
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class, 'student_id', 'id');
+    }
+
+    public function teacherApplications()
+    {
+        return $this->hasMany(TeacherApplication::class, 'student_id', 'id');
     }
 }
