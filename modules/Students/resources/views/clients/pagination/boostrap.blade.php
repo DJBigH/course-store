@@ -2,25 +2,29 @@
     <nav class="pagination-nav d-flex justify-content-between align-items-center flex-wrap gap-2">
 
         {{-- Mobile: Previous / Next --}}
-        <div class="d-flex d-sm-none gap-2">
+        <div class="d-flex d-sm-none gap-2 account-pagination-mobile">
             {{-- Previous --}}
             @if ($paginator->onFirstPage())
-                <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">
+                <span class="btn btn-outline-secondary btn-sm disabled page-link-compact page-link-compact--mobile" aria-disabled="true">
                     <i class="bi bi-chevron-left"></i>
+                    <span>{{ __('pagination.previous') }}</span>
                 </span>
             @else
-                <a href="{{ $paginator->previousPageUrl() }}" class="btn btn-outline-primary btn-sm page-link-compact" rel="prev">
+                <a href="{{ $paginator->previousPageUrl() }}" class="btn btn-outline-primary btn-sm page-link-compact page-link-compact--mobile" rel="prev">
                     <i class="bi bi-chevron-left"></i>
+                    <span>{{ __('pagination.previous') }}</span>
                 </a>
             @endif
 
             {{-- Next --}}
             @if ($paginator->hasMorePages())
-                <a href="{{ $paginator->nextPageUrl() }}" class="btn btn-outline-primary btn-sm page-link-compact" rel="next">
+                <a href="{{ $paginator->nextPageUrl() }}" class="btn btn-outline-primary btn-sm page-link-compact page-link-compact--mobile" rel="next">
+                    <span>{{ __('pagination.next') }}</span>
                     <i class="bi bi-chevron-right"></i>
                 </a>
             @else
-                <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">
+                <span class="btn btn-outline-secondary btn-sm disabled page-link-compact page-link-compact--mobile" aria-disabled="true">
+                    <span>{{ __('pagination.next') }}</span>
                     <i class="bi bi-chevron-right"></i>
                 </span>
             @endif

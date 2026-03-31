@@ -107,17 +107,17 @@ class StudentTwoFactorService
 
     public function challengeLifetime(): int
     {
-        return (int) config('auth.student_two_factor_code_expire', 600);
+        return max(60, (int) setting('student_two_factor_code_expire', config('auth.student_two_factor_code_expire', 600)));
     }
 
     public function resendCooldown(): int
     {
-        return (int) config('auth.student_two_factor_resend_cooldown', 60);
+        return max(10, (int) setting('student_two_factor_resend_cooldown', config('auth.student_two_factor_resend_cooldown', 60)));
     }
 
     public function reauthWindow(): int
     {
-        return (int) config('auth.student_two_factor_timeout', 600);
+        return max(60, (int) setting('student_two_factor_timeout', config('auth.student_two_factor_timeout', 600)));
     }
 
     public function purposeLabelKey(string $purpose): string
@@ -329,7 +329,7 @@ class StudentTwoFactorService
             'action' => $action,
             'subject_type' => Student::class,
             'subject_id' => $student->id,
-            'causer_type' => $student->name . ' (Học viên)',
+            'causer_type' => buildLogCauserLabel($student, 'student'),
             'causer_id' => $student->id,
             'properties' => $properties,
             'description' => $description,
@@ -338,3 +338,4 @@ class StudentTwoFactorService
         ]);
     }
 }
+

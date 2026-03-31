@@ -34,8 +34,9 @@
                             </div>
                         @endisset
 
-                        <div class="d-flex justify-content-center gap-3 mt-4">
-                            <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary px-4">
+                        <div class="thankyou-actions d-flex justify-content-center gap-3 mt-4">
+                            <a href="{{ route('home', ['locale' => app()->getLocale()]) }}"
+                                class="btn btn-primary px-4 thankyou-action-btn">
                                 <i class="fa-solid fa-house me-1"></i> {{ __('students::clients/thankyou.home') }}
                             </a>
 
@@ -44,7 +45,7 @@
                                     'locale' => app()->getLocale(),
                                     'id' => $order->id,
                                 ]) }}"
-                                    class="btn btn-outline-secondary px-4">
+                                    class="btn btn-outline-secondary px-4 thankyou-action-btn">
                                     <i class="fa-solid fa-receipt me-1"></i>
                                     {{ __('students::clients/thankyou.view_order') }}
                                 </a>
@@ -63,6 +64,47 @@
     <style>
         .thankyou-content {
             animation: fadeUp 0.6s ease;
+        }
+
+        .thankyou-actions {
+            flex-wrap: wrap;
+        }
+
+        .thankyou-action-btn {
+            min-height: 50px;
+            padding: 0.9rem 1.25rem !important;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 575.98px) {
+            .thankyou-content {
+                padding: 1.5rem !important;
+            }
+
+            .thankyou-actions {
+                flex-direction: column;
+                gap: 12px !important;
+            }
+
+            .thankyou-action-btn {
+                width: 100%;
+                min-height: 48px;
+                padding: 0.85rem 1rem !important;
+                border-radius: 14px;
+                font-size: 0.95rem;
+                flex-direction: row;
+            }
+
+            .thankyou-action-btn i {
+                margin-right: 0 !important;
+            }
         }
 
         @keyframes fadeUp {

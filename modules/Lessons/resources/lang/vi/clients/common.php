@@ -1,23 +1,26 @@
 <?php
 
 return [
-    // Core messages
-    'help'        => 'Nếu video này bị lỗi, vui lòng liên hệ quản trị viên để được hỗ trợ.',
-    'no_video'    => 'Bài học này chưa có video',
+    'help' => 'Nếu video này bị lỗi, vui lòng liên hệ quản trị viên để được hỗ trợ.',
+    'no_video' => 'Bài học này chưa có video',
     'no_document' => 'Khóa học hiện tại chưa có tài liệu',
     'locked_document' => 'Đã khóa',
     'buy_to_view_document' => 'Cần mua khóa học để xem tài liệu này.',
-
-    // Navigation
-    'back'        => 'Quay lại',
-    'next'        => 'Tiếp theo',
-
-    // Tabs
-    'lesson'      => 'Bài học',
-    'document'    => 'Tài liệu',
+    'back' => 'Quay lại',
+    'next' => 'Tiếp theo',
+    'lesson' => 'Bài học',
+    'document' => 'Tài liệu',
     'lesson_1' => 'bài học',
-
-    // Labels
     'lesson_item' => 'Bài',
-    'lessons'     => 'Bài học',
+    'lessons' => 'Bài học',
+    'course_progress' => 'Tiến độ học',
+    'completed' => 'Đã học',
+    'completed_lessons' => 'Đã học :completed / :total bài',
+    'mark_completed' => 'Đánh dấu đã học',
+    'mark_incomplete' => 'Bỏ đánh dấu đã học',
+    'mark_completed_success' => 'Bài học đã được đánh dấu hoàn thành.',
+    'mark_incomplete_success' => 'Bài học đã được bỏ khỏi tiến độ hoàn thành.',
+    'completion_error' => 'Không thể cập nhật tiến độ bài học. Vui lòng thử lại.',
+    'lesson_not_found' => 'Không tìm thấy bài học.',
+    'login_required' => 'Vui lòng đăng nhập để cập nhật tiến độ bài học.',
 ];

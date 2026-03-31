@@ -5,6 +5,7 @@ namespace Modules\Students\src\Http\Controllers\Clients;
 use App\Http\Controllers\Controller;
 use App\Mail\AccountDeactivatedMail;
 use App\Mail\StudentTwoFactorStatusMail;
+use App\Support\SystemMailManager;
 use App\Support\StudentAccountDeletionService;
 use App\Support\StudentTwoFactorService;
 use Illuminate\Http\Request;
@@ -16,7 +17,8 @@ class TwoFactorController extends Controller
 {
     public function __construct(
         protected StudentTwoFactorService $twoFactorService,
-        protected StudentAccountDeletionService $accountDeletionService
+        protected StudentAccountDeletionService $accountDeletionService,
+        protected SystemMailManager $systemMailManager
     )
     {
     }
@@ -33,6 +35,10 @@ class TwoFactorController extends Controller
             return redirect()
                 ->route('students.account.profile', ['locale' => $locale])
                 ->with('msg', __('students::clients/account.two_factor.already_enabled'));
+        }
+
+        if ($response = $this->mailMaintenanceResponse($request)) {
+            return $response;
         }
 
         $sent = $this->twoFactorService->issueChallenge(
@@ -68,6 +74,10 @@ class TwoFactorController extends Controller
                 ->with('msg', __('students::clients/account.two_factor.already_disabled'));
         }
 
+        if ($response = $this->mailMaintenanceResponse($request)) {
+            return $response;
+        }
+
         $sent = $this->twoFactorService->issueChallenge(
             $student,
             StudentTwoFactorService::PURPOSE_DISABLE,
@@ -93,6 +103,10 @@ class TwoFactorController extends Controller
 
         if (!$student) {
             return redirect()->route('clients-login', ['locale' => $locale]);
+        }
+
+        if ($response = $this->mailMaintenanceResponse($request)) {
+            return $response;
         }
 
         $sent = $this->twoFactorService->issueChallenge(
@@ -122,6 +136,10 @@ class TwoFactorController extends Controller
 
         if (!$student) {
             return redirect()->route('clients-login', ['locale' => $locale]);
+        }
+
+        if ($response = $this->mailMaintenanceResponse($request)) {
+            return $response;
         }
 
         $sent = $this->twoFactorService->issueChallenge(
@@ -238,6 +256,10 @@ class TwoFactorController extends Controller
                 __('students::clients/account.two_factor.challenge_not_found'),
                 $locale
             );
+        }
+
+        if ($response = $this->mailMaintenanceResponse($request)) {
+            return $response;
         }
 
         if (!$this->twoFactorService->canResend($student)) {
@@ -454,5 +476,25 @@ class TwoFactorController extends Controller
         return back()
             ->withErrors($errors ?: ['code' => $message])
             ->with('msg_danger', $message);
+    }
+
+    protected function mailMaintenanceResponse(Request $request)
+    {
+        if ($this->systemMailManager->isEnabled() && $this->systemMailManager->isConfigured()) {
+            return null;
+        }
+
+        $message = __('students::clients/account.two_factor.mail_disabled');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'errors' => [
+                    'code' => [$message],
+                ],
+            ], 503);
+        }
+
+        return back()->with('msg_danger', $message);
     }
 }

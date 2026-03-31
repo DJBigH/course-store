@@ -3,9 +3,9 @@
 namespace Modules\Lessons\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Notifications\NewLessonNotification;
 use App\Notifications\StudentNotification;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -44,6 +44,26 @@ class LessonController extends Controller
 
         $this->updateDurations($courseId);
         return view('lessons::lists', compact('pageTitle', 'courses'));
+    }
+
+    public function trash($courseId)
+    {
+        $courses = $this->courseRepository->getCourse($courseId);
+        if (!$courses) {
+            abort(404);
+        }
+
+        $pageTitle = 'Thùng rác bài giảng: ' . $courses->name;
+        $trashedLessons = Lesson::query()
+            ->onlyTrashed()
+            ->where('course_id', $courseId)
+            ->orderByRaw('COALESCE(parent_id, 0)')
+            ->orderBy('position')
+            ->get();
+
+        $trashedLessonRows = $this->flattenTrashedLessons($trashedLessons);
+
+        return view('lessons::trash', compact('pageTitle', 'courses', 'trashedLessonRows'));
     }
 
     public function sort(Request $request, $courseId)
@@ -89,6 +109,86 @@ class LessonController extends Controller
 
     public function getLessonTable($lessons, $char = '', &$result = [])
     {
+        $user = auth()->user();
+        $canCreateLessons = $user?->hasPermission('lessons.create');
+        $canEditLessons = $user?->hasPermission('lessons.edit');
+        $canDeleteLessons = $user?->canAnyPermission(['lessons.delete', 'lessons.soft_delete']);
+
+        if (empty($lessons)) {
+            return $result;
+        }
+
+        foreach ($lessons as $key => $lesson) {
+            $row = $lesson;
+            $lessonName = e($lesson['name'] ?? '');
+            $publicLocale = in_array(app()->getLocale(), ['vi', 'en', 'ko', 'ja', 'zh'], true)
+                ? app()->getLocale()
+                : 'vi';
+
+            if ($row['parent_id'] == null) {
+                $row['name'] = $char . $lessonName;
+            } else {
+                $lessonSlug = trim((string) (($lesson['slug_locale'] ?? '') ?: ($lesson['slug'] ?? '')));
+
+                if ($lessonSlug !== '') {
+                    $lessonUrl = route('lessons.home', [
+                        'locale' => $publicLocale,
+                        'slug' => $lessonSlug,
+                    ]);
+                    $row['name'] = $char . '<a href="' . $lessonUrl . '" target="_blank" rel="noopener noreferrer" class="lesson-name-link">' . $lessonName . '</a>';
+                } else {
+                    $row['name'] = $char . $lessonName;
+                }
+            }
+
+            if ($row['parent_id'] == null) {
+                $row['is_trial'] = '';
+                $row['document_id'] = $row['document_id'] != null ? 'Có' : 'Không';
+                $row['view'] = '';
+                $row['durations'] = '';
+                $row['status'] = $row['status'] == 1
+                    ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i>Kích hoạt</span>'
+                    : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i>Chưa kích hoạt</span>';
+
+                $row['add'] = $canCreateLessons
+                    ? '<a href="' . route('lessons.add', $row['course_id']) . '?module=' . $row['id'] . '" class="btn btn-primary btn-sm">Thêm bài</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+                $row['edit'] = $canEditLessons
+                    ? '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+                $row['delete'] = $canDeleteLessons
+                    ? '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa mềm</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+            } else {
+                $row['is_trial'] = $row['is_trial'] == 1 ? 'Có' : 'Không';
+                $row['document_id'] = $row['document_id']  != null ? 'Có' : 'Không';
+                $row['view'] = $lesson['view'];
+                $row['durations'] = getTime($row['durations']);
+                $row['status'] = $row['status'] == 1
+                    ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i>Kích hoạt</span>'
+                    : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i>Chưa kích hoạt</span>';
+                $row['add'] = '';
+                $row['edit'] = $canEditLessons
+                    ? '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+                $row['delete'] = $canDeleteLessons
+                    ? '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa mềm</a>'
+                    : '<span class="text-muted small">Không có quyền</span>';
+            }
+
+            unset($row['sub_lessons']);
+            unset($row['course_id']);
+            unset($row['created_at']);
+            unset($row['updated_at']);
+            $result[] = $row;
+
+            if (!empty($lesson['sub_lessons'])) {
+                $this->getLessonTable($lesson['sub_lessons'], $char . '|--', $result);
+            }
+        }
+
+        return $result;
+
         if (!empty($lessons)) {
             foreach ($lessons as $key => $lesson) {
                 $row = $lesson;
@@ -470,10 +570,11 @@ class LessonController extends Controller
         $snapshot = $lesson->toArray();
         $courseId = $lesson->course_id;
 
-        $this->lessonRepository->delete($lessonId);
+        $branchIds = $this->collectLessonBranchIds($lesson->id);
+        Lesson::query()->whereIn('id', $branchIds)->delete();
 
         activity_log(
-            action: 'delete',
+            action: 'soft_delete',
             subject: $lesson,
             properties: [
                 'course_id' => $courseId,
@@ -482,17 +583,84 @@ class LessonController extends Controller
                     'name' => $snapshot['name'] ?? null,
                     'slug' => $snapshot['slug'] ?? null,
                     'parent_id' => $snapshot['parent_id'] ?? null,
+                    'branch_ids' => $branchIds,
                 ],
             ],
-            logName: 'Xóa',
-            description: 'Xóa bài giảng'
+            logName: 'Xóa mềm',
+            description: 'Xóa mềm bài giảng'
         );
         $this->updateDurations($lesson->course_id);
-        return redirect()->route('lessons.index', $lesson->course_id)->with('msg', __('lessons::messages.delete.success'));
+        return redirect()->route('lessons.index', $lesson->course_id)->with('msg', 'Đã chuyển bài giảng vào thùng rác.');
+    }
+
+    public function restore($lessonId)
+    {
+        $lesson = Lesson::query()->onlyTrashed()->findOrFail($lessonId);
+        $branchIds = $this->collectLessonBranchIds($lesson->id);
+
+        Lesson::query()
+            ->onlyTrashed()
+            ->whereIn('id', $branchIds)
+            ->restore();
+
+        activity_log(
+            action: 'restore',
+            subject: $lesson,
+            properties: [
+                'course_id' => $lesson->course_id,
+                'data' => [
+                    'id' => $lesson->id,
+                    'name' => $lesson->name,
+                    'branch_ids' => $branchIds,
+                ],
+            ],
+            logName: 'Khôi phục',
+            description: 'Khôi phục bài giảng'
+        );
+
+        $this->updateDurations($lesson->course_id);
+
+        return redirect()->route('lessons.trash', $lesson->course_id)->with('msg', 'Đã khôi phục bài giảng thành công.');
+    }
+
+    public function forceDelete($lessonId)
+    {
+        $lesson = Lesson::query()->onlyTrashed()->findOrFail($lessonId);
+        $snapshot = $lesson->toArray();
+        $branchIds = $this->collectLessonBranchIds($lesson->id);
+
+        Lesson::query()
+            ->onlyTrashed()
+            ->whereIn('id', $branchIds)
+            ->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $lesson,
+            properties: [
+                'course_id' => $snapshot['course_id'] ?? null,
+                'data' => [
+                    'id' => $snapshot['id'] ?? null,
+                    'name' => $snapshot['name'] ?? null,
+                    'slug' => $snapshot['slug'] ?? null,
+                    'branch_ids' => $branchIds,
+                ],
+            ],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn bài giảng'
+        );
+
+        $this->updateDurations($snapshot['course_id'] ?? null);
+
+        return redirect()->route('lessons.trash', $snapshot['course_id'])->with('msg', 'Đã xóa vĩnh viễn bài giảng thành công.');
     }
 
     private function updateDurations($courseId)
     {
+        if (!$courseId) {
+            return;
+        }
+
         $lessons = $this->lessonRepository->getAllLessions($courseId);
 
         $durations = $lessons->reduce(function ($prev, $item) {
@@ -529,5 +697,44 @@ class LessonController extends Controller
         $logs = $query->latest()->paginate(config('paginate.log_limit'))->withQueryString();
 
         return view('courses::logs', compact('pageTitle', 'lesson', 'logs'));
+    }
+
+    private function collectLessonBranchIds(int $lessonId): array
+    {
+        $ids = [$lessonId];
+
+        $childIds = Lesson::query()
+            ->withTrashed()
+            ->where('parent_id', $lessonId)
+            ->pluck('id');
+
+        foreach ($childIds as $childId) {
+            $ids = array_merge($ids, $this->collectLessonBranchIds((int) $childId));
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    private function flattenTrashedLessons(Collection $lessons, ?int $parentId = null, string $prefix = '', array &$rows = []): array
+    {
+        $items = $lessons
+            ->where('parent_id', $parentId)
+            ->sortBy('position');
+
+        foreach ($items as $lesson) {
+            $rows[] = [
+                'id' => $lesson->id,
+                'name' => $prefix . $lesson->name,
+                'is_trial' => $lesson->parent_id ? ((int) $lesson->is_trial === 1 ? 'Có' : 'Không') : '',
+                'document' => $lesson->document_id ? 'Có' : 'Không',
+                'view' => $lesson->parent_id ? $lesson->view : '',
+                'durations' => $lesson->parent_id ? getTime($lesson->durations) : '',
+                'deleted_at' => optional($lesson->deleted_at)?->format('d/m/Y H:i:s'),
+            ];
+
+            $this->flattenTrashedLessons($lessons, $lesson->id, $prefix . '|--', $rows);
+        }
+
+        return $rows;
     }
 }

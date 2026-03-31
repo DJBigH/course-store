@@ -8,8 +8,8 @@
             Vui lòng kiểm tra lại dữ liệu đã nhập.
         </div>
     @endif
-    <form action="" method="post">
-        <div class="d-flex align-items-center justify-content-between mb-3">
+    <form action="" method="post" class="admin-form">
+        <div class="admin-form__header d-flex align-items-center justify-content-between mb-3">
             <h5 class="mb-0"></h5>
 
             <div class="btn-group" role="group">
@@ -286,6 +286,29 @@
                 </div>
             </div>
 
+            <div class="col-6">
+                <div class="mb-3">
+                    <label for="">Khóa học tập</label>
+                    <select name="is_learning_locked"
+                        class="form-select{{ $errors->has('is_learning_locked') ? ' is-invalid' : '' }}">
+                        <option value="0" {{ old('is_learning_locked', 0) == 0 ? 'selected' : '' }}>
+                            Không khóa, học viên đã mua vẫn được học
+                        </option>
+                        <option value="1" {{ old('is_learning_locked', 0) == 1 ? 'selected' : '' }}>
+                            Khóa học tập, chặn cả học viên đã mua
+                        </option>
+                    </select>
+                    <small class="text-muted d-block mt-2">
+                        Ẩn khóa học chỉ ngừng hiển thị ngoài public. Tùy chọn này mới là phần chặn học tập thật sự.
+                    </small>
+                    @error('is_learning_locked')
+                        <div class="invalid-feedback">
+                            {{ $message }}
+                        </div>
+                    @enderror
+                </div>
+            </div>
+
             <div class="col-12">
                 {{-- VI --}}
                 <div class="lang-block lang-vi">
@@ -411,7 +434,7 @@
                 </div>
             </div>
 
-            <div class="col-12 text-end">
+            <div class="col-12 text-end admin-form__footer">
                 <button type="submit" class="btn btn-success">Lưu</button>
                 <a href="{{ route('courses.index') }}" class="btn btn-warning">Trở về</a>
             </div>

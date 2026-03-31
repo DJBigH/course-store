@@ -8,6 +8,7 @@ interface CoursesRepositoryInterface extends RepositoryInterface
 {
     //function for admin
     public function getAllCourses();
+    public function getAdminCourseStats(): array;
 
     public function createCoursesCategory($course, $data = []);
 
@@ -25,6 +26,7 @@ interface CoursesRepositoryInterface extends RepositoryInterface
     //function for clients
     public function getCourses($limit);
     public function getCourseActive($slug);
+    public function getCourseForClientAccess($slug, ?int $studentId = null);
     public function createOrder($data = []);
     public function getCourseFree();
     public function getCourseView();

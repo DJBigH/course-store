@@ -7,6 +7,8 @@ use Throwable;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -50,6 +52,33 @@ class Handler extends ExceptionHandler
                 return response()->view('errors.admin.400', [], 400);
             }
             return response()->view('errors.clients.400', [], 400);
+        }
+
+        if ($e instanceof TooManyRequestsHttpException) {
+            $retryAfter = (int) ($e->getHeaders()['Retry-After'] ?? 60);
+            $retryAfter = max(1, $retryAfter);
+
+            if ($request->is('admin/forgot-password')) {
+                return back()
+                    ->withInput($request->only('email'))
+                    ->withErrors([
+                        'email' => "Bạn thao tác quá nhanh. Vui lòng thử lại sau {$retryAfter} giây.",
+                    ]);
+            }
+
+            if ($request->is('admin/reset-password')) {
+                return back()
+                    ->withInput($request->except('password', 'password_confirmation'))
+                    ->withErrors([
+                        'password' => "Bạn thao tác quá nhanh. Vui lòng thử lại sau {$retryAfter} giây.",
+                    ]);
+            }
+        }
+
+        if ($e instanceof HttpExceptionInterface && $e->getStatusCode() === 403 && $request->is('admin/*')) {
+            return response()->view('errors.admin.403', [
+                'message' => $e->getMessage() ?: 'Bạn không có quyền truy cập khu vực này.',
+            ], 403);
         }
 
         return parent::render($request, $e);

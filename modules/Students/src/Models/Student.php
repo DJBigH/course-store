@@ -8,15 +8,19 @@ use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Courses\src\Models\Courses;
 use Modules\Orders\src\Models\Order;
+use Modules\Teacher\src\Models\Teacher;
+use Modules\Teacher\src\Models\TeacherApplication;
 
 class Student extends Authenticatable implements MustVerifyEmail, CanResetPassword, HasLocalePreference
 {
     use HasFactory;
     use Notifiable;
+    use SoftDeletes;
 
     protected $table = 'students';
 
@@ -41,6 +45,7 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
         'last_login_browser',
         'last_login_platform',
         'last_login_device',
+        'deleted_at',
     ];
 
     protected $casts = [
@@ -50,6 +55,7 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
         'two_factor_email_code_expires_at' => 'datetime',
         'two_factor_email_code_sent_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function sendEmailVerificationNotification()
@@ -90,5 +96,15 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
     public function orders()
     {
         return $this->hasMany(Order::class, 'student_id', 'id');
+    }
+
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class, 'student_id', 'id');
+    }
+
+    public function teacherApplications()
+    {
+        return $this->hasMany(TeacherApplication::class, 'student_id', 'id');
     }
 }

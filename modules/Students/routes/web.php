@@ -1,25 +1,32 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\Students\src\Http\Controllers\Clients\TwoFactorController;
 
 Route::prefix('admin')->group(function () {
    Route::prefix('students')->name('students.')->group(function () {
-      Route::get('/', 'StudentController@index')->name('index');
-      Route::get('data', 'StudentController@data')->name('data');
-      Route::get('/create', 'StudentController@create')->name('add');
-      Route::post('/create', 'StudentController@store')->name('post-add');
-      Route::get('/edit/{student}', 'StudentController@edit')->name('edit');
-      Route::post('/edit/{student}', 'StudentController@update')->name('post-edit');
-      Route::delete('/delete/{student}', 'StudentController@delete')->name('delete');
-      Route::get('/{id}/coupon-history', 'StudentController@CouponHistory')->name('coupon-history');
-      Route::get('/{id}/purchased-courses', 'StudentController@purchasedCourses')->name('purchased-courses');
-      Route::get('logs/{student}', 'StudentController@logs')->name('logs');
+      Route::get('/', 'StudentController@index')->middleware('permission:students.view,students.create,students.edit,students.delete,students.soft_delete,students.force_delete,students.logs')->name('index');
+      Route::get('/trash', 'StudentController@trash')->middleware('permission:students.view,students.soft_delete,students.force_delete')->name('trash');
+      Route::get('data', 'StudentController@data')->middleware('permission:students.view,students.create,students.edit,students.delete,students.soft_delete,students.force_delete,students.logs')->name('data');
+      Route::get('/trash/data', 'StudentController@trashData')->middleware('permission:students.view,students.soft_delete,students.force_delete')->name('trash.data');
+      Route::post('/bulk', 'StudentController@bulkAction')->middleware('permission:students.edit,students.delete,students.soft_delete')->name('bulk');
+      Route::post('/trash/bulk', 'StudentController@trashBulkAction')->middleware('permission:students.delete,students.soft_delete,students.force_delete')->name('trash.bulk');
+      Route::get('/create', 'StudentController@create')->middleware('permission:students.create')->name('add');
+      Route::post('/create', 'StudentController@store')->middleware('permission:students.create')->name('post-add');
+      Route::post('/restore/{student}', 'StudentController@restore')->middleware('permission:students.restore,students.delete,students.soft_delete')->name('restore');
+      Route::delete('/force-delete/{student}', 'StudentController@forceDelete')->middleware('permission:students.force_delete')->name('force-delete');
+      Route::get('/edit/{student}', 'StudentController@edit')->middleware('permission:students.edit')->name('edit');
+      Route::post('/edit/{student}', 'StudentController@update')->middleware('permission:students.edit')->name('post-edit');
+      Route::delete('/delete/{student}', 'StudentController@delete')->middleware('permission:students.delete,students.soft_delete')->name('delete');
+      Route::get('/{id}/coupon-history', 'StudentController@CouponHistory')->middleware('permission:students.view')->name('coupon-history');
+      Route::get('/{id}/purchased-courses', 'StudentController@purchasedCourses')->middleware('permission:students.view')->name('purchased-courses');
+      Route::get('logs/{student}', 'StudentController@logs')->middleware('permission:students.logs')->name('logs');
    });
 });
 
 Route::group(['as' => 'students.'], function () {
-   Route::group(['prefix' => '{locale}/tai-khoan', 'where' => ['locale' => 'vi|en|ko|ja|zh'], 'as' => 'account.', 'middleware' => ['setLocale','auth:students', 'verified', 'user.block']], function () {
+   Route::group(['prefix' => '{locale}/tai-khoan', 'where' => ['locale' => 'vi|en|ko|ja|zh'], 'as' => 'account.', 'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block']], function () {
       Route::get('/', 'Clients\AccountController@index')->name('index');
       Route::get('/thong-tin', 'Clients\AccountController@profile')->name('profile');
       Route::post('/thong-tin', 'Clients\AccountController@updateProfile')->name('client-updateprofile');
@@ -49,10 +56,8 @@ Route::group(['as' => 'students.'], function () {
          Route::post('/polling', 'Clients\CouponsController@pollingCoupon')->name('coupons-pollingCoupon');
       });
 
-      Route::group([], function () {
-         Route::prefix('checkout')->group(function () {
-            Route::get('/cam-on/{id}', 'Clients\CheckoutController@thankyou')->name('checkout-thankyou');
-         });
+      Route::prefix('checkout')->group(function () {
+         Route::get('/cam-on/{id}', 'Clients\CheckoutController@thankyou')->name('checkout-thankyou');
       });
    });
 });
@@ -87,21 +92,120 @@ Route::group([
    Route::get('/vo-hieu-hoa/thanh-cong', 'Clients\AccountController@deactivateSuccess')->name('deactivate-success');
 });
 
-Route::get('students/notifications/read/{id}', function ($id) {
-   $notification = auth('students')->user()
-      ->notifications()
-      ->where('id', $id)
-      ->firstOrFail();
+Route::group([
+   'prefix' => '{locale}/tai-khoan/thong-bao',
+   'where' => ['locale' => 'vi|en|ko|ja|zh'],
+   'as' => 'students.notifications.',
+   'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block'],
+], function () {
+   Route::get('/', function (Request $request, string $locale) {
+      $student = auth('students')->user();
+      $query = $student->notifications()->latest();
 
-   $notification->markAsRead();
+      if ($request->input('status') === 'unread') {
+         $query->whereNull('read_at');
+      }
 
-   return redirect($notification->data['url'] ?? '/');
-})->middleware(['auth:students', 'verified', 'user.block'])->name('students.notifications.read');
+      if ($request->filled('type')) {
+         $query->where('type', $request->string('type'));
+      }
 
-Route::get('students/notifications', function () {
-   return view('students.notifications.index', [
-      'pageTitle' => 'Thông báo',
-      'pageName' => 'Thông báo',
-      'notifications' => auth('students')->user()->notifications()->latest()->paginate(100),
-   ]);
-})->middleware(['auth:students', 'verified', 'user.block'])->name('students.notifications.index');
+      $notifications = $query->paginate(20)->withQueryString();
+      $types = $student->notifications()
+         ->select('type')
+         ->whereNotNull('type')
+         ->distinct()
+         ->orderBy('type')
+         ->pluck('type');
+
+      return view('students.notifications.index', [
+         'pageTitle' => 'Thông báo',
+         'pageName' => 'Thông báo',
+         'notifications' => $notifications,
+         'types' => $types,
+      ]);
+   })->name('index');
+
+   Route::post('/danh-dau-da-doc-tat-ca', function (Request $request) {
+      $student = auth('students')->user();
+      $student?->unreadNotifications->markAsRead();
+
+      if ($request->expectsJson() || $request->ajax()) {
+         return response()->json([
+            'success' => true,
+            'unread_count' => 0,
+            'message' => 'Đã đánh dấu tất cả thông báo là đã đọc.',
+         ]);
+      }
+
+      return back()->with('msg_success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
+   })->name('mark-all-read');
+
+   Route::get('/doc/{id}', function (string $locale, $id) {
+      $notification = auth('students')->user()
+         ->notifications()
+         ->where('id', $id)
+         ->firstOrFail();
+
+      $notification->markAsRead();
+
+      $targetUrl = trim((string) ($notification->data['url'] ?? ''));
+      $fallback = route('students.notifications.index', ['locale' => $locale]);
+
+      if ($targetUrl === '') {
+         return redirect($fallback);
+      }
+
+      $supportedLocales = ['vi', 'en', 'ko', 'ja', 'zh'];
+      $parts = parse_url($targetUrl);
+
+      if ($parts === false) {
+         return redirect($fallback);
+      }
+
+      $host = $parts['host'] ?? null;
+      $currentHost = request()->getHost();
+      $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+
+      if ($host && !in_array($host, array_filter([$currentHost, $appHost]), true)) {
+         return redirect($targetUrl);
+      }
+
+      $path = trim((string) ($parts['path'] ?? ''), '/');
+
+      if ($path === '') {
+         return redirect($fallback);
+      }
+
+      $segments = explode('/', $path);
+
+      if (!empty($segments) && in_array($segments[0], $supportedLocales, true)) {
+         $segments[0] = $locale;
+      } else {
+         array_unshift($segments, $locale);
+      }
+
+      $rebuiltPath = '/' . implode('/', array_filter($segments, static fn($segment) => $segment !== ''));
+      $redirectUrl = $rebuiltPath;
+
+      if (!empty($parts['scheme']) && !empty($parts['host'])) {
+         $redirectUrl = $parts['scheme'] . '://' . $parts['host'];
+
+         if (!empty($parts['port'])) {
+            $redirectUrl .= ':' . $parts['port'];
+         }
+
+         $redirectUrl .= $rebuiltPath;
+      }
+
+      if (!empty($parts['query'])) {
+         $redirectUrl .= '?' . $parts['query'];
+      }
+
+      if (!empty($parts['fragment'])) {
+         $redirectUrl .= '#' . $parts['fragment'];
+      }
+
+      return redirect($redirectUrl);
+   })->name('read');
+});

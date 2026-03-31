@@ -10,6 +10,7 @@ use Modules\Orders\src\Models\Order;
 use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Models\Teacher;
+use Modules\User\src\Models\User;
 use Modules\Video\src\Models\Video;
 
 function activity_log(
@@ -22,13 +23,12 @@ function activity_log(
     $student = Auth::guard('students')->user();
     $admin = Auth::user();
     $user = $student ?? $admin;
-
     if ($student) {
-        $causerLabel = $student->name . ' (Học viên)';
+        $causerLabel = buildLogCauserLabel($student, 'student');
     } elseif ($admin) {
-        $causerLabel = $admin->name . ' (Admin)';
+        $causerLabel = buildLogCauserLabel($admin, 'admin');
     } else {
-        $causerLabel = 'System';
+        $causerLabel = buildLogCauserLabel();
     }
 
     ActiveLog::create([
@@ -43,6 +43,68 @@ function activity_log(
         'ip'           => request()->ip(),
         'user_agent'   => request()->userAgent(),
     ]);
+}
+
+if (!function_exists('buildLogCauserLabel')) {
+    function buildLogCauserLabel($user = null, ?string $type = null): string
+    {
+        if (!$user) {
+            return 'System';
+        }
+
+        if ($type === 'student' || $user instanceof Student) {
+            return trim(($user->name ?? 'Unknown') . '(hoc-vien)');
+        }
+
+        if ($type === 'admin' || $user instanceof User) {
+            if ($user instanceof User && !$user->relationLoaded('group')) {
+                $user->loadMissing('group');
+            }
+
+            $role = $user->group->slug ?? $user->group->name ?? 'admin';
+            $role = str_replace('_', '-', trim((string) $role));
+
+            return trim(($user->name ?? 'Unknown') . '(' . $role . ')');
+        }
+
+        return (string) ($user->name ?? 'System');
+    }
+}
+
+if (!function_exists('logCauserDisplay')) {
+    function logCauserDisplay($log): string
+    {
+        if (!$log) {
+            return 'System';
+        }
+
+        if (!$log->causer_id) {
+            return $log->causer_type ?: 'System';
+        }
+
+        $storedLabel = (string) ($log->causer_type ?? '');
+        $normalizedLabel = mb_strtolower($storedLabel, 'UTF-8');
+
+        if (
+            str_contains($normalizedLabel, 'hoc-vien') ||
+            str_contains($normalizedLabel, '(student)') ||
+            str_contains($normalizedLabel, '(hoc-vien)')
+        ) {
+            $student = Student::query()->find($log->causer_id);
+
+            if ($student) {
+                return buildLogCauserLabel($student, 'student');
+            }
+        }
+
+        $admin = User::query()->with('group')->find($log->causer_id);
+
+        if ($admin) {
+            return buildLogCauserLabel($admin, 'admin');
+        }
+
+        return $log->causer_type ?: 'System';
+    }
 }
 
 if (!function_exists('presentLogProperties')) {
@@ -131,6 +193,25 @@ if (!function_exists('logFieldLabels')) {
             'banner_slider' => 'Banner slider',
             'banner_right' => 'Banner bên phải',
             'banner_full' => 'Banner full',
+            'global_notice_enabled' => 'Bật thông báo tổng',
+            'global_notice_title' => 'Tiêu đề thông báo tổng',
+            'global_notice_content' => 'Nội dung thông báo tổng',
+            'global_notice_link_label' => 'Nút thông báo tổng',
+            'global_notice_link_url' => 'Liên kết thông báo tổng',
+            'popup_notice_enabled' => 'Bật popup thông báo',
+            'popup_notice_title' => 'Tiêu đề popup',
+            'popup_notice_content' => 'Nội dung popup',
+            'popup_notice_link_label' => 'Nút popup',
+            'popup_notice_link_url' => 'Liên kết popup',
+            'popup_notice_snooze_minutes' => 'Số phút tắt popup tạm thời',
+            'mail_enabled' => 'Gửi mail',
+            'chatbot_widget_enabled' => 'Chatbot widget',
+            'chatbot_enabled' => 'Chatbot',
+            'two_factor_email_enabled' => 'Xác thực 2 lớp email',
+            'is_locked' => 'Khóa tài khoản',
+            'is_admin' => 'Quyền admin',
+            'per_student_once' => 'Dùng 1 lần / học viên',
+            'is_active' => 'Kích hoạt',
             'teacher_id' => 'Giảng viên',
             'parent_id' => 'Mục cha',
             'exp' => 'Kinh nghiệm',
@@ -494,6 +575,10 @@ if (!function_exists('formatLogValue')) {
                 ->format('j/n/Y H:i:s');
         }
 
+        if (in_array($field, ['logo', 'banner_slider', 'banner_right', 'banner_full'], true)) {
+            return formatLogFileValue($value);
+        }
+
         // ===== PRICE =====
         if (in_array($field, ['price', 'sale_price']) && is_numeric($value)) {
             return money($value) . 'đ';
@@ -515,6 +600,8 @@ if (!function_exists('formatLogValue')) {
             'supports_ko',
             'supports_ja',
             'supports_zh',
+            'global_notice_content',
+            'popup_notice_content',
         ], true)) {
             return formatHtmlForLog((string) $value, 220);
         }
@@ -530,6 +617,51 @@ if (!function_exists('formatLogValue')) {
             if ($trimmed === '') {
                 return '—';
             }
+        }
+
+        return (string) $value;
+    }
+}
+
+if (!function_exists('formatLogFileValue')) {
+    function formatLogFileValue($value): string
+    {
+        if (is_null($value)) {
+            return 'â€”';
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+
+            if ($trimmed === '') {
+                return 'â€”';
+            }
+
+            $decoded = json_decode($trimmed, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $value = $decoded;
+            } else {
+                return basename(str_replace('\\', '/', $trimmed));
+            }
+        }
+
+        if (is_array($value)) {
+            $files = collect($value)
+                ->flatten()
+                ->filter(fn($item) => filled($item))
+                ->map(function ($item) {
+                    if (!is_string($item)) {
+                        return null;
+                    }
+
+                    return basename(str_replace('\\', '/', $item));
+                })
+                ->filter()
+                ->values()
+                ->all();
+
+            return empty($files) ? 'â€”' : implode(', ', $files);
         }
 
         return (string) $value;

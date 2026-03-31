@@ -46,7 +46,7 @@ class BackfillLessonDurations extends Command
         $total = (clone $query)->count();
 
         if ($total === 0) {
-            $this->info('Khong co bai giang nao can cap nhat durations.');
+            $this->info('Không có bài giảng nào cần cập nhập thời gian.');
             return self::SUCCESS;
         }
 
@@ -136,12 +136,12 @@ class BackfillLessonDurations extends Command
         }
 
         $this->table(
-            ['Chi tiet', 'So luong'],
+            ['Chi tiết', 'Số lượng'],
             [
-                ['Bai giang da cap nhat', $updatedLessons],
-                ['Bai giang bo qua', $skippedLessons],
-                ['Bai giang khong lay duoc duration', $failedLessons],
-                ['Khoa hoc da tinh lai tong thoi gian', $updatedCourses],
+                ['Bài giảng đã cập nhật', $updatedLessons],
+                ['Bài giảng bỏ qua', $skippedLessons],
+                ['Bải giảng không lấy được tổng thời gian', $failedLessons],
+                ['Khóa học đã tính lại tổng thời gian', $updatedCourses],
             ]
         );
 

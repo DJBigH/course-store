@@ -4,23 +4,23 @@
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-                🎓 Cấp mã cho học viên
+                Cấp mã cho học viên
                 <span class="text-primary">({{ $coupon->code }})</span>
             </h5>
             <a href="{{ route('coupons.index') }}" class="btn btn-sm btn-secondary">
-                ← Quay lại
+                Quay lại
             </a>
         </div>
-        {{-- Thông báo --}}
+
         @if (session('msg'))
-            <div class="alert alert-success alert-dismissible fade show">
+            <div class="alert alert-success alert-dismissible fade show m-3 mb-0">
                 {{ session('msg') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
         @if (session('msg_danger'))
-            <div class="alert alert-danger alert-dismissible fade show">
+            <div class="alert alert-danger alert-dismissible fade show m-3 mb-0">
                 {{ session('msg_danger') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -30,8 +30,6 @@
             @csrf
 
             <div class="card-body">
-
-                {{-- Thông tin mã --}}
                 <div class="alert alert-info">
                     <strong>Loại giảm:</strong>
                     @if ($coupon->discount_type === 'percent')
@@ -63,7 +61,6 @@
                     @endif
                 </div>
 
-                {{-- Chọn học viên --}}
                 <div class="mb-3">
                     <label class="form-label fw-bold">Chọn học viên áp dụng mã</label>
 
@@ -79,7 +76,6 @@
                                     <th>Trạng thái</th>
                                 </tr>
                             </thead>
-
                             <tbody>
                                 @foreach ($students as $student)
                                     <tr>
@@ -99,16 +95,14 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-
                         </table>
                     </div>
                 </div>
-
             </div>
 
             <div class="card-footer text-end">
                 <button class="btn btn-primary">
-                    💾 Lưu thay đổi
+                    Lưu thay đổi
                 </button>
             </div>
         </form>
@@ -118,7 +112,7 @@
 @section('scripts')
     <script>
         document.getElementById('checkAll').addEventListener('change', function() {
-            document.querySelectorAll('input[name="students[]"]').forEach(cb => {
+            document.querySelectorAll('input[name="students[]"]').forEach((cb) => {
                 cb.checked = this.checked;
             });
         });

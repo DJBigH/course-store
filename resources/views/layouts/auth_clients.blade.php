@@ -28,9 +28,13 @@
 
 <body>
     @yield('content')
+    @if ((int) setting('chatbot_widget_enabled', '1') === 1)
+        @include('part.clients.sales-chatbot')
+    @endif
 </body>
 
 @vite(['resources/js/app.js'])
 @yield('scripts')
 
 </html>
+

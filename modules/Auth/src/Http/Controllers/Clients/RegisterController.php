@@ -53,7 +53,7 @@ class RegisterController extends Controller
         }
         event(new Registered($user));
         Auth::guard('students')->login($user);
-        $admins = ModelsUser::where('group_id', 1)->get();
+        $admins = ModelsUser::query()->inGroup('super_admin')->get();
 
         foreach ($admins as $admin) {
             $admin->notify(new RegisterNotification($user));

@@ -26,7 +26,7 @@
                     {{ __('auth::clients/auth.block.back_home') }}
                 </a>
 
-                <a href="#" class="btn btn-danger">
+                <a href="{{ route('contacts.home') }}" class="btn btn-danger">
                     <i class="fa-solid fa-headset me-1"></i>
                     {{ __('auth::clients/auth.block.contact_support') }}
                 </a>

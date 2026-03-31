@@ -4,11 +4,15 @@ namespace Modules\Auth\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
 use App\Support\ClientMailThrottle;
+use App\Support\SystemMailManager;
 use Illuminate\Http\Request;
 
 class VerifyController extends Controller
 {
-    public function __construct(protected ClientMailThrottle $mailThrottle)
+    public function __construct(
+        protected ClientMailThrottle $mailThrottle,
+        protected SystemMailManager $systemMailManager
+    )
     {
     }
 
@@ -24,6 +28,19 @@ class VerifyController extends Controller
 
     public function resend(Request $request, $locale)
     {
+        if (!$this->systemMailManager->isEnabled() || !$this->systemMailManager->isConfigured()) {
+            $message = __('auth::clients/messages.mail_disabled');
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                    'resent' => false,
+                ], 503);
+            }
+
+            return back()->with('msg_danger', $message);
+        }
+
         $throttle = config('mail.throttle.verify_resend');
         $throttleKey = $this->mailThrottle->key('verify-resend', [
             $request->ip(),

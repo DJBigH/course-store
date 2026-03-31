@@ -4,16 +4,25 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->group(function () {
    Route::prefix('courses')->name('courses.')->group(function () {
-      Route::get('/', 'CoursesController@index')->name('index');
-      Route::get('/comments', 'CourseCommentController@index')->name('comments.admin');
-      Route::post('/comments/{commentId}/toggle-visibility', 'CourseCommentController@toggleVisibility')->name('comments.admin-toggle');
-      Route::get('data', 'CoursesController@data')->name('data');
-      Route::get('/create', 'CoursesController@create')->name('add');
-      Route::post('/create', 'CoursesController@store')->name('post-add');
-      Route::get('/edit/{courses}', 'CoursesController@edit')->name('edit');
-      Route::post('/edit/{courses}', 'CoursesController@update')->name('post-edit');
-      Route::delete('/delete/{courses}', 'CoursesController@delete')->name('delete');
-      Route::get('logs/{courses}', 'CoursesController@logs')->name('logs');
+      Route::get('/', 'CoursesController@index')->middleware('permission:courses.view')->name('index');
+      Route::get('/trash', 'CoursesController@trash')->middleware('permission:courses.view')->name('trash');
+      Route::get('/comments', 'CourseCommentController@index')->middleware('permission:comments.moderate')->name('comments.admin');
+      Route::post('/comments/bulk', 'CourseCommentController@bulkAction')->middleware('permission:comments.moderate')->name('comments.admin-bulk');
+      Route::post('/comments/{commentId}/toggle-visibility', 'CourseCommentController@toggleVisibility')->middleware('permission:comments.moderate')->name('comments.admin-toggle');
+      Route::get('data', 'CoursesController@data')->middleware('permission:courses.view')->name('data');
+      Route::get('/trash/data', 'CoursesController@trashData')->middleware('permission:courses.view')->name('trash.data');
+      Route::get('/create', 'CoursesController@create')->middleware('permission:courses.create')->name('add');
+      Route::post('/create', 'CoursesController@store')->middleware('permission:courses.create')->name('post-add');
+      Route::post('/bulk', 'CoursesController@bulkAction')->middleware('permission:courses.publish,courses.edit,courses.soft_delete')->name('bulk');
+      Route::post('/trash/bulk', 'CoursesController@trashBulkAction')->middleware('permission:courses.publish,courses.force_delete')->name('trash.bulk');
+      Route::post('/toggle-status/{courses}', 'CoursesController@toggleStatus')->middleware('permission:courses.publish')->name('toggle-status');
+      Route::post('/duplicate/{courses}', 'CoursesController@duplicate')->middleware('permission:courses.edit')->name('duplicate');
+      Route::post('/restore/{courses}', 'CoursesController@restore')->middleware('permission:courses.restore,courses.publish')->name('restore');
+      Route::delete('/force-delete/{courses}', 'CoursesController@forceDelete')->middleware('permission:courses.force_delete')->name('force-delete');
+      Route::get('/edit/{courses}', 'CoursesController@edit')->middleware('permission:courses.edit')->name('edit');
+      Route::post('/edit/{courses}', 'CoursesController@update')->middleware('permission:courses.edit')->name('post-edit');
+      Route::delete('/delete/{courses}', 'CoursesController@delete')->middleware('permission:courses.soft_delete')->name('delete');
+      Route::get('logs/{courses}', 'CoursesController@logs')->middleware('permission:courses.view')->name('logs');
    });
 });
 

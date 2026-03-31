@@ -3,112 +3,299 @@
 namespace Modules\Settings\src\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SystemTestMail;
+use App\Support\SystemMailManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Mail;
 use Modules\ActiveLogs\src\Models\ActiveLog;
+use Modules\Home\src\Support\GeminiHealthService;
 use Modules\Settings\src\Http\Requests\SettingRequest;
 use Modules\Settings\src\Models\Setting;
 
 class SettingController extends Controller
 {
-
-    public function __construct() {}
+    public function __construct(
+        protected SystemMailManager $systemMailManager,
+        protected GeminiHealthService $geminiHealthService,
+    ) {}
 
     public function index()
     {
-        $pageTitle = 'Cấu hình Website';
-        $pageName = 'Cấu hình Website';
+        $pageTitle = 'Cấu hình website';
+        $pageName = 'Cấu hình website';
         $settings = Setting::pluck('value', 'key')->toArray();
-        return view('settings::index', compact('settings', 'pageName', 'pageTitle'));
+        $currentUser = auth()->user();
+        $canUpdateGeneralSettings = $currentUser?->hasPermission('settings.update') ?? false;
+        $mailConfigured = $this->systemMailManager->isConfigured();
+        $geminiHealth = $this->geminiHealthService->snapshot();
+
+        return view('settings::index', compact(
+            'settings',
+            'pageName',
+            'pageTitle',
+            'canUpdateGeneralSettings',
+            'mailConfigured',
+            'geminiHealth'
+        ));
     }
 
     public function update(SettingRequest $request)
     {
-        // 1) Lấy tất cả input trừ file + token
-        $textInputs = $request->except('_token', 'banner_slider', 'banner_right', 'banner_full', 'logo');
+        $currentUser = auth()->user();
+        $canUpdateGeneralSettings = $currentUser?->hasPermission('settings.update') ?? false;
+        if (!$canUpdateGeneralSettings) {
+            abort(403);
+        }
 
-        // 2) Lấy old settings theo các key gửi lên
-        $old = Setting::whereIn('key', array_keys($textInputs))
+        $textInputs = array_merge(
+            $request->except('_token', 'banner_slider', 'banner_right', 'banner_full', 'logo'),
+            [
+                'global_notice_enabled' => $request->boolean('global_notice_enabled') ? '1' : '0',
+                'popup_notice_enabled' => $request->boolean('popup_notice_enabled') ? '1' : '0',
+                'mail_enabled' => $request->boolean('mail_enabled') ? '1' : '0',
+                'chatbot_widget_enabled' => $request->boolean('chatbot_widget_enabled') ? '1' : '0',
+                'chatbot_enabled' => $request->boolean('chatbot_enabled') ? '1' : '0',
+                'popup_notice_snooze_minutes' => (string) ($request->input('popup_notice_snooze_minutes') ?: '60'),
+                'checkout_countdown_minutes' => (string) ($request->input('checkout_countdown_minutes') ?: config('checkout.checkout_countdown', '0')),
+                'max_devices' => (string) ($request->input('max_devices') ?: config('auth.max_devices', '1')),
+                'chatbot_message_ttl_minutes' => (string) ($request->input('chatbot_message_ttl_minutes') ?: env('CHATBOT_MESSAGE_TTL_MINUTES', '10')),
+                'student_two_factor_timeout' => (string) ($request->input('student_two_factor_timeout') ?: config('auth.student_two_factor_timeout', '600')),
+                'student_two_factor_code_expire' => (string) ($request->input('student_two_factor_code_expire') ?: config('auth.student_two_factor_code_expire', '600')),
+                'student_two_factor_resend_cooldown' => (string) ($request->input('student_two_factor_resend_cooldown') ?: config('auth.student_two_factor_resend_cooldown', '60')),
+            ]
+        );
+
+        if (($textInputs['chatbot_widget_enabled'] ?? '0') !== '1') {
+            $textInputs['chatbot_enabled'] = '0';
+        }
+
+        $generalSettingKeys = [
+            'site_name',
+            'email',
+            'phone',
+            'address',
+            'facebook',
+            'instagram',
+            'youtube',
+            'tiktok',
+            'currency_rate_usd',
+            'currency_rate_krw',
+            'currency_rate_jpy',
+            'currency_rate_cny',
+            'mail_enabled',
+            'chatbot_widget_enabled',
+            'checkout_countdown_minutes',
+            'max_devices',
+            'chatbot_enabled',
+            'chatbot_message_ttl_minutes',
+            'student_two_factor_timeout',
+            'student_two_factor_code_expire',
+            'student_two_factor_resend_cooldown',
+            'global_notice_enabled',
+            'global_notice_title',
+            'global_notice_title_en',
+            'global_notice_title_ko',
+            'global_notice_title_ja',
+            'global_notice_title_zh',
+            'global_notice_content',
+            'global_notice_content_en',
+            'global_notice_content_ko',
+            'global_notice_content_ja',
+            'global_notice_content_zh',
+            'global_notice_link_label',
+            'global_notice_link_label_en',
+            'global_notice_link_label_ko',
+            'global_notice_link_label_ja',
+            'global_notice_link_label_zh',
+            'global_notice_link_url',
+            'global_notice_link_url_en',
+            'global_notice_link_url_ko',
+            'global_notice_link_url_ja',
+            'global_notice_link_url_zh',
+            'popup_notice_enabled',
+            'popup_notice_title',
+            'popup_notice_title_en',
+            'popup_notice_title_ko',
+            'popup_notice_title_ja',
+            'popup_notice_title_zh',
+            'popup_notice_content',
+            'popup_notice_content_en',
+            'popup_notice_content_ko',
+            'popup_notice_content_ja',
+            'popup_notice_content_zh',
+            'popup_notice_link_label',
+            'popup_notice_link_label_en',
+            'popup_notice_link_label_ko',
+            'popup_notice_link_label_ja',
+            'popup_notice_link_label_zh',
+            'popup_notice_link_url',
+            'popup_notice_link_url_en',
+            'popup_notice_link_url_ko',
+            'popup_notice_link_url_ja',
+            'popup_notice_link_url_zh',
+            'popup_notice_snooze_minutes',
+        ];
+
+        $allowedSettingKeys = [];
+
+        if ($canUpdateGeneralSettings) {
+            $allowedSettingKeys = array_merge($allowedSettingKeys, $generalSettingKeys);
+        }
+
+        $textInputs = Arr::only($textInputs, array_values(array_unique($allowedSettingKeys)));
+
+        $mailConfigKeys = $this->systemMailManager->configKeys();
+        $mailKeysToDelete = $canUpdateGeneralSettings ? $mailConfigKeys : [];
+        $sensitiveKeys = [];
+
+        $legacyRemovedSettingKeys = [
+            'payment_vnpay_enabled',
+            'payment_vnpay_url',
+            'payment_vnpay_tmn_code',
+            'payment_vnpay_hash_secret',
+            'payment_vnpay_return_url',
+            'payment_vnpay_bank_code',
+            'payment_vnpay_version',
+            'payment_vnpay_command',
+            'payment_vnpay_curr_code',
+            'payment_vnpay_order_type',
+            'payment_momo_enabled',
+            'payment_momo_endpoint',
+            'payment_momo_partner_code',
+            'payment_momo_access_key',
+            'payment_momo_secret_key',
+            'payment_momo_request_type',
+            'bank_transfer_bank_name',
+            'bank_transfer_bank_bin',
+            'bank_transfer_account_number',
+            'bank_transfer_account_name',
+            'bank_transfer_note_prefix',
+            'captcha_enabled',
+            'captcha_site_key',
+            'captcha_secret_key',
+            'captcha_verify_url',
+        ];
+
+        $keysToDelete = array_merge($mailKeysToDelete, $legacyRemovedSettingKeys);
+        $keysToDelete = array_values(array_unique($keysToDelete));
+        $trackedKeys = array_values(array_unique(array_merge(array_keys($textInputs), $keysToDelete)));
+
+        $old = Setting::whereIn('key', $trackedKeys)
             ->pluck('value', 'key')
             ->toArray();
 
-        // 3) Lưu text settings
         foreach ($textInputs as $key => $value) {
             Setting::updateOrCreate(['key' => $key], ['value' => $value]);
         }
 
-        // 4) Lưu file settings + chuẩn bị newValues để log
-        $new = $textInputs; // new của text
+        if (!empty($keysToDelete)) {
+            Setting::whereIn('key', $keysToDelete)->delete();
+        }
 
-        if ($request->hasFile('banner_slider')) {
+        if ($canUpdateGeneralSettings && $request->hasFile('banner_slider')) {
             $paths = [];
+
             foreach ($request->file('banner_slider') as $file) {
                 $paths[] = $file->store('banners/slider', 'public');
             }
+
             Setting::updateOrCreate(['key' => 'banner_slider'], ['value' => json_encode($paths)]);
-            $new['banner_slider'] = $paths; // log dạng array cho dễ đọc
         }
 
-        if ($request->hasFile('banner_right')) {
+        if ($canUpdateGeneralSettings && $request->hasFile('banner_right')) {
             $paths = [];
+
             foreach ($request->file('banner_right') as $file) {
                 $paths[] = $file->store('banners/right', 'public');
             }
+
             Setting::updateOrCreate(['key' => 'banner_right'], ['value' => json_encode($paths)]);
-            $new['banner_right'] = $paths;
         }
 
-        if ($request->hasFile('banner_full')) {
+        if ($canUpdateGeneralSettings && $request->hasFile('banner_full')) {
             $path = $request->file('banner_full')->store('banners/full', 'public');
             Setting::updateOrCreate(['key' => 'banner_full'], ['value' => $path]);
-            $new['banner_full'] = $path;
         }
 
-        if ($request->hasFile('logo')) {
+        if ($canUpdateGeneralSettings && $request->hasFile('logo')) {
             $path = $request->file('logo')->store('banners/logo', 'public');
             Setting::updateOrCreate(['key' => 'logo'], ['value' => $path]);
-            $new['logo'] = $path;
         }
 
-        // 5) Lấy lại new values trong DB cho chắc (bao gồm key file)
-        $allKeys = array_unique(array_merge(array_keys($textInputs), ['banner_slider', 'banner_right', 'banner_full', 'logo']));
+        $allKeys = array_unique(array_merge($trackedKeys, ['banner_slider', 'banner_right', 'banner_full', 'logo']));
         $newDb = Setting::whereIn('key', $allKeys)->pluck('value', 'key')->toArray();
 
-        // 6) Tính changed (chỉ log cái thay đổi)
         $changed = [];
         foreach ($allKeys as $key) {
             $oldVal = $old[$key] ?? null;
             $newVal = $newDb[$key] ?? null;
 
-            if ((string)$oldVal !== (string)$newVal) {
+            if ((string) $oldVal !== (string) $newVal) {
                 $changed[] = $key;
             }
         }
 
-        // 7) Tạo log (1 record duy nhất cho mỗi lần update)
         if (!empty($changed)) {
             activity_log(
                 action: 'update_settings',
-                subject: null, // settings không cần subject_id
+                subject: null,
                 properties: [
-                    'changed_keys' => $changed,
-                    'old' => Arr::only($old, $changed),
-                    'new' => Arr::only($newDb, $changed),
+                    'changed_keys' => $this->formatSettingLogKeys($changed),
+                    'old' => $this->formatSettingLogValues(Arr::only($old, $changed), $sensitiveKeys),
+                    'new' => $this->formatSettingLogValues(Arr::only($newDb, $changed), $sensitiveKeys),
                 ],
                 logName: 'Cập nhập',
-                description: 'Cập nhật cấu hình website'
+                description: 'Cập nhập cấu hình'
             );
         }
 
-        return back()->with('msg', 'Cập nhật cấu hình thành công');
+        return back()->with('msg', 'Cập nhập cấu hình thành công')->with('msgType', 'success');
+    }
+
+    public function testMail(Request $request)
+    {
+        abort_unless(auth()->user()?->hasPermission('settings.update'), 403);
+
+        $user = auth()->user();
+        $settings = $this->systemMailManager->settings();
+
+        if (!$this->systemMailManager->isEnabled($settings)) {
+            return back()->with('msg', 'Mail đang tắt. Hãy bật mail trước khi test')->with('msgType', 'danger');
+        }
+
+        if (!$this->systemMailManager->isConfigured($settings)) {
+            return back()->with('msg', 'Mail chưa đủ cấu hình!')->with('msgType', 'danger');
+        }
+
+        if (!$user || blank($user->email)) {
+            return back()->with('msg', 'Tài khoản hiện tại chauw có email để nhận mail test')->with('msgType', 'danger');
+        }
+
+        try {
+            $this->systemMailManager->apply($settings);
+
+            Mail::to($user->email)->queue(new SystemTestMail(
+                $user->name ?: 'Admin',
+                now()->format('Y-m-d H:i:s')
+            ));
+        } catch (\Throwable $exception) {
+            return back()
+                ->with('msg', 'Gửi email test thất bại: ' . $exception->getMessage())
+                ->with('msgType', 'danger');
+        }
+
+        return back()
+            ->with('msg', 'Đã gửi email tới ' . $user->email)
+            ->with('msgType', 'success');
     }
 
     public function logs(Request $request)
     {
-        $pageTitle = "Lịch sử cấu hình Website";
+        $pageTitle = 'Lịch sử cấu hình website';
 
         $query = ActiveLog::query()
-            ->where('log_name', 'Cập nhập')
+            ->where('action', 'update_settings')
             ->withoutGlobalScopes();
 
         if ($request->filled('action')) {
@@ -135,4 +322,87 @@ class SettingController extends Controller
 
         return view('settings::logs', compact('pageTitle', 'logs'));
     }
+
+    private function maskSensitiveSettings(array $settings, array $sensitiveKeys): array
+    {
+        foreach ($sensitiveKeys as $key) {
+            if (array_key_exists($key, $settings) && filled($settings[$key])) {
+                $settings[$key] = '***hidden***';
+            }
+        }
+
+        return $settings;
+    }
+
+    private function formatSettingLogKeys(array $keys): array
+    {
+        return array_values(array_unique(array_map(
+            fn ($key) => $this->settingLogLabel($key),
+            $keys
+        )));
+    }
+
+    private function formatSettingLogValues(array $settings, array $sensitiveKeys): array
+    {
+        $settings = $this->maskSensitiveSettings($settings, $sensitiveKeys);
+        $formatted = [];
+
+        foreach ($settings as $key => $value) {
+            $formatted[$this->settingLogLabel($key)] = $value;
+        }
+
+        return $formatted;
+    }
+
+    private function settingLogLabel(string $key): string
+    {
+        $exactLabels = [
+            'site_name' => 'Ten website',
+            'email' => 'Email website',
+            'phone' => 'So dien thoai',
+            'address' => 'Dia chi',
+            'facebook' => 'Facebook',
+            'instagram' => 'Instagram',
+            'youtube' => 'Youtube',
+            'tiktok' => 'TikTok',
+            'mail_enabled' => 'Bat gui mail',
+            'chatbot_widget_enabled' => 'Bat chatbot thuong',
+            'checkout_countdown_minutes' => 'So phut giu don checkout',
+            'chatbot_enabled' => 'Bat chatbot Gemini',
+            'chatbot_message_ttl_minutes' => 'Thoi gian nho hoi thoai chatbot',
+            'student_two_factor_timeout' => 'Thoi gian xac thuc lai 2FA',
+            'student_two_factor_code_expire' => 'Thoi gian het han ma 2FA',
+            'student_two_factor_resend_cooldown' => 'Thoi gian cho gui lai ma 2FA',
+            'mail_host' => 'SMTP host',
+            'mail_port' => 'SMTP port',
+            'mail_encryption' => 'Mail encryption',
+            'mail_username' => 'Mail username',
+            'mail_password' => 'Mail password',
+            'mail_from_address' => 'Mail from email',
+            'mail_from_name' => 'Mail from name',
+            'banner_slider' => 'Banner slider',
+            'banner_right' => 'Banner ben phai',
+            'banner_full' => 'Banner full',
+            'logo' => 'Logo',
+        ];
+
+        if (isset($exactLabels[$key])) {
+            return $exactLabels[$key];
+        }
+
+        if (str_starts_with($key, 'global_notice_')) {
+            return 'Thông báo toàn website';
+        }
+
+        if (str_starts_with($key, 'popup_notice_')) {
+            return 'Popup thông báo';
+        }
+
+        if (str_starts_with($key, 'currency_rate_')) {
+            return 'Tỷ giá tiền tệ';
+        }
+
+        return ucwords(str_replace('_', ' ', $key));
+    }
 }
+

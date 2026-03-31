@@ -12,6 +12,16 @@ window.addEventListener("DOMContentLoaded", (event) => {
     // Toggle the side navigation
     const sidebarToggle = document.body.querySelector("#sidebarToggle");
     if (sidebarToggle) {
+        const isOverlaySidebarViewport = () => window.innerWidth < 1200;
+        const closeSidebarOnOverlayViewport = () => {
+            if (!isOverlaySidebarViewport()) {
+                return;
+            }
+
+            document.body.classList.remove("sb-sidenav-toggled");
+            localStorage.setItem("sb|sidebar-toggle", "false");
+        };
+
         // Uncomment Below to persist sidebar toggle between refreshes
         // if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
         //     document.body.classList.toggle('sb-sidenav-toggled');
@@ -23,6 +33,30 @@ window.addEventListener("DOMContentLoaded", (event) => {
                 "sb|sidebar-toggle",
                 document.body.classList.contains("sb-sidenav-toggled"),
             );
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!isOverlaySidebarViewport() || !document.body.classList.contains("sb-sidenav-toggled")) {
+                return;
+            }
+
+            const sidebar = document.querySelector("#layoutSidenav_nav");
+            const clickedToggle = event.target.closest("#sidebarToggle");
+
+            if (clickedToggle) {
+                return;
+            }
+
+            if (sidebar && !sidebar.contains(event.target)) {
+                closeSidebarOnOverlayViewport();
+            }
+        });
+
+        window.addEventListener("resize", () => {
+            if (!isOverlaySidebarViewport()) {
+                document.body.classList.remove("sb-sidenav-toggled");
+                localStorage.setItem("sb|sidebar-toggle", "false");
+            }
         });
     }
 

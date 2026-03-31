@@ -1,7 +1,6 @@
 @extends('layouts.backend')
 
 @section('content')
-    {{-- Alert --}}
     @if (session('msg'))
         <div class="alert alert-success">{{ session('msg') }}</div>
     @endif
@@ -15,8 +14,6 @@
     @endif
 
     <div class="container-fluid">
-
-        {{-- Header --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold mb-0">
                 <i class="bi bi-receipt me-1"></i> Chi tiết đơn hàng
@@ -28,11 +25,7 @@
         </div>
 
         <div class="row">
-
-            {{-- LEFT --}}
             <div class="col-lg-8">
-
-                {{-- Order Info --}}
                 <div class="card shadow-sm mb-4">
                     <div class="card-header fw-semibold">
                         Thông tin đơn hàng
@@ -52,21 +45,35 @@
                                     <th>Trạng thái</th>
                                     <td>
                                         <span class="badge bg-{{ $order->status->color }}">
-                                            {{ $order->status->name }}
+                                            {{ $order->status->name_locale }}
                                         </span>
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Thanh toán</th>
                                     <td>
-                                        @if ($order->payment_date)
+                                        @if ((int) $order->status_id === 2)
                                             <span class="badge bg-success">Đã thanh toán</span>
-                                            <div class="small text-muted">
-                                                {{ format_date_dmy($order->payment_complete_date) ?? '' }}
-                                            </div>
+                                            @if ($order->payment_complete_date || $order->payment_date)
+                                                <div class="small text-muted">
+                                                    {{ format_date_dmy($order->payment_complete_date ?: $order->payment_date) }}
+                                                </div>
+                                            @endif
+                                        @elseif ((int) $order->status_id === 4)
+                                            <span class="badge bg-danger">Hủy thanh toán</span>
+                                        @elseif ((int) $order->status_id === 3)
+                                            <span class="badge bg-danger">Thanh toán thất bại</span>
                                         @else
-                                            <span class="badge bg-warning">Chưa thanh toán</span>
+                                            <span class="badge bg-warning text-dark">Chưa thanh toán</span>
                                         @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Phương thức thanh toán</th>
+                                    <td>
+                                        <span class="badge rounded-pill" style="{{ $order->payment_method_badge_style }}">
+                                            {{ $order->payment_method_label }}
+                                        </span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -74,7 +81,6 @@
                     </div>
                 </div>
 
-                {{-- Course Detail --}}
                 <div class="card shadow-sm">
                     <div class="card-header fw-semibold">
                         Danh sách khóa học
@@ -112,13 +118,9 @@
                         </table>
                     </div>
                 </div>
-
             </div>
 
-            {{-- RIGHT --}}
             <div class="col-lg-4">
-
-                {{-- Customer --}}
                 <div class="card shadow-sm mb-4">
                     <div class="card-header fw-semibold">
                         Thông tin khách hàng
@@ -139,13 +141,12 @@
                     </div>
                 </div>
 
-                {{-- Payment Summary --}}
                 <div class="card shadow-sm">
                     <div class="card-header fw-semibold">
                         Tổng thanh toán
                     </div>
                     <div class="card-body p-0">
-                        <table class="table table-bordered mb-0">
+                        <table class="table table-bordered mb-0 order-summary-table">
                             <tbody>
                                 <tr>
                                     <th>Tạm tính</th>
@@ -173,10 +174,71 @@
                         </table>
                     </div>
                 </div>
-
             </div>
-
         </div>
     </div>
 @endsection
 
+@section('stylesheets')
+    <style>
+        html[data-theme='dark'] .order-summary-table .table-success,
+        html[data-theme='dark'] .order-summary-table .table-success > th,
+        html[data-theme='dark'] .order-summary-table .table-success > td {
+            background: rgba(34, 197, 94, 0.18) !important;
+            color: #dcfce7 !important;
+        }
+
+        html[data-theme='dark'] .order-summary-table .table-success th,
+        html[data-theme='dark'] .order-summary-table .table-success td {
+            border-color: rgba(74, 222, 128, 0.18) !important;
+        }
+
+        html[data-theme='dark'] .order-summary-table .table-success .fw-bold,
+        html[data-theme='dark'] .order-summary-table .table-success th.fw-bold,
+        html[data-theme='dark'] .order-summary-table .table-success td.fw-bold {
+            color: #f0fdf4 !important;
+            text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+        }
+
+        html[data-theme='dark'] .order-summary-table .text-success {
+            color: #86efac !important;
+            font-weight: 800;
+        }
+
+        html[data-theme='dark'] .order-summary-table .text-danger {
+            color: #f87171 !important;
+        }
+
+        html[data-theme='dark'] .card .table-light,
+        html[data-theme='dark'] .card .table-light > th,
+        html[data-theme='dark'] .card .table-light > td {
+            background: rgba(30, 41, 59, 0.92) !important;
+            color: #cbd5e1 !important;
+            border-color: rgba(148, 163, 184, 0.18) !important;
+        }
+
+        html[data-theme='dark'] .card .table-bordered > :not(caption) > * > * {
+            border-color: rgba(148, 163, 184, 0.18);
+        }
+
+        html[data-theme='dark'] .card .table-hover > tbody > tr:hover > * {
+            background: rgba(30, 41, 59, 0.52);
+            color: #f8fafc;
+        }
+
+        html[data-theme='dark'] .card .small.text-muted {
+            color: #94a3b8 !important;
+        }
+
+        html[data-theme='dark'] .btn-outline-secondary {
+            border-color: rgba(148, 163, 184, 0.24);
+            color: #e2e8f0;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        html[data-theme='dark'] .btn-outline-secondary:hover {
+            background: rgba(30, 41, 59, 0.96);
+            color: #f8fafc;
+        }
+    </style>
+@endsection

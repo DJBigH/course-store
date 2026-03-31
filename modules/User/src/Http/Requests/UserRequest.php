@@ -6,40 +6,29 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UserRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        $id = $this->route()->user;
+        $id = $this->route('user');
+
         $rules = [
             'name' => 'required|max:225',
-            'email' => 'required|email|unique:users,email,'.$id,
+            'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'required|min:6',
-            'group_id' => ['integer', function ($attribute, $value, $fail) {
-                if ($value == 0) {
-                    $fail(__('user::validation.select'));
-                }
-            }],
+            'group_id' => 'required|integer|exists:groups,id',
+            'is_locked' => 'required|in:0,1',
         ];
-        if($id){
-            $rules['email'] = 'required|email|unique:users,email,'.$id;
-            if($this->password){
-                $rules['password'] = 'min:6';
-            }else{
+
+        if ($id) {
+            if (!$this->filled('password')) {
                 unset($rules['password']);
             }
         }
+
         return $rules;
     }
 
@@ -52,6 +41,7 @@ class UserRequest extends FormRequest
             'max' => __('user::validation.max'),
             'min' => __('user::validation.min'),
             'integer' => __('user::validation.integer'),
+            'exists' => ':attribute không tồn tại trong hệ thống.',
         ];
     }
 
@@ -62,6 +52,7 @@ class UserRequest extends FormRequest
             'email' => __('user::validation.attributes.email'),
             'password' => __('user::validation.attributes.password'),
             'group_id' => __('user::validation.attributes.group_id'),
+            'is_locked' => 'trạng thái tài khoản',
         ];
     }
 }

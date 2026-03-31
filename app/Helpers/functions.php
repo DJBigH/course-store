@@ -238,6 +238,67 @@ if (!function_exists('notificationText')) {
     }
 }
 
+
+if (!function_exists('notificationData')) {
+    function notificationData($notification, string $key, $default = null)
+    {
+        return $notification->data[$key] ?? $default;
+    }
+}
+
+if (!function_exists('notificationSeverityClass')) {
+    function notificationSeverityClass($notification, string $default = 'secondary'): string
+    {
+        $severity = (string) notificationData($notification, 'severity', $default);
+
+        return match ($severity) {
+            'success' => 'success',
+            'warning' => 'warning',
+            'danger', 'error', 'critical' => 'danger',
+            'info', 'primary' => 'primary',
+            default => $default,
+        };
+    }
+}
+
+if (!function_exists('notificationIconClass')) {
+    function notificationIconClass($notification, string $default = 'fas fa-bell'): string
+    {
+        return (string) notificationData($notification, 'icon', $default);
+    }
+}
+
+if (!function_exists('notificationTypeLabel')) {
+    function notificationTypeLabel(?string $type): string
+    {
+        $type = trim((string) $type);
+
+        if ($type === '') {
+            return 'Thong bao he thong';
+        }
+
+        $map = [
+            'App\\Notifications\\NewContactNotification' => 'Liên hệ mới',
+            'App\\Notifications\\OrderPaidNotification' => 'Đơn hàng đã thanh toán',
+            'App\\Notifications\\RegisterNotification' => 'Đăng ký mới',
+            'App\\Notifications\\CouponStudentNotification' => 'Mã giảm giá',
+            'App\\Notifications\\StudentNotification' => 'Học viên',
+            'App\\Notifications\\GeminiHealthNotification' => 'Gemini health',
+            'App\\Notifications\\AdminSecurityAlertNotification' => 'Bảo mật admin',
+        ];
+
+        if (isset($map[$type])) {
+            return $map[$type];
+        }
+
+        $basename = class_basename($type);
+        $basename = preg_replace('/Notification$/', '', $basename);
+        $label = trim((string) preg_replace('/(?<!^)([A-Z])/', ' $1', $basename));
+
+        return $label !== '' ? $label : $type;
+    }
+}
+
 if (!function_exists('normalizeVideoUrl')) {
     function normalizeVideoUrl($url): string
     {

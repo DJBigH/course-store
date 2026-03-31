@@ -4,7 +4,8 @@ return [
     'checkout' => [
         'page_title' => 'Thanh toán đơn hàng',
         'page_name' => 'Thanh toán',
-        'notice_complete_payment' => 'Vui lòng hoàn tất thanh toán để kích hoạt khóa học',
+        'notice_complete_payment' => 'Vui lòng hoàn tất thanh toán để kích hoạt khóa học.',
+        'notice_free_order' => 'Đây là đơn hàng miễn phí, bạn có thể kích hoạt khóa học ngay.',
         'order_info' => 'Thông tin đơn hàng',
         'order_code' => 'Mã đơn hàng',
         'subtotal' => 'Tạm tính',
@@ -24,6 +25,7 @@ return [
         'choose_payment_method' => 'Chọn hình thức thanh toán',
         'qr_transfer' => 'Chuyển khoản QR',
         'maintenance' => 'Bảo trì',
+        'payment_under_maintenance' => ':gateway đang được bảo trì.',
         'bank_transfer' => 'Thanh toán chuyển khoản',
         'bank_name' => 'Ngân hàng',
         'bank_account' => 'STK',
@@ -35,11 +37,14 @@ return [
         'transfer_note_qr' => 'thanh toan don',
         'download_qr' => 'Tải QR',
         'after_transfer_notice' => 'Sau khi chuyển khoản thành công, vui lòng nhấn',
-        'confirm_paid' => '“Tôi đã thanh toán”',
+        'confirm_paid' => '"Tôi đã thanh toán"',
         'complete_order_notice' => 'để hoàn tất đơn hàng.',
         'i_have_paid' => 'Tôi đã thanh toán',
         'cancel_order' => 'Hủy đơn hàng',
         'cancel_confirm' => 'Bạn có chắc chắn muốn hủy đơn hàng này không?',
+        'free_order_message' => 'Đơn hàng này có số tiền thanh toán là 0đ, bạn không cần đi qua cổng thanh toán.',
+        'activate_free_course' => 'Nhận khóa học miễn phí',
+        'free_order_completed' => 'Khóa học miễn phí đã được kích hoạt thành công.',
         'vnpay_notice' => 'Bạn sẽ được chuyển đến cổng thanh toán VNPAY để hoàn tất giao dịch.',
         'pay_with_vnpay' => 'Thanh toán bằng VNPAY',
         'vnpay_not_configured' => 'VNPAY chưa được cấu hình. Vui lòng thêm thông tin sandbox vào .env.',
@@ -70,3 +75,4 @@ return [
         'apply' => 'Áp dụng',
     ],
 ];
+

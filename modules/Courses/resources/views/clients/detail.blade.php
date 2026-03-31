@@ -380,6 +380,43 @@
             .admin-reply-form {
                 margin-left: 0;
             }
+
+            .course-profile {
+                margin-top: 24px;
+            }
+
+            .comment-card {
+                padding: 14px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .course-comments-head,
+            .comment-meta {
+                gap: 6px;
+            }
+
+            .course-comment-form .d-flex.justify-content-between {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 10px;
+            }
+
+            .course-comment-form .btn,
+            .admin-reply-form .btn {
+                width: 100%;
+            }
+
+            .comment-card {
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .comment-avatar {
+                width: 38px;
+                height: 38px;
+                border-radius: 12px;
+            }
         }
     </style>
 @endsection

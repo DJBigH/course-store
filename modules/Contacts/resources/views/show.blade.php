@@ -1,108 +1,93 @@
 @extends('layouts.backend')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
+    <div class="admin-form">
+        <div class="admin-form__header">
+            <div>
+                <h5 class="mb-1">Chi tiết liên hệ</h5>
+                <p class="text-muted mb-0">Xem nội dung khách gửi và xử lý nhanh ngay trong màn hình này.</p>
+            </div>
+            <a href="{{ route('contacts.index') }}" class="btn btn-light border">Quay lại danh sách</a>
+        </div>
 
-                {{-- Header --}}
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="mb-0">
-                        <i class="bi bi-envelope-paper me-1 text-primary"></i>
-                        Chi tiết liên hệ
-                    </h4>
+        @if (session('msg'))
+            <div class="alert alert-success border-0 rounded-4">{{ session('msg') }}</div>
+        @endif
 
-                    <a href="{{ route('contacts.index') }}" class="btn btn-secondary btn-sm">
-                        ← Quay lại
-                    </a>
-                </div>
-                {{-- Flash message --}}
-                @if (session('msg'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="bi bi-check-circle me-1"></i>
-                        {{ session('msg') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                {{-- Card --}}
-                <div class="card shadow-sm">
-                    <div class="card-body">
-
-                        {{-- Thông tin người liên hệ --}}
-                        <table class="table table-bordered align-middle">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <tbody>
                             <tr>
-                                <th width="180">Họ tên</th>
+                                <th style="width: 180px;">Họ tên</th>
                                 <td>{{ $contact->name }}</td>
                             </tr>
-
                             <tr>
                                 <th>Số điện thoại</th>
-                                <td>
-                                    <a href="tel:{{ $contact->phone }}">
-                                        {{ $contact->phone }}
-                                    </a>
-                                </td>
+                                <td><a href="tel:{{ $contact->phone }}">{{ $contact->phone }}</a></td>
                             </tr>
-
                             <tr>
                                 <th>Email</th>
-                                <td>
-                                    <a href="mailto:{{ $contact->email }}">
-                                        {{ $contact->email }}
-                                    </a>
-                                </td>
+                                <td><a href="mailto:{{ $contact->email }}">{{ $contact->email }}</a></td>
                             </tr>
-
                             <tr>
                                 <th>Trạng thái</th>
                                 <td>
                                     @if ($contact->status == 1)
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-check-circle"></i>
-                                            Đã tiếp nhận
-                                        </span>
+                                        <span class="badge rounded-pill text-success-emphasis bg-success-subtle">Đã tiếp nhận</span>
                                     @else
-                                        <span class="badge bg-warning text-dark">
-                                            <i class="bi bi-clock"></i>
-                                            Chờ tiếp xử
-                                        </span>
+                                        <span class="badge rounded-pill text-warning-emphasis bg-warning-subtle">Chờ tiếp xử</span>
                                     @endif
                                 </td>
                             </tr>
-
                             <tr>
                                 <th>Thời gian gửi</th>
                                 <td>{{ $contact->created_at->format('d/m/Y H:i:s') }}</td>
                             </tr>
-
                             <tr>
-                                <th>Nội dung liên hệ</th>
+                                <th>Nội dung</th>
                                 <td>
-                                    <div class="border rounded p-3 bg-light">
+                                    <div class="rounded-4 border bg-light p-3">
                                         {!! nl2br(e($contact->message)) !!}
                                     </div>
                                 </td>
                             </tr>
-                        </table>
-
-                        {{-- Action --}}
-                        <div class="d-flex justify-content-end gap-2 mt-3">
-                            @if ($contact->status == 0)
-                                <form method="POST" action="{{ route('contacts.accept',$contact->id) }}">
-                                    @csrf
-                                    <button class="btn btn-success btn-sm">
-                                        <i class="bi bi-check-lg"></i>
-                                        Tiếp nhận
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
-
             </div>
         </div>
+
+        <div class="admin-form__footer">
+            <a href="{{ route('contacts.index') }}" class="btn btn-light border px-4">Quay lại</a>
+            @if ($contact->status == 0)
+                <form method="POST" action="{{ route('contacts.accept', $contact->id) }}">
+                    @csrf
+                    <button class="btn btn-success px-4">
+                        <i class="fa-solid fa-check me-1"></i>
+                        Tiếp nhận
+                    </button>
+                </form>
+            @endif
+        </div>
     </div>
-    @include('part.backend.delete')
+
+@include('part.backend.delete')
+@endsection
+
+@section('stylesheets')
+    <style>
+        html[data-theme="dark"] .bg-light {
+            background: #162033 !important;
+            border-color: #2b3b53 !important;
+            color: #e2e8f0;
+        }
+
+        html[data-theme="dark"] .table tbody th,
+        html[data-theme="dark"] .table tbody td,
+        html[data-theme="dark"] .table tbody a {
+            color: #e2e8f0;
+        }
+    </style>
 @endsection

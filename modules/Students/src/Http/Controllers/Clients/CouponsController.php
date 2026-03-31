@@ -21,12 +21,17 @@ class CouponsController extends Controller
 
     public function verify(Request $request, $locale)
     {
+        $coupon = null;
+
         try {
             $coupon = $request->coupon;
             if (!$coupon) {
                 throw new \Exception(__('students::clients/messages.verify_coupons.coupon_required'), 400);
             }
             $order = $this->orderRepository->getOrder($request->orderId);
+            if (!$request->orderId || !$order) {
+                throw new \Exception(__('students::clients/messages.verify_coupons.coupon_exp'), 400);
+            }
             $coupon = $this->couponRepository->verifyCoupon($coupon, $order);
             if (!$coupon) {
                 throw new \Exception(__('students::clients/messages.verify_coupons.coupon_exp'), 400);
@@ -34,11 +39,12 @@ class CouponsController extends Controller
 
             //Tính toán mã giảm giá
             $discount = 0;
+            $discountableTotal = (float) $order->total;
 
             if (
                 $coupon->discount_type === 'percent' && $request->orderId && $order
             ) {
-                $discount = ($order->total * $coupon->discount_value) / 100;
+                $discount = ($discountableTotal * $coupon->discount_value) / 100;
             }
 
 
@@ -47,33 +53,34 @@ class CouponsController extends Controller
             }
             if ($this->couponRepository->isCourseCoupon($coupon)) {
                 $courses = $this->couponRepository->getCourses($coupon, $request->orderId)->pluck('id')->toArray();
+                $discountableTotal = (float) $order->detail()->whereIn('course_id', $courses)->sum('price');
                 if ($coupon->discount_type === 'percent') {
-                    $discount = $order->detail()->whereIn('course_id', $courses)->sum('price') * $coupon->discount_value / 100;
+                    $discount = $discountableTotal * $coupon->discount_value / 100;
                 }
 
                 if ($coupon->discount_type === 'value') {
-                    $discount = $order->detail()->whereIn('course_id', $courses)->sum('price') * $coupon->discount_value / 100;
+                    $discount = $coupon->discount_value;
                 }
             }
             //Cập nhập mã giảm giá
+            $discount = min((float) $discount, $discountableTotal);
+            $totalAfterDiscount = max((float) $order->total - $discount, 0);
             $this->orderRepository->updateDiscount($request->orderId, $discount, $coupon->code);
             return response()->json([
                 'success' => true,
                 'data' => [
                     'discount' => $discount,
                     'total' => $order->total,
-                    'total_after_discount' => $order->total - $discount
+                    'total_after_discount' => $totalAfterDiscount
                 ]
             ]);
         } catch (\Exception $exception) {
             $code = $exception->getCode();
-            if (!$coupon) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validated Failed',
-                    'errors' => $exception->getMessage()
-                ], $code ? $code : 500);
-            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Validated Failed',
+                'errors' => $exception->getMessage()
+            ], $code ? $code : 500);
         }
     }
 

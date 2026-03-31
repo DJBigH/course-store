@@ -33,6 +33,7 @@ return [
         'choose_payment_method' => '支払い方法を選択',
         'qr_transfer' => 'QR 銀行振込',
         'maintenance' => 'メンテナンス中',
+        'payment_under_maintenance' => ':gateway は現在メンテナンス中です。',
 
         // Bank transfer
         'bank_transfer' => '銀行振込',
@@ -78,3 +79,4 @@ return [
     ],
 
 ];
+

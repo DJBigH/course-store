@@ -39,18 +39,23 @@ class CheckoutController extends Controller
         $order->coupon = null;
         $this->orderRepository->updatePaymentDate($id);
 
-        if (config('checkout.checkout_countdown') > 0) {
+        $checkoutCountdownMinutes = $this->checkoutCountdownMinutes();
+
+        if ($checkoutCountdownMinutes > 0) {
             $now = strtotime(date('Y-m-d H:i:s'));
             $paymentDate = strtotime($order->payment_date);
             $diff = $now - $paymentDate;
-            $checkoutCountdown = config('checkout.checkout_countdown') * 60;
+            $checkoutCountdown = $checkoutCountdownMinutes * 60;
 
             if ($diff > $checkoutCountdown && !$order->payment_date == null) {
                 return view('errors.clients.expired');
             }
         }
 
-        return view('students::clients.checkout', compact('pageTitle', 'pageName', 'order'));
+        $payableAmount = $this->getPayableAmount($order);
+        $isFreeOrder = $payableAmount <= 0;
+
+        return view('students::clients.checkout', compact('pageTitle', 'pageName', 'order', 'payableAmount', 'isFreeOrder'));
     }
 
     public function complete($locale, $orderId)
@@ -61,6 +66,7 @@ class CheckoutController extends Controller
             abort(404);
         }
 
+        $this->setOrderPaymentMethod($order, $this->getPayableAmount($order) <= 0 ? 'free' : 'bank_transfer');
         $this->markOrderAsPaid($order);
 
         return redirect()->route('students.account.checkout-thankyou', [
@@ -78,7 +84,7 @@ class CheckoutController extends Controller
         }
 
         $this->orderRepository->cancelOrder($order);
-        $admins = User::where('group_id', 1)->get();
+        $admins = User::query()->inGroup('super_admin')->get();
 
         foreach ($admins as $admin) {
             $admin->notify(new OrderPaidNotification($order));
@@ -107,7 +113,17 @@ class CheckoutController extends Controller
             abort(404);
         }
 
-        $config = config('services.vnpay');
+        if (!$this->isPaymentGatewayEnabled('vnpay')) {
+            return redirect()->route('students.account.checkout', [
+                'locale' => $locale,
+                'id' => $order->id,
+            ])->with('msg', __('students::clients/checkout.checkout.vnpay_not_configured'))
+                ->with('msgType', 'danger');
+        }
+
+        $this->setOrderPaymentMethod($order, 'vnpay');
+
+        $config = $this->getVnpayConfig();
         if (empty($config['tmn_code']) || empty($config['hash_secret']) || empty($config['url'])) {
             return redirect()->route('students.account.checkout', [
                 'locale' => $locale,
@@ -118,11 +134,13 @@ class CheckoutController extends Controller
 
         $amount = (int) max($order->total - ($order->discount ?? 0), 0);
         if ($amount <= 0) {
-            return redirect()->route('students.account.checkout', [
+            $this->markOrderAsPaid($order);
+
+            return redirect()->route('students.account.checkout-thankyou', [
                 'locale' => $locale,
                 'id' => $order->id,
-            ])->with('msg', __('students::clients/checkout.checkout.vnpay_invalid_amount'))
-                ->with('msgType', 'danger');
+            ])->with('msg', __('students::clients/checkout.checkout.free_order_completed'))
+                ->with('msgType', 'success');
         }
 
         $returnUrl = $config['return_url'] ?: route('students.account.checkout-vnpay-return', ['locale' => $locale]);
@@ -139,7 +157,7 @@ class CheckoutController extends Controller
             'vnp_OrderType' => $config['order_type'],
             'vnp_ReturnUrl' => $returnUrl,
             'vnp_TxnRef' => $order->code,
-            'vnp_ExpireDate' => now()->addMinutes((int) config('checkout.checkout_countdown', 15))->format('YmdHis'),
+            'vnp_ExpireDate' => now()->addMinutes(max($this->checkoutCountdownMinutes(), 15))->format('YmdHis'),
         ];
 
         if (!empty($config['bank_code'])) {
@@ -223,7 +241,17 @@ class CheckoutController extends Controller
             abort(404);
         }
 
-        $config = config('services.momo');
+        if (!$this->isPaymentGatewayEnabled('momo')) {
+            return redirect()->route('students.account.checkout', [
+                'locale' => $locale,
+                'id' => $order->id,
+            ])->with('msg', __('students::clients/checkout.checkout.momo_not_configured'))
+                ->with('msgType', 'danger');
+        }
+
+        $this->setOrderPaymentMethod($order, 'momo');
+
+        $config = $this->getMomoConfig();
         if (
             empty($config['partner_code']) ||
             empty($config['access_key']) ||
@@ -238,11 +266,13 @@ class CheckoutController extends Controller
 
         $amount = (int) max($order->total - ($order->discount ?? 0), 0);
         if ($amount <= 0) {
-            return redirect()->route('students.account.checkout', [
+            $this->markOrderAsPaid($order);
+
+            return redirect()->route('students.account.checkout-thankyou', [
                 'locale' => $locale,
                 'id' => $order->id,
-            ])->with('msg', __('students::clients/checkout.checkout.momo_invalid_amount'))
-                ->with('msgType', 'danger');
+            ])->with('msg', __('students::clients/checkout.checkout.free_order_completed'))
+                ->with('msgType', 'success');
         }
 
         $requestId = (string) Str::uuid();
@@ -426,7 +456,7 @@ class CheckoutController extends Controller
 
     private function validateVnpaySignature(Request $request): bool
     {
-        $hashSecret = config('services.vnpay.hash_secret');
+        $hashSecret = $this->getVnpayConfig()['hash_secret'] ?? null;
         $secureHash = $request->input('vnp_SecureHash');
 
         if (!$hashSecret || !$secureHash) {
@@ -466,18 +496,124 @@ class CheckoutController extends Controller
         }
 
         $this->orderRepository->completePayment($order);
+        $order->refresh()->loadMissing(['status', 'detail.courses']);
 
-        $admins = User::where('group_id', 1)->get();
+        $admins = User::query()->inGroup('super_admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new OrderPaidNotification($order));
         }
 
         $student = Student::find($order->student_id);
+        if ($student) {
+            $this->logPurchasedOrder($student, $order);
+        }
+
         if ($student && $student->email) {
             Mail::to($student->email)->queue(new OrderPaidCustomerMail(
                 $order,
                 method_exists($student, 'preferredLocale') ? $student->preferredLocale() : app()->getLocale()
             ));
         }
+    }
+
+    private function logPurchasedOrder(Student $student, Order $order): void
+    {
+        $courses = $order->detail
+            ->pluck('courses')
+            ->filter()
+            ->map(function ($course) {
+                return $this->buildTranslatedNames($course);
+            })
+            ->values()
+            ->all();
+
+        activity_log(
+            'order_purchased',
+            $student,
+            [
+                'order_code' => $order->code,
+                'order_status' => $this->buildTranslatedStatus($order),
+                'total_paid' => (float) max($order->total - ($order->discount ?? 0), 0),
+                'courses' => $courses,
+            ],
+            'student_order',
+            __('students::clients/account.activity_log.order_purchased_desc')
+        );
+    }
+
+    private function buildTranslatedNames(object $model): array
+    {
+        return [
+            'vi' => (string) ($model->name ?? ''),
+            'en' => (string) ($model->name_en ?? $model->name ?? ''),
+            'ko' => (string) ($model->name_ko ?? $model->name ?? $model->name_en ?? ''),
+            'ja' => (string) ($model->name_ja ?? $model->name ?? $model->name_en ?? ''),
+            'zh' => (string) ($model->name_zh ?? $model->name ?? $model->name_en ?? ''),
+        ];
+    }
+
+    private function buildTranslatedStatus(Order $order): array
+    {
+        $status = $order->status;
+
+        return [
+            'vi' => (string) ($status->name ?? ''),
+            'en' => (string) ($status->name_en ?? $status->name ?? ''),
+            'ko' => (string) ($status->name_ko ?? $status->name ?? $status->name_en ?? ''),
+            'ja' => (string) ($status->name_ja ?? $status->name ?? $status->name_en ?? ''),
+            'zh' => (string) ($status->name_zh ?? $status->name ?? $status->name_en ?? ''),
+        ];
+    }
+
+    private function getPayableAmount(Order $order): float
+    {
+        return (float) max($order->total - ($order->discount ?? 0), 0);
+    }
+
+    private function isPaymentGatewayEnabled(string $gateway): bool
+    {
+        $default = $gateway === 'momo' ? '0' : '1';
+
+        return (int) setting('payment_' . $gateway . '_enabled', $default) === 1;
+    }
+
+    private function getVnpayConfig(): array
+    {
+        return [
+            'url' => config('services.vnpay.url'),
+            'tmn_code' => config('services.vnpay.tmn_code'),
+            'hash_secret' => config('services.vnpay.hash_secret'),
+            'return_url' => config('services.vnpay.return_url'),
+            'bank_code' => config('services.vnpay.bank_code'),
+            'version' => config('services.vnpay.version'),
+            'command' => config('services.vnpay.command'),
+            'curr_code' => config('services.vnpay.curr_code'),
+            'order_type' => config('services.vnpay.order_type'),
+        ];
+    }
+
+    private function getMomoConfig(): array
+    {
+        return [
+            'endpoint' => config('services.momo.endpoint'),
+            'partner_code' => config('services.momo.partner_code'),
+            'access_key' => config('services.momo.access_key'),
+            'secret_key' => config('services.momo.secret_key'),
+            'request_type' => config('services.momo.request_type'),
+        ];
+    }
+
+    private function setOrderPaymentMethod(Order $order, string $paymentMethod): void
+    {
+        if ($order->payment_method === $paymentMethod) {
+            return;
+        }
+
+        $order->update(['payment_method' => $paymentMethod]);
+    }
+
+    private function checkoutCountdownMinutes(): int
+    {
+        return max(0, (int) setting('checkout_countdown_minutes', config('checkout.checkout_countdown', 0)));
     }
 }

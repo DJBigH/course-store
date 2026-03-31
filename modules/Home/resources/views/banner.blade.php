@@ -1,7 +1,7 @@
 <section class="banner">
     <div class="container padding">
         <div class="row">
-            <div class="d-none d-md-block col-md-4 col-lg-3">
+            <div class="d-none d-md-block col-md-5 col-xl-3">
                 <div class="banner-left">
                     <div class="course-group">
                         <p>{{ __('home::clients/common.free_course') }}</p>
@@ -73,7 +73,7 @@
                 </div>
             </div>
 
-            <div class="col-12 col-md-8 col-lg-6">
+            <div class="col-12 col-md-7 col-xl-6">
                 <div class="banner-slider">
                     @if (!empty(json_decode(setting('banner_slider'), true)))
                         @foreach (json_decode(setting('banner_slider'), true) ?? [] as $img)
@@ -92,11 +92,13 @@
                     @endif
                 </div>
             </div>
-            <div class="d-none d-lg-block col-lg-3">
+            <div class="d-none d-xl-block col-xl-3">
                 <div class="banner-right">
                     @if (!empty(json_decode(setting('banner_right'), true)))
                         @foreach (json_decode(setting('banner_right'), true) ?? [] as $img)
-                            <img src="{{ asset('storage/' . $img) }}">
+                            <div class="banner-right__img">
+                                <img src="{{ asset('storage/' . $img) }}" alt="">
+                            </div>
                         @endforeach
                     @else
                         <div class="banner-right__img">

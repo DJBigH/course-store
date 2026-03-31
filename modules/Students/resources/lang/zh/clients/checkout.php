@@ -24,6 +24,7 @@ return [
         'choose_payment_method' => '选择支付方式',
         'qr_transfer' => '二维码银行转账',
         'maintenance' => '维护中',
+        'payment_under_maintenance' => ':gateway 正在维护中。',
         'bank_transfer' => '银行转账',
         'bank_name' => '银行',
         'bank_account' => '账号',
@@ -58,3 +59,4 @@ return [
         'apply' => '应用',
     ],
 ];
+

@@ -3,10 +3,13 @@
 namespace Modules\Categories\src\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Courses\src\Models\Courses;
 
 class Category extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'categories';
 
     protected $fillable = [
@@ -22,6 +25,7 @@ class Category extends Model
         'slug_ja',
         'slug_zh',
         'parent_id',
+        'deleted_at',
         'created_at',
         'updated_at'
     ];

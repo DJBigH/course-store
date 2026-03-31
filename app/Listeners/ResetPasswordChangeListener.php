@@ -2,10 +2,10 @@
 
 namespace App\Listeners;
 
+use App\Notifications\AdminPasswordChangedNotification;
 use App\Notifications\ResetPasswordChangeNotification;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
+use Modules\User\src\Models\User;
 
 class ResetPasswordChangeListener
 {
@@ -22,6 +22,12 @@ class ResetPasswordChangeListener
      */
     public function handle(PasswordReset $event): void
     {
-        $event->user->notify(new ResetPasswordChangeNotification);
+        if ($event->user instanceof User) {
+            $event->user->notify(new AdminPasswordChangedNotification());
+
+            return;
+        }
+
+        $event->user->notify(new ResetPasswordChangeNotification());
     }
 }

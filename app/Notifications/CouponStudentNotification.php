@@ -4,7 +4,6 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Locale;
 
 class CouponStudentNotification extends Notification
 {
@@ -24,24 +23,22 @@ class CouponStudentNotification extends Notification
 
     public function toArray($notifiable)
     {
-        $locale = method_exists($notifiable, 'preferredLocale')
-            ? $notifiable->preferredLocale()
-            : app()->getLocale();
+        $locale = app()->getLocale();
 
         $titleTranslations = [
             'vi' => 'Mã giảm giá mới',
             'en' => 'New coupon',
-            'ko' => '새 쿠폰',
+            'ko' => '새 할인 쿠폰',
             'ja' => '新しいクーポン',
-            'zh' => '新优惠券',
+            'zh' => '新的优惠券',
         ];
 
         $messageTranslations = [
             'vi' => 'Bạn có mã giảm giá mới',
             'en' => 'You have received a new coupon',
-            'ko' => '새 할인 쿠폰이 도착했습니다',
-            'ja' => '新しい割引クーポンがあります',
-            'zh' => '你收到了一张新优惠券',
+            'ko' => '새로운 할인 쿠폰을 받으셨습니다',
+            'ja' => '新しいクーポンを受け取りました',
+            'zh' => '您已收到新的优惠券',
         ];
 
         return [
@@ -51,6 +48,13 @@ class CouponStudentNotification extends Notification
             'message' => $messageTranslations['vi'],
             'message_translations' => $messageTranslations,
             'url' => route('students.account.my-coupon', ['locale' => $locale]),
+            'severity' => 'success',
+            'icon' => 'fas fa-ticket-alt',
+            'entity_type' => 'coupon',
+            'entity_id' => $this->coupon->id,
+            'meta' => [
+                'coupon_code' => $this->coupon->code ?? null,
+            ],
         ];
     }
 }

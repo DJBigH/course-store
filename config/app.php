@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\ServiceProvider;
+// use Illuminate\Support\ServiceProvider;
 
 return [
 
@@ -200,7 +200,6 @@ return [
         Yajra\DataTables\DataTablesServiceProvider::class,
 
         //File debug tắt khi hoàn thiện dự án
-        Barryvdh\Debugbar\ServiceProvider::class,
     ],
 
     /*

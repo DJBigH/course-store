@@ -444,13 +444,32 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Tạo thêm 1 nơi để setting phân trang được (Không biết có nên làm không)
 - Làm đa ngôn ngữ ( Tiếng Anh/Tiếng Việt ) ( Tương lai có thể thêm cái tiếng khác nữa ) (Done)
 - Thêm hay cập nhập thời gian ở phần mã giảm giá không vào db (Done)
-- Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán
-- Chỉnh lại khóa học khi chuyển thành đã ra mắt thì bên clients những người đã mua khóa học ấn vào sẽ bị trang 404 ( tìm xem hướng giải nào ok nhất )
-- Check lại mã giảm giá
-- Trong config thêm cái kiểm soát momo, vnpay, captcha
-- Thêm phần quản lý học viên xem học viên đã bật 2FA chưa
-- Làm bên admin bảo mật hơn
-- Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không)
+- Thêm remember login ( Done )
+- Chi tiết hóa đơn hủy thanh toán nhưng ở dưỡi vẫn là đã thanh toán ( Done )
+- Thêm cái nhận biết là thành toán = j ( Nếu sửa ở admin thì bên clients cần sửa luôn không) ( Done )
+- Chỉnh lại khóa học khi chuyển thành đã ra mắt thì bên clients những người đã mua khóa học ấn vào sẽ bị trang 404 ( tìm xem hướng giải nào ok nhất ) ( Hướng tạo thêm 1 trường là khóa nhưng học viên đã mua vẫn xem được và khóa học viên đã mua ko xem dc) ( Done )
+- Cái phần bảo mật nếu tài khoản admin bị lộ như kiểu sale, content bị lộ thì sử lý như nào ( Có bước khóa tài khoản rồi còn j nx...) ( Done )
+- Chỉ có super admin chỉnh được tất cả các nhóm quyền khác mà có quyền chỉnh quyền thì không chỉnh được quyền của super admin ( super admin là quyền cao nhất chỉ đăng nhập vào super admin mới chỉnh được quyền của nó còn đâu không quyền nào chỉnh đươc nó) ( Done )
+- ở trang danh sách khóa học, bài giảng khi click vào tên thì mở thêm 1 trang mở link đó ( Làm sau )
+- Trong tất cả module thì module nào có xóa thì thêm cái xóa mềm cho tôi và với tất cả cái xóa hiện lên trên thì sẽ là xóa mềm hết ở trong thùng rác có hiện button xóa vĩnh viễn ( Done )
+- Thêm quyền xóa mềm ( Done )
+- Check lại mã giảm giá ( Done )
+- Thêm phần quản lý học viên xem học viên đã bật 2FA chưa ( Done )
+- Làm bên admin bảo mật hơn ( Done )
+- Trong config thêm cái kiểm soát momo, vnpay, captcha ( Done )
+- Thêm config tắt gửi mail ( Khi tắt sẽ xóa hết dữ liệu trong mail để lại mỗi biến và khi bật lại sẽ phải nhập lại key thì mới được) thêm cái test mail (Gửi 1 cái mail test đến chính bản thân mình xem nó có hoạt động không) ( Done )
+- Check xem còn thiếu config nào không ( Done hiện tại 29-03-2026 có thể thấy cần j thêm sau khi test case)
+- Trong config chatbot xem có cách nào train được con bot thẳng trên website quản trị không ko được thì thôi ( Bỏ )
+- Check lại xem có thiếu quyền nào không, có quyền nào bị trùng nhau ko ( quyền trong nhóm cấu hình ) ( Done )
+- Cái seed group thì tạo super admin và admin ( Done )
+- Thêm chức năng light mode/ dark mode ( Done )
+- check lại cái log xem có thiếu j không ( Done hiện tại 30-03-2026 có thể thấy cần j thêm sau khi test case )
+- Đổi Chỉnh sửa lại Người thực hiện thì sẽ là tên ( quyền hạn kiểu: bigk(super-admin))
+- Check cái notify thì cần thêm cái j nx ko ( Done )
+- Thêm cái lịch sử đăng nhập, lịch sử thao tác ở bên admin và thêm 1 cái nữa check đăng nhập khác thiếp bị hoặc khác ip sẽ báo lên notify ( không dùng email để gửi, gửi lên log là được) ( Done )
+- Check lại responsive ( Done)
+- Viết seed quyền cho giáo viên
+- Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó))
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -480,9 +499,34 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Quên mật khẩu có vấn đề là khi mới gửi mail xong vào mail đó đổi mật khẩu đã báo token sai hay quá hạn rồi và tôi muốn limit và thời gian token đó để đổi mk là 10p ( Done )
 - Làm chức năng xóa tài khoản ( Done )
 - Với cái trang mã giảm giá chỉ lấy mã giảm giá nào còn hiệu lực (còn thời gian, còn số lượng, không giới hạn số lượng, không giới hạn thời gian) ( Done )
-- Với cái trạng thái đơn hàng thêm đa ngôn ngữ lưu vào db ỏ bảng order_status và thêm seeder
-- Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin
-- Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không
-- bên clients thiếu mấy trang nếu được cố code html css
-- Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để ghi cho backend )
-- Check lại responsive
+- Với cái trạng thái đơn hàng thêm đa ngôn ngữ lưu vào db ỏ bảng order_status và thêm seeder ( Done )
+- Phần bài giảng thì thêm cái tiến độ học tổng học được bao nhiêu % có tích đánh dấu những bài đã học ( Done )
+- bên clients thiếu mấy trang nếu được cố code html css ( Done )
+- Check UI/UX xem có trang nào khiến người dùng khó chịu hay không (các trang, light mode, đa ngôn ngữ) (Check lại để khi đẩy lên production tránh fix) ( Done )
+- Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin ( Bot tự đọc db các khóa học, mã giảm giá, hay liên quan j đến website không được đọc những thông tin nhạy cảm hay bảo mật) ( Done )
+- Kết nối với api của con gemeni thêm cho nó các api xem khóa học, đa ngôn ngữ (nếu thấy ổn thì làm)
+- Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không 
+- Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi ) ( Done )
+- Check lại responsive ( Done )
+- Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị ( Done )
+- Check cái notify của học viên xem thiếu hay thừa cái j ( Done )
+- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký  )
+Tổng kết
+- check lại lần cuối trước khi đẩy lên production
+
+
+1. Cái landing page mấy cái ở dầu nhìn nó trật quá fix lại cho tôi ( Done )
+2. Với cái kênh giảng viên thì chỉ khi người dùng là giảng viên mới được quyền thấy nó                          
+3. Cho phép người dùng khi chưa tạo tài khoản sẽ được phép đăng ký làm giáo viên ( khi đăng ký yêu cầu có email rồi khi accpet thì gửi theo email đó làm tài khoản và mk tự random gửi về email và thông báo nên đổi mật khẩu)
+4. Khi đăng ký mà chưa lập tài khoản thì sẽ gửi mail thành công về email đó và thêm lời cảm ơn và chờ đợi
+5. Đối với tài khoản học viên khi đăng ký sang làm giảng viên thì cái kênh giáo viên chuyển thành đơn đăng ký ko được rediect sang trang teacher và chờ khi nào admin duyệt thì nó sẽ chuyển thành kênh giáo viên
+6. Nếu học viên không đăng ký mà chỉ dùng thì ẩn cái đơn đăng ký chỉ khi có đơn đăng ký thì mới hiện ra
+7. Với các đơn accpet hay reject thì đều được gửi mail về ( mail phải trong queue )
+8. Phải vào trang trở thành giáo viên ấn đăng ký thì mới có thể đăng ký
+9. Với cái form đăng ký thì làm thêm 1 trang nào đó phía clients không để nó vào luôn màn teacher đăng ký 
+10. phần chọn các gói đăng ký thêm hiệu ứng hover
+11. Trang lading page thêm 1 số hiệu ứng trong trang vào nhìn nó đơ quá
+12. Khi đăng ký thêm các phường thức thanh toán giống ở bên học viên
+13. bỏ cái bật kênh giáo viên và fix lại khi ở light mode mà 2 nút đăng ký/đăng nhập nó bị tối
+14. Thêm dòng chữ nếu bạn đã là giáo viên vui lòng đăng nhập ở đây hoặc 1 câu j đó để đăng nhập với tư cách giáo viên cho dễ 
+BẠN HAY XỬ LÝ HẾT CÁC TASK TÔI ĐÃ GIAO NHÉ

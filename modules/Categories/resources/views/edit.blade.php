@@ -1,4 +1,5 @@
 @extends('layouts.backend')
+
 @section('content')
     @if (session('msg'))
         <div class="alert alert-success">{{ session('msg') }}</div>
@@ -11,10 +12,14 @@
             Vui lòng kiểm tra lại dữ liệu đã nhập.
         </div>
     @endif
-    <form action="" method="post">
+
+    <form action="" method="post" class="admin-form">
         @csrf
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h5 class="mb-0"></h5>
+        <div class="admin-form__header d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h5 class="mb-1">Cập nhật danh mục</h5>
+                <p class="text-muted mb-0">Điều chỉnh nội dung đa ngôn ngữ và cấu trúc cây danh mục.</p>
+            </div>
             <div class="btn-group" role="group">
                 <input type="radio" class="btn-check" name="content_lang" id="lang_vi" checked>
                 <label class="btn btn-outline-primary" for="lang_vi">VI</label>
@@ -32,12 +37,13 @@
                 <label class="btn btn-outline-primary" for="lang_zh">ZH</label>
             </div>
         </div>
+
         <div class="row">
             <div class="col-12 lang-block lang-vi">
                 <div class="row">
                     <div class="col-6">
                         <div class="mb-3">
-                            <label for="">Tên (VI)</label>
+                            <label>Tên (VI)</label>
                             <input type="text" class="form-control title {{ $errors->has('name') ? ' is-invalid' : '' }}"
                                 name="name" placeholder="Tên..." value="{{ old('name') ?? $category->name }}">
                             @error('name')
@@ -48,7 +54,7 @@
 
                     <div class="col-6">
                         <div class="mb-3">
-                            <label for="">Slug (VI)</label>
+                            <label>Slug (VI)</label>
                             <input type="text" class="form-control slug {{ $errors->has('slug') ? ' is-invalid' : '' }}"
                                 name="slug" placeholder="Slug..." value="{{ old('slug') ?? $category->slug }}">
                             @error('slug')
@@ -59,123 +65,47 @@
                 </div>
             </div>
 
-            <div class="col-12 lang-block lang-en d-none">
-                <div class="row">
-                    <div class="col-6">
-                        <div class="mb-3">
-                            <label for="">Tên (EN)</label>
-                            <input type="text" class="form-control title-en {{ $errors->has('name_en') ? ' is-invalid' : '' }}"
-                                name="name_en" placeholder="Name..." value="{{ old('name_en') ?? $category->name_en }}">
-                            @error('name_en')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+            @foreach (['en' => 'EN', 'ko' => 'KO', 'ja' => 'JA', 'zh' => 'ZH'] as $locale => $label)
+                <div class="col-12 lang-block lang-{{ $locale }} d-none">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Tên ({{ $label }})</label>
+                                <input type="text" class="form-control title-{{ $locale }} {{ $errors->has('name_' . $locale) ? ' is-invalid' : '' }}"
+                                    name="name_{{ $locale }}" placeholder="Name..." value="{{ old('name_' . $locale) ?? $category->{'name_' . $locale} }}">
+                                @error('name_' . $locale)
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="mb-3">
-                            <label for="">Slug (EN)</label>
-                            <input type="text" class="form-control slug-en {{ $errors->has('slug_en') ? ' is-invalid' : '' }}"
-                                name="slug_en" placeholder="Slug..." value="{{ old('slug_en') ?? $category->slug_en }}">
-                            @error('slug_en')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 lang-block lang-ko d-none">
-                <div class="row">
-                    <div class="col-6">
-                        <div class="mb-3">
-                            <label for="">Tên (KO)</label>
-                            <input type="text" class="form-control title-ko {{ $errors->has('name_ko') ? ' is-invalid' : '' }}"
-                                name="name_ko" placeholder="Name..." value="{{ old('name_ko') ?? $category->name_ko }}">
-                            @error('name_ko')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="mb-3">
-                            <label for="">Slug (KO)</label>
-                            <input type="text" class="form-control slug-ko {{ $errors->has('slug_ko') ? ' is-invalid' : '' }}"
-                                name="slug_ko" placeholder="Slug..." value="{{ old('slug_ko') ?? $category->slug_ko }}">
-                            @error('slug_ko')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Slug ({{ $label }})</label>
+                                <input type="text" class="form-control slug-{{ $locale }} {{ $errors->has('slug_' . $locale) ? ' is-invalid' : '' }}"
+                                    name="slug_{{ $locale }}" placeholder="Slug..." value="{{ old('slug_' . $locale) ?? $category->{'slug_' . $locale} }}">
+                                @error('slug_' . $locale)
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-12 lang-block lang-ja d-none">
-                <div class="row">
-                    <div class="col-6">
-                        <div class="mb-3">
-                            <label for="">Tên (JA)</label>
-                            <input type="text" class="form-control title-ja {{ $errors->has('name_ja') ? ' is-invalid' : '' }}"
-                                name="name_ja" placeholder="Name..." value="{{ old('name_ja') ?? $category->name_ja }}">
-                            @error('name_ja')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="mb-3">
-                            <label for="">Slug (JA)</label>
-                            <input type="text" class="form-control slug-ja {{ $errors->has('slug_ja') ? ' is-invalid' : '' }}"
-                                name="slug_ja" placeholder="Slug..." value="{{ old('slug_ja') ?? $category->slug_ja }}">
-                            @error('slug_ja')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 lang-block lang-zh d-none">
-                <div class="row">
-                    <div class="col-6">
-                        <div class="mb-3">
-                            <label for="">Tên (ZH)</label>
-                            <input type="text" class="form-control title-zh {{ $errors->has('name_zh') ? ' is-invalid' : '' }}"
-                                name="name_zh" placeholder="Name..." value="{{ old('name_zh') ?? $category->name_zh }}">
-                            @error('name_zh')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="mb-3">
-                            <label for="">Slug (ZH)</label>
-                            <input type="text" class="form-control slug-zh {{ $errors->has('slug_zh') ? ' is-invalid' : '' }}"
-                                name="slug_zh" placeholder="Slug..." value="{{ old('slug_zh') ?? $category->slug_zh }}">
-                            @error('slug_zh')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @endforeach
 
             <div class="col-6">
                 <div class="mb-3">
-                    <label for="">Cha</label>
-                    <select name="parent_id" id=""
-                        class="form-select{{ $errors->has('parent_id') ? ' is-invalid' : '' }}">
+                    <label>Danh mục cha</label>
+                    <select name="parent_id" class="form-select{{ $errors->has('parent_id') ? ' is-invalid' : '' }}">
                         <option value="0">Không có</option>
                         {{ getCategories($categories, old('parent_id') ?? $category->parent_id) }}
                     </select>
                     @error('parent_id')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
 
-            <div class="col-12 text-end">
+            <div class="col-12 text-end admin-form__footer">
                 <button type="submit" class="btn btn-success">Lưu</button>
                 <a href="{{ route('categories.index') }}" class="btn btn-warning">Trở về</a>
             </div>
@@ -185,59 +115,64 @@
 
 @section('scripts')
     <script>
-        function getSlugVI(title) {
-            let slug = (title || '').toLowerCase();
-            slug = slug.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, "a");
-            slug = slug.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, "e");
-            slug = slug.replace(/i|í|ì|ỉ|ĩ|ị/gi, "i");
-            slug = slug.replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, "o");
-            slug = slug.replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, "u");
-            slug = slug.replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, "y");
-            slug = slug.replace(/đ/gi, "d");
-            slug = slug.replace(/[^a-z0-9\s-]/g, "");
-            return slug.replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+        function toSlug(title) {
+            return (title || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/[^\p{L}\p{N}\s-]/gu, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-+|-+$/g, '');
         }
-        function getSlugIntl(title) {
-            return (title || '').toLowerCase().trim().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '-')
-                .replace(/-+/g, '-').replace(/^-+|-+$/g, '');
-        }
-        function bindAutoSlug(titleSelector, slugSelector, fn) {
+
+        function bindAutoSlug(titleSelector, slugSelector) {
             const titleEl = document.querySelector(titleSelector);
             const slugEl = document.querySelector(slugSelector);
-            if (!titleEl || !slugEl) return;
-            titleEl.addEventListener('input', (e) => {
-                if (!slugEl.dataset.manual) slugEl.value = fn(e.target.value);
-            });
-            slugEl.addEventListener('input', () => slugEl.dataset.manual = '1');
-        }
-        bindAutoSlug('.title', '.slug', getSlugVI);
-        bindAutoSlug('.title-en', '.slug-en', getSlugIntl);
-        bindAutoSlug('.title-ko', '.slug-ko', (title) => getSlugByLocale(title, 'ko'));
-        bindAutoSlug('.title-ja', '.slug-ja', (title) => getSlugByLocale(title, 'ja'));
-        bindAutoSlug('.title-zh', '.slug-zh', (title) => getSlugByLocale(title, 'zh'));
 
-        (function() {
-            const viBtn = document.getElementById('lang_vi');
-            const enBtn = document.getElementById('lang_en');
-            const koBtn = document.getElementById('lang_ko');
-            const jaBtn = document.getElementById('lang_ja');
-            const zhBtn = document.getElementById('lang_zh');
+            if (!titleEl || !slugEl) {
+                return;
+            }
+
+            titleEl.addEventListener('input', (e) => {
+                if (!slugEl.dataset.manual) {
+                    slugEl.value = toSlug(e.target.value);
+                }
+            });
+
+            slugEl.addEventListener('input', () => {
+                slugEl.dataset.manual = '1';
+            });
+        }
+
+        bindAutoSlug('.title', '.slug');
+        bindAutoSlug('.title-en', '.slug-en');
+        bindAutoSlug('.title-ko', '.slug-ko');
+        bindAutoSlug('.title-ja', '.slug-ja');
+        bindAutoSlug('.title-zh', '.slug-zh');
+
+        (() => {
+            const locales = ['vi', 'en', 'ko', 'ja', 'zh'];
+
             function showLang(lang) {
-                document.querySelectorAll('.lang-block').forEach(el => el.classList.add('d-none'));
-                document.querySelectorAll('.lang-' + lang).forEach(el => el.classList.remove('d-none'));
+                document.querySelectorAll('.lang-block').forEach((el) => el.classList.add('d-none'));
+                document.querySelectorAll('.lang-' + lang).forEach((el) => el.classList.remove('d-none'));
                 localStorage.setItem('admin_category_lang', lang);
             }
+
             const saved = localStorage.getItem('admin_category_lang') || 'vi';
-            if (saved === 'en') enBtn.checked = true;
-            if (saved === 'ko') koBtn.checked = true;
-            if (saved === 'ja') jaBtn.checked = true;
-            if (saved === 'zh') zhBtn.checked = true;
-            showLang(saved);
-            viBtn.addEventListener('change', () => showLang('vi'));
-            enBtn.addEventListener('change', () => showLang('en'));
-            koBtn.addEventListener('change', () => showLang('ko'));
-            jaBtn.addEventListener('change', () => showLang('ja'));
-            zhBtn.addEventListener('change', () => showLang('zh'));
+            const input = document.getElementById('lang_' + saved) || document.getElementById('lang_vi');
+
+            if (input) {
+                input.checked = true;
+                showLang(saved);
+            }
+
+            locales.forEach((locale) => {
+                document.getElementById('lang_' + locale)?.addEventListener('change', () => showLang(locale));
+            });
         })();
     </script>
 @endsection

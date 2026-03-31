@@ -10,7 +10,7 @@ class SetLocale
     // app/Http/Middleware/SetLocale.php
     public function handle($request, Closure $next)
     {
-        $locale = $request->route('locale') ?? 'vi';
+        $locale = $request->route('locale') ?? $request->session()->get('locale', 'vi');
 
         if (!in_array($locale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
             $locale = 'vi';

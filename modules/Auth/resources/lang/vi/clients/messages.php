@@ -16,4 +16,5 @@ return [
     'passwords.token' => 'Liên kết đã hết hạn hoặc không hợp lệ. Vui lòng gửi yêu cầu mới.',
     'passwords.user' => 'Email không hợp lệ. Vui lòng kiểm tra lại.',
     'mail_throttled' => 'Bạn đang thao tác gửi email quá nhanh. Vui lòng thử lại sau :seconds giây.',
+    'mail_disabled' => 'Tính năng email đang tạm bảo trì. Vui lòng thử lại sau.',
 ];

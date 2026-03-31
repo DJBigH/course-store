@@ -29,6 +29,7 @@ return [
     'feel_student'         => 'Student Testimonials',
     'terms_and_conditions' => 'Terms and Conditions',
     'affiliate'            => 'Affiliate Program',
+    'payment_policy'       => 'Payment Policy',
     'terms_of_service' => 'Terms of Service',
     'privacy_policy'       => 'Privacy Policy',
 

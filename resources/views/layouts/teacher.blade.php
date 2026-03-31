@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{{ $pageTitle ?? 'Teacher Portal' }} - BigK Udemy</title>
+    <script>
+        (() => {
+            const storageKey = 'admin-theme';
+            const root = document.documentElement;
+            const savedTheme = localStorage.getItem(storageKey);
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme === 'light' || savedTheme === 'dark'
+                ? savedTheme
+                : (systemPrefersDark ? 'dark' : 'light');
+
+            root.dataset.theme = theme;
+            root.style.colorScheme = theme;
+        })();
+    </script>
+    <link href="{{ asset('backend/css/styles.css') }}" rel="stylesheet" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --admin-bg: #f4f7fb;
+            --admin-surface: #ffffff;
+            --admin-border: #dbe4f0;
+            --admin-text: #0f172a;
+            --admin-muted: #64748b;
+            --admin-primary: #2563eb;
+            --teacher-accent: #0ea5e9;
+            --teacher-accent-2: #22c55e;
+            --teacher-glow: rgba(14, 165, 233, 0.18);
+            --teacher-warm: #f59e0b;
+            --admin-topnav-bg: rgba(15, 23, 42, 0.96);
+            --admin-topnav-border: rgba(148, 163, 184, 0.14);
+            --admin-sidebar-gradient:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.28), transparent 28%),
+                linear-gradient(180deg, #0f172a 0%, #172554 100%);
+            --admin-card-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+            --admin-dropdown-shadow: 0 18px 35px rgba(15, 23, 42, 0.12);
+            --admin-form-bg: rgba(255, 255, 255, 0.96);
+            --admin-subtle-bg: #f8fafc;
+            --admin-hover-bg: #f8fafc;
+            --admin-input-bg: #ffffff;
+            --admin-link: #0f172a;
+            --admin-link-muted: #475569;
+            --admin-surface-2: #f8fafc;
+            --admin-surface-3: #eef4fb;
+            --admin-success-bg: #dcfce7;
+            --admin-success-text: #166534;
+            --admin-success-border: #86efac;
+            --admin-danger-bg: #fee2e2;
+            --admin-danger-text: #991b1b;
+            --admin-danger-border: #fca5a5;
+            --admin-warning-bg: #fef3c7;
+            --admin-warning-text: #92400e;
+            --admin-warning-border: #fcd34d;
+            --admin-info-bg: #dbeafe;
+            --admin-info-text: #1d4ed8;
+            --admin-info-border: #93c5fd;
+        }
+
+        html[data-theme="dark"] {
+            --admin-bg: #0b1220;
+            --admin-surface: #111827;
+            --admin-border: #2b3b53;
+            --admin-text: #e2e8f0;
+            --admin-muted: #a8b6c9;
+            --admin-primary: #60a5fa;
+            --teacher-accent: #38bdf8;
+            --teacher-accent-2: #4ade80;
+            --teacher-glow: rgba(56, 189, 248, 0.22);
+            --teacher-warm: #fbbf24;
+            --admin-topnav-bg: rgba(8, 15, 31, 0.96);
+            --admin-topnav-border: rgba(71, 85, 105, 0.35);
+            --admin-sidebar-gradient:
+                radial-gradient(circle at top left, rgba(96, 165, 250, 0.2), transparent 28%),
+                linear-gradient(180deg, #020617 0%, #0f172a 100%);
+            --admin-card-shadow: 0 18px 40px rgba(2, 6, 23, 0.35);
+            --admin-dropdown-shadow: 0 18px 35px rgba(2, 6, 23, 0.45);
+            --admin-form-bg: rgba(15, 23, 42, 0.92);
+            --admin-subtle-bg: #172235;
+            --admin-hover-bg: #1a2940;
+            --admin-input-bg: #0b1324;
+            --admin-link: #e2e8f0;
+            --admin-link-muted: #cbd5e1;
+            --admin-surface-2: #162033;
+            --admin-surface-3: #1a2740;
+            --admin-success-bg: rgba(34, 197, 94, 0.16);
+            --admin-success-text: #86efac;
+            --admin-success-border: rgba(34, 197, 94, 0.34);
+            --admin-danger-bg: rgba(239, 68, 68, 0.16);
+            --admin-danger-text: #fca5a5;
+            --admin-danger-border: rgba(239, 68, 68, 0.34);
+            --admin-warning-bg: rgba(245, 158, 11, 0.16);
+            --admin-warning-text: #fcd34d;
+            --admin-warning-border: rgba(245, 158, 11, 0.34);
+            --admin-info-bg: rgba(59, 130, 246, 0.16);
+            --admin-info-text: #93c5fd;
+            --admin-info-border: rgba(59, 130, 246, 0.34);
+        }
+
+        body.sb-nav-fixed {
+            background:
+                radial-gradient(circle at top, var(--teacher-glow), transparent 22%),
+                radial-gradient(circle at right top, rgba(34, 197, 94, 0.06), transparent 24%),
+                linear-gradient(180deg, var(--admin-surface-2) 0%, var(--admin-bg) 100%);
+            color: var(--admin-text);
+        }
+
+        #layoutSidenav,
+        #layoutSidenav_content,
+        #layoutSidenav_content main {
+            background:
+                radial-gradient(circle at top, var(--teacher-glow), transparent 22%),
+                radial-gradient(circle at right top, rgba(34, 197, 94, 0.06), transparent 24%),
+                linear-gradient(180deg, var(--admin-surface-2) 0%, var(--admin-bg) 100%);
+        }
+
+        #layoutSidenav_content {
+            min-height: calc(100vh - 72px);
+        }
+
+        #layoutSidenav_content main {
+            min-height: 100%;
+            padding-bottom: 2rem;
+        }
+
+        a {
+            color: var(--admin-link);
+        }
+
+        a:hover {
+            color: var(--admin-primary);
+        }
+
+        .container-fluid {
+            max-width: 1600px;
+        }
+
+        .sb-topnav {
+            min-height: 72px;
+            background: var(--admin-topnav-bg) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--admin-topnav-border);
+            position: sticky;
+            top: 0;
+            z-index: 1035;
+        }
+
+        .sb-topnav::after {
+            content: "";
+            position: absolute;
+            inset: auto 0 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--teacher-accent), var(--teacher-accent-2), var(--teacher-warm));
+        }
+
+        .sb-sidenav {
+            background: var(--admin-sidebar-gradient);
+        }
+
+        .sb-sidenav .sb-sidenav-menu .nav .nav-link {
+            margin: 0.18rem 0.75rem;
+            padding: 0.82rem 1rem;
+            border-radius: 14px;
+            color: rgba(255, 255, 255, 0.78);
+            transition: 0.2s ease;
+        }
+
+        .sb-sidenav .sb-sidenav-menu .nav .nav-link:hover,
+        .sb-sidenav .sb-sidenav-menu .nav .nav-link.active,
+        .sb-sidenav .sb-sidenav-menu .nav .nav-link.is-active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .sb-sidenav .sb-sidenav-menu .nav .sb-sidenav-menu-heading {
+            padding: 1rem 1.5rem 0.65rem;
+            color: rgba(255, 255, 255, 0.48);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .card,
+        .teacher-panel {
+            background: var(--admin-surface);
+            border: 1px solid color-mix(in srgb, var(--admin-border) 85%, transparent);
+            box-shadow: var(--admin-card-shadow) !important;
+            color: var(--admin-text);
+            border-radius: 24px;
+        }
+
+        .teacher-panel {
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teacher-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--teacher-accent) 55%, transparent), transparent);
+            opacity: 0.95;
+        }
+
+        .teacher-stat-card {
+            padding: 1.35rem;
+            border-radius: 22px;
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .teacher-stat-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--teacher-accent), var(--teacher-accent-2));
+        }
+
+        .teacher-stat-card:hover {
+            transform: translateY(-2px);
+            border-color: color-mix(in srgb, var(--teacher-accent) 35%, var(--admin-border));
+            box-shadow: 0 20px 42px rgba(15, 23, 42, 0.1);
+        }
+
+        .teacher-stat-card__label {
+            color: var(--admin-muted);
+            font-size: 0.92rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .teacher-stat-card__value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--admin-text);
+        }
+
+        .teacher-subtle-card {
+            border: 1px solid var(--admin-border);
+            border-radius: 18px;
+            background: var(--admin-subtle-bg);
+            padding: 1rem 1.1rem;
+        }
+
+        .teacher-hero {
+            position: relative;
+            overflow: hidden;
+            padding: 1.6rem;
+            border-radius: 28px;
+            background:
+                radial-gradient(circle at top right, rgba(34, 197, 94, 0.18), transparent 24%),
+                radial-gradient(circle at left center, rgba(14, 165, 233, 0.18), transparent 28%),
+                linear-gradient(135deg, #081526 0%, #0f2742 58%, #11355b 100%);
+            color: #fff;
+            box-shadow: 0 24px 54px rgba(8, 21, 38, 0.22);
+        }
+
+        .teacher-hero::after {
+            content: "";
+            position: absolute;
+            inset: auto -80px -90px auto;
+            width: 220px;
+            height: 220px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 70%);
+            pointer-events: none;
+        }
+
+        .teacher-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.45rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .teacher-hero__title {
+            margin: 1rem 0 0.65rem;
+            font-size: clamp(1.8rem, 2.8vw, 2.45rem);
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .teacher-hero__desc {
+            max-width: 720px;
+            margin-bottom: 0;
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .teacher-chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .teacher-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 40px;
+            padding: 0.45rem 0.85rem;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--admin-surface) 84%, transparent);
+            border: 1px solid color-mix(in srgb, var(--admin-border) 90%, transparent);
+            color: var(--admin-text);
+            font-weight: 600;
+        }
+
+        .teacher-chip--dark {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.16);
+            color: #fff;
+        }
+
+        .teacher-section-title {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.9rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .teacher-section-title h3,
+        .teacher-section-title h4 {
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .teacher-soft-link {
+            color: var(--teacher-accent);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .teacher-soft-link:hover {
+            color: var(--admin-primary);
+        }
+
+        .teacher-page-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .table {
+            color: var(--admin-text);
+        }
+
+        .table thead th {
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--admin-muted);
+            background: var(--admin-subtle-bg);
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .table > :not(caption) > * > * {
+            background-color: transparent;
+            border-color: var(--admin-border);
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 12px;
+            border-color: var(--admin-border);
+            min-height: 44px;
+            background: var(--admin-input-bg);
+            color: var(--admin-text);
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: var(--admin-input-bg);
+            color: var(--admin-text);
+            border-color: color-mix(in srgb, var(--admin-primary) 60%, var(--admin-border));
+            box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--admin-primary) 18%, transparent);
+        }
+
+        .btn {
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .text-muted,
+        .small.text-muted,
+        .text-secondary {
+            color: var(--admin-muted) !important;
+        }
+
+        .text-dark,
+        .text-body,
+        .text-black,
+        .text-reset {
+            color: var(--admin-text) !important;
+        }
+
+        .alert {
+            border-width: 1px;
+            border-style: solid;
+        }
+
+        .alert-success {
+            background: var(--admin-success-bg);
+            color: var(--admin-success-text);
+            border-color: var(--admin-success-border);
+        }
+
+        .alert-danger {
+            background: var(--admin-danger-bg);
+            color: var(--admin-danger-text);
+            border-color: var(--admin-danger-border);
+        }
+
+        .alert-warning {
+            background: var(--admin-warning-bg);
+            color: var(--admin-warning-text);
+            border-color: var(--admin-warning-border);
+        }
+
+        .alert-info {
+            background: var(--admin-info-bg);
+            color: var(--admin-info-text);
+            border-color: var(--admin-info-border);
+        }
+
+        .theme-toggle-admin {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            min-height: 40px;
+            padding: 0.4rem 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            transition: 0.2s ease;
+        }
+
+        .theme-toggle-admin:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.28);
+        }
+
+        .theme-toggle-admin__icon-light {
+            display: none;
+        }
+
+        html[data-theme="dark"] .theme-toggle-admin__icon-dark {
+            display: none;
+        }
+
+        html[data-theme="dark"] .theme-toggle-admin__icon-light {
+            display: inline-block;
+        }
+
+        .teacher-shell-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            color: var(--admin-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .teacher-panel {
+                padding: 1rem;
+            }
+        }
+    </style>
+    @yield('stylesheets')
+</head>
+
+<body class="sb-nav-fixed">
+    @include('part.teacher.header')
+    <div id="layoutSidenav">
+        @include('part.teacher.sidebar')
+        <div id="layoutSidenav_content">
+            <main>
+                <div class="container-fluid px-4">
+                    @include('part.backend.page_title')
+                    @yield('content')
+                </div>
+            </main>
+            @include('part.backend.footer')
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="{{ asset('backend/js/scripts.js') }}"></script>
+    <script>
+        (() => {
+            const storageKey = 'admin-theme';
+            const root = document.documentElement;
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+            const applyTheme = (theme) => {
+                root.dataset.theme = theme;
+                root.style.colorScheme = theme;
+
+                document.querySelectorAll('[data-admin-theme-toggle]').forEach((button) => {
+                    const isDark = theme === 'dark';
+                    const nextThemeLabel = isDark ? 'Light mode' : 'Dark mode';
+                    const nextThemeTitle = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+                    const label = button.querySelector('[data-admin-theme-label]');
+
+                    button.setAttribute('aria-pressed', String(isDark));
+                    button.setAttribute('title', nextThemeTitle);
+                    button.setAttribute('aria-label', nextThemeTitle);
+
+                    if (label) {
+                        label.textContent = nextThemeLabel;
+                    }
+                });
+            };
+
+            const persistTheme = (theme) => {
+                localStorage.setItem(storageKey, theme);
+                applyTheme(theme);
+            };
+
+            document.addEventListener('click', (event) => {
+                const toggle = event.target.closest('[data-admin-theme-toggle]');
+                if (!toggle) {
+                    return;
+                }
+
+                const nextTheme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+                persistTheme(nextTheme);
+            });
+
+            const syncSystemTheme = (event) => {
+                const savedTheme = localStorage.getItem(storageKey);
+                if (savedTheme === 'light' || savedTheme === 'dark') {
+                    return;
+                }
+
+                applyTheme(event.matches ? 'dark' : 'light');
+            };
+
+            if (typeof mediaQuery.addEventListener === 'function') {
+                mediaQuery.addEventListener('change', syncSystemTheme);
+            } else if (typeof mediaQuery.addListener === 'function') {
+                mediaQuery.addListener(syncSystemTheme);
+            }
+
+            applyTheme(root.dataset.theme || 'light');
+        })();
+    </script>
+    @yield('scripts')
+</body>
+
+</html>

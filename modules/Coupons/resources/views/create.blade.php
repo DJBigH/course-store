@@ -2,28 +2,29 @@
 
 @section('content')
     @if (session('msg_danger'))
-        <div class="alert alert-danger">{{ session('msg_danger') }}</div>
+        <div class="alert alert-danger border-0 rounded-4">{{ session('msg_danger') }}</div>
     @endif
 
     @if ($errors->any())
-        <div class="alert alert-danger">
+        <div class="alert alert-danger border-0 rounded-4">
             Vui lòng kiểm tra lại dữ liệu đã nhập.
         </div>
     @endif
 
-    <form action="" method="POST">
+    <form action="" method="POST" class="admin-form">
         @csrf
 
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white fw-semibold">
-                <i class="fas fa-ticket-alt me-1"></i>
-                Thêm mã khuyến mãi
+        <div class="admin-form__header">
+            <div>
+                <h5 class="mb-1">Thêm mã giảm giá</h5>
+                <p class="text-muted mb-0">Tạo coupon mới, thiết lập thời gian áp dụng và điều kiện đơn hàng tối thiểu.</p>
             </div>
+            <a href="{{ route('coupons.index') }}" class="btn btn-light border">Quay lại danh sách</a>
+        </div>
 
-            <div class="card-body">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
                 <div class="row g-3">
-
-                    {{-- Mã khuyến mãi --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Mã khuyến mãi</label>
                         <div class="input-group">
@@ -39,7 +40,6 @@
                         @enderror
                     </div>
 
-                    {{-- Loại giảm --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Loại giảm giá</label>
                         <select name="discount_type"
@@ -56,37 +56,29 @@
                         @enderror
                     </div>
 
-                    {{-- Giá trị giảm --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Giá trị giảm</label>
                         <input type="number" class="form-control {{ $errors->has('discount_value') ? 'is-invalid' : '' }}"
-                            name="discount_value" placeholder="VD: 10 (%) hoặc 50000 (đ)"
+                            name="discount_value" placeholder="VD: 10 hoặc 50000"
                             value="{{ old('discount_value', 0) }}">
                         @error('discount_value')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    {{-- Tổng tiền tối thiểu --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Giá trị đơn hàng tối thiểu</label>
-
-                        {{-- input hiển thị có dấu phẩy --}}
-                        <input type="text"
-                            class="form-control {{ $errors->has('total_condition') ? 'is-invalid' : '' }}"
-                            id="total_condition_display" placeholder="VD: 1,000,000" inputmode="numeric" autocomplete="off"
+                        <input type="text" class="form-control {{ $errors->has('total_condition') ? 'is-invalid' : '' }}"
+                            id="total_condition_display" placeholder="VD: 1,000,000" inputmode="numeric"
+                            autocomplete="off"
                             value="{{ old('total_condition', 0) ? money((int) old('total_condition', 0)) : '' }}">
-
-                        {{-- input thật để submit --}}
                         <input type="hidden" name="total_condition" id="total_condition"
                             value="{{ old('total_condition', 0) }}">
-
                         @error('total_condition')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    {{-- Số lượng --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Số lượt sử dụng</label>
                         <input type="number" class="form-control {{ $errors->has('count') ? 'is-invalid' : '' }}"
@@ -96,49 +88,61 @@
                         @enderror
                     </div>
 
-                    {{-- Ngày bắt đầu --}}
+                    <div class="col-12">
+                        <div class="border rounded-3 px-3 py-3">
+                            <div class="form-check form-switch d-flex align-items-start gap-3 mb-0 ps-0">
+                                <input class="form-check-input flex-shrink-0 ms-0 mt-1" type="checkbox" role="switch"
+                                    id="per_student_once" name="per_student_once" value="1"
+                                    {{ old('per_student_once') ? 'checked' : '' }}>
+                                <label class="form-check-label ms-0" for="per_student_once">
+                                <span class="d-block fw-semibold">Mỗi học viên chỉ dùng 1 lần</span>
+                                <span class="text-muted small">Nếu học viên đã dùng coupon này thành công, mã sẽ tự ẩn khỏi màn client của chính học viên đó.</span>
+                                </label>
+                            </div>
+                        </div>
+                        @error('per_student_once')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Ngày bắt đầu</label>
-                        <input type="date"
-                            class="form-control datepicker {{ $errors->has('start_date') ? 'is-invalid' : '' }}"
-                            name="start_date" placeholder="dd/mm/yyyy" value="{{ old('start_date') }}">
+                        <input type="date" class="form-control {{ $errors->has('start_date') ? 'is-invalid' : '' }}"
+                            name="start_date" value="{{ old('start_date') }}">
                         @error('start_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    {{-- Ngày kết thúc --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Ngày kết thúc</label>
-                        <input type="date"
-                            class="form-control datepicker {{ $errors->has('end_date') ? 'is-invalid' : '' }}"
-                            name="end_date" placeholder="dd/mm/yyyy" value="{{ old('end_date') }}">
+                        <input type="date" class="form-control {{ $errors->has('end_date') ? 'is-invalid' : '' }}"
+                            name="end_date" value="{{ old('end_date') }}">
                         @error('end_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
                 </div>
             </div>
+        </div>
 
-            <div class="card-footer text-end">
-                <a href="{{ route('coupons.index') }}" class="btn btn-secondary px-4">
-                    Quay lại
-                </a>
-                <button type="submit" class="btn btn-success px-4">
-                    <i class="fas fa-save me-1"></i> Lưu
-                </button>
-            </div>
+        <div class="admin-form__footer">
+            <a href="{{ route('coupons.index') }}" class="btn btn-light border px-4">Hủy</a>
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save me-1"></i>
+                Lưu mã giảm giá
+            </button>
         </div>
     </form>
 @endsection
+
 @section('scripts')
     <script>
         document.getElementById('randomCodeBtn').addEventListener('click', function() {
             const random = Math.random().toString(36).substring(2, 8).toUpperCase();
             document.getElementById('couponCode').value = `${random}`;
         });
-        // format 1,000,000 khi gõ và submit số sạch
+
         const display = document.getElementById('total_condition_display');
         const hidden = document.getElementById('total_condition');
 
@@ -157,16 +161,7 @@
             display.value = formatNumber(digits);
         }
 
-        // init
         sync();
-
-        // on input
         display.addEventListener('input', sync);
-
-        // random code giữ nguyên của bạn
-        document.getElementById('randomCodeBtn').addEventListener('click', function() {
-            const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-            document.getElementById('couponCode').value = `${random}`;
-        });
     </script>
 @endsection

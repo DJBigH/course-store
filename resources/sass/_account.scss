@@ -279,6 +279,12 @@
 }
 
 @media (max-width: 767.98px) {
+    .account-sidebar,
+    .account-content {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
     .account-dashboard-block__head {
         flex-direction: column;
         align-items: flex-start;

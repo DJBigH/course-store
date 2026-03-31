@@ -1,11 +1,14 @@
 import "select2/dist/css/select2.min.css";
 import $ from "jquery";
 import select2 from "select2";
-select2();
 import { showMessage } from "./message";
 import html2canvas from "html2canvas-pro";
 import { jsPDF } from "jspdf";
+
+select2();
+
 const profileBtn = document.querySelector(".js-profile-btn");
+
 if (profileBtn) {
     let status = "table";
 
@@ -24,13 +27,16 @@ if (profileBtn) {
 
     const renderTableForm = () => {
         const profileList = document.querySelectorAll(".js-profile");
-        var indexActive = null;
+        let indexActive = null;
+
         profileList.forEach((profile, index) => {
             if (profile.classList.contains("active")) {
                 indexActive = index;
             }
         });
+
         profileList[indexActive].classList.remove("active");
+
         if (indexActive === 0) {
             profileList[1].classList.add("active");
         } else {
@@ -46,7 +52,6 @@ if (profileBtn) {
     });
 }
 
-//Xử lý profile
 const profileForm = document.querySelector("form.js-profile");
 const locale = document.documentElement.lang || "vi";
 
@@ -54,6 +59,33 @@ if (profileForm) {
     const msgSuccess = profileForm.dataset.msgSuccess;
     const msgError = profileForm.dataset.msgError;
     const profileTable = document.querySelector(".table-profile");
+
+    const showErrors = (errors) => {
+        const errorList = profileForm.querySelectorAll(".error");
+
+        errorList.forEach((error) => {
+            error.innerText = "";
+        });
+
+        Object.keys(errors).forEach((key) => {
+            const errorEl = profileForm.querySelector(`.error-${key}`);
+
+            if (errorEl) {
+                errorEl.innerText = errors[key];
+            }
+        });
+    };
+
+    const updateTable = (student) => {
+        if (!profileTable || !student) return;
+
+        const rows = profileTable.querySelectorAll("tbody tr td");
+
+        if (rows[0]) rows[0].innerText = student.name || "";
+        if (rows[1]) rows[1].innerText = student.email || "";
+        if (rows[2]) rows[2].innerText = student.phone || "";
+        if (rows[3]) rows[3].innerText = student.address || "Chưa cập nhật";
+    };
 
     const updateProfile = async (formData, token) => {
         const response = await fetch(`/${locale}/tai-khoan/thong-tin`, {
@@ -77,40 +109,24 @@ if (profileForm) {
 
         if (errors) {
             showErrors(errors);
+            return;
+        }
+
+        if (success) {
+            updateTable(student);
+            showMessage(message || msgSuccess, "success");
         } else {
-            if (success) {
-                updateTable(student);
-                showMessage(message || msgSuccess, "success");
-            } else {
-                showMessage(message || msgError, "error");
-            }
+            showMessage(message || msgError, "error");
         }
     };
-    // phần còn lại giữ nguyên
-    const showErrors = (errors) => {
-        const errorList = profileForm.querySelectorAll(".error");
-        errorList.forEach((error) => {
-            error.innerText = "";
-        });
-        Object.keys(errors).forEach((key) => {
-            const errorEl = profileForm.querySelector(`.error-${key}`);
-            errorEl.innerText = errors[key];
-        });
-    };
-    const updateTable = (student) => {
-        if (!profileTable || !student) return;
 
-        const rows = profileTable.querySelectorAll("tbody tr td");
-        if (rows[0]) rows[0].innerText = student.name || "";
-        if (rows[1]) rows[1].innerText = student.email || "";
-        if (rows[2]) rows[2].innerText = student.phone || "";
-        if (rows[3]) rows[3].innerText = student.address || "Chưa cập nhật";
-    };
     profileForm.addEventListener("submit", (e) => {
         e.preventDefault();
+
         const formData = Object.fromEntries(new FormData(e.target));
         const csrfToken =
-            document.head.querySelector(`[name="csrf_token"]`).content;
+            document.head.querySelector('[name="csrf_token"]').content;
+
         updateProfile(formData, csrfToken);
     });
 }
@@ -124,6 +140,7 @@ if (changePasswordForm) {
 
     const showAccountAlert = (message, type = "success") => {
         if (!alertBox) return;
+
         alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
     };
 
@@ -134,8 +151,11 @@ if (changePasswordForm) {
 
         Object.keys(errors || {}).forEach((key) => {
             const errorEl = changePasswordForm.querySelector(`.error-${key}`);
+
             if (errorEl) {
-                errorEl.innerText = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
+                errorEl.innerText = Array.isArray(errors[key])
+                    ? errors[key][0]
+                    : errors[key];
             }
         });
     };
@@ -144,11 +164,15 @@ if (changePasswordForm) {
         e.preventDefault();
 
         showPasswordErrors({});
+
         if (alertBox) {
             alertBox.innerHTML = "";
         }
 
-        const submitButton = changePasswordForm.querySelector('button[type="submit"]');
+        const submitButton = changePasswordForm.querySelector(
+            'button[type="submit"]'
+        );
+
         submitButton.disabled = true;
 
         try {
@@ -157,7 +181,9 @@ if (changePasswordForm) {
                 headers: {
                     Accept: "application/json",
                     "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-TOKEN": document.head.querySelector(`[name="csrf_token"]`).content,
+                    "X-CSRF-TOKEN": document.head.querySelector(
+                        '[name="csrf_token"]'
+                    ).content,
                 },
                 body: new FormData(changePasswordForm),
             });
@@ -193,10 +219,8 @@ if (changePasswordForm) {
     });
 }
 
-//Select2
 $(".js-select2").select2();
 
-//Đơn hàng
 const downloadBtn = document.querySelector(".download-btn");
 
 if (downloadBtn) {
@@ -205,31 +229,63 @@ if (downloadBtn) {
 
         if (!orderDetailEl) return;
 
-        const canvas = await html2canvas(orderDetailEl, {
-            scale: 2, // nét hơn
-            useCORS: true,
-            backgroundColor: "#ffffff",
-        });
+        const root = document.documentElement;
+        const previousTheme = root.getAttribute("data-theme");
+        const previousColorScheme = root.style.colorScheme;
 
-        const image = canvas.toDataURL("image/png");
+        downloadBtn.disabled = true;
+        root.setAttribute("data-theme", "light");
+        root.style.colorScheme = "light";
+        orderDetailEl.classList.add("pdf-export");
 
-        const pdf = new jsPDF({
-            orientation: "portrait",
-            unit: "mm",
-            format: "a4",
-        });
+        try {
+            await new Promise((resolve) => requestAnimationFrame(resolve));
 
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            const canvas = await html2canvas(orderDetailEl, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+            });
 
-        pdf.addImage(image, "PNG", 0, 0, pdfWidth, pdfHeight);
+            const image = canvas.toDataURL("image/png");
+            const pdf = new jsPDF({
+                orientation: "portrait",
+                unit: "mm",
+                format: "a4",
+            });
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const imageHeight = (canvas.height * pdfWidth) / canvas.width;
+            let remainingHeight = imageHeight;
+            let positionY = 0;
 
-        pdf.save(`order-${Date.now()}.pdf`);
+            pdf.addImage(image, "PNG", 0, positionY, pdfWidth, imageHeight);
+            remainingHeight -= pageHeight;
+
+            while (remainingHeight > 0) {
+                positionY -= pageHeight;
+                pdf.addPage();
+                pdf.addImage(image, "PNG", 0, positionY, pdfWidth, imageHeight);
+                remainingHeight -= pageHeight;
+            }
+
+            pdf.save(`order-${Date.now()}.pdf`);
+        } finally {
+            orderDetailEl.classList.remove("pdf-export");
+            if (previousTheme === null) {
+                root.removeAttribute("data-theme");
+            } else {
+                root.setAttribute("data-theme", previousTheme);
+            }
+            root.style.colorScheme = previousColorScheme;
+            downloadBtn.disabled = false;
+        }
     });
 }
 
 document.addEventListener("click", function (e) {
     const el = e.target.closest(".js-logout");
+
     if (!el) return;
 
     e.preventDefault();

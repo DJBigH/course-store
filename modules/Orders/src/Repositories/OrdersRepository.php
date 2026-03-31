@@ -115,12 +115,42 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
             $coupon = Coupons::firstWhere('code', $order->coupon);
 
             if ($coupon) {
-                CouponUsage::create([
+                $usage = CouponUsage::create([
                     'coupon_id'  => $coupon->id,
                     'order_id'   => $order->id,
                     'student_id' => $order->student_id,
                     'created_at' => now(),
                 ]);
+
+                activity_log(
+                    action: 'used',
+                    subject: $coupon,
+                    properties: [
+                        'coupon_id' => $coupon->id,
+                        'coupon_code' => $coupon->code,
+                        'order_id' => $order->id,
+                        'order_code' => $order->code,
+                        'student_id' => $order->student_id,
+                        'discount' => $order->discount,
+                        'usage_id' => $usage->id,
+                    ],
+                    logName: 'Sử dụng mã',
+                    description: 'Coupon được sử dụng thành công'
+                );
+
+                activity_log(
+                    action: 'apply_coupon',
+                    subject: $order,
+                    properties: [
+                        'coupon_id' => $coupon->id,
+                        'coupon_code' => $coupon->code,
+                        'student_id' => $order->student_id,
+                        'discount' => $order->discount,
+                        'usage_id' => $usage->id,
+                    ],
+                    logName: 'Áp dụng mã giảm giá',
+                    description: 'Đơn hàng được áp dụng coupon thành công'
+                );
             }
 
 
@@ -153,7 +183,10 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
 
     public function getCategories()
     {
-        return $this->model->with(['detail', 'status'])->select(['id', 'code', 'total', 'discount', 'coupon', 'status_id', 'created_at'])->latest();
+        return $this->model
+            ->with(['detail', 'status'])
+            ->select(['id', 'code', 'total', 'discount', 'coupon', 'status_id', 'payment_method', 'created_at'])
+            ->latest();
     }
 
     protected function enrichCustomerSnapshot(array $data): array

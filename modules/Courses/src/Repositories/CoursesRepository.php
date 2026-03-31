@@ -16,7 +16,24 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
     public function getAllCourses()
     {
-        return $this->model->withoutGlobalScope(ActiveScope::class)->select(['id', 'name', 'price', 'status', 'sale_price', 'created_at'])->latest();
+        return $this->model
+            ->withoutGlobalScope(ActiveScope::class)
+            ->with(['teacher:id,name'])
+            ->select(['id', 'name', 'price', 'status', 'sale_price', 'created_at', 'teacher_id', 'view'])
+            ->withCount(['lessons', 'students'])
+            ->latest();
+    }
+
+    public function getAdminCourseStats(): array
+    {
+        $query = $this->model->withoutGlobalScope(ActiveScope::class);
+
+        return [
+            'total' => (clone $query)->count(),
+            'published' => (clone $query)->where('status', 1)->count(),
+            'draft' => (clone $query)->where('status', 0)->count(),
+            'free' => (clone $query)->where('price', 0)->count(),
+        ];
     }
 
     public function getCourse($id)
@@ -34,6 +51,35 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
                     ->orWhere('slug_ko', $slug)
                     ->orWhere('slug_ja', $slug)
                     ->orWhere('slug_zh', $slug);
+            })
+            ->first();
+    }
+
+    public function getCourseForClientAccess($slug, ?int $studentId = null)
+    {
+        $course = $this->getCourseActive($slug);
+
+        if ($course) {
+            return $course;
+        }
+
+        if (!$studentId) {
+            return null;
+        }
+
+        return $this->model
+            ->withoutGlobalScope(ActiveScope::class)
+            ->withCount('students')
+            ->where(function ($query) use ($slug) {
+                $query->where('slug', $slug)
+                    ->orWhere('slug_en', $slug)
+                    ->orWhere('slug_ko', $slug)
+                    ->orWhere('slug_ja', $slug)
+                    ->orWhere('slug_zh', $slug);
+            })
+            ->whereHas('students', function ($query) use ($studentId) {
+                $query->where('student_id', $studentId)
+                    ->wherePivot('status', 1);
             })
             ->first();
     }

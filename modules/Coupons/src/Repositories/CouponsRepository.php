@@ -22,10 +22,10 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
         $orderId = $order->id;
         $now = Carbon::now()->format('Y-m-d H:i:s');
         $coupon = $this->model->whereCode($code)->first();
-        $students = $coupon->students;
         if (!$coupon) {
             return false;
         }
+        $students = $coupon->students;
 
         if ($coupon->count && $coupon->usages->count() >= $coupon->count) {
             return false;
@@ -39,6 +39,17 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
             return false;
         }
 
+        if ($coupon->per_student_once) {
+            $alreadyUsed = DB::table('coupons_usage')
+                ->where('coupon_id', $coupon->id)
+                ->where('student_id', $studentId)
+                ->exists();
+
+            if ($alreadyUsed) {
+                return false;
+            }
+        }
+
         // Coupon có giới hạn lượt dùng
         if ($coupon->count) {
 
@@ -47,7 +58,6 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
 
                 $usedCount = DB::table('coupons_usage')
                     ->where('coupon_id', $coupon->id)
-                    ->where('student_id', $studentId)
                     ->count();
             }
             // CASE 2: Coupon KHÔNG ràng buộc học viên
@@ -55,7 +65,6 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
 
                 $usedCount = DB::table('coupons_usage')
                     ->where('coupon_id', $coupon->id)
-                    ->where('order_id', $orderId)
                     ->count();
             }
 
@@ -100,6 +109,6 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
 
     public function getAllCoupons()
     {
-        return $this->model->with(['usages', 'students', 'courses'])->select('id', 'code', 'discount_type', 'discount_value', 'total_condition', 'count', 'start_date', 'end_date')->latest();
+        return $this->model->with(['usages', 'students', 'courses'])->select('id', 'code', 'discount_type', 'discount_value', 'total_condition', 'count', 'per_student_once', 'start_date', 'end_date')->latest();
     }
 }

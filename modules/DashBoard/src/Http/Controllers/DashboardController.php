@@ -187,7 +187,7 @@ class DashboardController extends Controller
         // Doughnut by order status
         $statusMap = OrderStatus::query()
             ->orderBy('id')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'name_en', 'name_ko', 'name_ja', 'name_zh']);
 
         $statusCounts = Order::query()
             ->whereBetween('created_at', [$from, $to])
@@ -196,7 +196,7 @@ class DashboardController extends Controller
             ->pluck('c', 'status_id');
 
         $orderStatus = [
-            'labels' => $statusMap->pluck('name')->values(),
+            'labels' => $statusMap->pluck('name_locale')->values(),
             'data' => $statusMap->pluck('id')->map(fn ($id) => (int) ($statusCounts[$id] ?? 0))->values(),
         ];
 
@@ -258,4 +258,5 @@ class DashboardController extends Controller
         ));
     }
 }
+
 
