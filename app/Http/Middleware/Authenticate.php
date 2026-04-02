@@ -25,6 +25,10 @@ class Authenticate extends Middleware
     {
         if (!$request->expectsJson()) {
             if (!$isAdmin) {
+                if ($request->routeIs('teacher.dashboard.*')) {
+                    return route('teacher.auth.login', ['locale' => app()->getLocale()]);
+                }
+
                 return route('clients-login',['locale' => app()->getLocale()]);
             }
         }

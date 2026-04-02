@@ -4,12 +4,18 @@
     @include('part.clients.page_title')
 
     @php
+        $copy = trans('teacher::portal.status');
         $statusClass = match ($application->status) {
             'approved' => 'success',
             'rejected' => 'danger',
             'pending_payment' => 'warning',
             default => 'info',
         };
+        $applicantTypeLabel = $application->applicant_type === 'guest'
+            ? $copy['labels']['guest']
+            : $copy['labels']['student'];
+        $statusMessage = $copy['messages'][$application->status] ?? null;
+        $paymentGuide = $copy['payment_guide'][$application->payment_method] ?? $copy['payment_guide']['bank_transfer'];
     @endphp
 
     <section class="teacher-application-status py-5">
@@ -17,13 +23,13 @@
             <div class="teacher-status-shell">
                 <div class="teacher-status-header">
                     <div>
-                        <span class="teacher-status-kicker">Application Tracking</span>
-                        <h2>Đơn đăng ký giảng viên</h2>
-                        <p class="mb-0">Bạn đang đứng ở đúng màn theo dõi hồ sơ rồi. Chưa được duyệt thì chưa vào `/teacher`, nên flow sẽ đỡ rối hơn nhiều.</p>
+                        <span class="teacher-status-kicker">{{ $copy['kicker'] }}</span>
+                        <h2>{{ $copy['title'] }}</h2>
+                        <p class="mb-0">{{ $copy['intro'] }}</p>
                     </div>
                     @if (in_array($application->status, ['rejected', 'pending_payment', 'draft'], true))
                         <a href="{{ route('teacher.account.edit', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-primary">
-                            Chỉnh sửa đơn
+                            {{ $copy['edit'] }}
                         </a>
                     @endif
                 </div>
@@ -36,32 +42,26 @@
                 @endif
 
                 <div class="alert alert-{{ $statusClass }} teacher-status-alert">
-                    <strong>Trạng thái hiện tại: {{ $application->display_status }}</strong>
-                    @if ($application->status === 'pending_payment')
-                        <span>Bạn đã chọn gói trả phí. Hoàn tất thanh toán rồi bấm xác nhận để đơn đi tiếp vào hàng chờ duyệt.</span>
-                    @elseif ($application->status === 'pending_review')
-                        <span>Admin đang xem hồ sơ của bạn. Giờ là lúc bình tĩnh chờ mail, đừng tự dọa mình bằng cách refresh 40 lần.</span>
-                    @elseif ($application->status === 'approved')
-                        <span>Chúc mừng, đơn đã được duyệt. Nếu tài khoản được tạo mới từ email đăng ký, thông tin đăng nhập đã được gửi qua mail.</span>
-                    @elseif ($application->status === 'rejected')
-                        <span>Đơn chưa được duyệt. Bạn xem ghi chú bên dưới, sửa lại cho gọn và gửi lại là ổn.</span>
+                    <strong>{{ str_replace(':status', $application->display_status, $copy['current_status']) }}</strong>
+                    @if ($statusMessage)
+                        <span>{{ $statusMessage }}</span>
                     @endif
                 </div>
 
                 <div class="row g-4">
                     <div class="col-lg-6">
                         <div class="teacher-status-card">
-                            <h3 class="h5 fw-bold mb-3">Thông tin hồ sơ</h3>
+                            <h3 class="h5 fw-bold mb-3">{{ $copy['sections']['profile'] }}</h3>
                             <dl class="row mb-0">
-                                <dt class="col-sm-5">Họ tên</dt>
+                                <dt class="col-sm-5">{{ $copy['labels']['full_name'] }}</dt>
                                 <dd class="col-sm-7">{{ $application->full_name }}</dd>
-                                <dt class="col-sm-5">Tên hiển thị</dt>
+                                <dt class="col-sm-5">{{ $copy['labels']['display_name'] }}</dt>
                                 <dd class="col-sm-7">{{ $application->display_name ?: '-' }}</dd>
-                                <dt class="col-sm-5">Email</dt>
+                                <dt class="col-sm-5">{{ $copy['labels']['email'] }}</dt>
                                 <dd class="col-sm-7">{{ $application->email }}</dd>
-                                <dt class="col-sm-5">Loại người nộp</dt>
-                                <dd class="col-sm-7">{{ $application->applicant_type === 'guest' ? 'Khách ngoài hệ thống' : 'Học viên hiện tại' }}</dd>
-                                <dt class="col-sm-5">Gửi lúc</dt>
+                                <dt class="col-sm-5">{{ $copy['labels']['applicant_type'] }}</dt>
+                                <dd class="col-sm-7">{{ $applicantTypeLabel }}</dd>
+                                <dt class="col-sm-5">{{ $copy['labels']['submitted_at'] }}</dt>
                                 <dd class="col-sm-7">{{ optional($application->submitted_at)->format('d/m/Y H:i') ?: '-' }}</dd>
                             </dl>
                         </div>
@@ -69,33 +69,25 @@
 
                     <div class="col-lg-6">
                         <div class="teacher-status-card">
-                            <h3 class="h5 fw-bold mb-3">Gói và thanh toán</h3>
-                            <p class="mb-2 fw-semibold">{{ $application->package?->name ?: 'Chưa chọn gói' }}</p>
-                            <p class="text-muted mb-2">{{ $application->package?->description }}</p>
+                            <h3 class="h5 fw-bold mb-3">{{ $copy['sections']['package_payment'] }}</h3>
+                            <p class="mb-2 fw-semibold">{{ $application->package?->name_locale ?: $application->package?->name ?: $copy['labels']['not_selected'] }}</p>
+                            <p class="text-muted mb-2">{{ $application->package?->description_locale ?: $application->package?->description }}</p>
                             <div class="teacher-status-meta">
                                 <span>{{ $application->package ? money($application->package->price) : '-' }}</span>
                                 @if ($application->coupon_code)
-                                    <span>Mã {{ $application->coupon_code }} giảm {{ money($application->discount_amount ?? 0) }}</span>
+                                    <span>{{ str_replace([':code', ':amount'], [$application->coupon_code, money($application->discount_amount ?? 0)], $copy['labels']['coupon']) }}</span>
                                 @endif
                                 @if ($application->package)
-                                    <span>Thanh toán {{ money($application->payable_amount) }}</span>
+                                    <span>{{ str_replace(':amount', money($application->payable_amount), $copy['labels']['payable']) }}</span>
                                 @endif
                                 <span>{{ $application->payment_method_label }}</span>
-                                <span>Commission {{ $application->package?->commission_rate ?? 0 }}%</span>
+                                <span>{{ str_replace(':rate', $application->package?->commission_rate ?? 0, $copy['labels']['commission']) }}</span>
                             </div>
 
                             @if ($application->status === 'pending_payment')
                                 <div class="teacher-status-payment mt-3">
-                                    <strong>Hướng dẫn nhanh</strong>
-                                    <p class="mb-0">
-                                        @if ($application->payment_method === 'vnpay')
-                                            Đơn đang chờ thanh toán qua VNPay. Sau khi hoàn tất, quay lại đây và bấm xác nhận.
-                                        @elseif ($application->payment_method === 'momo')
-                                            Đơn đang chờ thanh toán qua MoMo. Sau khi hoàn tất, quay lại đây và bấm xác nhận.
-                                        @else
-                                            Đơn đang chờ chuyển khoản ngân hàng. Sau khi chuyển khoản xong, quay lại đây và bấm xác nhận.
-                                        @endif
-                                    </p>
+                                    <strong>{{ $copy['labels']['quick_guide'] }}</strong>
+                                    <p class="mb-0">{{ $paymentGuide }}</p>
                                 </div>
                             @endif
                         </div>
@@ -104,14 +96,14 @@
 
                 @if (!empty($application->bio))
                     <div class="teacher-status-card mt-4">
-                        <h3 class="h5 fw-bold mb-3">Giới thiệu</h3>
+                        <h3 class="h5 fw-bold mb-3">{{ $copy['sections']['bio'] }}</h3>
                         <p class="mb-0">{{ $application->bio }}</p>
                     </div>
                 @endif
 
                 @if (!empty($application->admin_note))
                     <div class="teacher-status-card mt-4 teacher-status-card--danger">
-                        <h3 class="h5 fw-bold mb-3 text-danger">Ghi chú từ admin</h3>
+                        <h3 class="h5 fw-bold mb-3 text-danger">{{ $copy['sections']['admin_note'] }}</h3>
                         <p class="mb-0">{{ $application->admin_note }}</p>
                     </div>
                 @endif
@@ -119,7 +111,7 @@
                 <div class="d-flex flex-wrap gap-2 mt-4">
                     @if ($application->status === 'approved' && $application->teacher?->status === 'active')
                         <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-primary">
-                            Vào kênh giảng viên
+                            {{ $copy['actions']['go_dashboard'] }}
                         </a>
                     @endif
 
@@ -127,19 +119,19 @@
                         <form method="POST" action="{{ route('teacher.account.mark-paid', ['locale' => app()->getLocale()]) }}">
                             @csrf
                             <button type="submit" class="btn btn-primary">
-                                Tôi đã thanh toán
+                                {{ $copy['actions']['mark_paid'] }}
                             </button>
                         </form>
                     @endif
 
                     @if (in_array($application->status, ['rejected', 'pending_payment', 'draft'], true))
                         <a href="{{ route('teacher.account.edit', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-primary">
-                            Cập nhật hồ sơ
+                            {{ $copy['actions']['update_profile'] }}
                         </a>
                     @endif
 
                     <a href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-secondary">
-                        Quay lại landing page
+                        {{ $copy['actions']['back_landing'] }}
                     </a>
                 </div>
             </div>
@@ -149,6 +141,25 @@
 
 @section('stylesheets')
     <style>
+        .teacher-application-status {
+            --teacher-status-card-bg: #ffffff;
+            --teacher-status-card-border: rgba(37, 99, 235, 0.12);
+            --teacher-status-text: #0f172a;
+            --teacher-status-muted: #64748b;
+            --teacher-status-accent: #2563eb;
+            --teacher-status-payment-bg: rgba(245, 158, 11, 0.12);
+            color: var(--teacher-status-text);
+        }
+
+        html[data-theme="dark"] .teacher-application-status {
+            --teacher-status-card-bg: #0f172a;
+            --teacher-status-card-border: rgba(96, 165, 250, 0.2);
+            --teacher-status-text: #e5eefc;
+            --teacher-status-muted: #a9bbd5;
+            --teacher-status-accent: #60a5fa;
+            --teacher-status-payment-bg: rgba(245, 158, 11, 0.18);
+        }
+
         .teacher-status-shell {
             max-width: 1100px;
             margin: 0 auto;
@@ -167,7 +178,7 @@
             padding: 0.45rem 0.9rem;
             border-radius: 999px;
             background: rgba(37, 99, 235, 0.1);
-            color: #2563eb;
+            color: var(--teacher-status-accent);
             font-weight: 700;
             font-size: 0.78rem;
             text-transform: uppercase;
@@ -178,6 +189,11 @@
             margin-top: 1rem;
             font-size: clamp(2rem, 3vw, 2.8rem);
             font-weight: 800;
+            color: var(--teacher-status-text);
+        }
+
+        .teacher-status-header p {
+            color: var(--teacher-status-text);
         }
 
         .teacher-status-alert {
@@ -188,26 +204,97 @@
         .teacher-status-card {
             padding: 1.35rem;
             border-radius: 26px;
-            background: var(--card-bg-color, #fff);
+            background: var(--teacher-status-card-bg);
+            border: 1px solid var(--teacher-status-card-border);
             box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+            color: var(--teacher-status-text);
+        }
+
+        html[data-theme="dark"] .teacher-status-card {
+            box-shadow: 0 22px 54px rgba(2, 6, 23, 0.28);
         }
 
         .teacher-status-card--danger {
             border: 1px solid rgba(220, 38, 38, 0.18);
         }
 
+        .teacher-status-card h3,
+        .teacher-status-card p,
+        .teacher-status-card dt,
+        .teacher-status-card dd,
+        .teacher-status-card strong,
+        .teacher-status-card span {
+            color: var(--teacher-status-text);
+        }
+
+        .teacher-status-card .text-muted {
+            color: var(--teacher-status-muted) !important;
+        }
+
+        .teacher-status-card dt {
+            font-weight: 700;
+        }
+
+        .teacher-status-card dd,
+        .teacher-status-card p {
+            color: var(--teacher-status-muted);
+        }
+
         .teacher-status-meta {
             display: flex;
             flex-wrap: wrap;
             gap: 0.75rem;
-            color: #2563eb;
+            color: var(--teacher-status-accent);
             font-weight: 700;
+        }
+
+        .teacher-status-meta span {
+            color: var(--teacher-status-accent);
         }
 
         .teacher-status-payment {
             padding: 1rem 1.1rem;
             border-radius: 18px;
-            background: rgba(245, 158, 11, 0.12);
+            background: var(--teacher-status-payment-bg);
+        }
+
+        .teacher-status-payment strong {
+            display: block;
+            margin-bottom: 0.45rem;
+            color: var(--teacher-status-text);
+        }
+
+        .teacher-status-payment p {
+            color: var(--teacher-status-text);
+        }
+
+        html[data-theme="dark"] .teacher-application-status .btn-outline-secondary {
+            color: #dbeafe;
+            border-color: rgba(148, 163, 184, 0.35);
+            transition: color 0.22s ease, background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+        }
+
+        html[data-theme="dark"] .teacher-application-status .btn-outline-secondary:hover,
+        html[data-theme="dark"] .teacher-application-status .btn-outline-secondary:active {
+            color: #0f172a;
+            background: #dbeafe;
+            border-color: #dbeafe;
+            transform: translateY(-1px);
+        }
+
+        .teacher-application-status .btn-outline-secondary:focus-visible,
+        .teacher-application-status .btn-primary:focus-visible {
+            outline: none;
+            box-shadow:
+                0 0 0 3px rgba(8, 17, 31, 0.9),
+                0 0 0 6px rgba(96, 165, 250, 0.48);
+        }
+
+        html[data-theme="dark"] .teacher-application-status .btn-outline-secondary:focus-visible,
+        html[data-theme="dark"] .teacher-application-status .btn-primary:focus-visible {
+            box-shadow:
+                0 0 0 3px rgba(7, 17, 31, 0.96),
+                0 0 0 6px rgba(125, 211, 252, 0.58);
         }
     </style>
 @endsection

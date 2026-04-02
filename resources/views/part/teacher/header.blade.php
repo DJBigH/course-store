@@ -14,7 +14,7 @@
         </span>
         <span class="teacher-brand-copy">
             <strong>{{ setting('site_name', 'BigK Udemy') }}</strong>
-            <small>Teacher Studio</small>
+            <small>{{ __('teacher::dashboard.brand.studio') }}</small>
         </span>
     </a>
 
@@ -28,20 +28,21 @@
             {{ strtoupper($teacherLocale) }}
         </span>
         <a href="{{ route('home', ['locale' => $teacherLocale]) }}" class="teacher-header-link">
-            Xem website
+            {{ __('teacher::dashboard.header.view_site') }}
         </a>
         <a href="{{ route('students.account.index', ['locale' => $teacherLocale]) }}" class="teacher-header-link">
-            Tai khoan hoc vien
+            {{ __('teacher::dashboard.header.student_account') }}
         </a>
     </div>
 
     <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 align-items-center">
         <li class="nav-item me-2">
-            <button type="button" class="theme-toggle-admin" data-admin-theme-toggle title="Switch to dark mode"
-                aria-label="Switch to dark mode" aria-pressed="false">
+            <button type="button" class="theme-toggle-admin" data-admin-theme-toggle
+                title="{{ __('teacher::dashboard.header.switch_to_dark') }}"
+                aria-label="{{ __('teacher::dashboard.header.switch_to_dark') }}" aria-pressed="false">
                 <i class="fas fa-moon theme-toggle-admin__icon-dark" aria-hidden="true"></i>
                 <i class="fas fa-sun theme-toggle-admin__icon-light" aria-hidden="true"></i>
-                <span data-admin-theme-label>Dark mode</span>
+                <span data-admin-theme-label>{{ __('teacher::dashboard.header.dark_mode') }}</span>
             </button>
         </li>
 
@@ -64,12 +65,12 @@
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="teacherNavbarDropdown">
                 <li>
                     <a class="dropdown-item" href="{{ route('students.account.index', ['locale' => $teacherLocale]) }}">
-                        Tai khoan hoc vien
+                        {{ __('teacher::dashboard.header.student_account') }}
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="{{ route('teacher.account.status', ['locale' => $teacherLocale]) }}">
-                        Ho so giang vien
+                        {{ __('teacher::dashboard.header.teacher_profile') }}
                     </a>
                 </li>
                 <li>
@@ -79,7 +80,7 @@
                     <form action="{{ route('clients-logout', ['locale' => $teacherLocale]) }}" method="POST" class="m-0">
                         @csrf
                         <button type="submit" class="dropdown-item">
-                            Dang xuat
+                            {{ __('teacher::dashboard.header.logout') }}
                         </button>
                     </form>
                 </li>

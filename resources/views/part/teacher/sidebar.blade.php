@@ -1,9 +1,12 @@
 @php
     $teacherStudent = auth('students')->user();
+    $teacherLocale = session('locale', app()->getLocale());
     $teacherApplication = $teacherStudent?->teacherApplications()?->latest('id')->first();
     $teacherProfile = $teacherStudent?->teacher;
     $teacherIsActive = $teacherProfile && $teacherProfile->status === 'active';
-    $teacherStatusText = $teacherIsActive ? 'Kenh da kich hoat' : ($teacherApplication?->display_status ?? 'Chua gui ho so');
+    $teacherStatusText = $teacherIsActive
+        ? __('teacher::dashboard.brand.active_channel')
+        : ($teacherApplication?->display_status ?? __('teacher::dashboard.brand.not_submitted'));
 @endphp
 
 <style>
@@ -111,8 +114,8 @@
     <nav class="sb-sidenav accordion sb-sidenav-dark" id="teacherSidenav">
         <div class="sb-sidenav-menu">
             <div class="teacher-sidebar-brand">
-                <div class="teacher-sidebar-brand__eyebrow">Instructor workspace</div>
-                <div class="teacher-sidebar-brand__title">Kenh giang vien</div>
+                <div class="teacher-sidebar-brand__eyebrow">{{ __('teacher::dashboard.brand.workspace') }}</div>
+                <div class="teacher-sidebar-brand__title">{{ __('teacher::dashboard.brand.portal') }}</div>
                 <div class="teacher-sidebar-brand__meta">
                     <i class="fas fa-signal"></i>
                     {{ $teacherStatusText }}
@@ -120,46 +123,46 @@
             </div>
 
             <div class="nav">
-                <div class="sb-sidenav-menu-heading mt-2">Teacher Portal</div>
+                <div class="sb-sidenav-menu-heading mt-2">{{ __('teacher::dashboard.brand.portal') }}</div>
 
                 <a class="nav-link {{ request()->routeIs('teacher.dashboard.index') ? 'active' : '' }}"
                     href="{{ route('teacher.dashboard.index') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-gauge-high"></i></div>
-                    Tong quan
+                    {{ __('teacher::dashboard.nav.overview') }}
                 </a>
 
                 <a class="nav-link {{ request()->routeIs('teacher.account.*') ? 'active' : '' }}"
                     href="{{ $teacherApplication ? route('teacher.account.status', ['locale' => $teacherLocale]) : route('teacher.account.apply', ['locale' => $teacherLocale]) }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-id-card"></i></div>
-                    Ho so giang vien
+                    {{ __('teacher::dashboard.nav.profile') }}
                 </a>
 
                 @if ($teacherIsActive)
                     <a class="nav-link {{ request()->routeIs('teacher.dashboard.courses') ? 'active' : '' }}"
                         href="{{ route('teacher.dashboard.courses') }}">
                         <div class="sb-nav-link-icon"><i class="fas fa-book-open"></i></div>
-                        Khoa hoc cua toi
+                        {{ __('teacher::dashboard.nav.courses') }}
                     </a>
                     <a class="nav-link {{ request()->routeIs('teacher.dashboard.earnings') ? 'active' : '' }}"
                         href="{{ route('teacher.dashboard.earnings') }}">
                         <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                        Doanh thu
+                        {{ __('teacher::dashboard.nav.earnings') }}
                     </a>
                     <a class="nav-link {{ request()->routeIs('teacher.dashboard.payouts') ? 'active' : '' }}"
                         href="{{ route('teacher.dashboard.payouts') }}">
                         <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
-                        Rut tien
+                        {{ __('teacher::dashboard.nav.payouts') }}
                     </a>
                 @endif
             </div>
         </div>
 
         <div class="sb-sidenav-footer">
-            <div class="small">Dang nhap voi</div>
-            <div class="sidebar-user-name">{{ $teacherStudent?->name ?? 'Hoc vien' }}</div>
+            <div class="small">{{ __('teacher::dashboard.brand.logged_in_as') }}</div>
+            <div class="sidebar-user-name">{{ $teacherStudent?->name ?? __('teacher::dashboard.brand.student_fallback') }}</div>
             <div class="sidebar-link-label">
                 @if ($teacherIsActive)
-                    <span class="teacher-status-dot"></span>Kenh da kich hoat
+                    <span class="teacher-status-dot"></span>{{ __('teacher::dashboard.brand.active_channel') }}
                 @else
                     {{ $teacherStatusText }}
                 @endif

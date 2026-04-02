@@ -5,6 +5,7 @@ use Modules\Teacher\src\Http\Controllers\Admin\TeacherApplicationController as A
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherFinanceController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherPackageController as AdminTeacherPackageController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherApplicationController as ClientTeacherApplicationController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherAuthController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherDashboardController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherLandingController;
 
@@ -39,6 +40,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/create', [AdminTeacherPackageController::class, 'store'])->middleware('permission:teachers.create')->name('post-add');
       Route::get('/edit/{id}', [AdminTeacherPackageController::class, 'edit'])->middleware('permission:teachers.edit')->name('edit');
       Route::post('/edit/{id}', [AdminTeacherPackageController::class, 'update'])->middleware('permission:teachers.edit')->name('post-edit');
+      Route::post('/reorder', [AdminTeacherPackageController::class, 'reorder'])->middleware('permission:teachers.edit')->name('reorder');
       Route::delete('/delete/{id}', [AdminTeacherPackageController::class, 'delete'])->middleware('permission:teachers.delete')->name('delete');
    });
 
@@ -57,6 +59,12 @@ Route::group([
    'middleware' => ['setLocale'],
 ], function () {
    Route::get('/tro-thanh-giang-vien', [TeacherLandingController::class, 'index'])->name('teacher.portal.index');
+   Route::get('/teacher/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.auth.login');
+   Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->name('teacher.auth.post-login');
+   Route::get('/teacher/forgot-password', [TeacherAuthController::class, 'showForgotForm'])->name('teacher.auth.forgot');
+   Route::post('/teacher/forgot-password', [TeacherAuthController::class, 'sendResetLink'])->name('teacher.auth.post-forgot');
+   Route::get('/teacher/reset-password/{token}', [TeacherAuthController::class, 'showResetForm'])->name('teacher.password.reset');
+   Route::post('/teacher/reset-password', [TeacherAuthController::class, 'updatePassword'])->name('teacher.auth.password.update');
    Route::get('/tro-thanh-giang-vien/bat-dau', [ClientTeacherApplicationController::class, 'begin'])->name('teacher.account.begin');
    Route::get('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'create'])->name('teacher.account.apply');
    Route::post('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'store'])->name('teacher.account.submit');
@@ -71,7 +79,7 @@ Route::group([
 Route::group([
    'prefix' => 'teacher',
    'as' => 'teacher.dashboard.',
-   'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block'],
+   'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active'],
 ], function () {
    Route::get('/', [TeacherDashboardController::class, 'index'])->name('index');
    Route::get('/khoa-hoc', [TeacherDashboardController::class, 'courses'])->name('courses');

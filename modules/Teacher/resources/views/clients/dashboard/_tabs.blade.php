@@ -1,19 +1,19 @@
 <div class="teacher-dashboard-tabs mb-4">
     <a href="{{ route('teacher.dashboard.index') }}"
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.index') ? 'active' : '' }}">
-        Tong quan
+        {{ __('teacher::dashboard.nav.overview') }}
     </a>
     <a href="{{ route('teacher.dashboard.courses') }}"
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.courses') ? 'active' : '' }}">
-        Khoa hoc cua toi
+        {{ __('teacher::dashboard.nav.courses') }}
     </a>
     <a href="{{ route('teacher.dashboard.earnings') }}"
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.earnings') ? 'active' : '' }}">
-        Doanh thu
+        {{ __('teacher::dashboard.nav.earnings') }}
     </a>
     <a href="{{ route('teacher.dashboard.payouts') }}"
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.payouts') ? 'active' : '' }}">
-        Rut tien
+        {{ __('teacher::dashboard.nav.payouts') }}
     </a>
 </div>
 

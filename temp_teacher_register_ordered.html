@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf_token" content="PvXUXvG2IoPPw8R16CGZenUtQYDo3F6y0hUQ1ZPp" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Dang ky giang vien - BigK Udemy</title>
+    <link rel="shortcut icon" href="http://127.0.0.1:8000/clients/assets/LOGO-DSCONS-FAVICON.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script>
+        (() => {
+            const storageKey = 'client-theme';
+            const root = document.documentElement;
+            const savedTheme = localStorage.getItem(storageKey);
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme === 'light' || savedTheme === 'dark'
+                ? savedTheme
+                : (systemPrefersDark ? 'dark' : 'light');
+
+            root.dataset.theme = theme;
+            root.style.colorScheme = theme;
+        })();
+    </script>
+    <script type="module" src="http://[::1]:5173/@vite/client"></script><link rel="stylesheet" href="http://[::1]:5173/resources/sass/app.scss" />        <style>
+        .teacher-apply-page {
+            --teacher-card-bg: #ffffff;
+            --teacher-card-border: rgba(37, 99, 235, 0.14);
+            --teacher-text: #0f172a;
+            --teacher-muted: #64748b;
+            --teacher-input-bg: #ffffff;
+            --teacher-input-border: rgba(148, 163, 184, 0.35);
+            --teacher-summary-bg: rgba(37, 99, 235, 0.06);
+            background: linear-gradient(180deg, rgba(37, 99, 235, 0.05), transparent 30%), var(--bg-color);
+            color: var(--teacher-text);
+        }
+
+        html[data-theme="dark"] .teacher-apply-page {
+            --teacher-card-bg: #0f172a;
+            --teacher-card-border: rgba(96, 165, 250, 0.22);
+            --teacher-text: #e5eefc;
+            --teacher-muted: #a9bbd5;
+            --teacher-input-bg: #0b1220;
+            --teacher-input-border: rgba(148, 163, 184, 0.24);
+            --teacher-summary-bg: rgba(59, 130, 246, 0.12);
+        }
+
+        .teacher-apply-shell {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .teacher-apply-intro {
+            margin-bottom: 1.5rem;
+            color: var(--teacher-text);
+        }
+
+        .teacher-apply-kicker {
+            display: inline-flex;
+            padding: 0.45rem 0.9rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.1);
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .teacher-apply-intro h2 {
+            margin-top: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: clamp(2rem, 3.2vw, 3rem);
+            font-weight: 800;
+            color: var(--teacher-text);
+        }
+
+        .teacher-apply-card {
+            padding: 1.5rem;
+            border-radius: 28px;
+            background: var(--teacher-card-bg);
+            border: 1px solid var(--teacher-card-border);
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        .teacher-section-heading {
+            margin-bottom: 1rem;
+        }
+
+        .teacher-section-heading h3 {
+            margin-bottom: 0.35rem;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--teacher-text);
+        }
+
+        .teacher-section-heading p {
+            margin-bottom: 0;
+            color: var(--teacher-muted);
+        }
+
+        .teacher-package-option {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            height: 100%;
+            padding: 1.2rem;
+            border: 1px solid var(--teacher-card-border);
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(37, 99, 235, 0.04), transparent 42%), var(--teacher-card-bg);
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .teacher-package-option:hover {
+            transform: translateY(-4px);
+            border-color: rgba(37, 99, 235, 0.28);
+            box-shadow: 0 20px 36px rgba(37, 99, 235, 0.12);
+        }
+
+        .teacher-package-option.is-selected {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+        }
+
+        .teacher-package-option input {
+            display: none;
+        }
+
+        .teacher-package-option__code {
+            display: inline-flex;
+            width: fit-content;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.1);
+            color: #2563eb;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .teacher-package-option__name,
+        .teacher-package-option__price {
+            color: var(--teacher-text);
+        }
+
+        .teacher-package-option__name {
+            font-size: 1.1rem;
+        }
+
+        .teacher-package-option__price {
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+
+        .teacher-package-option__desc,
+        .teacher-package-option__meta {
+            color: var(--teacher-muted);
+        }
+
+        .teacher-payment-summary {
+            padding: 1rem 1.1rem;
+            border-radius: 20px;
+            background: var(--teacher-summary-bg);
+        }
+
+        .teacher-payment-summary > div:first-child {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.4rem;
+            color: var(--teacher-text);
+        }
+
+        .teacher-payment-methods.is-hidden {
+            display: none;
+        }
+
+        .teacher-payment-option {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.95rem 1rem;
+            border: 1px solid var(--teacher-card-border);
+            border-radius: 18px;
+        }
+
+        .teacher-payment-option + .teacher-payment-option {
+            margin-top: 0.75rem;
+        }
+
+        .teacher-payment-option span {
+            color: var(--teacher-text);
+        }
+
+        .teacher-apply-page .form-label {
+            color: var(--teacher-text);
+            font-weight: 600;
+        }
+
+        .teacher-apply-page .form-control {
+            background: var(--teacher-input-bg);
+            color: var(--teacher-text);
+            border-color: var(--teacher-input-border);
+        }
+
+        .teacher-apply-page .form-control::placeholder {
+            color: var(--teacher-muted);
+            opacity: 1;
+        }
+
+        .teacher-apply-page .form-control:focus {
+            background: var(--teacher-input-bg);
+            color: var(--teacher-text);
+            border-color: rgba(37, 99, 235, 0.5);
+            box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.14);
+        }
+
+        .teacher-submit-btn {
+            min-width: 220px;
+            min-height: 52px;
+            font-weight: 700;
+        }
+
+        html[data-theme="dark"] .teacher-apply-page .btn-outline-secondary {
+            color: #dbeafe;
+            border-color: rgba(148, 163, 184, 0.35);
+        }
+
+        html[data-theme="dark"] .teacher-apply-page .btn-outline-secondary:hover {
+            color: #0f172a;
+            background: #dbeafe;
+            border-color: #dbeafe;
+        }
+
+        @media (max-width: 767.98px) {
+            .teacher-apply-card {
+                padding: 1.25rem;
+                border-radius: 22px;
+            }
+        }
+    </style>
+<link rel='stylesheet' type='text/css' property='stylesheet' href='/_debugbar/assets/stylesheets?v=1766457420' data-turbolinks-eval='false' data-turbo-eval='false'><script src='/_debugbar/assets/javascript?v=1766457420' data-turbolinks-eval='false' data-turbo-eval='false'></script><script data-turbo-eval='false'>jQuery.noConflict(true);</script>
+<script> Sfdump = window.Sfdump || (function (doc) { doc.documentElement.classList.add('sf-js-enabled'); var rxEsc = /([.*+?^${}()|\[\]\/\\])/g, idRx = /\bsf-dump-\d+-ref[012]\w+\b/, keyHint = 0 <= navigator.platform.toUpperCase().indexOf('MAC') ? 'Cmd' : 'Ctrl', addEventListener = function (e, n, cb) { e.addEventListener(n, cb, false); }; if (!doc.addEventListener) { addEventListener = function (element, eventName, callback) { element.attachEvent('on' + eventName, function (e) { e.preventDefault = function () {e.returnValue = false;}; e.target = e.srcElement; callback(e); }); }; } function toggle(a, recursive) { var s = a.nextSibling || {}, oldClass = s.className, arrow, newClass; if (/\bsf-dump-compact\b/.test(oldClass)) { arrow = '?'; newClass = 'sf-dump-expanded'; } else if (/\bsf-dump-expanded\b/.test(oldClass)) { arrow = '?'; newClass = 'sf-dump-compact'; } else { return false; } if (doc.createEvent && s.dispatchEvent) { var event = doc.createEvent('Event'); event.initEvent('sf-dump-expanded' === newClass ? 'sfbeforedumpexpand' : 'sfbeforedumpcollapse', true, false); s.dispatchEvent(event); } a.lastChild.innerHTML = arrow; s.className = s.className.replace(/\bsf-dump-(compact|expanded)\b/, newClass); if (recursive) { try { a = s.querySelectorAll('.'+oldClass); for (s = 0; s < a.length; ++s) { if (-1 == a[s].className.indexOf(newClass)) { a[s].className = newClass; a[s].previousSibling.lastChild.innerHTML = arrow; } } } catch (e) { } } return true; }; function collapse(a, recursive) { var s = a.nextSibling || {}, oldClass = s.className; if (/\bsf-dump-expanded\b/.test(oldClass)) { toggle(a, recursive); return true; } return false; }; function expand(a, recursive) { var s = a.nextSibling || {}, oldClass = s.className; if (/\bsf-dump-compact\b/.test(oldClass)) { toggle(a, recursive); return true; } return false; }; function collapseAll(root) { var a = root.querySelector('a.sf-dump-toggle'); if (a) { collapse(a, true); expand(a); return true; } return false; } function reveal(node) { var previous, parents = []; while ((node = node.parentNode || {}) && (previous = node.previousSibling) && 'A' === previous.tagName) { parents.push(previous); } if (0 !== parents.length) { parents.forEach(function (parent) { expand(parent); }); return true; } return false; } function highlight(root, activeNode, nodes) { resetHighlightedNodes(root); Array.from(nodes||[]).forEach(function (node) { if (!/\bsf-dump-highlight\b/.test(node.className)) { node.className = node.className + ' sf-dump-highlight'; } }); if (!/\bsf-dump-highlight-active\b/.test(activeNode.className)) { activeNode.className = activeNode.className + ' sf-dump-highlight-active'; } } function resetHighlightedNodes(root) { Array.from(root.querySelectorAll('.sf-dump-str, .sf-dump-key, .sf-dump-public, .sf-dump-protected, .sf-dump-private')).forEach(function (strNode) { strNode.className = strNode.className.replace(/\bsf-dump-highlight\b/, ''); strNode.className = strNode.className.replace(/\bsf-dump-highlight-active\b/, ''); }); } return function (root, x) { root = doc.getElementById(root); var indentRx = new RegExp('^('+(root.getAttribute('data-indent-pad') || ' ').replace(rxEsc, '\\$1')+')+', 'm'), options = {"maxDepth":1,"maxStringLength":160,"fileLinkFormat":false}, elt = root.getElementsByTagName('A'), len = elt.length, i = 0, s, h, t = []; while (i < len) t.push(elt[i++]); for (i in x) { options[i] = x[i]; } function a(e, f) { addEventListener(root, e, function (e, n) { if ('A' == e.target.tagName) { f(e.target, e); } else if ('A' == e.target.parentNode.tagName) { f(e.target.parentNode, e); } else { n = /\bsf-dump-ellipsis\b/.test(e.target.className) ? e.target.parentNode : e.target; if ((n = n.nextElementSibling) && 'A' == n.tagName) { if (!/\bsf-dump-toggle\b/.test(n.className)) { n = n.nextElementSibling || n; } f(n, e, true); } } }); }; function isCtrlKey(e) { return e.ctrlKey || e.metaKey; } function xpathString(str) { var parts = str.match(/[^'"]+|['"]/g).map(function (part) { if ("'" == part) { return '"\'"'; } if ('"' == part) { return "'\"'"; } return "'" + part + "'"; }); return "concat(" + parts.join(",") + ", '')"; } function xpathHasClass(className) { return "contains(concat(' ', normalize-space(@class), ' '), ' " + className +" ')"; } a('mouseover', function (a, e, c) { if (c) { e.target.style.cursor = "pointer"; } }); a('click', function (a, e, c) { if (/\bsf-dump-toggle\b/.test(a.className)) { e.preventDefault(); if (!toggle(a, isCtrlKey(e))) { var r = doc.getElementById(a.getAttribute('href').slice(1)), s = r.previousSibling, f = r.parentNode, t = a.parentNode; t.replaceChild(r, a); f.replaceChild(a, s); t.insertBefore(s, r); f = f.firstChild.nodeValue.match(indentRx); t = t.firstChild.nodeValue.match(indentRx); if (f && t && f[0] !== t[0]) { r.innerHTML = r.innerHTML.replace(new RegExp('^'+f[0].replace(rxEsc, '\\$1'), 'mg'), t[0]); } if (/\bsf-dump-compact\b/.test(r.className)) { toggle(s, isCtrlKey(e)); } } if (c) { } else if (doc.getSelection) { try { doc.getSelection().removeAllRanges(); } catch (e) { doc.getSelection().empty(); } } else { doc.selection.empty(); } } else if (/\bsf-dump-str-toggle\b/.test(a.className)) { e.preventDefault(); e = a.parentNode.parentNode; e.className = e.className.replace(/\bsf-dump-str-(expand|collapse)\b/, a.parentNode.className); } }); elt = root.getElementsByTagName('SAMP'); len = elt.length; i = 0; while (i < len) t.push(elt[i++]); len = t.length; for (i = 0; i < len; ++i) { elt = t[i]; if ('SAMP' == elt.tagName) { a = elt.previousSibling || {}; if ('A' != a.tagName) { a = doc.createElement('A'); a.className = 'sf-dump-ref'; elt.parentNode.insertBefore(a, elt); } else { a.innerHTML += ' '; } a.title = (a.title ? a.title+'\n[' : '[')+keyHint+'+click] Expand all children'; a.innerHTML += elt.className == 'sf-dump-compact' ? '<span>?</span>' : '<span>?</span>'; a.className += ' sf-dump-toggle'; x = 1; if ('sf-dump' != elt.parentNode.className) { x += elt.parentNode.getAttribute('data-depth')/1; } } else if (/\bsf-dump-ref\b/.test(elt.className) && (a = elt.getAttribute('href'))) { a = a.slice(1); elt.className += ' sf-dump-hover'; elt.className += ' '+a; if (/[\[{]$/.test(elt.previousSibling.nodeValue)) { a = a != elt.nextSibling.id && doc.getElementById(a); try { s = a.nextSibling; elt.appendChild(a); s.parentNode.insertBefore(a, s); if (/^[@#]/.test(elt.innerHTML)) { elt.innerHTML += ' <span>?</span>'; } else { elt.innerHTML = '<span>?</span>'; elt.className = 'sf-dump-ref'; } elt.className += ' sf-dump-toggle'; } catch (e) { if ('&' == elt.innerHTML.charAt(0)) { elt.innerHTML = '…'; elt.className = 'sf-dump-ref'; } } } } } if (doc.evaluate && Array.from && root.children.length > 1) { root.setAttribute('tabindex', 0); SearchState = function () { this.nodes = []; this.idx = 0; }; SearchState.prototype = { next: function () { if (this.isEmpty()) { return this.current(); } this.idx = this.idx < (this.nodes.length - 1) ? this.idx + 1 : 0; return this.current(); }, previous: function () { if (this.isEmpty()) { return this.current(); } this.idx = this.idx > 0 ? this.idx - 1 : (this.nodes.length - 1); return this.current(); }, isEmpty: function () { return 0 === this.count(); }, current: function () { if (this.isEmpty()) { return null; } return this.nodes[this.idx]; }, reset: function () { this.nodes = []; this.idx = 0; }, count: function () { return this.nodes.length; }, }; function showCurrent(state) { var currentNode = state.current(), currentRect, searchRect; if (currentNode) { reveal(currentNode); highlight(root, currentNode, state.nodes); if ('scrollIntoView' in currentNode) { currentNode.scrollIntoView(true); currentRect = currentNode.getBoundingClientRect(); searchRect = search.getBoundingClientRect(); if (currentRect.top < (searchRect.top + searchRect.height)) { window.scrollBy(0, -(searchRect.top + searchRect.height + 5)); } } } counter.textContent = (state.isEmpty() ? 0 : state.idx + 1) + ' of ' + state.count(); } var search = doc.createElement('div'); search.className = 'sf-dump-search-wrapper sf-dump-search-hidden'; search.innerHTML = ' <input type="text" class="sf-dump-search-input"> <span class="sf-dump-search-count">0 of 0<\/span> <button type="button" class="sf-dump-search-input-previous" tabindex="-1"> <svg viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg"><path d="M1683 1331l-166 165q-19 19-45 19t-45-19L896 965l-531 531q-19 19-45 19t-45-19l-166-165q-19-19-19-45.5t19-45.5l742-741q19-19 45-19t45 19l742 741q19 19 19 45.5t-19 45.5z"\/><\/svg> <\/button> <button type="button" class="sf-dump-search-input-next" tabindex="-1"> <svg viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg"><path d="M1683 808l-742 741q-19 19-45 19t-45-19L109 808q-19-19-19-45.5t19-45.5l166-165q19-19 45-19t45 19l531 531 531-531q19-19 45-19t45 19l166 165q19 19 19 45.5t-19 45.5z"\/><\/svg> <\/button> '; root.insertBefore(search, root.firstChild); var state = new SearchState(); var searchInput = search.querySelector('.sf-dump-search-input'); var counter = search.querySelector('.sf-dump-search-count'); var searchInputTimer = 0; var previousSearchQuery = ''; addEventListener(searchInput, 'keyup', function (e) { var searchQuery = e.target.value; /* Don't perform anything if the pressed key didn't change the query */ if (searchQuery === previousSearchQuery) { return; } previousSearchQuery = searchQuery; clearTimeout(searchInputTimer); searchInputTimer = setTimeout(function () { state.reset(); collapseAll(root); resetHighlightedNodes(root); if ('' === searchQuery) { counter.textContent = '0 of 0'; return; } var classMatches = [ "sf-dump-str", "sf-dump-key", "sf-dump-public", "sf-dump-protected", "sf-dump-private", ].map(xpathHasClass).join(' or '); var xpathResult = doc.evaluate('.//span[' + classMatches + '][contains(translate(child::text(), ' + xpathString(searchQuery.toUpperCase()) + ', ' + xpathString(searchQuery.toLowerCase()) + '), ' + xpathString(searchQuery.toLowerCase()) + ')]', root, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null); while (node = xpathResult.iterateNext()) state.nodes.push(node); showCurrent(state); }, 400); }); Array.from(search.querySelectorAll('.sf-dump-search-input-next, .sf-dump-search-input-previous')).forEach(function (btn) { addEventListener(btn, 'click', function (e) { e.preventDefault(); -1 !== e.target.className.indexOf('next') ? state.next() : state.previous(); searchInput.focus(); collapseAll(root); showCurrent(state); }) }); addEventListener(root, 'keydown', function (e) { var isSearchActive = !/\bsf-dump-search-hidden\b/.test(search.className); if ((114 === e.keyCode && !isSearchActive) || (isCtrlKey(e) && 70 === e.keyCode)) { /* F3 or CMD/CTRL + F */ if (70 === e.keyCode && document.activeElement === searchInput) { /* * If CMD/CTRL + F is hit while having focus on search input, * the user probably meant to trigger browser search instead. * Let the browser execute its behavior: */ return; } e.preventDefault(); search.className = search.className.replace(/\bsf-dump-search-hidden\b/, ''); searchInput.focus(); } else if (isSearchActive) { if (27 === e.keyCode) { /* ESC key */ search.className += ' sf-dump-search-hidden'; e.preventDefault(); resetHighlightedNodes(root); searchInput.value = ''; } else if ( (isCtrlKey(e) && 71 === e.keyCode) /* CMD/CTRL + G */ || 13 === e.keyCode /* Enter */ || 114 === e.keyCode /* F3 */ ) { e.preventDefault(); e.shiftKey ? state.previous() : state.next(); collapseAll(root); showCurrent(state); } } }); } if (0 >= options.maxStringLength) { return; } try { elt = root.querySelectorAll('.sf-dump-str'); len = elt.length; i = 0; t = []; while (i < len) t.push(elt[i++]); len = t.length; for (i = 0; i < len; ++i) { elt = t[i]; s = elt.innerText || elt.textContent; x = s.length - options.maxStringLength; if (0 < x) { h = elt.innerHTML; elt[elt.innerText ? 'innerText' : 'textContent'] = s.substring(0, options.maxStringLength); elt.className += ' sf-dump-str-collapse'; elt.innerHTML = '<span class=sf-dump-str-collapse>'+h+'<a class="sf-dump-ref sf-dump-str-toggle" title="Collapse"> ?</a></span>'+ '<span class=sf-dump-str-expand>'+elt.innerHTML+'<a class="sf-dump-ref sf-dump-str-toggle" title="'+x+' remaining characters"> ?</a></span>'; } } } catch (e) { } }; })(document); </script><style> .sf-js-enabled .phpdebugbar pre.sf-dump .sf-dump-compact, .sf-js-enabled .sf-dump-str-collapse .sf-dump-str-collapse, .sf-js-enabled .sf-dump-str-expand .sf-dump-str-expand { display: none; } .sf-dump-hover:hover { background-color: #B729D9; color: #FFF !important; border-radius: 2px; } .phpdebugbar pre.sf-dump { display: block; white-space: pre; padding: 5px; overflow: initial !important; } .phpdebugbar pre.sf-dump:after { content: ""; visibility: hidden; display: block; height: 0; clear: both; } .phpdebugbar pre.sf-dump .sf-dump-ellipsization { display: inline-flex; } .phpdebugbar pre.sf-dump a { text-decoration: none; cursor: pointer; border: 0; outline: none; color: inherit; } .phpdebugbar pre.sf-dump img { max-width: 50em; max-height: 50em; margin: .5em 0 0 0; padding: 0; background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAAHUlEQVQY02O8zAABilCaiQEN0EeA8QuUcX9g3QEAAjcC5piyhyEAAAAASUVORK5CYII=) #D3D3D3; } .phpdebugbar pre.sf-dump .sf-dump-ellipsis { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; } .phpdebugbar pre.sf-dump .sf-dump-ellipsis-tail { flex-shrink: 0; } .phpdebugbar pre.sf-dump code { display:inline; padding:0; background:none; } .sf-dump-public.sf-dump-highlight, .sf-dump-protected.sf-dump-highlight, .sf-dump-private.sf-dump-highlight, .sf-dump-str.sf-dump-highlight, .sf-dump-key.sf-dump-highlight { background: rgba(111, 172, 204, 0.3); border: 1px solid #7DA0B1; border-radius: 3px; } .sf-dump-public.sf-dump-highlight-active, .sf-dump-protected.sf-dump-highlight-active, .sf-dump-private.sf-dump-highlight-active, .sf-dump-str.sf-dump-highlight-active, .sf-dump-key.sf-dump-highlight-active { background: rgba(253, 175, 0, 0.4); border: 1px solid #ffa500; border-radius: 3px; } .phpdebugbar pre.sf-dump .sf-dump-search-hidden { display: none !important; } .phpdebugbar pre.sf-dump .sf-dump-search-wrapper { font-size: 0; white-space: nowrap; margin-bottom: 5px; display: flex; position: -webkit-sticky; position: sticky; top: 5px; } .phpdebugbar pre.sf-dump .sf-dump-search-wrapper > * { vertical-align: top; box-sizing: border-box; height: 21px; font-weight: normal; border-radius: 0; background: #FFF; color: #757575; border: 1px solid #BBB; } .phpdebugbar pre.sf-dump .sf-dump-search-wrapper > input.sf-dump-search-input { padding: 3px; height: 21px; font-size: 12px; border-right: none; border-top-left-radius: 3px; border-bottom-left-radius: 3px; color: #000; min-width: 15px; width: 100%; } .phpdebugbar pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-next, .phpdebugbar pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-previous { background: #F2F2F2; outline: none; border-left: none; font-size: 0; line-height: 0; } .phpdebugbar pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-next { border-top-right-radius: 3px; border-bottom-right-radius: 3px; } .phpdebugbar pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-next > svg, .phpdebugbar pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-input-previous > svg { pointer-events: none; width: 12px; height: 12px; } .phpdebugbar pre.sf-dump .sf-dump-search-wrapper > .sf-dump-search-count { display: inline-block; padding: 0 5px; margin: 0; border-left: none; line-height: 21px; font-size: 12px; }.phpdebugbar pre.sf-dump, .phpdebugbar pre.sf-dump .sf-dump-default{word-wrap: break-word; white-space: pre-wrap; word-break: normal}.phpdebugbar pre.sf-dump .sf-dump-num{font-weight:bold; color:#1299DA}.phpdebugbar pre.sf-dump .sf-dump-const{font-weight:bold}.phpdebugbar pre.sf-dump .sf-dump-str{font-weight:bold; color:#3A9B26}.phpdebugbar pre.sf-dump .sf-dump-note{color:#1299DA}.phpdebugbar pre.sf-dump .sf-dump-ref{color:#7B7B7B}.phpdebugbar pre.sf-dump .sf-dump-public{color:#000000}.phpdebugbar pre.sf-dump .sf-dump-protected{color:#000000}.phpdebugbar pre.sf-dump .sf-dump-private{color:#000000}.phpdebugbar pre.sf-dump .sf-dump-meta{color:#B729D9}.phpdebugbar pre.sf-dump .sf-dump-key{color:#3A9B26}.phpdebugbar pre.sf-dump .sf-dump-index{color:#1299DA}.phpdebugbar pre.sf-dump .sf-dump-ellipsis{color:#A0A000}.phpdebugbar pre.sf-dump .sf-dump-ns{user-select:none;}.phpdebugbar pre.sf-dump .sf-dump-ellipsis-note{color:#1299DA}.phpdebugbar[data-theme='dark'] pre.sf-dump, pre.sf-dump .sf-dump-default{background-color:#18171B; color:#FF8400; line-height:1.2em; font:12px Menlo, Monaco, Consolas, monospace; word-wrap: break-word; white-space: pre-wrap; position:relative; z-index:99999; word-break: break-all}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-num{font-weight:bold; color:#1299DA}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-const{font-weight:bold}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-str{font-weight:bold; color:#56DB3A}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-note{color:#1299DA}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-ref{color:#A0A0A0}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-public{color:#FFFFFF}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-protected{color:#FFFFFF}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-private{color:#FFFFFF}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-meta{color:#B729D9}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-key{color:#56DB3A}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-index{color:#1299DA}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-ellipsis{color:#FF8400}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-ns{user-select:none;}.phpdebugbar[data-theme='dark'] pre.sf-dump .sf-dump-ellipsis-note{color:#1299DA}</style>
+</head>
+
+<body data-locale-switch-loading="Ðang t?i n?i dung và chu?n b? tr?i nghi?m h?c t?p t?t hon.">
+    <div id="page-loader" class="page-loader" aria-hidden="true">
+        <div class="page-loader__panel">
+            <div class="page-loader__brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <p class="page-loader__title">BigK Udemy</p>
+            <p class="page-loader__subtitle">Ðang t?i n?i dung và chu?n b? tr?i nghi?m h?c t?p t?t hon.</p>
+            <div class="page-loader__track">
+                <div class="page-loader__bar"></div>
+            </div>
+            <div class="page-loader__dots" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+    <script>
+        (() => {
+            const loader = document.getElementById('page-loader');
+
+            if (!loader) {
+                return;
+            }
+
+            let hidden = false;
+            const hideLoader = () => {
+                if (hidden) {
+                    return;
+                }
+
+                hidden = true;
+                loader.classList.add('is-hidden');
+
+                window.setTimeout(() => {
+                    if (loader && loader.parentNode) {
+                        loader.remove();
+                    }
+                }, 320);
+            };
+
+            if (document.readyState === 'interactive' || document.readyState === 'complete') {
+                window.requestAnimationFrame(hideLoader);
+            } else {
+                document.addEventListener('DOMContentLoaded', hideLoader, { once: true });
+            }
+
+            window.addEventListener('load', hideLoader, { once: true });
+            window.addEventListener('pageshow', hideLoader, { once: true });
+            window.setTimeout(hideLoader, 1200);
+        })();
+    </script>
+    <header class="header">
+    <div class="action-bar">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="d-none d-xl-block col-xl-3">
+                    <form class="header-search" action="http://127.0.0.1:8000/vi/khoa-hoc"
+                        method="GET" role="search">
+                        <label class="visually-hidden"
+                            for="header-search-input">Tìm</label>
+                        <span class="header-search__icon" aria-hidden="true">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input id="header-search-input" type="text" name="keyword"
+                            value=""
+                            placeholder="B?n tìm gì..." />
+                        <button type="submit" class="btn btn-primary header-search__button">
+                            Tìm
+                        </button>
+                    </form>
+                </div>
+                <div class="d-none d-xl-block col-xl-4">
+                    <div class="d-flex">
+                        <p class="slogan">
+                            <i class="fas fa-phone"></i>Tu v?n &amp; h? tr?
+                            <a href="tel:0123456789">0123456789</a>
+                        </p>
+                        <p class="mail">
+                            <i class="far fa-envelope"></i>
+                            <a href="mailto:bigkudemy@gmail.com">bigkudemy@gmail.com</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-12 col-xl-5">
+                    <div class="social d-flex align-items-center justify-content-end gap-2">
+                        <button class="btn btn-outline-primary theme-toggle" type="button" data-theme-toggle
+                            data-theme-label-light="Sáng"
+                            data-theme-label-dark="T?i"
+                            data-theme-switch-light="Chuy?n sang ch? d? sáng"
+                            data-theme-switch-dark="Chuy?n sang ch? d? t?i"
+                            aria-label="Chuy?n sang ch? d? t?i"
+                            aria-pressed="false" title="Chuy?n sang ch? d? t?i">
+                            <i class="bi bi-moon-stars-fill theme-toggle__icon theme-toggle__icon--dark"></i>
+                            <i class="bi bi-sun-fill theme-toggle__icon theme-toggle__icon--light"></i>
+                            <span class="theme-toggle__label">T?i</span>
+                        </button>
+
+                        
+                        <div class="dropdown locale-switcher">
+                            <button
+                                class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2 locale-switcher__toggle"
+                                data-bs-toggle="dropdown" type="button" aria-expanded="false">
+                                <span class="locale-switcher__flag">VN</span>
+                                <span class="locale-switcher__short">VI</span>
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end locale-switcher__menu">
+                                                                    <li>
+                                        <a class="dropdown-item d-flex gap-2 align-items-center locale-switcher__item active"
+                                            href="http://127.0.0.1:8000/vi/tro-thanh-giang-vien/dang-ky" data-locale-link
+                                            data-locale-code="VI"
+                                            data-locale-label="Vietnamese"
+                                             aria-current="true" >
+                                            <span class="locale-switcher__flag">VN</span>
+                                            <span class="locale-switcher__label">Vietnamese</span>
+                                            <span class="locale-switcher__code">VI</span>
+                                        </a>
+                                    </li>
+                                                                    <li>
+                                        <a class="dropdown-item d-flex gap-2 align-items-center locale-switcher__item "
+                                            href="http://127.0.0.1:8000/en/tro-thanh-giang-vien/dang-ky" data-locale-link
+                                            data-locale-code="EN"
+                                            data-locale-label="English"
+                                            >
+                                            <span class="locale-switcher__flag">EN</span>
+                                            <span class="locale-switcher__label">English</span>
+                                            <span class="locale-switcher__code">EN</span>
+                                        </a>
+                                    </li>
+                                                                    <li>
+                                        <a class="dropdown-item d-flex gap-2 align-items-center locale-switcher__item "
+                                            href="http://127.0.0.1:8000/ko/tro-thanh-giang-vien/dang-ky" data-locale-link
+                                            data-locale-code="KO"
+                                            data-locale-label="Korean"
+                                            >
+                                            <span class="locale-switcher__flag">KO</span>
+                                            <span class="locale-switcher__label">Korean</span>
+                                            <span class="locale-switcher__code">KO</span>
+                                        </a>
+                                    </li>
+                                                                    <li>
+                                        <a class="dropdown-item d-flex gap-2 align-items-center locale-switcher__item "
+                                            href="http://127.0.0.1:8000/ja/tro-thanh-giang-vien/dang-ky" data-locale-link
+                                            data-locale-code="JA"
+                                            data-locale-label="Japanese"
+                                            >
+                                            <span class="locale-switcher__flag">JA</span>
+                                            <span class="locale-switcher__label">Japanese</span>
+                                            <span class="locale-switcher__code">JA</span>
+                                        </a>
+                                    </li>
+                                                                    <li>
+                                        <a class="dropdown-item d-flex gap-2 align-items-center locale-switcher__item "
+                                            href="http://127.0.0.1:8000/zh/tro-thanh-giang-vien/dang-ky" data-locale-link
+                                            data-locale-code="ZH"
+                                            data-locale-label="Chinese"
+                                            >
+                                            <span class="locale-switcher__flag">ZH</span>
+                                            <span class="locale-switcher__label">Chinese</span>
+                                            <span class="locale-switcher__code">ZH</span>
+                                        </a>
+                                    </li>
+                                                            </ul>
+                        </div>
+
+                                                    <div class="header-auth-actions d-flex align-items-center gap-2">
+                                <a href="http://127.0.0.1:8000/vi/dang-ky"
+                                    class="btn btn-primary header-auth-btn">
+                                    <i class="fas fa-user"></i>
+                                    <span>Ðang ký</span>
+                                </a>
+                                <a href="http://127.0.0.1:8000/vi/dang-nhap"
+                                    class="btn btn-primary header-auth-btn">
+                                    <i class="fas fa-key"></i>
+                                    <span>Ðang nh?p</span>
+                                </a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <nav class="navbar navbar-expand-xl navbar-light bg-light">
+        <div class="container">
+
+            
+            <a class="navbar-brand" href="http://127.0.0.1:8000/vi">
+                <img src="http://127.0.0.1:8000/clients/assets/logo.png"
+                    alt="Logo" width="20px">
+            </a>
+
+
+            
+            <button class="navbar-toggler d-xl-none" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav me-auto">
+
+                    <li class="nav-item">
+                        <a class="nav-link "
+                            href="http://127.0.0.1:8000/vi">
+                            <i class="fas fa-home"></i>
+                            Trang ch?
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown dropdown-hover">
+                        <a class="nav-link nav-link--submenu-toggle
+        "
+                            id="coursesDropdown" role="button" href="#"
+                            data-mobile-submenu-toggle="courses-submenu"
+                            aria-expanded="false">
+                            <i class="fas fa-tv"></i>
+                            <span>Danh m?c khóa h?c</span>
+                            <i class="fas fa-chevron-down nav-link__chevron" aria-hidden="true"></i>
+                        </a>
+
+                        <ul class="dropdown-menu mobile-nav-submenu" id="courses-submenu">
+                                                            <li class="dropdown-submenu">
+                                    <a class="dropdown-item"
+                                        href="http://127.0.0.1:8000/vi/danh-muc/front-end">
+                                        Front-End
+                                    </a>
+                                    
+                                </li>
+                                                            <li class="dropdown-submenu">
+                                    <a class="dropdown-item"
+                                        href="http://127.0.0.1:8000/vi/danh-muc/back-end">
+                                        Back-End
+                                    </a>
+                                    
+                                </li>
+                                                            <li class="dropdown-submenu">
+                                    <a class="dropdown-item"
+                                        href="http://127.0.0.1:8000/vi/danh-muc/app-mobile">
+                                        App Mobile
+                                    </a>
+                                    
+                                </li>
+                                                            <li class="dropdown-submenu">
+                                    <a class="dropdown-item"
+                                        href="http://127.0.0.1:8000/vi/danh-muc/server-devops">
+                                        Server - DevOps
+                                    </a>
+                                    
+                                </li>
+                            
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-item">
+                        <a class="nav-link "
+                            href="http://127.0.0.1:8000/vi/ma-giam-gia">
+                            <i class="fas fa-ticket-alt"></i>
+                            Mã gi?m giá
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link active"
+                            href="http://127.0.0.1:8000/vi/tro-thanh-giang-vien">
+                            <i class="fas fa-chalkboard-user"></i>
+                            Tr? thành gi?ng viên
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link "
+                            href="http://127.0.0.1:8000/vi/lien-he">
+                            <i class="fas fa-phone-alt"></i>
+                            Liên h?
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+</header>
+<form action="http://127.0.0.1:8000/vi/dang-xuat" method="post" name="form-logout"><input type="hidden" name="_token" value="PvXUXvG2IoPPw8R16CGZenUtQYDo3F6y0hUQ1ZPp" autocomplete="off"></form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggles = document.querySelectorAll('[data-mobile-submenu-toggle]');
+        const notificationRoot = document.querySelector('[data-notification-dropdown]');
+        const notificationToggle = notificationRoot?.querySelector('[data-notification-toggle]');
+        const notificationMenu = notificationRoot?.querySelector('[data-notification-menu]');
+
+        const mobileOnly = () => window.innerWidth < 1200;
+
+        const resetSubmenus = () => {
+            toggles.forEach((toggle) => {
+                const submenuId = toggle.dataset.mobileSubmenuToggle;
+                const submenu = submenuId ? document.getElementById(submenuId) : null;
+
+                toggle.classList.remove('is-open');
+                toggle.setAttribute('aria-expanded', 'false');
+
+                if (submenu) {
+                    submenu.classList.remove('is-open');
+                }
+            });
+        };
+
+        if (toggles.length) {
+            toggles.forEach((toggle) => {
+                toggle.addEventListener('click', (event) => {
+                    if (!mobileOnly()) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    const submenuId = toggle.dataset.mobileSubmenuToggle;
+                    const submenu = submenuId ? document.getElementById(submenuId) : null;
+
+                    if (!submenu) {
+                        return;
+                    }
+
+                    const willOpen = !submenu.classList.contains('is-open');
+                    resetSubmenus();
+
+                    if (willOpen) {
+                        toggle.classList.add('is-open');
+                        toggle.setAttribute('aria-expanded', 'true');
+                        submenu.classList.add('is-open');
+                    }
+                });
+            });
+        }
+
+        const closeNotificationDropdown = () => {
+            if (!notificationRoot || !notificationToggle || !notificationMenu) {
+                return;
+            }
+
+            notificationRoot.classList.remove('is-open');
+            notificationToggle.setAttribute('aria-expanded', 'false');
+            notificationMenu.classList.remove('show');
+        };
+
+        const openNotificationDropdown = () => {
+            if (!notificationRoot || !notificationToggle || !notificationMenu) {
+                return;
+            }
+
+            notificationRoot.classList.add('is-open');
+            notificationToggle.setAttribute('aria-expanded', 'true');
+            notificationMenu.classList.add('show');
+        };
+
+        if (notificationToggle && notificationMenu) {
+            notificationToggle.addEventListener('click', (event) => {
+                if (!mobileOnly()) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (notificationRoot.classList.contains('is-open')) {
+                    closeNotificationDropdown();
+                    return;
+                }
+
+                openNotificationDropdown();
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!mobileOnly() || !notificationRoot) {
+                    return;
+                }
+
+                if (notificationRoot.contains(event.target)) {
+                    return;
+                }
+
+                closeNotificationDropdown();
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            if (!mobileOnly()) {
+                resetSubmenus();
+                closeNotificationDropdown();
+            }
+        });
+
+        const updateNotificationUiAfterMarkAllRead = () => {
+            document.querySelectorAll('[data-unread-badge]').forEach((badge) => badge.remove());
+
+            document.querySelectorAll('.notification-item.unread').forEach((item) => {
+                item.classList.remove('unread');
+            });
+
+            document.querySelectorAll('[data-notification-status]').forEach((badge) => {
+                badge.className = 'badge bg-success';
+                badge.textContent = badge.dataset.readLabel || 'Da doc';
+            });
+
+            document.querySelectorAll('[data-mark-all-read-form]').forEach((form) => {
+                form.remove();
+            });
+        };
+
+        document.querySelectorAll('[data-mark-all-read-form]').forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const submitButton = form.querySelector('[data-mark-all-read-button]');
+                const token = form.querySelector('input[name="_token"]')?.value;
+
+                if (!token) {
+                    form.submit();
+                    return;
+                }
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({}),
+                        credentials: 'same-origin',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Request failed');
+                    }
+
+                    updateNotificationUiAfterMarkAllRead();
+                } catch (error) {
+                    form.submit();
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                }
+            });
+        });
+    });
+</script>
+<style>
+    .header-auth-actions .header-auth-btn.btn-primary {
+        color: #fff !important;
+        border-color: var(--bs-primary);
+    }
+    .header-auth-actions .header-auth-btn.btn-primary:hover,
+    .header-auth-actions .header-auth-btn.btn-primary:focus {
+        color: #fff !important;
+    }
+    .header-auth-actions .header-auth-btn.btn-outline-primary {
+        color: var(--bs-primary) !important;
+        background: #fff;
+    }
+    html[data-theme="dark"] .header-auth-actions .header-auth-btn.btn-outline-primary {
+        background: transparent;
+        color: #dbeafe !important;
+    }
+</style>
+
+    <section class="site-announcement" aria-label="Thông báo toàn website">
+        <div class="container">
+            <div class="site-announcement__inner">
+                <div class="site-announcement__icon" aria-hidden="true">
+                    <i class="fa-solid fa-bullhorn"></i>
+                </div>
+                <div class="site-announcement__content">
+                                            <div class="site-announcement__title-marquee" data-announcement-marquee>
+                            <div class="site-announcement__track" data-announcement-track>
+                                <p class="site-announcement__title" data-announcement-copy>Ð?ng quên s? d?ng mã gi?m giá d? ti?t ki?m chi phí h?c t?p</p>
+                                <p class="site-announcement__title site-announcement__title--clone" aria-hidden="true">
+                                    Ð?ng quên s? d?ng mã gi?m giá d? ti?t ki?m chi phí h?c t?p
+                                </p>
+                            </div>
+                        </div>
+                    
+                                            <div class="site-announcement__marquee" data-announcement-marquee>
+                            <div class="site-announcement__track" data-announcement-track>
+                                <div class="site-announcement__text" data-announcement-copy><p><strong>Ð?ng qu&ecirc;n s? d?ng m&atilde; gi?m gi&aacute; 50% d? ti?t ki?m chi ph&iacute; h?c t?p</strong></p></div>
+                                <div class="site-announcement__text site-announcement__text--clone" aria-hidden="true">
+                                    <p><strong>Ð?ng qu&ecirc;n s? d?ng m&atilde; gi?m gi&aacute; 50% d? ti?t ki?m chi ph&iacute; h?c t?p</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                                    </div>
+
+                                    <a class="site-announcement__link" href="http://127.0.0.1:8000/vi/ma-giam-gia">
+                        Xem danh sách khuy?n mãi
+                    </a>
+                            </div>
+        </div>
+    </section>
+
+    <script>
+        (() => {
+            const marquees = document.querySelectorAll('[data-announcement-marquee]');
+
+            marquees.forEach((marquee) => {
+                const track = marquee.querySelector('[data-announcement-track]');
+                const copy = marquee.querySelector('[data-announcement-copy]');
+
+                if (!track || !copy) {
+                    return;
+                }
+
+                const syncMarqueeState = () => {
+                    const shouldScroll = copy.scrollWidth > marquee.clientWidth;
+                    marquee.classList.toggle('is-animated', shouldScroll);
+                };
+
+                syncMarqueeState();
+                window.addEventListener('resize', syncMarqueeState);
+            });
+        })();
+    </script>
+
+    <div class="site-popup" data-site-popup data-popup-version="1774797754"
+        data-popup-snooze-minutes="10" hidden>
+        <div class="site-popup__backdrop" data-popup-close></div>
+        <div class="site-popup__dialog" role="dialog" aria-modal="true" aria-labelledby="site-popup-title">
+            <button class="site-popup__close" type="button" aria-label="Ðóng thông báo" data-popup-close>
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="site-popup__badge">
+                <i class="fa-solid fa-sparkles"></i>
+                <span>Tin m?i</span>
+            </div>
+
+                            <h2 class="site-popup__title" id="site-popup-title">? Uu dãi h?c t?p dành riêng cho b?n</h2>
+            
+                            <div class="site-popup__content"><p style="text-align:center"><img alt="" src="/storage/photos/2/popup.png" style="height:419px; width:550px" /></p>
+
+<p style="text-align:center">&nbsp;</p>
+
+<p style="text-align:center"><strong>Ð?ng qu&ecirc;n s? d?ng m&atilde; gi?m gi&aacute; 50% d? ti?t ki?m chi ph&iacute; h?c t?p</strong></p></div>
+            
+            <div class="site-popup__actions">
+                <div class="site-popup__actions-left">
+                                            <a class="site-popup__primary" href="http://127.0.0.1:8000/vi/ma-giam-gia">
+                            Xem uu dãi ngay
+                        </a>
+                                    </div>
+
+                <div class="site-popup__actions-right">
+                    <button class="site-popup__ghost" type="button" data-popup-snooze>
+                        T?t trong 10 phút
+                    </button>
+                    <button class="site-popup__secondary" type="button" data-popup-close>Ðã hi?u</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const popup = document.querySelector('[data-site-popup]');
+
+            if (!popup) {
+                return;
+            }
+
+            const version = popup.dataset.popupVersion || '0';
+            const snoozeKey = `site-popup-snooze-until-${version}`;
+            const snoozeMinutes = Math.max(1, Number.parseInt(popup.dataset.popupSnoozeMinutes || '60', 10) || 60);
+            const closeButtons = popup.querySelectorAll('[data-popup-close]');
+            const snoozeButton = popup.querySelector('[data-popup-snooze]');
+            let snoozeUntil = null;
+
+            try {
+                snoozeUntil = localStorage.getItem(snoozeKey);
+            } catch (error) {
+                snoozeUntil = null;
+            }
+
+            const closePopup = () => {
+                popup.setAttribute('hidden', 'hidden');
+                document.body.classList.remove('site-popup-open');
+            };
+
+            const snoozePopup = () => {
+                popup.setAttribute('hidden', 'hidden');
+                document.body.classList.remove('site-popup-open');
+
+                try {
+                    const nextVisibleAt = Date.now() + (snoozeMinutes * 60 * 1000);
+                    localStorage.setItem(snoozeKey, String(nextVisibleAt));
+                } catch (error) {
+                    // Ignore storage failures and still allow the popup to close.
+                }
+            };
+
+            const openPopup = () => {
+                popup.removeAttribute('hidden');
+                document.body.classList.add('site-popup-open');
+            };
+
+            closeButtons.forEach((button) => {
+                button.addEventListener('click', closePopup);
+            });
+
+            if (snoozeButton) {
+                snoozeButton.addEventListener('click', snoozePopup);
+            }
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !popup.hasAttribute('hidden')) {
+                    closePopup();
+                }
+            });
+
+            if (snoozeUntil && Number.parseInt(snoozeUntil, 10) > Date.now()) {
+                return;
+            }
+
+            window.setTimeout(openPopup, 450);
+        })();
+    </script>
+    <main>
+            <section class="sub-header">
+    <div class="container">
+        <div class="sub-title">
+            <p>
+                <a href="http://127.0.0.1:8000/vi"> Trang ch?
+                </a>
+                <i class="fa-solid fa-angle-right"></i>
+                Dang ky giang vien
+            </p>
+            <h2>Dang ky giang vien</h2>
+        </div>
+    </div>
+</section>
+
+    
+    <section class="teacher-apply-page py-5">
+        <div class="container">
+            <div class="teacher-apply-shell">
+                <div class="teacher-apply-intro">
+                    <span class="teacher-apply-kicker">Instructor Application</span>
+                    <h2>Dang ky tro thanh giang vien</h2>
+                    <p class="mb-0">
+                        Di?n thong tin co ban, chon goi phu hop roi gui ho so. Neu goi co phi, ban chon phuong thuc thanh toan o buoc cuoi cung.
+                    </p>
+                </div>
+
+                
+                
+                
+                <form action="http://127.0.0.1:8000/vi/tro-thanh-giang-vien/dang-ky"
+                    method="POST" class="teacher-apply-form">
+                    <input type="hidden" name="_token" value="PvXUXvG2IoPPw8R16CGZenUtQYDo3F6y0hUQ1ZPp" autocomplete="off">
+                    <div class="teacher-apply-card mb-4">
+                        <div class="teacher-section-heading">
+                            <h3>1. Dien thong tin</h3>
+                            <p>Dien cac truong quan trong de admin co the danh gia ho so nhanh hon.</p>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Ho va ten *</label>
+                                <input type="text" name="full_name" class="form-control"
+                                    value="">
+                                                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Email *</label>
+                                <input type="email" name="email" class="form-control"
+                                    value="">
+                                                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Ten hien thi</label>
+                                <input type="text" name="display_name" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">So dien thoai</label>
+                                <input type="text" name="phone" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Chuc danh / headline</label>
+                                <input type="text" name="headline" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">So nam kinh nghiem</label>
+                                <input type="number" min="0" max="80" name="experience_years" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Chuyen mon</label>
+                                <input type="text" name="specialties" class="form-control"
+                                    placeholder="Vi du: Revit, AutoCAD, BIM Coordination"
+                                    value="">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Gioi thieu ban than</label>
+                                <textarea name="bio" rows="5" class="form-control"></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Portfolio URL</label>
+                                <input type="url" name="portfolio_url" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Video gioi thieu URL</label>
+                                <input type="url" name="intro_video_url" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Facebook URL</label>
+                                <input type="url" name="facebook_url" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">YouTube URL</label>
+                                <input type="url" name="youtube_url" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">LinkedIn URL</label>
+                                <input type="url" name="linkedin_url" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Link CV</label>
+                                <input type="text" name="cv_file" class="form-control"
+                                    value="">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Link CCCD / giay to</label>
+                                <input type="text" name="identity_file" class="form-control"
+                                    value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="teacher-apply-card mb-4">
+                        <div class="teacher-section-heading">
+                            <h3>2. Chon goi</h3>
+                            <p>Chon mot goi de he thong tinh gia, hoa hong va trang thai ho so tuong ung.</p>
+                        </div>
+
+                        <div class="row g-3">
+                                                            <div class="col-lg-4">
+                                    <label class="teacher-package-option" data-package-card>
+                                        <input type="radio" name="package_id" value="1"
+                                            data-package-price="0"
+                                            checked>
+                                        <span class="teacher-package-option__code">FREE</span>
+                                        <strong class="teacher-package-option__name">Goi Free</strong>
+                                        <span class="teacher-package-option__price">
+                                            Mien phi
+                                        </span>
+                                                                                    <span class="teacher-package-option__desc">Bat dau voi quy trinh duyet thu cong va gioi han so khoa hoc.</span>
+                                                                                <span class="teacher-package-option__meta">
+                                            Hoa hong 50%
+                                                                                            · 2 khoa hoc
+                                                                                    </span>
+                                    </label>
+                                </div>
+                                                            <div class="col-lg-4">
+                                    <label class="teacher-package-option" data-package-card>
+                                        <input type="radio" name="package_id" value="2"
+                                            data-package-price="499000"
+                                            >
+                                        <span class="teacher-package-option__code">STARTER</span>
+                                        <strong class="teacher-package-option__name">Goi Starter</strong>
+                                        <span class="teacher-package-option__price">
+                                            499,000 d
+                                        </span>
+                                                                                    <span class="teacher-package-option__desc">Mo rong quyen dang khoa hoc, nhan muc chia doanh thu tot hon.</span>
+                                                                                <span class="teacher-package-option__meta">
+                                            Hoa hong 60%
+                                                                                            · 5 khoa hoc
+                                                                                    </span>
+                                    </label>
+                                </div>
+                                                            <div class="col-lg-4">
+                                    <label class="teacher-package-option" data-package-card>
+                                        <input type="radio" name="package_id" value="3"
+                                            data-package-price="990000"
+                                            >
+                                        <span class="teacher-package-option__code">PRO</span>
+                                        <strong class="teacher-package-option__name">Goi Pro</strong>
+                                        <span class="teacher-package-option__price">
+                                            990,000 d
+                                        </span>
+                                                                                    <span class="teacher-package-option__desc">Duyet uu tien, khong gioi han dang khoa hoc va commission cao nhat.</span>
+                                                                                <span class="teacher-package-option__meta">
+                                            Hoa hong 70%
+                                                                                            · Khong gioi han khoa hoc
+                                                                                    </span>
+                                    </label>
+                                </div>
+                                                    </div>
+
+                        <div class="teacher-payment-summary mt-3">
+                            <div>
+                                <span>Gia goi</span>
+                                <strong data-selected-price>Mien phi</strong>
+                            </div>
+                            <div class="small text-muted" data-payment-hint>
+                                Goi mien phi se chuyen ho so sang cho duyet ngay.
+                            </div>
+                        </div>
+
+                                            </div>
+
+                    <div class="teacher-apply-card mb-4">
+                        <div class="teacher-section-heading">
+                            <h3>3. Chon phuong thuc thanh toan</h3>
+                            <p>Goi mien phi se bo qua buoc nay. Neu goi co phi, ban chon cach thanh toan va co the nhap ma giam gia.</p>
+                        </div>
+
+                        <div class="row g-3 align-items-start">
+                            <div class="col-lg-6">
+                                <label class="form-label">Ma giam gia</label>
+                                <input type="text" name="coupon_code" class="form-control"
+                                    value=""
+                                    placeholder="Nhap ma neu co">
+                                                            </div>
+                        </div>
+
+                        <div class="teacher-payment-methods mt-3" data-payment-methods>
+                            <label class="teacher-payment-option">
+                                <input type="radio" name="payment_method" value="bank_transfer"
+                                    checked>
+                                <span>Chuyen khoan ngan hang</span>
+                            </label>
+                            <label class="teacher-payment-option">
+                                <input type="radio" name="payment_method" value="vnpay"
+                                    >
+                                <span>VNPay</span>
+                            </label>
+                            <label class="teacher-payment-option">
+                                <input type="radio" name="payment_method" value="momo"
+                                    >
+                                <span>MoMo</span>
+                            </label>
+                                                    </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary teacher-submit-btn">
+                            Gui ho so giang vien
+                        </button>
+
+                                            </div>
+                </form>
+            </div>
+        </div>
+    </section>
+    </main>
+    <footer>
+    <div class="container">
+        <div class="row align-items-start">
+            <div class="col-12 col-xl-4">
+                <div class="footer-brand">
+                    <a class="footer-brand__logo" href="http://127.0.0.1:8000/vi">
+                        <img src="http://127.0.0.1:8000/clients/assets/logo.png"
+                            alt="BigK Udemy">
+                    </a>
+                    <h3>V? chúng tôi</h3>
+                    <p>N?n t?ng h?c tr?c tuy?n t?p trung vào l? trình rõ ràng, ti?n d? h?c t?p và tr?i nghi?m th?c t? cho ngu?i h?c công ngh?.</p>
+                    <div class="footer-brand__actions">
+                        <a href="http://127.0.0.1:8000/vi/ve-chung-toi">
+                            <i class="fa-solid fa-circle-info"></i>
+                            V? chúng tôi
+                        </a>
+                        <a href="http://127.0.0.1:8000/vi/lien-he">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Liên h?
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-2 mt-4 mt-xl-0">
+                <div class="footer-group">
+                    <h3>H? tr? h?c viên</h3>
+                    <ul>
+                        <li>
+                            <a href="http://127.0.0.1:8000/vi/ho-tro-hoc-vien">H? tr? h?c viên</a>
+                        </li>
+                        <li>
+                            <a href="http://127.0.0.1:8000/vi/cau-hoi-thuong-gap">Câu h?i thu?ng g?p</a>
+                        </li>
+                        <li>
+                            <a href="http://127.0.0.1:8000/vi/cam-nhan-hoc-vien">C?m nh?n h?c viên</a>
+                        </li>
+                        <li>
+                            <a href="http://127.0.0.1:8000/vi/ve-chung-toi">V? chúng tôi</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3 mt-4 mt-xl-0">
+                <div class="footer-group">
+                    <h3>Chính sách di?u kho?n</h3>
+                    <ul>
+                        <li>
+                            <a href="http://127.0.0.1:8000/vi/chinh-sach-thanh-toan">Chính sách thanh toán</a>
+                        </li>
+                        <li>
+                            <a href="http://127.0.0.1:8000/vi/chinh-sach-hoan-tien-huy-don">Chính sách hoàn ti?n / h?y don</a>
+                        </li>
+                        <li>
+                            <a href="http://127.0.0.1:8000/vi/dieu-khoan-dich-vu">Ði?u kho?n d?ch v?</a>
+                        </li>
+                        <li>
+                            <a href="http://127.0.0.1:8000/vi/chinh-sach-bao-mat">Chính sách b?o m?t</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-xl-3 mt-4 mt-xl-0">
+                <div class="footer-group">
+                    <h3>Liên h?</h3>
+                    <ul>
+                        <li>
+                            <a href="tel:0123456789">
+                                <i class="fa-solid fa-mobile"></i>
+                                0123456789
+                            </a>
+                        </li>
+                        <li>
+                            <a href="mailto:bigkudemy@gmail.com">
+                                <i class="fa-solid fa-envelope"></i>
+                                bigkudemy@gmail.com
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" >
+                                <i class="fa-brands fa-facebook-f"></i>
+                                Facebook
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" >
+                                <i class="fa-brands fa-youtube"></i>
+                                YouTube
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.google.com/maps/search/?api=1&amp;query=Vi%E1%BB%87t%20Nam" target="_blank" rel="noopener noreferrer">
+                                <i class="fa-solid fa-house"></i>
+                                Vi?t Nam
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <p>
+        Made with
+        <span>
+            <i class="fa-solid fa-heart"></i>
+        </span>
+        by BigK
+    </p>
+</footer>
+            <div class="sales-chatbot" data-sales-chatbot='{"endpoint":"http:\/\/127.0.0.1:8000\/vi\/tro-ly-ban-hang","supportUrl":"http:\/\/127.0.0.1:8000\/vi\/ho-tro-hoc-vien","csrfToken":"PvXUXvG2IoPPw8R16CGZenUtQYDo3F6y0hUQ1ZPp","storageKey":"bigk-sales-chatbot:v6:vi","leadEndpoint":"http:\/\/127.0.0.1:8000\/vi\/tro-ly-ban-hang\/lien-he","messageTtlMinutes":5,"title":"Tr\u1ee3 l\u00fd b\u00e1n h\u00e0ng","subtitle":"T\u01b0 v\u1ea5n kh\u00f3a h\u1ecdc v\u00e0 \u01b0u \u0111\u00e3i","welcome":"M\u00ecnh c\u00f3 th\u1ec3 gi\u00fap b\u1ea1n t\u00ecm kh\u00f3a h\u1ecdc ph\u00f9 h\u1ee3p, xem m\u00e3 gi\u1ea3m gi\u00e1 \u0111ang c\u00f2n hi\u1ec7u l\u1ef1c v\u00e0 ch\u1ec9 c\u00e1ch li\u00ean h\u1ec7 h\u1ed7 tr\u1ee3 khi admin ch\u01b0a ph\u1ea3n h\u1ed3i.","placeholder":"Nh\u1eadp c\u00e2u h\u1ecfi c\u1ee7a b\u1ea1n...","send":"G\u1eedi","typing":"Bot \u0111ang tr\u1ea3 l\u1eddi...","supportLabel":"Trang h\u1ed7 tr\u1ee3","openLabel":"M\u1edf tr\u1ee3 l\u00fd","closeLabel":"\u0110\u00f3ng tr\u1ee3 l\u00fd","starterQuestions":["Hi\u1ec7n c\u00f3 m\u00e3 gi\u1ea3m gi\u00e1 n\u00e0o kh\u00f4ng?","C\u00e1c ph\u01b0\u01a1ng th\u1ee9c thanh to\u00e1n l\u00e0 g\u00ec?","Ch\u00ednh s\u00e1ch h\u1ee7y\/ho\u00e0n \u1edf \u0111\u00e2u?","C\u00e2u h\u1ecfi th\u01b0\u1eddng g\u1eb7p \u1edf \u0111\u00e2u?"],"student":null}'>
+    <button
+        class="sales-chatbot__toggle"
+        type="button"
+        aria-expanded="false"
+        aria-label="M? tr? lý">
+        <span class="sales-chatbot__toggle-icon"><i class="fa-solid fa-headset"></i></span>
+        <span class="sales-chatbot__toggle-copy">
+            <strong>Tu v?n nhanh</strong>
+            <small>M? tr? lý bán hàng</small>
+        </span>
+        <span class="sales-chatbot__toggle-arrow"><i class="fa-solid fa-chevron-up"></i></span>
+    </button>
+
+    <section
+        class="sales-chatbot__panel"
+        hidden
+        aria-hidden="true">
+        <header class="sales-chatbot__header">
+            <div class="sales-chatbot__header-copy">
+                <p class="sales-chatbot__eyebrow">BigK Udemy</p>
+                <h3 class="sales-chatbot__title">Tr? lý bán hàng</h3>
+                <p class="sales-chatbot__subtitle">Tu v?n khóa h?c, uu dãi và hu?ng d?n liên h?</p>
+            </div>
+
+            <div class="sales-chatbot__header-actions">
+                <a class="sales-chatbot__support-link" href="http://127.0.0.1:8000/vi/ho-tro-hoc-vien">
+                    Trang h? tr?
+                </a>
+                <button
+                    class="sales-chatbot__close"
+                    type="button"
+                    aria-label="Ðóng tr? lý">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="sales-chatbot__hero">
+            <div class="sales-chatbot__hero-badge">
+                <i class="fa-solid fa-sparkles"></i>
+                S?n sàng tu v?n
+            </div>
+            <p>Mình có th? giúp b?n tìm khóa h?c phù h?p, xem mã gi?m giá dang còn hi?u l?c và ch? cách liên h? h? tr? khi admin chua ph?n h?i.</p>
+        </div>
+
+        <div class="sales-chatbot__messages" aria-live="polite"></div>
+
+        <div class="sales-chatbot__starters">
+                            <button type="button" class="sales-chatbot__starter">Hi?n có mã gi?m giá nào không?</button>
+                            <button type="button" class="sales-chatbot__starter">Các phuong th?c thanh toán là gì?</button>
+                            <button type="button" class="sales-chatbot__starter">Chính sách h?y/hoàn ? dâu?</button>
+                            <button type="button" class="sales-chatbot__starter">Câu h?i thu?ng g?p ? dâu?</button>
+                    </div>
+
+        <form class="sales-chatbot__form">
+            <label class="visually-hidden" for="sales-chatbot-message">Câu h?i</label>
+            <textarea
+                id="sales-chatbot-message"
+                class="sales-chatbot__input"
+                rows="1"
+                maxlength="500"
+                placeholder="Nh?p câu h?i c?a b?n..."></textarea>
+            <button class="sales-chatbot__send" type="submit">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>G?i</span>
+            </button>
+        </form>
+    </section>
+</div>
+        <div id="page-modals">
+            </div>
+    <div class="modal fade" id="modal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="examplemodalLabel"></h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                </div>
+            </div>
+        </div>
+    </div>
+<script type="text/javascript">
+var phpdebugbar = new PhpDebugBar.DebugBar({"theme":"auto","hideEmptyTabs":true});
+phpdebugbar.addTab("request", new PhpDebugBar.DebugBar.Tab({"icon":"tags","order":-100,"title":"Request", "widget": new PhpDebugBar.Widgets.HtmlVariableListWidget()}));
+phpdebugbar.addTab("messages", new PhpDebugBar.DebugBar.Tab({"icon":"list-alt","title":"Messages", "widget": new PhpDebugBar.Widgets.MessagesWidget()}));
+phpdebugbar.addIndicator("time", new PhpDebugBar.DebugBar.Indicator({"icon":"clock-o","tooltip":"Request Duration","link":"timeline"}), "right");
+phpdebugbar.addTab("timeline", new PhpDebugBar.DebugBar.Tab({"icon":"tasks","title":"Timeline", "widget": new PhpDebugBar.Widgets.TimelineWidget()}));
+phpdebugbar.addIndicator("memory", new PhpDebugBar.DebugBar.Indicator({"icon":"cogs","tooltip":"Memory Usage"}), "right");
+phpdebugbar.addTab("exceptions", new PhpDebugBar.DebugBar.Tab({"icon":"bug","title":"Exceptions", "widget": new PhpDebugBar.Widgets.ExceptionsWidget()}));
+phpdebugbar.addIndicator("version", new PhpDebugBar.DebugBar.Indicator({"icon":"laravel phpdebugbar-fab"}), "right");
+phpdebugbar.addTab("views", new PhpDebugBar.DebugBar.Tab({"icon":"leaf","title":"Views", "widget": new PhpDebugBar.Widgets.TemplatesWidget()}));
+phpdebugbar.addTab("queries", new PhpDebugBar.DebugBar.Tab({"icon":"database","title":"Queries", "widget": new PhpDebugBar.Widgets.LaravelQueriesWidget()}));
+phpdebugbar.addTab("models", new PhpDebugBar.DebugBar.Tab({"icon":"cubes","title":"Models", "widget": new PhpDebugBar.Widgets.TableVariableListWidget()}));
+phpdebugbar.addTab("emails", new PhpDebugBar.DebugBar.Tab({"icon":"inbox","title":"Mails", "widget": new PhpDebugBar.Widgets.MailsWidget()}));
+phpdebugbar.addTab("gate", new PhpDebugBar.DebugBar.Tab({"icon":"list-alt","title":"Gate", "widget": new PhpDebugBar.Widgets.MessagesWidget()}));
+phpdebugbar.addIndicator("currentrequest", new PhpDebugBar.DebugBar.Indicator({"icon":"share","link":"request"}), "right");
+phpdebugbar.setDataMap({
+"request": ["request.data", {}],
+"messages": ["messages.messages", []],
+"messages:badge": ["messages.count", null],
+"time": ["time.duration_str", '0ms'],
+"timeline": ["time", {}],
+"memory": ["memory.peak_usage_str", '0B'],
+"exceptions": ["exceptions.exceptions", []],
+"exceptions:badge": ["exceptions.count", null],
+"version": ["laravel.version", ],
+"version:tooltip": ["laravel.tooltip", {}],
+"views": ["views", []],
+"views:badge": ["views.nb_templates", 0],
+"queries": ["queries", []],
+"queries:badge": ["queries.nb_statements", 0],
+"models": ["models", {}],
+"models:badge": ["models.count", 0],
+"emails": ["symfonymailer_mails.mails", []],
+"emails:badge": ["symfonymailer_mails.count", null],
+"gate": ["gate.messages", []],
+"gate:badge": ["gate.count", null],
+"request:badge": ["request.badge", null],
+"currentrequest": ["request.data.uri", ],
+"currentrequest:tooltip": ["request.tooltip", {}]
+});
+phpdebugbar.restoreState();
+phpdebugbar.enableAjaxHandlerTab();
+phpdebugbar.ajaxHandler = new PhpDebugBar.AjaxHandler(phpdebugbar, undefined, true);
+phpdebugbar.ajaxHandler.bindToFetch();
+phpdebugbar.ajaxHandler.bindToXHR();
+phpdebugbar.setOpenHandler(new PhpDebugBar.OpenHandler({"url":"http:\/\/127.0.0.1:8000\/_debugbar\/open"}));
+phpdebugbar.addDataSet({"__meta":{"id":"01KN6N8MNEDM5GX04ZQD1SYSBP","datetime":"2026-04-02 15:34:25","utime":1775118865.071725,"method":"GET","uri":"\/vi\/tro-thanh-giang-vien\/dang-ky","ip":"127.0.0.1"},"messages":{"count":0,"messages":[]},"time":{"count":11,"start":1775118864.354804,"end":1775118865.071754,"duration":0.7169499397277832,"duration_str":"717ms","measures":[{"label":"Booting","start":1775118864.354804,"relative_start":0,"end":1775118864.572441,"relative_end":1775118864.572441,"duration":0.2176370620727539,"duration_str":"218ms","memory":0,"memory_str":"0B","params":[],"collector":"time","group":null},{"label":"Application","start":1775118864.572453,"relative_start":0.21764898300170898,"end":1775118865.071758,"relative_end":4.0531158447265625e-6,"duration":0.49930500984191895,"duration_str":"499ms","memory":0,"memory_str":"0B","params":[],"collector":"time","group":null},{"label":"Routing","start":1775118864.586426,"relative_start":0.23162198066711426,"end":1775118864.590704,"relative_end":1775118864.590704,"duration":0.004277944564819336,"duration_str":"4.28ms","memory":0,"memory_str":"0B","params":[],"collector":null,"group":null},{"label":"Preparing Response","start":1775118864.622628,"relative_start":0.2678239345550537,"end":1775118865.068903,"relative_end":1775118865.068903,"duration":0.446274995803833,"duration_str":"446ms","memory":0,"memory_str":"0B","params":[],"collector":null,"group":null},{"label":"View: teacher::clients.application_form","start":1775118864.625479,"relative_start":0.2706749439239502,"end":1775118864.625479,"relative_end":1775118864.625479,"duration":0,"duration_str":"0\u03bcs","memory":0,"memory_str":"0B","params":[],"collector":"views","group":"View"},{"label":"View: part.clients.page_title","start":1775118865.005066,"relative_start":0.6502618789672852,"end":1775118865.005066,"relative_end":1775118865.005066,"duration":0,"duration_str":"0\u03bcs","memory":0,"memory_str":"0B","params":[],"collector":"views","group":"View"},{"label":"View: layouts.client","start":1775118865.025793,"relative_start":0.6709890365600586,"end":1775118865.025793,"relative_end":1775118865.025793,"duration":0,"duration_str":"0\u03bcs","memory":0,"memory_str":"0B","params":[],"collector":"views","group":"View"},{"label":"View: part.clients.header","start":1775118865.02891,"relative_start":0.6741058826446533,"end":1775118865.02891,"relative_end":1775118865.02891,"duration":0,"duration_str":"0\u03bcs","memory":0,"memory_str":"0B","params":[],"collector":"views","group":"View"},{"label":"View: part.clients.site-announcement","start":1775118865.040434,"relative_start":0.6856298446655273,"end":1775118865.040434,"relative_end":1775118865.040434,"duration":0,"duration_str":"0\u03bcs","memory":0,"memory_str":"0B","params":[],"collector":"views","group":"View"},{"label":"View: part.clients.footer","start":1775118865.041182,"relative_start":0.686378002166748,"end":1775118865.041182,"relative_end":1775118865.041182,"duration":0,"duration_str":"0\u03bcs","memory":0,"memory_str":"0B","params":[],"collector":"views","group":"View"},{"label":"View: part.clients.sales-chatbot","start":1775118865.06466,"relative_start":0.7098560333251953,"end":1775118865.06466,"relative_end":1775118865.06466,"duration":0,"duration_str":"0\u03bcs","memory":0,"memory_str":"0B","params":[],"collector":"views","group":"View"}]},"memory":{"peak_usage":24527832,"peak_usage_str":"23MB"},"exceptions":{"count":0,"exceptions":[]},"laravel":{"version":"10.x","tooltip":{"Laravel Version":"10.50.0","PHP Version":"8.2.12","Environment":"local","Debug Mode":"Enabled","URL":"127.0.0.1:8000","Timezone":"Asia\/Ho_Chi_Minh","Locale":"vi"}},"views":{"count":7,"nb_templates":7,"templates":[{"name":"teacher::clients.application_form","param_count":null,"params":[],"start":1775118864.625388,"type":"blade","hash":"bladeC:\\xampp\\htdocs\\course-store\\modules\/Teacher\/resources\/views\/clients\/application_form.blade.phpteacher::clients.application_form","xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FTeacher%2Fresources%2Fviews%2Fclients%2Fapplication_form.blade.php\u0026line=1","ajax":false,"filename":"application_form.blade.php","line":"?"}},{"name":"part.clients.page_title","param_count":null,"params":[],"start":1775118865.004978,"type":"blade","hash":"bladeC:\\xampp\\htdocs\\course-store\\resources\\views\/part\/clients\/page_title.blade.phppart.clients.page_title","xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fresources%2Fviews%2Fpart%2Fclients%2Fpage_title.blade.php\u0026line=1","ajax":false,"filename":"page_title.blade.php","line":"?"}},{"name":"layouts.client","param_count":null,"params":[],"start":1775118865.025647,"type":"blade","hash":"bladeC:\\xampp\\htdocs\\course-store\\resources\\views\/layouts\/client.blade.phplayouts.client","xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fresources%2Fviews%2Flayouts%2Fclient.blade.php\u0026line=1","ajax":false,"filename":"client.blade.php","line":"?"}},{"name":"part.clients.header","param_count":null,"params":[],"start":1775118865.028827,"type":"blade","hash":"bladeC:\\xampp\\htdocs\\course-store\\resources\\views\/part\/clients\/header.blade.phppart.clients.header","xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fresources%2Fviews%2Fpart%2Fclients%2Fheader.blade.php\u0026line=1","ajax":false,"filename":"header.blade.php","line":"?"}},{"name":"part.clients.site-announcement","param_count":null,"params":[],"start":1775118865.040375,"type":"blade","hash":"bladeC:\\xampp\\htdocs\\course-store\\resources\\views\/part\/clients\/site-announcement.blade.phppart.clients.site-announcement","xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fresources%2Fviews%2Fpart%2Fclients%2Fsite-announcement.blade.php\u0026line=1","ajax":false,"filename":"site-announcement.blade.php","line":"?"}},{"name":"part.clients.footer","param_count":null,"params":[],"start":1775118865.041125,"type":"blade","hash":"bladeC:\\xampp\\htdocs\\course-store\\resources\\views\/part\/clients\/footer.blade.phppart.clients.footer","xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fresources%2Fviews%2Fpart%2Fclients%2Ffooter.blade.php\u0026line=1","ajax":false,"filename":"footer.blade.php","line":"?"}},{"name":"part.clients.sales-chatbot","param_count":null,"params":[],"start":1775118865.064602,"type":"blade","hash":"bladeC:\\xampp\\htdocs\\course-store\\resources\\views\/part\/clients\/sales-chatbot.blade.phppart.clients.sales-chatbot","xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fresources%2Fviews%2Fpart%2Fclients%2Fsales-chatbot.blade.php\u0026line=1","ajax":false,"filename":"sales-chatbot.blade.php","line":"?"}}]},"queries":{"count":17,"nb_statements":17,"nb_visible_statements":17,"nb_excluded_statements":0,"nb_failed_statements":0,"accumulated_duration":0.00832,"accumulated_duration_str":"8.32ms","memory_usage":0,"memory_usage_str":null,"statements":[{"sql":"select * from `sessions` where `id` = \u0027yRMf2cqCyz8JWfRn7xlzVVRGrTkWYXmqH1SdgDCs\u0027 limit 1","type":"query","params":[],"bindings":["yRMf2cqCyz8JWfRn7xlzVVRGrTkWYXmqH1SdgDCs"],"hints":null,"show_copy":true,"backtrace":[{"index":15,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Session\/DatabaseSessionHandler.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Session\\DatabaseSessionHandler.php","line":97},{"index":16,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Session\/Store.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Session\\Store.php","line":113},{"index":17,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Session\/Store.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Session\\Store.php","line":101},{"index":18,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Session\/Store.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Session\\Store.php","line":85},{"index":19,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Session\/Middleware\/StartSession.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Session\\Middleware\\StartSession.php","line":147}],"start":1775118864.597887,"duration":0.00038,"duration_str":"380\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"DatabaseSessionHandler.php:97","source":{"index":15,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Session\/DatabaseSessionHandler.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Session\\DatabaseSessionHandler.php","line":97},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fvendor%2Flaravel%2Fframework%2Fsrc%2FIlluminate%2FSession%2FDatabaseSessionHandler.php\u0026line=97","ajax":false,"filename":"DatabaseSessionHandler.php","line":"97"},"connection":"laravel_course_store","explain":null,"start_percent":0,"width_percent":4.567},{"sql":"select * from `teacher_packages` where `status` = 1 order by `sort_order` asc","type":"query","params":[],"bindings":[1],"hints":null,"show_copy":true,"backtrace":[{"index":15,"namespace":null,"name":"modules\/Teacher\/src\/Http\/Controllers\/Clients\/TeacherApplicationController.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Teacher\\src\\Http\\Controllers\\Clients\\TeacherApplicationController.php","line":37},{"index":16,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Controller.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Controller.php","line":54},{"index":17,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/ControllerDispatcher.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\ControllerDispatcher.php","line":43},{"index":18,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php","line":259},{"index":19,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Routing\/Route.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Routing\\Route.php","line":205}],"start":1775118864.6101248,"duration":0.00041,"duration_str":"410\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"TeacherApplicationController.php:37","source":{"index":15,"namespace":null,"name":"modules\/Teacher\/src\/Http\/Controllers\/Clients\/TeacherApplicationController.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Teacher\\src\\Http\\Controllers\\Clients\\TeacherApplicationController.php","line":37},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FTeacher%2Fsrc%2FHttp%2FControllers%2FClients%2FTeacherApplicationController.php\u0026line=37","ajax":false,"filename":"TeacherApplicationController.php","line":"37"},"connection":"laravel_course_store","explain":null,"start_percent":4.567,"width_percent":4.928},{"sql":"select `categories`.*, (select count(*) from `courses` inner join `categories_courses` on `courses`.`id` = `categories_courses`.`courses_id` where `categories`.`id` = `categories_courses`.`category_id` and `courses`.`deleted_at` is null and `courses`.`status` = 1) as `courses_count` from `categories` where `categories`.`deleted_at` is null","type":"query","params":[],"bindings":[1],"hints":null,"show_copy":true,"backtrace":[{"index":15,"namespace":null,"name":"app\/Providers\/AppServiceProvider.php","file":"C:\\xampp\\htdocs\\course-store\\app\\Providers\\AppServiceProvider.php","line":58},{"index":19,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Concerns\/ManagesEvents.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Concerns\\ManagesEvents.php","line":177},{"index":20,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/View.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\View.php","line":188},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/View.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\View.php","line":159},{"index":22,"namespace":"view","name":"teacher::clients.application_form","file":"C:\\xampp\\htdocs\\course-store\\modules\/Teacher\/resources\/views\/clients\/application_form.blade.php","line":554}],"start":1775118865.0158532,"duration":0.0008,"duration_str":"800\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"AppServiceProvider.php:58","source":{"index":15,"namespace":null,"name":"app\/Providers\/AppServiceProvider.php","file":"C:\\xampp\\htdocs\\course-store\\app\\Providers\\AppServiceProvider.php","line":58},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fapp%2FProviders%2FAppServiceProvider.php\u0026line=58","ajax":false,"filename":"AppServiceProvider.php","line":"58"},"connection":"laravel_course_store","explain":null,"start_percent":9.495,"width_percent":9.615},{"sql":"select `key`, `value`, `updated_at` from `settings` where `key` in (\u0027global_notice_enabled\u0027, \u0027popup_notice_enabled\u0027, \u0027popup_notice_snooze_minutes\u0027, \u0027global_notice_title\u0027, \u0027global_notice_title_en\u0027, \u0027global_notice_title_ko\u0027, \u0027global_notice_title_ja\u0027, \u0027global_notice_title_zh\u0027, \u0027global_notice_content\u0027, \u0027global_notice_content_en\u0027, \u0027global_notice_content_ko\u0027, \u0027global_notice_content_ja\u0027, \u0027global_notice_content_zh\u0027, \u0027global_notice_link_label\u0027, \u0027global_notice_link_label_en\u0027, \u0027global_notice_link_label_ko\u0027, \u0027global_notice_link_label_ja\u0027, \u0027global_notice_link_label_zh\u0027, \u0027global_notice_link_url\u0027, \u0027global_notice_link_url_en\u0027, \u0027global_notice_link_url_ko\u0027, \u0027global_notice_link_url_ja\u0027, \u0027global_notice_link_url_zh\u0027, \u0027popup_notice_title\u0027, \u0027popup_notice_title_en\u0027, \u0027popup_notice_title_ko\u0027, \u0027popup_notice_title_ja\u0027, \u0027popup_notice_title_zh\u0027, \u0027popup_notice_content\u0027, \u0027popup_notice_content_en\u0027, \u0027popup_notice_content_ko\u0027, \u0027popup_notice_content_ja\u0027, \u0027popup_notice_content_zh\u0027, \u0027popup_notice_link_label\u0027, \u0027popup_notice_link_label_en\u0027, \u0027popup_notice_link_label_ko\u0027, \u0027popup_notice_link_label_ja\u0027, \u0027popup_notice_link_label_zh\u0027, \u0027popup_notice_link_url\u0027, \u0027popup_notice_link_url_en\u0027, \u0027popup_notice_link_url_ko\u0027, \u0027popup_notice_link_url_ja\u0027, \u0027popup_notice_link_url_zh\u0027)","type":"query","params":[],"bindings":["global_notice_enabled","popup_notice_enabled","popup_notice_snooze_minutes","global_notice_title","global_notice_title_en","global_notice_title_ko","global_notice_title_ja","global_notice_title_zh","global_notice_content","global_notice_content_en","global_notice_content_ko","global_notice_content_ja","global_notice_content_zh","global_notice_link_label","global_notice_link_label_en","global_notice_link_label_ko","global_notice_link_label_ja","global_notice_link_label_zh","global_notice_link_url","global_notice_link_url_en","global_notice_link_url_ko","global_notice_link_url_ja","global_notice_link_url_zh","popup_notice_title","popup_notice_title_en","popup_notice_title_ko","popup_notice_title_ja","popup_notice_title_zh","popup_notice_content","popup_notice_content_en","popup_notice_content_ko","popup_notice_content_ja","popup_notice_content_zh","popup_notice_link_label","popup_notice_link_label_en","popup_notice_link_label_ko","popup_notice_link_label_ja","popup_notice_link_label_zh","popup_notice_link_url","popup_notice_link_url_en","popup_notice_link_url_ko","popup_notice_link_url_ja","popup_notice_link_url_zh"],"hints":null,"show_copy":true,"backtrace":[{"index":15,"namespace":null,"name":"app\/Providers\/AppServiceProvider.php","file":"C:\\xampp\\htdocs\\course-store\\app\\Providers\\AppServiceProvider.php","line":80},{"index":19,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Concerns\/ManagesEvents.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Concerns\\ManagesEvents.php","line":177},{"index":20,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/View.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\View.php","line":188},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/View.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\View.php","line":159},{"index":22,"namespace":"view","name":"teacher::clients.application_form","file":"C:\\xampp\\htdocs\\course-store\\modules\/Teacher\/resources\/views\/clients\/application_form.blade.php","line":554}],"start":1775118865.019733,"duration":0.0008399999999999999,"duration_str":"840\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"AppServiceProvider.php:80","source":{"index":15,"namespace":null,"name":"app\/Providers\/AppServiceProvider.php","file":"C:\\xampp\\htdocs\\course-store\\app\\Providers\\AppServiceProvider.php","line":80},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fapp%2FProviders%2FAppServiceProvider.php\u0026line=80","ajax":false,"filename":"AppServiceProvider.php","line":"80"},"connection":"laravel_course_store","explain":null,"start_percent":19.111,"width_percent":10.096},{"sql":"select `value` from `settings` where `key` = \u0027phone\u0027 limit 1","type":"query","params":[],"bindings":["phone"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.030313,"duration":0.00057,"duration_str":"570\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":29.207,"width_percent":6.851},{"sql":"select `value` from `settings` where `key` = \u0027email\u0027 limit 1","type":"query","params":[],"bindings":["email"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.033243,"duration":0.0005,"duration_str":"500\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":36.058,"width_percent":6.01},{"sql":"select `value` from `settings` where `key` = \u0027logo\u0027 limit 1","type":"query","params":[],"bindings":["logo"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.036483,"duration":0.0005,"duration_str":"500\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":42.067,"width_percent":6.01},{"sql":"select `value` from `settings` where `key` = \u0027phone\u0027 limit 1","type":"query","params":[],"bindings":["phone"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.0416942,"duration":0.00047999999999999996,"duration_str":"480\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":48.077,"width_percent":5.769},{"sql":"select `value` from `settings` where `key` = \u0027email\u0027 limit 1","type":"query","params":[],"bindings":["email"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.044153,"duration":0.00041999999999999996,"duration_str":"420\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":53.846,"width_percent":5.048},{"sql":"select `value` from `settings` where `key` = \u0027address\u0027 limit 1","type":"query","params":[],"bindings":["address"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.046705,"duration":0.0005,"duration_str":"500\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":58.894,"width_percent":6.01},{"sql":"select `value` from `settings` where `key` = \u0027logo\u0027 limit 1","type":"query","params":[],"bindings":["logo"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.049189,"duration":0.00047,"duration_str":"470\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":64.904,"width_percent":5.649},{"sql":"select `value` from `settings` where `key` = \u0027facebook\u0027 limit 1","type":"query","params":[],"bindings":["facebook"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":24,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.05252,"duration":0.00058,"duration_str":"580\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":70.553,"width_percent":6.971},{"sql":"select `value` from `settings` where `key` = \u0027facebook\u0027 limit 1","type":"query","params":[],"bindings":["facebook"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":24,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.05531,"duration":0.0005600000000000001,"duration_str":"560\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":77.524,"width_percent":6.731},{"sql":"select `value` from `settings` where `key` = \u0027youtube\u0027 limit 1","type":"query","params":[],"bindings":["youtube"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":24,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.0578651,"duration":0.00045,"duration_str":"450\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":84.255,"width_percent":5.409},{"sql":"select `value` from `settings` where `key` = \u0027youtube\u0027 limit 1","type":"query","params":[],"bindings":["youtube"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":24,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.060257,"duration":0.0003,"duration_str":"300\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":89.663,"width_percent":3.606},{"sql":"select `value` from `settings` where `key` = \u0027chatbot_widget_enabled\u0027 limit 1","type":"query","params":[],"bindings":["chatbot_widget_enabled"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.062358,"duration":0.00019,"duration_str":"190\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":93.269,"width_percent":2.284},{"sql":"select `value` from `settings` where `key` = \u0027chatbot_message_ttl_minutes\u0027 limit 1","type":"query","params":[],"bindings":["chatbot_message_ttl_minutes"],"hints":null,"show_copy":true,"backtrace":[{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},{"index":18,"namespace":null,"name":"modules\/Settings\/helpers\/helpers.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\helpers\\helpers.php","line":7},{"index":21,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/Filesystem\/Filesystem.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\Filesystem\\Filesystem.php","line":124},{"index":22,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/PhpEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\PhpEngine.php","line":58},{"index":23,"namespace":null,"name":"vendor\/laravel\/framework\/src\/Illuminate\/View\/Engines\/CompilerEngine.php","file":"C:\\xampp\\htdocs\\course-store\\vendor\\laravel\\framework\\src\\Illuminate\\View\\Engines\\CompilerEngine.php","line":72}],"start":1775118865.065257,"duration":0.00037,"duration_str":"370\u03bcs","slow":false,"memory":0,"memory_str":null,"filename":"Setting.php:16","source":{"index":17,"namespace":null,"name":"modules\/Settings\/src\/Models\/Setting.php","file":"C:\\xampp\\htdocs\\course-store\\modules\\Settings\\src\\Models\\Setting.php","line":16},"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=16","ajax":false,"filename":"Setting.php","line":"16"},"connection":"laravel_course_store","explain":null,"start_percent":95.553,"width_percent":4.447}]},"models":{"data":{"Modules\\Settings\\src\\Models\\Setting":{"retrieved":56,"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FSettings%2Fsrc%2FModels%2FSetting.php\u0026line=1","ajax":false,"filename":"Setting.php","line":"?"}},"Modules\\Categories\\src\\Models\\Category":{"retrieved":4,"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FCategories%2Fsrc%2FModels%2FCategory.php\u0026line=1","ajax":false,"filename":"Category.php","line":"?"}},"Modules\\Teacher\\src\\Models\\TeacherPackage":{"retrieved":3,"xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FTeacher%2Fsrc%2FModels%2FTeacherPackage.php\u0026line=1","ajax":false,"filename":"TeacherPackage.php","line":"?"}}},"count":63,"key_map":{"retrieved":"Retrieved","created":"Created","updated":"Updated","deleted":"Deleted"},"is_counter":true,"badges":{"retrieved":63}},"symfonymailer_mails":{"count":0,"mails":[]},"gate":{"count":0,"messages":[]},"request":{"data":{"status":"200 OK","full_url":"http:\/\/127.0.0.1:8000\/vi\/tro-thanh-giang-vien\/dang-ky","action_name":"teacher.account.apply","controller_action":"Modules\\Teacher\\src\\Http\\Controllers\\Clients\\TeacherApplicationController@create","uri":"GET {locale}\/tro-thanh-giang-vien\/dang-ky","controller":{"value":"Modules\\Teacher\\src\\Http\\Controllers\\Clients\\TeacherApplicationController@create","xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FTeacher%2Fsrc%2FHttp%2FControllers%2FClients%2FTeacherApplicationController.php\u0026line=25","ajax":false,"filename":"TeacherApplicationController.php","line":"25"}},"namespace":"Modules\\Teacher\\src\\Http\\Controllers","prefix":"\/{locale}","where":{"locale":"vi|en|ko|ja|zh"},"file":{"value":"modules\/Teacher\/src\/Http\/Controllers\/Clients\/TeacherApplicationController.php:25-40","xdebug_link":{"url":"phpstorm:\/\/open?file=C%3A%2Fxampp%2Fhtdocs%2Fcourse-store%2Fmodules%2FTeacher%2Fsrc%2FHttp%2FControllers%2FClients%2FTeacherApplicationController.php\u0026line=25","ajax":false,"filename":"TeacherApplicationController.php","line":"25"}},"middleware":"web, setLocale","duration":"720ms","peak_memory":"24MB","response":"text\/html; charset=UTF-8","request_format":"html","request_query":"\u003Cpre class=sf-dump id=sf-dump-1170418240 data-indent-pad=\u0022  \u0022\u003E[]\n\u003C\/pre\u003E\u003Cscript\u003ESfdump(\u0022sf-dump-1170418240\u0022, {\u0022maxDepth\u0022:0})\u003C\/script\u003E\n","request_request":"\u003Cpre class=sf-dump id=sf-dump-509464778 data-indent-pad=\u0022  \u0022\u003E[]\n\u003C\/pre\u003E\u003Cscript\u003ESfdump(\u0022sf-dump-509464778\u0022, {\u0022maxDepth\u0022:0})\u003C\/script\u003E\n","request_headers":"\u003Cpre class=sf-dump id=sf-dump-547546607 data-indent-pad=\u0022  \u0022\u003E\u003Cspan class=sf-dump-note\u003Earray:3\u003C\/span\u003E [\u003Csamp data-depth=1 class=sf-dump-expanded\u003E\n  \u0022\u003Cspan class=sf-dump-key\u003Euser-agent\u003C\/span\u003E\u0022 =\u003E \u003Cspan class=sf-dump-note\u003Earray:1\u003C\/span\u003E [\u003Csamp data-depth=2 class=sf-dump-compact\u003E\n    \u003Cspan class=sf-dump-index\u003E0\u003C\/span\u003E =\u003E \u0022\u003Cspan class=sf-dump-str title=\u002281 characters\u0022\u003EMozilla\/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell\/5.1.19041.6456\u003C\/span\u003E\u0022\n  \u003C\/samp\u003E]\n  \u0022\u003Cspan class=sf-dump-key\u003Ehost\u003C\/span\u003E\u0022 =\u003E \u003Cspan class=sf-dump-note\u003Earray:1\u003C\/span\u003E [\u003Csamp data-depth=2 class=sf-dump-compact\u003E\n    \u003Cspan class=sf-dump-index\u003E0\u003C\/span\u003E =\u003E \u0022\u003Cspan class=sf-dump-str title=\u002214 characters\u0022\u003E127.0.0.1:8000\u003C\/span\u003E\u0022\n  \u003C\/samp\u003E]\n  \u0022\u003Cspan class=sf-dump-key\u003Econnection\u003C\/span\u003E\u0022 =\u003E \u003Cspan class=sf-dump-note\u003Earray:1\u003C\/span\u003E [\u003Csamp data-depth=2 class=sf-dump-compact\u003E\n    \u003Cspan class=sf-dump-index\u003E0\u003C\/span\u003E =\u003E \u0022\u003Cspan class=sf-dump-str title=\u002210 characters\u0022\u003EKeep-Alive\u003C\/span\u003E\u0022\n  \u003C\/samp\u003E]\n\u003C\/samp\u003E]\n\u003C\/pre\u003E\u003Cscript\u003ESfdump(\u0022sf-dump-547546607\u0022, {\u0022maxDepth\u0022:0})\u003C\/script\u003E\n","request_cookies":"\u003Cpre class=sf-dump id=sf-dump-853851642 data-indent-pad=\u0022  \u0022\u003E[]\n\u003C\/pre\u003E\u003Cscript\u003ESfdump(\u0022sf-dump-853851642\u0022, {\u0022maxDepth\u0022:0})\u003C\/script\u003E\n","response_headers":"\u003Cpre class=sf-dump id=sf-dump-1722522443 data-indent-pad=\u0022  \u0022\u003E\u003Cspan class=sf-dump-note\u003Earray:3\u003C\/span\u003E [\u003Csamp data-depth=1 class=sf-dump-expanded\u003E\n  \u0022\u003Cspan class=sf-dump-key\u003Econtent-type\u003C\/span\u003E\u0022 =\u003E \u003Cspan class=sf-dump-note\u003Earray:1\u003C\/span\u003E [\u003Csamp data-depth=2 class=sf-dump-compact\u003E\n    \u003Cspan class=sf-dump-index\u003E0\u003C\/span\u003E =\u003E \u0022\u003Cspan class=sf-dump-str title=\u002224 characters\u0022\u003Etext\/html; charset=UTF-8\u003C\/span\u003E\u0022\n  \u003C\/samp\u003E]\n  \u0022\u003Cspan class=sf-dump-key\u003Ecache-control\u003C\/span\u003E\u0022 =\u003E \u003Cspan class=sf-dump-note\u003Earray:1\u003C\/span\u003E [\u003Csamp data-depth=2 class=sf-dump-compact\u003E\n    \u003Cspan class=sf-dump-index\u003E0\u003C\/span\u003E =\u003E \u0022\u003Cspan class=sf-dump-str title=\u002217 characters\u0022\u003Eno-cache, private\u003C\/span\u003E\u0022\n  \u003C\/samp\u003E]\n  \u0022\u003Cspan class=sf-dump-key\u003Edate\u003C\/span\u003E\u0022 =\u003E \u003Cspan class=sf-dump-note\u003Earray:1\u003C\/span\u003E [\u003Csamp data-depth=2 class=sf-dump-compact\u003E\n    \u003Cspan class=sf-dump-index\u003E0\u003C\/span\u003E =\u003E \u0022\u003Cspan class=sf-dump-str title=\u002229 characters\u0022\u003EThu, 02 Apr 2026 08:34:24 GMT\u003C\/span\u003E\u0022\n  \u003C\/samp\u003E]\n\u003C\/samp\u003E]\n\u003C\/pre\u003E\u003Cscript\u003ESfdump(\u0022sf-dump-1722522443\u0022, {\u0022maxDepth\u0022:0})\u003C\/script\u003E\n","session_attributes":"\u003Cpre class=sf-dump id=sf-dump-755558779 data-indent-pad=\u0022  \u0022\u003E\u003Cspan class=sf-dump-note\u003Earray:2\u003C\/span\u003E [\u003Csamp data-depth=1 class=sf-dump-expanded\u003E\n  \u0022\u003Cspan class=sf-dump-key\u003E_token\u003C\/span\u003E\u0022 =\u003E \u0022\u003Cspan class=sf-dump-str title=\u002240 characters\u0022\u003EPvXUXvG2IoPPw8R16CGZenUtQYDo3F6y0hUQ1ZPp\u003C\/span\u003E\u0022\n  \u0022\u003Cspan class=sf-dump-key\u003Elocale\u003C\/span\u003E\u0022 =\u003E \u0022\u003Cspan class=sf-dump-str title=\u00222 characters\u0022\u003Evi\u003C\/span\u003E\u0022\n\u003C\/samp\u003E]\n\u003C\/pre\u003E\u003Cscript\u003ESfdump(\u0022sf-dump-755558779\u0022, {\u0022maxDepth\u0022:0})\u003C\/script\u003E\n"},"tooltip":{"status":"200 OK","full_url":"http:\/\/127.0.0.1:8000\/vi\/tro-thanh-giang-vien\/dang-ky","action_name":"teacher.account.apply","controller_action":"Modules\\Teacher\\src\\Http\\Controllers\\Clients\\TeacherApplicationController@create"},"badge":null}}, "01KN6N8MNEDM5GX04ZQD1SYSBP");
+
+</script>
+</body>
+<script type="module" src="http://[::1]:5173/@vite/client"></script><script type="module" src="http://[::1]:5173/resources/js/app.js"></script><div id="page-inline-scripts" hidden>
+        <script>
+        (() => {
+            const packageInputs = document.querySelectorAll('input[name="package_id"]');
+            const paymentMethods = document.querySelector('[data-payment-methods]');
+            const selectedPrice = document.querySelector('[data-selected-price]');
+            const paymentHint = document.querySelector('[data-payment-hint]');
+
+            const formatMoney = (value) => new Intl.NumberFormat('vi-VN').format(Math.max(Number(value || 0), 0)) + 'd';
+
+            const updateUi = () => {
+                const active = document.querySelector('input[name="package_id"]:checked');
+                const price = Number(active?.dataset.packagePrice || 0);
+                const isFree = price <= 0;
+
+                document.querySelectorAll('[data-package-card]').forEach((card) => card.classList.remove('is-selected'));
+                active?.closest('[data-package-card]')?.classList.add('is-selected');
+
+                if (selectedPrice) {
+                    selectedPrice.textContent = isFree ? 'Mien phi' : formatMoney(price);
+                }
+
+                if (paymentHint) {
+                    paymentHint.textContent = isFree
+                        ? 'Goi mien phi se chuyen ho so sang cho duyet ngay.'
+                        : 'Goi nay can chon phuong thuc thanh toan truoc khi gui.';
+                }
+
+                if (paymentMethods) {
+                    paymentMethods.classList.toggle('is-hidden', isFree);
+                }
+            };
+
+            packageInputs.forEach((input) => {
+                input.addEventListener('change', updateUi);
+            });
+
+            updateUi();
+        })();
+    </script>
+</div>
+
+</html>
+

@@ -16,7 +16,8 @@ class TeacherApplicationApprovedMail extends Mailable implements ShouldQueue
 
     public function __construct(
         public TeacherApplication $application,
-        public ?string $plainPassword,
+        public ?string $passwordSetupUrl,
+        public bool $useExistingAccount,
         string $locale
     ) {
         $this->localeCode = $locale;
@@ -26,7 +27,7 @@ class TeacherApplicationApprovedMail extends Mailable implements ShouldQueue
     {
         app()->setLocale($this->localeCode);
 
-        return $this->subject('BigK Udemy - Hồ sơ giảng viên của bạn đã được duyệt')
+        return $this->subject(__('teacher::mail.approved.subject'))
             ->view('emails.teacher-application-approved');
     }
 }

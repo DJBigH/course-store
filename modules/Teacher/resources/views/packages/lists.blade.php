@@ -15,32 +15,46 @@
                 <div class="alert alert-success">{{ session('msg') }}</div>
             @endif
 
+            <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
+                <i class="fa-solid fa-up-down-left-right"></i>
+                <span>Keo tha dong de doi thu tu hien thi package. He thong se luu lai sort order moi ngay khi ban tha chuot.</span>
+            </div>
+
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead>
                         <tr>
+                            <th style="width: 56px;"></th>
                             <th>Code</th>
                             <th>Ten goi</th>
+                            <th>Thu tu</th>
                             <th>Gia</th>
                             <th>Commission</th>
                             <th>Trang thai</th>
                             <th class="text-end">Thao tac</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody data-package-sortable data-reorder-url="{{ route('teacher-packages.reorder') }}" data-csrf="{{ csrf_token() }}">
                         @forelse ($packages as $package)
-                            <tr>
+                            <tr draggable="true" data-package-id="{{ $package->id }}">
+                                <td class="text-center text-muted package-sort-handle" title="Keo de sap xep">
+                                    <i class="fa-solid fa-grip-vertical"></i>
+                                </td>
                                 <td>{{ strtoupper($package->code) }}</td>
                                 <td>
                                     <strong>{{ $package->name }}</strong>
                                     <div class="text-muted small">{{ $package->description }}</div>
                                 </td>
+                                <td>#{{ $package->sort_order }}</td>
                                 <td>{{ money($package->price) }}</td>
                                 <td>{{ rtrim(rtrim(number_format($package->commission_rate, 2, '.', ''), '0'), '.') }}%</td>
                                 <td>
-                                    <span class="badge bg-{{ $package->status ? 'success' : 'secondary' }}">
-                                        {{ $package->status ? 'Dang bat' : 'Dang tat' }}
+                                    <span class="badge bg-{{ $package->status ? 'success' : ($package->hidden_mode === 'available' ? 'warning text-dark' : 'secondary') }}">
+                                        {{ $package->status ? 'Cong khai' : ($package->hidden_mode === 'available' ? 'An nhung van dung duoc' : 'An va khoa su dung') }}
                                     </span>
+                                    @if ($package->is_featured)
+                                        <div class="small text-info mt-1">Featured</div>
+                                    @endif
                                 </td>
                                 <td class="text-end">
                                     <a href="{{ route('teacher-packages.edit', $package->id) }}" class="btn btn-sm btn-warning">Sua</a>
@@ -53,14 +67,132 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">Chua co goi nao.</td>
+                                <td colspan="8" class="text-center text-muted py-4">Chua co goi nao.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-            {{ $packages->links() }}
         </div>
     </div>
+@endsection
+
+@section('stylesheets')
+    <style>
+        .package-sort-handle {
+            cursor: grab;
+            user-select: none;
+        }
+
+        tr[data-package-id] {
+            transition: background-color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        tr[data-package-id].is-dragging {
+            opacity: 0.55;
+        }
+
+        tr[data-package-id].is-drag-over > * {
+            background: rgba(59, 130, 246, 0.12) !important;
+        }
+
+        html[data-theme="dark"] tr[data-package-id].is-drag-over > * {
+            background: rgba(96, 165, 250, 0.16) !important;
+        }
+    </style>
+@endsection
+
+@section('scripts')
+    <script>
+        (() => {
+            const tbody = document.querySelector('[data-package-sortable]');
+            if (!tbody) {
+                return;
+            }
+
+            let draggingRow = null;
+
+            const getRows = () => [...tbody.querySelectorAll('tr[data-package-id]')];
+
+            const clearDragState = () => {
+                getRows().forEach((row) => row.classList.remove('is-drag-over', 'is-dragging'));
+            };
+
+            const persistOrder = async () => {
+                const ids = getRows().map((row) => Number(row.dataset.packageId));
+
+                const response = await fetch(tbody.dataset.reorderUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': tbody.dataset.csrf,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ ids }),
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Khong the cap nhat thu tu.');
+                }
+
+                getRows().forEach((row, index) => {
+                    const orderCell = row.children[3];
+                    if (orderCell) {
+                        orderCell.textContent = `#${index + 1}`;
+                    }
+                });
+            };
+
+            getRows().forEach((row) => {
+                row.addEventListener('dragstart', () => {
+                    draggingRow = row;
+                    row.classList.add('is-dragging');
+                });
+
+                row.addEventListener('dragend', async () => {
+                    clearDragState();
+                    if (!draggingRow) {
+                        return;
+                    }
+
+                    try {
+                        await persistOrder();
+                    } catch (error) {
+                        window.alert(error.message || 'Khong the cap nhat thu tu.');
+                        window.location.reload();
+                    } finally {
+                        draggingRow = null;
+                    }
+                });
+
+                row.addEventListener('dragover', (event) => {
+                    event.preventDefault();
+                    if (!draggingRow || draggingRow === row) {
+                        return;
+                    }
+
+                    const rect = row.getBoundingClientRect();
+                    const offset = event.clientY - rect.top;
+                    row.classList.add('is-drag-over');
+
+                    if (offset > rect.height / 2) {
+                        row.after(draggingRow);
+                    } else {
+                        row.before(draggingRow);
+                    }
+                });
+
+                row.addEventListener('dragleave', () => {
+                    row.classList.remove('is-drag-over');
+                });
+
+                row.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    row.classList.remove('is-drag-over');
+                });
+            });
+        })();
+    </script>
 @endsection

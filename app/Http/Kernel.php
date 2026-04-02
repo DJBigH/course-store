@@ -66,6 +66,7 @@ class Kernel extends HttpKernel
         'precognitive' => \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'student.2fa' => \App\Http\Middleware\RequireStudentTwoFactorFresh::class,
+        'teacher.active' => \App\Http\Middleware\EnsureActiveTeacher::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
     ];

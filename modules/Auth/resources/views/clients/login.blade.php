@@ -78,9 +78,13 @@
                 </a>
             </p>
 
-            <p class="sign-up register" style="margin-top: 12px;">
-                Nếu bạn đã là giảng viên, hãy đăng nhập bằng email đã đăng ký ở đây rồi vào kênh giảng viên sau khi được duyệt.
-            </p>
+            <div class="alert alert-info d-flex flex-column align-items-start gap-2 mt-3" role="alert">
+                <strong>Kênh giảng viên</strong>
+                <span>Nếu bạn đã được duyệt giảng viên, hãy đăng nhập ở cổng riêng để vào dashboard giảng viên.</span>
+                <a href="{{ route('teacher.auth.login', ['locale' => app()->getLocale()]) }}" class="btn btn-sm btn-outline-primary">
+                    Đăng nhập giảng viên
+                </a>
+            </div>
         </div>
     </div>
 @endsection

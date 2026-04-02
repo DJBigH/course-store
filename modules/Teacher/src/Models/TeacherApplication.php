@@ -27,6 +27,7 @@ class TeacherApplication extends Model
         'specialties',
         'phone',
         'email',
+        'locale',
         'portfolio_url',
         'facebook_url',
         'youtube_url',
@@ -74,12 +75,12 @@ class TeacherApplication extends Model
     public function getDisplayStatusAttribute(): string
     {
         return match ($this->status) {
-            'draft' => 'Bản nháp',
-            'pending_payment' => 'Chờ thanh toán',
-            'pending_review' => 'Chờ admin duyệt',
-            'approved' => 'Đã duyệt',
-            'rejected' => 'Bị từ chối',
-            'cancelled' => 'Đã hủy',
+            'draft' => __('teacher::portal.status_labels.draft'),
+            'pending_payment' => __('teacher::portal.status_labels.pending_payment'),
+            'pending_review' => __('teacher::portal.status_labels.pending_review'),
+            'approved' => __('teacher::portal.status_labels.approved'),
+            'rejected' => __('teacher::portal.status_labels.rejected'),
+            'cancelled' => __('teacher::portal.status_labels.cancelled'),
             default => ucfirst((string) $this->status),
         };
     }
@@ -87,9 +88,9 @@ class TeacherApplication extends Model
     public function getPaymentMethodLabelAttribute(): string
     {
         return match ($this->payment_method) {
-            'vnpay' => 'VNPay',
-            'momo' => 'MoMo',
-            default => 'Chuyển khoản ngân hàng',
+            'vnpay' => __('teacher::portal.payment_methods.vnpay'),
+            'momo' => __('teacher::portal.payment_methods.momo'),
+            default => __('teacher::portal.payment_methods.bank_transfer'),
         };
     }
 

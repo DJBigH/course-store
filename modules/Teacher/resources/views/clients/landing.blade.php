@@ -5,20 +5,7 @@
 
     @php
         $currentLocale = app()->getLocale();
-        $supportLabels = [
-            'vi' => ['co ban' => 'cơ bản', 'email' => 'email', 'uu tien' => 'ưu tiên'],
-            'en' => ['co ban' => 'basic', 'email' => 'email', 'uu tien' => 'priority'],
-            'ko' => ['co ban' => '기본', 'email' => '이메일', 'uu tien' => '우선'],
-            'ja' => ['co ban' => '基本', 'email' => 'メール', 'uu tien' => '優先'],
-            'zh' => ['co ban' => '基础', 'email' => '邮件', 'uu tien' => '优先'],
-        ];
-        $packageTitles = [
-            'vi' => ['free' => 'Gói Free', 'starter' => 'Gói Starter', 'pro' => 'Gói Pro'],
-            'en' => ['free' => 'Free', 'starter' => 'Starter', 'pro' => 'Pro'],
-            'ko' => ['free' => 'Free', 'starter' => 'Starter', 'pro' => 'Pro'],
-            'ja' => ['free' => 'Free', 'starter' => 'Starter', 'pro' => 'Pro'],
-            'zh' => ['free' => 'Free', 'starter' => 'Starter', 'pro' => 'Pro'],
-        ];
+        $ui = $content['ui'];
         $teacherApplication = auth('students')->user()?->teacherApplications()?->latest('id')->first();
         $isActiveTeacher = auth('students')->check() && auth('students')->user()?->teacher?->status === 'active';
         $ctaUrl = $isActiveTeacher
@@ -27,9 +14,7 @@
                 ? route('teacher.account.status', ['locale' => $currentLocale])
                 : route('teacher.account.begin', ['locale' => $currentLocale]));
         $packageCtaUrl = $ctaUrl;
-        $teacherLoginUrl = route('clients-login', ['locale' => $currentLocale]);
-        $currentSupportLabels = $supportLabels[$currentLocale] ?? $supportLabels['en'];
-        $currentPackageTitles = $packageTitles[$currentLocale] ?? $packageTitles['en'];
+        $teacherLoginUrl = route('teacher.auth.login', ['locale' => $currentLocale]);
     @endphp
 
     <section class="teacher-landing-shell">
@@ -57,9 +42,9 @@
                         </div>
 
                         <p class="teacher-hero-login-hint mt-3 mb-0">
-                            Nếu bạn đã là giảng viên, chỉ cần
-                            <a href="{{ $teacherLoginUrl }}">đăng nhập tại đây</a>
-                            rồi vào kênh giảng viên cho nhanh.
+                            {{ $ui['hero_login_prefix'] }}
+                            <a href="{{ $teacherLoginUrl }}">{{ $ui['hero_login_link'] }}</a>
+                            {{ $ui['hero_login_suffix'] }}
                         </p>
                     </div>
 
@@ -91,13 +76,9 @@
         <section class="py-5 teacher-section teacher-section--soft" data-reveal="up">
             <div class="container">
                 <div class="teacher-section-heading text-center mb-5">
-                    <span class="teacher-section-kicker">Why people start here</span>
-                    <h2 class="fw-bold mb-3">
-                        {{ $currentLocale === 'vi' ? 'Một khởi đầu vừa đủ vui để có động lực, vừa đủ nghiêm để đi được đường dài' : $content['highlights'][0]['title'] }}
-                    </h2>
-                    <p class="text-muted mb-0">
-                        {{ $currentLocale === 'vi' ? 'Trang này không hứa biến bạn thành “siêu sao sau một đêm”. Nó chỉ hứa cho bạn một đường vào đúng, đủ rõ và đủ đẹp để bắt đầu tử tế.' : $content['journey']['description'] }}
-                    </p>
+                    <span class="teacher-section-kicker">{{ $ui['highlights_kicker'] }}</span>
+                    <h2 class="fw-bold mb-3">{{ $ui['highlights_title'] }}</h2>
+                    <p class="text-muted mb-0">{{ $ui['highlights_description'] }}</p>
                 </div>
 
                 <div class="row g-4">
@@ -119,7 +100,7 @@
                 <div class="row g-4 align-items-start">
                     <div class="col-lg-5">
                         <div class="teacher-stacked-panel">
-                            <span class="teacher-section-kicker">Journey</span>
+                            <span class="teacher-section-kicker">{{ $ui['journey_kicker'] }}</span>
                             <h2 class="fw-bold mb-3">{{ $content['journey']['title'] }}</h2>
                             <p class="text-muted mb-0">{{ $content['journey']['description'] }}</p>
                         </div>
@@ -146,7 +127,7 @@
                 <div class="row g-4 align-items-center">
                     <div class="col-lg-6">
                         <div class="teacher-earnings-panel">
-                            <span class="teacher-section-kicker teacher-section-kicker--light">Revenue</span>
+                            <span class="teacher-section-kicker teacher-section-kicker--light">{{ $ui['earnings_kicker'] }}</span>
                             <h2 class="fw-bold mb-3">{{ $content['earnings']['title'] }}</h2>
                             <p class="mb-0">{{ $content['earnings']['description'] }}</p>
                         </div>
@@ -170,7 +151,7 @@
         <section id="teacher-packages" class="py-5 teacher-section" data-reveal="up">
             <div class="container">
                 <div class="teacher-section-heading text-center mb-5">
-                    <span class="teacher-section-kicker">Packages</span>
+                    <span class="teacher-section-kicker">{{ $ui['packages_kicker'] }}</span>
                     <h2 class="fw-bold mb-3">{{ $content['packages']['title'] }}</h2>
                     <p class="text-muted mb-0">{{ $content['packages']['description'] }}</p>
                 </div>
@@ -178,33 +159,37 @@
                 <div class="row g-4">
                     @foreach ($packages as $package)
                         @php
-                            $packageCode = strtolower((string) $package->code);
-                            $isFeatured = $packageCode === 'pro';
-                            $supportLabel = $currentSupportLabels[$package->support_level] ?? ($package->support_level ?: 'basic');
+                            $isFeatured = (bool) $package->is_featured;
+                            $supportLabel = $package->support_level_locale ?: ($package->support_level ?: 'basic');
                             $courseLimit = $package->effective_course_limit;
-                            $packageDescription = $content['packages']['descriptions'][$packageCode] ?? $package->description;
+                            $packageName = $package->name_locale ?: $package->name;
+                            $packageTagline = $package->tagline_locale ?: '';
+                            $packageDescription = $package->description_locale ?: $package->description;
+                            $packageBadge = $package->badge_text_locale ?: '';
                         @endphp
 
-                        <div class="col-lg-4">
+                        <div class="col-lg-4 d-flex">
                             <article class="teacher-package-card {{ $isFeatured ? 'is-featured' : '' }}">
                                 <div class="teacher-package-card__top">
                                     <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-                                        <span class="teacher-package-card__tag">{{ strtoupper($package->code) }}</span>
-                                        @if ($packageCode === 'starter')
-                                            <span class="teacher-package-card__badge">{{ $content['packages']['most_popular'] }}</span>
+                                        <span class="teacher-package-card__tag">{{ strtoupper((string) $package->code) }}</span>
+                                        @if ($packageBadge !== '')
+                                            <span class="teacher-package-card__badge">{{ $packageBadge }}</span>
                                         @endif
                                     </div>
 
-                                    <h3>{{ $currentPackageTitles[$packageCode] ?? $package->name }}</h3>
-                                    <p class="teacher-package-card__meta">
-                                        {{ $packageCode === 'free' ? $content['packages']['meta_free'] : $content['packages']['meta_paid'] }}
-                                    </p>
+                                    <h3>{{ $packageName }}</h3>
+                                    @if ($packageTagline !== '')
+                                        <p class="teacher-package-card__meta">{{ $packageTagline }}</p>
+                                    @endif
                                     <div class="teacher-package-card__price">
-                                        {{ (float) $package->price > 0 ? money($package->price) : ($currentLocale === 'vi' ? 'Miễn phí' : 'Free') }}
+                                        {{ (float) $package->price > 0 ? money($package->price) : $ui['free_label'] }}
                                     </div>
                                 </div>
 
-                                <p class="teacher-package-card__desc">{{ $packageDescription }}</p>
+                                @if (!empty($packageDescription) && $packageDescription !== $packageTagline)
+                                    <p class="teacher-package-card__desc">{{ $packageDescription }}</p>
+                                @endif
 
                                 <ul class="teacher-package-card__features">
                                     <li>{{ str_replace(':rate', rtrim(rtrim(number_format($package->commission_rate, 2, '.', ''), '0'), '.'), $content['packages']['features']['commission']) }}</li>
@@ -231,7 +216,7 @@
         <section class="py-5 teacher-section teacher-section--soft" data-reveal="up">
             <div class="container">
                 <div class="teacher-section-heading text-center mb-5">
-                    <span class="teacher-section-kicker">FAQ</span>
+                    <span class="teacher-section-kicker">{{ $ui['faq_kicker'] }}</span>
                     <h2 class="fw-bold mb-3">{{ $content['faq']['title'] }}</h2>
                 </div>
 
@@ -250,7 +235,7 @@
             <div class="container">
                 <div class="teacher-final-cta">
                     <div>
-                        <span class="teacher-section-kicker teacher-section-kicker--light">Ready when you are</span>
+                        <span class="teacher-section-kicker teacher-section-kicker--light">{{ $ui['final_kicker'] }}</span>
                         <h2 class="fw-bold mb-3">{{ $content['final']['title'] }}</h2>
                         <p class="mb-0">{{ $content['final']['description'] }}</p>
                     </div>
@@ -273,9 +258,11 @@
     <script>
         (() => {
             const reveals = document.querySelectorAll('[data-reveal]');
-            if (!reveals.length) {
+            if (!reveals.length || !('IntersectionObserver' in window)) {
                 return;
             }
+
+            document.documentElement.classList.add('reveal-ready');
 
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
@@ -316,11 +303,11 @@
 
         html[data-theme="dark"] .teacher-landing-shell {
             --teacher-bg: #08111f;
-            --teacher-surface: #0f1c31;
-            --teacher-surface-alt: #10233e;
-            --teacher-border: rgba(148, 163, 184, 0.16);
-            --teacher-text: #ecf3ff;
-            --teacher-muted: #b6c3d9;
+            --teacher-surface: #0f172a;
+            --teacher-surface-alt: #111c33;
+            --teacher-border: rgba(96, 165, 250, 0.2);
+            --teacher-text: #e5eefc;
+            --teacher-muted: #a9bbd5;
             --teacher-primary: #60a5fa;
             --teacher-secondary: #38bdf8;
             --teacher-accent: #2dd4bf;
@@ -334,8 +321,16 @@
             position: relative;
         }
 
+        .teacher-landing-shell .text-muted {
+            color: var(--teacher-muted) !important;
+        }
+
         .teacher-section--soft {
             background: color-mix(in srgb, var(--teacher-surface-alt) 66%, transparent);
+        }
+
+        html[data-theme="dark"] .teacher-section--soft {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.94) 0%, rgba(17, 28, 51, 0.94) 100%);
         }
 
         .teacher-section--accent {
@@ -360,10 +355,6 @@
             gap: 2rem;
             align-items: start;
             position: relative;
-        }
-
-        .teacher-hero-copy {
-            padding-top: 0.35rem;
         }
 
         .teacher-portal-badge,
@@ -411,14 +402,19 @@
             gap: 0.85rem;
         }
 
+        .teacher-hero-chip,
+        .teacher-stat-surface,
+        .teacher-bullet-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
         .teacher-hero-chip {
             display: inline-flex;
             align-items: center;
             min-height: 42px;
             padding: 0.55rem 0.95rem;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.12);
             color: rgba(255, 255, 255, 0.92);
             font-weight: 600;
         }
@@ -428,19 +424,55 @@
             border-radius: 16px;
             padding-inline: 1.4rem;
             font-weight: 700;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease;
         }
 
-        .teacher-landing-btn--ghost {
-            border-color: rgba(255, 255, 255, 0.32);
-        }
-
+        .teacher-landing-btn--ghost,
         .teacher-landing-btn--ghost-light {
             border-color: rgba(255, 255, 255, 0.28);
             color: #fff;
         }
 
+        .teacher-landing-btn--ghost {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .teacher-landing-btn:hover,
+        .teacher-landing-btn:active {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
+        }
+
+        .teacher-landing-btn--ghost:hover,
+        .teacher-landing-btn--ghost:active {
+            background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
+            border-color: transparent;
+            color: #14365f;
+        }
+
         .teacher-landing-btn--ghost-light:hover {
             color: #fff;
+        }
+
+        .teacher-landing-btn--ghost-light:active {
+            color: #fff;
+        }
+
+        .teacher-landing-shell a:focus-visible,
+        .teacher-landing-shell button:focus-visible,
+        .teacher-landing-shell [tabindex]:focus-visible {
+            outline: none;
+            box-shadow:
+                0 0 0 3px rgba(8, 17, 31, 0.82),
+                0 0 0 6px rgba(96, 165, 250, 0.72);
+        }
+
+        html[data-theme="dark"] .teacher-landing-shell a:focus-visible,
+        html[data-theme="dark"] .teacher-landing-shell button:focus-visible,
+        html[data-theme="dark"] .teacher-landing-shell [tabindex]:focus-visible {
+            box-shadow:
+                0 0 0 3px rgba(7, 17, 31, 0.96),
+                0 0 0 6px rgba(125, 211, 252, 0.82);
         }
 
         .teacher-hero-login-hint {
@@ -456,14 +488,30 @@
         }
 
         [data-reveal] {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        html.reveal-ready [data-reveal] {
             opacity: 0;
             transform: translateY(22px);
             transition: opacity 0.65s ease, transform 0.65s ease;
         }
 
-        [data-reveal].is-visible {
+        html.reveal-ready [data-reveal].is-visible {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        .teacher-hero-card,
+        .teacher-info-card,
+        .teacher-stacked-panel,
+        .teacher-timeline-item,
+        .teacher-package-card,
+        .teacher-faq-card {
+            background: var(--teacher-surface);
+            border: 1px solid var(--teacher-border);
+            box-shadow: var(--teacher-shadow);
         }
 
         .teacher-hero-card {
@@ -471,40 +519,69 @@
             border-radius: 28px;
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 30px 64px rgba(2, 6, 23, 0.22);
-            animation: teacher-float 5.6s ease-in-out infinite;
         }
 
-        .teacher-hero-card h3 {
-            margin-bottom: 1.1rem;
-            font-weight: 800;
+        html[data-theme="dark"] .teacher-hero-card,
+        html[data-theme="dark"] .teacher-stat-surface,
+        html[data-theme="dark"] .teacher-bullet-card {
+            background: rgba(15, 23, 42, 0.62);
+            border-color: rgba(96, 165, 250, 0.16);
         }
 
-        .teacher-hero-card ol {
-            padding-left: 1.2rem;
-            color: rgba(255, 255, 255, 0.86);
+        .teacher-stat-surface,
+        .teacher-info-card,
+        .teacher-package-card,
+        .teacher-faq-card,
+        .teacher-bullet-card,
+        .teacher-final-cta {
+            border-radius: 28px;
+            padding: 1.6rem;
         }
 
-        .teacher-hero-card li + li {
-            margin-top: 0.9rem;
+        .teacher-info-card,
+        .teacher-package-card,
+        .teacher-faq-card,
+        .teacher-bullet-card,
+        .teacher-final-cta,
+        .teacher-timeline-item,
+        .teacher-stacked-panel {
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
         }
 
-        @keyframes teacher-float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-8px);
-            }
+        .teacher-info-card:hover,
+        .teacher-faq-card:hover,
+        .teacher-bullet-card:hover,
+        .teacher-timeline-item:hover,
+        .teacher-stacked-panel:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 28px 58px rgba(15, 23, 42, 0.16);
+        }
+
+        .teacher-info-card:focus-within,
+        .teacher-faq-card:focus-within,
+        .teacher-bullet-card:focus-within,
+        .teacher-timeline-item:focus-within,
+        .teacher-stacked-panel:focus-within,
+        .teacher-package-card:focus-within,
+        .teacher-final-cta:focus-within {
+            transform: translateY(-6px);
+            border-color: rgba(96, 165, 250, 0.42);
+            box-shadow: 0 0 0 3px rgba(8, 17, 31, 0.76), 0 0 0 6px rgba(96, 165, 250, 0.32), 0 28px 58px rgba(15, 23, 42, 0.16);
+        }
+
+        html[data-theme="dark"] .teacher-info-card:focus-within,
+        html[data-theme="dark"] .teacher-faq-card:focus-within,
+        html[data-theme="dark"] .teacher-bullet-card:focus-within,
+        html[data-theme="dark"] .teacher-timeline-item:focus-within,
+        html[data-theme="dark"] .teacher-stacked-panel:focus-within,
+        html[data-theme="dark"] .teacher-package-card:focus-within,
+        html[data-theme="dark"] .teacher-final-cta:focus-within {
+            border-color: rgba(125, 211, 252, 0.48);
+            box-shadow: 0 0 0 3px rgba(7, 17, 31, 0.92), 0 0 0 6px rgba(125, 211, 252, 0.36), 0 32px 64px rgba(2, 6, 23, 0.4);
         }
 
         .teacher-stat-surface {
             height: 100%;
-            padding: 1.25rem 1.3rem;
-            border-radius: 22px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.12);
             color: rgba(255, 255, 255, 0.9);
         }
 
@@ -518,26 +595,6 @@
         .teacher-section-heading {
             max-width: 860px;
             margin-inline: auto;
-        }
-
-        .teacher-info-card,
-        .teacher-stacked-panel,
-        .teacher-timeline-item,
-        .teacher-package-card,
-        .teacher-faq-card,
-        .teacher-bullet-card {
-            background: var(--teacher-surface);
-            border: 1px solid var(--teacher-border);
-            box-shadow: var(--teacher-shadow);
-        }
-
-        .teacher-info-card,
-        .teacher-package-card,
-        .teacher-faq-card,
-        .teacher-bullet-card {
-            height: 100%;
-            border-radius: 28px;
-            padding: 1.6rem;
         }
 
         .teacher-info-card__index {
@@ -560,7 +617,8 @@
         .teacher-info-card p,
         .teacher-timeline-item p,
         .teacher-package-card p,
-        .teacher-faq-card p {
+        .teacher-faq-card p,
+        .teacher-stacked-panel p {
             color: var(--teacher-muted);
             line-height: 1.75;
         }
@@ -584,21 +642,21 @@
             padding: 1.2rem 1.25rem;
         }
 
-        .teacher-timeline-item__step {
+        .teacher-timeline-item__step,
+        .teacher-bullet-card__icon {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 44px;
-            height: 44px;
             flex-shrink: 0;
-            border-radius: 14px;
-            background: linear-gradient(135deg, var(--teacher-primary), var(--teacher-secondary));
             color: #fff;
-            font-weight: 800;
         }
 
-        .teacher-earnings-panel {
-            max-width: 560px;
+        .teacher-timeline-item__step {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--teacher-primary), var(--teacher-secondary));
+            font-weight: 800;
         }
 
         .teacher-earnings-panel h2,
@@ -607,8 +665,9 @@
         }
 
         .teacher-earnings-panel p,
-        .teacher-final-cta p {
-            color: rgba(255, 255, 255, 0.82);
+        .teacher-final-cta p,
+        .teacher-bullet-card p {
+            color: rgba(255, 255, 255, 0.84);
             line-height: 1.8;
         }
 
@@ -621,39 +680,57 @@
             display: flex;
             gap: 0.9rem;
             align-items: flex-start;
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.12);
-            box-shadow: 0 18px 42px rgba(2, 6, 23, 0.16);
         }
 
         .teacher-bullet-card__icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
             width: 38px;
             height: 38px;
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.12);
-            color: #fff;
-            flex-shrink: 0;
         }
 
-        .teacher-bullet-card p {
-            color: rgba(255, 255, 255, 0.86);
-            line-height: 1.75;
-        }
-
-        .teacher-package-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .teacher-package-card.is-featured {
+        .teacher-package-card.is-featured,
+        .teacher-final-cta {
             background:
                 radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), transparent 26%),
                 linear-gradient(180deg, #0f172a 0%, #11294a 100%);
             color: #fff;
             border-color: rgba(96, 165, 250, 0.18);
+        }
+
+        .teacher-package-card {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teacher-package-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.08), transparent 42%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .teacher-package-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(96, 165, 250, 0.36);
+            box-shadow: 0 32px 64px rgba(2, 6, 23, 0.22);
+        }
+
+        .teacher-package-card:hover::before {
+            opacity: 1;
+        }
+
+        .teacher-package-card__top,
+        .teacher-package-card__desc {
+            position: relative;
+            z-index: 1;
         }
 
         .teacher-package-card__tag,
@@ -672,24 +749,24 @@
             color: var(--teacher-primary);
         }
 
-        .teacher-package-card.is-featured .teacher-package-card__tag {
-            background: rgba(255, 255, 255, 0.12);
-            color: #fff;
-        }
-
         .teacher-package-card__badge {
             background: rgba(20, 184, 166, 0.12);
             color: #0f766e;
         }
 
-        .teacher-package-card.is-featured .teacher-package-card__badge {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.92);
+        html[data-theme="dark"] .teacher-package-card__badge {
+            background: rgba(45, 212, 191, 0.16);
+            color: #7cead9;
         }
 
-        .teacher-package-card__meta {
-            margin-bottom: 0.75rem;
-            font-size: 0.96rem;
+        .teacher-package-card.is-featured .teacher-package-card__tag,
+        .teacher-package-card.is-featured .teacher-package-card__badge,
+        .teacher-package-card.is-featured .teacher-package-card__price,
+        .teacher-package-card.is-featured h3,
+        .teacher-package-card.is-featured .teacher-package-card__desc,
+        .teacher-package-card.is-featured .teacher-package-card__meta,
+        .teacher-package-card.is-featured .teacher-package-card__features {
+            color: #fff;
         }
 
         .teacher-package-card__price {
@@ -698,35 +775,119 @@
             color: var(--teacher-text);
         }
 
-        .teacher-package-card.is-featured .teacher-package-card__price,
-        .teacher-package-card.is-featured h3,
-        .teacher-package-card.is-featured .teacher-package-card__desc,
-        .teacher-package-card.is-featured .teacher-package-card__meta {
-            color: #fff;
-        }
-
-        .teacher-package-card__desc {
-            min-height: 104px;
-        }
-
         .teacher-package-card__features {
             margin: 1.2rem 0 1.5rem;
             padding-left: 1.15rem;
             color: var(--teacher-text);
-        }
-
-        .teacher-package-card.is-featured .teacher-package-card__features {
-            color: rgba(255, 255, 255, 0.92);
+            position: relative;
+            z-index: 1;
+            flex-grow: 1;
         }
 
         .teacher-package-card__features li + li {
-            margin-top: 0.55rem;
+            margin-top: 0.35rem;
         }
 
         .teacher-package-card__cta {
-            border-radius: 16px;
-            min-height: 50px;
+            position: relative;
+            z-index: 1;
+            margin-top: auto;
+            border-radius: 14px;
             font-weight: 800;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease, color 0.25s ease;
+        }
+
+        .teacher-package-card:hover .teacher-package-card__cta {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 32px rgba(37, 99, 235, 0.28);
+        }
+
+        .teacher-package-card__cta:active {
+            transform: translateY(0);
+        }
+
+        .teacher-package-card.is-featured .teacher-package-card__cta {
+            color: #12325b;
+            background: #f8fbff;
+            border-color: transparent;
+        }
+
+        .teacher-package-card.is-featured:hover .teacher-package-card__cta {
+            background: #ffffff;
+            color: #0f2748;
+            box-shadow: 0 18px 34px rgba(148, 197, 255, 0.22);
+        }
+
+        .teacher-final-cta .teacher-landing-btn.btn-light {
+            background: linear-gradient(180deg, #ffffff 0%, #e8f1ff 100%);
+            color: #163760;
+            border-color: transparent;
+            box-shadow: 0 16px 30px rgba(8, 17, 31, 0.2);
+        }
+
+        .teacher-final-cta .teacher-landing-btn.btn-light:hover,
+        .teacher-final-cta .teacher-landing-btn.btn-light:active {
+            background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
+            color: #0f2748;
+        }
+
+        .teacher-final-cta .teacher-landing-btn--ghost-light {
+            border-color: rgba(191, 219, 254, 0.34);
+            color: #dcecff;
+            background: rgba(15, 23, 42, 0.08);
+        }
+
+        .teacher-final-cta .teacher-landing-btn--ghost-light:hover,
+        .teacher-final-cta .teacher-landing-btn--ghost-light:active {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(191, 219, 254, 0.54);
+            color: #ffffff;
+        }
+
+        .teacher-final-cta .teacher-landing-btn--ghost-light:focus-visible,
+        .teacher-final-cta .teacher-landing-btn.btn-light:focus-visible,
+        .teacher-package-card__cta:focus-visible,
+        .teacher-landing-btn--ghost:focus-visible {
+            color: inherit;
+        }
+
+        html[data-theme="dark"] .teacher-final-cta .teacher-landing-btn.btn-light {
+            background: linear-gradient(180deg, #f8fbff 0%, #dbeafe 100%);
+            color: #12325b;
+            box-shadow: 0 18px 34px rgba(2, 6, 23, 0.34);
+        }
+
+        html[data-theme="dark"] .teacher-final-cta .teacher-landing-btn.btn-light:hover,
+        html[data-theme="dark"] .teacher-final-cta .teacher-landing-btn.btn-light:active {
+            background: linear-gradient(180deg, #ffffff 0%, #eaf3ff 100%);
+            color: #0f2748;
+        }
+
+        html[data-theme="dark"] .teacher-package-card:not(.is-featured) {
+            background:
+                linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 28, 51, 0.98) 100%);
+            border-color: rgba(96, 165, 250, 0.18);
+        }
+
+        html[data-theme="dark"] .teacher-package-card:not(.is-featured):hover {
+            border-color: rgba(125, 211, 252, 0.38);
+            box-shadow: 0 34px 68px rgba(2, 6, 23, 0.42);
+        }
+
+        html[data-theme="dark"] .teacher-package-card:not(.is-featured) h3,
+        html[data-theme="dark"] .teacher-package-card:not(.is-featured) .teacher-package-card__price,
+        html[data-theme="dark"] .teacher-package-card:not(.is-featured) .teacher-package-card__features {
+            color: #e7eefc;
+        }
+
+        html[data-theme="dark"] .teacher-package-card:not(.is-featured) .teacher-package-card__meta,
+        html[data-theme="dark"] .teacher-package-card:not(.is-featured) .teacher-package-card__desc {
+            color: #a9bbd5;
+        }
+
+        html[data-theme="dark"] .teacher-package-card__tag {
+            background: rgba(96, 165, 250, 0.16);
+            color: #8fc3ff;
         }
 
         .teacher-faq-grid {
@@ -735,29 +896,14 @@
             gap: 1rem;
         }
 
-        .teacher-final-cta {
-            padding: 2rem;
-            border-radius: 32px;
-            background:
-                radial-gradient(circle at top right, rgba(20, 184, 166, 0.2), transparent 28%),
-                linear-gradient(135deg, #0b182c 0%, #123154 58%, #15426f 100%);
-            box-shadow: 0 32px 68px rgba(2, 6, 23, 0.2);
-        }
-
         @media (max-width: 991.98px) {
             .teacher-hero-layout {
                 grid-template-columns: 1fr;
             }
 
-            .teacher-hero-copy {
-                padding-top: 0;
-            }
-
-            .teacher-stacked-panel {
-                position: static;
-            }
-
+            .teacher-stacked-panel,
             .teacher-faq-grid {
+                position: static;
                 grid-template-columns: 1fr;
             }
         }
@@ -771,11 +917,7 @@
                 width: 100%;
             }
 
-            .teacher-hero-chip {
-                width: 100%;
-                justify-content: center;
-            }
-
+            .teacher-stat-surface,
             .teacher-info-card,
             .teacher-package-card,
             .teacher-faq-card,

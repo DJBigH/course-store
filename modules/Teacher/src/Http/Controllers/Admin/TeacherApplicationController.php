@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Models\Teacher;
@@ -50,23 +52,34 @@ class TeacherApplicationController extends Controller
 
         $teacher = $application->teacher;
         $displayName = $application->display_name ?: $application->full_name;
-        $plainPassword = null;
         $student = $application->student;
+        $passwordSetupUrl = null;
+        $accountWasCreated = false;
 
         if (!$student) {
             $student = Student::query()->where('email', $application->email)->first();
         }
 
+        $mailLocale = $this->resolveMailLocale($student, $application);
+
         if (!$student) {
-            $plainPassword = Str::random(12);
             $student = Student::query()->create([
                 'name' => $application->full_name,
                 'email' => $application->email,
                 'phone' => $application->phone,
                 'status' => 1,
-                'password' => Hash::make($plainPassword),
+                'preferred_locale' => $mailLocale,
+                'password' => Hash::make(Str::random(32)),
                 'email_verified_at' => now(),
             ]);
+            $accountWasCreated = true;
+            $passwordSetupUrl = URL::route('teacher.password.reset', [
+                'locale' => $mailLocale,
+                'token' => Password::broker('students')->createToken($student),
+                'email' => $student->email,
+            ]);
+        } elseif ($student->preferred_locale !== $mailLocale) {
+            $student->forceFill(['preferred_locale' => $mailLocale])->save();
         }
 
         if (!$teacher) {
@@ -97,8 +110,8 @@ class TeacherApplicationController extends Controller
             'teacher_id' => $teacher->id,
             'status' => 'approved',
             'reviewed_at' => now(),
-            'account_created_at' => $plainPassword ? now() : $application->account_created_at,
-            'account_credentials_sent_at' => $plainPassword ? now() : $application->account_credentials_sent_at,
+            'account_created_at' => $accountWasCreated ? now() : $application->account_created_at,
+            'account_credentials_sent_at' => $passwordSetupUrl ? now() : $application->account_credentials_sent_at,
             'reviewed_by' => auth()->id(),
             'admin_note' => $request->input('admin_note'),
         ]);
@@ -116,8 +129,13 @@ class TeacherApplicationController extends Controller
         );
 
         Mail::to($application->email)
-            ->locale(app()->getLocale())
-            ->queue(new TeacherApplicationApprovedMail($application->fresh(['package', 'teacher', 'student']), $plainPassword, app()->getLocale()));
+            ->locale($mailLocale)
+            ->queue(new TeacherApplicationApprovedMail(
+                $application->fresh(['package', 'teacher', 'student']),
+                $passwordSetupUrl,
+                !$accountWasCreated,
+                $mailLocale
+            ));
 
         return redirect()->route('teacher-applications.show', $application->id)
             ->with('msg', 'Da phe duyet ho so giang vien thanh cong.');
@@ -157,5 +175,25 @@ class TeacherApplicationController extends Controller
         }
 
         return $slug;
+    }
+
+    private function resolveMailLocale(?Student $student, TeacherApplication $application): string
+    {
+        $preferred = $student?->preferredLocale();
+        if (in_array($preferred, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
+            return $preferred;
+        }
+
+        $applicationLocale = (string) ($application->locale ?? '');
+        if (in_array($applicationLocale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
+            return $applicationLocale;
+        }
+
+        $currentLocale = app()->getLocale();
+        if (in_array($currentLocale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
+            return $currentLocale;
+        }
+
+        return config('app.locale', 'vi');
     }
 }

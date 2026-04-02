@@ -33,8 +33,8 @@ class TeacherDashboardController extends Controller
             ->where('teacher_id', $teacher->id)
             ->sum('amount');
 
-        $pageTitle = 'Bang dieu khien giang vien';
-        $pageName = 'Bang dieu khien giang vien';
+        $pageTitle = __('teacher::dashboard.pages.overview');
+        $pageName = __('teacher::dashboard.pages.overview');
         $stats = [
             'courses' => (clone $coursesQuery)->count(),
             'active_courses' => (clone $coursesQuery)->where('status', 1)->count(),
@@ -58,8 +58,8 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
-        $pageTitle = 'Khoa hoc cua toi';
-        $pageName = 'Khoa hoc cua toi';
+        $pageTitle = __('teacher::dashboard.pages.courses');
+        $pageName = __('teacher::dashboard.pages.courses');
         $courses = Courses::query()
             ->withoutGlobalScopes()
             ->withTrashed()
@@ -79,8 +79,8 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
-        $pageTitle = 'Doanh thu giang vien';
-        $pageName = 'Doanh thu giang vien';
+        $pageTitle = __('teacher::dashboard.pages.earnings');
+        $pageName = __('teacher::dashboard.pages.earnings');
         $items = $this->paidOrderDetailsQuery($teacher)->paginate(12)->withQueryString();
         $summary = TeacherFinanceCalculator::summarize(
             $this->paidOrderDetailsQuery($teacher)->get(),
@@ -101,8 +101,8 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
-        $pageTitle = 'Rut tien';
-        $pageName = 'Rut tien';
+        $pageTitle = __('teacher::dashboard.pages.payouts');
+        $pageName = __('teacher::dashboard.pages.payouts');
         $summary = TeacherFinanceCalculator::summarize(
             $this->paidOrderDetailsQuery($teacher)->get(),
             fn () => (float) $teacher->commission_rate
@@ -141,7 +141,7 @@ class TeacherDashboardController extends Controller
         $availableBalance = max($summary['teacher_revenue'] - $requestedAmount, 0);
 
         if ((float) $data['amount'] > $availableBalance) {
-            return back()->with('msg_danger', 'So tien yeu cau rut lon hon so du kha dung.');
+            return back()->with('msg_danger', __('teacher::dashboard.payouts.flash.amount_exceeds_balance'));
         }
 
         TeacherPayoutRequest::query()->create(array_merge($data, [
@@ -150,7 +150,7 @@ class TeacherDashboardController extends Controller
         ]));
 
         return redirect()->route('teacher.dashboard.payouts')
-            ->with('msg_success', 'Da gui yeu cau rut tien thanh cong.');
+            ->with('msg_success', __('teacher::dashboard.payouts.flash.request_sent'));
     }
 
     private function resolveTeacher(): ?Teacher
@@ -166,7 +166,7 @@ class TeacherDashboardController extends Controller
     private function redirectToStatus()
     {
         return redirect()->route('teacher.account.status', ['locale' => session('locale', app()->getLocale())])
-            ->with('msg_danger', 'Tai khoan cua ban chua duoc kich hoat khu giang vien.');
+            ->with('msg_danger', __('teacher::dashboard.payouts.flash.inactive_teacher'));
     }
 
     private function paidOrderDetailsQuery(Teacher $teacher)

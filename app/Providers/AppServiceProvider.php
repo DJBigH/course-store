@@ -21,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(SystemMailManager $systemMailManager): void
     {
+
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
         $systemMailManager->apply();
 
         VerifyEmail::createUrlUsing(function ($notifiable) {
