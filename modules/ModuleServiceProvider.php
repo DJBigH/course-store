@@ -231,7 +231,7 @@ class ModuleServiceProvider extends ServiceProvider
             if (!empty($helperList)) {
                 foreach ($helperList as $helper) {
                     $file = $helper->getPathName();
-                    require $file;
+                    require_once $file;
                 }
             }
         }
