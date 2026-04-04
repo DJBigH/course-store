@@ -1,5 +1,31 @@
 <p>{{ __('teacher::mail.approved.greeting', ['name' => $application->full_name]) }}</p>
-<p>{{ __('teacher::mail.approved.intro') }}</p>
+<p>{{ __('teacher::mail.approved.events.' . $packageAction) }}</p>
+
+@if ($application->package)
+    <p>
+        {{ __('teacher::mail.approved.labels.package') }}
+        <strong>{{ $application->package->name_locale ?: $application->package->name }}</strong>
+    </p>
+@endif
+
+@if ($packageAction === 'queued' && $application->activates_at)
+    <p>
+        {{ __('teacher::mail.approved.labels.starts_at') }}
+        <strong>{{ $application->activates_at->format('d/m/Y') }}</strong>
+    </p>
+@elseif (in_array($packageAction, ['activated', 'extended'], true) && $application->package_started_at)
+    <p>
+        {{ __('teacher::mail.approved.labels.starts_at') }}
+        <strong>{{ $application->package_started_at->format('d/m/Y') }}</strong>
+    </p>
+@endif
+
+@if ($application->package_expires_at)
+    <p>
+        {{ __('teacher::mail.approved.labels.expires_at') }}
+        <strong>{{ $application->package_expires_at->format('d/m/Y') }}</strong>
+    </p>
+@endif
 
 @if ($passwordSetupUrl)
     <p>{{ __('teacher::mail.approved.new_account_intro') }}</p>

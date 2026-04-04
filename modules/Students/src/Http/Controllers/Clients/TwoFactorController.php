@@ -26,6 +26,7 @@ class TwoFactorController extends Controller
     public function startEnable(Request $request, string $locale)
     {
         $student = Auth::guard('students')->user();
+        $this->storeReturnRouteName($request);
 
         if (!$student) {
             return redirect()->route('clients-login', ['locale' => $locale]);
@@ -33,7 +34,7 @@ class TwoFactorController extends Controller
 
         if ($student->two_factor_email_enabled) {
             return redirect()
-                ->route('students.account.profile', ['locale' => $locale])
+                ->route($this->resolvedProfileRouteName($request), ['locale' => $locale])
                 ->with('msg', __('students::clients/account.two_factor.already_enabled'));
         }
 
@@ -63,6 +64,7 @@ class TwoFactorController extends Controller
     public function startDisable(Request $request, string $locale)
     {
         $student = Auth::guard('students')->user();
+        $this->storeReturnRouteName($request);
 
         if (!$student) {
             return redirect()->route('clients-login', ['locale' => $locale]);
@@ -70,7 +72,7 @@ class TwoFactorController extends Controller
 
         if (!$student->two_factor_email_enabled) {
             return redirect()
-                ->route('students.account.profile', ['locale' => $locale])
+                ->route($this->resolvedProfileRouteName($request), ['locale' => $locale])
                 ->with('msg', __('students::clients/account.two_factor.already_disabled'));
         }
 
@@ -301,7 +303,7 @@ class TwoFactorController extends Controller
                 return $this->successResponse(
                     $request,
                     __('students::clients/account.two_factor.enabled_success'),
-                    route('students.account.profile', ['locale' => $locale])
+                    route($this->resolvedProfileRouteName($request), ['locale' => $locale])
                 );
 
             case StudentTwoFactorService::PURPOSE_DISABLE:
@@ -319,7 +321,7 @@ class TwoFactorController extends Controller
                 return $this->successResponse(
                     $request,
                     __('students::clients/account.two_factor.disabled_success'),
-                    route('students.account.profile', ['locale' => $locale])
+                    route($this->resolvedProfileRouteName($request), ['locale' => $locale])
                 );
 
             case StudentTwoFactorService::PURPOSE_STEP_UP:
@@ -389,7 +391,7 @@ class TwoFactorController extends Controller
 
                 $redirect = $request->session()->pull(
                     'students.two_factor.intended',
-                    route('students.account.profile', ['locale' => $locale])
+                    route($this->resolvedProfileRouteName($request), ['locale' => $locale])
                 );
 
                 return $this->successResponse(
@@ -445,7 +447,7 @@ class TwoFactorController extends Controller
             return redirect()->route('clients-login', ['locale' => $locale]);
         }
 
-        return redirect()->route('students.account.profile', ['locale' => $locale]);
+        return redirect()->route($this->resolvedProfileRouteName($request), ['locale' => $locale]);
     }
 
     protected function successResponse(Request $request, string $message, string $redirect)
@@ -496,5 +498,23 @@ class TwoFactorController extends Controller
         }
 
         return back()->with('msg_danger', $message);
+    }
+
+    protected function storeReturnRouteName(Request $request): void
+    {
+        $route = (string) $request->input('return_route', '');
+
+        if (in_array($route, ['students.account.profile', 'teacher.dashboard.profile'], true)) {
+            $request->session()->put('students.two_factor.return_route', $route);
+        }
+    }
+
+    protected function resolvedProfileRouteName(Request $request): string
+    {
+        $route = (string) $request->session()->get('students.two_factor.return_route', '');
+
+        return in_array($route, ['students.account.profile', 'teacher.dashboard.profile'], true)
+            ? $route
+            : 'students.account.profile';
     }
 }

@@ -25,6 +25,7 @@ return [
         'pending_payment' => 'Pending Payment',
         'pending_review' => 'Pending Review',
         'approved' => 'Approved',
+        'queued_activation' => 'Approved, waiting for activation',
         'rejected' => 'Rejected',
         'cancelled' => 'Cancelled',
     ],

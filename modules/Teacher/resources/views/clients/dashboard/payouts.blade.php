@@ -9,8 +9,6 @@
             </div>
         </div>
 
-        @include('teacher::clients.dashboard._tabs')
-
         @if (session('msg_success'))
             <div class="alert alert-success">{{ session('msg_success') }}</div>
         @endif
@@ -31,19 +29,19 @@
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('teacher::dashboard.payouts.summary.teacher_revenue') }}</div>
-                    <div class="teacher-stat-card__value">{{ money($summary['teacher_revenue']) }}</div>
+                    <div class="teacher-stat-card__value">{{ money($summary['teacher_revenue'], 'đ', '0 đ') }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('teacher::dashboard.payouts.summary.requested') }}</div>
-                    <div class="teacher-stat-card__value">{{ money($requestedAmount) }}</div>
+                    <div class="teacher-stat-card__value">{{ money($requestedAmount, 'đ', '0 đ') }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('teacher::dashboard.payouts.summary.available') }}</div>
-                    <div class="teacher-stat-card__value">{{ money($availableBalance) }}</div>
+                    <div class="teacher-stat-card__value">{{ money($availableBalance, 'đ', '0 đ') }}</div>
                 </div>
             </div>
         </div>
@@ -95,7 +93,7 @@
                         @forelse ($payouts as $payout)
                             <tr>
                                 <td>#{{ $payout->id }}</td>
-                                <td>{{ money($payout->amount) }}</td>
+                                <td>{{ money($payout->amount, 'đ', '0 đ') }}</td>
                                 <td>{{ $payout->bank_name }}<br><small class="text-muted">{{ $payout->bank_account_number }}</small></td>
                                 <td>
                                     <span class="badge bg-info">

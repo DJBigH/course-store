@@ -14,9 +14,14 @@ use Illuminate\Support\Str;
 use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherApplication;
+use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
 
 class TeacherApplicationController extends Controller
 {
+    public function __construct(
+        private readonly TeacherPackageLifecycleManager $packageLifecycleManager
+    ) {}
+
     public function index(Request $request)
     {
         $pageTitle = 'Ung tuyen giang vien';
@@ -43,7 +48,7 @@ class TeacherApplicationController extends Controller
     public function approve(Request $request, $id)
     {
         $application = TeacherApplication::query()
-            ->with(['student', 'package'])
+            ->with(['student', 'package', 'teacher.application.package', 'teacher.student'])
             ->findOrFail($id);
 
         if ($application->status === 'pending_payment') {
@@ -88,14 +93,12 @@ class TeacherApplicationController extends Controller
 
         $teacher->fill([
             'student_id' => $student->id,
-            'application_id' => $application->id,
             'name' => $displayName,
             'slug' => $this->makeUniqueSlug($displayName, $teacher->id),
             'description' => $application->bio,
             'exp' => $application->experience_years,
             'image' => $teacher->image ?: null,
             'status' => 'active',
-            'commission_rate' => $application->package?->commission_rate ?? 50,
             'approved_at' => now(),
             'approved_by' => auth()->id(),
         ]);
@@ -108,13 +111,16 @@ class TeacherApplicationController extends Controller
         $application->update([
             'student_id' => $student->id,
             'teacher_id' => $teacher->id,
-            'status' => 'approved',
             'reviewed_at' => now(),
             'account_created_at' => $accountWasCreated ? now() : $application->account_created_at,
             'account_credentials_sent_at' => $passwordSetupUrl ? now() : $application->account_credentials_sent_at,
             'reviewed_by' => auth()->id(),
             'admin_note' => $request->input('admin_note'),
         ]);
+
+        $packageAction = $this->packageLifecycleManager->applyApprovedChange($teacher, $application->fresh(['package']));
+        $teacher->refresh();
+        $application->refresh();
 
         activity_log(
             action: 'teacher_application_approved',
@@ -123,9 +129,15 @@ class TeacherApplicationController extends Controller
                 'application_id' => $application->id,
                 'student_id' => $student->id,
                 'package' => $application->package?->name,
+                'type' => $application->admin_note === 'package_upgrade' ? 'package_upgrade' : 'new_application',
+                'package_action' => $packageAction,
+                'package_expires_at' => optional($teacher->package_expires_at)->toDateTimeString(),
+                'activates_at' => optional($application->activates_at)->toDateTimeString(),
             ],
             logName: 'Duyet giang vien',
-            description: 'Admin phe duyet ho so giang vien'
+            description: $application->admin_note === 'package_upgrade'
+                ? 'Admin phe duyet nang cap goi giang vien'
+                : 'Admin phe duyet ho so giang vien'
         );
 
         Mail::to($application->email)
@@ -134,6 +146,7 @@ class TeacherApplicationController extends Controller
                 $application->fresh(['package', 'teacher', 'student']),
                 $passwordSetupUrl,
                 !$accountWasCreated,
+                $packageAction,
                 $mailLocale
             ));
 

@@ -471,6 +471,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Viết seed quyền cho giáo viên
 - Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó))
 - Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
+- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên 
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -511,12 +512,21 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check lại responsive ( Done )
 - Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị ( Done )
 - Check cái notify của học viên xem thiếu hay thừa cái j ( Done )
-- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký  )
+- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký  ) ( Done )
+- Chưa check validate đăng ký giáo viên
+- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên
+- Thêm cái danh mục dành cho các gói mua của giáo viên ( Gói hợp tác, Gói theo tháng/năm, Gói j đó...)
+ Teacher:
+- Làm cái hồ sơ giáo viên
+- Làm quản lý học sinh cho giáo viên ( Gán khóa học )
+- Làm quản lý bình luận những khóa học của giáo viên đó
+- Làm quản lý mã giảm giá
+- Làm quản lý đơn hàng
+- Với cái xử lý rút tiền thì nhập 1 lần tài khoản sẽ lưu tài khoản đó tôi đa 3 tài khoản ngân hàng khác nhau với tài khoản t4 sẽ phải xin từ admin accpet mới thay đổi và khi thay đổi sẽ thay thay 1 trong 3 tài khoản đó
+- Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...)
+- Góp ý hoặc báo cáo với admin
+- Nghĩ xem cần thêm chức năng nào khác không
 Tổng kết
 - check lại lần cuối trước khi đẩy lên production
 
-Nếu bạn muốn, bước tiếp theo mình có thể làm thêm một lượt polish rất nên có:
 
-hiện thông báo chặn cho student thường rõ hơn bằng text sạch tiếng Việt
-thêm link qua lại đẹp hơn giữa student login và teacher login
-test tiếp case teacher có 2FA bật để chắc flow teacher login cũng qua được xác thực 2 lớp

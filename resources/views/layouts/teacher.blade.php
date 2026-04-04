@@ -138,6 +138,23 @@
             padding-bottom: 2rem;
         }
 
+        .sb-nav-fixed #layoutSidenav #layoutSidenav_nav .sb-sidenav {
+            padding-top: 72px;
+        }
+
+        .sb-nav-fixed #layoutSidenav #layoutSidenav_content {
+            padding-left: 225px;
+            top: 72px;
+            transition: padding-left 0.15s ease-in-out, margin 0.15s ease-in-out;
+        }
+
+        @media (min-width: 992px) {
+            .sb-sidenav-toggled #layoutSidenav #layoutSidenav_content {
+                padding-left: 0;
+                margin-left: 0;
+            }
+        }
+
         a {
             color: var(--admin-link);
         }
@@ -447,6 +464,22 @@
             --bs-pagination-active-color: #fff;
             --bs-pagination-disabled-bg: var(--admin-subtle-bg);
             --bs-pagination-disabled-color: var(--admin-muted);
+        }
+
+        .app-shell-footer {
+            background: linear-gradient(180deg, color-mix(in srgb, var(--admin-surface) 96%, transparent), var(--admin-surface-2));
+            border-top: 1px solid var(--admin-border);
+            color: var(--admin-muted);
+        }
+
+        .app-shell-footer a {
+            color: var(--admin-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .app-shell-footer a:hover {
+            color: var(--teacher-accent);
         }
 
         .table {

@@ -37,6 +37,10 @@ class TeacherApplication extends Model
         'identity_file',
         'submitted_at',
         'reviewed_at',
+        'activates_at',
+        'package_started_at',
+        'package_expires_at',
+        'activated_at',
         'account_created_at',
         'account_credentials_sent_at',
         'reviewed_by',
@@ -48,6 +52,10 @@ class TeacherApplication extends Model
         'discount_amount' => 'float',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
+        'activates_at' => 'datetime',
+        'package_started_at' => 'datetime',
+        'package_expires_at' => 'datetime',
+        'activated_at' => 'datetime',
         'account_created_at' => 'datetime',
         'account_credentials_sent_at' => 'datetime',
     ];
@@ -74,6 +82,14 @@ class TeacherApplication extends Model
 
     public function getDisplayStatusAttribute(): string
     {
+        if ($this->status === 'approved' && !$this->activated_at && $this->activates_at) {
+            $queuedLabel = __('teacher::portal.status_labels.queued_activation');
+
+            return $queuedLabel !== 'teacher::portal.status_labels.queued_activation'
+                ? $queuedLabel
+                : 'Approved, waiting for activation';
+        }
+
         return match ($this->status) {
             'draft' => __('teacher::portal.status_labels.draft'),
             'pending_payment' => __('teacher::portal.status_labels.pending_payment'),

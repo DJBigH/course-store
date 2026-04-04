@@ -18,6 +18,7 @@ class TeacherApplicationApprovedMail extends Mailable implements ShouldQueue
         public TeacherApplication $application,
         public ?string $passwordSetupUrl,
         public bool $useExistingAccount,
+        public string $packageAction,
         string $locale
     ) {
         $this->localeCode = $locale;
@@ -27,7 +28,16 @@ class TeacherApplicationApprovedMail extends Mailable implements ShouldQueue
     {
         app()->setLocale($this->localeCode);
 
-        return $this->subject(__('teacher::mail.approved.subject'))
+        return $this->subject(__('teacher::mail.approved.subjects.' . $this->resolveSubjectKey()))
             ->view('emails.teacher-application-approved');
+    }
+
+    private function resolveSubjectKey(): string
+    {
+        return match ($this->packageAction) {
+            'extended' => 'extended',
+            'queued' => 'queued',
+            default => 'activated',
+        };
     }
 }

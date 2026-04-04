@@ -25,6 +25,7 @@ return [
         'pending_payment' => 'Chờ thanh toán',
         'pending_review' => 'Chờ admin duyệt',
         'approved' => 'Đã duyệt',
+        'queued_activation' => 'Đã duyệt, chờ kích hoạt',
         'rejected' => 'Bị từ chối',
         'cancelled' => 'Đã hủy',
     ],

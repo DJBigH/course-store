@@ -8,7 +8,9 @@
 //
 
 window.addEventListener("DOMContentLoaded", (event) => {
-    $(".select2").select2();
+    if (window.jQuery && typeof window.jQuery.fn.select2 === "function") {
+        window.jQuery(".select2").select2();
+    }
     // Toggle the side navigation
     const sidebarToggle = document.body.querySelector("#sidebarToggle");
     if (sidebarToggle) {

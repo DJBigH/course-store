@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\Students\src\Http\Controllers\Clients\GiftCourseController;
 use Modules\Students\src\Http\Controllers\Clients\TwoFactorController;
 
 Route::prefix('admin')->group(function () {
@@ -58,6 +59,12 @@ Route::group(['as' => 'students.'], function () {
 
       Route::prefix('checkout')->group(function () {
          Route::get('/cam-on/{id}', 'Clients\CheckoutController@thankyou')->name('checkout-thankyou');
+      });
+
+      Route::prefix('qua-tang')->name('gifts.')->group(function () {
+         Route::get('/', [GiftCourseController::class, 'index'])->name('index');
+         Route::get('/{token}', [GiftCourseController::class, 'show'])->name('show');
+         Route::post('/{token}/nhan', [GiftCourseController::class, 'accept'])->name('accept');
       });
    });
 });

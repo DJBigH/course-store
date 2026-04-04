@@ -13,19 +13,17 @@
             </div>
         </div>
 
-        @include('teacher::clients.dashboard._tabs')
-
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('teacher::dashboard.earnings.gross_revenue') }}</div>
-                    <div class="teacher-stat-card__value">{{ money($summary['gross_amount']) }}</div>
+                    <div class="teacher-stat-card__value">{{ money($summary['gross_amount'], 'đ', '0 đ') }}</div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('teacher::dashboard.earnings.teacher_revenue', ['rate' => $commission]) }}</div>
-                    <div class="teacher-stat-card__value">{{ money($summary['teacher_revenue']) }}</div>
+                    <div class="teacher-stat-card__value">{{ money($summary['teacher_revenue'], 'đ', '0 đ') }}</div>
                 </div>
             </div>
         </div>
@@ -50,10 +48,10 @@
                                 <td>#{{ $item->order?->code }}</td>
                                 <td>{{ $item->courses?->name_locale ?: '-' }}</td>
                                 <td>{{ $item->order?->students?->name ?: '-' }}</td>
-                                <td>{{ money($item->finance_breakdown['gross_amount']) }}</td>
-                                <td class="text-danger">-{{ money($item->finance_breakdown['allocated_discount']) }}</td>
-                                <td>{{ money($item->finance_breakdown['net_revenue']) }}</td>
-                                <td>{{ money($item->finance_breakdown['teacher_revenue']) }}</td>
+                                <td>{{ money($item->finance_breakdown['gross_amount'], 'đ', '0 đ') }}</td>
+                                <td class="text-danger">-{{ money($item->finance_breakdown['allocated_discount'], 'đ', '0 đ') }}</td>
+                                <td>{{ money($item->finance_breakdown['net_revenue'], 'đ', '0 đ') }}</td>
+                                <td>{{ money($item->finance_breakdown['teacher_revenue'], 'đ', '0 đ') }}</td>
                             </tr>
                         @empty
                             <tr>
