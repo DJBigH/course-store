@@ -518,7 +518,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm cái danh mục dành cho các gói mua của giáo viên ( Gói hợp tác, Gói theo tháng/năm, Gói j đó...)
  Teacher:
 - Làm cái hồ sơ giáo viên
-- Làm quản lý học sinh cho giáo viên ( Gán khóa học )
+- Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
 - Làm quản lý bình luận những khóa học của giáo viên đó
 - Làm quản lý mã giảm giá
 - Làm quản lý đơn hàng
