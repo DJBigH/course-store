@@ -1,23 +1,29 @@
 @extends('layouts.teacher')
 
 @section('content')
-    <div class="teacher-panel">
-        <h3 class="fw-bold mb-2">Doanh thu giang vien</h3>
-        <p class="text-muted mb-4">Ban MVP nay dang tinh doanh thu dua tren cac order da thanh toan va commission hien tai.</p>
+    @php
+        $commission = rtrim(rtrim(number_format((float) $teacher->commission_rate, 2, '.', ''), '0'), '.');
+    @endphp
 
-        @include('teacher::clients.dashboard._tabs')
+    <div class="teacher-panel">
+        <div class="teacher-section-title mb-4">
+            <div>
+                <h3 class="fw-bold mb-2">{{ __('teacher::dashboard.earnings.title') }}</h3>
+                <p class="text-muted mb-0">{{ __('teacher::dashboard.earnings.description') }}</p>
+            </div>
+        </div>
 
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <div class="teacher-stat-card">
-                    <div class="teacher-stat-card__label">Doanh thu gop</div>
-                    <div class="teacher-stat-card__value">{{ money($summary['gross_amount']) }}</div>
+                    <div class="teacher-stat-card__label">{{ __('teacher::dashboard.earnings.gross_revenue') }}</div>
+                    <div class="teacher-stat-card__value">{{ money($summary['gross_amount'], 'đ', '0 đ') }}</div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="teacher-stat-card">
-                    <div class="teacher-stat-card__label">Thuc nhan tam tinh theo commission {{ rtrim(rtrim(number_format($teacher->commission_rate, 2, '.', ''), '0'), '.') }}%</div>
-                    <div class="teacher-stat-card__value">{{ money($summary['teacher_revenue']) }}</div>
+                    <div class="teacher-stat-card__label">{{ __('teacher::dashboard.earnings.teacher_revenue', ['rate' => $commission]) }}</div>
+                    <div class="teacher-stat-card__value">{{ money($summary['teacher_revenue'], 'đ', '0 đ') }}</div>
                 </div>
             </div>
         </div>
@@ -27,13 +33,13 @@
                 <table class="table align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Don hang</th>
-                            <th>Khoa hoc</th>
-                            <th>Hoc vien</th>
-                            <th>Gross</th>
-                            <th>Discount</th>
-                            <th>Net</th>
-                            <th>Thuc nhan</th>
+                            <th>{{ __('teacher::dashboard.earnings.table.order') }}</th>
+                            <th>{{ __('teacher::dashboard.earnings.table.course') }}</th>
+                            <th>{{ __('teacher::dashboard.earnings.table.student') }}</th>
+                            <th>{{ __('teacher::dashboard.earnings.table.gross') }}</th>
+                            <th>{{ __('teacher::dashboard.earnings.table.discount') }}</th>
+                            <th>{{ __('teacher::dashboard.earnings.table.net') }}</th>
+                            <th>{{ __('teacher::dashboard.earnings.table.revenue') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -42,14 +48,14 @@
                                 <td>#{{ $item->order?->code }}</td>
                                 <td>{{ $item->courses?->name_locale ?: '-' }}</td>
                                 <td>{{ $item->order?->students?->name ?: '-' }}</td>
-                                <td>{{ money($item->finance_breakdown['gross_amount']) }}</td>
-                                <td class="text-danger">-{{ money($item->finance_breakdown['allocated_discount']) }}</td>
-                                <td>{{ money($item->finance_breakdown['net_revenue']) }}</td>
-                                <td>{{ money($item->finance_breakdown['teacher_revenue']) }}</td>
+                                <td>{{ money($item->finance_breakdown['gross_amount'], 'đ', '0 đ') }}</td>
+                                <td class="text-danger">-{{ money($item->finance_breakdown['allocated_discount'], 'đ', '0 đ') }}</td>
+                                <td>{{ money($item->finance_breakdown['net_revenue'], 'đ', '0 đ') }}</td>
+                                <td>{{ money($item->finance_breakdown['teacher_revenue'], 'đ', '0 đ') }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">Chua co giao dich thanh cong nao.</td>
+                                <td colspan="7" class="text-center text-muted py-4">{{ __('teacher::dashboard.earnings.empty') }}</td>
                             </tr>
                         @endforelse
                     </tbody>

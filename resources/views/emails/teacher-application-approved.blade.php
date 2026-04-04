@@ -1,17 +1,46 @@
-<p>Xin chào {{ $application->full_name }},</p>
-<p>Tin vui nè: hồ sơ đăng ký giảng viên của bạn đã được <strong>duyệt</strong>.</p>
-@if ($plainPassword)
-    <p>Tụi mình đã tạo tài khoản học viên/giảng viên cho email này để bạn vào hệ thống ngay:</p>
+<p>{{ __('teacher::mail.approved.greeting', ['name' => $application->full_name]) }}</p>
+<p>{{ __('teacher::mail.approved.events.' . $packageAction) }}</p>
+
+@if ($application->package)
     <p>
-        Email đăng nhập: <strong>{{ $application->email }}</strong><br>
-        Mật khẩu tạm thời: <strong>{{ $plainPassword }}</strong>
+        {{ __('teacher::mail.approved.labels.package') }}
+        <strong>{{ $application->package->name_locale ?: $application->package->name }}</strong>
     </p>
-    <p>Vui lòng đăng nhập và đổi mật khẩu ngay sau khi vào hệ thống. Mật khẩu random này ổn để bắt đầu, nhưng đừng để nó sống lâu quá.</p>
+@endif
+
+@if ($packageAction === 'queued' && $application->activates_at)
+    <p>
+        {{ __('teacher::mail.approved.labels.starts_at') }}
+        <strong>{{ $application->activates_at->format('d/m/Y') }}</strong>
+    </p>
+@elseif (in_array($packageAction, ['activated', 'extended'], true) && $application->package_started_at)
+    <p>
+        {{ __('teacher::mail.approved.labels.starts_at') }}
+        <strong>{{ $application->package_started_at->format('d/m/Y') }}</strong>
+    </p>
+@endif
+
+@if ($application->package_expires_at)
+    <p>
+        {{ __('teacher::mail.approved.labels.expires_at') }}
+        <strong>{{ $application->package_expires_at->format('d/m/Y') }}</strong>
+    </p>
+@endif
+
+@if ($passwordSetupUrl)
+    <p>{{ __('teacher::mail.approved.new_account_intro') }}</p>
+    <p>{{ __('teacher::mail.approved.login_email') }} <strong>{{ $application->email }}</strong></p>
+    <p><a href="{{ $passwordSetupUrl }}">{{ __('teacher::mail.approved.setup_password') }}</a></p>
+    <p>{{ __('teacher::mail.approved.setup_password_hint') }}</p>
 @else
-    <p>Tài khoản hiện tại của bạn đã được bật quyền giảng viên. Bạn có thể đăng nhập và vào kênh giảng viên để bắt đầu.</p>
+    <p>{{ __('teacher::mail.approved.existing_account_intro') }}</p>
+    <p>{{ __('teacher::mail.approved.login_email') }} <strong>{{ $application->email }}</strong></p>
+    <p>{{ __('teacher::mail.approved.existing_account_hint') }}</p>
 @endif
+
 @if (!empty($application->admin_note))
-    <p>Ghi chú từ admin: {{ $application->admin_note }}</p>
+    <p>{{ __('teacher::mail.approved.admin_note') }} {{ $application->admin_note }}</p>
 @endif
-<p>Chúc mừng bạn đã chính thức bước vào kênh giảng viên.</p>
-<p>Trân trọng,<br>BigK Udemy</p>
+
+<p>{{ __('teacher::mail.approved.closing') }}</p>
+<p>{{ __('teacher::mail.approved.signature') }}<br>{{ __('teacher::mail.approved.brand') }}</p>

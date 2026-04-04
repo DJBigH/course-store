@@ -470,6 +470,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check lại responsive ( Done)
 - Viết seed quyền cho giáo viên
 - Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó))
+- Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
+- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên 
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -510,23 +512,21 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check lại responsive ( Done )
 - Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị ( Done )
 - Check cái notify của học viên xem thiếu hay thừa cái j ( Done )
-- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký  )
+- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký  ) ( Done )
+- Chưa check validate đăng ký giáo viên
+- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên
+- Thêm cái danh mục dành cho các gói mua của giáo viên ( Gói hợp tác, Gói theo tháng/năm, Gói j đó...)
+ Teacher:
+- Làm cái hồ sơ giáo viên
+- Làm quản lý học sinh cho giáo viên ( Gán khóa học )
+- Làm quản lý bình luận những khóa học của giáo viên đó
+- Làm quản lý mã giảm giá
+- Làm quản lý đơn hàng
+- Với cái xử lý rút tiền thì nhập 1 lần tài khoản sẽ lưu tài khoản đó tôi đa 3 tài khoản ngân hàng khác nhau với tài khoản t4 sẽ phải xin từ admin accpet mới thay đổi và khi thay đổi sẽ thay thay 1 trong 3 tài khoản đó
+- Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...)
+- Góp ý hoặc báo cáo với admin
+- Nghĩ xem cần thêm chức năng nào khác không
 Tổng kết
 - check lại lần cuối trước khi đẩy lên production
 
 
-1. Cái landing page mấy cái ở dầu nhìn nó trật quá fix lại cho tôi ( Done )
-2. Với cái kênh giảng viên thì chỉ khi người dùng là giảng viên mới được quyền thấy nó                          
-3. Cho phép người dùng khi chưa tạo tài khoản sẽ được phép đăng ký làm giáo viên ( khi đăng ký yêu cầu có email rồi khi accpet thì gửi theo email đó làm tài khoản và mk tự random gửi về email và thông báo nên đổi mật khẩu)
-4. Khi đăng ký mà chưa lập tài khoản thì sẽ gửi mail thành công về email đó và thêm lời cảm ơn và chờ đợi
-5. Đối với tài khoản học viên khi đăng ký sang làm giảng viên thì cái kênh giáo viên chuyển thành đơn đăng ký ko được rediect sang trang teacher và chờ khi nào admin duyệt thì nó sẽ chuyển thành kênh giáo viên
-6. Nếu học viên không đăng ký mà chỉ dùng thì ẩn cái đơn đăng ký chỉ khi có đơn đăng ký thì mới hiện ra
-7. Với các đơn accpet hay reject thì đều được gửi mail về ( mail phải trong queue )
-8. Phải vào trang trở thành giáo viên ấn đăng ký thì mới có thể đăng ký
-9. Với cái form đăng ký thì làm thêm 1 trang nào đó phía clients không để nó vào luôn màn teacher đăng ký 
-10. phần chọn các gói đăng ký thêm hiệu ứng hover
-11. Trang lading page thêm 1 số hiệu ứng trong trang vào nhìn nó đơ quá
-12. Khi đăng ký thêm các phường thức thanh toán giống ở bên học viên
-13. bỏ cái bật kênh giáo viên và fix lại khi ở light mode mà 2 nút đăng ký/đăng nhập nó bị tối
-14. Thêm dòng chữ nếu bạn đã là giáo viên vui lòng đăng nhập ở đây hoặc 1 câu j đó để đăng nhập với tư cách giáo viên cho dễ 
-BẠN HAY XỬ LÝ HẾT CÁC TASK TÔI ĐÃ GIAO NHÉ

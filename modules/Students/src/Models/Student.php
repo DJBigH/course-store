@@ -29,6 +29,7 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
         'email',
         'password',
         'status',
+        'preferred_locale',
         'address',
         'phone',
         'remember_token',
@@ -70,6 +71,12 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
 
     public function preferredLocale()
     {
+        $locale = (string) ($this->preferred_locale ?? '');
+
+        if (in_array($locale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
+            return $locale;
+        }
+
         return app()->getLocale() ?: config('app.locale', 'vi');
     }
 

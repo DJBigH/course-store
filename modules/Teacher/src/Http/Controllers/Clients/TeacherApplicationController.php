@@ -32,14 +32,9 @@ class TeacherApplicationController extends Controller
             return redirect()->route('teacher.account.status', ['locale' => app()->getLocale()]);
         }
 
-        if (!$application && !$request->session()->pull('teacher_application_entry_allowed', false)) {
-            return redirect()->route('teacher.portal.index', ['locale' => app()->getLocale()])
-                ->with('msg_danger', 'Vui long bat dau tu trang Tro thanh giang vien de gui ho so.');
-        }
-
-        $pageTitle = 'Dang ky giang vien';
-        $pageName = 'Dang ky giang vien';
-        $packages = TeacherPackage::query()->where('status', true)->orderBy('sort_order')->get();
+        $pageTitle = __('teacher::portal.titles.apply');
+        $pageName = $pageTitle;
+        $packages = $this->resolvePublicPackages($application?->package_id);
 
         return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'application', 'student', 'couponPreview'));
     }
@@ -48,21 +43,21 @@ class TeacherApplicationController extends Controller
     {
         $student = auth('students')->user();
         if (!$student && Student::query()->where('email', $request->string('email')->toString())->exists()) {
-            return redirect()->route('clients-login', ['locale' => app()->getLocale()])
-                ->with('msg_danger', 'Email nay da co tai khoan. Vui long dang nhap de tiep tuc dang ky giang vien.');
+            return redirect()->route('teacher.auth.login', ['locale' => app()->getLocale()])
+                ->with('msg_danger', __('teacher::portal.flash.email_exists'));
         }
 
-        $package = TeacherPackage::query()->where('status', true)->findOrFail($request->integer('package_id'));
+        $package = TeacherPackage::query()->selectable()->findOrFail($request->integer('package_id'));
         $application = $this->resolveWritableApplication($request, $student);
 
         if ($application->exists && $application->status === 'approved') {
             return redirect()->route('teacher.account.status', ['locale' => app()->getLocale()])
-                ->with('msg_danger', 'Ho so nay da duoc duyet. Vui long dang nhap de vao kenh giang vien.');
+                ->with('msg_danger', __('teacher::portal.flash.approved'));
         }
 
         if ($application->exists && $application->status === 'pending_review') {
             return redirect()->route('teacher.account.status', ['locale' => app()->getLocale()])
-                ->with('msg_danger', 'Ho so dang trong hang cho duyet, tam thoi chua the chinh sua.');
+                ->with('msg_danger', __('teacher::portal.flash.pending_review'));
         }
 
         $couponData = $this->resolveCouponData(
@@ -82,6 +77,7 @@ class TeacherApplicationController extends Controller
             'specialties' => $this->parseSpecialties($request->string('specialties')->toString()),
             'phone' => $request->string('phone')->toString() ?: null,
             'email' => $request->string('email')->toString(),
+            'locale' => $this->normalizeLocale(app()->getLocale()),
             'portfolio_url' => $request->string('portfolio_url')->toString() ?: null,
             'facebook_url' => $request->string('facebook_url')->toString() ?: null,
             'youtube_url' => $request->string('youtube_url')->toString() ?: null,
@@ -101,6 +97,10 @@ class TeacherApplicationController extends Controller
         ]);
         $application->save();
         $this->forgetCouponPreview($request);
+
+        if ($student && $student->preferred_locale !== $application->locale) {
+            $student->forceFill(['preferred_locale' => $application->locale])->save();
+        }
 
         if (!$student) {
             $request->session()->put('teacher_guest_application_id', $application->id);
@@ -126,7 +126,7 @@ class TeacherApplicationController extends Controller
             ->queue(new TeacherApplicationReceivedMail($application, app()->getLocale()));
 
         return redirect()->route('teacher.account.status', ['locale' => app()->getLocale()])
-            ->with('msg_success', 'Ho so giang vien da duoc ghi nhan. Vui long kiem tra email de xem thong bao cam on va huong dan tiep theo.');
+            ->with('msg_success', __('teacher::portal.flash.submitted'));
     }
 
     public function status(Request $request)
@@ -138,20 +138,20 @@ class TeacherApplicationController extends Controller
             return redirect()->route('teacher.portal.index', ['locale' => app()->getLocale()]);
         }
 
-        $pageTitle = 'Don dang ky giang vien';
-        $pageName = 'Don dang ky giang vien';
+        $pageTitle = __('teacher::portal.titles.status');
+        $pageName = $pageTitle;
 
         return view('teacher::clients.application_status', compact('pageTitle', 'pageName', 'application', 'student'));
     }
 
     public function previewCoupon(Request $request)
     {
-        $package = TeacherPackage::query()->where('status', true)->find($request->integer('package_id'));
+        $package = TeacherPackage::query()->selectable()->find($request->integer('package_id'));
 
         if (!$package) {
             return response()->json([
                 'success' => false,
-                'message' => 'Goi dang ky khong hop le.',
+                'message' => __('teacher::portal.flash.invalid_package'),
             ], 422);
         }
 
@@ -164,7 +164,7 @@ class TeacherApplicationController extends Controller
         } catch (ValidationException $exception) {
             return response()->json([
                 'success' => false,
-                'message' => collect($exception->errors())->flatten()->first() ?: 'Ma giam gia khong hop le.',
+                'message' => collect($exception->errors())->flatten()->first() ?: __('teacher::portal.flash.invalid_coupon'),
             ], 422);
         }
 
@@ -215,9 +215,9 @@ class TeacherApplicationController extends Controller
             return redirect()->route('teacher.account.status', ['locale' => app()->getLocale()]);
         }
 
-        $pageTitle = 'Cap nhat ho so giang vien';
-        $pageName = 'Cap nhat ho so giang vien';
-        $packages = TeacherPackage::query()->where('status', true)->orderBy('sort_order')->get();
+        $pageTitle = __('teacher::portal.titles.edit');
+        $pageName = $pageTitle;
+        $packages = $this->resolvePublicPackages($application?->package_id);
         $couponPreview = $this->resolveCouponPreview($request, $application);
 
         return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'application', 'student', 'couponPreview'));
@@ -237,7 +237,7 @@ class TeacherApplicationController extends Controller
         }
 
         if ($application->status !== 'pending_payment') {
-            return back()->with('msg_danger', 'Ho so nay khong o trang thai cho thanh toan.');
+            return back()->with('msg_danger', __('teacher::portal.flash.invalid_payment_status'));
         }
 
         $application->update([
@@ -245,7 +245,7 @@ class TeacherApplicationController extends Controller
             'submitted_at' => now(),
         ]);
 
-        return back()->with('msg_success', 'He thong da ghi nhan xac nhan thanh toan va chuyen ho so sang hang cho duyet.');
+        return back()->with('msg_success', __('teacher::portal.flash.paid_marked'));
     }
 
     private function resolveCurrentApplication(Request $request, bool $withRelations = false): ?TeacherApplication
@@ -280,6 +280,24 @@ class TeacherApplicationController extends Controller
         }
 
         return null;
+    }
+
+    private function resolvePublicPackages(?int $selectedPackageId = null)
+    {
+        $packages = TeacherPackage::query()->visibleForListing()->get();
+
+        if ($selectedPackageId && !$packages->contains('id', $selectedPackageId)) {
+            $selectedPackage = TeacherPackage::query()
+                ->selectable()
+                ->find($selectedPackageId);
+
+            if ($selectedPackage) {
+                $packages->push($selectedPackage);
+                $packages = $packages->sortBy('sort_order')->values();
+            }
+        }
+
+        return $packages;
     }
 
     private function resolveWritableApplication(Request $request, ?object $student): TeacherApplication
@@ -321,19 +339,19 @@ class TeacherApplicationController extends Controller
 
         if (!$coupon) {
             throw ValidationException::withMessages([
-                'coupon_code' => 'Ma giam gia khong hop le hoac da het han.',
+                'coupon_code' => __('teacher::portal.flash.coupon_invalid_or_expired'),
             ]);
         }
 
         if ($coupon->students()->exists() && !$studentId) {
             throw ValidationException::withMessages([
-                'coupon_code' => 'Ma nay can dang nhap dung tai khoan duoc cap de su dung.',
+                'coupon_code' => __('teacher::portal.flash.coupon_login_required'),
             ]);
         }
 
         if ($coupon->courses()->exists()) {
             throw ValidationException::withMessages([
-                'coupon_code' => 'Ma nay chi ap dung cho khoa hoc, chua dung duoc cho goi giang vien.',
+                'coupon_code' => __('teacher::portal.flash.coupon_courses_only'),
             ]);
         }
 
@@ -341,7 +359,7 @@ class TeacherApplicationController extends Controller
 
         if ($coupon->total_condition && $basePrice < (float) $coupon->total_condition) {
             throw ValidationException::withMessages([
-                'coupon_code' => 'Goi hien tai chua du dieu kien ap dung ma giam gia nay.',
+                'coupon_code' => __('teacher::portal.flash.coupon_total_condition'),
             ]);
         }
 
@@ -383,5 +401,12 @@ class TeacherApplicationController extends Controller
     private function forgetCouponPreview(Request $request): void
     {
         $request->session()->forget('teacher_coupon_preview');
+    }
+
+    private function normalizeLocale(?string $locale): string
+    {
+        return in_array($locale, ['vi', 'en', 'ko', 'ja', 'zh'], true)
+            ? $locale
+            : config('app.locale', 'vi');
     }
 }

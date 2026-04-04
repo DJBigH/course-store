@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+@php
+    $teacherLocale = session('locale', app()->getLocale());
+    if (!in_array($teacherLocale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
+        $teacherLocale = 'vi';
+    }
+@endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
@@ -130,6 +136,23 @@
         #layoutSidenav_content main {
             min-height: 100%;
             padding-bottom: 2rem;
+        }
+
+        .sb-nav-fixed #layoutSidenav #layoutSidenav_nav .sb-sidenav {
+            padding-top: 72px;
+        }
+
+        .sb-nav-fixed #layoutSidenav #layoutSidenav_content {
+            padding-left: 225px;
+            top: 72px;
+            transition: padding-left 0.15s ease-in-out, margin 0.15s ease-in-out;
+        }
+
+        @media (min-width: 992px) {
+            .sb-sidenav-toggled #layoutSidenav #layoutSidenav_content {
+                padding-left: 0;
+                margin-left: 0;
+            }
         }
 
         a {
@@ -272,6 +295,50 @@
             box-shadow: 0 24px 54px rgba(8, 21, 38, 0.22);
         }
 
+        .teacher-hero--dashboard {
+            display: grid;
+            grid-template-columns: minmax(0, 1.7fr) minmax(260px, 0.8fr);
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .teacher-hero__content,
+        .teacher-hero__rail {
+            position: relative;
+            z-index: 1;
+        }
+
+        .teacher-hero__rail {
+            display: grid;
+            gap: 0.85rem;
+            align-content: end;
+        }
+
+        .teacher-hero__mini {
+            padding: 1rem 1rem 1.05rem;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+        }
+
+        .teacher-hero__mini span {
+            display: block;
+            font-size: 0.86rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.35rem;
+        }
+
+        .teacher-hero__mini strong {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .teacher-hero__mini--glass {
+            background: rgba(14, 165, 233, 0.14);
+        }
+
         .teacher-hero::after {
             content: "";
             position: absolute;
@@ -350,6 +417,18 @@
             font-weight: 800;
         }
 
+        .teacher-status-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 38px;
+            padding: 0.5rem 0.9rem;
+            border-radius: 999px;
+            background: var(--admin-success-bg);
+            border: 1px solid var(--admin-success-border);
+            color: var(--admin-success-text);
+            font-weight: 700;
+        }
+
         .teacher-soft-link {
             color: var(--teacher-accent);
             font-weight: 700;
@@ -364,6 +443,43 @@
             display: flex;
             flex-direction: column;
             gap: 1.25rem;
+        }
+
+        .teacher-course-card strong {
+            font-size: 1.05rem;
+        }
+
+        .teacher-panel .pagination {
+            --bs-pagination-bg: var(--admin-surface);
+            --bs-pagination-color: var(--admin-text);
+            --bs-pagination-border-color: var(--admin-border);
+            --bs-pagination-hover-bg: var(--admin-surface-3);
+            --bs-pagination-hover-color: var(--admin-primary);
+            --bs-pagination-hover-border-color: var(--admin-border);
+            --bs-pagination-focus-bg: var(--admin-surface-3);
+            --bs-pagination-focus-color: var(--admin-primary);
+            --bs-pagination-focus-box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--admin-primary) 18%, transparent);
+            --bs-pagination-active-bg: var(--admin-primary);
+            --bs-pagination-active-border-color: var(--admin-primary);
+            --bs-pagination-active-color: #fff;
+            --bs-pagination-disabled-bg: var(--admin-subtle-bg);
+            --bs-pagination-disabled-color: var(--admin-muted);
+        }
+
+        .app-shell-footer {
+            background: linear-gradient(180deg, color-mix(in srgb, var(--admin-surface) 96%, transparent), var(--admin-surface-2));
+            border-top: 1px solid var(--admin-border);
+            color: var(--admin-muted);
+        }
+
+        .app-shell-footer a {
+            color: var(--admin-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .app-shell-footer a:hover {
+            color: var(--teacher-accent);
         }
 
         .table {
@@ -491,6 +607,10 @@
             .teacher-panel {
                 padding: 1rem;
             }
+
+            .teacher-hero--dashboard {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
     @yield('stylesheets')
@@ -526,8 +646,8 @@
 
                 document.querySelectorAll('[data-admin-theme-toggle]').forEach((button) => {
                     const isDark = theme === 'dark';
-                    const nextThemeLabel = isDark ? 'Light mode' : 'Dark mode';
-                    const nextThemeTitle = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+                    const nextThemeLabel = isDark ? @json(__('teacher::dashboard.header.light_mode')) : @json(__('teacher::dashboard.header.dark_mode'));
+                    const nextThemeTitle = isDark ? @json(__('teacher::dashboard.header.switch_to_light')) : @json(__('teacher::dashboard.header.switch_to_dark'));
                     const label = button.querySelector('[data-admin-theme-label]');
 
                     button.setAttribute('aria-pressed', String(isDark));

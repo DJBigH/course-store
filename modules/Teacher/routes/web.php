@@ -1,12 +1,15 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherApplicationController as AdminTeacherApplicationController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherFinanceController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherPackageController as AdminTeacherPackageController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherApplicationController as ClientTeacherApplicationController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherAuthController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherDashboardController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherLandingController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherProfileController;
 
 Route::prefix('admin')->group(function () {
    Route::prefix('teacher')->name('teacher.')->group(function () {
@@ -39,6 +42,7 @@ Route::prefix('admin')->group(function () {
       Route::post('/create', [AdminTeacherPackageController::class, 'store'])->middleware('permission:teachers.create')->name('post-add');
       Route::get('/edit/{id}', [AdminTeacherPackageController::class, 'edit'])->middleware('permission:teachers.edit')->name('edit');
       Route::post('/edit/{id}', [AdminTeacherPackageController::class, 'update'])->middleware('permission:teachers.edit')->name('post-edit');
+      Route::post('/reorder', [AdminTeacherPackageController::class, 'reorder'])->middleware('permission:teachers.edit')->name('reorder');
       Route::delete('/delete/{id}', [AdminTeacherPackageController::class, 'delete'])->middleware('permission:teachers.delete')->name('delete');
    });
 
@@ -57,6 +61,12 @@ Route::group([
    'middleware' => ['setLocale'],
 ], function () {
    Route::get('/tro-thanh-giang-vien', [TeacherLandingController::class, 'index'])->name('teacher.portal.index');
+   Route::get('/teacher/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.auth.login');
+   Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->name('teacher.auth.post-login');
+   Route::get('/teacher/forgot-password', [TeacherAuthController::class, 'showForgotForm'])->name('teacher.auth.forgot');
+   Route::post('/teacher/forgot-password', [TeacherAuthController::class, 'sendResetLink'])->name('teacher.auth.post-forgot');
+   Route::get('/teacher/reset-password/{token}', [TeacherAuthController::class, 'showResetForm'])->name('teacher.password.reset');
+   Route::post('/teacher/reset-password', [TeacherAuthController::class, 'updatePassword'])->name('teacher.auth.password.update');
    Route::get('/tro-thanh-giang-vien/bat-dau', [ClientTeacherApplicationController::class, 'begin'])->name('teacher.account.begin');
    Route::get('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'create'])->name('teacher.account.apply');
    Route::post('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'store'])->name('teacher.account.submit');
@@ -71,10 +81,59 @@ Route::group([
 Route::group([
    'prefix' => 'teacher',
    'as' => 'teacher.dashboard.',
-   'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block'],
+   'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active'],
 ], function () {
+   Route::get('/locale/{locale}', function (Request $request, string $locale) {
+      if (!in_array($locale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
+         $locale = 'vi';
+      }
+
+      session(['locale' => $locale]);
+      app()->setLocale($locale);
+
+      $redirect = (string) $request->query('redirect', route('teacher.dashboard.index'));
+      $fallback = route('teacher.dashboard.index');
+
+      if (!str_starts_with($redirect, url('/')) && !str_starts_with($redirect, '/')) {
+         $redirect = $fallback;
+      }
+
+      return redirect()->to($redirect);
+   })->name('locale');
+
    Route::get('/', [TeacherDashboardController::class, 'index'])->name('index');
+   Route::get('/ho-so', [TeacherProfileController::class, 'show'])->name('profile');
+   Route::post('/ho-so', [TeacherProfileController::class, 'update'])->name('profile.update');
+   Route::get('/goi/nang-cap', [TeacherDashboardController::class, 'upgradePackage'])->name('package.upgrade');
+   Route::post('/goi/nang-cap', [TeacherDashboardController::class, 'storeUpgradePackage'])->name('package.upgrade.store');
+   Route::get('/goi/nang-cap/trang-thai', [TeacherDashboardController::class, 'upgradePackageStatus'])->name('package.upgrade.status');
+   Route::post('/goi/nang-cap/xac-nhan-da-thanh-toan', [TeacherDashboardController::class, 'markUpgradePaid'])->name('package.upgrade.mark-paid');
+   Route::post('/goi/nang-cap/huy', [TeacherDashboardController::class, 'cancelUpgradePackage'])->name('package.upgrade.cancel');
    Route::get('/khoa-hoc', [TeacherDashboardController::class, 'courses'])->name('courses');
+   Route::get('/hoc-vien', [TeacherDashboardController::class, 'students'])->name('students');
+   Route::get('/hoc-vien/cap-quyen', [TeacherDashboardController::class, 'createStudentGrant'])->name('students.grants.create');
+   Route::post('/hoc-vien/cap-quyen', [TeacherDashboardController::class, 'storeStudentGrant'])->name('students.grants.store');
+   Route::get('/hoc-vien/export/{format}', [TeacherDashboardController::class, 'exportStudents'])->name('students.export');
+   Route::post('/hoc-vien/{student}/grant/{grant}/thu-hoi', [TeacherDashboardController::class, 'revokeStudentGrant'])->name('students.grants.revoke');
+   Route::get('/hoc-vien/{student}', [TeacherDashboardController::class, 'showStudent'])->name('students.show');
+   Route::post('/hoc-vien/{student}/ghi-chu', [TeacherDashboardController::class, 'saveStudentNote'])->name('students.note');
+   Route::get('/khoa-hoc/thung-rac', [TeacherDashboardController::class, 'coursesTrash'])->name('courses.trash');
+   Route::get('/khoa-hoc/tao-moi', [TeacherDashboardController::class, 'createCourse'])->name('courses.create');
+   Route::post('/khoa-hoc/tao-moi', [TeacherDashboardController::class, 'storeCourse'])->name('courses.store');
+   Route::get('/khoa-hoc/{course}/chinh-sua', [TeacherDashboardController::class, 'editCourse'])->name('courses.edit');
+   Route::post('/khoa-hoc/{course}/chinh-sua', [TeacherDashboardController::class, 'updateCourse'])->name('courses.update');
+   Route::delete('/khoa-hoc/{course}', [TeacherDashboardController::class, 'deleteCourse'])->name('courses.delete');
+   Route::post('/khoa-hoc/{course}/khoi-phuc', [TeacherDashboardController::class, 'restoreCourse'])->name('courses.restore');
+   Route::delete('/khoa-hoc/{course}/xoa-vinh-vien', [TeacherDashboardController::class, 'forceDeleteCourse'])->name('courses.force-delete');
+   Route::get('/khoa-hoc/{course}/bai-hoc', [TeacherDashboardController::class, 'lessons'])->name('lessons.index');
+   Route::get('/khoa-hoc/{course}/bai-hoc/thung-rac', [TeacherDashboardController::class, 'lessonsTrash'])->name('lessons.trash');
+   Route::get('/khoa-hoc/{course}/bai-hoc/tao-moi', [TeacherDashboardController::class, 'createLesson'])->name('lessons.create');
+   Route::post('/khoa-hoc/{course}/bai-hoc/tao-moi', [TeacherDashboardController::class, 'storeLesson'])->name('lessons.store');
+   Route::get('/khoa-hoc/{course}/bai-hoc/{lesson}/chinh-sua', [TeacherDashboardController::class, 'editLesson'])->name('lessons.edit');
+   Route::post('/khoa-hoc/{course}/bai-hoc/{lesson}/chinh-sua', [TeacherDashboardController::class, 'updateLesson'])->name('lessons.update');
+   Route::delete('/khoa-hoc/{course}/bai-hoc/{lesson}', [TeacherDashboardController::class, 'deleteLesson'])->name('lessons.delete');
+   Route::post('/khoa-hoc/{course}/bai-hoc/{lesson}/khoi-phuc', [TeacherDashboardController::class, 'restoreLesson'])->name('lessons.restore');
+   Route::delete('/khoa-hoc/{course}/bai-hoc/{lesson}/xoa-vinh-vien', [TeacherDashboardController::class, 'forceDeleteLesson'])->name('lessons.force-delete');
    Route::get('/doanh-thu', [TeacherDashboardController::class, 'earnings'])->name('earnings');
    Route::get('/rut-tien', [TeacherDashboardController::class, 'payouts'])->name('payouts');
    Route::post('/rut-tien', [TeacherDashboardController::class, 'storePayout'])->name('payouts.store');

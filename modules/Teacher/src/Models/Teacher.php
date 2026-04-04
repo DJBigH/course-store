@@ -37,6 +37,8 @@ class Teacher extends Model
         'commission_rate',
         'approved_at',
         'approved_by',
+        'package_started_at',
+        'package_expires_at',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -45,6 +47,8 @@ class Teacher extends Model
     protected $casts = [
         'approved_at' => 'datetime',
         'commission_rate' => 'float',
+        'package_started_at' => 'datetime',
+        'package_expires_at' => 'datetime',
     ];
 
     public function student()
@@ -60,6 +64,11 @@ class Teacher extends Model
     public function payoutRequests()
     {
         return $this->hasMany(TeacherPayoutRequest::class, 'teacher_id', 'id');
+    }
+
+    public function studentNotes()
+    {
+        return $this->hasMany(TeacherStudentNote::class, 'teacher_id', 'id');
     }
 
     public function getDescriptionLocaleAttribute(): string
