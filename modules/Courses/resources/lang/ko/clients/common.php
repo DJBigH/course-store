@@ -66,6 +66,7 @@ return [
     'comment_need_purchase' => '댓글을 작성하려면 먼저 이 강의를 구매해야 합니다.',
     'comment_login_to_join' => '토론에 참여하려면 수강생으로 로그인하고 강의를 구매해 주세요.',
     'comment_role_admin' => 'Admin',
+    'comment_role_teacher' => '강사',
     'comment_role_student' => '수강생',
     'comment_flag_badge' => '주의',
     'comment_hidden_badge' => '숨김',

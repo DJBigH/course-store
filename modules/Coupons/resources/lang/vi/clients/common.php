@@ -14,7 +14,7 @@ return [
     'end' => 'đã hết hạn',
     'no_limit_time' => 'Không giới hạn thời gian',
     'expired' => 'Hết hạn',
-    'time_up' => "Hết lượt",
+    'time_up' => 'Hết lượt',
     'still_available' => 'Còn dùng',
 
     //Mã của tôi
@@ -26,4 +26,5 @@ return [
     //MÃ CHUNG
     'all_coupon' => 'Mã khuyến mãi chung',
     'no_coupon' => 'Không có mã khuyến mãi chung.',
+    'created_by_teacher' => 'Giảng viên tạo mã',
 ];

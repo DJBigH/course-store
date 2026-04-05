@@ -353,6 +353,88 @@
             font-weight: 300;
         }
 
+        html[data-theme="light"] .teacher-courses-shell {
+            background:
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 28%),
+                linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(241, 245, 249, 0.98) 100%);
+        }
+
+        html[data-theme="light"] .teacher-courses-kicker {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-courses-title {
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-courses-desc {
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-courses-usage {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            color: var(--admin-text);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-courses-usage strong {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-courses-guide__item,
+        html[data-theme="light"] .teacher-course-card--friendly,
+        html[data-theme="light"] .teacher-courses-empty {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-courses-guide__item strong,
+        html[data-theme="light"] .teacher-course-card__title,
+        html[data-theme="light"] .teacher-courses-empty h4 {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-courses-guide__item p,
+        html[data-theme="light"] .teacher-courses-empty p {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-course-card__stat {
+            background: var(--admin-subtle-bg);
+            border-color: var(--admin-border);
+        }
+
+        html[data-theme="light"] .teacher-course-card__stat span {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-course-card__stat strong {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-course-card__help {
+            background: rgba(37, 99, 235, 0.08);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-course-card__status.is-active {
+            background: rgba(34, 197, 94, 0.16);
+            color: #166534;
+        }
+
+        html[data-theme="light"] .teacher-course-card__status.is-hidden {
+            background: rgba(148, 163, 184, 0.2);
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-courses-empty__icon {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(59, 130, 246, 0.18));
+            color: #1d4ed8;
+        }
+
         @media (max-width: 991.98px) {
             .teacher-courses-hero,
             .teacher-course-card__head {

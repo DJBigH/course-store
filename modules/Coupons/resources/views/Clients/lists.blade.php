@@ -41,6 +41,14 @@
                         </p>
                     @endif
 
+                    @if ($item->teacher)
+                        <p class="small text-muted mb-1">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            {{ __('coupons::clients/common.created_by_teacher') }}:
+                            <strong>{{ $item->teacher->name_locale ?: $item->teacher->name }}</strong>
+                        </p>
+                    @endif
+
 
                     <p class="small mb-1">
                         @if ($limited)

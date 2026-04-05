@@ -21,4 +21,5 @@ return [
     'no_coupon_course' => '当前此课程没有可用优惠券。',
     'all_coupon' => '通用优惠券',
     'no_coupon' => '当前没有可用的通用优惠券。',
+    'created_by_teacher' => '讲师创建',
 ];

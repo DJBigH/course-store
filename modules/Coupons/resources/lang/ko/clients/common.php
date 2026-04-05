@@ -26,4 +26,5 @@ return [
     //All Coupon
     'all_coupon' => '공용 할인 코드',
     'no_coupon' => '사용 가능한 공용 할인 코드가 없습니다.',
+    'created_by_teacher' => '강사가 만든 쿠폰',
 ];

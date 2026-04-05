@@ -66,6 +66,7 @@ return [
     'comment_need_purchase' => 'コメントするには、先にこのコースを購入してください。',
     'comment_login_to_join' => '参加するには、受講者としてログインしてコースを購入してください。',
     'comment_role_admin' => 'Admin',
+    'comment_role_teacher' => '講師',
     'comment_role_student' => '受講者',
     'comment_flag_badge' => '注意',
     'comment_hidden_badge' => '非表示',

@@ -498,6 +498,107 @@
             line-height: 1.1;
         }
 
+        html[data-theme="light"] .teacher-upgrade-shell {
+            background:
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 26%),
+                linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(241, 245, 249, 0.98) 100%);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-kicker {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-title {
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-desc {
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-current,
+        html[data-theme="light"] .teacher-upgrade-section,
+        html[data-theme="light"] .teacher-upgrade-summary {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-current__label,
+        html[data-theme="light"] .teacher-upgrade-summary__label {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-current__name,
+        html[data-theme="light"] .teacher-upgrade-summary__name,
+        html[data-theme="light"] .teacher-upgrade-section__head h4 {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-current__meta,
+        html[data-theme="light"] .teacher-upgrade-summary__meta,
+        html[data-theme="light"] .teacher-upgrade-section__head p {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-current__time {
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-card {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-card__tag {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-card__badge {
+            background: rgba(16, 185, 129, 0.12);
+            color: #047857;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-card__body h5,
+        html[data-theme="light"] .teacher-upgrade-card__price {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-card__tagline,
+        html[data-theme="light"] .teacher-upgrade-card__desc {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-card__features {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-card__check {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            color: #2563eb;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-payment {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            color: var(--admin-text);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-warning {
+            background: rgba(245, 158, 11, 0.12);
+            border-color: rgba(245, 158, 11, 0.25);
+            color: #92400e;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-summary__price {
+            color: var(--admin-text);
+        }
+
         @media (max-width: 991.98px) {
             .teacher-upgrade-payment-grid {
                 grid-template-columns: 1fr;

@@ -519,11 +519,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
  Teacher:
 - Làm cái hồ sơ giáo viên
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
-- Làm quản lý bình luận những khóa học của giáo viên đó
-- Làm quản lý mã giảm giá
+- Làm quản lý bình luận những khóa học của giáo viên đó ( Done )
+- Làm quản lý mã giảm giá ( Done )
 - Làm quản lý đơn hàng
 - Với cái xử lý rút tiền thì nhập 1 lần tài khoản sẽ lưu tài khoản đó tôi đa 3 tài khoản ngân hàng khác nhau với tài khoản t4 sẽ phải xin từ admin accpet mới thay đổi và khi thay đổi sẽ thay thay 1 trong 3 tài khoản đó
-- Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...)
+- Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...) hay có thêm chức năng j để giới hạn không
 - Góp ý hoặc báo cáo với admin
 - Nghĩ xem cần thêm chức năng nào khác không
 Tổng kết

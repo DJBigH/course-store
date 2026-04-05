@@ -533,6 +533,75 @@
             line-height: 1.75;
         }
 
+        html[data-theme="light"] .teacher-students-shell {
+            background:
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 30%),
+                linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(241, 245, 249, 0.98) 100%);
+        }
+
+        html[data-theme="light"] .teacher-students-kicker {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-students-title {
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-students-desc {
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-students-search,
+        html[data-theme="light"] .teacher-students-summary__item,
+        html[data-theme="light"] .teacher-student-card,
+        html[data-theme="light"] .teacher-students-empty {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-students-search label {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-students-summary__item span,
+        html[data-theme="light"] .teacher-student-card__meta,
+        html[data-theme="light"] .teacher-student-card__info span,
+        html[data-theme="light"] .teacher-student-card__footer span,
+        html[data-theme="light"] .teacher-student-card__section-title,
+        html[data-theme="light"] .teacher-students-empty p {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-students-summary__item strong,
+        html[data-theme="light"] .teacher-student-card__name,
+        html[data-theme="light"] .teacher-student-card__info strong,
+        html[data-theme="light"] .teacher-student-card__footer strong,
+        html[data-theme="light"] .teacher-students-empty h4 {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-student-card__info {
+            background: var(--admin-subtle-bg);
+            border-color: var(--admin-border);
+        }
+
+        html[data-theme="light"] .teacher-student-card__course-chip {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-student-card__course-chip.is-more {
+            background: rgba(14, 165, 233, 0.12);
+            color: #0284c7;
+        }
+
+        html[data-theme="light"] .teacher-students-empty__icon {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(56, 189, 248, 0.14));
+            color: #1d4ed8;
+        }
+
         @media (max-width: 1199.98px) {
             .teacher-students-hero {
                 grid-template-columns: 1fr;

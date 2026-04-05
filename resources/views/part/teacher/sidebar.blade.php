@@ -138,6 +138,18 @@
                     {{ __('teacher::dashboard.nav.courses') }}
                 </a>
 
+                <a class="nav-link {{ request()->routeIs('teacher.dashboard.comments*') ? 'active' : '' }}"
+                    href="{{ route('teacher.dashboard.comments') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-comments"></i></div>
+                    {{ __('teacher::comments.nav.label') }}
+                </a>
+
+                <a class="nav-link {{ request()->routeIs('teacher.dashboard.coupons*') ? 'active' : '' }}"
+                    href="{{ route('teacher.dashboard.coupons.index') }}">
+                    <div class="sb-nav-link-icon"><i class="fas fa-ticket"></i></div>
+                    {{ __('teacher::coupons.nav.label') }}
+                </a>
+
                 <a class="nav-link {{ request()->routeIs('teacher.dashboard.students*') ? 'active' : '' }}"
                     href="{{ route('teacher.dashboard.students') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-user-graduate"></i></div>

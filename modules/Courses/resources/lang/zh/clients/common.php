@@ -49,6 +49,7 @@ return [
     'comment_need_purchase' => '发表评论前，请先购买本课程。',
     'comment_login_to_join' => '请先以学员身份登录并购买课程后再参与讨论。',
     'comment_role_admin' => 'Admin',
+    'comment_role_teacher' => '讲师',
     'comment_role_student' => '学员',
     'comment_flag_badge' => '提醒',
     'comment_hidden_badge' => '已隐藏',

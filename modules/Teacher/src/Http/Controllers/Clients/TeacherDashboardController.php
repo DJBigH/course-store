@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
+use Modules\Courses\src\Models\CourseComment;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Modules\Lessons\src\Models\Lesson;
@@ -787,6 +788,102 @@ class TeacherDashboardController extends Controller
             'students',
             'directory'
         ));
+    }
+
+    public function comments(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $courses = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->orderBy('name')
+            ->get();
+
+        $selectedCourseId = (int) $request->query('course_id', 0);
+        $selectedCourse = $selectedCourseId > 0
+            ? $courses->firstWhere('id', $selectedCourseId)
+            : $courses->first();
+
+        $threads = $selectedCourse
+            ? courseCommentThreads($selectedCourse->id, true)
+            : collect();
+
+        $pageTitle = __('teacher::comments.page_title');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.comments', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'courses',
+            'selectedCourse',
+            'threads'
+        ));
+    }
+
+    public function replyComment(Request $request, int $commentId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $comment = CourseComment::query()
+            ->whereNull('parent_id')
+            ->whereHas('course', function ($query) use ($teacher) {
+                $query->withoutGlobalScope(ActiveScope::class)
+                    ->where('teacher_id', $teacher->id);
+            })
+            ->findOrFail($commentId);
+
+        $payload = $request->validate([
+            'content' => ['required', 'string', 'min:2', 'max:2000'],
+        ]);
+
+        $content = $this->sanitizeCommentContent($payload['content']);
+
+        if (mb_strlen($content) < 2) {
+            return $this->commentErrorResponse($request, __('teacher::comments.flash.reply_too_short'), 422);
+        }
+
+        $moderation = courseCommentModeration($content);
+
+        CourseComment::create([
+            'course_id' => $comment->course_id,
+            'parent_id' => $comment->id,
+            'student_id' => $teacher->student_id ?? auth('students')->id(),
+            'content' => $content,
+            'is_visible' => true,
+            'is_flagged' => $moderation['is_flagged'],
+            'flagged_terms' => $moderation['is_flagged'] ? implode(', ', $moderation['matched_terms']) : null,
+        ]);
+
+        return $this->renderTeacherCommentThread($request, $comment->course_id, $teacher);
+    }
+
+    public function toggleCommentVisibility(Request $request, int $commentId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $comment = CourseComment::query()
+            ->whereHas('course', function ($query) use ($teacher) {
+                $query->withoutGlobalScope(ActiveScope::class)
+                    ->where('teacher_id', $teacher->id);
+            })
+            ->findOrFail($commentId);
+
+        $comment->update([
+            'is_visible' => !$comment->is_visible,
+        ]);
+
+        return $this->renderTeacherCommentThread($request, $comment->course_id, $teacher);
     }
 
     public function exportStudents(Request $request, string $format = 'csv')
@@ -1712,6 +1809,58 @@ class TeacherDashboardController extends Controller
             'vip' => 'VIP',
             default => '',
         };
+    }
+
+    private function renderTeacherCommentThread(Request $request, int $courseId, Teacher $teacher)
+    {
+        $course = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->findOrFail($courseId);
+
+        $threads = courseCommentThreads($course->id, true);
+
+        $html = view('teacher::clients.dashboard.comments_thread', [
+            'course' => $course,
+            'threads' => $threads,
+            'teacher' => $teacher,
+        ])->render();
+
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+            ]);
+        }
+
+        return redirect()->route('teacher.dashboard.comments', ['course_id' => $course->id]);
+    }
+
+    private function commentErrorResponse(Request $request, string $message, int $status = 422)
+    {
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], $status);
+        }
+
+        return redirect()->back()
+            ->withInput()
+            ->with('msg_danger', $message);
+    }
+
+    private function wantsJson(Request $request): bool
+    {
+        return $request->expectsJson() || $request->ajax();
+    }
+
+    private function sanitizeCommentContent(string $content): string
+    {
+        $plainText = strip_tags(str_replace('&nbsp;', ' ', $content));
+        $plainText = html_entity_decode($plainText, ENT_QUOTES, 'UTF-8');
+
+        return trim(preg_replace('/\s+/u', ' ', $plainText) ?? '');
     }
 
     private function updateCourseDurations(?int $courseId): void

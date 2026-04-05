@@ -26,4 +26,5 @@ return [
     //All Coupon
     'all_coupon' => '共通クーポン',
     'no_coupon' => '現在利用できる共通クーポンはありません。',
+    'created_by_teacher' => '講師が作成',
 ];

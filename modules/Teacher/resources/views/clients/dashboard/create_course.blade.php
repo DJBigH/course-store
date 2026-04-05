@@ -129,16 +129,34 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">{{ __('teacher::dashboard.courses.form.price') }}</label>
-                                    <input type="number" name="price" min="0" step="0.01"
-                                        class="form-control @error('price') is-invalid @enderror" value="{{ old('price', $course?->price ?? 0) }}">
+                                    <input type="hidden" name="price" id="teacher-course-price" value="{{ old('price', $course?->price ?? 0) }}">
+                                    <input
+                                        type="text"
+                                        inputmode="numeric"
+                                        class="form-control @error('price') is-invalid @enderror"
+                                        id="teacher-course-price-display"
+                                        value="{{ old('price', $course?->price ?? 0) }}"
+                                        data-number-format
+                                        data-number-target="teacher-course-price"
+                                        placeholder="0"
+                                    >
                                     @error('price')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">{{ __('teacher::dashboard.courses.form.sale_price') }}</label>
-                                    <input type="number" name="sale_price" min="0" step="0.01"
-                                        class="form-control @error('sale_price') is-invalid @enderror" value="{{ old('sale_price', $course?->sale_price ?? 0) }}">
+                                    <input type="hidden" name="sale_price" id="teacher-course-sale-price" value="{{ old('sale_price', $course?->sale_price ?? 0) }}">
+                                    <input
+                                        type="text"
+                                        inputmode="numeric"
+                                        class="form-control @error('sale_price') is-invalid @enderror"
+                                        id="teacher-course-sale-price-display"
+                                        value="{{ old('sale_price', $course?->sale_price ?? 0) }}"
+                                        data-number-format
+                                        data-number-target="teacher-course-sale-price"
+                                        placeholder="0"
+                                    >
                                     @error('sale_price')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -281,6 +299,37 @@
                     codeInput.value = `KH${random}`;
                 });
             }
+
+            const formattedInputs = document.querySelectorAll('[data-number-format]');
+            const formatNumber = (value) => {
+                const digits = value.replace(/[^\d]/g, '');
+                if (!digits) {
+                    return '';
+                }
+                return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            };
+
+            const syncNumberField = (displayEl, hiddenEl) => {
+                const digits = displayEl.value.replace(/[^\d]/g, '');
+                hiddenEl.value = digits;
+                displayEl.value = formatNumber(digits);
+            };
+
+            formattedInputs.forEach((displayEl) => {
+                const targetId = displayEl.getAttribute('data-number-target');
+                if (!targetId) {
+                    return;
+                }
+                const hiddenEl = document.getElementById(targetId);
+                if (!hiddenEl) {
+                    return;
+                }
+
+                displayEl.value = formatNumber(displayEl.value);
+                displayEl.addEventListener('input', () => syncNumberField(displayEl, hiddenEl));
+                displayEl.addEventListener('blur', () => syncNumberField(displayEl, hiddenEl));
+                syncNumberField(displayEl, hiddenEl);
+            });
         })();
     </script>
 @endsection

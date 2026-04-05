@@ -67,6 +67,7 @@ return [
     'comment_need_purchase' => 'Please purchase this course before commenting.',
     'comment_login_to_join' => 'Sign in as a student and purchase the course to join the discussion.',
     'comment_role_admin' => 'Admin',
+    'comment_role_teacher' => 'Teacher',
     'comment_role_student' => 'Student',
     'comment_flag_badge' => 'Flagged',
     'comment_hidden_badge' => 'Hidden',

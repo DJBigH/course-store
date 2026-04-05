@@ -68,6 +68,7 @@ return [
     'comment_need_purchase' => 'Bạn cần mua khóa học trước khi bình luận.',
     'comment_login_to_join' => 'Đăng nhập học viên và mua khóa học để tham gia hỏi đáp.',
     'comment_role_admin' => 'Admin',
+    'comment_role_teacher' => 'Giảng viên',
     'comment_role_student' => 'Học viên',
     'comment_flag_badge' => 'Cảnh báo',
     'comment_hidden_badge' => 'Đang ẩn',

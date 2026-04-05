@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Courses\src\Models\Courses;
 use Modules\Orders\src\Models\Order;
+use Modules\Teacher\src\Models\Teacher;
 
 class Coupons extends Model
 {
@@ -16,6 +17,7 @@ class Coupons extends Model
     protected $table = 'coupons';
 
     protected $fillable = [
+        'teacher_id',
         'code',
         'discount_type',
         'discount_value',
@@ -39,6 +41,11 @@ class Coupons extends Model
     public function students()
     {
         return $this->belongsToMany(Student::class, 'coupons_students', 'coupon_id', 'student_id');
+    }
+
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
     }
 
     public function courses()
