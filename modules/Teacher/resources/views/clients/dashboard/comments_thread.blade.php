@@ -1,5 +1,6 @@
 @php
     $teacherStudentId = $teacher?->student_id;
+    $teacherCanToggleComments = $teacher?->packageHasFeature('can_manage_comments') ?? false;
     $resolveRole = function ($comment) use ($teacherStudentId) {
         if ($comment->user_id) {
             return 'admin';
@@ -62,14 +63,16 @@
                         @if ($comment->is_flagged && $comment->flagged_terms)
                             <div class="comment-flag-note">{{ __('teacher::comments.comment.flag_terms') }}: {{ $comment->flagged_terms }}</div>
                         @endif
-                        <div class="comment-actions">
-                            <button type="button"
-                                class="btn btn-outline-secondary btn-sm"
-                                data-teacher-comment-toggle
-                                data-action="{{ route('teacher.dashboard.comments.toggle', ['comment' => $comment->id]) }}">
-                                {{ $comment->is_visible ? __('teacher::comments.comment.hide') : __('teacher::comments.comment.show') }}
-                            </button>
-                        </div>
+                        @if ($teacherCanToggleComments)
+                            <div class="comment-actions">
+                                <button type="button"
+                                    class="btn btn-outline-secondary btn-sm"
+                                    data-teacher-comment-toggle
+                                    data-action="{{ route('teacher.dashboard.comments.toggle', ['comment' => $comment->id]) }}">
+                                    {{ $comment->is_visible ? __('teacher::comments.comment.hide') : __('teacher::comments.comment.show') }}
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -100,14 +103,16 @@
                                     @if ($reply->is_flagged && $reply->flagged_terms)
                                         <div class="comment-flag-note">{{ __('teacher::comments.comment.flag_terms') }}: {{ $reply->flagged_terms }}</div>
                                     @endif
-                                    <div class="comment-actions">
-                                        <button type="button"
-                                            class="btn btn-outline-secondary btn-sm"
-                                            data-teacher-comment-toggle
-                                            data-action="{{ route('teacher.dashboard.comments.toggle', ['comment' => $reply->id]) }}">
-                                            {{ $reply->is_visible ? __('teacher::comments.comment.hide_reply') : __('teacher::comments.comment.show_reply') }}
-                                        </button>
-                                    </div>
+                                    @if ($teacherCanToggleComments)
+                                        <div class="comment-actions">
+                                            <button type="button"
+                                                class="btn btn-outline-secondary btn-sm"
+                                                data-teacher-comment-toggle
+                                                data-action="{{ route('teacher.dashboard.comments.toggle', ['comment' => $reply->id]) }}">
+                                                {{ $reply->is_visible ? __('teacher::comments.comment.hide_reply') : __('teacher::comments.comment.show_reply') }}
+                                            </button>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach

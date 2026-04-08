@@ -55,20 +55,46 @@
 
                 <div class="teacher-students-search__actions">
                     <button type="submit" class="btn btn-primary">Loc danh sach</button>
-                    <a href="{{ route('teacher.dashboard.students.grants.create') }}" class="btn btn-outline-secondary">
-                        Cap quyen hoc
-                    </a>
-                    <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'excel'], request()->query())) }}"
-                        class="btn btn-outline-secondary">
-                        Export Excel
-                    </a>
-                    <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'csv'], request()->query())) }}"
-                        class="btn btn-outline-secondary">
-                        Export CSV
-                    </a>
+                    @if ($teacher->packageHasFeature('can_grant_courses'))
+                        <a href="{{ route('teacher.dashboard.students.grants.create') }}" class="btn btn-outline-secondary">
+                            Cap quyen hoc
+                        </a>
+                    @endif
+                    @if ($teacher->packageHasFeature('can_export_students'))
+                        <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'excel'], request()->query())) }}"
+                            class="btn btn-outline-secondary">
+                            Export Excel
+                        </a>
+                        <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'csv'], request()->query())) }}"
+                            class="btn btn-outline-secondary">
+                            Export CSV
+                        </a>
+                    @endif
                 </div>
             </form>
         </div>
+
+        @if (!$teacher->packageHasFeature('can_grant_courses') || !$teacher->packageHasFeature('can_export_students'))
+            <div class="alert alert-warning border-0 mb-4">
+                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+                    <div>
+                        <strong>{{ __('teacher::dashboard.package_features.upsell_title') }}</strong>
+                        <div class="mt-1 text-muted">
+                            @if (!$teacher->packageHasFeature('can_grant_courses') && !$teacher->packageHasFeature('can_export_students'))
+                                {{ __('teacher::dashboard.package_features.students_locked_both') }}
+                            @elseif (!$teacher->packageHasFeature('can_grant_courses'))
+                                {{ __('teacher::dashboard.package_features.students_locked_grants') }}
+                            @else
+                                {{ __('teacher::dashboard.package_features.students_locked_export') }}
+                            @endif
+                        </div>
+                    </div>
+                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
+                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                    </a>
+                </div>
+            </div>
+        @endif
 
         <div class="teacher-students-summary">
             <div class="teacher-students-summary__item">
@@ -207,9 +233,11 @@
                                 <a href="{{ route('teacher.dashboard.students.show', $student->id) }}" class="btn btn-primary btn-sm">
                                     Xem chi tiet
                                 </a>
-                                <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary btn-sm">
-                                    Cap quyen hoc
-                                </a>
+                                @if ($teacher->packageHasFeature('can_grant_courses'))
+                                    <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary btn-sm">
+                                        Cap quyen hoc
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </article>

@@ -67,7 +67,7 @@
                                     <p class="text-muted mb-1 small">{{ __('courses::clients/common.instructor') }}</p>
 
                                     <h5 class="instructor-name mb-1 fw-semibold">
-                                        <a href="/giang-vien/{{ $course->teacher->slug_locale }}"
+                                        <a href="{{ route('teacher.public.show', ['locale' => app()->getLocale(), 'slug' => $course->teacher->slug_locale]) }}"
                                             class="text-decoration-none text-dark hover-primary">
                                             {{ $course->teacher->name_locale }}
                                         </a>
@@ -77,6 +77,11 @@
                                         <i class="bi bi-mortarboard"></i>
                                         <span>{{ $course->teacher->exp }}
                                             {{ __('courses::clients/common.experience_years') }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 text-warning mt-2">
+                                        <i class="fa-solid fa-star"></i>
+                                        <strong>{{ $course->teacher->ratings_count > 0 ? number_format((float) $course->teacher->ratings_avg_rating, 1) : '0.0' }}</strong>
+                                        <span class="text-muted">{{ __('courses::clients/common.rating_count', ['count' => (int) ($course->teacher->ratings_count ?? 0)]) }}</span>
                                     </div>
                                 </div>
 
@@ -246,6 +251,67 @@
             border-radius: 14px;
             resize: vertical;
             min-height: 88px;
+        }
+
+        .course-rating-panel {
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 16px;
+            background: #fffaf0;
+        }
+
+        .course-rating-panel__summary {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .course-rating-panel__title {
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .course-rating-panel__stars {
+            color: #f59e0b;
+            display: flex;
+            gap: 4px;
+        }
+
+        .course-rating-panel__score {
+            text-align: right;
+        }
+
+        .course-rating-panel__score strong {
+            display: block;
+            font-size: 1.75rem;
+            color: #111827;
+            line-height: 1;
+        }
+
+        .course-rating-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .course-rating-picker__option {
+            border: 1px solid #fdba74;
+            background: #fff;
+            color: #c2410c;
+            border-radius: 999px;
+            padding: 8px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+        }
+
+        .course-rating-picker__option.is-active {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            color: #fff;
+            border-color: transparent;
         }
 
         .admin-reply-form {
@@ -546,6 +612,22 @@
             }, true);
 
             wrap.addEventListener('click', async (event) => {
+                const ratingOption = event.target.closest('[data-rating-option]');
+                if (ratingOption) {
+                    const ratingForm = ratingOption.closest('form');
+                    if (ratingForm && wrap.contains(ratingForm)) {
+                        ratingForm.querySelector('[data-rating-input]').value = ratingOption.dataset.value;
+                        ratingForm.querySelectorAll('[data-rating-option]').forEach((item) => item.classList.toggle('is-active', item === ratingOption));
+
+                        const currentLabel = ratingForm.querySelector('[data-rating-current-label]');
+                        if (currentLabel) {
+                            currentLabel.textContent = @js(__('courses::clients/common.rating_selected_label')) + ' ' + ratingOption.dataset.value;
+                        }
+                    }
+
+                    return;
+                }
+
                 const toggleButton = event.target.closest('[data-visibility-form]');
 
                 if (!toggleButton) {
@@ -576,6 +658,41 @@
                     initCommentEditors();
                 } catch (error) {
                     alert(@js(__('courses::clients/common.comment_toggle_error')));
+                }
+            });
+
+            wrap.addEventListener('submit', async (event) => {
+                const form = event.target.closest('[data-course-rating-form]');
+                if (!form || !wrap.contains(form)) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                        body: new FormData(form),
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        alert(result.message || @js(__('courses::clients/common.rating_submit_error')));
+                        return;
+                    }
+
+                    const ratingWrap = document.getElementById('course-rating-wrap');
+                    if (ratingWrap && result.html) {
+                        ratingWrap.innerHTML = result.html;
+                    }
+                } catch (error) {
+                    alert(@js(__('courses::clients/common.rating_submit_error')));
                 }
             });
 

@@ -241,6 +241,11 @@
                         'title' => 'Liên hệ',
                         'name' => 'contacts',
                     ])
+                    <a class="nav-link {{ request()->is('admin/contacts/support*') ? 'active' : '' }}"
+                        href="{{ route('contacts.support-index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-life-ring"></i></div>
+                        Gop y bao cao
+                    </a>
                 @endif
 
                 @if (auth()->user()

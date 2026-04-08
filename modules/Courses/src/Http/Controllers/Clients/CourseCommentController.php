@@ -128,6 +128,14 @@ class CourseCommentController extends Controller
                 ->wherePivot('status', 1)
                 ->exists()
             : false;
+        $canRate = $canComment;
+
+        $course->loadCount('ratings');
+        $course->loadAvg('ratings', 'rating');
+        if ($course->teacher) {
+            $course->teacher->loadCount('ratings');
+            $course->teacher->loadAvg('ratings', 'rating');
+        }
 
         $threads = courseCommentThreads($course->id, $viewerIsAdmin);
 
@@ -135,7 +143,11 @@ class CourseCommentController extends Controller
             'course' => $course,
             'threads' => $threads,
             'canComment' => $canComment,
+            'canRate' => $canRate,
             'viewerIsAdmin' => $viewerIsAdmin,
+            'viewerCourseRating' => $student
+                ? $student->courseRatings()->where('course_id', $course->id)->value('rating')
+                : null,
         ])->render();
 
         if ($this->wantsJson($request)) {

@@ -232,15 +232,83 @@
                         value="{{ old('course_limit', $package->course_limit ?? '') }}" data-preview-global="course_limit">
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label">Payout account limit</label>
+                    <input type="number" class="form-control" name="payout_account_limit" min="1" max="3"
+                        value="{{ old('payout_account_limit', $package->effective_payout_account_limit ?? 3) }}">
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">Commission rate</label>
                     <input type="number" class="form-control" name="commission_rate" min="0" max="100" step="0.01"
                         value="{{ old('commission_rate', $package->commission_rate ?? 50) }}" required data-preview-global="commission_rate">
                 </div>
-                <div class="col-md-8 d-flex align-items-center">
+                <div class="col-md-4 d-flex align-items-center">
                     <div class="form-check mt-md-4">
                         <input class="form-check-input" type="checkbox" name="priority_review" value="1"
                             {{ old('priority_review', $package->priority_review ?? false) ? 'checked' : '' }} data-preview-global="priority_review">
                         <label class="form-check-label">Priority review</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Coupon limit</label>
+                    <input type="number" class="form-control" name="coupon_limit" min="1"
+                        value="{{ old('coupon_limit', $package->coupon_limit ?? '') }}"
+                        placeholder="De trong = khong gioi han">
+                    <div class="form-text">Chi ap dung khi da bat quyen quan ly coupon.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="border rounded-4 p-4">
+            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
+                <div>
+                    <h6 class="mb-1">Feature flags theo goi</h6>
+                    <p class="text-muted mb-0">Bat/tat tung quyen trong teacher portal de phan hoa ro giua free, starter va pro.</p>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_duplicate_courses" value="1"
+                            {{ old('can_duplicate_courses', $package->can_duplicate_courses ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep nhan ban khoa hoc</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_manage_comments" value="1"
+                            {{ old('can_manage_comments', $package->can_manage_comments ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep quan ly binh luan</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_manage_coupons" value="1"
+                            {{ old('can_manage_coupons', $package->can_manage_coupons ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep quan ly coupon</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_grant_courses" value="1"
+                            {{ old('can_grant_courses', $package->can_grant_courses ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep cap quyen hoc thu cong</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_export_orders" value="1"
+                            {{ old('can_export_orders', $package->can_export_orders ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep export don hang</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_export_students" value="1"
+                            {{ old('can_export_students', $package->can_export_students ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep export hoc vien</label>
                     </div>
                 </div>
             </div>

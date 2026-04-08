@@ -325,6 +325,85 @@
             font-weight: 600;
         }
 
+        html[data-theme="light"] .teacher-hero {
+            background:
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 24%),
+                radial-gradient(circle at left center, rgba(59, 130, 246, 0.1), transparent 28%),
+                linear-gradient(135deg, #f8fafc 0%, #e2e8f0 60%, #dbeafe 100%);
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-hero__eyebrow {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-hero__title {
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-hero__desc {
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-chip--dark {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini {
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini span {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini strong {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini small {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini--glass {
+            background: var(--admin-subtle-bg);
+            border-color: var(--admin-border);
+        }
+
+        html[data-theme="light"] .teacher-hero__package-note {
+            color: #2563eb;
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            color: var(--admin-text);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut:hover {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut__icon {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut strong {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut p {
+            color: var(--admin-muted);
+        }
+
         @media (max-width: 991.98px) {
             .teacher-overview-shortcuts {
                 grid-template-columns: 1fr;

@@ -472,6 +472,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó))
 - Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
 - Làm cái mã giảm giá dành riêng cho đăng ký giáo viên 
+- admin tạo ra 1 gói dành riêng cho giáo viên đó
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -516,17 +517,20 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Chưa check validate đăng ký giáo viên
 - Làm cái mã giảm giá dành riêng cho đăng ký giáo viên
 - Thêm cái danh mục dành cho các gói mua của giáo viên ( Gói hợp tác, Gói theo tháng/năm, Gói j đó...)
+- Làm cái trang xem profile của giảng viên ( Giảng viên sẽ hiện ra profile khi đăng ký đổ ra, và có rating giảng viên, có bao nhiêu khóa học, bài giảng trong website )
  Teacher:
 - Làm cái hồ sơ giáo viên
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
 - Làm quản lý bình luận những khóa học của giáo viên đó ( Done )
 - Làm quản lý mã giảm giá ( Done )
 - Làm quản lý đơn hàng
-- Với cái xử lý rút tiền thì nhập 1 lần tài khoản sẽ lưu tài khoản đó tôi đa 3 tài khoản ngân hàng khác nhau với tài khoản t4 sẽ phải xin từ admin accpet mới thay đổi và khi thay đổi sẽ thay thay 1 trong 3 tài khoản đó
+- Với cái xử lý rút tiền thì nhập 1 lần tài khoản sẽ lưu tài khoản đó tôi đa 3 tài khoản ngân hàng khác nhau với tài khoản t4 sẽ phải xin từ admin accpet mới thay đổi và khi thay đổi sẽ thay thay 1 trong 3 tài khoản đó ( Done )
 - Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...) hay có thêm chức năng j để giới hạn không
-- Góp ý hoặc báo cáo với admin
+- Khi đã là giáo viên rồi thì khi đổi gói có cần admin duyệt không hay tự động chuyển gói ( Góp ý cho tôi )
+- Làm chức năng góp ý hoặc báo cáo với admin ( kiểu tôi muốn thêm danh mục j đó để phát triển) ( Done )
+- Thêm các noti vào cái chuông như kiểu: có bình luận, có người mua khóa học, mã giảm giá sắp hết hạn hay số lượt, gói giáo viên sắp hết hạn, các tính năng mới j đó admin cập nhập dành riêng cho giáo viên
+- với trường hợp giáo viên mua gói tháng/năm thì khi hết hạn và họ không gia hạn thì xử lý như nào
+- Với trường hợp họ đang dùng gói không giới hạn khóa học hay mã giảm giá thì khi họ hạ gói xuống nó limit thì xử lý như nào
 - Nghĩ xem cần thêm chức năng nào khác không
 Tổng kết
 - check lại lần cuối trước khi đẩy lên production
-
-

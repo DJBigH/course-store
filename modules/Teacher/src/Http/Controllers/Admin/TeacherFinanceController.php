@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Notifications\TeacherPayoutStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Modules\Orders\src\Models\OrderDetail;
 use Modules\Teacher\src\Models\Teacher;
+use Modules\Teacher\src\Models\TeacherPayoutAccountChangeRequest;
 use Modules\Teacher\src\Models\TeacherPayoutRequest;
 use Modules\Teacher\src\Support\TeacherFinanceCalculator;
 
@@ -47,11 +49,18 @@ class TeacherFinanceController extends Controller
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
+        $accountChangeRequests = TeacherPayoutAccountChangeRequest::query()
+            ->with(['teacher.student', 'replaceAccount'])
+            ->when($request->filled('account_change_status'), fn ($query) => $query->where('status', $request->input('account_change_status')))
+            ->latest('id')
+            ->paginate(10, ['*'], 'account_change_page')
+            ->withQueryString();
 
         $summary = [
             'requested' => (float) TeacherPayoutRequest::query()->where('status', 'requested')->sum('amount'),
             'processing' => (float) TeacherPayoutRequest::query()->where('status', 'processing')->sum('amount'),
             'paid' => (float) TeacherPayoutRequest::query()->where('status', 'paid')->sum('amount'),
+            'account_change_pending' => (int) TeacherPayoutAccountChangeRequest::query()->where('status', 'pending')->count(),
         ];
         $teacherSummaries = TeacherPayoutRequest::query()
             ->with('teacher')
@@ -70,7 +79,7 @@ class TeacherFinanceController extends Controller
             })
             ->sortByDesc('requested');
 
-        return view('teacher::finance.payouts', compact('pageTitle', 'payouts', 'summary', 'teacherSummaries'));
+        return view('teacher::finance.payouts', compact('pageTitle', 'payouts', 'summary', 'teacherSummaries', 'accountChangeRequests'));
     }
 
     public function updatePayout(Request $request, $id)
@@ -94,6 +103,45 @@ class TeacherFinanceController extends Controller
         }
 
         return back()->with('msg', 'Da cap nhat trang thai yeu cau rut tien.');
+    }
+
+    public function updatePayoutAccountChangeRequest(Request $request, $id)
+    {
+        $payload = $request->validate([
+            'status' => ['required', 'in:approved,rejected'],
+            'admin_note' => ['nullable', 'string'],
+        ]);
+
+        $changeRequest = TeacherPayoutAccountChangeRequest::query()
+            ->with('replaceAccount')
+            ->findOrFail($id);
+
+        if ($changeRequest->status !== 'pending') {
+            return back()->with('msg', 'Yeu cau thay doi tai khoan nay da duoc xu ly truoc do.');
+        }
+
+        if ($payload['status'] === 'approved' && !$changeRequest->replaceAccount) {
+            return back()->with('msg', 'Khong tim thay tai khoan goc de thay the.');
+        }
+
+        DB::transaction(function () use ($changeRequest, $payload) {
+            if ($payload['status'] === 'approved' && $changeRequest->replaceAccount) {
+                $changeRequest->replaceAccount->update([
+                    'bank_name' => $changeRequest->bank_name,
+                    'bank_account_name' => $changeRequest->bank_account_name,
+                    'bank_account_number' => $changeRequest->bank_account_number,
+                ]);
+            }
+
+            $changeRequest->update([
+                'status' => $payload['status'],
+                'admin_note' => trim((string) ($payload['admin_note'] ?? '')) ?: null,
+                'processed_at' => now(),
+                'processed_by' => auth()->id(),
+            ]);
+        });
+
+        return back()->with('msg', 'Da cap nhat yeu cau thay doi tai khoan ngan hang.');
     }
 
     public function exportEarnings(Request $request, string $format)

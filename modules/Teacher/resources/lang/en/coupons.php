@@ -27,6 +27,10 @@ return [
         'title' => 'Coupons',
         'description' => 'Create discount codes for students or apply them directly to your courses.',
     ],
+    'limit' => [
+        'title' => 'Coupon limit in your package',
+        'description' => 'You are using :count / :limit coupons in your current package.',
+    ],
     'labels' => [
         'discount' => 'off',
         'once' => 'Once per student',
@@ -72,6 +76,7 @@ return [
         'created' => 'Coupon created successfully.',
         'updated' => 'Coupon updated.',
         'deleted' => 'Coupon deleted.',
+        'limit_reached' => 'You have reached the coupon limit for your current package (:limit coupons).',
         'students_updated' => 'Student assignment updated.',
         'courses_updated' => 'Course assignment updated.',
     ],

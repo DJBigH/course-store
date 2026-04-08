@@ -37,6 +37,20 @@
             </div>
         </div>
 
+        @if (!$teacher->packageHasFeature('can_duplicate_courses'))
+            <div class="alert alert-warning border-0 mb-4">
+                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+                    <div>
+                        <strong>{{ __('teacher::dashboard.package_features.upsell_title') }}</strong>
+                        <div class="mt-1 text-muted">{{ __('teacher::dashboard.package_features.courses_locked_duplicate') }}</div>
+                    </div>
+                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
+                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                    </a>
+                </div>
+            </div>
+        @endif
+
         @if (session('msg_success'))
             <div class="alert alert-success">{{ session('msg_success') }}</div>
         @endif
@@ -97,6 +111,10 @@
                                 <span>Giá đang bán</span>
                                 <strong>{{ money($course->sale_price ?: $course->price) }}</strong>
                             </div>
+                            <div class="teacher-course-card__stat">
+                                <span>Đánh giá</span>
+                                <strong>{{ $course->ratings_count > 0 ? number_format((float) $course->ratings_avg_rating, 1) . ' / 5' : '0.0 / 5' }}</strong>
+                            </div>
                         </div>
 
                         <div class="teacher-course-card__help">
@@ -110,6 +128,14 @@
                             <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-outline-secondary">
                                 Chỉnh sửa thông tin
                             </a>
+                            @if ($teacher->packageHasFeature('can_duplicate_courses'))
+                                <form method="POST" action="{{ route('teacher.dashboard.courses.duplicate', $course->id) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-info">
+                                        {{ __('teacher::dashboard.courses.actions.duplicate') }}
+                                    </button>
+                                </form>
+                            @endif
                             <form method="POST" action="{{ route('teacher.dashboard.courses.delete', $course->id) }}" onsubmit="return confirm('{{ __('teacher::dashboard.courses.confirm_delete') }}')">
                                 @csrf
                                 @method('DELETE')

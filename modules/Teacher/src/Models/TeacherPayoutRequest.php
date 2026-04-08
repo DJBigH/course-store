@@ -30,4 +30,9 @@ class TeacherPayoutRequest extends Model
     {
         return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
     }
+
+    public function getBankLabelAttribute(): string
+    {
+        return trim($this->bank_name . ' - ' . $this->bank_account_name . ' - ' . $this->bank_account_number, ' -');
+    }
 }

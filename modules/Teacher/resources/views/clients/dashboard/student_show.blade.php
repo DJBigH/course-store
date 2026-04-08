@@ -22,9 +22,11 @@
             </div>
             <div class="teacher-student-show-actions">
                 <a href="{{ route('teacher.dashboard.students') }}" class="btn btn-outline-secondary">Quay lai danh sach</a>
-                <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary">
-                    Cap quyen hoc
-                </a>
+                @if ($teacher->packageHasFeature('can_grant_courses'))
+                    <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary">
+                        Cap quyen hoc
+                    </a>
+                @endif
                 <a href="mailto:{{ $student->email }}" class="btn btn-primary">Gui email</a>
             </div>
         </div>
@@ -35,6 +37,20 @@
 
         @if (session('msg_danger'))
             <div class="alert alert-danger">{{ session('msg_danger') }}</div>
+        @endif
+
+        @if (!$teacher->packageHasFeature('can_grant_courses'))
+            <div class="alert alert-warning border-0 mb-4">
+                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+                    <div>
+                        <strong>{{ __('teacher::dashboard.package_features.upsell_title') }}</strong>
+                        <div class="mt-1 text-muted">{{ __('teacher::dashboard.package_features.students_locked_grants') }}</div>
+                    </div>
+                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
+                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                    </a>
+                </div>
+            </div>
         @endif
 
         <div class="teacher-student-show-summary">
@@ -193,13 +209,15 @@
                                             • {{ optional($grant->created_at)->format('d/m/Y H:i') }}
                                         </span>
                                     </div>
-                                    <form method="POST" action="{{ route('teacher.dashboard.students.grants.revoke', ['student' => $student->id, 'grant' => $grant->id]) }}">
-                                        @csrf
-                                        <button type="submit" class="btn btn-outline-danger btn-sm"
-                                            onclick="return confirm('Thu hoi suat cap quyen hoc nay? Khoa hoc da mua that se khong bi anh huong.')">
-                                            Thu hoi quyen hoc
-                                        </button>
-                                    </form>
+                                    @if ($teacher->packageHasFeature('can_grant_courses'))
+                                        <form method="POST" action="{{ route('teacher.dashboard.students.grants.revoke', ['student' => $student->id, 'grant' => $grant->id]) }}">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                onclick="return confirm('Thu hoi suat cap quyen hoc nay? Khoa hoc da mua that se khong bi anh huong.')">
+                                                Thu hoi quyen hoc
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                                 @if ($grant->note)
                                     <p class="mb-0">{{ $grant->note }}</p>

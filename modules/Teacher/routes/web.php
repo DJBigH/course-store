@@ -10,6 +10,7 @@ use Modules\Teacher\src\Http\Controllers\Clients\TeacherAuthController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherCouponController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherDashboardController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherLandingController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherPublicController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherProfileController;
 
 Route::prefix('admin')->group(function () {
@@ -53,6 +54,7 @@ Route::prefix('admin')->group(function () {
       Route::get('/payouts', [TeacherFinanceController::class, 'payouts'])->middleware('permission:teachers.view')->name('payouts');
       Route::get('/payouts/export/{format}', [TeacherFinanceController::class, 'exportPayouts'])->middleware('permission:teachers.view')->name('payouts.export');
       Route::post('/payouts/{id}', [TeacherFinanceController::class, 'updatePayout'])->middleware('permission:teachers.edit')->name('payouts.update');
+      Route::post('/payout-account-change-requests/{id}', [TeacherFinanceController::class, 'updatePayoutAccountChangeRequest'])->middleware('permission:teachers.edit')->name('payout-account-change-requests.update');
    });
 });
 
@@ -77,6 +79,8 @@ Route::group([
    Route::get('/tro-thanh-giang-vien/chinh-sua', [ClientTeacherApplicationController::class, 'edit'])->name('teacher.account.edit');
    Route::post('/tro-thanh-giang-vien/chinh-sua', [ClientTeacherApplicationController::class, 'update'])->name('teacher.account.update');
    Route::post('/tro-thanh-giang-vien/xac-nhan-da-thanh-toan', [ClientTeacherApplicationController::class, 'markPaid'])->name('teacher.account.mark-paid');
+   Route::get('/giang-vien/{slug}', [TeacherPublicController::class, 'show'])->name('teacher.public.show');
+   Route::post('/giang-vien/{slug}/rating', [TeacherPublicController::class, 'rate'])->middleware(['auth:students', 'verified', 'user.block'])->name('teacher.public.rate');
 });
 
 Route::group([
@@ -125,6 +129,9 @@ Route::group([
    Route::post('/binh-luan/{comment}/reply', [TeacherDashboardController::class, 'replyComment'])->name('comments.reply');
    Route::post('/binh-luan/{comment}/toggle', [TeacherDashboardController::class, 'toggleCommentVisibility'])->name('comments.toggle');
    Route::get('/hoc-vien', [TeacherDashboardController::class, 'students'])->name('students');
+   Route::get('/don-hang', [TeacherDashboardController::class, 'orders'])->name('orders');
+   Route::get('/don-hang/export/{format}', [TeacherDashboardController::class, 'exportOrders'])->name('orders.export');
+   Route::get('/don-hang/{order}', [TeacherDashboardController::class, 'showOrder'])->name('orders.show');
    Route::get('/hoc-vien/cap-quyen', [TeacherDashboardController::class, 'createStudentGrant'])->name('students.grants.create');
    Route::post('/hoc-vien/cap-quyen', [TeacherDashboardController::class, 'storeStudentGrant'])->name('students.grants.store');
    Route::get('/hoc-vien/export/{format}', [TeacherDashboardController::class, 'exportStudents'])->name('students.export');
@@ -136,6 +143,7 @@ Route::group([
    Route::post('/khoa-hoc/tao-moi', [TeacherDashboardController::class, 'storeCourse'])->name('courses.store');
    Route::get('/khoa-hoc/{course}/chinh-sua', [TeacherDashboardController::class, 'editCourse'])->name('courses.edit');
    Route::post('/khoa-hoc/{course}/chinh-sua', [TeacherDashboardController::class, 'updateCourse'])->name('courses.update');
+   Route::post('/khoa-hoc/{course}/nhan-ban', [TeacherDashboardController::class, 'duplicateCourse'])->name('courses.duplicate');
    Route::delete('/khoa-hoc/{course}', [TeacherDashboardController::class, 'deleteCourse'])->name('courses.delete');
    Route::post('/khoa-hoc/{course}/khoi-phuc', [TeacherDashboardController::class, 'restoreCourse'])->name('courses.restore');
    Route::delete('/khoa-hoc/{course}/xoa-vinh-vien', [TeacherDashboardController::class, 'forceDeleteCourse'])->name('courses.force-delete');
@@ -151,4 +159,7 @@ Route::group([
    Route::get('/doanh-thu', [TeacherDashboardController::class, 'earnings'])->name('earnings');
    Route::get('/rut-tien', [TeacherDashboardController::class, 'payouts'])->name('payouts');
    Route::post('/rut-tien', [TeacherDashboardController::class, 'storePayout'])->name('payouts.store');
+   Route::post('/rut-tien/yeu-cau-doi-tai-khoan', [TeacherDashboardController::class, 'storePayoutAccountChangeRequest'])->name('payouts.account-change.store');
+   Route::get('/gop-y-bao-cao', [TeacherDashboardController::class, 'support'])->name('support');
+   Route::post('/gop-y-bao-cao', [TeacherDashboardController::class, 'storeSupport'])->name('support.store');
 });

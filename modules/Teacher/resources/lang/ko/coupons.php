@@ -18,6 +18,10 @@ return [
         'title' => '쿠폰',
         'description' => '수강생 전용 할인 코드 또는 강의별 쿠폰을 생성하세요.',
     ],
+    'limit' => [
+        'title' => 'Coupon limit in your package',
+        'description' => 'You are using :count / :limit coupons in your current package.',
+    ],
     'labels' => [
         'discount' => '할인',
         'once' => '1회 / 수강생',
@@ -61,6 +65,7 @@ return [
         'created' => '쿠폰이 생성되었습니다.',
         'updated' => '쿠폰이 수정되었습니다.',
         'deleted' => '쿠폰이 삭제되었습니다.',
+        'limit_reached' => 'You have reached the coupon limit for your current package (:limit coupons).',
         'students_updated' => '수강생 지정이 업데이트되었습니다.',
         'courses_updated' => '강의 지정이 업데이트되었습니다.',
     ],

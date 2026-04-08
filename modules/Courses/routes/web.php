@@ -47,6 +47,9 @@ Route::group([
    Route::post('/khoa-hoc/{slug}/comments/{commentId}/toggle-visibility', 'Clients\CourseCommentController@toggleVisibility')
       ->middleware(['auth'])
       ->name('comments.toggle');
+   Route::post('/khoa-hoc/{slug}/rating', 'Clients\CourseRatingController@store')
+      ->middleware(['auth:students', 'verified', 'user.block'])
+      ->name('rating.store');
    Route::prefix('data')->name('data.')->group(function () {
       Route::get('/trial/{lessonId?}', 'Clients\CoursesController@getTrialVideo')->name('trial');
       Route::get('/stream', 'Clients\CoursesController@streamVideo')->name('stream');

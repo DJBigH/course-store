@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Categories\Src\Models\Category;
 use Modules\Courses\src\Models\CourseComment;
+use Modules\Courses\src\Models\CourseRating;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Orders\src\Models\OrderDetail;
 use Modules\Students\src\Models\Student;
@@ -95,6 +96,11 @@ class Courses extends Model
     public function comments()
     {
         return $this->hasMany(CourseComment::class, 'course_id', 'id');
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(CourseRating::class, 'course_id', 'id');
     }
 
     public function getNameLocaleAttribute(): string

@@ -27,6 +27,10 @@ return [
         'title' => 'Mã giảm giá',
         'description' => 'Tạo mã giảm giá riêng cho học viên hoặc áp dụng trực tiếp trên khóa học của bạn.',
     ],
+    'limit' => [
+        'title' => 'Giới hạn coupon theo gói',
+        'description' => 'Bạn đang dùng :count / :limit coupon trong gói hiện tại.',
+    ],
     'labels' => [
         'discount' => 'giảm',
         'once' => '1 lần / học viên',
@@ -72,6 +76,7 @@ return [
         'created' => 'Đã tạo mã giảm giá thành công.',
         'updated' => 'Đã cập nhật mã giảm giá.',
         'deleted' => 'Đã xóa mã giảm giá.',
+        'limit_reached' => 'Bạn đã dùng hết số coupon cho gói hiện tại (:limit coupon).',
         'students_updated' => 'Đã cập nhật danh sách học viên.',
         'courses_updated' => 'Đã cập nhật danh sách khóa học.',
     ],

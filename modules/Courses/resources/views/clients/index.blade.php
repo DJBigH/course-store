@@ -3,6 +3,36 @@
     @include('part.clients.page_title')
     <section class="all-course" data-pagination-scroll>
         <div class="container" data-pagination-container="courses-index">
+            <form method="GET" class="course-index-toolbar mt-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-5">
+                        <label class="form-label">{{ __('courses::clients/common.search_label') }}</label>
+                        <input
+                            type="text"
+                            name="keyword"
+                            value="{{ $searchKeyword ?? '' }}"
+                            class="form-control"
+                            placeholder="{{ __('courses::clients/common.search_placeholder') }}">
+                    </div>
+                    <div class="col-lg-3">
+                        <label class="form-label">{{ __('courses::clients/common.rating_filter_label') }}</label>
+                        <select name="rating_min" class="form-select" onchange="this.form.submit()">
+                            <option value="" @selected(($ratingMin ?? '') === '')>{{ __('courses::clients/common.rating_filter_all') }}</option>
+                            <option value="4" @selected(($ratingMin ?? '') === '4')>{{ __('courses::clients/common.rating_filter_4_plus') }}</option>
+                            <option value="4.5" @selected(($ratingMin ?? '') === '4.5')>{{ __('courses::clients/common.rating_filter_45_plus') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-4">
+                        <label class="form-label">{{ __('courses::clients/common.sort_label') }}</label>
+                        <select name="sort" class="form-select" onchange="this.form.submit()">
+                            <option value="latest" @selected(($sort ?? 'latest') === 'latest')>{{ __('courses::clients/common.sort_latest') }}</option>
+                            <option value="rating_desc" @selected(($sort ?? 'latest') === 'rating_desc')>{{ __('courses::clients/common.sort_rating_desc') }}</option>
+                            <option value="rating_asc" @selected(($sort ?? 'latest') === 'rating_asc')>{{ __('courses::clients/common.sort_rating_asc') }}</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+
             @if ($courses && $courses->count())
                 <div class="row">
                     @foreach ($courses as $course)
@@ -45,6 +75,12 @@
                                             <i class="fa-solid fa-users"></i>
                                             {{ number_format($course->students_count ?? 0) }}
                                             {{ __('courses::clients/common.students') }}
+                                        </p>
+
+                                        <p class="course-rating-inline">
+                                            <i class="fa-solid fa-star"></i>
+                                            {{ $course->ratings_count > 0 ? number_format((float) $course->ratings_avg_rating, 1) : '0.0' }}
+                                            <span>({{ (int) ($course->ratings_count ?? 0) }})</span>
                                         </p>
                                     </div>
 
@@ -111,6 +147,60 @@
 
 @section('stylesheets')
     <style>
+        .all-course {
+            padding: 1px 0 48px;
+            background: #f8fafc;
+        }
+
+        .course-index-toolbar {
+            padding: 1rem;
+            border-radius: 14px;
+            background: #f8fafc;
+            box-shadow: inset 0 0 0 1px #e5e7eb;
+        }
+
+        .course-index-toolbar .form-label {
+            color: #334155;
+            font-weight: 700;
+        }
+
+        .course-index-toolbar .form-control,
+        .course-index-toolbar .form-select {
+            border-color: #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
+        }
+
+        .course-index-toolbar .form-control::placeholder {
+            color: #94a3b8;
+        }
+
+        html[data-theme="dark"] .all-course {
+            background:
+                radial-gradient(circle at top center, rgba(37, 99, 235, 0.12), transparent 26%),
+                linear-gradient(180deg, #081120 0%, #0b1527 100%);
+        }
+
+        html[data-theme="dark"] .course-index-toolbar {
+            background: rgba(15, 23, 42, 0.88);
+            box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.18);
+        }
+
+        html[data-theme="dark"] .course-index-toolbar .form-label {
+            color: #dbeafe;
+        }
+
+        html[data-theme="dark"] .course-index-toolbar .form-control,
+        html[data-theme="dark"] .course-index-toolbar .form-select {
+            border-color: rgba(96, 165, 250, 0.22);
+            background: rgba(11, 19, 36, 0.92);
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .course-index-toolbar .form-control::placeholder {
+            color: #94a3b8;
+        }
+
         .empty-course {
             background: #f8fafc;
             border-radius: 14px;
@@ -130,6 +220,19 @@
 
         .empty-course p {
             font-size: 15px;
+        }
+
+        html[data-theme="dark"] .empty-course {
+            background: rgba(15, 23, 42, 0.88);
+            box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.18);
+        }
+
+        html[data-theme="dark"] .empty-course h4 {
+            color: #f8fafc;
+        }
+
+        html[data-theme="dark"] .empty-course p {
+            color: #cbd5e1 !important;
         }
 
         @media (max-width: 575.98px) {

@@ -18,6 +18,10 @@ return [
         'title' => 'クーポン',
         'description' => '受講者向け割引コードやコース別クーポンを作成できます。',
     ],
+    'limit' => [
+        'title' => 'Coupon limit in your package',
+        'description' => 'You are using :count / :limit coupons in your current package.',
+    ],
     'labels' => [
         'discount' => '割引',
         'once' => '受講者1回',
@@ -61,6 +65,7 @@ return [
         'created' => 'クーポンを作成しました。',
         'updated' => 'クーポンを更新しました。',
         'deleted' => 'クーポンを削除しました。',
+        'limit_reached' => 'You have reached the coupon limit for your current package (:limit coupons).',
         'students_updated' => '受講者の割り当てを更新しました。',
         'courses_updated' => 'コースの割り当てを更新しました。',
     ],

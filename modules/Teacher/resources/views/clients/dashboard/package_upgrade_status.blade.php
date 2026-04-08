@@ -23,6 +23,33 @@
 
             <div class="row g-4 align-items-start">
                 <div class="col-xl-8">
+                    @php
+                        $targetPackage = $upgradeRequest->package;
+                        $isQueuedActivation = $upgradeRequest->status === 'approved'
+                            && $upgradeRequest->activated_at === null
+                            && $upgradeRequest->activates_at !== null;
+                        $isDowngrade = $currentPackage
+                            && $targetPackage
+                            && (int) $targetPackage->sort_order < (int) $currentPackage->sort_order;
+                        $noticeTitle = null;
+                        $noticeDescription = null;
+
+                        if ($upgradeRequest->status === 'pending_review' && $upgradeRequest->payment_method === 'bank_transfer') {
+                            $noticeTitle = __('teacher::dashboard.package.notice.bank_transfer_title');
+                            $noticeDescription = __('teacher::dashboard.package.notice.bank_transfer_description');
+                        } elseif ($isQueuedActivation && $isDowngrade) {
+                            $noticeTitle = __('teacher::dashboard.package.notice.downgrade_title');
+                            $noticeDescription = __('teacher::dashboard.package.notice.downgrade_description', [
+                                'date' => $upgradeRequest->activates_at->format('d/m/Y'),
+                            ]);
+                        } elseif ($upgradeRequest->activates_at) {
+                            $noticeTitle = __('teacher::dashboard.package.notice.activation_title');
+                            $noticeDescription = __('teacher::dashboard.package.notice.activation_description', [
+                                'date' => $upgradeRequest->activates_at->format('d/m/Y'),
+                            ]);
+                        }
+                    @endphp
+
                     <div class="row g-4">
                         <div class="col-lg-6">
                             <div class="teacher-upgrade-card h-100">
@@ -83,6 +110,46 @@
                             </div>
                         </div>
                     </div>
+
+                    @if ($noticeTitle && $noticeDescription)
+                        <div class="teacher-upgrade-notice mt-4">
+                            <div class="teacher-upgrade-notice__icon">i</div>
+                            <div>
+                                <div class="teacher-upgrade-notice__title">{{ $noticeTitle }}</div>
+                                <p class="teacher-upgrade-notice__desc mb-0">{{ $noticeDescription }}</p>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if (!empty($overLimitWarnings))
+                        <div class="teacher-upgrade-warning mt-4">
+                            <div class="teacher-upgrade-warning__icon">!</div>
+                            <div>
+                                <div class="teacher-upgrade-warning__title">{{ __('teacher::dashboard.package.over_limit.title') }}</div>
+                                <p class="teacher-upgrade-warning__desc">{{ __('teacher::dashboard.package.over_limit.description') }}</p>
+                                <ul class="teacher-upgrade-warning__list mb-0">
+                                    @foreach ($overLimitWarnings as $warning)
+                                        <li>{{ $warning }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if (!empty($featureLossWarnings))
+                        <div class="teacher-upgrade-warning is-feature-loss mt-4">
+                            <div class="teacher-upgrade-warning__icon">!</div>
+                            <div>
+                                <div class="teacher-upgrade-warning__title">{{ __('teacher::dashboard.package.feature_loss.title') }}</div>
+                                <p class="teacher-upgrade-warning__desc">{{ __('teacher::dashboard.package.feature_loss.description') }}</p>
+                                <ul class="teacher-upgrade-warning__list mb-0">
+                                    @foreach ($featureLossWarnings as $warning)
+                                        <li>{{ $warning }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    @endif
 
                     @if ($upgradeRequest->status === 'pending_payment')
                         <div class="teacher-upgrade-action mt-4">
@@ -197,7 +264,9 @@
 
         .teacher-upgrade-card,
         .teacher-upgrade-summary,
-        .teacher-upgrade-action {
+        .teacher-upgrade-action,
+        .teacher-upgrade-notice,
+        .teacher-upgrade-warning {
             border: 1px solid rgba(96, 165, 250, 0.18);
             background: rgba(15, 23, 42, 0.72);
             border-radius: 26px;
@@ -306,6 +375,101 @@
             padding: 1.25rem 1.35rem;
         }
 
+        .teacher-upgrade-notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.95rem;
+            padding: 1.15rem 1.25rem;
+            background:
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 24%),
+                linear-gradient(180deg, rgba(17, 31, 58, 0.96) 0%, rgba(11, 22, 41, 0.96) 100%);
+            border-color: rgba(96, 165, 250, 0.32);
+        }
+
+        .teacher-upgrade-notice__icon {
+            width: 2rem;
+            height: 2rem;
+            flex: 0 0 2rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #eff6ff;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.92), rgba(14, 165, 233, 0.92));
+            box-shadow: 0 10px 24px rgba(14, 165, 233, 0.28);
+        }
+
+        .teacher-upgrade-notice__title {
+            color: #f8fbff;
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+        }
+
+        .teacher-upgrade-notice__desc {
+            color: #b8cae2;
+            line-height: 1.65;
+        }
+
+        .teacher-upgrade-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.95rem;
+            padding: 1.15rem 1.25rem;
+            background:
+                radial-gradient(circle at top right, rgba(245, 158, 11, 0.14), transparent 24%),
+                linear-gradient(180deg, rgba(55, 35, 11, 0.96) 0%, rgba(34, 23, 10, 0.96) 100%);
+            border-color: rgba(251, 191, 36, 0.34);
+        }
+
+        .teacher-upgrade-warning.is-feature-loss {
+            background:
+                radial-gradient(circle at top right, rgba(244, 114, 182, 0.14), transparent 24%),
+                linear-gradient(180deg, rgba(56, 21, 48, 0.96) 0%, rgba(34, 15, 31, 0.96) 100%);
+            border-color: rgba(244, 114, 182, 0.3);
+        }
+
+        .teacher-upgrade-warning__icon {
+            width: 2rem;
+            height: 2rem;
+            flex: 0 0 2rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #1f1304;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.98), rgba(245, 158, 11, 0.96));
+            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.22);
+        }
+
+        .teacher-upgrade-warning.is-feature-loss .teacher-upgrade-warning__icon {
+            color: #2f0f25;
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.98), rgba(236, 72, 153, 0.96));
+            box-shadow: 0 10px 24px rgba(236, 72, 153, 0.2);
+        }
+
+        .teacher-upgrade-warning__title {
+            color: #fff7ed;
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+        }
+
+        .teacher-upgrade-warning__desc {
+            color: #fed7aa;
+            line-height: 1.65;
+            margin-bottom: 0.65rem;
+        }
+
+        .teacher-upgrade-warning__list {
+            margin: 0;
+            padding-left: 1.1rem;
+            color: #ffedd5;
+            line-height: 1.7;
+        }
+
         .teacher-upgrade-action__title {
             color: #f8fbff;
             font-size: 1.05rem;
@@ -393,6 +557,11 @@
 
             .teacher-upgrade-title {
                 font-size: 2rem;
+            }
+
+            .teacher-upgrade-notice,
+            .teacher-upgrade-warning {
+                padding: 1rem;
             }
         }
     </style>

@@ -134,6 +134,12 @@ class TeacherPackageLifecycleManager
                 return 'extended';
             }
 
+            if ($this->comparePackageLevel($targetPackage, $currentPackage) >= 0) {
+                $this->activateApplication($teacher, $application, $now, $this->calculateExpiresAt($targetPackage, $now));
+
+                return 'activated';
+            }
+
             $queuedStartAt = $currentExpiresAt->copy();
             $queuedExpiresAt = $this->calculateExpiresAt($targetPackage, $queuedStartAt->copy());
 
@@ -207,5 +213,13 @@ class TeacherPackageLifecycleManager
             ->when($currentPackage, fn ($query) => $query->where('id', '!=', (int) $currentPackage->id))
             ->orderBy('sort_order')
             ->first();
+    }
+
+    private function comparePackageLevel(?TeacherPackage $targetPackage, ?TeacherPackage $currentPackage): int
+    {
+        $targetOrder = (int) ($targetPackage?->sort_order ?? 0);
+        $currentOrder = (int) ($currentPackage?->sort_order ?? 0);
+
+        return $targetOrder <=> $currentOrder;
     }
 }

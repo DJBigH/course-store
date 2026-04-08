@@ -18,6 +18,10 @@ return [
         'title' => '优惠券',
         'description' => '为学员创建优惠码，或将优惠直接应用到课程。',
     ],
+    'limit' => [
+        'title' => 'Coupon limit in your package',
+        'description' => 'You are using :count / :limit coupons in your current package.',
+    ],
     'labels' => [
         'discount' => '优惠',
         'once' => '每位学员一次',
@@ -61,6 +65,7 @@ return [
         'created' => '优惠券已创建。',
         'updated' => '优惠券已更新。',
         'deleted' => '优惠券已删除。',
+        'limit_reached' => 'You have reached the coupon limit for your current package (:limit coupons).',
         'students_updated' => '学员分配已更新。',
         'courses_updated' => '课程分配已更新。',
     ],

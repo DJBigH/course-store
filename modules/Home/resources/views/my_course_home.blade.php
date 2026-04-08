@@ -52,6 +52,12 @@
                                             <span>{{ $item->teacher->name_locale }}</span>
                                         </div>
 
+                                        <div class="course-rating">
+                                            <i class="fa-solid fa-star"></i>
+                                            <strong>{{ $item->ratings_count > 0 ? number_format((float) $item->ratings_avg_rating, 1) : '0.0' }}</strong>
+                                            <span>({{ (int) ($item->ratings_count ?? 0) }})</span>
+                                        </div>
+
                                         <div class="course-price">
                                             <a href="{{ route('courses.detail', [
                                                 'locale' => app()->getLocale(),
@@ -168,6 +174,19 @@
 
         .course-price {
             margin-top: 12px;
+        }
+
+        .course-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            color: #b45309;
+            font-size: 14px;
+        }
+
+        .course-rating i {
+            color: #f59e0b;
         }
 
         .price-old {

@@ -31,16 +31,27 @@ class CoursesController extends Controller
 
     public function index(Request $request)
     {
+        $perPage = 4;
         $searchKeyword = trim((string) $request->input('keyword', ''));
+        $sort = (string) $request->input('sort', 'latest');
+        $ratingMin = $request->filled('rating_min') ? (string) $request->input('rating_min') : '';
+        $allowedSorts = ['latest', 'rating_desc', 'rating_asc'];
+        $allowedRatingMins = ['', '4', '4.5'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'latest';
+        }
+        if (!in_array($ratingMin, $allowedRatingMins, true)) {
+            $ratingMin = '';
+        }
+
         $pageTitle = __('courses::clients/common.page_title');
         $pageName = __('courses::clients/common.page_title');
-        $courses = $this->courseRepository->getCourses(config('paginate.limit'));
-
-        if ($searchKeyword !== '') {
-            $courses = Courses::query()
-                ->withCount('students')
-                ->where(function ($query) use ($searchKeyword) {
-                    $query->where('name', 'like', '%' . $searchKeyword . '%')
+        $courses = Courses::query()
+            ->withCount(['students', 'ratings'])
+            ->withAvg('ratings', 'rating')
+            ->when($searchKeyword !== '', function ($query) use ($searchKeyword) {
+                $query->where(function ($searchQuery) use ($searchKeyword) {
+                    $searchQuery->where('name', 'like', '%' . $searchKeyword . '%')
                         ->orWhere('name_en', 'like', '%' . $searchKeyword . '%')
                         ->orWhere('name_ko', 'like', '%' . $searchKeyword . '%')
                         ->orWhere('name_ja', 'like', '%' . $searchKeyword . '%')
@@ -50,13 +61,29 @@ class CoursesController extends Controller
                         ->orWhere('detail_ko', 'like', '%' . $searchKeyword . '%')
                         ->orWhere('detail_ja', 'like', '%' . $searchKeyword . '%')
                         ->orWhere('detail_zh', 'like', '%' . $searchKeyword . '%');
-                })
-                ->latest('id')
-                ->paginate(config('paginate.limit'))
-                ->withQueryString();
-        }
+                });
+            })
+            ->when($ratingMin !== '', function ($query) use ($ratingMin) {
+                $query->having('ratings_avg_rating', '>=', (float) $ratingMin);
+            });
 
-        return view('courses::clients.index', compact('pageTitle', 'pageName', 'courses', 'searchKeyword'));
+        match ($sort) {
+            'rating_desc' => $courses
+                ->orderByRaw('COALESCE(ratings_avg_rating, 0) DESC')
+                ->orderByDesc('ratings_count')
+                ->latest('id'),
+            'rating_asc' => $courses
+                ->orderByRaw('COALESCE(ratings_avg_rating, 0) ASC')
+                ->orderBy('ratings_count')
+                ->latest('id'),
+            default => $courses->latest('id'),
+        };
+
+        $courses = $courses
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('courses::clients.index', compact('pageTitle', 'pageName', 'courses', 'searchKeyword', 'sort', 'ratingMin'));
     }
 
     public function detail($locale, $slug_locale)
@@ -95,8 +122,18 @@ class CoursesController extends Controller
         $pageName = $course->name_locale;
         $index = 0;
         $canComment = $hasCourse;
+        $canRate = $hasCourse;
         $viewerIsAdmin = Auth::check();
+        $course->loadCount('ratings');
+        $course->loadAvg('ratings', 'rating');
+        if ($course->teacher) {
+            $course->teacher->loadCount('ratings');
+            $course->teacher->loadAvg('ratings', 'rating');
+        }
         $threads = courseCommentThreads($course->id, $viewerIsAdmin);
+        $viewerCourseRating = $student
+            ? $student->courseRatings()->where('course_id', $course->id)->value('rating')
+            : null;
 
         return view('courses::clients.detail', compact(
             'pageTitle',
@@ -105,8 +142,10 @@ class CoursesController extends Controller
             'index',
             'threads',
             'canComment',
+            'canRate',
             'viewerIsAdmin',
-            'hasCourse'
+            'hasCourse',
+            'viewerCourseRating'
         ));
     }
 

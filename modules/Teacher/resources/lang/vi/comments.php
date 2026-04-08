@@ -8,7 +8,7 @@ return [
     'hero' => [
         'kicker' => 'Khu vực bình luận',
         'title' => 'Bình luận khóa học',
-        'description' => 'Quản lý tất cả bình luận của học viên trong các khóa học của bạn, ẩn/hiện nhanh và trả lời ngay trên dashboard.',
+        'description' => 'Quản lý tất cả bình luận của học viên trong các khóa học của bạn, trả lời ngay trên dashboard và ẩn hoặc hiện khi gói cho phép.',
     ],
     'filter' => [
         'label' => 'Chọn khóa học cần quản lý',

@@ -9,9 +9,34 @@
                 <p class="teacher-coupons-desc mb-0">{{ __('teacher::coupons.hero.description') }}</p>
             </div>
             <div class="teacher-coupons-actions">
-                <a href="{{ route('teacher.dashboard.coupons.create') }}" class="btn btn-primary">
-                    {{ __('teacher::coupons.actions.create') }}
-                </a>
+                @if ($couponLimit === null || $couponCount < $couponLimit)
+                    <a href="{{ route('teacher.dashboard.coupons.create') }}" class="btn btn-primary">
+                        {{ __('teacher::coupons.actions.create') }}
+                    </a>
+                @else
+                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-warning">
+                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                    </a>
+                @endif
+            </div>
+        </div>
+
+        <div class="alert alert-info border-0 mb-4">
+            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+                <div>
+                    <strong>{{ __('teacher::coupons.limit.title') }}</strong>
+                    <div class="mt-1 text-muted">
+                        {{ __('teacher::coupons.limit.description', [
+                            'count' => $couponCount,
+                            'limit' => $couponLimit ?? __('teacher::coupons.labels.unlimited'),
+                        ]) }}
+                    </div>
+                </div>
+                @if ($couponLimit !== null && $couponCount >= $couponLimit)
+                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
+                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                    </a>
+                @endif
             </div>
         </div>
 

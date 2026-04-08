@@ -3,15 +3,20 @@
 namespace Modules\Teacher\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\NewContactNotification;
 use App\Notifications\TeacherCourseGiftInvitationNotification;
 use App\Models\Scopes\ActiveScope;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Modules\Contacts\src\Models\Contacts;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
 use Modules\Courses\src\Models\CourseComment;
+use Modules\Students\src\Models\Coupons;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Modules\Lessons\src\Models\Lesson;
@@ -25,11 +30,14 @@ use Modules\Teacher\src\Http\Requests\TeacherCourseRequest;
 use Modules\Teacher\src\Http\Requests\TeacherLessonRequest;
 use Modules\Teacher\src\Models\TeacherApplication;
 use Modules\Teacher\src\Models\TeacherCourseGrant;
+use Modules\Teacher\src\Models\TeacherPayoutAccount;
+use Modules\Teacher\src\Models\TeacherPayoutAccountChangeRequest;
 use Modules\Teacher\src\Models\TeacherPayoutRequest;
 use Modules\Teacher\src\Models\TeacherPackage;
 use Modules\Teacher\src\Models\TeacherStudentNote;
 use Modules\Teacher\src\Support\TeacherFinanceCalculator;
 use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
+use Modules\User\src\Models\User;
 use Modules\Video\src\Repositories\VideoRepositoryInterface;
 
 class TeacherDashboardController extends Controller
@@ -58,9 +66,7 @@ class TeacherDashboardController extends Controller
             $orderDetails,
             fn () => (float) $teacher->commission_rate
         );
-        $payoutRequested = (float) TeacherPayoutRequest::query()
-            ->where('teacher_id', $teacher->id)
-            ->sum('amount');
+        $payoutRequested = $this->resolveCommittedPayoutAmount($teacher);
 
         $pageTitle = __('teacher::dashboard.pages.overview');
         $pageName = __('teacher::dashboard.pages.overview');
@@ -172,7 +178,7 @@ class TeacherDashboardController extends Controller
         $sourceApplication = $teacher->application;
         $student = auth('students')->user();
 
-        TeacherApplication::query()->create([
+        $upgradeRequest = TeacherApplication::query()->create([
             'student_id' => $student?->id,
             'teacher_id' => $teacher->id,
             'applicant_type' => $student ? 'student' : 'guest',
@@ -180,7 +186,7 @@ class TeacherDashboardController extends Controller
             'payment_method' => $paymentMethod,
             'coupon_code' => null,
             'discount_amount' => 0,
-            'status' => (float) $targetPackage->price > 0 ? 'pending_payment' : 'pending_review',
+            'status' => (float) $targetPackage->price > 0 ? 'pending_payment' : 'approved',
             'full_name' => $sourceApplication?->full_name ?: $teacher->name,
             'display_name' => $sourceApplication?->display_name ?: $teacher->name,
             'headline' => $sourceApplication?->headline,
@@ -201,6 +207,12 @@ class TeacherDashboardController extends Controller
             'admin_note' => 'package_upgrade',
         ]);
 
+        if ((float) $targetPackage->price <= 0) {
+            $action = $this->finalizePackageChange($teacher, $upgradeRequest);
+
+            return $this->redirectAfterPackageChange($action);
+        }
+
         return redirect()->route('teacher.dashboard.package.upgrade.status')
             ->with('msg_success', __('teacher::dashboard.package.flash.created'));
     }
@@ -220,8 +232,10 @@ class TeacherDashboardController extends Controller
         $pageTitle = __('teacher::dashboard.package.status_title');
         $pageName = $pageTitle;
         $currentPackage = $teacher->application?->package;
+        $overLimitWarnings = $this->resolvePackageOverLimitWarnings($teacher, $upgradeRequest);
+        $featureLossWarnings = $this->resolvePackageFeatureLossWarnings($teacher, $upgradeRequest);
 
-        return view('teacher::clients.dashboard.package_upgrade_status', compact('pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradeRequest'));
+        return view('teacher::clients.dashboard.package_upgrade_status', compact('pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradeRequest', 'overLimitWarnings', 'featureLossWarnings'));
     }
 
     public function markUpgradePaid()
@@ -240,12 +254,18 @@ class TeacherDashboardController extends Controller
             return back()->with('msg_danger', __('teacher::dashboard.package.flash.invalid_payment_status'));
         }
 
-        $upgradeRequest->update([
-            'status' => 'pending_review',
-            'submitted_at' => now(),
-        ]);
+        if ($upgradeRequest->payment_method === 'bank_transfer') {
+            $upgradeRequest->update([
+                'status' => 'pending_review',
+                'submitted_at' => now(),
+            ]);
 
-        return back()->with('msg_success', __('teacher::dashboard.package.flash.paid_marked'));
+            return back()->with('msg_success', __('teacher::dashboard.package.flash.bank_transfer_waiting_confirmation'));
+        }
+
+        $action = $this->finalizePackageChange($teacher, $upgradeRequest);
+
+        return $this->redirectAfterPackageChange($action);
     }
 
     public function cancelUpgradePackage()
@@ -288,7 +308,8 @@ class TeacherDashboardController extends Controller
         $pageName = __('teacher::dashboard.pages.courses');
         $courses = Courses::query()
             ->withoutGlobalScope(ActiveScope::class)
-            ->withCount(['lessons', 'students'])
+            ->withCount(['lessons', 'students', 'ratings'])
+            ->withAvg('ratings', 'rating')
             ->where('teacher_id', $teacher->id)
             ->latest('id')
             ->paginate(12)
@@ -432,6 +453,30 @@ class TeacherDashboardController extends Controller
         return redirect()
             ->route('teacher.dashboard.courses')
             ->with('msg_success', __('teacher::dashboard.courses.flash.updated'));
+    }
+
+    public function duplicateCourse(int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_duplicate_courses', 'teacher.dashboard.courses')) {
+            return $featureRedirect;
+        }
+
+        $limitCheck = $this->ensureCourseCreationAllowed($teacher);
+        if ($limitCheck !== null) {
+            return $limitCheck;
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        $this->performCourseDuplicate($course);
+
+        return redirect()
+            ->route('teacher.dashboard.courses')
+            ->with('msg_success', __('teacher::dashboard.courses.flash.duplicated'));
     }
 
     public function deleteCourse(int $courseId)
@@ -740,15 +785,200 @@ class TeacherDashboardController extends Controller
             $this->paidOrderDetailsQuery($teacher)->get(),
             fn () => (float) $teacher->commission_rate
         );
-        $requestedAmount = (float) TeacherPayoutRequest::query()->where('teacher_id', $teacher->id)->sum('amount');
+        $requestedAmount = $this->resolveCommittedPayoutAmount($teacher);
         $availableBalance = max($summary['teacher_revenue'] - $requestedAmount, 0);
+        $payoutAccounts = $teacher->payoutAccounts()->orderBy('id')->get();
+        $payoutAccountLimit = $this->resolvePayoutAccountLimit($teacher);
+        $pendingAccountChangeRequests = $teacher->payoutAccountChangeRequests()
+            ->with('replaceAccount')
+            ->latest('id')
+            ->take(10)
+            ->get();
         $payouts = TeacherPayoutRequest::query()
             ->where('teacher_id', $teacher->id)
             ->latest('id')
             ->paginate(10)
             ->withQueryString();
 
-        return view('teacher::clients.dashboard.payouts', compact('pageTitle', 'pageName', 'teacher', 'payouts', 'summary', 'requestedAmount', 'availableBalance'));
+        return view('teacher::clients.dashboard.payouts', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'payouts',
+            'summary',
+            'requestedAmount',
+            'availableBalance',
+            'payoutAccounts',
+            'payoutAccountLimit',
+            'pendingAccountChangeRequests'
+        ));
+    }
+
+    public function support()
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $pageTitle = 'Góp ý / Báo cáo';
+        $pageName = $pageTitle;
+        $items = Contacts::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('source', 'teacher_portal')
+            ->whereIn('submission_type', [Contacts::TYPE_FEEDBACK, Contacts::TYPE_REPORT])
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('teacher::clients.dashboard.support', compact('pageTitle', 'pageName', 'teacher', 'items'));
+    }
+
+    public function orders(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $directory = $this->buildTeacherOrderDirectory($teacher, $request);
+        $groupedOrders = $directory['orders'];
+
+        $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $orders = new LengthAwarePaginator(
+            $groupedOrders->slice(($currentPage - 1) * $perPage, $perPage)->values(),
+            $groupedOrders->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'query' => $request->query(),
+            ]
+        );
+
+        $pageTitle = __('teacher::dashboard.pages.orders');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.orders', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'orders',
+            'directory'
+        ));
+    }
+
+    public function exportOrders(Request $request, string $format = 'csv')
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_export_orders')) {
+            return $featureRedirect;
+        }
+
+        $directory = $this->buildTeacherOrderDirectory($teacher, $request);
+        $orders = $directory['orders'];
+
+        if ($format === 'excel') {
+            $filename = 'teacher-orders-' . now()->format('Ymd-His') . '.xls';
+            $html = view('teacher::clients.dashboard.exports.orders_excel', compact('orders'))->render();
+
+            return response($html, 200, [
+                'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
+
+        $filename = 'teacher-orders-' . now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($orders) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, [
+                __('teacher::dashboard.orders.export.order'),
+                __('teacher::dashboard.orders.export.student'),
+                __('teacher::dashboard.orders.export.email'),
+                __('teacher::dashboard.orders.export.phone'),
+                __('teacher::dashboard.orders.export.payment_method'),
+                __('teacher::dashboard.orders.export.paid_at'),
+                __('teacher::dashboard.orders.export.course_count'),
+                __('teacher::dashboard.orders.export.courses'),
+                __('teacher::dashboard.orders.export.gross'),
+                __('teacher::dashboard.orders.export.discount'),
+                __('teacher::dashboard.orders.export.net'),
+                __('teacher::dashboard.orders.export.revenue'),
+            ]);
+
+            foreach ($orders as $item) {
+                fputcsv($handle, [
+                    $item->order?->code ?: $item->order?->id,
+                    $item->order?->customer_name_display ?: '',
+                    $item->order?->customer_email_display ?: '',
+                    $item->order?->customer_phone_display ?: '',
+                    $item->order?->payment_method_label ?: '',
+                    optional($item->payment_at)->format('Y-m-d H:i:s'),
+                    $item->item_count,
+                    $item->details->pluck(fn ($detail) => $detail->courses?->name_locale ?: $detail->courses?->name ?: '')->implode(' | '),
+                    $item->gross_amount,
+                    $item->allocated_discount,
+                    $item->net_revenue,
+                    $item->teacher_revenue,
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function showOrder(int $orderId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $details = $this->paidOrderDetailsQuery($teacher)
+            ->where('order_id', $orderId)
+            ->get();
+
+        if ($details->isEmpty()) {
+            abort(404);
+        }
+
+        $details = TeacherFinanceCalculator::decorate(
+            $details,
+            fn() => (float) $teacher->commission_rate
+        );
+
+        $order = $details->first()?->order;
+        if (!$order) {
+            abort(404);
+        }
+
+        $summary = [
+            'gross_amount' => (float) $details->sum(fn($item) => data_get($item, 'finance_breakdown.gross_amount', 0)),
+            'allocated_discount' => (float) $details->sum(fn($item) => data_get($item, 'finance_breakdown.allocated_discount', 0)),
+            'net_revenue' => (float) $details->sum(fn($item) => data_get($item, 'finance_breakdown.net_revenue', 0)),
+            'teacher_revenue' => (float) $details->sum(fn($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+            'item_count' => $details->count(),
+        ];
+
+        $pageTitle = __('teacher::dashboard.orders.show.title', ['code' => $order->code ?: $order->id]);
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.order_show', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'order',
+            'details',
+            'summary'
+        ));
     }
 
     public function students(Request $request)
@@ -872,6 +1102,10 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_comments')) {
+            return $featureRedirect;
+        }
+
         $comment = CourseComment::query()
             ->whereHas('course', function ($query) use ($teacher) {
                 $query->withoutGlobalScope(ActiveScope::class)
@@ -891,6 +1125,10 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_export_students')) {
+            return $featureRedirect;
         }
 
         $directory = $this->buildTeacherStudentDirectory($teacher, $request);
@@ -940,6 +1178,10 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_grant_courses', 'teacher.dashboard.students')) {
+            return $featureRedirect;
+        }
+
         $selectedStudent = Student::query()
             ->where('id', (int) $request->query('student_id', 0))
             ->first();
@@ -973,6 +1215,10 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_grant_courses', 'teacher.dashboard.students')) {
+            return $featureRedirect;
         }
 
         $data = $request->validate([
@@ -1041,6 +1287,10 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_grant_courses', 'teacher.dashboard.students')) {
+            return $featureRedirect;
         }
 
         [$student, $details, $grants] = $this->resolveOwnedStudentContext($teacher, $studentId);
@@ -1199,9 +1449,11 @@ class TeacherDashboardController extends Controller
 
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:10000'],
-            'bank_name' => ['required', 'string', 'max:100'],
-            'bank_account_name' => ['required', 'string', 'max:120'],
-            'bank_account_number' => ['required', 'string', 'max:50'],
+            'account_mode' => ['required', 'in:saved,new'],
+            'payout_account_id' => ['nullable', 'integer'],
+            'bank_name' => ['nullable', 'string', 'max:100'],
+            'bank_account_name' => ['nullable', 'string', 'max:120'],
+            'bank_account_number' => ['nullable', 'string', 'max:50'],
             'note' => ['nullable', 'string'],
         ]);
 
@@ -1209,20 +1461,140 @@ class TeacherDashboardController extends Controller
             $this->paidOrderDetailsQuery($teacher)->get(),
             fn () => (float) $teacher->commission_rate
         );
-        $requestedAmount = (float) TeacherPayoutRequest::query()->where('teacher_id', $teacher->id)->sum('amount');
+        $requestedAmount = $this->resolveCommittedPayoutAmount($teacher);
         $availableBalance = max($summary['teacher_revenue'] - $requestedAmount, 0);
 
         if ((float) $data['amount'] > $availableBalance) {
             return back()->with('msg_danger', __('teacher::dashboard.payouts.flash.amount_exceeds_balance'));
         }
 
-        TeacherPayoutRequest::query()->create(array_merge($data, [
+        $payoutAccounts = $teacher->payoutAccounts()->orderBy('id')->get();
+        $bankData = $this->resolvePayoutBankData($request, $teacher, $data, $payoutAccounts);
+        if ($bankData instanceof \Illuminate\Http\RedirectResponse) {
+            return $bankData;
+        }
+
+        TeacherPayoutRequest::query()->create([
             'teacher_id' => $teacher->id,
+            'amount' => $data['amount'],
+            'bank_name' => $bankData['bank_name'],
+            'bank_account_name' => $bankData['bank_account_name'],
+            'bank_account_number' => $bankData['bank_account_number'],
+            'note' => trim((string) ($data['note'] ?? '')) ?: null,
             'status' => 'requested',
-        ]));
+        ]);
 
         return redirect()->route('teacher.dashboard.payouts')
             ->with('msg_success', __('teacher::dashboard.payouts.flash.request_sent'));
+    }
+
+    public function storeSupport(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $data = $request->validate([
+            'submission_type' => ['required', 'in:' . Contacts::TYPE_FEEDBACK . ',' . Contacts::TYPE_REPORT],
+            'category' => ['required', 'in:' . implode(',', array_filter(Contacts::categories(), fn ($item) => $item !== 'general_contact'))],
+            'subject' => ['required', 'string', 'max:150'],
+            'message' => ['required', 'string', 'max:2000'],
+            'page_url' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $student = auth('students')->user();
+
+        $contact = Contacts::query()->create([
+            'name' => $student?->name ?: ($teacher->name_locale ?: $teacher->name),
+            'phone' => $student?->phone,
+            'email' => $student?->email,
+            'subject' => $data['subject'],
+            'submission_type' => $data['submission_type'],
+            'category' => $data['category'],
+            'message' => $data['message'],
+            'status' => 0,
+            'workflow_status' => Contacts::STATUS_NEW,
+            'source' => 'teacher_portal',
+            'page_url' => $data['page_url'] ?: route('teacher.dashboard.support'),
+            'student_id' => $student?->id,
+            'teacher_id' => $teacher->id,
+        ]);
+
+        $admins = User::query()->inGroup('super_admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewContactNotification($contact));
+        }
+
+        return redirect()
+            ->route('teacher.dashboard.support')
+            ->with('msg_success', 'Bạn đã gửi góp ý / báo cáo thành công cho admin.');
+    }
+
+    public function storePayoutAccountChangeRequest(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $accounts = $teacher->payoutAccounts()->orderBy('id')->get();
+        $accountLimit = $this->resolvePayoutAccountLimit($teacher);
+        if ($accounts->count() < $accountLimit) {
+            return back()->with('msg_danger', __('teacher::dashboard.payouts.flash.change_request_not_required', [
+                'limit' => $accountLimit,
+            ]));
+        }
+
+        $data = $request->validate([
+            'replace_payout_account_id' => ['required', 'integer'],
+            'bank_name' => ['required', 'string', 'max:100'],
+            'bank_account_name' => ['required', 'string', 'max:120'],
+            'bank_account_number' => ['required', 'string', 'max:50'],
+            'note' => ['nullable', 'string'],
+        ]);
+
+        $replaceAccount = $accounts->firstWhere('id', (int) $data['replace_payout_account_id']);
+        if (!$replaceAccount) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.invalid_saved_account'));
+        }
+
+        $bankData = $this->sanitizeBankData($data);
+        if ($this->findMatchingPayoutAccount($accounts, $bankData)) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.account_already_saved'));
+        }
+
+        $duplicatePendingRequest = $teacher->payoutAccountChangeRequests()
+            ->where('status', 'pending')
+            ->get()
+            ->first(fn (TeacherPayoutAccountChangeRequest $item) => $item->replace_payout_account_id === (int) $replaceAccount->id
+                && $this->bankPayloadMatches($item, $bankData));
+
+        if ($duplicatePendingRequest) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.change_request_exists'));
+        }
+
+        TeacherPayoutAccountChangeRequest::query()->create([
+            'teacher_id' => $teacher->id,
+            'replace_payout_account_id' => $replaceAccount->id,
+            'replace_bank_name' => $replaceAccount->bank_name,
+            'replace_bank_account_name' => $replaceAccount->bank_account_name,
+            'replace_bank_account_number' => $replaceAccount->bank_account_number,
+            'bank_name' => $bankData['bank_name'],
+            'bank_account_name' => $bankData['bank_account_name'],
+            'bank_account_number' => $bankData['bank_account_number'],
+            'note' => trim((string) ($data['note'] ?? '')) ?: null,
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('teacher.dashboard.payouts')
+            ->with('msg_success', __('teacher::dashboard.payouts.flash.change_request_sent'));
     }
 
     private function resolveTeacher(): ?Teacher
@@ -1246,9 +1618,113 @@ class TeacherDashboardController extends Controller
             ->with('msg_danger', __('teacher::dashboard.payouts.flash.inactive_teacher'));
     }
 
+    private function ensurePackageFeatureAllowed(Teacher $teacher, string $feature, string $fallbackRoute = 'teacher.dashboard.index')
+    {
+        if ($teacher->packageHasFeature($feature)) {
+            return null;
+        }
+
+        return redirect()
+            ->route($fallbackRoute)
+            ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
+    }
+
+    private function resolveCommittedPayoutAmount(Teacher $teacher): float
+    {
+        return (float) TeacherPayoutRequest::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('status', ['requested', 'processing', 'paid'])
+            ->sum('amount');
+    }
+
+    private function resolvePayoutBankData(Request $request, Teacher $teacher, array $data, Collection $payoutAccounts)
+    {
+        if (($data['account_mode'] ?? null) === 'saved') {
+            $selectedAccount = $payoutAccounts->firstWhere('id', (int) ($data['payout_account_id'] ?? 0));
+            if (!$selectedAccount) {
+                return back()
+                    ->withInput()
+                    ->with('msg_danger', __('teacher::dashboard.payouts.flash.invalid_saved_account'));
+            }
+
+            return [
+                'bank_name' => $selectedAccount->bank_name,
+                'bank_account_name' => $selectedAccount->bank_account_name,
+                'bank_account_number' => $selectedAccount->bank_account_number,
+            ];
+        }
+
+        $request->validate([
+            'bank_name' => ['required', 'string', 'max:100'],
+            'bank_account_name' => ['required', 'string', 'max:120'],
+            'bank_account_number' => ['required', 'string', 'max:50'],
+        ]);
+
+        $bankData = $this->sanitizeBankData($data);
+        $matchedAccount = $this->findMatchingPayoutAccount($payoutAccounts, $bankData);
+        if ($matchedAccount) {
+            return [
+                'bank_name' => $matchedAccount->bank_name,
+                'bank_account_name' => $matchedAccount->bank_account_name,
+                'bank_account_number' => $matchedAccount->bank_account_number,
+            ];
+        }
+
+        $accountLimit = $this->resolvePayoutAccountLimit($teacher);
+        if ($payoutAccounts->count() >= $accountLimit) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.limit_reached_use_change_request', [
+                    'limit' => $accountLimit,
+                ]));
+        }
+
+        TeacherPayoutAccount::query()->create(array_merge($bankData, [
+            'teacher_id' => $teacher->id,
+        ]));
+
+        return $bankData;
+    }
+
+    private function sanitizeBankData(array $data): array
+    {
+        return [
+            'bank_name' => trim((string) ($data['bank_name'] ?? '')),
+            'bank_account_name' => trim((string) ($data['bank_account_name'] ?? '')),
+            'bank_account_number' => preg_replace('/\s+/', '', trim((string) ($data['bank_account_number'] ?? ''))),
+        ];
+    }
+
+    private function findMatchingPayoutAccount(Collection $accounts, array $bankData): ?TeacherPayoutAccount
+    {
+        return $accounts->first(fn (TeacherPayoutAccount $account) => $this->bankPayloadMatches($account, $bankData));
+    }
+
+    private function bankPayloadMatches($accountLike, array $bankData): bool
+    {
+        return $this->normalizeBankText($accountLike->bank_name) === $this->normalizeBankText($bankData['bank_name'])
+            && $this->normalizeBankText($accountLike->bank_account_name) === $this->normalizeBankText($bankData['bank_account_name'])
+            && $this->normalizeBankAccountNumber($accountLike->bank_account_number) === $this->normalizeBankAccountNumber($bankData['bank_account_number']);
+    }
+
+    private function normalizeBankText(?string $value): string
+    {
+        return Str::upper(preg_replace('/\s+/', ' ', trim((string) $value)));
+    }
+
+    private function normalizeBankAccountNumber(?string $value): string
+    {
+        return preg_replace('/\s+/', '', trim((string) $value));
+    }
+
     private function resolveCourseLimit(Teacher $teacher): ?int
     {
         return $teacher->application?->package?->effective_course_limit;
+    }
+
+    private function resolvePayoutAccountLimit(Teacher $teacher): int
+    {
+        return $teacher->application?->package?->effective_payout_account_limit ?? 3;
     }
 
     private function resolveNextPackage(?TeacherPackage $currentPackage): ?TeacherPackage
@@ -1299,6 +1775,122 @@ class TeacherDashboardController extends Controller
             ->first();
     }
 
+    private function finalizePackageChange(Teacher $teacher, TeacherApplication $upgradeRequest): string
+    {
+        $upgradeRequest->forceFill([
+            'status' => 'approved',
+            'submitted_at' => $upgradeRequest->submitted_at ?: now(),
+            'reviewed_at' => now(),
+        ])->save();
+
+        $action = $this->packageLifecycleManager->applyApprovedChange($teacher, $upgradeRequest->fresh(['package']));
+
+        $teacher->refresh();
+
+        return $action;
+    }
+
+    private function redirectAfterPackageChange(string $action)
+    {
+        $flashKey = match ($action) {
+            'extended' => 'teacher::dashboard.package.flash.auto_extended',
+            'queued' => 'teacher::dashboard.package.flash.auto_queued',
+            default => 'teacher::dashboard.package.flash.auto_activated',
+        };
+
+        $route = $action === 'queued'
+            ? route('teacher.dashboard.package.upgrade.status')
+            : route('teacher.dashboard.index');
+
+        return redirect($route)->with('msg_success', __($flashKey));
+    }
+
+    private function resolvePackageOverLimitWarnings(Teacher $teacher, TeacherApplication $upgradeRequest): array
+    {
+        $currentPackage = $teacher->application?->package;
+        $targetPackage = $upgradeRequest->package;
+
+        if (
+            !$currentPackage ||
+            !$targetPackage ||
+            (int) $targetPackage->sort_order >= (int) $currentPackage->sort_order
+        ) {
+            return [];
+        }
+
+        $warnings = [];
+
+        $courseCount = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->count();
+        $targetCourseLimit = $targetPackage->effective_course_limit;
+        if ($targetCourseLimit !== null && $courseCount > $targetCourseLimit) {
+            $warnings[] = __('teacher::dashboard.package.over_limit.course_limit', [
+                'used' => $courseCount,
+                'limit' => $targetCourseLimit,
+            ]);
+        }
+
+        $couponCount = Coupons::query()
+            ->where('teacher_id', $teacher->id)
+            ->count();
+        $targetCouponLimit = $targetPackage->hasFeature('can_manage_coupons')
+            ? $targetPackage->effective_coupon_limit
+            : 0;
+        if ($targetCouponLimit !== null && $couponCount > $targetCouponLimit) {
+            $warnings[] = __('teacher::dashboard.package.over_limit.coupon_limit', [
+                'used' => $couponCount,
+                'limit' => $targetCouponLimit,
+            ]);
+        }
+
+        $payoutAccountCount = TeacherPayoutAccount::query()
+            ->where('teacher_id', $teacher->id)
+            ->count();
+        $targetPayoutLimit = $targetPackage->effective_payout_account_limit;
+        if ($payoutAccountCount > $targetPayoutLimit) {
+            $warnings[] = __('teacher::dashboard.package.over_limit.payout_account_limit', [
+                'used' => $payoutAccountCount,
+                'limit' => $targetPayoutLimit,
+            ]);
+        }
+
+        return $warnings;
+    }
+
+    private function resolvePackageFeatureLossWarnings(Teacher $teacher, TeacherApplication $upgradeRequest): array
+    {
+        $currentPackage = $teacher->application?->package;
+        $targetPackage = $upgradeRequest->package;
+
+        if (
+            !$currentPackage ||
+            !$targetPackage ||
+            (int) $targetPackage->sort_order >= (int) $currentPackage->sort_order
+        ) {
+            return [];
+        }
+
+        $featureKeys = [
+            'can_duplicate_courses',
+            'can_manage_comments',
+            'can_manage_coupons',
+            'can_grant_courses',
+            'can_export_orders',
+            'can_export_students',
+        ];
+
+        $warnings = [];
+        foreach ($featureKeys as $featureKey) {
+            if ($currentPackage->hasFeature($featureKey) && !$targetPackage->hasFeature($featureKey)) {
+                $warnings[] = __('teacher::dashboard.package_features.labels.' . $featureKey);
+            }
+        }
+
+        return $warnings;
+    }
+
     private function resolveOwnedCourse(Teacher $teacher, int $courseId, bool $withTrashed = false): Courses
     {
         $query = Courses::query()
@@ -1324,6 +1916,106 @@ class TeacherDashboardController extends Controller
         }
 
         return $query->firstOrFail();
+    }
+
+    private function duplicateTitle(?string $value, string $suffix): ?string
+    {
+        if (!$value) {
+            return $value;
+        }
+
+        return trim($value . ' (' . $suffix . ')');
+    }
+
+    private function duplicateSlug(?string $value, string $suffix = 'copy'): ?string
+    {
+        if (!$value) {
+            return $value;
+        }
+
+        return trim($value . '-' . $suffix . '-' . Str::lower(Str::random(4)), '-');
+    }
+
+    private function duplicateCode(?string $value): string
+    {
+        $base = $value ?: 'COURSE';
+
+        return $base . '-COPY-' . strtoupper(Str::random(4));
+    }
+
+    private function performCourseDuplicate(Courses $course): Courses
+    {
+        return DB::transaction(function () use ($course) {
+            $courseData = $course->getAttributes();
+
+            unset($courseData['id'], $courseData['created_at'], $courseData['updated_at'], $courseData['deleted_at']);
+            $courseData['name'] = $this->duplicateTitle($course->name, 'Bản sao');
+            $courseData['name_ko'] = $this->duplicateTitle($course->name_ko, '복제본');
+            $courseData['name_ja'] = $this->duplicateTitle($course->name_ja, '複製版');
+            $courseData['name_zh'] = $this->duplicateTitle($course->name_zh, '复制版');
+            $courseData['slug'] = $this->duplicateSlug($course->slug, 'copy');
+            $courseData['slug_en'] = $this->duplicateSlug($course->slug_en, 'copy');
+            $courseData['slug_ko'] = $this->duplicateSlug($course->slug_ko, 'copy');
+            $courseData['slug_ja'] = $this->duplicateSlug($course->slug_ja, 'copy');
+            $courseData['slug_zh'] = $this->duplicateSlug($course->slug_zh, 'copy');
+            $courseData['code'] = $this->duplicateCode($course->code);
+            $courseData['status'] = 0;
+            $courseData['is_learning_locked'] = 0;
+            $courseData['view'] = 0;
+
+            $newCourse = $this->courseRepository->create($courseData);
+
+            $categoryIds = $this->courseRepository->getRelatedCategories($course);
+            if (!empty($categoryIds)) {
+                $newCourse->categories()->attach($this->categoriesPivotPayload($categoryIds));
+            }
+
+            $lessonMap = [];
+            $lessons = Lesson::query()
+                ->where('course_id', $course->id)
+                ->orderByRaw('CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END')
+                ->orderBy('parent_id')
+                ->orderBy('position')
+                ->orderBy('id')
+                ->get();
+
+            foreach ($lessons as $lesson) {
+                $lessonData = $lesson->getAttributes();
+
+                unset($lessonData['id'], $lessonData['created_at'], $lessonData['updated_at']);
+
+                $oldParentId = $lessonData['parent_id'] ?? null;
+                $lessonData['course_id'] = $newCourse->id;
+                $lessonData['name'] = $this->duplicateTitle($lesson->name, 'Bản sao');
+                $lessonData['name_ko'] = $this->duplicateTitle($lesson->name_ko, '복제본');
+                $lessonData['name_ja'] = $this->duplicateTitle($lesson->name_ja, '複製版');
+                $lessonData['name_zh'] = $this->duplicateTitle($lesson->name_zh, '复制版');
+                $lessonData['slug'] = $this->duplicateSlug($lesson->slug, 'copy');
+                $lessonData['slug_en'] = $this->duplicateSlug($lesson->slug_en, 'copy');
+                $lessonData['slug_ko'] = $this->duplicateSlug($lesson->slug_ko, 'copy');
+                $lessonData['slug_ja'] = $this->duplicateSlug($lesson->slug_ja, 'copy');
+                $lessonData['slug_zh'] = $this->duplicateSlug($lesson->slug_zh, 'copy');
+                $lessonData['status'] = 0;
+                $lessonData['view'] = 0;
+                $lessonData['parent_id'] = null;
+
+                $newLesson = Lesson::query()->create($lessonData);
+                $lessonMap[$lesson->id] = [
+                    'id' => $newLesson->id,
+                    'parent_id' => $oldParentId,
+                ];
+            }
+
+            foreach ($lessonMap as $map) {
+                if (!empty($map['parent_id']) && isset($lessonMap[$map['parent_id']])) {
+                    Lesson::query()
+                        ->whereKey($map['id'])
+                        ->update(['parent_id' => $lessonMap[$map['parent_id']]['id']]);
+                }
+            }
+
+            return $newCourse;
+        });
     }
 
     private function ensureCourseCreationAllowed(Teacher $teacher)
@@ -1416,6 +2108,19 @@ class TeacherDashboardController extends Controller
                 $categoryId => ['created_at' => $timestamp, 'updated_at' => $timestamp],
             ])->all()
         );
+    }
+
+    private function categoriesPivotPayload(array $categories): array
+    {
+        $timestamp = Carbon::now()->format('Y-m-d H:i:s');
+
+        return collect($categories)
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->mapWithKeys(fn ($categoryId) => [
+                $categoryId => ['created_at' => $timestamp, 'updated_at' => $timestamp],
+            ])->all();
     }
 
     private function buildLessonPayload(array $data, Courses $course, ?Lesson $lesson = null): array
@@ -1766,6 +2471,86 @@ class TeacherDashboardController extends Controller
                 $query->where('status_id', 2);
             })
             ->latest('id');
+    }
+
+    private function buildTeacherOrderDirectory(Teacher $teacher, Request $request): array
+    {
+        $search = trim((string) $request->query('q', ''));
+        $courseId = (int) $request->query('course_id', 0);
+        $paymentMethod = trim((string) $request->query('payment_method', ''));
+        $dateFrom = trim((string) $request->query('date_from', ''));
+        $dateTo = trim((string) $request->query('date_to', ''));
+
+        $courseOptions = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'name_en', 'name_ko', 'name_ja', 'name_zh']);
+
+        $details = $this->paidOrderDetailsQuery($teacher)
+            ->when($courseId > 0, fn($query) => $query->where('course_id', $courseId))
+            ->when($paymentMethod !== '', fn($query) => $query->whereHas('order', fn($orderQuery) => $orderQuery->where('payment_method', $paymentMethod)))
+            ->when($dateFrom !== '', fn($query) => $query->whereHas('order', fn($orderQuery) => $orderQuery->whereDate('payment_complete_date', '>=', $dateFrom)))
+            ->when($dateTo !== '', fn($query) => $query->whereHas('order', fn($orderQuery) => $orderQuery->whereDate('payment_complete_date', '<=', $dateTo)))
+            ->when($search !== '', function ($query) use ($search) {
+                $query->whereHas('order', function ($orderQuery) use ($search) {
+                    $orderQuery->where(function ($nestedQuery) use ($search) {
+                        $nestedQuery->where('code', 'like', '%' . $search . '%')
+                            ->orWhere('customer_name_snapshot', 'like', '%' . $search . '%')
+                            ->orWhere('customer_email_snapshot', 'like', '%' . $search . '%')
+                            ->orWhere('customer_phone_snapshot', 'like', '%' . $search . '%')
+                            ->orWhereHas('students', function ($studentQuery) use ($search) {
+                                $studentQuery->where('name', 'like', '%' . $search . '%')
+                                    ->orWhere('email', 'like', '%' . $search . '%')
+                                    ->orWhere('phone', 'like', '%' . $search . '%');
+                            });
+                    });
+                });
+            })
+            ->get();
+
+        $decoratedDetails = TeacherFinanceCalculator::decorate(
+            $details,
+            fn() => (float) $teacher->commission_rate
+        );
+
+        $orders = $decoratedDetails
+            ->groupBy('order_id')
+            ->map(function ($orderDetails) {
+                $firstDetail = $orderDetails->first();
+                $order = $firstDetail?->order;
+
+                return (object) [
+                    'order' => $order,
+                    'details' => $orderDetails->values(),
+                    'item_count' => $orderDetails->count(),
+                    'gross_amount' => (float) $orderDetails->sum(fn($item) => data_get($item, 'finance_breakdown.gross_amount', 0)),
+                    'allocated_discount' => (float) $orderDetails->sum(fn($item) => data_get($item, 'finance_breakdown.allocated_discount', 0)),
+                    'net_revenue' => (float) $orderDetails->sum(fn($item) => data_get($item, 'finance_breakdown.net_revenue', 0)),
+                    'teacher_revenue' => (float) $orderDetails->sum(fn($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+                    'payment_at' => $order?->payment_complete_date ?: $order?->payment_date ?: $order?->created_at,
+                ];
+            })
+            ->sortByDesc(fn($item) => optional($item->payment_at)->timestamp ?? 0)
+            ->values();
+
+        return [
+            'search' => $search,
+            'courseId' => $courseId,
+            'paymentMethod' => $paymentMethod,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'courseOptions' => $courseOptions,
+            'orders' => $orders,
+            'summary' => [
+                'orders' => $orders->count(),
+                'students' => $orders->pluck('order.student_id')->filter()->unique()->count(),
+                'courses' => $decoratedDetails->pluck('course_id')->filter()->unique()->count(),
+                'gross_amount' => (float) $decoratedDetails->sum(fn($item) => data_get($item, 'finance_breakdown.gross_amount', 0)),
+                'allocated_discount' => (float) $decoratedDetails->sum(fn($item) => data_get($item, 'finance_breakdown.allocated_discount', 0)),
+                'teacher_revenue' => (float) $decoratedDetails->sum(fn($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+            ],
+        ];
     }
 
     private function teacherCourseGrantsQuery(Teacher $teacher, ?array $statuses = ['accepted'])

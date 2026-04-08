@@ -61,14 +61,46 @@ class Teacher extends Model
         return $this->belongsTo(TeacherApplication::class, 'application_id', 'id');
     }
 
+    public function currentPackage(): ?TeacherPackage
+    {
+        $this->loadMissing('application.package');
+
+        return $this->application?->package;
+    }
+
+    public function packageHasFeature(string $feature): bool
+    {
+        return (bool) $this->currentPackage()?->hasFeature($feature);
+    }
+
     public function payoutRequests()
     {
         return $this->hasMany(TeacherPayoutRequest::class, 'teacher_id', 'id');
     }
 
+    public function payoutAccounts()
+    {
+        return $this->hasMany(TeacherPayoutAccount::class, 'teacher_id', 'id');
+    }
+
+    public function payoutAccountChangeRequests()
+    {
+        return $this->hasMany(TeacherPayoutAccountChangeRequest::class, 'teacher_id', 'id');
+    }
+
     public function studentNotes()
     {
         return $this->hasMany(TeacherStudentNote::class, 'teacher_id', 'id');
+    }
+
+    public function courses()
+    {
+        return $this->hasMany(\Modules\Courses\src\Models\Courses::class, 'teacher_id', 'id');
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(TeacherRating::class, 'teacher_id', 'id');
     }
 
     public function getDescriptionLocaleAttribute(): string

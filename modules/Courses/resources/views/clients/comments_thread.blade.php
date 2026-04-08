@@ -6,6 +6,14 @@
         </div>
     </div>
 
+    <div id="course-rating-wrap" class="mt-3">
+        @include('courses::clients.partials.rating_panel', [
+            'course' => $course,
+            'canRate' => $canRate ?? false,
+            'viewerCourseRating' => $viewerCourseRating ?? null,
+        ])
+    </div>
+
     @if (auth('students')->check() && $canComment)
         <form class="course-comment-form mt-3" data-comment-form
             action="{{ route('courses.comments.store', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}"

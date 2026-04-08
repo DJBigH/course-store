@@ -22,6 +22,13 @@ class TeacherCouponController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
+        }
+
+        $couponLimit = $this->resolveCouponLimit($teacher);
+        $couponCount = $this->resolveTeacherCouponCount($teacher);
+
         $coupons = Coupons::query()
             ->with(['courses', 'students'])
             ->withCount('usagescoupon')
@@ -33,7 +40,14 @@ class TeacherCouponController extends Controller
         $pageTitle = __('teacher::coupons.page_title');
         $pageName = $pageTitle;
 
-        return view('teacher::clients.dashboard.coupons.index', compact('pageTitle', 'pageName', 'teacher', 'coupons'));
+        return view('teacher::clients.dashboard.coupons.index', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'coupons',
+            'couponLimit',
+            'couponCount'
+        ));
     }
 
     public function create()
@@ -41,6 +55,14 @@ class TeacherCouponController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
+        }
+
+        if ($limitRedirect = $this->ensureCouponCreationAllowed($teacher)) {
+            return $limitRedirect;
         }
 
         $students = $this->resolveTeacherStudents($teacher);
@@ -74,6 +96,14 @@ class TeacherCouponController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
+        }
+
+        if ($limitRedirect = $this->ensureCouponCreationAllowed($teacher)) {
+            return $limitRedirect;
+        }
+
         $data = $this->validateCoupon($request);
         $assignment = $this->validateAssignment($request, $teacher);
         if ($assignment === null) {
@@ -99,6 +129,10 @@ class TeacherCouponController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
@@ -132,6 +166,10 @@ class TeacherCouponController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
+        }
+
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
         $data = $this->validateCoupon($request, $coupon->id);
         $assignment = $this->validateAssignment($request, $teacher);
@@ -157,6 +195,10 @@ class TeacherCouponController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
+        }
+
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
         $coupon->delete();
 
@@ -170,6 +212,10 @@ class TeacherCouponController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
@@ -194,6 +240,10 @@ class TeacherCouponController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
@@ -227,6 +277,10 @@ class TeacherCouponController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
+        }
+
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
         $courses = Courses::query()
             ->withoutGlobalScopes()
@@ -253,6 +307,10 @@ class TeacherCouponController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
+            return $featureRedirect;
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
@@ -416,6 +474,49 @@ class TeacherCouponController extends Controller
     private function redirectToStatus()
     {
         return redirect()->route('teacher.account.status', ['locale' => session('locale', app()->getLocale())]);
+    }
+
+    private function ensureCouponFeatureAllowed(Teacher $teacher)
+    {
+        if ($teacher->packageHasFeature('can_manage_coupons')) {
+            return null;
+        }
+
+        return redirect()
+            ->route('teacher.dashboard.index')
+            ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
+    }
+
+    private function ensureCouponCreationAllowed(Teacher $teacher)
+    {
+        $limit = $this->resolveCouponLimit($teacher);
+        if ($limit === null) {
+            return null;
+        }
+
+        if ($this->resolveTeacherCouponCount($teacher) < $limit) {
+            return null;
+        }
+
+        return redirect()
+            ->route('teacher.dashboard.coupons.index')
+            ->with('msg_danger', __('teacher::coupons.flash.limit_reached', ['limit' => $limit]));
+    }
+
+    private function resolveCouponLimit(Teacher $teacher): ?int
+    {
+        if (!$teacher->packageHasFeature('can_manage_coupons')) {
+            return 0;
+        }
+
+        return $teacher->currentPackage()?->effective_coupon_limit;
+    }
+
+    private function resolveTeacherCouponCount(Teacher $teacher): int
+    {
+        return Coupons::query()
+            ->where('teacher_id', $teacher->id)
+            ->count();
     }
 
     private function resolveTeacherCoupon(Teacher $teacher, int $id): Coupons
