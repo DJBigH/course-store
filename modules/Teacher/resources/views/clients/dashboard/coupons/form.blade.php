@@ -7,6 +7,12 @@
                 <span class="teacher-coupon-form__kicker">{{ __('teacher::coupons.hero.kicker') }}</span>
                 <h3 class="teacher-coupon-form__title">{{ $pageTitle }}</h3>
                 <p class="teacher-coupon-form__desc mb-0">{{ __('teacher::coupons.form.description') }}</p>
+                @if ($coupon?->package_locked_at)
+                    <div class="teacher-limit-lock mt-3">
+                        <span class="teacher-limit-lock__badge">{{ __('teacher::coupons.labels.limited_actions_only') }}</span>
+                        <div class="teacher-limit-lock__text">{{ __('teacher::coupons.flash.locked_manage_only') }}</div>
+                    </div>
+                @endif
             </div>
             <a href="{{ route('teacher.dashboard.coupons.index') }}" class="btn btn-outline-secondary">
                 {{ __('teacher::coupons.actions.back') }}
@@ -206,6 +212,23 @@
             color: #f8fbff;
         }
 
+        .teacher-limit-lock__badge {
+            display: inline-flex;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(248, 113, 113, 0.18);
+            color: #fecaca;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+
+        .teacher-limit-lock__text {
+            margin-top: 0.6rem;
+            color: #fca5a5;
+            font-weight: 600;
+        }
+
         .teacher-coupon-form__desc {
             max-width: 720px;
             color: #a9bbd5;
@@ -319,6 +342,15 @@
 
         html[data-theme="light"] .teacher-coupon-form__title {
             color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-limit-lock__badge {
+            background: rgba(248, 113, 113, 0.14);
+            color: #b91c1c;
+        }
+
+        html[data-theme="light"] .teacher-limit-lock__text {
+            color: #b45309;
         }
 
         html[data-theme="light"] .teacher-coupon-form__desc {

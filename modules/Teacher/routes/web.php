@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherApplicationController as AdminTeacherApplicationController;
+use Modules\Teacher\src\Http\Controllers\Admin\TeacherAnnouncementController as AdminTeacherAnnouncementController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherFinanceController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherPackageController as AdminTeacherPackageController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherApplicationController as ClientTeacherApplicationController;
@@ -48,6 +49,15 @@ Route::prefix('admin')->group(function () {
       Route::delete('/delete/{id}', [AdminTeacherPackageController::class, 'delete'])->middleware('permission:teachers.delete')->name('delete');
    });
 
+   Route::prefix('teacher-announcements')->name('teacher-announcements.')->group(function () {
+      Route::get('/', [AdminTeacherAnnouncementController::class, 'index'])->middleware('permission:teachers.view')->name('index');
+      Route::get('/create', [AdminTeacherAnnouncementController::class, 'create'])->middleware('permission:teachers.edit')->name('add');
+      Route::post('/create', [AdminTeacherAnnouncementController::class, 'store'])->middleware('permission:teachers.edit')->name('post-add');
+      Route::get('/edit/{id}', [AdminTeacherAnnouncementController::class, 'edit'])->middleware('permission:teachers.edit')->name('edit');
+      Route::post('/edit/{id}', [AdminTeacherAnnouncementController::class, 'update'])->middleware('permission:teachers.edit')->name('post-edit');
+      Route::delete('/delete/{id}', [AdminTeacherAnnouncementController::class, 'delete'])->middleware('permission:teachers.delete')->name('delete');
+   });
+
    Route::prefix('teacher-finance')->name('teacher-finance.')->group(function () {
       Route::get('/earnings', [TeacherFinanceController::class, 'earnings'])->middleware('permission:teachers.view')->name('earnings');
       Route::get('/earnings/export/{format}', [TeacherFinanceController::class, 'exportEarnings'])->middleware('permission:teachers.view')->name('earnings.export');
@@ -86,7 +96,7 @@ Route::group([
 Route::group([
    'prefix' => 'teacher',
    'as' => 'teacher.dashboard.',
-   'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active'],
+   'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active', 'teacher.activity'],
 ], function () {
    Route::get('/locale/{locale}', function (Request $request, string $locale) {
       if (!in_array($locale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
@@ -114,12 +124,16 @@ Route::group([
    Route::get('/goi/nang-cap/trang-thai', [TeacherDashboardController::class, 'upgradePackageStatus'])->name('package.upgrade.status');
    Route::post('/goi/nang-cap/xac-nhan-da-thanh-toan', [TeacherDashboardController::class, 'markUpgradePaid'])->name('package.upgrade.mark-paid');
    Route::post('/goi/nang-cap/huy', [TeacherDashboardController::class, 'cancelUpgradePackage'])->name('package.upgrade.cancel');
+   Route::get('/thong-bao', [TeacherDashboardController::class, 'notifications'])->name('notifications');
+   Route::get('/thong-bao/doc', [TeacherDashboardController::class, 'readNotification'])->name('notifications.read');
+   Route::get('/thong-bao/announcement/{announcement}/doc', [TeacherDashboardController::class, 'readAnnouncement'])->name('notifications.announcements.read');
    Route::get('/khoa-hoc', [TeacherDashboardController::class, 'courses'])->name('courses');
    Route::get('/ma-giam-gia', [TeacherCouponController::class, 'index'])->name('coupons.index');
    Route::get('/ma-giam-gia/tao-moi', [TeacherCouponController::class, 'create'])->name('coupons.create');
    Route::post('/ma-giam-gia/tao-moi', [TeacherCouponController::class, 'store'])->name('coupons.store');
    Route::get('/ma-giam-gia/{id}/chinh-sua', [TeacherCouponController::class, 'edit'])->name('coupons.edit');
    Route::post('/ma-giam-gia/{id}/chinh-sua', [TeacherCouponController::class, 'update'])->name('coupons.update');
+   Route::post('/ma-giam-gia/{id}/uu-tien', [TeacherCouponController::class, 'togglePriority'])->name('coupons.priority');
    Route::delete('/ma-giam-gia/{id}', [TeacherCouponController::class, 'delete'])->name('coupons.delete');
    Route::get('/ma-giam-gia/{id}/hoc-vien', [TeacherCouponController::class, 'students'])->name('coupons.students');
    Route::post('/ma-giam-gia/{id}/hoc-vien', [TeacherCouponController::class, 'updateStudents'])->name('coupons.students.update');
@@ -143,6 +157,8 @@ Route::group([
    Route::post('/khoa-hoc/tao-moi', [TeacherDashboardController::class, 'storeCourse'])->name('courses.store');
    Route::get('/khoa-hoc/{course}/chinh-sua', [TeacherDashboardController::class, 'editCourse'])->name('courses.edit');
    Route::post('/khoa-hoc/{course}/chinh-sua', [TeacherDashboardController::class, 'updateCourse'])->name('courses.update');
+   Route::post('/khoa-hoc/{course}/uu-tien', [TeacherDashboardController::class, 'toggleCoursePriority'])->name('courses.priority');
+   Route::post('/khoa-hoc/{course}/trang-thai', [TeacherDashboardController::class, 'updateCourseVisibility'])->name('courses.visibility');
    Route::post('/khoa-hoc/{course}/nhan-ban', [TeacherDashboardController::class, 'duplicateCourse'])->name('courses.duplicate');
    Route::delete('/khoa-hoc/{course}', [TeacherDashboardController::class, 'deleteCourse'])->name('courses.delete');
    Route::post('/khoa-hoc/{course}/khoi-phuc', [TeacherDashboardController::class, 'restoreCourse'])->name('courses.restore');

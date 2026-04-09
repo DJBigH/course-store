@@ -49,10 +49,18 @@ class Courses extends Model
         'supports_ja',
         'supports_zh',
         'status',
+        'package_locked_at',
+        'package_lock_reason',
+        'is_package_priority',
         'is_learning_locked',
         'view',
         'created_at',
         'updated_at',
+    ];
+
+    protected $casts = [
+        'package_locked_at' => 'datetime',
+        'is_package_priority' => 'boolean',
     ];
 
     protected $with = ['teacher'];

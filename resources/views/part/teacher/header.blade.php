@@ -4,7 +4,9 @@
     if (!in_array($teacherLocale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
         $teacherLocale = 'vi';
     }
-    $teacherUnreadCount = $teacherStudent?->unreadNotifications()->count() ?? 0;
+    $teacherNotificationSummary = app(\Modules\Teacher\src\Support\TeacherNotificationCenter::class)->summary($teacherStudent, 6);
+    $teacherUnreadCount = $teacherNotificationSummary['count'] ?? 0;
+    $teacherNotifications = $teacherNotificationSummary['items'] ?? collect();
     $teacherLocaleOptions = [
         'vi' => ['short' => 'VI', 'label' => __('teacher::dashboard.header.locales.vi'), 'icon' => 'VN'],
         'en' => ['short' => 'EN', 'label' => __('teacher::dashboard.header.locales.en'), 'icon' => 'EN'],
@@ -80,14 +82,51 @@
         </li>
 
         <li class="nav-item me-2">
-            <a class="nav-link position-relative" href="{{ route('students.notifications.index', ['locale' => $teacherLocale]) }}">
-                <i class="fas fa-bell"></i>
-                @if ($teacherUnreadCount)
-                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
-                        {{ $teacherUnreadCount }}
-                    </span>
-                @endif
-            </a>
+            <div class="dropdown">
+                <a class="nav-link position-relative" href="#" id="teacherNotificationDropdown" role="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-bell"></i>
+                    @if ($teacherUnreadCount)
+                        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                            {{ $teacherUnreadCount }}
+                        </span>
+                    @endif
+                </a>
+                <div class="dropdown-menu dropdown-menu-end teacher-notification-menu" aria-labelledby="teacherNotificationDropdown">
+                    <div class="teacher-notification-menu__header">
+                        <strong>{{ __('teacher::dashboard.notifications.title') }}</strong>
+                        <a href="{{ route('teacher.dashboard.notifications') }}">{{ __('teacher::dashboard.notifications.view_all_cta') }}</a>
+                    </div>
+                    <div class="teacher-notification-menu__list">
+                        @forelse ($teacherNotifications as $notification)
+                            @php
+                                $severityClass = match ($notification['severity'] ?? 'secondary') {
+                                    'success' => 'success',
+                                    'warning' => 'warning',
+                                    'danger', 'error', 'critical' => 'danger',
+                                    'info', 'primary' => 'primary',
+                                    default => 'secondary',
+                                };
+                            @endphp
+                            <a class="teacher-notification-menu__item teacher-notification-menu__item--{{ $severityClass }}"
+                                href="{{ $notification['url'] ?? route('teacher.dashboard.notifications') }}">
+                                <span class="teacher-notification-menu__icon">
+                                    <i class="{{ $notification['icon'] ?? 'fas fa-bell' }}"></i>
+                                </span>
+                                <span class="teacher-notification-menu__body">
+                                    <span class="teacher-notification-menu__title">{{ $notification['title'] ?? __('teacher::dashboard.notifications.types.system') }}</span>
+                                    <span class="teacher-notification-menu__message">{{ $notification['message'] ?? '' }}</span>
+                                    <span class="teacher-notification-menu__time">{{ optional($notification['created_at'] ?? null)->diffForHumans() }}</span>
+                                </span>
+                            </a>
+                        @empty
+                            <div class="teacher-notification-menu__empty">
+                                {{ __('teacher::dashboard.notifications.empty') }}
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
         </li>
 
         <li class="nav-item dropdown">
@@ -269,6 +308,122 @@
     .teacher-header-locale-menu .dropdown-item:hover .teacher-header-locale-badge {
         background: color-mix(in srgb, var(--admin-primary) 16%, var(--admin-surface));
         border-color: color-mix(in srgb, var(--admin-primary) 36%, var(--admin-border));
+    }
+
+    .teacher-notification-menu {
+        width: min(380px, calc(100vw - 2rem));
+        padding: 0;
+        overflow: hidden;
+        border-radius: 20px;
+        border: 1px solid var(--admin-topnav-border);
+        background: var(--admin-surface);
+        box-shadow: var(--admin-dropdown-shadow);
+    }
+
+    .teacher-notification-menu__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.95rem 1rem;
+        border-bottom: 1px solid var(--admin-border);
+    }
+
+    .teacher-notification-menu__header strong {
+        color: var(--admin-text);
+    }
+
+    .teacher-notification-menu__header a {
+        color: var(--admin-primary);
+        font-size: 0.86rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .teacher-notification-menu__list {
+        max-height: 430px;
+        overflow-y: auto;
+    }
+
+    .teacher-notification-menu__item {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 0.85rem;
+        padding: 0.9rem 1rem;
+        text-decoration: none;
+        color: inherit;
+        border-bottom: 1px solid color-mix(in srgb, var(--admin-border) 70%, transparent);
+    }
+
+    .teacher-notification-menu__item:last-child {
+        border-bottom: 0;
+    }
+
+    .teacher-notification-menu__item:hover {
+        background: var(--admin-hover-bg);
+    }
+
+    .teacher-notification-menu__icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-size: 1rem;
+    }
+
+    .teacher-notification-menu__item--primary .teacher-notification-menu__icon,
+    .teacher-notification-menu__item--secondary .teacher-notification-menu__icon {
+        color: #2563eb;
+        background: rgba(37, 99, 235, 0.12);
+    }
+
+    .teacher-notification-menu__item--success .teacher-notification-menu__icon {
+        color: #15803d;
+        background: rgba(34, 197, 94, 0.14);
+    }
+
+    .teacher-notification-menu__item--warning .teacher-notification-menu__icon {
+        color: #b45309;
+        background: rgba(245, 158, 11, 0.14);
+    }
+
+    .teacher-notification-menu__item--danger .teacher-notification-menu__icon {
+        color: #dc2626;
+        background: rgba(239, 68, 68, 0.14);
+    }
+
+    .teacher-notification-menu__body {
+        min-width: 0;
+    }
+
+    .teacher-notification-menu__title,
+    .teacher-notification-menu__message,
+    .teacher-notification-menu__time {
+        display: block;
+    }
+
+    .teacher-notification-menu__title {
+        color: var(--admin-text);
+        font-weight: 700;
+        margin-bottom: 0.15rem;
+    }
+
+    .teacher-notification-menu__message {
+        color: var(--admin-link-muted);
+        font-size: 0.88rem;
+        line-height: 1.45;
+    }
+
+    .teacher-notification-menu__time {
+        color: var(--admin-muted);
+        font-size: 0.8rem;
+        margin-top: 0.35rem;
+    }
+
+    .teacher-notification-menu__empty {
+        padding: 1rem;
+        color: var(--admin-muted);
     }
 
     @media (max-width: 767.98px) {

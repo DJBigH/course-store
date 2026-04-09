@@ -9,6 +9,12 @@
                 <p class="teacher-coupon-assign__desc mb-0">
                     {{ __('teacher::coupons.assign_students_desc', ['code' => $coupon->code]) }}
                 </p>
+                @if ($coupon->package_locked_at)
+                    <div class="teacher-limit-lock mt-3">
+                        <span class="teacher-limit-lock__badge">{{ __('teacher::coupons.labels.limited_actions_only') }}</span>
+                        <div class="teacher-limit-lock__text">{{ __('teacher::coupons.flash.locked_manage_only') }}</div>
+                    </div>
+                @endif
             </div>
             <a href="{{ route('teacher.dashboard.coupons.edit', $coupon->id) }}" class="btn btn-outline-secondary">
                 {{ __('teacher::coupons.actions.back') }}
@@ -83,6 +89,23 @@
             max-width: 720px;
             color: #a9bbd5;
             line-height: 1.75;
+        }
+
+        .teacher-limit-lock__badge {
+            display: inline-flex;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(248, 113, 113, 0.18);
+            color: #fecaca;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+
+        .teacher-limit-lock__text {
+            margin-top: 0.6rem;
+            color: #fca5a5;
+            font-weight: 600;
         }
 
         .teacher-coupon-assign__body {

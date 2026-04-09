@@ -2,7 +2,10 @@
 
 namespace Modules\Teacher\src\Support;
 
+use App\Models\Scopes\ActiveScope;
 use Illuminate\Support\Carbon;
+use Modules\Courses\src\Models\Courses;
+use Modules\Students\src\Models\Coupons;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherApplication;
 use Modules\Teacher\src\Models\TeacherPackage;
@@ -203,6 +206,10 @@ class TeacherPackageLifecycleManager
             'package_expires_at' => $expiresAt,
             'activated_at' => now(),
         ])->save();
+
+        $refreshedTeacher = $teacher->fresh(['application.package']);
+        $this->syncCouponLocks($refreshedTeacher);
+        $this->syncCourseLocks($refreshedTeacher);
     }
 
     private function resolveFallbackPackage(?TeacherPackage $currentPackage): ?TeacherPackage
@@ -221,5 +228,107 @@ class TeacherPackageLifecycleManager
         $currentOrder = (int) ($currentPackage?->sort_order ?? 0);
 
         return $targetOrder <=> $currentOrder;
+    }
+
+    public function syncCouponLocks(Teacher $teacher): void
+    {
+        $teacher->loadMissing(['application.package']);
+
+        $currentPackage = $teacher->application?->package;
+        $query = Coupons::query()->where('teacher_id', $teacher->id);
+
+        if (!$currentPackage?->hasFeature('can_manage_coupons')) {
+            $query->update([
+                'package_locked_at' => now(),
+                'package_lock_reason' => 'package_feature_locked',
+            ]);
+
+            return;
+        }
+
+        $limit = $currentPackage->effective_coupon_limit;
+        if ($limit === null) {
+            $query->update([
+                'package_locked_at' => null,
+                'package_lock_reason' => null,
+            ]);
+
+            return;
+        }
+
+        $couponIds = Coupons::query()
+            ->where('teacher_id', $teacher->id)
+            ->orderByDesc('is_package_priority')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id')
+            ->pluck('id');
+
+        $allowedIds = $couponIds->take($limit)->all();
+
+        Coupons::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('id', $allowedIds)
+            ->update([
+                'package_locked_at' => null,
+                'package_lock_reason' => null,
+            ]);
+
+        Coupons::query()
+            ->where('teacher_id', $teacher->id)
+            ->when(!empty($allowedIds), fn ($inner) => $inner->whereNotIn('id', $allowedIds))
+            ->update([
+                'package_locked_at' => now(),
+                'package_lock_reason' => 'package_limit_locked',
+            ]);
+    }
+
+    public function syncCourseLocks(Teacher $teacher): void
+    {
+        $teacher->loadMissing(['application.package']);
+
+        $limit = $teacher->application?->package?->effective_course_limit;
+        $query = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id);
+
+        if ($limit === null) {
+            $query->update([
+                'package_locked_at' => null,
+                'package_lock_reason' => null,
+            ]);
+
+            return;
+        }
+
+        $publishedIds = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->orderByDesc('is_package_priority')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id')
+            ->pluck('id');
+
+        $allowedIds = $publishedIds->take($limit)->all();
+
+        Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('id', $allowedIds)
+            ->update([
+                'package_locked_at' => null,
+                'package_lock_reason' => null,
+            ]);
+
+        Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->when(!empty($allowedIds), fn ($inner) => $inner->whereNotIn('id', $allowedIds))
+            ->update([
+                'status' => 0,
+                'package_locked_at' => now(),
+                'package_lock_reason' => 'package_limit_locked',
+            ]);
     }
 }

@@ -4,35 +4,51 @@
     <div class="teacher-panel teacher-courses-shell">
         @php
             $usedCourses = (int) ($usage['used'] ?? 0);
+            $publishedCourses = (int) ($usage['published'] ?? $usedCourses);
+            $totalCourses = (int) ($usage['total'] ?? $usedCourses);
             $limitLabel = $usage['limit_label'] ?? __('teacher::dashboard.courses.unlimited');
             $canCreate = (bool) ($usage['can_create'] ?? false);
+            $canPublishMore = (bool) ($usage['can_publish_more'] ?? true);
+            $isOverLimit = (bool) ($usage['is_over_limit'] ?? false);
+            $overLimitBy = (int) ($usage['over_limit_by'] ?? 0);
         @endphp
 
         <div class="teacher-courses-hero">
             <div>
-                <span class="teacher-courses-kicker">Khu vực soạn khóa học</span>
+                <span class="teacher-courses-kicker">Khu vuc quan ly khoa hoc</span>
                 <h3 class="teacher-courses-title">{{ __('teacher::dashboard.courses.title') }}</h3>
                 <p class="teacher-courses-desc mb-0">
-                    Đây là nơi dễ nhất để tạo, sửa và quản lý khóa học của bạn. Bạn chỉ cần làm theo 3 bước bên dưới.
+                    Quan ly khoa hoc theo huong an toan khi ha goi: khoa cu van giu nguyen, con limit se ap vao so khoa dang publish.
                 </p>
             </div>
             <div class="teacher-courses-hero__actions">
                 @if (!empty($usage))
                     <div class="teacher-courses-usage">
-                        <span>Đã tạo</span>
-                        <strong>{{ $usedCourses }}</strong>
+                        <span>{{ __('teacher::dashboard.courses.labels.published_count') }}</span>
+                        <strong>{{ $publishedCourses }}</strong>
                         <span>/</span>
                         <strong>{{ $limitLabel }}</strong>
-                        <span>khóa học</span>
+                        <span>{{ __('teacher::dashboard.courses.labels.published_courses') }}</span>
                     </div>
                 @endif
                 @if ($canCreate)
                     <a href="{{ route('teacher.dashboard.courses.create') }}" class="btn btn-primary btn-lg">
-                        Tạo khóa học mới
+                        Tao khoa hoc moi
                     </a>
+                @else
+                    <div class="teacher-disabled-action-wrap">
+                        <span class="teacher-disabled-action" title="{{ __('teacher::dashboard.courses.flash.publish_limit_reached', ['limit' => $usage['limit']]) }}">
+                            <button type="button" class="btn btn-primary btn-lg" disabled>
+                                Tao khoa hoc moi
+                            </button>
+                        </span>
+                        <div class="teacher-disabled-action__note">
+                            {{ __('teacher::dashboard.courses.flash.publish_limit_reached', ['limit' => $usage['limit']]) }}
+                        </div>
+                    </div>
                 @endif
                 <a href="{{ route('teacher.dashboard.courses.trash') }}" class="btn btn-outline-secondary">
-                    Xem thùng rác
+                    {{ __('teacher::dashboard.courses.actions.trash') }}
                 </a>
             </div>
         </div>
@@ -58,77 +74,142 @@
             <div class="alert alert-danger">{{ session('msg_danger') }}</div>
         @endif
 
+        @if (!empty($usage))
+            <div class="alert {{ $isOverLimit ? 'alert-warning' : 'alert-info' }} border-0 mb-4">
+                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
+                    <div>
+                        <strong>{{ __('teacher::dashboard.courses.warnings.publish_limit_title') }}</strong>
+                        <div class="mt-1 text-muted">
+                            {{ __('teacher::dashboard.courses.warnings.publish_limit_summary', [
+                                'published' => $publishedCourses,
+                                'total' => $totalCourses,
+                                'limit' => $limitLabel,
+                            ]) }}
+                        </div>
+                        @if ($isOverLimit)
+                            <div class="mt-2">
+                                {{ __('teacher::dashboard.courses.warnings.publish_limit_over', ['count' => $overLimitBy]) }}
+                            </div>
+                        @endif
+                    </div>
+                    @if ($isOverLimit)
+                        <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
+                            {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                        </a>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <div class="teacher-courses-guide">
             <article class="teacher-courses-guide__item">
                 <span class="teacher-courses-guide__step">1</span>
                 <div>
-                    <strong>Tạo khóa học</strong>
-                    <p class="mb-0">Bấm nút <em>Tạo khóa học mới</em> để nhập tên, mô tả và chọn danh mục.</p>
+                    <strong>Tao hoac giu lai khoa cu</strong>
+                    <p class="mb-0">Khi ha goi, khoa hoc cu khong bi huy. Ban van co the tiep tuc chinh sua noi dung nhu binh thuong.</p>
                 </div>
             </article>
             <article class="teacher-courses-guide__item">
                 <span class="teacher-courses-guide__step">2</span>
                 <div>
-                    <strong>Soạn bài học</strong>
-                    <p class="mb-0">Sau khi tạo xong, bấm <em>Soạn bài học</em> để thêm video, tài liệu và nội dung.</p>
+                    <strong>Tu chon khoa nao tiep tuc publish</strong>
+                    <p class="mb-0">Neu vuot limit, hay dua mot so khoa ve ban nhap de giai phong slot publish cho khoa quan trong hon.</p>
                 </div>
             </article>
             <article class="teacher-courses-guide__item">
                 <span class="teacher-courses-guide__step">3</span>
                 <div>
-                    <strong>Cập nhật thông tin</strong>
-                    <p class="mb-0">Nếu cần chỉnh sửa tiêu đề, giá bán hoặc ảnh, bấm <em>Chỉnh sửa thông tin</em>.</p>
+                    <strong>Soan bai hoc va cap nhat noi dung</strong>
+                    <p class="mb-0">Ngay ca khi dang vuot limit, ban van co the tao khoa nhap moi va cap nhat bai hoc truoc khi publish.</p>
                 </div>
             </article>
         </div>
 
         <div class="row g-3">
             @forelse ($courses as $course)
+                @php
+                    $isLockedCourse = (bool) $course->package_locked_at;
+                    $canPublishThisCourse = (int) $course->status === 1 || $canPublishMore || $isLockedCourse;
+                @endphp
                 <div class="col-md-6">
                     <article class="teacher-course-card teacher-course-card--friendly">
                         <div class="teacher-course-card__head">
                             <div>
                                 <strong class="d-block mb-2 teacher-course-card__title">{{ $course->name_locale }}</strong>
                                 <div class="teacher-course-card__status {{ $course->status ? 'is-active' : 'is-hidden' }}">
-                                    {{ $course->status ? 'Đang hiển thị cho học viên' : 'Đang ẩn / tạm ngưng' }}
+                                    {{ $course->status ? __('teacher::dashboard.courses.status.published') : __('teacher::dashboard.courses.status.draft') }}
                                 </div>
+                                @if ($isLockedCourse)
+                                    <div class="teacher-course-card__limit-badge">
+                                        {{ __('teacher::dashboard.courses.labels.limited_actions_only') }}
+                                    </div>
+                                @endif
+                                @if ($course->is_package_priority)
+                                    <div class="teacher-course-card__priority">
+                                        {{ __('teacher::dashboard.courses.labels.priority_active') }}
+                                    </div>
+                                @endif
                             </div>
-                            <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-sm btn-outline-primary">
-                                Chỉnh sửa thông tin
-                            </a>
+                            @if (!$isLockedCourse)
+                                <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-sm btn-outline-primary">
+                                    {{ __('teacher::dashboard.courses.actions.edit') }}
+                                </a>
+                            @endif
                         </div>
 
                         <div class="teacher-course-card__stats">
                             <div class="teacher-course-card__stat">
-                                <span>Bài học</span>
+                                <span>Bai hoc</span>
                                 <strong>{{ $course->lessons_count }}</strong>
                             </div>
                             <div class="teacher-course-card__stat">
-                                <span>Học viên đã mua</span>
+                                <span>Hoc vien da mua</span>
                                 <strong>{{ $course->students_count }}</strong>
                             </div>
                             <div class="teacher-course-card__stat">
-                                <span>Giá đang bán</span>
+                                <span>Gia dang ban</span>
                                 <strong>{{ money($course->sale_price ?: $course->price) }}</strong>
                             </div>
                             <div class="teacher-course-card__stat">
-                                <span>Đánh giá</span>
+                                <span>Danh gia</span>
                                 <strong>{{ $course->ratings_count > 0 ? number_format((float) $course->ratings_avg_rating, 1) . ' / 5' : '0.0 / 5' }}</strong>
                             </div>
                         </div>
 
                         <div class="teacher-course-card__help">
-                            Bạn muốn thêm nội dung cho khóa học này? Hãy bấm <strong>Soạn bài học</strong>.
+                            @if ($isLockedCourse)
+                                {{ __('teacher::dashboard.courses.warnings.locked_manage_only') }}
+                            @else
+                                Ban van co the soan bai hoc va cap nhat noi dung cho khoa nay, ke ca khi khoa dang o trang thai nhap.
+                            @endif
                         </div>
 
+                        @if ($isLockedCourse)
+                            <div class="teacher-course-card__notice">
+                                {{ __('teacher::dashboard.courses.warnings.lock_reason_package_limit_locked') }}
+                            </div>
+                        @elseif (!(int) $course->status && !$canPublishThisCourse)
+                            <div class="teacher-course-card__notice">
+                                {{ __('teacher::dashboard.courses.warnings.course_publish_blocked') }}
+                            </div>
+                        @endif
+
                         <div class="d-flex flex-wrap gap-2 mt-3">
-                            <a href="{{ route('teacher.dashboard.lessons.index', $course->id) }}" class="btn btn-primary">
-                                Soạn bài học
-                            </a>
-                            <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-outline-secondary">
-                                Chỉnh sửa thông tin
-                            </a>
-                            @if ($teacher->packageHasFeature('can_duplicate_courses'))
+                            <form method="POST" action="{{ route('teacher.dashboard.courses.priority', $course->id) }}">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-warning">
+                                    {{ $course->is_package_priority ? __('teacher::dashboard.courses.actions.unprioritize') : __('teacher::dashboard.courses.actions.prioritize') }}
+                                </button>
+                            </form>
+                            @if (!$isLockedCourse)
+                                <a href="{{ route('teacher.dashboard.lessons.index', $course->id) }}" class="btn btn-primary">
+                                    {{ __('teacher::dashboard.courses.actions.lessons') }}
+                                </a>
+                                <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-outline-secondary">
+                                    {{ __('teacher::dashboard.courses.actions.edit') }}
+                                </a>
+                            @endif
+                            @if (!$isLockedCourse && $teacher->packageHasFeature('can_duplicate_courses'))
                                 <form method="POST" action="{{ route('teacher.dashboard.courses.duplicate', $course->id) }}">
                                     @csrf
                                     <button type="submit" class="btn btn-outline-info">
@@ -136,11 +217,18 @@
                                     </button>
                                 </form>
                             @endif
+                            <form method="POST" action="{{ route('teacher.dashboard.courses.visibility', $course->id) }}">
+                                @csrf
+                                <input type="hidden" name="status" value="{{ $course->status ? 0 : 1 }}">
+                                <button type="submit" class="btn btn-outline-light">
+                                    {{ $course->status ? __('teacher::dashboard.courses.actions.move_to_draft') : __('teacher::dashboard.courses.actions.publish') }}
+                                </button>
+                            </form>
                             <form method="POST" action="{{ route('teacher.dashboard.courses.delete', $course->id) }}" onsubmit="return confirm('{{ __('teacher::dashboard.courses.confirm_delete') }}')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-outline-danger">
-                                    Chuyển vào thùng rác
+                                    Dua vao thung rac
                                 </button>
                             </form>
                         </div>
@@ -150,13 +238,13 @@
                 <div class="col-12">
                     <div class="teacher-courses-empty">
                         <div class="teacher-courses-empty__icon">+</div>
-                        <h4>Bạn chưa có khóa học nào</h4>
+                        <h4>{{ __('teacher::dashboard.courses.empty') }}</h4>
                         <p class="mb-0">
-                            Hãy bắt đầu bằng việc tạo khóa học đầu tiên. Sau đó bạn có thể thêm bài học, video và tài liệu rất dễ dàng.
+                            Hay bat dau bang viec tao khoa hoc dau tien. Ban co the luu ban nhap truoc, sau do moi quyet dinh khoa nao se duoc publish.
                         </p>
                         @if ($canCreate)
                             <a href="{{ route('teacher.dashboard.courses.create') }}" class="btn btn-primary mt-3">
-                                Tạo khóa học đầu tiên
+                                Tao khoa hoc dau tien
                             </a>
                         @endif
                     </div>
@@ -238,6 +326,31 @@
         .teacher-courses-usage strong {
             color: #fff;
             font-weight: 800;
+        }
+
+        .teacher-disabled-action {
+            display: inline-flex;
+            cursor: not-allowed;
+        }
+
+        .teacher-disabled-action-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.45rem;
+        }
+
+        .teacher-disabled-action .btn[disabled] {
+            pointer-events: none;
+            opacity: 0.55;
+        }
+
+        .teacher-disabled-action__note {
+            display: none;
+            max-width: 320px;
+            color: #fbbf24;
+            font-size: 0.82rem;
+            line-height: 1.45;
         }
 
         .teacher-courses-guide {
@@ -326,9 +439,32 @@
             color: #c9d7ea;
         }
 
+        .teacher-course-card__priority {
+            display: inline-flex;
+            margin-top: 0.55rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(250, 204, 21, 0.18);
+            color: #fde68a;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .teacher-course-card__limit-badge {
+            display: inline-flex;
+            margin-top: 0.55rem;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(248, 113, 113, 0.18);
+            color: #fecaca;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+
         .teacher-course-card__stats {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 0.85rem;
             margin-bottom: 1rem;
         }
@@ -357,6 +493,15 @@
             border-radius: 16px;
             background: rgba(37, 99, 235, 0.12);
             color: #cfe4ff;
+            line-height: 1.6;
+        }
+
+        .teacher-course-card__notice {
+            margin-top: 0.9rem;
+            padding: 0.85rem 1rem;
+            border-radius: 16px;
+            background: rgba(245, 158, 11, 0.14);
+            color: #fde68a;
             line-height: 1.6;
         }
 
@@ -409,6 +554,10 @@
             color: var(--admin-text);
         }
 
+        html[data-theme="light"] .teacher-disabled-action__note {
+            color: #b45309;
+        }
+
         html[data-theme="light"] .teacher-courses-guide__item,
         html[data-theme="light"] .teacher-course-card--friendly,
         html[data-theme="light"] .teacher-courses-empty {
@@ -446,6 +595,11 @@
             color: #1d4ed8;
         }
 
+        html[data-theme="light"] .teacher-course-card__notice {
+            background: rgba(245, 158, 11, 0.12);
+            color: #92400e;
+        }
+
         html[data-theme="light"] .teacher-course-card__status.is-active {
             background: rgba(34, 197, 94, 0.16);
             color: #166534;
@@ -454,6 +608,16 @@
         html[data-theme="light"] .teacher-course-card__status.is-hidden {
             background: rgba(148, 163, 184, 0.2);
             color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-course-card__priority {
+            background: rgba(250, 204, 21, 0.2);
+            color: #92400e;
+        }
+
+        html[data-theme="light"] .teacher-course-card__limit-badge {
+            background: rgba(248, 113, 113, 0.14);
+            color: #b91c1c;
         }
 
         html[data-theme="light"] .teacher-courses-empty__icon {
@@ -482,6 +646,10 @@
 
             .teacher-course-card__stats {
                 grid-template-columns: 1fr;
+            }
+
+            .teacher-disabled-action__note {
+                display: block;
             }
         }
     </style>

@@ -7,6 +7,12 @@
                 <div>
                     <h3 class="fw-bold mb-2">{{ $course ? __('teacher::dashboard.courses.edit_title') : __('teacher::dashboard.courses.create_title') }}</h3>
                     <p class="text-muted mb-0">{{ $course ? __('teacher::dashboard.courses.edit_description') : __('teacher::dashboard.courses.create_description') }}</p>
+                    @if ($course?->package_locked_at)
+                        <div class="teacher-limit-lock mt-3">
+                            <span class="teacher-limit-lock__badge">{{ __('teacher::dashboard.courses.labels.limited_actions_only') }}</span>
+                            <div class="teacher-limit-lock__text">{{ __('teacher::dashboard.courses.warnings.locked_manage_only') }}</div>
+                        </div>
+                    @endif
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     @if ($usage)
@@ -22,6 +28,12 @@
 
             @if (session('msg_danger'))
                 <div class="alert alert-danger">{{ session('msg_danger') }}</div>
+            @endif
+
+            @if ($usage && ($usage['is_over_limit'] ?? false))
+                <div class="alert alert-warning">
+                    {{ __('teacher::dashboard.courses.warnings.publish_limit_over', ['count' => $usage['over_limit_by'] ?? 0]) }}
+                </div>
             @endif
 
             @if ($errors->any())
@@ -167,6 +179,15 @@
                                         <option value="0" @selected(old('status', $course?->status ?? 0) == 0)>{{ __('teacher::dashboard.courses.status.draft') }}</option>
                                         <option value="1" @selected(old('status', $course?->status ?? 0) == 1)>{{ __('teacher::dashboard.courses.status.published') }}</option>
                                     </select>
+                                    @if ($usage)
+                                        <small class="text-muted d-block mt-2">
+                                            {{ __('teacher::dashboard.courses.warnings.publish_limit_summary', [
+                                                'published' => $usage['published'] ?? $usage['used'] ?? 0,
+                                                'total' => $usage['total'] ?? $usage['used'] ?? 0,
+                                                'limit' => $usage['limit_label'] ?? __('teacher::dashboard.courses.unlimited'),
+                                            ]) }}
+                                        </small>
+                                    @endif
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">{{ __('teacher::dashboard.courses.form.is_document') }}</label>
@@ -223,6 +244,23 @@
 
 @section('stylesheets')
     <style>
+        .teacher-limit-lock__badge {
+            display: inline-flex;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(248, 113, 113, 0.14);
+            color: #b91c1c;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+
+        .teacher-limit-lock__text {
+            margin-top: 0.6rem;
+            color: var(--admin-warning, #b45309);
+            font-weight: 600;
+        }
+
         .teacher-course-form .teacher-panel {
             overflow: visible;
         }

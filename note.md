@@ -473,6 +473,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
 - Làm cái mã giảm giá dành riêng cho đăng ký giáo viên 
 - admin tạo ra 1 gói dành riêng cho giáo viên đó
+- Check lại logic của module giáo viên
+- Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -518,6 +520,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm cái mã giảm giá dành riêng cho đăng ký giáo viên
 - Thêm cái danh mục dành cho các gói mua của giáo viên ( Gói hợp tác, Gói theo tháng/năm, Gói j đó...)
 - Làm cái trang xem profile của giảng viên ( Giảng viên sẽ hiện ra profile khi đăng ký đổ ra, và có rating giảng viên, có bao nhiêu khóa học, bài giảng trong website )
+- Đối với tài khoản đã được nâng lên làm teacher thì sẽ có tất cả các khóa học mà mình tạo ra 
+- Đối với tài khoản đã được nâng lên làm teacher sẽ bỏ cái trở thành giáo viên
  Teacher:
 - Làm cái hồ sơ giáo viên
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
@@ -526,11 +530,16 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm quản lý đơn hàng
 - Với cái xử lý rút tiền thì nhập 1 lần tài khoản sẽ lưu tài khoản đó tôi đa 3 tài khoản ngân hàng khác nhau với tài khoản t4 sẽ phải xin từ admin accpet mới thay đổi và khi thay đổi sẽ thay thay 1 trong 3 tài khoản đó ( Done )
 - Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...) hay có thêm chức năng j để giới hạn không
-- Khi đã là giáo viên rồi thì khi đổi gói có cần admin duyệt không hay tự động chuyển gói ( Góp ý cho tôi )
+- Khi đã là giáo viên rồi thì khi đổi gói có cần admin duyệt không hay tự động chuyển gói ( Góp ý cho tôi ) ( Done )
 - Làm chức năng góp ý hoặc báo cáo với admin ( kiểu tôi muốn thêm danh mục j đó để phát triển) ( Done )
-- Thêm các noti vào cái chuông như kiểu: có bình luận, có người mua khóa học, mã giảm giá sắp hết hạn hay số lượt, gói giáo viên sắp hết hạn, các tính năng mới j đó admin cập nhập dành riêng cho giáo viên
-- với trường hợp giáo viên mua gói tháng/năm thì khi hết hạn và họ không gia hạn thì xử lý như nào
-- Với trường hợp họ đang dùng gói không giới hạn khóa học hay mã giảm giá thì khi họ hạ gói xuống nó limit thì xử lý như nào
-- Nghĩ xem cần thêm chức năng nào khác không
+- Thêm các noti vào cái chuông như kiểu: có bình luận, có người mua khóa học, mã giảm giá sắp hết hạn hay số lượt, gói giáo viên sắp hết hạn, các tính năng mới j đó admin cập nhập dành riêng cho giáo viên ( Done )
+- với trường hợp giáo viên mua gói tháng/năm thì khi hết hạn và họ không gia hạn thì xử lý như nào ( Done tự về gói free nếu không gia hạn gói )
+- Với trường hợp họ đang dùng gói không giới hạn khóa học hay mã giảm giá thì khi họ hạ gói xuống nó limit thì xử lý như nào ( Done sẽ cho họ active)
+- Với trường hợp tài khoản giảng viên họ không dùng nữa và họ không báo với mình thì sao mình không hề biết là họ không dùng nữa ( Done Admin check số ngày hoạt động)
+- Nếu bạn muốn, mình có thể làm thêm một bước nữa là cho cột được chọn có icon ✓ Đang so sánh hoặc một thanh màu chạy dọc ở đầu cột để trực quan hơn nữa.
+- À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá
+- Thêm chức năng xem lại lịch sử thao tác, đôi với quản lý học viên cái giám sát học viên học được bao nhiêu % thì thêm vào đó và phần quyền trong gói giúp tôi 
+- Nghĩ xem cần thêm chức năng nào khác không ( Tôi muốn chức năng nó có thể liên quan đến các gói của giáo viên để gói đó có giá trị hơn khiến giảng viên mua để xử dụng)
 Tổng kết
+- Check lại tất cả đa ngôn ngữ ( Đặc biệt là vi phải có dấu)
 - check lại lần cuối trước khi đẩy lên production

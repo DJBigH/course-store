@@ -28,14 +28,18 @@ use Modules\Students\src\Models\StudentsCourses;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Http\Requests\TeacherCourseRequest;
 use Modules\Teacher\src\Http\Requests\TeacherLessonRequest;
+use Modules\Teacher\src\Models\TeacherAnnouncement;
+use Modules\Teacher\src\Models\TeacherAnnouncementRead;
 use Modules\Teacher\src\Models\TeacherApplication;
 use Modules\Teacher\src\Models\TeacherCourseGrant;
+use Modules\Teacher\src\Models\TeacherNotificationRead;
 use Modules\Teacher\src\Models\TeacherPayoutAccount;
 use Modules\Teacher\src\Models\TeacherPayoutAccountChangeRequest;
 use Modules\Teacher\src\Models\TeacherPayoutRequest;
 use Modules\Teacher\src\Models\TeacherPackage;
 use Modules\Teacher\src\Models\TeacherStudentNote;
 use Modules\Teacher\src\Support\TeacherFinanceCalculator;
+use Modules\Teacher\src\Support\TeacherNotificationCenter;
 use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
 use Modules\User\src\Models\User;
 use Modules\Video\src\Repositories\VideoRepositoryInterface;
@@ -48,6 +52,7 @@ class TeacherDashboardController extends Controller
         protected DocumentRepositoryInterface $documentRepository,
         protected LessonsRepositoryInterface $lessonRepository,
         protected TeacherPackageLifecycleManager $packageLifecycleManager,
+        protected TeacherNotificationCenter $notificationCenter,
     ) {}
 
     public function index()
@@ -142,6 +147,102 @@ class TeacherDashboardController extends Controller
         $pageName = $pageTitle;
 
         return view('teacher::clients.dashboard.package_upgrade', compact('pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradePackages'));
+    }
+
+    public function notifications()
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $student = auth('students')->user();
+        $notificationSummary = $this->notificationCenter->summary($student, 40);
+        $notifications = $notificationSummary['items'];
+
+        $pageTitle = __('teacher::dashboard.pages.notifications');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.notifications', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'notifications',
+            'notificationSummary'
+        ));
+    }
+
+    public function readAnnouncement(int $announcementId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $student = auth('students')->user();
+        $currentPackageId = $teacher->currentPackage()?->id;
+        $announcement = TeacherAnnouncement::query()
+            ->active()
+            ->where(function ($query) use ($currentPackageId) {
+                $query->whereDoesntHave('packages');
+
+                if ($currentPackageId) {
+                    $query->orWhereHas('packages', function ($packageQuery) use ($currentPackageId) {
+                        $packageQuery->where('teacher_packages.id', $currentPackageId);
+                    });
+                }
+            })
+            ->findOrFail($announcementId);
+
+        TeacherAnnouncementRead::query()->updateOrCreate(
+            [
+                'announcement_id' => $announcement->id,
+                'student_id' => $student->id,
+            ],
+            [
+                'read_at' => now(),
+            ]
+        );
+
+        TeacherNotificationRead::query()->updateOrCreate(
+            [
+                'student_id' => $student->id,
+                'notification_key' => 'announcement:' . $announcement->id . ':' . ($announcement->updated_at?->timestamp ?? 0),
+            ],
+            [
+                'read_at' => now(),
+            ]
+        );
+
+        $targetUrl = trim((string) ($announcement->action_url ?? ''));
+
+        return redirect()->to($targetUrl !== '' ? $targetUrl : route('teacher.dashboard.notifications'));
+    }
+
+    public function readNotification(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $student = auth('students')->user();
+        $payload = $request->validate([
+            'key' => ['required', 'string', 'max:191'],
+            'redirect' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        TeacherNotificationRead::query()->updateOrCreate(
+            [
+                'student_id' => $student->id,
+                'notification_key' => $payload['key'],
+            ],
+            [
+                'read_at' => now(),
+            ]
+        );
+
+        return redirect()->to($this->sanitizeTeacherNotificationRedirect($payload['redirect'] ?? null));
     }
 
     public function storeUpgradePackage(Request $request)
@@ -304,6 +405,9 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        $this->syncCourseLocks($teacher);
+        $teacher->refresh();
+
         $pageTitle = __('teacher::dashboard.pages.courses');
         $pageName = __('teacher::dashboard.pages.courses');
         $courses = Courses::query()
@@ -315,18 +419,7 @@ class TeacherDashboardController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        $courseLimit = $this->resolveCourseLimit($teacher);
-        $courseCount = Courses::query()
-            ->withoutGlobalScope(ActiveScope::class)
-            ->where('teacher_id', $teacher->id)
-            ->count();
-        $usage = [
-            'used' => $courseCount,
-            'limit' => $courseLimit,
-            'limit_label' => $courseLimit === null ? __('teacher::dashboard.courses.unlimited') : $courseLimit,
-            'remaining' => $courseLimit === null ? null : max($courseLimit - $courseCount, 0),
-            'can_create' => $courseLimit === null || $courseCount < $courseLimit,
-        ];
+        $usage = $this->resolvePublishedCourseUsage($teacher);
 
         return view('teacher::clients.dashboard.courses', compact('pageTitle', 'pageName', 'teacher', 'courses', 'usage'));
     }
@@ -359,25 +452,21 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
-        $limitCheck = $this->ensureCourseCreationAllowed($teacher);
-        if ($limitCheck !== null) {
-            return $limitCheck;
-        }
+        $this->syncCourseLocks($teacher);
+        $teacher->refresh();
 
         $pageTitle = __('teacher::dashboard.courses.create_title');
         $pageName = __('teacher::dashboard.courses.create_title');
         $categories = $this->getCourseCategories();
+        $usage = $this->resolvePublishedCourseUsage($teacher);
 
-        $courseLimit = $this->resolveCourseLimit($teacher);
-        $courseCount = Courses::query()
-            ->withoutGlobalScope(ActiveScope::class)
-            ->where('teacher_id', $teacher->id)
-            ->count();
-        $usage = [
-            'used' => $courseCount,
-            'limit' => $courseLimit,
-            'limit_label' => $courseLimit === null ? __('teacher::dashboard.courses.unlimited') : $courseLimit,
-        ];
+        if (!($usage['can_create'] ?? true)) {
+            return redirect()
+                ->route('teacher.dashboard.courses')
+                ->with('msg_danger', __('teacher::dashboard.courses.flash.publish_limit_reached', [
+                    'limit' => $this->resolveCourseLimit($teacher),
+                ]));
+        }
 
         return view('teacher::clients.dashboard.create_course', [
             'pageTitle' => $pageTitle,
@@ -399,9 +488,13 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
-        $limitCheck = $this->ensureCourseCreationAllowed($teacher);
-        if ($limitCheck !== null) {
-            return $limitCheck;
+        $usage = $this->resolvePublishedCourseUsage($teacher);
+        if (!($usage['can_create'] ?? true)) {
+            return redirect()
+                ->route('teacher.dashboard.courses')
+                ->with('msg_danger', __('teacher::dashboard.courses.flash.publish_limit_reached', [
+                    'limit' => $this->resolveCourseLimit($teacher),
+                ]));
         }
 
         $data = $request->validated();
@@ -410,7 +503,11 @@ class TeacherDashboardController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.courses')
-            ->with('msg_success', __('teacher::dashboard.courses.flash.created'));
+            ->with('msg_success', __(
+                ((int) $data['status'] === 1 && (int) $course->status !== 1)
+                    ? 'teacher::dashboard.courses.flash.created_as_draft_due_limit'
+                    : 'teacher::dashboard.courses.flash.created'
+            ));
     }
 
     public function editCourse(int $courseId)
@@ -421,6 +518,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $pageTitle = __('teacher::dashboard.courses.edit_title');
         $pageName = __('teacher::dashboard.courses.edit_title');
 
@@ -429,7 +529,7 @@ class TeacherDashboardController extends Controller
             'pageName' => $pageName,
             'teacher' => $teacher,
             'categories' => $this->getCourseCategories(),
-            'usage' => null,
+            'usage' => $this->resolvePublishedCourseUsage($teacher),
             'course' => $course,
             'selectedCategories' => $course->categories()->pluck('categories.id')->all(),
             'formAction' => route('teacher.dashboard.courses.update', $course->id),
@@ -445,6 +545,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $data = $request->validated();
 
         $course->update($this->buildCoursePayload($data, $teacher, $course));
@@ -452,7 +555,11 @@ class TeacherDashboardController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.courses')
-            ->with('msg_success', __('teacher::dashboard.courses.flash.updated'));
+            ->with('msg_success', __(
+                ((int) $data['status'] === 1 && (int) $course->status !== 1)
+                    ? 'teacher::dashboard.courses.flash.updated_as_draft_due_limit'
+                    : 'teacher::dashboard.courses.flash.updated'
+            ));
     }
 
     public function duplicateCourse(int $courseId)
@@ -466,17 +573,71 @@ class TeacherDashboardController extends Controller
             return $featureRedirect;
         }
 
-        $limitCheck = $this->ensureCourseCreationAllowed($teacher);
-        if ($limitCheck !== null) {
-            return $limitCheck;
-        }
-
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $this->performCourseDuplicate($course);
 
         return redirect()
             ->route('teacher.dashboard.courses')
             ->with('msg_success', __('teacher::dashboard.courses.flash.duplicated'));
+    }
+
+    public function updateCourseVisibility(Request $request, int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        $data = $request->validate([
+            'status' => ['required', 'integer', 'in:0,1'],
+        ]);
+
+        $targetStatus = (int) $data['status'];
+        if ($targetStatus === 1) {
+            $this->activateCourseWithinLimit($teacher, $course);
+        } else {
+            $course->update([
+                'status' => 0,
+                'package_locked_at' => null,
+                'package_lock_reason' => null,
+            ]);
+            $this->syncCourseLocks($teacher);
+        }
+
+        return redirect()
+            ->route('teacher.dashboard.courses')
+            ->with('msg_success', __(
+                $targetStatus === 1
+                    ? 'teacher::dashboard.courses.flash.published'
+                    : 'teacher::dashboard.courses.flash.drafted'
+            ));
+    }
+
+    public function toggleCoursePriority(int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        $course->update([
+            'is_package_priority' => !$course->is_package_priority,
+        ]);
+
+        $this->syncCourseLocks($teacher);
+
+        return redirect()
+            ->route('teacher.dashboard.courses')
+            ->with('msg_success', __(
+                $course->fresh()->is_package_priority
+                    ? 'teacher::dashboard.courses.flash.priority_enabled'
+                    : 'teacher::dashboard.courses.flash.priority_disabled'
+            ));
     }
 
     public function deleteCourse(int $courseId)
@@ -507,23 +668,26 @@ class TeacherDashboardController extends Controller
             abort(404);
         }
 
-        $limit = $this->resolveCourseLimit($teacher);
-        $activeCourses = Courses::query()
-            ->withoutGlobalScope(ActiveScope::class)
-            ->where('teacher_id', $teacher->id)
-            ->count();
-        if ($limit !== null && $activeCourses >= $limit) {
-            return redirect()
-                ->route('teacher.dashboard.courses.trash')
-                ->with('msg_danger', __('teacher::dashboard.courses.flash.restore_limit_reached', ['limit' => $limit]));
-        }
-
+        $wasTrashed = $course->trashed();
         $course->restore();
+        $restoredAsDraft = false;
+        if (
+            $wasTrashed &&
+            (int) $course->status === 1 &&
+            !$this->hasAvailablePublishedCourseSlot($teacher, $course->id)
+        ) {
+            $course->forceFill(['status' => 0])->save();
+            $restoredAsDraft = true;
+        }
         Lesson::query()->onlyTrashed()->where('course_id', $course->id)->restore();
 
         return redirect()
             ->route('teacher.dashboard.courses.trash')
-            ->with('msg_success', __('teacher::dashboard.courses.flash.restored'));
+            ->with('msg_success', __(
+                $restoredAsDraft
+                    ? 'teacher::dashboard.courses.flash.restored_as_draft_due_limit'
+                    : 'teacher::dashboard.courses.flash.restored'
+            ));
     }
 
     public function forceDeleteCourse(int $courseId)
@@ -555,6 +719,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $pageTitle = __('teacher::dashboard.lessons.title', ['course' => $course->name_locale]);
         $pageName = __('teacher::dashboard.lessons.title_short');
         $modules = Lesson::query()
@@ -575,6 +742,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId, true);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $pageTitle = __('teacher::dashboard.lessons.trash_title', ['course' => $course->name_locale]);
         $pageName = __('teacher::dashboard.lessons.trash_short');
         $lessons = Lesson::query()
@@ -596,6 +766,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $pageTitle = __('teacher::dashboard.lessons.create_title', ['course' => $course->name_locale]);
         $pageName = __('teacher::dashboard.lessons.create_short');
         $defaultParentId = (int) request()->query('module', 0);
@@ -627,6 +800,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $data = $request->validated();
 
         Lesson::query()->create($this->buildLessonPayload($data, $course));
@@ -645,6 +821,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId);
         $pageTitle = __('teacher::dashboard.lessons.edit_title', ['lesson' => $lesson->name_locale]);
         $pageName = __('teacher::dashboard.lessons.edit_short');
@@ -677,6 +856,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId);
         $data = $request->validated();
 
@@ -696,6 +878,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId);
         $branchIds = $this->collectLessonBranchIds($lesson->id);
         Lesson::query()->whereIn('id', $branchIds)->delete();
@@ -714,6 +899,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId, true);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId, true);
         if (!$lesson->trashed()) {
             abort(404);
@@ -736,6 +924,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId, true);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId, true);
         if (!$lesson->trashed()) {
             abort(404);
@@ -1823,6 +2014,7 @@ class TeacherDashboardController extends Controller
         $courseCount = Courses::query()
             ->withoutGlobalScope(ActiveScope::class)
             ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
             ->count();
         $targetCourseLimit = $targetPackage->effective_course_limit;
         if ($targetCourseLimit !== null && $courseCount > $targetCourseLimit) {
@@ -1893,6 +2085,8 @@ class TeacherDashboardController extends Controller
 
     private function resolveOwnedCourse(Teacher $teacher, int $courseId, bool $withTrashed = false): Courses
     {
+        $this->syncCourseLocks($teacher);
+
         $query = Courses::query()
             ->withoutGlobalScope(ActiveScope::class)
             ->where('teacher_id', $teacher->id)
@@ -2018,27 +2212,6 @@ class TeacherDashboardController extends Controller
         });
     }
 
-    private function ensureCourseCreationAllowed(Teacher $teacher)
-    {
-        $limit = $this->resolveCourseLimit($teacher);
-        if ($limit === null) {
-            return null;
-        }
-
-        $currentCount = Courses::query()
-            ->withoutGlobalScope(ActiveScope::class)
-            ->where('teacher_id', $teacher->id)
-            ->count();
-
-        if ($currentCount < $limit) {
-            return null;
-        }
-
-        return redirect()
-            ->route('teacher.dashboard.courses')
-            ->with('msg_danger', __('teacher::dashboard.courses.flash.limit_reached', ['limit' => $limit]));
-    }
-
     private function getCourseCategories()
     {
         return Category::query()
@@ -2062,6 +2235,8 @@ class TeacherDashboardController extends Controller
 
     private function buildCoursePayload(array $data, Teacher $teacher, ?Courses $course = null): array
     {
+        $normalizedStatus = $this->normalizeCourseStatusForPackage($teacher, (int) $data['status'], $course);
+
         return [
             'teacher_id' => $teacher->id,
             'name' => $data['name'],
@@ -2089,9 +2264,128 @@ class TeacherDashboardController extends Controller
             'sale_price' => (float) ($data['sale_price'] ?? 0),
             'code' => $this->generateCourseCode($data['code'] ?? null, $course?->id),
             'is_document' => (int) $data['is_document'],
-            'status' => (int) $data['status'],
+            'status' => $normalizedStatus,
             'is_learning_locked' => (int) $data['is_learning_locked'],
         ];
+    }
+
+    private function resolvePublishedCourseUsage(Teacher $teacher): array
+    {
+        $courseLimit = $this->resolveCourseLimit($teacher);
+        $totalCourses = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->count();
+        $publishedCourses = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->count();
+
+        return [
+            'used' => $publishedCourses,
+            'published' => $publishedCourses,
+            'total' => $totalCourses,
+            'limit' => $courseLimit,
+            'limit_label' => $courseLimit === null ? __('teacher::dashboard.courses.unlimited') : $courseLimit,
+            'remaining' => $courseLimit === null ? null : max($courseLimit - $publishedCourses, 0),
+            'can_create' => !($courseLimit !== null && $publishedCourses >= $courseLimit),
+            'can_publish_more' => $courseLimit === null || $publishedCourses < $courseLimit,
+            'is_over_limit' => $courseLimit !== null && $publishedCourses > $courseLimit,
+            'over_limit_by' => $courseLimit === null ? 0 : max($publishedCourses - $courseLimit, 0),
+        ];
+    }
+
+    private function normalizeCourseStatusForPackage(Teacher $teacher, int $requestedStatus, ?Courses $course = null): int
+    {
+        if ($requestedStatus !== 1) {
+            return 0;
+        }
+
+        return $this->canKeepOrPublishCourse($teacher, $course, $requestedStatus) ? 1 : 0;
+    }
+
+    private function canKeepOrPublishCourse(Teacher $teacher, ?Courses $course, int $requestedStatus): bool
+    {
+        if ($requestedStatus !== 1) {
+            return true;
+        }
+
+        if ($course && (int) $course->status === 1 && !$course->trashed() && !$course->package_locked_at) {
+            return true;
+        }
+
+        return $this->hasAvailablePublishedCourseSlot($teacher, $course?->id);
+    }
+
+    private function hasAvailablePublishedCourseSlot(Teacher $teacher, ?int $ignoreCourseId = null): bool
+    {
+        $limit = $this->resolveCourseLimit($teacher);
+        if ($limit === null) {
+            return true;
+        }
+
+        $publishedCount = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->when($ignoreCourseId, fn ($query) => $query->where('id', '!=', $ignoreCourseId))
+            ->count();
+
+        return $publishedCount < $limit;
+    }
+
+    private function activateCourseWithinLimit(Teacher $teacher, Courses $course): void
+    {
+        $limit = $this->resolveCourseLimit($teacher);
+
+        if ($limit !== null) {
+            $publishedQuery = Courses::query()
+                ->withoutGlobalScope(ActiveScope::class)
+                ->where('teacher_id', $teacher->id)
+                ->where('status', 1)
+                ->where('id', '!=', $course->id);
+
+            if ($publishedQuery->count() >= $limit) {
+                $demoteCourse = (clone $publishedQuery)
+                    ->orderBy('is_package_priority')
+                    ->orderBy('updated_at')
+                    ->orderBy('id')
+                    ->first();
+
+                if ($demoteCourse) {
+                    $demoteCourse->forceFill([
+                        'status' => 0,
+                        'package_locked_at' => now(),
+                        'package_lock_reason' => 'package_limit_locked',
+                    ])->save();
+                }
+            }
+        }
+
+        $course->forceFill([
+            'status' => 1,
+            'package_locked_at' => null,
+            'package_lock_reason' => null,
+        ])->save();
+
+        $this->syncCourseLocks($teacher);
+    }
+
+    private function syncCourseLocks(Teacher $teacher): void
+    {
+        $this->packageLifecycleManager->syncCourseLocks($teacher->fresh(['application.package']));
+    }
+
+    private function ensureCourseManageable(Courses $course)
+    {
+        if (!$course->package_locked_at) {
+            return null;
+        }
+
+        return redirect()
+            ->route('teacher.dashboard.courses')
+            ->with('msg_danger', __('teacher::dashboard.courses.flash.locked_manage_only'));
     }
 
     private function syncCourseCategories(Courses $course, array $categories): void
@@ -2692,6 +2986,39 @@ class TeacherDashboardController extends Controller
         }
 
         return $rows;
+    }
+
+    private function sanitizeTeacherNotificationRedirect(?string $redirect): string
+    {
+        $fallback = route('teacher.dashboard.notifications');
+        $redirect = trim((string) $redirect);
+
+        if ($redirect === '') {
+            return $fallback;
+        }
+
+        $parts = parse_url($redirect);
+        if ($parts === false) {
+            return $fallback;
+        }
+
+        $host = $parts['host'] ?? null;
+        $currentHost = request()->getHost();
+        $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+
+        if ($host && !in_array($host, array_filter([$currentHost, $appHost]), true)) {
+            return $fallback;
+        }
+
+        if ($host && !empty($parts['scheme'])) {
+            return $redirect;
+        }
+
+        if (!Str::startsWith($redirect, ['/']) && !Str::startsWith($redirect, url('/'))) {
+            return $fallback;
+        }
+
+        return $redirect;
     }
 }
 

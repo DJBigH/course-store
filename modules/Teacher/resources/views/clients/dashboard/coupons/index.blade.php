@@ -9,14 +9,21 @@
                 <p class="teacher-coupons-desc mb-0">{{ __('teacher::coupons.hero.description') }}</p>
             </div>
             <div class="teacher-coupons-actions">
-                @if ($couponLimit === null || $couponCount < $couponLimit)
+                @if ($canCreateCoupons)
                     <a href="{{ route('teacher.dashboard.coupons.create') }}" class="btn btn-primary">
                         {{ __('teacher::coupons.actions.create') }}
                     </a>
                 @else
-                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-warning">
-                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
-                    </a>
+                    <div class="teacher-disabled-action-wrap">
+                        <span class="teacher-disabled-action" title="{{ __('teacher::coupons.flash.limit_reached', ['limit' => $couponLimit]) }}">
+                            <button type="button" class="btn btn-primary" disabled>
+                                {{ __('teacher::coupons.actions.create') }}
+                            </button>
+                        </span>
+                        <div class="teacher-disabled-action__note">
+                            {{ __('teacher::coupons.flash.limit_reached', ['limit' => $couponLimit]) }}
+                        </div>
+                    </div>
                 @endif
             </div>
         </div>
@@ -31,8 +38,24 @@
                             'limit' => $couponLimit ?? __('teacher::coupons.labels.unlimited'),
                         ]) }}
                     </div>
+                    <div class="mt-1 text-muted">
+                        {{ __('teacher::coupons.limit.active_description', [
+                            'count' => $activeCouponCount,
+                            'locked' => $lockedCouponCount,
+                            'limit' => $couponLimit ?? __('teacher::coupons.labels.unlimited'),
+                        ]) }}
+                    </div>
+                    @if (!$canManageCoupons)
+                        <div class="mt-2 text-warning">
+                            {{ __('teacher::coupons.limit.feature_locked_notice') }}
+                        </div>
+                    @elseif ($lockedCouponCount > 0)
+                        <div class="mt-2 text-warning">
+                            {{ __('teacher::coupons.limit.locked_notice', ['count' => $lockedCouponCount]) }}
+                        </div>
+                    @endif
                 </div>
-                @if ($couponLimit !== null && $couponCount >= $couponLimit)
+                @if (!$canManageCoupons || ($couponLimit !== null && $lockedCouponCount > 0))
                     <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
                         {{ __('teacher::dashboard.package_features.upgrade_cta') }}
                     </a>
@@ -42,6 +65,9 @@
 
         <div class="row g-3">
             @forelse ($coupons as $coupon)
+                @php
+                    $isLockedCoupon = (bool) $coupon->package_locked_at;
+                @endphp
                 <div class="col-xl-6">
                     <article class="teacher-coupon-card">
                         <div class="teacher-coupon-card__head">
@@ -51,11 +77,31 @@
                                     {{ $coupon->discount_type === 'percent' ? $coupon->discount_value . '%' : money($coupon->discount_value) }}
                                     {{ __('teacher::coupons.labels.discount') }}
                                 </p>
+                                @if ($isLockedCoupon)
+                                    <div class="teacher-coupon-card__limit-badge">
+                                        {{ __('teacher::coupons.labels.limited_actions_only') }}
+                                    </div>
+                                @endif
+                                @if ($coupon->is_package_priority)
+                                    <div class="teacher-coupon-card__priority">
+                                        {{ __('teacher::coupons.labels.priority_active') }}
+                                    </div>
+                                @endif
                             </div>
                             <span class="teacher-coupon-card__badge">
-                                {{ $coupon->per_student_once ? __('teacher::coupons.labels.once') : __('teacher::coupons.labels.multi') }}
+                                @if ($coupon->package_locked_at)
+                                    {{ __('teacher::coupons.labels.locked') }}
+                                @else
+                                    {{ $coupon->per_student_once ? __('teacher::coupons.labels.once') : __('teacher::coupons.labels.multi') }}
+                                @endif
                             </span>
                         </div>
+
+                        @if ($coupon->package_locked_at)
+                            <div class="teacher-coupon-card__lock">
+                                {{ __('teacher::coupons.labels.lock_reason_' . ($coupon->package_lock_reason ?: 'package_limit_locked')) }}
+                            </div>
+                        @endif
 
                         <div class="teacher-coupon-card__grid">
                             <div class="teacher-coupon-card__info">
@@ -99,15 +145,25 @@
                         </div>
 
                         <div class="teacher-coupon-card__actions">
-                            <a href="{{ route('teacher.dashboard.coupons.edit', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">
-                                {{ __('teacher::coupons.actions.edit') }}
-                            </a>
-                            <a href="{{ route('teacher.dashboard.coupons.courses', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">
-                                {{ __('teacher::coupons.actions.assign_courses') }}
-                            </a>
-                            <a href="{{ route('teacher.dashboard.coupons.students', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">
-                                {{ __('teacher::coupons.actions.assign_students') }}
-                            </a>
+                            @if ($canManageCoupons)
+                                <form action="{{ route('teacher.dashboard.coupons.priority', $coupon->id) }}" method="POST" class="d-inline-block">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-warning btn-sm">
+                                        {{ $coupon->is_package_priority ? __('teacher::coupons.actions.unprioritize') : __('teacher::coupons.actions.prioritize') }}
+                                    </button>
+                                </form>
+                            @endif
+                            @if ($canManageCoupons && !$isLockedCoupon)
+                                <a href="{{ route('teacher.dashboard.coupons.edit', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">
+                                    {{ __('teacher::coupons.actions.edit') }}
+                                </a>
+                                <a href="{{ route('teacher.dashboard.coupons.courses', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">
+                                    {{ __('teacher::coupons.actions.assign_courses') }}
+                                </a>
+                                <a href="{{ route('teacher.dashboard.coupons.students', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">
+                                    {{ __('teacher::coupons.actions.assign_students') }}
+                                </a>
+                            @endif
                             <form action="{{ route('teacher.dashboard.coupons.delete', $coupon->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('{{ __('teacher::coupons.confirm_delete') }}');">
                                 @csrf
                                 @method('DELETE')
@@ -177,6 +233,31 @@
             line-height: 1.75;
         }
 
+        .teacher-disabled-action {
+            display: inline-flex;
+            cursor: not-allowed;
+        }
+
+        .teacher-disabled-action-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.45rem;
+        }
+
+        .teacher-disabled-action .btn[disabled] {
+            pointer-events: none;
+            opacity: 0.55;
+        }
+
+        .teacher-disabled-action__note {
+            display: none;
+            max-width: 320px;
+            color: #fbbf24;
+            font-size: 0.82rem;
+            line-height: 1.45;
+        }
+
         .teacher-coupon-card,
         .teacher-coupons-empty {
             border: 1px solid rgba(96, 165, 250, 0.16);
@@ -210,6 +291,38 @@
             color: #93c5fd;
             font-size: 0.78rem;
             font-weight: 700;
+        }
+
+        .teacher-coupon-card__priority {
+            display: inline-flex;
+            margin-top: 0.55rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(250, 204, 21, 0.18);
+            color: #fde68a;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .teacher-coupon-card__limit-badge {
+            display: inline-flex;
+            margin-top: 0.55rem;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(248, 113, 113, 0.18);
+            color: #fecaca;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+
+        .teacher-coupon-card__lock {
+            margin-bottom: 1rem;
+            padding: 0.85rem 1rem;
+            border-radius: 16px;
+            background: rgba(245, 158, 11, 0.14);
+            color: #fde68a;
+            line-height: 1.55;
         }
 
         .teacher-coupon-card__grid {
@@ -293,6 +406,10 @@
             color: #475569;
         }
 
+        html[data-theme="light"] .teacher-disabled-action__note {
+            color: #b45309;
+        }
+
         html[data-theme="light"] .teacher-coupon-card,
         html[data-theme="light"] .teacher-coupons-empty {
             background: var(--admin-surface);
@@ -313,6 +430,21 @@
         html[data-theme="light"] .teacher-coupon-card__badge {
             background: rgba(37, 99, 235, 0.12);
             color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-coupon-card__priority {
+            background: rgba(250, 204, 21, 0.2);
+            color: #92400e;
+        }
+
+        html[data-theme="light"] .teacher-coupon-card__limit-badge {
+            background: rgba(248, 113, 113, 0.14);
+            color: #b91c1c;
+        }
+
+        html[data-theme="light"] .teacher-coupon-card__lock {
+            background: rgba(245, 158, 11, 0.12);
+            color: #92400e;
         }
 
         html[data-theme="light"] .teacher-coupon-card__info {
@@ -336,6 +468,10 @@
         @media (max-width: 767.98px) {
             .teacher-coupon-card__grid {
                 grid-template-columns: 1fr;
+            }
+
+            .teacher-disabled-action__note {
+                display: block;
             }
         }
     </style>

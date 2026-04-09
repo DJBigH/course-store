@@ -26,6 +26,9 @@ class Coupons extends Model
         'per_student_once',
         'start_date',
         'end_date',
+        'package_locked_at',
+        'package_lock_reason',
+        'is_package_priority',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -33,8 +36,10 @@ class Coupons extends Model
 
     protected $casts = [
         'per_student_once' => 'boolean',
+        'is_package_priority' => 'boolean',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'package_locked_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 
@@ -76,6 +81,7 @@ class Coupons extends Model
                 $sub->whereNull('end_date')
                     ->orWhere('end_date', '>=', $now);
             })
+            ->whereNull('package_locked_at')
             ->whereRaw(
                 '(coupons.count is null or coupons.count = 0 or (select count(*) from coupons_usage where coupons_usage.coupon_id = coupons.id) < coupons.count)'
             );

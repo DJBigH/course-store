@@ -12,9 +12,14 @@ use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherCourseGrant;
+use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
 
 class TeacherCouponController extends Controller
 {
+    public function __construct(
+        protected TeacherPackageLifecycleManager $packageLifecycleManager,
+    ) {}
+
     public function index(Request $request)
     {
         $teacher = $this->resolveTeacher();
@@ -22,12 +27,15 @@ class TeacherCouponController extends Controller
             return $this->redirectToStatus();
         }
 
-        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
-            return $featureRedirect;
-        }
+        $this->syncCouponLocks($teacher);
+        $teacher->refresh();
 
         $couponLimit = $this->resolveCouponLimit($teacher);
         $couponCount = $this->resolveTeacherCouponCount($teacher);
+        $activeCouponCount = $this->resolveTeacherCouponCount($teacher, false);
+        $lockedCouponCount = $this->resolveTeacherLockedCouponCount($teacher);
+        $canManageCoupons = $teacher->packageHasFeature('can_manage_coupons');
+        $canCreateCoupons = $canManageCoupons && !$this->isCouponOverLimit($couponLimit, $lockedCouponCount);
 
         $coupons = Coupons::query()
             ->with(['courses', 'students'])
@@ -46,7 +54,11 @@ class TeacherCouponController extends Controller
             'teacher',
             'coupons',
             'couponLimit',
-            'couponCount'
+            'couponCount',
+            'activeCouponCount',
+            'lockedCouponCount',
+            'canManageCoupons',
+            'canCreateCoupons'
         ));
     }
 
@@ -59,6 +71,13 @@ class TeacherCouponController extends Controller
 
         if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
             return $featureRedirect;
+        }
+
+        $this->syncCouponLocks($teacher);
+        $teacher->refresh();
+
+        if ($limitRedirect = $this->ensureCouponUnderVisibleLimit($teacher)) {
+            return $limitRedirect;
         }
 
         if ($limitRedirect = $this->ensureCouponCreationAllowed($teacher)) {
@@ -100,6 +119,13 @@ class TeacherCouponController extends Controller
             return $featureRedirect;
         }
 
+        $this->syncCouponLocks($teacher);
+        $teacher->refresh();
+
+        if ($limitRedirect = $this->ensureCouponUnderVisibleLimit($teacher)) {
+            return $limitRedirect;
+        }
+
         if ($limitRedirect = $this->ensureCouponCreationAllowed($teacher)) {
             return $limitRedirect;
         }
@@ -118,6 +144,7 @@ class TeacherCouponController extends Controller
 
         $coupon->students()->sync($assignment['students']);
         $coupon->courses()->sync($assignment['courses']);
+        $this->syncCouponLocks($teacher);
 
         return redirect()
             ->route('teacher.dashboard.coupons.edit', $coupon->id)
@@ -136,6 +163,9 @@ class TeacherCouponController extends Controller
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
+        if ($lockedRedirect = $this->ensureCouponEditable($coupon)) {
+            return $lockedRedirect;
+        }
         $students = $this->resolveTeacherStudents($teacher);
         $courses = Courses::query()
             ->withoutGlobalScopes()
@@ -171,6 +201,9 @@ class TeacherCouponController extends Controller
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
+        if ($lockedRedirect = $this->ensureCouponEditable($coupon)) {
+            return $lockedRedirect;
+        }
         $data = $this->validateCoupon($request, $coupon->id);
         $assignment = $this->validateAssignment($request, $teacher);
         if ($assignment === null) {
@@ -182,6 +215,7 @@ class TeacherCouponController extends Controller
         $coupon->update($data);
         $coupon->students()->sync($assignment['students']);
         $coupon->courses()->sync($assignment['courses']);
+        $this->syncCouponLocks($teacher);
 
         return redirect()
             ->route('teacher.dashboard.coupons.edit', $coupon->id)
@@ -195,16 +229,36 @@ class TeacherCouponController extends Controller
             return $this->redirectToStatus();
         }
 
-        if ($featureRedirect = $this->ensureCouponFeatureAllowed($teacher)) {
-            return $featureRedirect;
-        }
-
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
         $coupon->delete();
+        $this->syncCouponLocks($teacher);
 
         return redirect()
             ->route('teacher.dashboard.coupons.index')
             ->with('msg_success', __('teacher::coupons.flash.deleted'));
+    }
+
+    public function togglePriority(int $id)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $coupon = $this->resolveTeacherCoupon($teacher, $id);
+        $coupon->update([
+            'is_package_priority' => !$coupon->is_package_priority,
+        ]);
+
+        $this->syncCouponLocks($teacher);
+
+        return redirect()
+            ->route('teacher.dashboard.coupons.index')
+            ->with('msg_success', __(
+                $coupon->fresh()->is_package_priority
+                    ? 'teacher::coupons.flash.priority_enabled'
+                    : 'teacher::coupons.flash.priority_disabled'
+            ));
     }
 
     public function students(int $id)
@@ -219,6 +273,9 @@ class TeacherCouponController extends Controller
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
+        if ($lockedRedirect = $this->ensureCouponEditable($coupon)) {
+            return $lockedRedirect;
+        }
         $students = $this->resolveTeacherStudents($teacher);
         $assignedStudentIds = $coupon->students()->pluck('students.id')->map(fn ($sid) => (int) $sid)->all();
 
@@ -247,6 +304,9 @@ class TeacherCouponController extends Controller
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
+        if ($lockedRedirect = $this->ensureCouponEditable($coupon)) {
+            return $lockedRedirect;
+        }
         $allowedStudents = $this->resolveTeacherStudents($teacher)->pluck('id')->map(fn ($sid) => (int) $sid)->all();
         $studentIds = collect($request->input('students', []))
             ->map(fn ($sid) => (int) $sid)
@@ -264,6 +324,7 @@ class TeacherCouponController extends Controller
         }
 
         $coupon->students()->sync($syncData);
+        $this->syncCouponLocks($teacher);
 
         return redirect()
             ->route('teacher.dashboard.coupons.students', $coupon->id)
@@ -282,6 +343,9 @@ class TeacherCouponController extends Controller
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
+        if ($lockedRedirect = $this->ensureCouponEditable($coupon)) {
+            return $lockedRedirect;
+        }
         $courses = Courses::query()
             ->withoutGlobalScopes()
             ->where('teacher_id', $teacher->id)
@@ -314,6 +378,9 @@ class TeacherCouponController extends Controller
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
+        if ($lockedRedirect = $this->ensureCouponEditable($coupon)) {
+            return $lockedRedirect;
+        }
         $allowedCourses = Courses::query()
             ->withoutGlobalScopes()
             ->where('teacher_id', $teacher->id)
@@ -337,6 +404,7 @@ class TeacherCouponController extends Controller
         }
 
         $coupon->courses()->sync($syncData);
+        $this->syncCouponLocks($teacher);
 
         return redirect()
             ->route('teacher.dashboard.coupons.courses', $coupon->id)
@@ -489,18 +557,17 @@ class TeacherCouponController extends Controller
 
     private function ensureCouponCreationAllowed(Teacher $teacher)
     {
-        $limit = $this->resolveCouponLimit($teacher);
-        if ($limit === null) {
+        if (!$teacher->packageHasFeature('can_manage_coupons')) {
+            return redirect()
+                ->route('teacher.dashboard.coupons.index')
+                ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
+        }
+
+        if ($this->resolveCouponLimit($teacher) === null) {
             return null;
         }
 
-        if ($this->resolveTeacherCouponCount($teacher) < $limit) {
-            return null;
-        }
-
-        return redirect()
-            ->route('teacher.dashboard.coupons.index')
-            ->with('msg_danger', __('teacher::coupons.flash.limit_reached', ['limit' => $limit]));
+        return null;
     }
 
     private function resolveCouponLimit(Teacher $teacher): ?int
@@ -512,11 +579,25 @@ class TeacherCouponController extends Controller
         return $teacher->currentPackage()?->effective_coupon_limit;
     }
 
-    private function resolveTeacherCouponCount(Teacher $teacher): int
+    private function resolveTeacherCouponCount(Teacher $teacher, bool $includeLocked = true): int
     {
         return Coupons::query()
             ->where('teacher_id', $teacher->id)
+            ->when(!$includeLocked, fn ($query) => $query->whereNull('package_locked_at'))
             ->count();
+    }
+
+    private function resolveTeacherLockedCouponCount(Teacher $teacher): int
+    {
+        return Coupons::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereNotNull('package_locked_at')
+            ->count();
+    }
+
+    private function isCouponOverLimit(?int $couponLimit, int $lockedCouponCount): bool
+    {
+        return $couponLimit !== null && $lockedCouponCount > 0;
     }
 
     private function resolveTeacherCoupon(Teacher $teacher, int $id): Coupons
@@ -524,6 +605,36 @@ class TeacherCouponController extends Controller
         return Coupons::query()
             ->where('teacher_id', $teacher->id)
             ->findOrFail($id);
+    }
+
+    private function ensureCouponEditable(Coupons $coupon)
+    {
+        if (!$coupon->package_locked_at) {
+            return null;
+        }
+
+        return redirect()
+            ->route('teacher.dashboard.coupons.index')
+            ->with('msg_danger', __('teacher::coupons.flash.locked_manage_only'));
+    }
+
+    private function syncCouponLocks(Teacher $teacher): void
+    {
+        $this->packageLifecycleManager->syncCouponLocks($teacher->fresh(['application.package']));
+    }
+
+    private function ensureCouponUnderVisibleLimit(Teacher $teacher)
+    {
+        $couponLimit = $this->resolveCouponLimit($teacher);
+        $lockedCouponCount = $this->resolveTeacherLockedCouponCount($teacher);
+
+        if (!$this->isCouponOverLimit($couponLimit, $lockedCouponCount)) {
+            return null;
+        }
+
+        return redirect()
+            ->route('teacher.dashboard.coupons.index')
+            ->with('msg_danger', __('teacher::coupons.flash.limit_reached', ['limit' => $couponLimit]));
     }
 
     private function resolveTeacherStudents(Teacher $teacher)

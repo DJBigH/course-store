@@ -39,6 +39,9 @@ class Teacher extends Model
         'approved_by',
         'package_started_at',
         'package_expires_at',
+        'last_active_at',
+        'inactive_teacher_notified_at',
+        'inactive_admin_notified_at',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -49,6 +52,9 @@ class Teacher extends Model
         'commission_rate' => 'float',
         'package_started_at' => 'datetime',
         'package_expires_at' => 'datetime',
+        'last_active_at' => 'datetime',
+        'inactive_teacher_notified_at' => 'datetime',
+        'inactive_admin_notified_at' => 'datetime',
     ];
 
     public function student()
