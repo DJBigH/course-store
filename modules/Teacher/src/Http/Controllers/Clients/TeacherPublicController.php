@@ -59,6 +59,15 @@ class TeacherPublicController extends Controller
             return $this->errorResponse($request, __('teacher::public.rating_need_purchase'), 403);
         }
 
+        $existingRating = TeacherRating::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('student_id', $student->id)
+            ->value('rating');
+
+        if ($existingRating !== null) {
+            return $this->errorResponse($request, __('teacher::public.rating_already_submitted'), 422);
+        }
+
         $payload = $request->validate([
             'rating' => ['required', 'numeric', 'min:1', 'max:5'],
         ]);
@@ -68,15 +77,11 @@ class TeacherPublicController extends Controller
             return $this->errorResponse($request, __('courses::clients/common.rating_invalid'), 422);
         }
 
-        TeacherRating::query()->updateOrCreate(
-            [
-                'teacher_id' => $teacher->id,
-                'student_id' => $student->id,
-            ],
-            [
-                'rating' => $rating,
-            ]
-        );
+        TeacherRating::query()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'rating' => $rating,
+        ]);
 
         $teacher->loadCount('ratings');
         $teacher->loadAvg('ratings', 'rating');

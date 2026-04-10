@@ -6,6 +6,7 @@
     $teacherCurrentPackage = $teacherProfile?->application?->package ?? $teacherApplication?->package;
     $teacherCanManageComments = $teacherProfile?->packageHasFeature('can_manage_comments') ?? false;
     $teacherCanManageCoupons = $teacherProfile?->packageHasFeature('can_manage_coupons') ?? false;
+    $teacherCanViewActivityLogs = $teacherProfile?->packageHasFeature('can_view_activity_logs') ?? false;
     $teacherIsActive = $teacherProfile && $teacherProfile->status === 'active';
     $teacherPendingUpgrade = $teacherStudent?->teacherApplications()
         ->where(function ($query) {
@@ -229,6 +230,22 @@
                     Học viên của tôi
                 </a>
 
+                @if ($teacherCanViewActivityLogs)
+                    <a class="nav-link {{ request()->routeIs('teacher.dashboard.activity-logs') ? 'active' : '' }}"
+                        href="{{ route('teacher.dashboard.activity-logs') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-clock-rotate-left"></i></div>
+                        {{ __('teacher::dashboard.nav.activity_logs') }}
+                    </a>
+                @elseif ($teacherIsActive)
+                    <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
+                        <span class="nav-link-main">
+                            <span class="sb-nav-link-icon"><i class="fas fa-clock-rotate-left"></i></span>
+                            <span class="nav-link-text">{{ __('teacher::dashboard.nav.activity_logs') }}</span>
+                        </span>
+                        <span class="nav-link-lock">{{ __('teacher::dashboard.package_features.upgrade_badge') }}</span>
+                    </a>
+                @endif
+
                 <a class="nav-link {{ request()->routeIs('teacher.dashboard.orders*') ? 'active' : '' }}"
                     href="{{ route('teacher.dashboard.orders') }}">
                     <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>
@@ -286,5 +303,4 @@
         </div>
     </nav>
 </div>
-
 

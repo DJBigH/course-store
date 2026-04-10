@@ -17,4 +17,6 @@ return [
     'rating_submit' => 'Save rating',
     'rating_need_purchase' => 'You need to own at least one course from this instructor before rating.',
     'rating_login_required' => 'Sign in as a student to rate this instructor.',
+    'rating_already_submitted' => 'You have already rated this instructor and can only rate once.',
+    'rating_submitted_once' => 'You rated this instructor :rating stars. Each student can rate only once.',
 ];

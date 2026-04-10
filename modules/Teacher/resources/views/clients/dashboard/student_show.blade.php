@@ -39,12 +39,18 @@
             <div class="alert alert-danger">{{ session('msg_danger') }}</div>
         @endif
 
-        @if (!$teacher->packageHasFeature('can_grant_courses'))
+        @if (!$teacher->packageHasFeature('can_grant_courses') || !$teacher->packageHasFeature('can_view_student_progress'))
             <div class="alert alert-warning border-0 mb-4">
                 <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
                     <div>
                         <strong>{{ __('teacher::dashboard.package_features.upsell_title') }}</strong>
-                        <div class="mt-1 text-muted">{{ __('teacher::dashboard.package_features.students_locked_grants') }}</div>
+                        <div class="mt-1 text-muted">
+                            @if (!$teacher->packageHasFeature('can_view_student_progress'))
+                                {{ __('teacher::dashboard.package_features.students_locked_progress') }}
+                            @else
+                                {{ __('teacher::dashboard.package_features.students_locked_grants') }}
+                            @endif
+                        </div>
                     </div>
                     <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
                         {{ __('teacher::dashboard.package_features.upgrade_cta') }}
@@ -74,6 +80,13 @@
                 <span>Tong chi tieu</span>
                 <strong>{{ money($summary['spent']) }}</strong>
             </div>
+            @if ($teacher->packageHasFeature('can_view_student_progress'))
+                <div class="teacher-student-show-summary__item">
+                    <span>Tien do hoc tong quan</span>
+                    <strong>{{ $summary['progress_percent'] ?? 0 }}%</strong>
+                    <small>{{ $summary['completed_lessons'] ?? 0 }} / {{ $summary['total_lessons'] ?? 0 }} bai</small>
+                </div>
+            @endif
             <div class="teacher-student-show-summary__item">
                 <span>Lan mua gan nhat</span>
                 <strong>{{ optional($summary['last_purchase_at'])->format('d/m/Y H:i') ?: 'Chua co du lieu' }}</strong>
@@ -168,6 +181,7 @@
                                     </span>
                                 </div>
 
+                                @if ($teacher->packageHasFeature('can_view_student_progress'))
                                 <div class="teacher-student-show-course__progress">
                                     <div class="teacher-student-show-course__progress-head">
                                         <small>Tien do hoc</small>
@@ -183,6 +197,7 @@
                                         @endif
                                     </small>
                                 </div>
+                                @endif
                             </article>
                         @empty
                             <p class="mb-0 text-white-50">Hoc vien nay chua co quyen vao khoa hoc nao cua ban.</p>
@@ -228,6 +243,57 @@
                         @endforelse
                     </div>
                 </section>
+
+                @if ($teacher->packageHasFeature('can_view_activity_logs'))
+                    <section class="teacher-student-show-card">
+                        <h4>Lich su thao tac voi hoc vien</h4>
+                        <div class="teacher-student-show-activity-list">
+                            @forelse ($activityHistory as $activity)
+                                @php
+                                    $activityProperties = is_array($activity->properties) ? $activity->properties : [];
+                                @endphp
+                                <article class="teacher-student-show-activity">
+                                    <div class="teacher-student-show-activity__head">
+                                        <div>
+                                            <strong>
+                                                {{ match ($activity->action) {
+                                                    'note_saved' => 'Cap nhat ghi chu noi bo',
+                                                    'grant_created' => 'Cap quyen hoc thu cong',
+                                                    'grant_revoked' => 'Thu hoi quyen hoc',
+                                                    default => $activity->description ?: $activity->action,
+                                                } }}
+                                            </strong>
+                                            <span>{{ optional($activity->created_at)->format('d/m/Y H:i') }}</span>
+                                        </div>
+                                        <span class="teacher-student-show-activity__badge">
+                                            {{ $activityProperties['course_name'] ?? ($activityProperties['tag_label'] ?? 'Hoc vien') }}
+                                        </span>
+                                    </div>
+                                    <p class="mb-2">{{ $activity->description ?: 'Khong co mo ta chi tiet.' }}</p>
+                                    @if (!empty($activityProperties['note_preview']))
+                                        <small>Ghi chu: {{ $activityProperties['note_preview'] }}</small>
+                                    @elseif (!empty($activityProperties['reason_label']) || !empty($activityProperties['reason']))
+                                        <small>Ly do: {{ $activityProperties['reason_label'] ?? $activityProperties['reason'] }}</small>
+                                    @elseif (array_key_exists('had_paid_access', $activityProperties))
+                                        <small>
+                                            {{ $activityProperties['had_paid_access'] ? 'Hoc vien van con quyen do da mua khoa hoc.' : 'Neu khong co don mua, quyen hoc da duoc thu hoi hoan toan.' }}
+                                        </small>
+                                    @endif
+                                </article>
+                            @empty
+                                <p class="mb-0 text-white-50">Chua co thao tac nao duoc ghi lai cho hoc vien nay.</p>
+                            @endforelse
+                        </div>
+                    </section>
+                @else
+                    <section class="teacher-student-show-card teacher-student-show-card--locked">
+                        <h4>Lich su thao tac voi hoc vien</h4>
+                        <p class="mb-3">{{ __('teacher::dashboard.package_features.activity_logs_locked') }}</p>
+                        <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-outline-warning">
+                            {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                        </a>
+                    </section>
+                @endif
 
                 <section class="teacher-student-show-card">
                     <h4>Lich su mua khoa hoc cua ban</h4>
@@ -363,9 +429,20 @@
             font-weight: 900;
         }
 
+        .teacher-student-show-summary__item small {
+            display: block;
+            margin-top: 0.35rem;
+            color: #7f97b8;
+        }
+
         .teacher-student-show-card {
             padding: 1.25rem;
             height: 100%;
+        }
+
+        .teacher-student-show-card--locked {
+            border-style: dashed;
+            background: rgba(245, 158, 11, 0.08);
         }
 
         .teacher-student-show-card h4 {
@@ -453,6 +530,46 @@
             overflow: hidden;
             background: rgba(148, 163, 184, 0.16);
             margin-bottom: 0.45rem;
+        }
+
+        .teacher-student-show-activity-list {
+            display: grid;
+            gap: 0.85rem;
+        }
+
+        .teacher-student-show-activity {
+            padding: 1rem;
+            border-radius: 18px;
+            background: rgba(11, 19, 36, 0.72);
+            border: 1px solid rgba(96, 165, 250, 0.12);
+        }
+
+        .teacher-student-show-activity__head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .teacher-student-show-activity__head span {
+            color: #8ca6c6;
+        }
+
+        .teacher-student-show-activity__badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 0.72rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.14);
+            color: #dbeafe !important;
+            font-size: 0.82rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .teacher-student-show-activity small {
+            color: #8ca6c6;
         }
 
         .teacher-student-show-course__progress-bar span {

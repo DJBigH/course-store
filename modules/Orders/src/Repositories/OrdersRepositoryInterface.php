@@ -13,6 +13,7 @@ interface OrdersRepositoryInterface extends RepositoryInterface
     public function updateDiscount($orderId, $disscount, $coupon);
     public function createOrder($data = []);
     public function createOrderWithDetail(array $orderData, array $detailData);
+    public function createOrderWithDetails(array $orderData, array $detailRows);
     public function completePayment(Order $order);
     public function cancelOrder(Order $order);
     public function getCategories();

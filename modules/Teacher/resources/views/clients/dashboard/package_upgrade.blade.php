@@ -6,6 +6,100 @@
         $selectedPaymentMethod = old('payment_method', 'bank_transfer');
         $currentPackageExpiresAt = $teacher->package_expires_at;
         $currentPackageDaysLeft = $currentPackageExpiresAt ? max(now()->startOfDay()->diffInDays($currentPackageExpiresAt->copy()->startOfDay(), false), 0) : null;
+        $isRecurringPackage = fn ($package) => in_array($package?->billing_cycle, ['monthly', 'yearly'], true);
+        $formatDate = fn ($date) => $date?->format('d/m/Y');
+        $packageTermLabel = function ($package) {
+            return match ($package?->billing_cycle) {
+                'monthly' => __('teacher::dashboard.package.term_monthly'),
+                'yearly' => __('teacher::dashboard.package.term_yearly'),
+                default => __('teacher::dashboard.package.term_permanent'),
+            };
+        };
+        $calculatePackagePreview = function ($targetPackage) use ($currentPackage, $currentPackageExpiresAt, $isRecurringPackage) {
+            $now = now();
+            $isTargetRecurring = $isRecurringPackage($targetPackage);
+
+            $calculateExpiresAt = function ($package, $startAt) use ($isRecurringPackage) {
+                if (!$isRecurringPackage($package) || !$startAt) {
+                    return null;
+                }
+
+                return match ($package->billing_cycle) {
+                    'monthly' => $startAt->copy()->addMonth(),
+                    'yearly' => $startAt->copy()->addYear(),
+                    default => null,
+                };
+            };
+
+            if (!$currentPackage || !$targetPackage) {
+                return [
+                    'start_at' => $now,
+                    'expires_at' => $calculateExpiresAt($targetPackage, $now),
+                    'is_queued' => false,
+                ];
+            }
+
+            if (
+                $isRecurringPackage($currentPackage) &&
+                $currentPackageExpiresAt &&
+                $currentPackageExpiresAt->isFuture()
+            ) {
+                if (
+                    (int) $currentPackage->id === (int) $targetPackage->id &&
+                    $currentPackage->billing_cycle === $targetPackage->billing_cycle
+                ) {
+                    return [
+                        'start_at' => $currentPackageExpiresAt->copy(),
+                        'expires_at' => $calculateExpiresAt($targetPackage, $currentPackageExpiresAt->copy()),
+                        'is_queued' => false,
+                    ];
+                }
+
+                if ((int) ($targetPackage->sort_order ?? 0) >= (int) ($currentPackage->sort_order ?? 0)) {
+                    return [
+                        'start_at' => $now,
+                        'expires_at' => $calculateExpiresAt($targetPackage, $now),
+                        'is_queued' => false,
+                    ];
+                }
+
+                return [
+                    'start_at' => $currentPackageExpiresAt->copy(),
+                    'expires_at' => $calculateExpiresAt($targetPackage, $currentPackageExpiresAt->copy()),
+                    'is_queued' => true,
+                ];
+            }
+
+            return [
+                'start_at' => $now,
+                'expires_at' => $calculateExpiresAt($targetPackage, $now),
+                'is_queued' => false,
+            ];
+        };
+        $packageTermDescription = function ($package, ?array $preview = null) use ($isRecurringPackage, $formatDate, $packageTermLabel) {
+            if (!$isRecurringPackage($package)) {
+                return __('teacher::dashboard.package.term_description_permanent');
+            }
+
+            $startAt = $preview['start_at'] ?? null;
+            $expiresAt = $preview['expires_at'] ?? null;
+            $isQueued = (bool) ($preview['is_queued'] ?? false);
+
+            if (!$startAt || !$expiresAt) {
+                return $packageTermLabel($package);
+            }
+
+            if ($isQueued) {
+                return __('teacher::dashboard.package.term_description_queued', [
+                    'start' => $formatDate($startAt),
+                    'expires' => $formatDate($expiresAt),
+                ]);
+            }
+
+            return __('teacher::dashboard.package.term_description_active', [
+                'expires' => $formatDate($expiresAt),
+            ]);
+        };
         $currentPackageMap = [
             'id' => (int) ($currentPackage?->id ?? 0),
             'billing_cycle' => $currentPackage?->billing_cycle,
@@ -16,10 +110,12 @@
         $packageMap = $upgradePackages
             ->mapWithKeys(fn ($package) => [
                 $package->id => [
+                    'term_label' => $packageTermLabel($package),
                     'name' => $package->name_locale ?: $package->name,
                     'price' => (float) $package->price,
                     'billing_cycle' => $package->billing_cycle,
                     'sort_order' => (int) $package->sort_order,
+                    'term_description' => $packageTermDescription($package, $calculatePackagePreview($package)),
                     'meta' => __('teacher::dashboard.package.current_meta', [
                         'commission' => rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.'),
                         'limit' => $package->effective_course_limit ?: __('teacher::dashboard.courses.unlimited'),
@@ -31,9 +127,18 @@
             'can_duplicate_courses' => __('teacher::dashboard.package_features.labels.can_duplicate_courses'),
             'can_manage_comments' => __('teacher::dashboard.package_features.labels.can_manage_comments'),
             'can_manage_coupons' => __('teacher::dashboard.package_features.labels.can_manage_coupons'),
+            'can_manage_students' => __('teacher::dashboard.package_features.labels.can_manage_students'),
+            'can_view_student_progress' => __('teacher::dashboard.package_features.labels.can_view_student_progress'),
+            'can_view_activity_logs' => __('teacher::dashboard.package_features.labels.can_view_activity_logs'),
             'can_grant_courses' => __('teacher::dashboard.package_features.labels.can_grant_courses'),
             'can_export_orders' => __('teacher::dashboard.package_features.labels.can_export_orders'),
             'can_export_students' => __('teacher::dashboard.package_features.labels.can_export_students'),
+            'can_sell_bundles' => __('teacher::dashboard.package_features.labels.can_sell_bundles'),
+            'can_schedule_content' => __('teacher::dashboard.package_features.labels.can_schedule_content'),
+            'can_send_promotions' => __('teacher::dashboard.package_features.labels.can_send_promotions'),
+            'can_issue_certificates' => __('teacher::dashboard.package_features.labels.can_issue_certificates'),
+            'can_customize_teacher_landing' => __('teacher::dashboard.package_features.labels.can_customize_teacher_landing'),
+            'can_use_affiliate_links' => __('teacher::dashboard.package_features.labels.can_use_affiliate_links'),
         ];
         $featureNotes = [
             'course_limit' => __('teacher::dashboard.package_features.notes.course_limit'),
@@ -43,9 +148,18 @@
             'can_duplicate_courses' => __('teacher::dashboard.package_features.notes.can_duplicate_courses'),
             'can_manage_comments' => __('teacher::dashboard.package_features.notes.can_manage_comments'),
             'can_manage_coupons' => __('teacher::dashboard.package_features.notes.can_manage_coupons'),
+            'can_manage_students' => __('teacher::dashboard.package_features.notes.can_manage_students'),
+            'can_view_student_progress' => __('teacher::dashboard.package_features.notes.can_view_student_progress'),
+            'can_view_activity_logs' => __('teacher::dashboard.package_features.notes.can_view_activity_logs'),
             'can_grant_courses' => __('teacher::dashboard.package_features.notes.can_grant_courses'),
             'can_export_orders' => __('teacher::dashboard.package_features.notes.can_export_orders'),
             'can_export_students' => __('teacher::dashboard.package_features.notes.can_export_students'),
+            'can_sell_bundles' => __('teacher::dashboard.package_features.notes.can_sell_bundles'),
+            'can_schedule_content' => __('teacher::dashboard.package_features.notes.can_schedule_content'),
+            'can_send_promotions' => __('teacher::dashboard.package_features.notes.can_send_promotions'),
+            'can_issue_certificates' => __('teacher::dashboard.package_features.notes.can_issue_certificates'),
+            'can_customize_teacher_landing' => __('teacher::dashboard.package_features.notes.can_customize_teacher_landing'),
+            'can_use_affiliate_links' => __('teacher::dashboard.package_features.notes.can_use_affiliate_links'),
         ];
         $missingFeatureKeys = collect(array_keys($featureRows))
             ->filter(fn ($featureKey) => !$currentPackage?->{$featureKey})
@@ -64,6 +178,49 @@
         $missingFeatureLabels = $missingFeatureKeys
             ->map(fn ($featureKey) => $featureRows[$featureKey] ?? $featureKey)
             ->values();
+        $compareDeltaLabel = function ($currentValue, $targetValue, array $options = []) {
+            $mode = $options['mode'] ?? 'number';
+            $sameLabel = $options['same'] ?? __('teacher::dashboard.package_features.compare_same');
+            $betterPrefix = $options['better_prefix'] ?? '+';
+            $worsePrefix = $options['worse_prefix'] ?? '-';
+            $suffix = $options['suffix'] ?? '';
+            $currentUnlimited = (bool) ($options['current_unlimited'] ?? false);
+            $targetUnlimited = (bool) ($options['target_unlimited'] ?? false);
+
+            if ($mode === 'feature') {
+                if ((bool) $currentValue === (bool) $targetValue) {
+                    return ['label' => $sameLabel, 'class' => 'is-same'];
+                }
+
+                return (bool) $targetValue
+                    ? ['label' => __('teacher::dashboard.package_features.compare_gain'), 'class' => 'is-better']
+                    : ['label' => __('teacher::dashboard.package_features.compare_loss'), 'class' => 'is-worse'];
+            }
+
+            if ($targetUnlimited && !$currentUnlimited) {
+                return ['label' => __('teacher::dashboard.package_features.compare_unlimited'), 'class' => 'is-better'];
+            }
+
+            if ($currentUnlimited && !$targetUnlimited) {
+                return ['label' => __('teacher::dashboard.package_features.compare_limited'), 'class' => 'is-worse'];
+            }
+
+            if ($currentUnlimited && $targetUnlimited) {
+                return ['label' => $sameLabel, 'class' => 'is-same'];
+            }
+
+            $delta = (float) $targetValue - (float) $currentValue;
+
+            if (abs($delta) < 0.00001) {
+                return ['label' => $sameLabel, 'class' => 'is-same'];
+            }
+
+            $formattedDelta = rtrim(rtrim(number_format(abs($delta), 2, '.', ''), '0'), '.');
+
+            return $delta > 0
+                ? ['label' => $betterPrefix . $formattedDelta . $suffix, 'class' => 'is-better']
+                : ['label' => $worsePrefix . $formattedDelta . $suffix, 'class' => 'is-worse'];
+        };
     @endphp
 
     <div class="teacher-page-shell">
@@ -98,7 +255,10 @@
                         'limit' => $currentPackage?->effective_course_limit ?: __('teacher::dashboard.courses.unlimited'),
                     ]) }}
                 </div>
-                @if ($currentPackageExpiresAt)
+                <div class="teacher-upgrade-current__term">
+                    {{ __('teacher::dashboard.package.term_label') }}: {{ $packageTermLabel($currentPackage) }}
+                </div>
+                @if ($isRecurringPackage($currentPackage) && $currentPackageExpiresAt)
                     <div class="teacher-upgrade-current__time">
                         Hết hạn ngày {{ $currentPackageExpiresAt->format('d/m/Y') }} • còn {{ $currentPackageDaysLeft }} ngày
                     </div>
@@ -136,6 +296,7 @@
                                 $isSelected = $selectedPackageId === $packageId;
                                 $isFeatured = (bool) $package->is_featured;
                                 $isRecommended = $recommendedPackageId !== null && $recommendedPackageId === $packageId;
+                                $packagePreview = $calculatePackagePreview($package);
                             @endphp
                             <div class="col-xl-4 col-md-6">
                                 <label class="teacher-upgrade-card {{ $isSelected ? 'is-selected' : '' }} {{ $isFeatured ? 'is-featured' : '' }} {{ $isRecommended ? 'is-recommended' : '' }}" data-upgrade-card>
@@ -176,6 +337,12 @@
                                                     'limit' => $package->effective_course_limit ?: __('teacher::dashboard.courses.unlimited'),
                                                 ]) }}
                                             </li>
+                                            <li>
+                                                {{ __('teacher::dashboard.package.term_label') }}: {{ $packageTermLabel($package) }}
+                                            </li>
+                                            <li class="teacher-upgrade-card__term">
+                                                {{ $packageTermDescription($package, $packagePreview) }}
+                                            </li>
                                             @if (($package->support_level_locale ?: '') !== '')
                                                 <li>{{ $package->support_level_locale }}</li>
                                             @endif
@@ -215,16 +382,51 @@
                                         <div class="small text-muted mt-1">{{ $currentPackage?->name_locale ?: $currentPackage?->name }}</div>
                                     </th>
                                     @foreach ($upgradePackages as $package)
+                                        @php
+                                            $isSelectedCompareColumn = (int) $package->id === $selectedPackageId;
+                                        @endphp
                                         <th data-compare-col="{{ (int) $package->id }}">
-                                            {{ $package->name_locale ?: $package->name }}
-                                            @if ((int) $package->id === $selectedPackageId)
-                                                <div class="small mt-1 text-info" data-compare-selected-label="{{ (int) $package->id }}">{{ __('teacher::dashboard.package_features.compare_selected') }}</div>
-                                            @endif
+                                            <div class="teacher-upgrade-compare__heading">
+                                                <div>{{ $package->name_locale ?: $package->name }}</div>
+                                                <span class="teacher-upgrade-compare__selected-badge {{ $isSelectedCompareColumn ? 'is-visible' : '' }}" data-compare-selected-label="{{ (int) $package->id }}">
+                                                    <span aria-hidden="true">&#10003;</span>
+                                                    {{ __('teacher::dashboard.package_features.compare_selected') }}
+                                                </span>
+                                            </div>
                                         </th>
                                     @endforeach
                                 </tr>
                             </thead>
                             <tbody>
+                                <tr>
+                                    <td>
+                                        <div>{{ __('teacher::dashboard.package.term_label') }}</div>
+                                        <div class="small text-muted mt-1">{{ __('teacher::dashboard.package.term_compare_note') }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="teacher-upgrade-compare__pill is-neutral">
+                                            {{ $packageTermLabel($currentPackage) }}
+                                        </span>
+                                        @if ($isRecurringPackage($currentPackage) && $currentPackageExpiresAt)
+                                            <div class="teacher-upgrade-compare__delta is-same">
+                                                {{ __('teacher::dashboard.package.current_expiry_short', ['date' => $currentPackageExpiresAt->format('d/m/Y')]) }}
+                                            </div>
+                                        @endif
+                                    </td>
+                                    @foreach ($upgradePackages as $package)
+                                        @php
+                                            $packagePreview = $calculatePackagePreview($package);
+                                        @endphp
+                                        <td data-compare-cell="{{ (int) $package->id }}">
+                                            <span class="teacher-upgrade-compare__pill is-neutral">
+                                                {{ $packageTermLabel($package) }}
+                                            </span>
+                                            <div class="teacher-upgrade-compare__delta is-better">
+                                                {{ $packageTermDescription($package, $packagePreview) }}
+                                            </div>
+                                        </td>
+                                    @endforeach
+                                </tr>
                                 <tr>
                                     <td>
                                         <div>{{ __('teacher::dashboard.package_features.labels.course_limit') }}</div>
@@ -236,10 +438,24 @@
                                         </span>
                                     </td>
                                     @foreach ($upgradePackages as $package)
+                                        @php
+                                            $courseDelta = $compareDeltaLabel(
+                                                $currentPackage?->effective_course_limit,
+                                                $package->effective_course_limit,
+                                                [
+                                                    'current_unlimited' => empty($currentPackage?->effective_course_limit),
+                                                    'target_unlimited' => empty($package->effective_course_limit),
+                                                    'suffix' => ' ' . __('teacher::dashboard.package_features.compare_unit_courses'),
+                                                ]
+                                            );
+                                        @endphp
                                         <td data-compare-cell="{{ (int) $package->id }}">
                                             <span class="teacher-upgrade-compare__pill is-neutral">
                                                 {{ $package->effective_course_limit ?: __('teacher::dashboard.courses.unlimited') }}
                                             </span>
+                                            <div class="teacher-upgrade-compare__delta {{ $courseDelta['class'] }}">
+                                                {{ $courseDelta['label'] }}
+                                            </div>
                                         </td>
                                     @endforeach
                                 </tr>
@@ -254,10 +470,20 @@
                                         </span>
                                     </td>
                                     @foreach ($upgradePackages as $package)
+                                        @php
+                                            $commissionDelta = $compareDeltaLabel(
+                                                (float) ($currentPackage?->commission_rate ?? 0),
+                                                (float) $package->commission_rate,
+                                                ['suffix' => '%']
+                                            );
+                                        @endphp
                                         <td data-compare-cell="{{ (int) $package->id }}">
                                             <span class="teacher-upgrade-compare__pill is-neutral">
                                                 {{ rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.') }}%
                                             </span>
+                                            <div class="teacher-upgrade-compare__delta {{ $commissionDelta['class'] }}">
+                                                {{ $commissionDelta['label'] }}
+                                            </div>
                                         </td>
                                     @endforeach
                                 </tr>
@@ -272,10 +498,20 @@
                                         </span>
                                     </td>
                                     @foreach ($upgradePackages as $package)
+                                        @php
+                                            $payoutDelta = $compareDeltaLabel(
+                                                (float) ($currentPackage?->effective_payout_account_limit ?? 3),
+                                                (float) $package->effective_payout_account_limit,
+                                                ['suffix' => ' ' . __('teacher::dashboard.package_features.compare_unit_accounts')]
+                                            );
+                                        @endphp
                                         <td data-compare-cell="{{ (int) $package->id }}">
                                             <span class="teacher-upgrade-compare__pill is-neutral">
                                                 {{ $package->effective_payout_account_limit }}
                                             </span>
+                                            <div class="teacher-upgrade-compare__delta {{ $payoutDelta['class'] }}">
+                                                {{ $payoutDelta['label'] }}
+                                            </div>
                                         </td>
                                     @endforeach
                                 </tr>
@@ -294,6 +530,17 @@
                                         </span>
                                     </td>
                                     @foreach ($upgradePackages as $package)
+                                        @php
+                                            $couponDelta = $compareDeltaLabel(
+                                                $currentPackage?->can_manage_coupons ? $currentPackage?->effective_coupon_limit : 0,
+                                                $package->can_manage_coupons ? $package->effective_coupon_limit : 0,
+                                                [
+                                                    'current_unlimited' => (bool) $currentPackage?->can_manage_coupons && empty($currentPackage?->effective_coupon_limit),
+                                                    'target_unlimited' => (bool) $package->can_manage_coupons && empty($package->effective_coupon_limit),
+                                                    'suffix' => ' ' . __('teacher::dashboard.package_features.compare_unit_coupons'),
+                                                ]
+                                            );
+                                        @endphp
                                         <td data-compare-cell="{{ (int) $package->id }}">
                                             <span class="teacher-upgrade-compare__pill is-neutral">
                                                 @if ($package->can_manage_coupons)
@@ -302,6 +549,9 @@
                                                     {{ __('teacher::dashboard.package_features.unavailable') }}
                                                 @endif
                                             </span>
+                                            <div class="teacher-upgrade-compare__delta {{ $couponDelta['class'] }}">
+                                                {{ $couponDelta['label'] }}
+                                            </div>
                                         </td>
                                     @endforeach
                                 </tr>
@@ -320,14 +570,15 @@
                                             @php
                                                 $enabled = (bool) $package->{$featureKey};
                                                 $isUpgradeGain = !$currentPackage?->{$featureKey} && $enabled;
+                                                $featureDelta = $compareDeltaLabel($currentPackage?->{$featureKey}, $enabled, ['mode' => 'feature']);
                                             @endphp
                                             <td data-compare-cell="{{ (int) $package->id }}" data-compare-feature-cell="{{ (int) $package->id }}:{{ $featureKey }}" class="{{ $isUpgradeGain ? 'is-static-upgrade-gain' : '' }}">
                                                 <span class="teacher-upgrade-compare__pill {{ $enabled ? 'is-on' : 'is-off' }}">
                                                     {{ $enabled ? __('teacher::dashboard.package_features.available') : __('teacher::dashboard.package_features.unavailable') }}
                                                 </span>
-                                                @if ($isUpgradeGain)
-                                                    <div class="small text-info mt-1" data-compare-gain-label="{{ (int) $package->id }}:{{ $featureKey }}">{{ __('teacher::dashboard.package_features.new_in_upgrade') }}</div>
-                                                @endif
+                                                <div class="teacher-upgrade-compare__delta {{ $featureDelta['class'] }}" data-compare-gain-label="{{ (int) $package->id }}:{{ $featureKey }}">
+                                                    {{ $featureDelta['label'] }}
+                                                </div>
                                             </td>
                                         @endforeach
                                     </tr>
@@ -357,40 +608,103 @@
                                         @if ($recommendedPackageId !== null && $recommendedPackageId === $packageId)
                                             <span class="teacher-upgrade-mobile-card__badge">{{ __('teacher::dashboard.package_features.recommended_badge') }}</span>
                                         @endif
+                                        <span class="teacher-upgrade-mobile-card__badge teacher-upgrade-mobile-card__badge--selected {{ $isSelectedMobile ? 'is-visible' : '' }}" data-mobile-compare-selected-label="{{ $packageId }}">
+                                            <span aria-hidden="true">&#10003;</span>
+                                            {{ __('teacher::dashboard.package_features.compare_selected') }}
+                                        </span>
                                         <span class="teacher-upgrade-mobile-card__chevron" aria-hidden="true"></span>
                                     </div>
                                 </summary>
 
                                 <div class="teacher-upgrade-mobile-card__list">
+                                    @php
+                                        $packagePreview = $calculatePackagePreview($package);
+                                    @endphp
+                                    <div class="teacher-upgrade-mobile-card__item">
+                                        <span>{{ __('teacher::dashboard.package.term_label') }}</span>
+                                        <div class="text-end">
+                                            <strong>{{ $packageTermLabel($package) }}</strong>
+                                            <small class="d-block teacher-upgrade-mobile-card__delta is-better">{{ $packageTermDescription($package, $packagePreview) }}</small>
+                                        </div>
+                                    </div>
                                     <div class="teacher-upgrade-mobile-card__item">
                                         <span>{{ __('teacher::dashboard.package_features.labels.course_limit') }}</span>
-                                        <strong>{{ $package->effective_course_limit ?: __('teacher::dashboard.courses.unlimited') }}</strong>
+                                        @php
+                                            $courseDelta = $compareDeltaLabel(
+                                                $currentPackage?->effective_course_limit,
+                                                $package->effective_course_limit,
+                                                [
+                                                    'current_unlimited' => empty($currentPackage?->effective_course_limit),
+                                                    'target_unlimited' => empty($package->effective_course_limit),
+                                                    'suffix' => ' ' . __('teacher::dashboard.package_features.compare_unit_courses'),
+                                                ]
+                                            );
+                                        @endphp
+                                        <div class="text-end">
+                                            <strong>{{ $package->effective_course_limit ?: __('teacher::dashboard.courses.unlimited') }}</strong>
+                                            <small class="d-block teacher-upgrade-mobile-card__delta {{ $courseDelta['class'] }}">{{ $courseDelta['label'] }}</small>
+                                        </div>
                                     </div>
                                     <div class="teacher-upgrade-mobile-card__item">
                                         <span>{{ __('teacher::dashboard.package_features.labels.payout_account_limit') }}</span>
-                                        <strong>{{ $package->effective_payout_account_limit }}</strong>
+                                        @php
+                                            $payoutDelta = $compareDeltaLabel(
+                                                (float) ($currentPackage?->effective_payout_account_limit ?? 3),
+                                                (float) $package->effective_payout_account_limit,
+                                                ['suffix' => ' ' . __('teacher::dashboard.package_features.compare_unit_accounts')]
+                                            );
+                                        @endphp
+                                        <div class="text-end">
+                                            <strong>{{ $package->effective_payout_account_limit }}</strong>
+                                            <small class="d-block teacher-upgrade-mobile-card__delta {{ $payoutDelta['class'] }}">{{ $payoutDelta['label'] }}</small>
+                                        </div>
                                     </div>
                                     <div class="teacher-upgrade-mobile-card__item">
                                         <div>
                                             <span>{{ __('teacher::dashboard.package_features.labels.coupon_limit') }}</span>
                                             <small>{{ $featureNotes['coupon_limit'] ?? '' }}</small>
                                         </div>
-                                        <strong>
-                                            @if ($package->can_manage_coupons)
-                                                {{ $package->effective_coupon_limit ?: __('teacher::coupons.labels.unlimited') }}
-                                            @else
-                                                {{ __('teacher::dashboard.package_features.unavailable') }}
-                                            @endif
-                                        </strong>
+                                        @php
+                                            $couponDelta = $compareDeltaLabel(
+                                                $currentPackage?->can_manage_coupons ? $currentPackage?->effective_coupon_limit : 0,
+                                                $package->can_manage_coupons ? $package->effective_coupon_limit : 0,
+                                                [
+                                                    'current_unlimited' => (bool) $currentPackage?->can_manage_coupons && empty($currentPackage?->effective_coupon_limit),
+                                                    'target_unlimited' => (bool) $package->can_manage_coupons && empty($package->effective_coupon_limit),
+                                                    'suffix' => ' ' . __('teacher::dashboard.package_features.compare_unit_coupons'),
+                                                ]
+                                            );
+                                        @endphp
+                                        <div class="text-end">
+                                            <strong>
+                                                @if ($package->can_manage_coupons)
+                                                    {{ $package->effective_coupon_limit ?: __('teacher::coupons.labels.unlimited') }}
+                                                @else
+                                                    {{ __('teacher::dashboard.package_features.unavailable') }}
+                                                @endif
+                                            </strong>
+                                            <small class="d-block teacher-upgrade-mobile-card__delta {{ $couponDelta['class'] }}">{{ $couponDelta['label'] }}</small>
+                                        </div>
                                     </div>
                                     <div class="teacher-upgrade-mobile-card__item">
                                         <span>{{ __('teacher::dashboard.package_features.labels.commission_rate') }}</span>
-                                        <strong>{{ rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.') }}%</strong>
+                                        @php
+                                            $commissionDelta = $compareDeltaLabel(
+                                                (float) ($currentPackage?->commission_rate ?? 0),
+                                                (float) $package->commission_rate,
+                                                ['suffix' => '%']
+                                            );
+                                        @endphp
+                                        <div class="text-end">
+                                            <strong>{{ rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.') }}%</strong>
+                                            <small class="d-block teacher-upgrade-mobile-card__delta {{ $commissionDelta['class'] }}">{{ $commissionDelta['label'] }}</small>
+                                        </div>
                                     </div>
                                     @foreach ($featureRows as $featureKey => $featureLabel)
                                         @php
                                             $enabled = (bool) $package->{$featureKey};
                                             $isUpgradeGain = !$currentPackage?->{$featureKey} && $enabled;
+                                            $featureDelta = $compareDeltaLabel($currentPackage?->{$featureKey}, $enabled, ['mode' => 'feature']);
                                         @endphp
                                         <div class="teacher-upgrade-mobile-card__item">
                                             <div>
@@ -401,9 +715,7 @@
                                                 <strong class="{{ $enabled ? 'text-success' : 'text-muted' }}">
                                                     {{ $enabled ? __('teacher::dashboard.package_features.available') : __('teacher::dashboard.package_features.unavailable') }}
                                                 </strong>
-                                                @if ($isUpgradeGain)
-                                                    <small class="d-block text-info">{{ __('teacher::dashboard.package_features.new_in_upgrade') }}</small>
-                                                @endif
+                                                <small class="d-block teacher-upgrade-mobile-card__delta {{ $featureDelta['class'] }}">{{ $featureDelta['label'] }}</small>
                                             </div>
                                         </div>
                                     @endforeach
@@ -440,12 +752,18 @@
 
                     <div class="col-lg-5">
                         <aside class="teacher-upgrade-summary">
+                            @php
+                                $selectedPackagePreview = $upgradePackages->firstWhere('id', $selectedPackageId);
+                            @endphp
                             <div class="teacher-upgrade-summary__label">{{ __('teacher::dashboard.package.status_title') }}</div>
                             <div class="teacher-upgrade-summary__name" data-upgrade-summary-name>
                                 {{ $upgradePackages->firstWhere('id', $selectedPackageId)?->name_locale ?: $upgradePackages->firstWhere('id', $selectedPackageId)?->name }}
                             </div>
                             <div class="teacher-upgrade-summary__price" data-upgrade-summary-price></div>
                             <p class="teacher-upgrade-summary__meta" data-upgrade-summary-meta></p>
+                            <p class="teacher-upgrade-summary__term" data-upgrade-summary-term>
+                                {{ $selectedPackagePreview ? $packageTermDescription($selectedPackagePreview, $calculatePackagePreview($selectedPackagePreview)) : '' }}
+                            </p>
 
                             <div class="d-flex flex-wrap gap-2 mt-4">
                                 <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-outline-secondary">
@@ -542,6 +860,14 @@
         .teacher-upgrade-summary__meta {
             margin-top: 0.35rem;
             color: #a9bbd5;
+        }
+
+        .teacher-upgrade-current__term,
+        .teacher-upgrade-summary__term,
+        .teacher-upgrade-card__term {
+            margin-top: 0.45rem;
+            color: #8fc3ff;
+            line-height: 1.55;
         }
 
         .teacher-upgrade-current__time {
@@ -826,6 +1152,31 @@
             min-width: 220px;
         }
 
+        .teacher-upgrade-compare__heading {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .teacher-upgrade-compare__selected-badge {
+            display: none;
+            align-items: center;
+            gap: 0.4rem;
+            width: fit-content;
+            padding: 0.32rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            color: #e0f2fe;
+            background: rgba(14, 165, 233, 0.18);
+            box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.28);
+        }
+
+        .teacher-upgrade-compare__selected-badge.is-visible {
+            display: inline-flex;
+        }
+
         .teacher-upgrade-compare__pill {
             display: inline-flex;
             align-items: center;
@@ -852,13 +1203,44 @@
             color: #bfdbfe;
         }
 
+        .teacher-upgrade-compare__delta {
+            margin-top: 0.45rem;
+            font-size: 0.74rem;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .teacher-upgrade-compare__delta.is-better {
+            color: #67e8f9;
+        }
+
+        .teacher-upgrade-compare__delta.is-worse {
+            color: #fda4af;
+        }
+
+        .teacher-upgrade-compare__delta.is-same {
+            color: #94a3b8;
+        }
+
         .teacher-upgrade-compare th.is-dynamic-selected {
+            position: relative;
             background: linear-gradient(180deg, rgba(37, 99, 235, 0.38), rgba(30, 64, 175, 0.22));
             color: #f8fbff;
             box-shadow:
                 inset 0 1px 0 rgba(147, 197, 253, 0.22),
                 inset 3px 0 0 rgba(56, 189, 248, 0.85),
                 inset -3px 0 0 rgba(56, 189, 248, 0.85);
+        }
+
+        .teacher-upgrade-compare th.is-dynamic-selected::before,
+        .teacher-upgrade-compare td.is-dynamic-selected::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: linear-gradient(180deg, #22d3ee, #38bdf8);
         }
 
         .teacher-upgrade-compare td.is-dynamic-selected {
@@ -936,6 +1318,7 @@
         .teacher-upgrade-mobile-card__badge {
             display: inline-flex;
             align-items: center;
+            gap: 0.35rem;
             padding: 0.36rem 0.72rem;
             border-radius: 999px;
             background: linear-gradient(135deg, rgba(250, 204, 21, 0.96), rgba(251, 146, 60, 0.92));
@@ -945,6 +1328,18 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             white-space: nowrap;
+        }
+
+        .teacher-upgrade-mobile-card__badge--selected {
+            display: none;
+            background: rgba(14, 165, 233, 0.16);
+            color: #e0f2fe;
+            text-transform: none;
+            letter-spacing: 0.02em;
+        }
+
+        .teacher-upgrade-mobile-card__badge--selected.is-visible {
+            display: inline-flex;
         }
 
         .teacher-upgrade-mobile-card__chevron {
@@ -994,6 +1389,24 @@
             line-height: 1.5;
         }
 
+        .teacher-upgrade-mobile-card__delta {
+            margin-top: 0.28rem;
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+
+        .teacher-upgrade-mobile-card__delta.is-better {
+            color: #67e8f9;
+        }
+
+        .teacher-upgrade-mobile-card__delta.is-worse {
+            color: #fda4af;
+        }
+
+        .teacher-upgrade-mobile-card__delta.is-same {
+            color: #94a3b8;
+        }
+
         html[data-theme="light"] .teacher-upgrade-shell {
             background:
                 radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 26%),
@@ -1036,6 +1449,12 @@
         html[data-theme="light"] .teacher-upgrade-summary__meta,
         html[data-theme="light"] .teacher-upgrade-section__head p {
             color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-current__term,
+        html[data-theme="light"] .teacher-upgrade-summary__term,
+        html[data-theme="light"] .teacher-upgrade-card__term {
+            color: #1d4ed8;
         }
 
         html[data-theme="light"] .teacher-upgrade-current__time {
@@ -1132,6 +1551,27 @@
             color: #1d4ed8;
         }
 
+        html[data-theme="light"] .teacher-upgrade-compare__delta.is-better,
+        html[data-theme="light"] .teacher-upgrade-mobile-card__delta.is-better {
+            color: #0284c7;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-compare__delta.is-worse,
+        html[data-theme="light"] .teacher-upgrade-mobile-card__delta.is-worse {
+            color: #e11d48;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-compare__delta.is-same,
+        html[data-theme="light"] .teacher-upgrade-mobile-card__delta.is-same {
+            color: #64748b;
+        }
+
+        html[data-theme="light"] .teacher-upgrade-compare__selected-badge {
+            color: #0f172a;
+            background: rgba(37, 99, 235, 0.12);
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.18);
+        }
+
         html[data-theme="light"] .teacher-upgrade-compare th.is-dynamic-selected {
             background: linear-gradient(180deg, rgba(191, 219, 254, 0.96), rgba(219, 234, 254, 0.92));
             color: #0f172a;
@@ -1150,6 +1590,11 @@
 
         html[data-theme="light"] .teacher-upgrade-compare td.is-dynamic-selected .teacher-upgrade-compare__pill {
             box-shadow: 0 10px 20px rgba(148, 163, 184, 0.18);
+        }
+
+        html[data-theme="light"] .teacher-upgrade-mobile-card__badge--selected {
+            color: #0f172a;
+            background: rgba(37, 99, 235, 0.12);
         }
 
         html[data-theme="light"] .teacher-upgrade-compare td.is-dynamic-gain {
@@ -1235,10 +1680,14 @@
             const summaryName = document.querySelector('[data-upgrade-summary-name]');
             const summaryPrice = document.querySelector('[data-upgrade-summary-price]');
             const summaryMeta = document.querySelector('[data-upgrade-summary-meta]');
+            const summaryTerm = document.querySelector('[data-upgrade-summary-term]');
             const warningBox = document.querySelector('[data-upgrade-warning]');
             const compareColumns = [...document.querySelectorAll('[data-compare-col]')];
             const compareCells = [...document.querySelectorAll('[data-compare-cell]')];
             const compareFeatureCells = [...document.querySelectorAll('[data-compare-feature-cell]')];
+            const compareSelectedLabels = [...document.querySelectorAll('[data-compare-selected-label]')];
+            const mobileCompareCards = [...document.querySelectorAll('[data-mobile-compare-card]')];
+            const mobileCompareSelectedLabels = [...document.querySelectorAll('[data-mobile-compare-selected-label]')];
             const unlimitedText = @json(__('teacher::dashboard.courses.unlimited'));
             const currentPackage = @json($currentPackageMap);
             const packageMap = @json($packageMap);
@@ -1270,6 +1719,9 @@
                     summaryName.textContent = packageMap[selectedId].name;
                     summaryPrice.textContent = selectedPrice > 0 ? formatMoney(selectedPrice) : '0 đ';
                     summaryMeta.textContent = packageMap[selectedId].meta || unlimitedText;
+                    if (summaryTerm) {
+                        summaryTerm.textContent = packageMap[selectedId].term_description || '';
+                    }
                 }
 
                 if (paymentGrid) {
@@ -1305,9 +1757,23 @@
                     cell.classList.toggle('is-dynamic-selected', String(cell.dataset.compareCell) === String(selectedId));
                 });
 
+                compareSelectedLabels.forEach((label) => {
+                    label.classList.toggle('is-visible', String(label.dataset.compareSelectedLabel) === String(selectedId));
+                });
+
                 compareFeatureCells.forEach((cell) => {
                     const [packageId] = String(cell.dataset.compareFeatureCell || '').split(':');
                     cell.classList.toggle('is-dynamic-gain', String(packageId) === String(selectedId) && cell.classList.contains('is-static-upgrade-gain'));
+                });
+
+                mobileCompareCards.forEach((card) => {
+                    const isSelected = String(card.dataset.mobileCompareCard) === String(selectedId);
+                    card.classList.toggle('is-selected', isSelected);
+                    card.open = isSelected;
+                });
+
+                mobileCompareSelectedLabels.forEach((label) => {
+                    label.classList.toggle('is-visible', String(label.dataset.mobileCompareSelectedLabel) === String(selectedId));
                 });
             };
 

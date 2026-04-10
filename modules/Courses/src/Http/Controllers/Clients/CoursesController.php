@@ -12,6 +12,7 @@ use Modules\Courses\src\Models\Courses;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
+use Modules\Teacher\src\Models\TeacherCourseBundle;
 
 class CoursesController extends Controller
 {
@@ -149,6 +150,63 @@ class CoursesController extends Controller
         ));
     }
 
+    public function bundleDetail($locale, $slug)
+    {
+        $student = Auth::guard('students')->user();
+        $bundle = TeacherCourseBundle::query()
+            ->with([
+                'teacher',
+                'items.course' => function ($query) {
+                    $query->withoutGlobalScope(ActiveScope::class)
+                        ->withCount('students');
+                },
+            ])
+            ->where('slug', $slug)
+            ->where('status', true)
+            ->firstOrFail();
+
+        $courses = $bundle->items
+            ->pluck('course')
+            ->filter(function ($course) use ($bundle) {
+                return $course
+                    && (int) $course->teacher_id === (int) $bundle->teacher_id
+                    && (int) $course->status === 1
+                    && (int) $course->is_learning_locked !== 1;
+            })
+            ->values();
+
+        if ($courses->isEmpty()) {
+            abort(404);
+        }
+
+        $ownedCourseIds = collect();
+        if ($student) {
+            $ownedCourseIds = $student->courses()
+                ->wherePivot('status', 1)
+                ->whereIn('courses.id', $courses->pluck('id')->all())
+                ->pluck('courses.id');
+        }
+
+        $pageTitle = $bundle->name;
+        $pageName = $bundle->name;
+        $sourceTotal = (float) $courses->sum(function ($course) {
+            return ($course->sale_price && $course->sale_price > 0)
+                ? (float) $course->sale_price
+                : (float) $course->price;
+        });
+        $hasOwnedCourses = $ownedCourseIds->isNotEmpty();
+
+        return view('courses::clients.bundle_detail', compact(
+            'pageTitle',
+            'pageName',
+            'bundle',
+            'courses',
+            'sourceTotal',
+            'ownedCourseIds',
+            'hasOwnedCourses'
+        ));
+    }
+
     public function getTrialVideo($locale, $lessonId = 0)
     {
         if (!Auth::guard('students')->check()) {
@@ -253,6 +311,64 @@ class CoursesController extends Controller
         return redirect()->route('students.account.checkout', ['locale' => app()->getLocale(), 'id' => $order->id]);
     }
 
+    public function createBundleOrder(Request $request)
+    {
+        $student = Auth::guard('students')->user();
+        $bundle = TeacherCourseBundle::query()
+            ->with([
+                'items.course' => function ($query) {
+                    $query->withoutGlobalScope(ActiveScope::class);
+                },
+            ])
+            ->where('id', (int) $request->input('bundle_id'))
+            ->where('status', true)
+            ->firstOrFail();
+
+        $courses = $bundle->items
+            ->pluck('course')
+            ->filter(function ($course) use ($bundle) {
+                return $course
+                    && (int) $course->teacher_id === (int) $bundle->teacher_id
+                    && (int) $course->status === 1
+                    && (int) $course->is_learning_locked !== 1;
+            })
+            ->values();
+
+        if ($courses->count() < 2) {
+            return back()
+                ->with('msg', __('teacher::dashboard.bundles.flash.public_not_available'))
+                ->with('msgType', 'danger');
+        }
+
+        $ownedCourseIds = $student->courses()
+            ->wherePivot('status', 1)
+            ->whereIn('courses.id', $courses->pluck('id')->all())
+            ->pluck('courses.id');
+
+        if ($ownedCourseIds->isNotEmpty()) {
+            return back()
+                ->with('msg', __('teacher::dashboard.bundles.flash.purchase_blocked_owned'))
+                ->with('msgType', 'danger');
+        }
+
+        $orderData = [
+            'code' => generateUniqueCouponCode(),
+            'student_id' => $student->id,
+            'discount' => 0,
+            'price' => (float) $bundle->price,
+            'coupon' => null,
+            'status_id' => 1,
+            'payment_date' => null,
+        ];
+
+        $order = $this->orderRepository->createOrderWithDetails(
+            $orderData,
+            $this->buildBundleOrderDetails($courses, (float) $bundle->price)
+        );
+
+        return redirect()->route('students.account.checkout', ['locale' => app()->getLocale(), 'id' => $order->id]);
+    }
+
     public function category($locale, $slug)
     {
         $category = Category::where(function ($query) use ($slug) {
@@ -271,5 +387,62 @@ class CoursesController extends Controller
             ->paginate(config('paginate.limit'));
 
         return view('courses::clients.index', compact('category', 'courses', 'pageTitle', 'pageName'));
+    }
+
+    private function buildBundleOrderDetails($courses, float $bundlePrice): array
+    {
+        $courses = collect($courses)->values();
+        if ($courses->isEmpty()) {
+            return [];
+        }
+
+        if ($bundlePrice <= 0) {
+            return $courses->map(fn ($course) => [
+                'course_id' => $course->id,
+                'price' => 0,
+            ])->all();
+        }
+
+        $basePrices = $courses->map(function ($course) {
+            return ($course->sale_price && $course->sale_price > 0)
+                ? (float) $course->sale_price
+                : (float) $course->price;
+        });
+        $baseTotal = (float) $basePrices->sum();
+
+        if ($baseTotal <= 0) {
+            $equalPrice = round($bundlePrice / max($courses->count(), 1), 2);
+
+            return $courses->map(function ($course, $index) use ($courses, $bundlePrice, $equalPrice) {
+                $price = $index === $courses->count() - 1
+                    ? round($bundlePrice - ($equalPrice * ($courses->count() - 1)), 2)
+                    : $equalPrice;
+
+                return [
+                    'course_id' => $course->id,
+                    'price' => $price,
+                ];
+            })->all();
+        }
+
+        $allocated = [];
+        $runningTotal = 0;
+
+        foreach ($courses as $index => $course) {
+            if ($index === $courses->count() - 1) {
+                $price = round($bundlePrice - $runningTotal, 2);
+            } else {
+                $courseBasePrice = (float) $basePrices[$index];
+                $price = round(($courseBasePrice / $baseTotal) * $bundlePrice, 2);
+                $runningTotal += $price;
+            }
+
+            $allocated[] = [
+                'course_id' => $course->id,
+                'price' => max($price, 0),
+            ];
+        }
+
+        return $allocated;
     }
 }

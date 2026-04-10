@@ -472,7 +472,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó))
 - Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
 - Làm cái mã giảm giá dành riêng cho đăng ký giáo viên 
-- admin tạo ra 1 gói dành riêng cho giáo viên đó
+- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý )
 - Check lại logic của module giáo viên
 - Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại
     Clients:
@@ -522,6 +522,10 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm cái trang xem profile của giảng viên ( Giảng viên sẽ hiện ra profile khi đăng ký đổ ra, và có rating giảng viên, có bao nhiêu khóa học, bài giảng trong website )
 - Đối với tài khoản đã được nâng lên làm teacher thì sẽ có tất cả các khóa học mà mình tạo ra 
 - Đối với tài khoản đã được nâng lên làm teacher sẽ bỏ cái trở thành giáo viên
+- Chỉ có super admin mới có quyền xóa nên làm chức năng khóa tài khoản giảng viên vì nếu admin thấy không hoạt động thì khóa lại
+- Đối với user, teacher, student thêm quyền khóa trong phân quyền
+- Check tất cả phân quyền là khi tắt quyền nào thì ẩn quyền nó ở màn đó đi (VD: tắt quyền sửa học viên thì ẩn sửa đi)
+- Với các gói thì xem được chi tiết rõ các gói đó như nào, Thêm so sanh ở đó
  Teacher:
 - Làm cái hồ sơ giáo viên
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
@@ -536,10 +540,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - với trường hợp giáo viên mua gói tháng/năm thì khi hết hạn và họ không gia hạn thì xử lý như nào ( Done tự về gói free nếu không gia hạn gói )
 - Với trường hợp họ đang dùng gói không giới hạn khóa học hay mã giảm giá thì khi họ hạ gói xuống nó limit thì xử lý như nào ( Done sẽ cho họ active)
 - Với trường hợp tài khoản giảng viên họ không dùng nữa và họ không báo với mình thì sao mình không hề biết là họ không dùng nữa ( Done Admin check số ngày hoạt động)
-- Nếu bạn muốn, mình có thể làm thêm một bước nữa là cho cột được chọn có icon ✓ Đang so sánh hoặc một thanh màu chạy dọc ở đầu cột để trực quan hơn nữa.
-- À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá
-- Thêm chức năng xem lại lịch sử thao tác, đôi với quản lý học viên cái giám sát học viên học được bao nhiêu % thì thêm vào đó và phần quyền trong gói giúp tôi 
-- Nghĩ xem cần thêm chức năng nào khác không ( Tôi muốn chức năng nó có thể liên quan đến các gói của giáo viên để gói đó có giá trị hơn khiến giảng viên mua để xử dụng)
+- Nếu bạn muốn, mình có thể làm thêm một bước nữa là cho cột được chọn có icon ✓ Đang so sánh hoặc một thanh màu chạy dọc ở đầu cột để trực quan hơn nữa. ( Done )
+- Thêm chức năng xem lại lịch sử thao tác, đôi với quản lý học viên cái giám sát học viên học được bao nhiêu % thì thêm vào đó và phần quyền trong gói giúp tôi ( Done )
+- Nghĩ xem cần thêm chức năng nào khác không ( Tôi muốn chức năng nó có thể liên quan đến các gói của giáo viên để gói đó có giá trị hơn khiến giảng viên mua để sử dụng)
+- Fix 1 số bug liên quan đến limit trong gói
+- À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá ( Chưa xong bên clients)
 Tổng kết
 - Check lại tất cả đa ngôn ngữ ( Đặc biệt là vi phải có dấu)
 - check lại lần cuối trước khi đẩy lên production

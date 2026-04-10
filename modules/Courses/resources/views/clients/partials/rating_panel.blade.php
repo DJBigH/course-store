@@ -31,24 +31,39 @@
         </div>
     </div>
 
-    @if (auth('students')->check() && $canRate)
+    @if (auth('students')->check() && $canRate && $currentRating === null)
         <form class="course-rating-form mt-3" data-course-rating-form
             action="{{ route('courses.rating.store', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}"
             method="POST">
             @csrf
-            <input type="hidden" name="rating" value="{{ $currentRating !== null ? number_format($currentRating, 1, '.', '') : '' }}" data-rating-input>
+            <input type="hidden" name="rating" value="" data-rating-input>
 
             <div class="course-rating-picker" data-rating-picker>
-                @foreach ($ratingOptions as $ratingOption)
-                    <button
-                        type="button"
-                        class="course-rating-picker__option {{ $currentRating !== null && abs($currentRating - $ratingOption) < 0.001 ? 'is-active' : '' }}"
-                        data-rating-option
-                        data-value="{{ number_format($ratingOption, 1, '.', '') }}">
-                        <i class="fa-solid fa-star"></i>
-                        <span>{{ rtrim(rtrim(number_format($ratingOption, 1, '.', ''), '0'), '.') }}</span>
-                    </button>
-                @endforeach
+                <div class="course-rating-picker__track" data-rating-track>
+                    <div class="course-rating-picker__stars-base">
+                        @for ($star = 1; $star <= 5; $star++)
+                            <i class="fa-regular fa-star"></i>
+                        @endfor
+                    </div>
+                    <div class="course-rating-picker__stars-fill" data-rating-fill style="width: 0%;">
+                        @for ($star = 1; $star <= 5; $star++)
+                            <i class="fa-solid fa-star"></i>
+                        @endfor
+                    </div>
+                    <div class="course-rating-picker__hotspots">
+                        @foreach ($ratingOptions as $ratingOption)
+                            <button
+                                type="button"
+                                class="course-rating-picker__hotspot"
+                                data-rating-option
+                                data-value="{{ number_format($ratingOption, 1, '.', '') }}"
+                                title="{{ rtrim(rtrim(number_format($ratingOption, 1, '.', ''), '0'), '.') }} sao"
+                                aria-label="{{ rtrim(rtrim(number_format($ratingOption, 1, '.', ''), '0'), '.') }} sao">
+                                <span class="visually-hidden">{{ rtrim(rtrim(number_format($ratingOption, 1, '.', ''), '0'), '.') }} sao</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
             </div>
 
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
@@ -62,6 +77,10 @@
                 <button type="submit" class="btn btn-warning btn-sm">{{ __('courses::clients/common.rating_submit') }}</button>
             </div>
         </form>
+    @elseif (auth('students')->check() && $currentRating !== null)
+        <div class="alert alert-success mt-3 mb-0">
+            {{ __('courses::clients/common.rating_submitted_once', ['rating' => rtrim(rtrim(number_format($currentRating, 1, '.', ''), '0'), '.')]) }}
+        </div>
     @elseif (auth('students')->check())
         <div class="alert alert-info mt-3 mb-0">{{ __('courses::clients/common.rating_need_purchase') }}</div>
     @else

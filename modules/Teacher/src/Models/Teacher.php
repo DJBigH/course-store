@@ -104,6 +104,11 @@ class Teacher extends Model
         return $this->hasMany(\Modules\Courses\src\Models\Courses::class, 'teacher_id', 'id');
     }
 
+    public function bundles()
+    {
+        return $this->hasMany(TeacherCourseBundle::class, 'teacher_id', 'id');
+    }
+
     public function ratings()
     {
         return $this->hasMany(TeacherRating::class, 'teacher_id', 'id');

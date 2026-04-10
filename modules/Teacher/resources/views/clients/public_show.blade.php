@@ -159,25 +159,74 @@
             line-height: 1;
         }
         .teacher-public-rating__picker {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.55rem;
+            display: block;
         }
-        .teacher-public-rating__option {
+        .teacher-public-rating__track {
+            position: relative;
+            width: min(100%, 270px);
+            padding: 0.9rem 1rem;
             border: 1px solid rgba(245, 158, 11, 0.22);
-            background: #fff7ed;
-            color: #b45309;
-            border-radius: 999px;
-            padding: 0.48rem 0.82rem;
+            background: linear-gradient(180deg, #ffffff, #fff7ed);
+            border-radius: 18px;
+            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.1);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+        .teacher-public-rating__track:hover,
+        .teacher-public-rating__track.is-preview {
+            transform: translateY(-2px) scale(1.03);
+            border-color: rgba(245, 158, 11, 0.45);
+            background: linear-gradient(180deg, #fff7ed, #ffedd5);
+            box-shadow: 0 14px 24px rgba(245, 158, 11, 0.16);
+        }
+        .teacher-public-rating__track.is-active {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(249, 115, 22, 0.28);
+        }
+        .teacher-public-rating__stars-base,
+        .teacher-public-rating__stars-fill {
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            font-weight: 700;
+            gap: 0.25rem;
+            font-size: 1.75rem;
+            line-height: 1;
+            white-space: nowrap;
         }
-        .teacher-public-rating__option.is-active {
-            background: linear-gradient(135deg, #f59e0b, #f97316);
-            color: #fff;
-            border-color: transparent;
+        .teacher-public-rating__stars-base {
+            color: #cbd5e1;
+        }
+        .teacher-public-rating__stars-fill {
+            position: absolute;
+            inset: 0.9rem auto auto 1rem;
+            overflow: hidden;
+            color: #f59e0b;
+            pointer-events: none;
+            transition: width 0.16s ease;
+        }
+        .teacher-public-rating__track.is-active .teacher-public-rating__stars-base {
+            color: rgba(255, 255, 255, 0.32);
+        }
+        .teacher-public-rating__track.is-active .teacher-public-rating__stars-fill {
+            color: #fff8e1;
+        }
+        .teacher-public-rating__hotspots {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            z-index: 2;
+        }
+        .teacher-public-rating__hotspot {
+            border: 0;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+        }
+        .teacher-public-rating__hotspot:focus-visible {
+            outline: 2px solid rgba(249, 115, 22, 0.6);
+            outline-offset: -3px;
         }
         .teacher-public-card h3 {
             color: #0f172a;
@@ -239,6 +288,24 @@
             }
 
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const updateRatingVisual = (form, value, state = 'idle') => {
+                if (!form) {
+                    return;
+                }
+
+                const track = form.querySelector('[data-rating-track]');
+                const fill = form.querySelector('[data-rating-fill]');
+                const numericValue = Math.max(0, Math.min(Number(value || 0), 5));
+
+                if (fill) {
+                    fill.style.width = `${numericValue * 20}%`;
+                }
+
+                if (track) {
+                    track.classList.toggle('is-preview', state === 'preview' && numericValue > 0);
+                    track.classList.toggle('is-active', numericValue > 0);
+                }
+            };
 
             ratingWrap.addEventListener('click', (event) => {
                 const option = event.target.closest('[data-rating-option]');
@@ -252,12 +319,80 @@
                 }
 
                 form.querySelector('[data-rating-input]').value = option.dataset.value;
-                form.querySelectorAll('[data-rating-option]').forEach((item) => item.classList.toggle('is-active', item === option));
+                updateRatingVisual(form, option.dataset.value, 'selected');
 
                 const label = form.querySelector('[data-rating-current-label]');
                 if (label) {
                     label.textContent = @js(__('teacher::public.rating_selected_label')) + ' ' + option.dataset.value;
                 }
+            });
+
+            ratingWrap.addEventListener('mouseover', (event) => {
+                const option = event.target.closest('[data-rating-option]');
+                if (!option) {
+                    return;
+                }
+
+                const form = option.closest('form');
+                if (!form) {
+                    return;
+                }
+
+                updateRatingVisual(form, option.dataset.value, 'preview');
+
+                const label = form.querySelector('[data-rating-current-label]');
+                if (label) {
+                    label.textContent = @js(__('teacher::public.rating_selected_label')) + ' ' + option.dataset.value;
+                }
+            });
+
+            ratingWrap.addEventListener('mouseout', (event) => {
+                const form = event.target.closest('[data-teacher-rating-form]');
+                if (!form) {
+                    return;
+                }
+
+                if (event.relatedTarget && form.contains(event.relatedTarget)) {
+                    return;
+                }
+
+                const selectedValue = form.querySelector('[data-rating-input]')?.value || '';
+                updateRatingVisual(form, selectedValue, selectedValue ? 'selected' : 'idle');
+
+                const label = form.querySelector('[data-rating-current-label]');
+                if (label) {
+                    label.textContent = selectedValue
+                        ? @js(__('teacher::public.rating_selected_label')) + ' ' + selectedValue
+                        : @js(__('teacher::public.rating_hint'));
+                }
+            });
+
+            ratingWrap.addEventListener('focusin', (event) => {
+                const option = event.target.closest('[data-rating-option]');
+                if (!option) {
+                    return;
+                }
+
+                const form = option.closest('form');
+                if (!form) {
+                    return;
+                }
+
+                updateRatingVisual(form, option.dataset.value, 'preview');
+            });
+
+            ratingWrap.addEventListener('focusout', (event) => {
+                const form = event.target.closest('[data-teacher-rating-form]');
+                if (!form) {
+                    return;
+                }
+
+                if (event.relatedTarget && form.contains(event.relatedTarget)) {
+                    return;
+                }
+
+                const selectedValue = form.querySelector('[data-rating-input]')?.value || '';
+                updateRatingVisual(form, selectedValue, selectedValue ? 'selected' : 'idle');
             });
 
             ratingWrap.addEventListener('submit', async (event) => {

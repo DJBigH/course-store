@@ -102,6 +102,33 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
         });
     }
 
+    public function createOrderWithDetails(array $orderData, array $detailRows)
+    {
+        return DB::transaction(function () use ($orderData, $detailRows) {
+            $orderData = $this->enrichCustomerSnapshot($orderData);
+            $orderData['total'] = 0;
+
+            $order = Order::create($orderData);
+            $total = 0;
+
+            foreach ($detailRows as $detailRow) {
+                $detail = OrderDetail::create([
+                    'order_id' => $order->id,
+                    'course_id' => $detailRow['course_id'],
+                    'price' => $detailRow['price'],
+                ]);
+
+                $total += (float) $detail->price;
+            }
+
+            $order->update([
+                'total' => $total,
+            ]);
+
+            return $order;
+        });
+    }
+
     public function completePayment(Order $order)
     {
         return DB::transaction(function () use ($order) {

@@ -4,6 +4,7 @@ namespace Modules\Teacher\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
 use App\Notifications\NewContactNotification;
+use App\Notifications\StudentNotification;
 use App\Notifications\TeacherCourseGiftInvitationNotification;
 use App\Models\Scopes\ActiveScope;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -12,6 +13,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Contacts\src\Models\Contacts;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
@@ -27,16 +29,20 @@ use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Students\src\Models\StudentsCourses;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Http\Requests\TeacherCourseRequest;
+use Modules\Teacher\src\Http\Requests\TeacherCourseBundleRequest;
 use Modules\Teacher\src\Http\Requests\TeacherLessonRequest;
+use Modules\Teacher\src\Http\Requests\TeacherPromotionRequest;
 use Modules\Teacher\src\Models\TeacherAnnouncement;
 use Modules\Teacher\src\Models\TeacherAnnouncementRead;
 use Modules\Teacher\src\Models\TeacherApplication;
+use Modules\Teacher\src\Models\TeacherCourseBundle;
 use Modules\Teacher\src\Models\TeacherCourseGrant;
 use Modules\Teacher\src\Models\TeacherNotificationRead;
 use Modules\Teacher\src\Models\TeacherPayoutAccount;
 use Modules\Teacher\src\Models\TeacherPayoutAccountChangeRequest;
 use Modules\Teacher\src\Models\TeacherPayoutRequest;
 use Modules\Teacher\src\Models\TeacherPackage;
+use Modules\Teacher\src\Models\TeacherPromotion;
 use Modules\Teacher\src\Models\TeacherStudentNote;
 use Modules\Teacher\src\Support\TeacherFinanceCalculator;
 use Modules\Teacher\src\Support\TeacherNotificationCenter;
@@ -170,6 +176,192 @@ class TeacherDashboardController extends Controller
             'notifications',
             'notificationSummary'
         ));
+    }
+
+    public function promotions(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_send_promotions')) {
+            return $featureRedirect;
+        }
+
+        $courseOptions = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'name_en', 'name_ko', 'name_ja', 'name_zh', 'slug', 'slug_en', 'slug_ko', 'slug_ja', 'slug_zh']);
+
+        $promotions = TeacherPromotion::query()
+            ->with(['course'])
+            ->where('teacher_id', $teacher->id)
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $selectedCourseId = (int) $request->query('course_id', 0);
+        $recentPurchaseDays = (int) $request->query('recent_purchase_days', 0);
+        $inactiveLearningDays = (int) $request->query('inactive_learning_days', 0);
+        $recipientPreviewCount = count($this->resolvePromotionRecipientIds(
+            $teacher,
+            $selectedCourseId > 0 ? $selectedCourseId : null,
+            $recentPurchaseDays > 0 ? $recentPurchaseDays : null,
+            $inactiveLearningDays > 0 ? $inactiveLearningDays : null
+        ));
+
+        $pageTitle = __('teacher::dashboard.pages.promotions');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.promotions', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'courseOptions',
+            'promotions',
+            'selectedCourseId',
+            'recentPurchaseDays',
+            'inactiveLearningDays',
+            'recipientPreviewCount'
+        ));
+    }
+
+    public function storePromotion(TeacherPromotionRequest $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_send_promotions', 'teacher.dashboard.promotions')) {
+            return $featureRedirect;
+        }
+
+        $data = $request->validated();
+        $courseId = !empty($data['course_id']) ? (int) $data['course_id'] : null;
+        $recentPurchaseDays = !empty($data['recent_purchase_days']) ? (int) $data['recent_purchase_days'] : null;
+        $inactiveLearningDays = !empty($data['inactive_learning_days']) ? (int) $data['inactive_learning_days'] : null;
+        $selectedCourse = null;
+
+        if ($courseId) {
+            $selectedCourse = Courses::query()
+                ->withoutGlobalScope(ActiveScope::class)
+                ->where('teacher_id', $teacher->id)
+                ->findOrFail($courseId);
+        }
+
+        $recipientIds = $this->resolvePromotionRecipientIds($teacher, $courseId, $recentPurchaseDays, $inactiveLearningDays);
+        if (empty($recipientIds)) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.promotions.flash.no_recipients'));
+        }
+
+        $promotion = DB::transaction(function () use ($teacher, $data, $courseId, $recentPurchaseDays, $inactiveLearningDays, $recipientIds) {
+            return TeacherPromotion::query()->create([
+                'teacher_id' => $teacher->id,
+                'course_id' => $courseId,
+                'created_by_student_id' => auth('students')->id(),
+                'title' => trim((string) $data['title']),
+                'message' => trim((string) $data['message']),
+                'audience_type' => $this->resolvePromotionAudienceType($courseId, $recentPurchaseDays, $inactiveLearningDays),
+                'recipient_count' => count($recipientIds),
+                'filters' => array_filter([
+                    'recent_purchase_days' => $recentPurchaseDays,
+                    'inactive_learning_days' => $inactiveLearningDays,
+                ], fn ($value) => $value !== null && $value !== ''),
+            ]);
+        });
+
+        $notificationPayload = $this->buildPromotionNotificationPayload($teacher, $promotion, $selectedCourse);
+
+        Student::query()
+            ->whereIn('id', $recipientIds)
+            ->chunkById(100, function ($students) use ($notificationPayload) {
+                foreach ($students as $student) {
+                    $student->notify(new StudentNotification($notificationPayload));
+                }
+            });
+
+        return redirect()
+            ->route('teacher.dashboard.promotions')
+            ->with('msg_success', __('teacher::dashboard.promotions.flash.sent', [
+                'count' => $promotion->recipient_count,
+            ]));
+    }
+
+    public function bundles(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_sell_bundles')) {
+            return $featureRedirect;
+        }
+
+        $bundles = TeacherCourseBundle::query()
+            ->withCount('items')
+            ->with(['items.course'])
+            ->where('teacher_id', $teacher->id)
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $pageTitle = __('teacher::dashboard.pages.bundles');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.bundles', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'bundles'
+        ));
+    }
+
+    public function createBundle()
+    {
+        return $this->bundleFormResponse();
+    }
+
+    public function storeBundle(TeacherCourseBundleRequest $request)
+    {
+        return $this->persistBundle($request);
+    }
+
+    public function editBundle(int $bundleId)
+    {
+        return $this->bundleFormResponse($bundleId);
+    }
+
+    public function updateBundle(TeacherCourseBundleRequest $request, int $bundleId)
+    {
+        return $this->persistBundle($request, $bundleId);
+    }
+
+    public function deleteBundle(int $bundleId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_sell_bundles', 'teacher.dashboard.bundles')) {
+            return $featureRedirect;
+        }
+
+        $bundle = TeacherCourseBundle::query()
+            ->where('teacher_id', $teacher->id)
+            ->findOrFail($bundleId);
+
+        $bundle->delete();
+
+        return redirect()
+            ->route('teacher.dashboard.bundles')
+            ->with('msg_success', __('teacher::dashboard.bundles.flash.deleted'));
     }
 
     public function readAnnouncement(int $announcementId)
@@ -418,6 +610,7 @@ class TeacherDashboardController extends Controller
             ->latest('id')
             ->paginate(12)
             ->withQueryString();
+        $this->attachCourseHistoryPreview($courses, $teacher);
 
         $usage = $this->resolvePublishedCourseUsage($teacher);
 
@@ -500,6 +693,18 @@ class TeacherDashboardController extends Controller
         $data = $request->validated();
         $course = Courses::query()->create($this->buildCoursePayload($data, $teacher));
         $this->syncCourseCategories($course, $data['categories'] ?? []);
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course->fresh(),
+            'course_created',
+            'Da tao khoa hoc moi',
+            [
+                'status' => (int) $course->status,
+                'price' => (float) $course->price,
+                'sale_price' => (float) $course->sale_price,
+                'category_count' => count($data['categories'] ?? []),
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses')
@@ -549,9 +754,22 @@ class TeacherDashboardController extends Controller
             return $lockedRedirect;
         }
         $data = $request->validated();
+        $before = $course->only(['name', 'price', 'sale_price', 'status', 'is_learning_locked']);
 
         $course->update($this->buildCoursePayload($data, $teacher, $course));
         $this->syncCourseCategories($course, $data['categories'] ?? []);
+        $course->refresh();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            'course_updated',
+            'Da cap nhat khoa hoc',
+            [
+                'before' => $before,
+                'after' => $course->only(['name', 'price', 'sale_price', 'status', 'is_learning_locked']),
+                'category_count' => count($data['categories'] ?? []),
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses')
@@ -577,7 +795,17 @@ class TeacherDashboardController extends Controller
         if ($lockedRedirect = $this->ensureCourseManageable($course)) {
             return $lockedRedirect;
         }
-        $this->performCourseDuplicate($course);
+        $newCourse = $this->performCourseDuplicate($course);
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            'course_duplicated',
+            'Da nhan ban khoa hoc',
+            [
+                'duplicate_course_id' => $newCourse->id,
+                'duplicate_course_name' => $newCourse->name_locale ?: $newCourse->name,
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses')
@@ -597,6 +825,7 @@ class TeacherDashboardController extends Controller
         ]);
 
         $targetStatus = (int) $data['status'];
+        $previousStatus = (int) $course->status;
         if ($targetStatus === 1) {
             $this->activateCourseWithinLimit($teacher, $course);
         } else {
@@ -607,6 +836,18 @@ class TeacherDashboardController extends Controller
             ]);
             $this->syncCourseLocks($teacher);
         }
+        $course->refresh();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            $targetStatus === 1 ? 'course_published' : 'course_moved_to_draft',
+            $targetStatus === 1 ? 'Da dua khoa hoc len publish' : 'Da chuyen khoa hoc ve ban nhap',
+            [
+                'before_status' => $previousStatus,
+                'after_status' => (int) $course->status,
+                'package_lock_reason' => $course->package_lock_reason,
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses')
@@ -625,11 +866,23 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        $wasPriority = (bool) $course->is_package_priority;
         $course->update([
             'is_package_priority' => !$course->is_package_priority,
         ]);
 
         $this->syncCourseLocks($teacher);
+        $course->refresh();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            $course->is_package_priority ? 'course_priority_enabled' : 'course_priority_disabled',
+            $course->is_package_priority ? 'Da bat uu tien goi cho khoa hoc' : 'Da tat uu tien goi cho khoa hoc',
+            [
+                'before_priority' => $wasPriority,
+                'after_priority' => (bool) $course->is_package_priority,
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses')
@@ -648,8 +901,16 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        $courseSnapshot = $course->only(['id', 'name', 'status']);
         $course->delete();
         Lesson::query()->where('course_id', $course->id)->delete();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            'course_deleted',
+            'Da dua khoa hoc vao thung rac',
+            $courseSnapshot
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses')
@@ -669,6 +930,7 @@ class TeacherDashboardController extends Controller
         }
 
         $wasTrashed = $course->trashed();
+        $originalStatus = (int) $course->status;
         $course->restore();
         $restoredAsDraft = false;
         if (
@@ -680,6 +942,18 @@ class TeacherDashboardController extends Controller
             $restoredAsDraft = true;
         }
         Lesson::query()->onlyTrashed()->where('course_id', $course->id)->restore();
+        $course->refresh();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            'course_restored',
+            $restoredAsDraft ? 'Da khoi phuc khoa hoc ve ban nhap' : 'Da khoi phuc khoa hoc',
+            [
+                'was_trashed' => $wasTrashed,
+                'before_status' => $originalStatus,
+                'after_status' => (int) $course->status,
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses.trash')
@@ -701,10 +975,24 @@ class TeacherDashboardController extends Controller
         if (!$course->trashed()) {
             abort(404);
         }
+        $courseName = $course->name_locale ?: $course->name;
+        $courseKey = $course->id;
 
         Lesson::query()->withTrashed()->where('course_id', $course->id)->forceDelete();
         $course->categories()->detach();
         $course->forceDelete();
+        activity_log(
+            'course_force_deleted',
+            null,
+            [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'course_id' => $courseKey,
+                'course_name' => $courseName,
+            ],
+            'teacher_course_management',
+            'Da xoa vinh vien khoa hoc'
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses.trash')
@@ -1179,6 +1467,10 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
+        }
+
         $directory = $this->buildTeacherStudentDirectory($teacher, $request);
         $search = $directory['search'];
         $summary = $directory['summary'];
@@ -1208,6 +1500,69 @@ class TeacherDashboardController extends Controller
             'teacher',
             'students',
             'directory'
+        ));
+    }
+
+    public function activityLogs(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_view_activity_logs')) {
+            return $featureRedirect;
+        }
+
+        $type = trim((string) $request->query('type', 'all'));
+        $search = trim((string) $request->query('q', ''));
+        $typeMap = [
+            'students' => 'teacher_student_management',
+            'courses' => 'teacher_course_management',
+            'coupons' => 'teacher_coupon_management',
+        ];
+        $selectedType = array_key_exists($type, $typeMap) ? $type : 'all';
+
+        $logsQuery = ActiveLog::query()
+            ->where('properties->teacher_id', $teacher->id)
+            ->whereIn('log_name', array_values($typeMap))
+            ->when($selectedType !== 'all', function ($query) use ($selectedType, $typeMap) {
+                $query->where('log_name', $typeMap[$selectedType]);
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($nested) use ($search) {
+                    $nested->where('action', 'like', '%' . $search . '%')
+                        ->orWhere('description', 'like', '%' . $search . '%')
+                        ->orWhere('properties->student_name', 'like', '%' . $search . '%')
+                        ->orWhere('properties->course_name', 'like', '%' . $search . '%')
+                        ->orWhere('properties->coupon_code', 'like', '%' . $search . '%')
+                        ->orWhere('properties->teacher_name', 'like', '%' . $search . '%');
+                });
+            });
+
+        $summary = [
+            'total' => (clone $logsQuery)->count(),
+            'students' => (clone $logsQuery)->where('log_name', $typeMap['students'])->count(),
+            'courses' => (clone $logsQuery)->where('log_name', $typeMap['courses'])->count(),
+            'coupons' => (clone $logsQuery)->where('log_name', $typeMap['coupons'])->count(),
+        ];
+
+        $logs = $logsQuery
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        $pageTitle = __('teacher::dashboard.pages.activity_logs');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.activity_logs', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'logs',
+            'summary',
+            'search',
+            'selectedType'
         ));
     }
 
@@ -1318,6 +1673,10 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
+        }
+
         if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_export_students')) {
             return $featureRedirect;
         }
@@ -1369,6 +1728,10 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
+        }
+
         if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_grant_courses', 'teacher.dashboard.students')) {
             return $featureRedirect;
         }
@@ -1406,6 +1769,10 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
         }
 
         if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_grant_courses', 'teacher.dashboard.students')) {
@@ -1468,6 +1835,26 @@ class TeacherDashboardController extends Controller
             $locale
         ));
 
+        $this->logTeacherStudentActivity(
+            $teacher,
+            $student,
+            'grant_created',
+            'Đã cấp quyền học thủ công',
+            [
+                'course_id' => $course->id,
+                'course_name' => $course->name_locale ?: $course->name,
+                'reason' => $data['reason'],
+                'reason_label' => match ($data['reason']) {
+                    'gift' => 'Quà tặng',
+                    'support' => 'Hỗ trợ',
+                    'special_trial' => 'Học thử đặc biệt',
+                    'compensation' => 'Bù quyền truy cập',
+                    default => $data['reason'],
+                },
+                'note' => trim((string) ($data['note'] ?? '')) ?: null,
+            ]
+        );
+
         return redirect()
             ->route('teacher.dashboard.students.grants.create', ['student_id' => $student->id])
             ->with('msg_success', __('teacher::gifts.flash.invitation_sent'));
@@ -1478,6 +1865,10 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
         }
 
         if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_grant_courses', 'teacher.dashboard.students')) {
@@ -1504,6 +1895,18 @@ class TeacherDashboardController extends Controller
                 ->delete();
         }
 
+        $this->logTeacherStudentActivity(
+            $teacher,
+            $student,
+            'grant_revoked',
+            'Đã thu hồi quyền học thủ công',
+            [
+                'course_id' => $grant->course_id,
+                'course_name' => $grant->course?->name_locale ?: $grant->course?->name,
+                'had_paid_access' => $hasPaidAccess,
+            ]
+        );
+
         return redirect()
             ->route('teacher.dashboard.students.show', $student->id)
             ->with('msg_success', 'Da thu hoi suat cap quyen hoc.');
@@ -1514,6 +1917,10 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
         }
 
         [$student, $details, $grants] = $this->resolveOwnedStudentContext($teacher, $studentId);
@@ -1565,6 +1972,8 @@ class TeacherDashboardController extends Controller
 
             return $course;
         });
+        $progressSummary = $this->summarizeStudentCourseProgress($courses);
+        $activityHistory = $this->resolveStudentManagementHistory($teacher, $student);
 
         $pageTitle = 'Chi tiết học viên';
         $pageName = $pageTitle;
@@ -1573,6 +1982,9 @@ class TeacherDashboardController extends Controller
             'courses' => $courses->count(),
             'grants' => $grants->count(),
             'spent' => (float) $details->sum(fn ($detail) => (float) ($detail->price ?? 0)),
+            'progress_percent' => $progressSummary['progress_percent'],
+            'completed_lessons' => $progressSummary['completed_lessons'],
+            'total_lessons' => $progressSummary['total_lessons'],
             'last_purchase_at' => optional(
                 $details->sortByDesc(function ($detail) {
                     return optional($detail->order?->payment_complete_date ?: $detail->order?->payment_date ?: $detail->created_at)->timestamp ?? 0;
@@ -1597,7 +2009,8 @@ class TeacherDashboardController extends Controller
             'grants',
             'note',
             'summary',
-            'learningTimeline'
+            'learningTimeline',
+            'activityHistory'
         ));
     }
 
@@ -1608,14 +2021,22 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
+        }
+
         [$student] = $this->resolveOwnedStudentContext($teacher, $studentId);
+        $existingNote = TeacherStudentNote::query()->firstWhere([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+        ]);
 
         $data = $request->validate([
             'tag' => ['nullable', 'in:potential,support_needed,vip'],
             'note' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        TeacherStudentNote::query()->updateOrCreate(
+        $savedNote = TeacherStudentNote::query()->updateOrCreate(
             [
                 'teacher_id' => $teacher->id,
                 'student_id' => $student->id,
@@ -1623,6 +2044,20 @@ class TeacherDashboardController extends Controller
             [
                 'tag' => $data['tag'] ?? null,
                 'note' => trim((string) ($data['note'] ?? '')) ?: null,
+            ]
+        );
+
+        $this->logTeacherStudentActivity(
+            $teacher,
+            $student,
+            'note_saved',
+            'Đã cập nhật ghi chú nội bộ',
+            [
+                'tag' => $savedNote->tag,
+                'tag_label' => $this->normalizeStudentTagLabel($savedNote->tag),
+                'note_preview' => Str::limit((string) ($savedNote->note ?? ''), 160),
+                'previous_tag' => $existingNote?->tag,
+                'previous_note_preview' => Str::limit((string) ($existingNote?->note ?? ''), 160),
             ]
         );
 
@@ -1818,6 +2253,295 @@ class TeacherDashboardController extends Controller
         return redirect()
             ->route($fallbackRoute)
             ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
+    }
+
+    private function resolvePromotionRecipientIds(
+        Teacher $teacher,
+        ?int $courseId = null,
+        ?int $recentPurchaseDays = null,
+        ?int $inactiveLearningDays = null
+    ): array
+    {
+        $orderDetailsQuery = $this->paidOrderDetailsQuery($teacher)
+            ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
+            ->when($recentPurchaseDays, function ($query) use ($recentPurchaseDays) {
+                $threshold = Carbon::now()->subDays($recentPurchaseDays)->startOfDay();
+
+                $query->whereHas('order', function ($orderQuery) use ($threshold) {
+                    $orderQuery->where(function ($dateQuery) use ($threshold) {
+                        $dateQuery->where('payment_complete_date', '>=', $threshold)
+                            ->orWhere(function ($fallbackQuery) use ($threshold) {
+                                $fallbackQuery->whereNull('payment_complete_date')
+                                    ->where('payment_date', '>=', $threshold);
+                            });
+                    });
+                });
+            });
+
+        $orderStudentIds = $orderDetailsQuery->get()->pluck('order.student_id');
+
+        $grantStudentIds = collect();
+        if (!$recentPurchaseDays) {
+            $grantStudentIds = $this->teacherCourseGrantsQuery($teacher)
+                ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
+                ->pluck('student_id');
+        }
+
+        $recipientIds = $orderStudentIds
+            ->concat($grantStudentIds)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($inactiveLearningDays) {
+            $recipientIds = $this->filterInactivePromotionRecipients(
+                $teacher,
+                $recipientIds->all(),
+                $courseId,
+                $inactiveLearningDays
+            );
+        }
+
+        return collect($recipientIds)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function buildPromotionNotificationPayload(Teacher $teacher, TeacherPromotion $promotion, $course = null): array
+    {
+        $teacherName = $teacher->name_locale ?: $teacher->name ?: 'Giang vien';
+        $courseName = $course ? (localizedModelField($course, 'name', app()->getLocale()) ?: __('teacher::dashboard.common.unknown_course')) : null;
+        $title = $promotion->title;
+        $message = $promotion->message;
+
+        if ($course && ($course->slug_locale ?: $course->slug)) {
+            $url = route('courses.detail', [
+                'locale' => app()->getLocale(),
+                'slug' => $course->slug_locale ?: $course->slug,
+            ]);
+        } else {
+            $url = route('teacher.public.show', [
+                'locale' => app()->getLocale(),
+                'slug' => $teacher->slug_locale ?: $teacher->slug,
+            ]);
+        }
+
+        return [
+            'type' => 'teacher.promotion',
+            'title' => $title,
+            'title_translations' => [
+                app()->getLocale() => $title,
+            ],
+            'message' => $message,
+            'message_translations' => [
+                app()->getLocale() => $message,
+            ],
+            'url' => $url,
+            'severity' => 'primary',
+            'icon' => 'fas fa-bullhorn',
+            'entity_type' => TeacherPromotion::class,
+            'entity_id' => $promotion->id,
+            'meta' => [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacherName,
+                'course_id' => $course?->id,
+                'course_name' => $courseName,
+                'promotion_id' => $promotion->id,
+            ],
+        ];
+    }
+
+    private function resolvePromotionAudienceType(?int $courseId, ?int $recentPurchaseDays, ?int $inactiveLearningDays): string
+    {
+        if ($courseId && $inactiveLearningDays) {
+            return 'course_inactive_learners';
+        }
+
+        if ($courseId) {
+            return 'course_students';
+        }
+
+        if ($recentPurchaseDays) {
+            return 'recent_buyers';
+        }
+
+        if ($inactiveLearningDays) {
+            return 'inactive_learners';
+        }
+
+        return 'all_students';
+    }
+
+    private function filterInactivePromotionRecipients(
+        Teacher $teacher,
+        array $recipientIds,
+        ?int $courseId,
+        int $inactiveLearningDays
+    ): array {
+        if (empty($recipientIds)) {
+            return [];
+        }
+
+        $threshold = Carbon::now()->subDays($inactiveLearningDays)->endOfDay();
+        $activeStudentIds = StudentLessonProgress::query()
+            ->select('student_id')
+            ->whereIn('student_id', $recipientIds)
+            ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
+            ->when(!$courseId, function ($query) use ($teacher) {
+                $query->whereHas('course', function ($courseQuery) use ($teacher) {
+                    $courseQuery->withoutGlobalScopes()->where('teacher_id', $teacher->id);
+                });
+            })
+            ->where('updated_at', '>', $threshold)
+            ->groupBy('student_id')
+            ->pluck('student_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return collect($recipientIds)
+            ->diff($activeStudentIds)
+            ->values()
+            ->all();
+    }
+
+    private function bundleFormResponse(?int $bundleId = null)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_sell_bundles', 'teacher.dashboard.bundles')) {
+            return $featureRedirect;
+        }
+
+        $bundle = null;
+        if ($bundleId) {
+            $bundle = TeacherCourseBundle::query()
+                ->with('items')
+                ->where('teacher_id', $teacher->id)
+                ->findOrFail($bundleId);
+        }
+
+        $courseOptions = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->where('is_learning_locked', '!=', 1)
+            ->orderBy('name')
+            ->get(['id', 'name', 'name_en', 'name_ko', 'name_ja', 'name_zh', 'price', 'sale_price', 'thumbnail']);
+
+        $pageTitle = $bundle
+            ? __('teacher::dashboard.bundles.edit_title')
+            : __('teacher::dashboard.bundles.create_title');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.bundle_form', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'bundle',
+            'courseOptions'
+        ));
+    }
+
+    private function persistBundle(TeacherCourseBundleRequest $request, ?int $bundleId = null)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_sell_bundles', 'teacher.dashboard.bundles')) {
+            return $featureRedirect;
+        }
+
+        $data = $request->validated();
+        $courseIds = collect($data['course_ids'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $courses = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->where('is_learning_locked', '!=', 1)
+            ->whereIn('id', $courseIds)
+            ->get(['id']);
+
+        if ($courses->count() < 2 || $courses->count() !== $courseIds->count()) {
+            return back()
+                ->withInput()
+                ->withErrors(['course_ids' => __('teacher::dashboard.bundles.flash.invalid_courses')]);
+        }
+
+        $existingBundle = $bundleId
+            ? TeacherCourseBundle::query()->where('teacher_id', $teacher->id)->findOrFail($bundleId)
+            : null;
+
+        $baseSlug = Str::slug((string) $data['name']);
+        $slug = $this->resolveUniqueBundleSlug($teacher, $baseSlug !== '' ? $baseSlug : 'combo-khoa-hoc', $existingBundle?->id);
+
+        $bundle = DB::transaction(function () use ($teacher, $data, $courseIds, $existingBundle, $slug) {
+            $payload = [
+                'teacher_id' => $teacher->id,
+                'name' => trim((string) $data['name']),
+                'slug' => $slug,
+                'description' => trim((string) ($data['description'] ?? '')),
+                'thumbnail' => trim((string) ($data['thumbnail'] ?? '')),
+                'price' => (float) $data['price'],
+                'status' => (bool) ($data['status'] ?? false),
+            ];
+
+            $bundle = $existingBundle;
+            if ($bundle) {
+                $bundle->update($payload);
+            } else {
+                $payload['position'] = ((int) TeacherCourseBundle::query()->where('teacher_id', $teacher->id)->max('position')) + 1;
+                $bundle = TeacherCourseBundle::query()->create($payload);
+            }
+
+            $bundle->items()->delete();
+
+            foreach ($courseIds->values() as $index => $courseId) {
+                $bundle->items()->create([
+                    'course_id' => $courseId,
+                    'position' => $index + 1,
+                ]);
+            }
+
+            return $bundle;
+        });
+
+        return redirect()
+            ->route('teacher.dashboard.bundles.edit', ['bundle' => $bundle->id])
+            ->with('msg_success', $bundleId
+                ? __('teacher::dashboard.bundles.flash.updated')
+                : __('teacher::dashboard.bundles.flash.created'));
+    }
+
+    private function resolveUniqueBundleSlug(Teacher $teacher, string $baseSlug, ?int $ignoreId = null): string
+    {
+        $slug = $baseSlug;
+        $index = 2;
+
+        while (
+            TeacherCourseBundle::query()
+                ->where('slug', $slug)
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $baseSlug . '-' . $index;
+            $index++;
+        }
+
+        return $slug;
     }
 
     private function resolveCommittedPayoutAmount(Teacher $teacher): float
@@ -2068,6 +2792,9 @@ class TeacherDashboardController extends Controller
             'can_duplicate_courses',
             'can_manage_comments',
             'can_manage_coupons',
+            'can_manage_students',
+            'can_view_student_progress',
+            'can_view_activity_logs',
             'can_grant_courses',
             'can_export_orders',
             'can_export_students',
@@ -2081,6 +2808,103 @@ class TeacherDashboardController extends Controller
         }
 
         return $warnings;
+    }
+
+    private function summarizeStudentCourseProgress(Collection $courses): array
+    {
+        $totalLessons = (int) $courses->sum('teacher_progress_total_lessons');
+        $completedLessons = (int) $courses->sum('teacher_progress_completed_lessons');
+        $progressPercent = $totalLessons > 0
+            ? min((int) round(($completedLessons * 100) / $totalLessons), 100)
+            : 0;
+
+        return [
+            'total_lessons' => $totalLessons,
+            'completed_lessons' => $completedLessons,
+            'progress_percent' => $progressPercent,
+        ];
+    }
+
+    private function attachCourseHistoryPreview(LengthAwarePaginator $courses, Teacher $teacher): void
+    {
+        $courseIds = collect($courses->items())->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $historyMap = ActiveLog::query()
+            ->where('log_name', 'teacher_course_management')
+            ->where(function ($query) use ($courseIds) {
+                $query->where(function ($subjectQuery) use ($courseIds) {
+                    $subjectQuery->where('subject_type', Courses::class)
+                        ->whereIn('subject_id', $courseIds ?: [0]);
+                })->orWhere(function ($propertyQuery) use ($courseIds) {
+                    $propertyQuery->whereNull('subject_id')
+                        ->whereIn('properties->course_id', $courseIds ?: [0]);
+                });
+            })
+            ->where('properties->teacher_id', $teacher->id)
+            ->latest('id')
+            ->get()
+            ->groupBy(function ($log) {
+                return (int) ($log->subject_id ?: data_get($log->properties, 'course_id', 0));
+            });
+
+        foreach ($courses->items() as $course) {
+            $course->teacher_activity_preview = ($historyMap->get((int) $course->id, collect()) ?? collect())
+                ->take(3)
+                ->values();
+        }
+    }
+
+    private function logTeacherCourseActivity(
+        Teacher $teacher,
+        Courses $course,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $course,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'course_id' => $course->id,
+                'course_name' => $course->name_locale ?: $course->name,
+            ]),
+            'teacher_course_management',
+            $description
+        );
+    }
+
+    private function resolveStudentManagementHistory(Teacher $teacher, Student $student): Collection
+    {
+        return ActiveLog::query()
+            ->where('log_name', 'teacher_student_management')
+            ->where('subject_type', Student::class)
+            ->where('subject_id', $student->id)
+            ->where('properties->teacher_id', $teacher->id)
+            ->latest('id')
+            ->take(12)
+            ->get();
+    }
+
+    private function logTeacherStudentActivity(
+        Teacher $teacher,
+        Student $student,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $student,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+            ]),
+            'teacher_student_management',
+            $description
+        );
     }
 
     private function resolveOwnedCourse(Teacher $teacher, int $courseId, bool $withTrashed = false): Courses
@@ -2676,14 +3500,28 @@ class TeacherDashboardController extends Controller
             ->unique()
             ->map(fn ($id) => (int) $id)
             ->all();
+        $courseLessonTotals = Lesson::query()
+            ->when(!empty($teacherCourseIds), fn ($query) => $query->whereIn('course_id', $teacherCourseIds), fn ($query) => $query->whereRaw('1 = 0'))
+            ->whereNotNull('parent_id')
+            ->where('status', 1)
+            ->selectRaw('course_id, COUNT(*) as total_lessons')
+            ->groupBy('course_id')
+            ->pluck('total_lessons', 'course_id');
         $recentLearningMap = StudentLessonProgress::query()
             ->when(!empty($filteredStudentIds), fn ($query) => $query->whereIn('student_id', $filteredStudentIds), fn ($query) => $query->whereRaw('1 = 0'))
             ->when(!empty($teacherCourseIds), fn ($query) => $query->whereIn('course_id', $teacherCourseIds), fn ($query) => $query->whereRaw('1 = 0'))
             ->selectRaw('student_id, MAX(completed_at) as last_learning_at')
             ->groupBy('student_id')
             ->pluck('last_learning_at', 'student_id');
+        $progressRows = StudentLessonProgress::query()
+            ->when(!empty($filteredStudentIds), fn ($query) => $query->whereIn('student_id', $filteredStudentIds), fn ($query) => $query->whereRaw('1 = 0'))
+            ->when(!empty($teacherCourseIds), fn ($query) => $query->whereIn('course_id', $teacherCourseIds), fn ($query) => $query->whereRaw('1 = 0'))
+            ->selectRaw('student_id, course_id, COUNT(DISTINCT lesson_id) as completed_lessons')
+            ->groupBy('student_id', 'course_id')
+            ->get()
+            ->groupBy('student_id');
 
-        $students = $students->map(function (Student $student) use ($detailsByStudent, $grantsByStudent, $notesMap, $recentLearningMap) {
+        $students = $students->map(function (Student $student) use ($detailsByStudent, $grantsByStudent, $notesMap, $recentLearningMap, $progressRows, $courseLessonTotals) {
             $details = $detailsByStudent->get((int) $student->id, collect());
             $grantItems = $grantsByStudent->get((int) $student->id, collect());
             $courses = $details->pluck('courses')
@@ -2696,6 +3534,17 @@ class TeacherDashboardController extends Controller
             })->first();
             $noteItem = $notesMap->get((int) $student->id);
             $lastLearningAt = $recentLearningMap->get((int) $student->id);
+            $studentProgressRows = $progressRows->get((int) $student->id, collect());
+            $totalLessons = $courses->sum(fn ($course) => (int) ($courseLessonTotals[$course->id] ?? 0));
+            $completedLessons = $courses->sum(function ($course) use ($studentProgressRows, $courseLessonTotals) {
+                $totalCourseLessons = (int) ($courseLessonTotals[$course->id] ?? 0);
+                $completedCourseLessons = (int) ($studentProgressRows->firstWhere('course_id', $course->id)?->completed_lessons ?? 0);
+
+                return min($completedCourseLessons, $totalCourseLessons);
+            });
+            $progressPercent = $totalLessons > 0
+                ? min((int) round(($completedLessons * 100) / $totalLessons), 100)
+                : 0;
 
             $student->teacher_course_count = $courses->count();
             $student->teacher_order_count = $details->pluck('order_id')->filter()->unique()->count();
@@ -2710,6 +3559,9 @@ class TeacherDashboardController extends Controller
             $student->teacher_note_preview = $noteItem?->note;
             $student->teacher_tag = $noteItem?->tag;
             $student->teacher_last_learning_at = $lastLearningAt ? Carbon::parse($lastLearningAt) : null;
+            $student->teacher_progress_total_lessons = $totalLessons;
+            $student->teacher_progress_completed_lessons = $completedLessons;
+            $student->teacher_progress_percent = $progressPercent;
 
             return $student;
         });

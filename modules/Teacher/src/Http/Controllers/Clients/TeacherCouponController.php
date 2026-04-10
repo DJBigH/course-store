@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Courses\src\Models\Courses;
 use Modules\Orders\src\Models\OrderDetail;
 use Modules\Students\src\Models\Coupons;
@@ -44,6 +45,7 @@ class TeacherCouponController extends Controller
             ->latest('id')
             ->paginate(12)
             ->withQueryString();
+        $this->attachCouponHistoryPreview($coupons, $teacher);
 
         $pageTitle = __('teacher::coupons.page_title');
         $pageName = $pageTitle;
@@ -145,6 +147,19 @@ class TeacherCouponController extends Controller
         $coupon->students()->sync($assignment['students']);
         $coupon->courses()->sync($assignment['courses']);
         $this->syncCouponLocks($teacher);
+        $coupon->load(['students', 'courses']);
+        $this->logTeacherCouponActivity(
+            $teacher,
+            $coupon,
+            'coupon_created',
+            'Da tao ma giam gia moi',
+            [
+                'discount_type' => $coupon->discount_type,
+                'discount_value' => (int) $coupon->discount_value,
+                'student_count' => $coupon->students->count(),
+                'course_count' => $coupon->courses->count(),
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.coupons.edit', $coupon->id)
@@ -212,10 +227,42 @@ class TeacherCouponController extends Controller
             ])->withInput();
         }
 
+        $before = $coupon->only([
+            'code',
+            'discount_type',
+            'discount_value',
+            'total_condition',
+            'count',
+            'per_student_once',
+            'start_date',
+            'end_date',
+        ]);
         $coupon->update($data);
         $coupon->students()->sync($assignment['students']);
         $coupon->courses()->sync($assignment['courses']);
         $this->syncCouponLocks($teacher);
+        $coupon->load(['students', 'courses']);
+        $this->logTeacherCouponActivity(
+            $teacher,
+            $coupon,
+            'coupon_updated',
+            'Da cap nhat ma giam gia',
+            [
+                'before' => $before,
+                'after' => $coupon->only([
+                    'code',
+                    'discount_type',
+                    'discount_value',
+                    'total_condition',
+                    'count',
+                    'per_student_once',
+                    'start_date',
+                    'end_date',
+                ]),
+                'student_count' => $coupon->students->count(),
+                'course_count' => $coupon->courses->count(),
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.coupons.edit', $coupon->id)
@@ -230,8 +277,22 @@ class TeacherCouponController extends Controller
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
+        $couponName = $coupon->code;
+        $couponId = $coupon->id;
         $coupon->delete();
         $this->syncCouponLocks($teacher);
+        activity_log(
+            'coupon_deleted',
+            null,
+            [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'coupon_id' => $couponId,
+                'coupon_code' => $couponName,
+            ],
+            'teacher_coupon_management',
+            'Da xoa ma giam gia'
+        );
 
         return redirect()
             ->route('teacher.dashboard.coupons.index')
@@ -246,11 +307,23 @@ class TeacherCouponController extends Controller
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
+        $wasPriority = (bool) $coupon->is_package_priority;
         $coupon->update([
             'is_package_priority' => !$coupon->is_package_priority,
         ]);
 
         $this->syncCouponLocks($teacher);
+        $coupon->refresh();
+        $this->logTeacherCouponActivity(
+            $teacher,
+            $coupon,
+            $coupon->is_package_priority ? 'coupon_priority_enabled' : 'coupon_priority_disabled',
+            $coupon->is_package_priority ? 'Da bat uu tien goi cho ma giam gia' : 'Da tat uu tien goi cho ma giam gia',
+            [
+                'before_priority' => $wasPriority,
+                'after_priority' => (bool) $coupon->is_package_priority,
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.coupons.index')
@@ -325,6 +398,15 @@ class TeacherCouponController extends Controller
 
         $coupon->students()->sync($syncData);
         $this->syncCouponLocks($teacher);
+        $this->logTeacherCouponActivity(
+            $teacher,
+            $coupon->fresh(),
+            'coupon_students_updated',
+            'Da cap nhat hoc vien ap dung ma giam gia',
+            [
+                'student_count' => count($syncData),
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.coupons.students', $coupon->id)
@@ -405,6 +487,15 @@ class TeacherCouponController extends Controller
 
         $coupon->courses()->sync($syncData);
         $this->syncCouponLocks($teacher);
+        $this->logTeacherCouponActivity(
+            $teacher,
+            $coupon->fresh(),
+            'coupon_courses_updated',
+            'Da cap nhat khoa hoc ap dung ma giam gia',
+            [
+                'course_count' => count($syncData),
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.coupons.courses', $coupon->id)
@@ -524,6 +615,55 @@ class TeacherCouponController extends Controller
         }
 
         return $code;
+    }
+
+    private function attachCouponHistoryPreview($coupons, Teacher $teacher): void
+    {
+        $couponIds = collect($coupons->items())->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $historyMap = ActiveLog::query()
+            ->where('log_name', 'teacher_coupon_management')
+            ->where(function ($query) use ($couponIds) {
+                $query->where(function ($subjectQuery) use ($couponIds) {
+                    $subjectQuery->where('subject_type', Coupons::class)
+                        ->whereIn('subject_id', $couponIds ?: [0]);
+                })->orWhere(function ($propertyQuery) use ($couponIds) {
+                    $propertyQuery->whereNull('subject_id')
+                        ->whereIn('properties->coupon_id', $couponIds ?: [0]);
+                });
+            })
+            ->where('properties->teacher_id', $teacher->id)
+            ->latest('id')
+            ->get()
+            ->groupBy(function ($log) {
+                return (int) ($log->subject_id ?: data_get($log->properties, 'coupon_id', 0));
+            });
+
+        foreach ($coupons->items() as $coupon) {
+            $coupon->teacher_activity_preview = ($historyMap->get((int) $coupon->id, collect()) ?? collect())
+                ->take(3)
+                ->values();
+        }
+    }
+
+    private function logTeacherCouponActivity(
+        Teacher $teacher,
+        Coupons $coupon,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $coupon,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'coupon_id' => $coupon->id,
+                'coupon_code' => $coupon->code,
+            ]),
+            'teacher_coupon_management',
+            $description
+        );
     }
 
     private function resolveTeacher(): ?Teacher

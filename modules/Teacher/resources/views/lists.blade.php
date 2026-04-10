@@ -147,6 +147,41 @@
             color: #334155;
         }
 
+        .activity-age {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1;
+            border: 1px solid transparent;
+        }
+
+        .activity-age--fresh {
+            background: #dcfce7;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .activity-age--notice {
+            background: #fef3c7;
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+
+        .activity-age--warning {
+            background: #ffedd5;
+            border-color: #fdba74;
+            color: #9a3412;
+        }
+
+        .activity-age--danger {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+
         html[data-theme="dark"] .admin-filter-panel {
             background: linear-gradient(180deg, #162033 0%, #111827 100%);
             border-color: #2b3b53;
@@ -159,6 +194,30 @@
 
         html[data-theme="dark"] .bulk-toolbar__summary {
             color: #cbd5e1;
+        }
+
+        html[data-theme="dark"] .activity-age--fresh {
+            background: rgba(34, 197, 94, 0.16);
+            border-color: rgba(74, 222, 128, 0.4);
+            color: #bbf7d0;
+        }
+
+        html[data-theme="dark"] .activity-age--notice {
+            background: rgba(245, 158, 11, 0.16);
+            border-color: rgba(251, 191, 36, 0.4);
+            color: #fde68a;
+        }
+
+        html[data-theme="dark"] .activity-age--warning {
+            background: rgba(249, 115, 22, 0.16);
+            border-color: rgba(251, 146, 60, 0.4);
+            color: #fdba74;
+        }
+
+        html[data-theme="dark"] .activity-age--danger {
+            background: rgba(239, 68, 68, 0.16);
+            border-color: rgba(248, 113, 113, 0.45);
+            color: #fca5a5;
         }
 
         html[data-theme="dark"] #datatable tbody td,

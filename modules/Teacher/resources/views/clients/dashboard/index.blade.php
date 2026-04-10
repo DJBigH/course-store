@@ -33,6 +33,17 @@
                         {{ __('teacher::dashboard.common.students_count', ['count' => $stats['students']]) }}
                     </span>
                 </div>
+                <a href="{{ $teacher->packageHasFeature('can_send_promotions') ? route('teacher.dashboard.promotions') : route('teacher.dashboard.package.upgrade') }}" class="teacher-overview-shortcut mt-4">
+                    <span class="teacher-overview-shortcut__icon"><i class="fas fa-bullhorn"></i></span>
+                    <div>
+                        <strong>{{ __('teacher::dashboard.promotions.shortcut_title') }}</strong>
+                        <p class="mb-0">
+                            {{ $teacher->packageHasFeature('can_send_promotions')
+                                ? __('teacher::dashboard.promotions.shortcut_description')
+                                : __('teacher::dashboard.promotions.shortcut_locked') }}
+                        </p>
+                    </div>
+                </a>
             </div>
 
             <div class="teacher-hero__rail">

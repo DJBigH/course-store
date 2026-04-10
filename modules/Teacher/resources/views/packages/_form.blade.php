@@ -292,6 +292,27 @@
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_manage_students" value="1"
+                            {{ old('can_manage_students', $package->can_manage_students ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep quan ly hoc vien</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_view_student_progress" value="1"
+                            {{ old('can_view_student_progress', $package->can_view_student_progress ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep xem % tien do hoc cua hoc vien</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_view_activity_logs" value="1"
+                            {{ old('can_view_activity_logs', $package->can_view_activity_logs ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep xem nhat ky hoat dong giang vien</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_grant_courses" value="1"
                             {{ old('can_grant_courses', $package->can_grant_courses ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label">Cho phep cap quyen hoc thu cong</label>
@@ -309,6 +330,48 @@
                         <input class="form-check-input" type="checkbox" name="can_export_students" value="1"
                             {{ old('can_export_students', $package->can_export_students ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label">Cho phep export hoc vien</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_sell_bundles" value="1"
+                            {{ old('can_sell_bundles', $package->can_sell_bundles ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep ban combo / bundle khoa hoc</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_schedule_content" value="1"
+                            {{ old('can_schedule_content', $package->can_schedule_content ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep mo bai hoc theo lich</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_send_promotions" value="1"
+                            {{ old('can_send_promotions', $package->can_send_promotions ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep gui thong bao khuyen mai</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_issue_certificates" value="1"
+                            {{ old('can_issue_certificates', $package->can_issue_certificates ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep cap chung chi hoan thanh</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_customize_teacher_landing" value="1"
+                            {{ old('can_customize_teacher_landing', $package->can_customize_teacher_landing ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep tuy chinh landing page giang vien</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_use_affiliate_links" value="1"
+                            {{ old('can_use_affiliate_links', $package->can_use_affiliate_links ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep dung link gioi thieu rieng</label>
                     </div>
                 </div>
             </div>

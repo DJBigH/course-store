@@ -139,16 +139,25 @@ class TeacherController extends Controller
             ->addColumn('inactive_days', function ($teachers) {
                 $reference = $teachers->last_active_at ?: $teachers->created_at;
                 $days = Carbon::parse($reference)->diffInDays(now());
+                $tone = 'activity-age--fresh';
+
+                if ($days >= 90) {
+                    $tone = 'activity-age--danger';
+                } elseif ($days >= 60) {
+                    $tone = 'activity-age--warning';
+                } elseif ($days >= 30) {
+                    $tone = 'activity-age--notice';
+                }
 
                 if (!$teachers->last_active_at) {
-                    return '<span class="text-warning fw-semibold">' . $days . ' ngày</span><div class="small text-muted">Chưa từng hoạt động</div>';
+                    return '<span class="activity-age ' . $tone . '">' . $days . ' ngày</span><div class="small text-muted">Chưa từng hoạt động</div>';
                 }
 
                 if ($days === 0) {
-                    return '<span class="text-success fw-semibold">Hôm nay</span>';
+                    return '<span class="activity-age activity-age--fresh">Hôm nay</span>';
                 }
 
-                return '<span class="fw-semibold">' . $days . ' ngày</span>';
+                return '<span class="activity-age ' . $tone . '">' . $days . ' ngày</span>';
             })
             ->editColumn('image', function ($teachers) {
                 return $teachers->image

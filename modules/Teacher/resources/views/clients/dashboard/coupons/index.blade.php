@@ -144,6 +144,43 @@
                             </div>
                         </div>
 
+                        @if ($teacher->packageHasFeature('can_view_activity_logs'))
+                            <div class="teacher-coupon-card__history">
+                                <div class="teacher-coupon-card__history-title">Lich su thao tac gan nhat</div>
+                                <div class="teacher-coupon-card__history-list">
+                                    @forelse ($coupon->teacher_activity_preview ?? collect() as $activity)
+                                        <article class="teacher-coupon-card__history-item">
+                                            <strong>
+                                                {{ match ($activity->action) {
+                                                    'coupon_created' => 'Tao ma giam gia',
+                                                    'coupon_updated' => 'Cap nhat ma giam gia',
+                                                    'coupon_deleted' => 'Xoa ma giam gia',
+                                                    'coupon_priority_enabled' => 'Bat uu tien goi',
+                                                    'coupon_priority_disabled' => 'Tat uu tien goi',
+                                                    'coupon_students_updated' => 'Cap nhat hoc vien ap dung',
+                                                    'coupon_courses_updated' => 'Cap nhat khoa hoc ap dung',
+                                                    default => $activity->description ?: $activity->action,
+                                                } }}
+                                            </strong>
+                                            <span>{{ optional($activity->created_at)->format('d/m/Y H:i') }}</span>
+                                        </article>
+                                    @empty
+                                        <div class="teacher-coupon-card__history-empty">Chua co thao tac nao duoc ghi lai.</div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        @else
+                            <div class="teacher-coupon-card__history teacher-coupon-card__history--locked">
+                                <div class="teacher-coupon-card__history-title">Lich su thao tac gan nhat</div>
+                                <div class="teacher-coupon-card__history-empty">
+                                    {{ __('teacher::dashboard.package_features.activity_logs_locked') }}
+                                </div>
+                                <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-outline-warning mt-3">
+                                    {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                                </a>
+                            </div>
+                        @endif
+
                         <div class="teacher-coupon-card__actions">
                             @if ($canManageCoupons)
                                 <form action="{{ route('teacher.dashboard.coupons.priority', $coupon->id) }}" method="POST" class="d-inline-block">
@@ -351,6 +388,51 @@
             color: #f8fbff;
             font-weight: 700;
             line-height: 1.55;
+        }
+
+        .teacher-coupon-card__history {
+            margin-bottom: 1rem;
+            padding: 0.95rem 1rem;
+            border-radius: 16px;
+            border: 1px solid rgba(96, 165, 250, 0.12);
+            background: rgba(11, 19, 36, 0.72);
+        }
+
+        .teacher-coupon-card__history-title {
+            margin-bottom: 0.7rem;
+            color: #dbeafe;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .teacher-coupon-card__history-list {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .teacher-coupon-card__history-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.9rem;
+            align-items: flex-start;
+        }
+
+        .teacher-coupon-card__history-item strong {
+            color: #f8fbff;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .teacher-coupon-card__history-item span,
+        .teacher-coupon-card__history-empty {
+            color: #8ca6c6;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .teacher-coupon-card__history--locked {
+            border-style: dashed;
+            background: rgba(245, 158, 11, 0.08);
         }
 
         .teacher-coupon-card__actions {

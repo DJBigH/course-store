@@ -28,6 +28,15 @@ class CourseRatingController extends Controller
             return $this->errorResponse($request, __('courses::clients/common.rating_need_purchase'), 403);
         }
 
+        $existingRating = CourseRating::query()
+            ->where('course_id', $course->id)
+            ->where('student_id', $student->id)
+            ->value('rating');
+
+        if ($existingRating !== null) {
+            return $this->errorResponse($request, __('courses::clients/common.rating_already_submitted'), 422);
+        }
+
         $payload = $request->validate([
             'rating' => ['required', 'numeric', 'min:1', 'max:5'],
         ]);
@@ -37,15 +46,11 @@ class CourseRatingController extends Controller
             return $this->errorResponse($request, __('courses::clients/common.rating_invalid'), 422);
         }
 
-        CourseRating::query()->updateOrCreate(
-            [
-                'course_id' => $course->id,
-                'student_id' => $student->id,
-            ],
-            [
-                'rating' => $rating,
-            ]
-        );
+        CourseRating::query()->create([
+            'course_id' => $course->id,
+            'student_id' => $student->id,
+            'rating' => $rating,
+        ]);
 
         return $this->renderRatingResponse($request, $course, $student->id, $hasCourse);
     }

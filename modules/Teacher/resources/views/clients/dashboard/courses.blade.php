@@ -184,6 +184,46 @@
                             @endif
                         </div>
 
+                        @if ($teacher->packageHasFeature('can_view_activity_logs'))
+                            <div class="teacher-course-card__history">
+                                <div class="teacher-course-card__history-title">Lich su thao tac gan nhat</div>
+                                <div class="teacher-course-card__history-list">
+                                    @forelse ($course->teacher_activity_preview ?? collect() as $activity)
+                                        <article class="teacher-course-card__history-item">
+                                            <strong>
+                                                {{ match ($activity->action) {
+                                                    'course_created' => 'Tao khoa hoc',
+                                                    'course_updated' => 'Cap nhat khoa hoc',
+                                                    'course_duplicated' => 'Nhan ban khoa hoc',
+                                                    'course_published' => 'Dua len publish',
+                                                    'course_moved_to_draft' => 'Chuyen ve ban nhap',
+                                                    'course_priority_enabled' => 'Bat uu tien goi',
+                                                    'course_priority_disabled' => 'Tat uu tien goi',
+                                                    'course_deleted' => 'Dua vao thung rac',
+                                                    'course_restored' => 'Khoi phuc khoa hoc',
+                                                    'course_force_deleted' => 'Xoa vinh vien',
+                                                    default => $activity->description ?: $activity->action,
+                                                } }}
+                                            </strong>
+                                            <span>{{ optional($activity->created_at)->format('d/m/Y H:i') }}</span>
+                                        </article>
+                                    @empty
+                                        <div class="teacher-course-card__history-empty">Chua co thao tac nao duoc ghi lai.</div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        @else
+                            <div class="teacher-course-card__history teacher-course-card__history--locked">
+                                <div class="teacher-course-card__history-title">Lich su thao tac gan nhat</div>
+                                <div class="teacher-course-card__history-empty">
+                                    {{ __('teacher::dashboard.package_features.activity_logs_locked') }}
+                                </div>
+                                <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-outline-warning mt-3">
+                                    {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                                </a>
+                            </div>
+                        @endif
+
                         @if ($isLockedCourse)
                             <div class="teacher-course-card__notice">
                                 {{ __('teacher::dashboard.courses.warnings.lock_reason_package_limit_locked') }}
@@ -494,6 +534,51 @@
             background: rgba(37, 99, 235, 0.12);
             color: #cfe4ff;
             line-height: 1.6;
+        }
+
+        .teacher-course-card__history {
+            margin-top: 0.9rem;
+            padding: 0.95rem 1rem;
+            border-radius: 16px;
+            border: 1px solid rgba(96, 165, 250, 0.14);
+            background: rgba(15, 23, 42, 0.58);
+        }
+
+        .teacher-course-card__history-title {
+            margin-bottom: 0.7rem;
+            color: #dbeafe;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .teacher-course-card__history-list {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .teacher-course-card__history-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.9rem;
+            align-items: flex-start;
+        }
+
+        .teacher-course-card__history-item strong {
+            color: #f8fbff;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .teacher-course-card__history-item span,
+        .teacher-course-card__history-empty {
+            color: #8fb5e9;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .teacher-course-card__history--locked {
+            border-style: dashed;
+            background: rgba(245, 158, 11, 0.08);
         }
 
         .teacher-course-card__notice {

@@ -74,13 +74,19 @@
             </form>
         </div>
 
-        @if (!$teacher->packageHasFeature('can_grant_courses') || !$teacher->packageHasFeature('can_export_students'))
+        @if (
+            !$teacher->packageHasFeature('can_grant_courses')
+            || !$teacher->packageHasFeature('can_export_students')
+            || !$teacher->packageHasFeature('can_view_student_progress')
+        )
             <div class="alert alert-warning border-0 mb-4">
                 <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
                     <div>
                         <strong>{{ __('teacher::dashboard.package_features.upsell_title') }}</strong>
                         <div class="mt-1 text-muted">
-                            @if (!$teacher->packageHasFeature('can_grant_courses') && !$teacher->packageHasFeature('can_export_students'))
+                            @if (!$teacher->packageHasFeature('can_view_student_progress'))
+                                {{ __('teacher::dashboard.package_features.students_locked_progress') }}
+                            @elseif (!$teacher->packageHasFeature('can_grant_courses') && !$teacher->packageHasFeature('can_export_students'))
                                 {{ __('teacher::dashboard.package_features.students_locked_both') }}
                             @elseif (!$teacher->packageHasFeature('can_grant_courses'))
                                 {{ __('teacher::dashboard.package_features.students_locked_grants') }}
@@ -164,6 +170,13 @@
                                 <span>Hoc gan nhat</span>
                                 <strong>{{ optional($student->teacher_last_learning_at)->format('d/m/Y H:i') ?: 'Chua hoc bai nao' }}</strong>
                             </div>
+                            @if ($teacher->packageHasFeature('can_view_student_progress'))
+                                <div class="teacher-student-card__info">
+                                    <span>Tien do hoc tong quan</span>
+                                    <strong>{{ $student->teacher_progress_percent ?? 0 }}%</strong>
+                                    <small>{{ $student->teacher_progress_completed_lessons ?? 0 }} / {{ $student->teacher_progress_total_lessons ?? 0 }} bai</small>
+                                </div>
+                            @endif
                             <div class="teacher-student-card__info">
                                 <span>Tag noi bo</span>
                                 <strong>
@@ -194,6 +207,18 @@
                                 </strong>
                             </div>
                         </div>
+
+                        @if ($teacher->packageHasFeature('can_view_student_progress'))
+                            <div class="teacher-student-card__progress">
+                                <div class="teacher-student-card__progress-head">
+                                    <span>Muc do hoan thanh khoa hoc da co quyen</span>
+                                    <strong>{{ $student->teacher_progress_percent ?? 0 }}%</strong>
+                                </div>
+                                <div class="teacher-student-card__progress-bar">
+                                    <span style="width: {{ $student->teacher_progress_percent ?? 0 }}%"></span>
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="teacher-student-card__courses">
                             <div class="teacher-student-card__section-title">Khoa hoc hoc vien da mua cua ban</div>
@@ -464,6 +489,55 @@
             font-weight: 700;
             line-height: 1.55;
             word-break: break-word;
+        }
+
+        .teacher-student-card__info small {
+            display: block;
+            margin-top: 0.32rem;
+            color: #7f97b8;
+        }
+
+        .teacher-student-card__progress {
+            margin-top: -0.2rem;
+            margin-bottom: 1rem;
+            padding: 0.95rem 1rem;
+            border-radius: 18px;
+            background: rgba(11, 19, 36, 0.72);
+            border: 1px solid rgba(96, 165, 250, 0.12);
+        }
+
+        .teacher-student-card__progress-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .teacher-student-card__progress-head span {
+            color: #8ca6c6;
+            font-size: 0.92rem;
+        }
+
+        .teacher-student-card__progress-head strong {
+            color: #f8fbff;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .teacher-student-card__progress-bar {
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(148, 163, 184, 0.22);
+        }
+
+        .teacher-student-card__progress-bar span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #38bdf8 0%, #22c55e 100%);
         }
 
         .teacher-student-card__courses {

@@ -106,4 +106,6 @@ return [
     'rating_need_purchase' => 'Bạn cần mua khóa học này trước khi đánh giá.',
     'rating_login_required' => 'Đăng nhập học viên để đánh giá khóa học này.',
     'rating_invalid' => 'Vui lòng chọn mức đánh giá hợp lệ từ 1 đến 5 sao.',
+    'rating_already_submitted' => 'Bạn đã đánh giá khóa học này rồi và chỉ được đánh giá một lần.',
+    'rating_submitted_once' => 'Bạn đã đánh giá khóa học này :rating sao. Mỗi học viên chỉ được đánh giá một lần.',
 ];

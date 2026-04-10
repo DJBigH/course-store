@@ -127,6 +127,14 @@ Route::group([
    Route::get('/thong-bao', [TeacherDashboardController::class, 'notifications'])->name('notifications');
    Route::get('/thong-bao/doc', [TeacherDashboardController::class, 'readNotification'])->name('notifications.read');
    Route::get('/thong-bao/announcement/{announcement}/doc', [TeacherDashboardController::class, 'readAnnouncement'])->name('notifications.announcements.read');
+   Route::get('/khuyen-mai', [TeacherDashboardController::class, 'promotions'])->name('promotions');
+   Route::post('/khuyen-mai', [TeacherDashboardController::class, 'storePromotion'])->name('promotions.store');
+   Route::get('/combo-khoa-hoc', [TeacherDashboardController::class, 'bundles'])->name('bundles');
+   Route::get('/combo-khoa-hoc/tao-moi', [TeacherDashboardController::class, 'createBundle'])->name('bundles.create');
+   Route::post('/combo-khoa-hoc/tao-moi', [TeacherDashboardController::class, 'storeBundle'])->name('bundles.store');
+   Route::get('/combo-khoa-hoc/{bundle}/chinh-sua', [TeacherDashboardController::class, 'editBundle'])->name('bundles.edit');
+   Route::post('/combo-khoa-hoc/{bundle}/chinh-sua', [TeacherDashboardController::class, 'updateBundle'])->name('bundles.update');
+   Route::delete('/combo-khoa-hoc/{bundle}', [TeacherDashboardController::class, 'deleteBundle'])->name('bundles.delete');
    Route::get('/khoa-hoc', [TeacherDashboardController::class, 'courses'])->name('courses');
    Route::get('/ma-giam-gia', [TeacherCouponController::class, 'index'])->name('coupons.index');
    Route::get('/ma-giam-gia/tao-moi', [TeacherCouponController::class, 'create'])->name('coupons.create');
@@ -143,6 +151,7 @@ Route::group([
    Route::post('/binh-luan/{comment}/reply', [TeacherDashboardController::class, 'replyComment'])->name('comments.reply');
    Route::post('/binh-luan/{comment}/toggle', [TeacherDashboardController::class, 'toggleCommentVisibility'])->name('comments.toggle');
    Route::get('/hoc-vien', [TeacherDashboardController::class, 'students'])->name('students');
+   Route::get('/nhat-ky-hoat-dong', [TeacherDashboardController::class, 'activityLogs'])->name('activity-logs');
    Route::get('/don-hang', [TeacherDashboardController::class, 'orders'])->name('orders');
    Route::get('/don-hang/export/{format}', [TeacherDashboardController::class, 'exportOrders'])->name('orders.export');
    Route::get('/don-hang/{order}', [TeacherDashboardController::class, 'showOrder'])->name('orders.show');

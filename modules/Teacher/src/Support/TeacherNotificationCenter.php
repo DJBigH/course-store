@@ -361,10 +361,19 @@ class TeacherNotificationCenter
         foreach ([
             'can_manage_comments',
             'can_manage_coupons',
+            'can_manage_students',
+            'can_view_student_progress',
+            'can_view_activity_logs',
             'can_duplicate_courses',
             'can_grant_courses',
             'can_export_orders',
             'can_export_students',
+            'can_sell_bundles',
+            'can_schedule_content',
+            'can_send_promotions',
+            'can_issue_certificates',
+            'can_customize_teacher_landing',
+            'can_use_affiliate_links',
         ] as $featureKey) {
             if ($package->hasFeature($featureKey)) {
                 $features->push(__('teacher::dashboard.package_features.labels.' . $featureKey));

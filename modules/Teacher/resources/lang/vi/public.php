@@ -17,4 +17,6 @@ return [
     'rating_submit' => 'Lưu đánh giá',
     'rating_need_purchase' => 'Bạn cần sở hữu ít nhất một khóa học của giảng viên này trước khi đánh giá.',
     'rating_login_required' => 'Đăng nhập học viên để đánh giá giảng viên.',
+    'rating_already_submitted' => 'Bạn đã đánh giá giảng viên này rồi và chỉ được đánh giá một lần.',
+    'rating_submitted_once' => 'Bạn đã đánh giá giảng viên này :rating sao. Mỗi học viên chỉ được đánh giá một lần.',
 ];

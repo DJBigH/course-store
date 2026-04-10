@@ -291,27 +291,85 @@
         }
 
         .course-rating-picker {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+            display: block;
         }
 
-        .course-rating-picker__option {
-            border: 1px solid #fdba74;
-            background: #fff;
-            color: #c2410c;
-            border-radius: 999px;
-            padding: 8px 12px;
+        .course-rating-picker__track {
+            position: relative;
+            width: min(100%, 270px);
+            padding: 0.9rem 1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(245, 158, 11, 0.24);
+            background: linear-gradient(180deg, #ffffff, #fff7ed);
+            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.1);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+
+        .course-rating-picker__track:hover,
+        .course-rating-picker__track.is-preview {
+            transform: translateY(-2px) scale(1.03);
+            border-color: rgba(245, 158, 11, 0.45);
+            background: linear-gradient(180deg, #fff7ed, #ffedd5);
+            box-shadow: 0 14px 24px rgba(245, 158, 11, 0.16);
+        }
+
+        .course-rating-picker__track.is-active {
+            background: linear-gradient(135deg, #f59e0b, #f97316);
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(249, 115, 22, 0.28);
+        }
+
+        .course-rating-picker__stars-base,
+        .course-rating-picker__stars-fill {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-weight: 700;
+            gap: 0.25rem;
+            font-size: 1.75rem;
+            line-height: 1;
+            white-space: nowrap;
         }
 
-        .course-rating-picker__option.is-active {
-            background: linear-gradient(135deg, #f59e0b, #f97316);
-            color: #fff;
-            border-color: transparent;
+        .course-rating-picker__stars-base {
+            color: #cbd5e1;
+        }
+
+        .course-rating-picker__stars-fill {
+            position: absolute;
+            inset: 0.9rem auto auto 1rem;
+            overflow: hidden;
+            color: #f59e0b;
+            pointer-events: none;
+            transition: width 0.16s ease;
+        }
+
+        .course-rating-picker__track.is-active .course-rating-picker__stars-base {
+            color: rgba(255, 255, 255, 0.32);
+        }
+
+        .course-rating-picker__track.is-active .course-rating-picker__stars-fill {
+            color: #fff8e1;
+        }
+
+        .course-rating-picker__hotspots {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            z-index: 2;
+        }
+
+        .course-rating-picker__hotspot {
+            border: 0;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .course-rating-picker__hotspot:focus-visible {
+            outline: 2px solid rgba(249, 115, 22, 0.6);
+            outline-offset: -3px;
         }
 
         .admin-reply-form {
@@ -597,6 +655,25 @@
                 }
             };
 
+            const updateRatingVisual = (form, value, state = 'idle') => {
+                if (!form || !wrap.contains(form)) {
+                    return;
+                }
+
+                const track = form.querySelector('[data-rating-track]');
+                const fill = form.querySelector('[data-rating-fill]');
+                const numericValue = Math.max(0, Math.min(Number(value || 0), 5));
+
+                if (fill) {
+                    fill.style.width = `${numericValue * 20}%`;
+                }
+
+                if (track) {
+                    track.classList.toggle('is-preview', state === 'preview' && numericValue > 0);
+                    track.classList.toggle('is-active', numericValue > 0);
+                }
+            };
+
             document.addEventListener('submit', (event) => {
                 const form = event.target instanceof HTMLFormElement
                     ? event.target
@@ -617,7 +694,7 @@
                     const ratingForm = ratingOption.closest('form');
                     if (ratingForm && wrap.contains(ratingForm)) {
                         ratingForm.querySelector('[data-rating-input]').value = ratingOption.dataset.value;
-                        ratingForm.querySelectorAll('[data-rating-option]').forEach((item) => item.classList.toggle('is-active', item === ratingOption));
+                        updateRatingVisual(ratingForm, ratingOption.dataset.value, 'selected');
 
                         const currentLabel = ratingForm.querySelector('[data-rating-current-label]');
                         if (currentLabel) {
@@ -659,6 +736,74 @@
                 } catch (error) {
                     alert(@js(__('courses::clients/common.comment_toggle_error')));
                 }
+            });
+
+            wrap.addEventListener('mouseover', (event) => {
+                const ratingOption = event.target.closest('[data-rating-option]');
+                if (!ratingOption) {
+                    return;
+                }
+
+                const ratingForm = ratingOption.closest('form');
+                if (!ratingForm || !wrap.contains(ratingForm)) {
+                    return;
+                }
+
+                updateRatingVisual(ratingForm, ratingOption.dataset.value, 'preview');
+
+                const currentLabel = ratingForm.querySelector('[data-rating-current-label]');
+                if (currentLabel) {
+                    currentLabel.textContent = @js(__('courses::clients/common.rating_selected_label')) + ' ' + ratingOption.dataset.value;
+                }
+            });
+
+            wrap.addEventListener('mouseout', (event) => {
+                const ratingForm = event.target.closest('[data-course-rating-form]');
+                if (!ratingForm || !wrap.contains(ratingForm)) {
+                    return;
+                }
+
+                if (event.relatedTarget && ratingForm.contains(event.relatedTarget)) {
+                    return;
+                }
+
+                const selectedValue = ratingForm.querySelector('[data-rating-input]')?.value || '';
+                updateRatingVisual(ratingForm, selectedValue, selectedValue ? 'selected' : 'idle');
+
+                const currentLabel = ratingForm.querySelector('[data-rating-current-label]');
+                if (currentLabel) {
+                    currentLabel.textContent = selectedValue
+                        ? @js(__('courses::clients/common.rating_selected_label')) + ' ' + selectedValue
+                        : @js(__('courses::clients/common.rating_hint'));
+                }
+            });
+
+            wrap.addEventListener('focusin', (event) => {
+                const ratingOption = event.target.closest('[data-rating-option]');
+                if (!ratingOption) {
+                    return;
+                }
+
+                const ratingForm = ratingOption.closest('form');
+                if (!ratingForm || !wrap.contains(ratingForm)) {
+                    return;
+                }
+
+                updateRatingVisual(ratingForm, ratingOption.dataset.value, 'preview');
+            });
+
+            wrap.addEventListener('focusout', (event) => {
+                const ratingForm = event.target.closest('[data-course-rating-form]');
+                if (!ratingForm || !wrap.contains(ratingForm)) {
+                    return;
+                }
+
+                if (event.relatedTarget && ratingForm.contains(event.relatedTarget)) {
+                    return;
+                }
+
+                const selectedValue = ratingForm.querySelector('[data-rating-input]')?.value || '';
+                updateRatingVisual(ratingForm, selectedValue, selectedValue ? 'selected' : 'idle');
             });
 
             wrap.addEventListener('submit', async (event) => {
