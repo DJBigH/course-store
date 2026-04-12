@@ -2,7 +2,7 @@
 
 @section('content')
     @php
-        $commission = rtrim(rtrim(number_format((float) $teacher->commission_rate, 2, '.', ''), '0'), '.');
+        $commission = rtrim(rtrim(number_format((float) ($effectiveCommissionRate ?? $teacher->commission_rate), 2, '.', ''), '0'), '.');
     @endphp
 
     <div class="teacher-panel">

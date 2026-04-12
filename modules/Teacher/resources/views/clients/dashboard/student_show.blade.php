@@ -22,7 +22,7 @@
             </div>
             <div class="teacher-student-show-actions">
                 <a href="{{ route('teacher.dashboard.students') }}" class="btn btn-outline-secondary">Quay lai danh sach</a>
-                @if ($teacher->packageHasFeature('can_grant_courses'))
+                @if ($studentFeatureState['can_grant_courses'])
                     <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary">
                         Cap quyen hoc
                     </a>
@@ -39,24 +39,12 @@
             <div class="alert alert-danger">{{ session('msg_danger') }}</div>
         @endif
 
-        @if (!$teacher->packageHasFeature('can_grant_courses') || !$teacher->packageHasFeature('can_view_student_progress'))
-            <div class="alert alert-warning border-0 mb-4">
-                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
-                    <div>
-                        <strong>{{ __('teacher::dashboard.package_features.upsell_title') }}</strong>
-                        <div class="mt-1 text-muted">
-                            @if (!$teacher->packageHasFeature('can_view_student_progress'))
-                                {{ __('teacher::dashboard.package_features.students_locked_progress') }}
-                            @else
-                                {{ __('teacher::dashboard.package_features.students_locked_grants') }}
-                            @endif
-                        </div>
-                    </div>
-                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
-                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
-                    </a>
-                </div>
-            </div>
+        @if (!$studentFeatureState['can_grant_courses'] || !$studentFeatureState['can_view_progress'])
+            @include('teacher::clients.dashboard.partials.package_feature_notice', [
+                'message' => !$studentFeatureState['can_view_progress']
+                    ? __('teacher::dashboard.package_features.students_locked_progress')
+                    : __('teacher::dashboard.package_features.students_locked_grants'),
+            ])
         @endif
 
         <div class="teacher-student-show-summary">
@@ -80,7 +68,7 @@
                 <span>Tong chi tieu</span>
                 <strong>{{ money($summary['spent']) }}</strong>
             </div>
-            @if ($teacher->packageHasFeature('can_view_student_progress'))
+            @if ($studentFeatureState['can_view_progress'])
                 <div class="teacher-student-show-summary__item">
                     <span>Tien do hoc tong quan</span>
                     <strong>{{ $summary['progress_percent'] ?? 0 }}%</strong>
@@ -181,7 +169,7 @@
                                     </span>
                                 </div>
 
-                                @if ($teacher->packageHasFeature('can_view_student_progress'))
+                                @if ($studentFeatureState['can_view_progress'])
                                 <div class="teacher-student-show-course__progress">
                                     <div class="teacher-student-show-course__progress-head">
                                         <small>Tien do hoc</small>
@@ -224,7 +212,7 @@
                                             • {{ optional($grant->created_at)->format('d/m/Y H:i') }}
                                         </span>
                                     </div>
-                                    @if ($teacher->packageHasFeature('can_grant_courses'))
+                                    @if ($studentFeatureState['can_grant_courses'])
                                         <form method="POST" action="{{ route('teacher.dashboard.students.grants.revoke', ['student' => $student->id, 'grant' => $grant->id]) }}">
                                             @csrf
                                             <button type="submit" class="btn btn-outline-danger btn-sm"

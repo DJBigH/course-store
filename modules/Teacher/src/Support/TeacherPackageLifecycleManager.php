@@ -77,6 +77,7 @@ class TeacherPackageLifecycleManager
             'facebook_url' => $sourceApplication?->facebook_url,
             'youtube_url' => $sourceApplication?->youtube_url,
             'linkedin_url' => $sourceApplication?->linkedin_url,
+            'custom_links' => $sourceApplication?->custom_links ?? [],
             'intro_video_url' => $sourceApplication?->intro_video_url,
             'cv_file' => $sourceApplication?->cv_file,
             'identity_file' => $sourceApplication?->identity_file,
@@ -249,6 +250,7 @@ class TeacherPackageLifecycleManager
         $limit = $currentPackage->effective_coupon_limit;
         if ($limit === null) {
             $query->update([
+                'is_package_priority' => false,
                 'package_locked_at' => null,
                 'package_lock_reason' => null,
             ]);
@@ -293,6 +295,7 @@ class TeacherPackageLifecycleManager
 
         if ($limit === null) {
             $query->update([
+                'is_package_priority' => false,
                 'package_locked_at' => null,
                 'package_lock_reason' => null,
             ]);

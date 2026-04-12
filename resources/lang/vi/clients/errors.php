@@ -24,4 +24,10 @@ return [
         'pay_again' => 'Thanh toán lại',
         'title' => 'Hết hạn thanh toán',
     ],
+    'affiliate_link_expired' => [
+        'message_1' => 'Link giới thiệu đã hết hiệu lực',
+        'message_2' => 'Link bạn vừa mở không còn được phép chia sẻ nữa.',
+        'message_3' => 'Vui lòng quay về trang chính hoặc liên hệ người chia sẻ để lấy link mới.',
+        'title' => 'Link giới thiệu hết hiệu lực',
+    ],
 ];

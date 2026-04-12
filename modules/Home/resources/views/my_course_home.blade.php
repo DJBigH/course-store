@@ -12,9 +12,7 @@
                                     ? (\Illuminate\Support\Str::startsWith($item->thumbnail, ['http://', 'https://']) ? $item->thumbnail : asset($item->thumbnail))
                                     : asset('clients/assets/banner-course.png');
 
-                                $teacherImage = $item->teacher?->image
-                                    ? (\Illuminate\Support\Str::startsWith($item->teacher->image, ['http://', 'https://']) ? $item->teacher->image : asset($item->teacher->image))
-                                    : asset('clients/assets/course-teacher.png');
+                                $teacherImage = teacherAvatarUrl($item->teacher);
                             @endphp
                             <div class="col-12 col-lg-6">
                                 <div class="course-card d-flex">
@@ -48,7 +46,7 @@
 
                                         <div class="course-teacher">
                                             <img src="{{ $teacherImage }}" alt="{{ $item->teacher?->name_locale }}"
-                                                onerror="this.onerror=null;this.src='{{ asset('clients/assets/course-teacher.png') }}';">
+                                                onerror="this.onerror=null;this.src='{{ asset('resources/assets/teacher.png') }}';">
                                             <span>{{ $item->teacher->name_locale }}</span>
                                         </div>
 

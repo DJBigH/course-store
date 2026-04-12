@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\Students\src\Http\Controllers\Clients\GiftCourseController;
+use Modules\Students\src\Http\Controllers\Clients\StudentCertificateController;
 use Modules\Students\src\Http\Controllers\Clients\TwoFactorController;
 
 Route::prefix('admin')->group(function () {
@@ -39,6 +40,8 @@ Route::group(['as' => 'students.'], function () {
       Route::post('/vo-hieu-hoa/xac-thuc', [TwoFactorController::class, 'startDeactivate'])->name('deactivate-start-2fa');
       Route::post('/vo-hieu-hoa', 'Clients\AccountController@deactivate')->name('deactivate-submit');
       Route::get('/khoa-hoc', 'Clients\AccountController@showMyCourse')->name('my-courses');
+      Route::get('/chung-chi', [StudentCertificateController::class, 'index'])->name('certificates.index');
+      Route::get('/chung-chi/{id}', [StudentCertificateController::class, 'show'])->name('certificates.show');
       Route::get('/ma-giam-gia', 'Clients\AccountController@myCoupon')->name('my-coupon');
       Route::get('/don-hang', 'Clients\AccountController@myOrder')->name('my-order');
       Route::get('/don-hang/{id}', 'Clients\AccountController@detailOrder')->name('order-detail');

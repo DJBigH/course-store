@@ -2,7 +2,7 @@
 
 @section('content')
     @php
-        $commission = rtrim(rtrim(number_format((float) $teacher->commission_rate, 2, '.', ''), '0'), '.');
+        $commission = rtrim(rtrim(number_format((float) ($effectiveCommissionRate ?? $teacher->commission_rate), 2, '.', ''), '0'), '.');
     @endphp
 
     <div class="teacher-page-shell">
@@ -265,6 +265,36 @@
                             </div>
                         @empty
                             <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.no_sales') }}</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="teacher-panel h-100">
+                    <div class="teacher-section-title">
+                        <div>
+                            <h4 class="h5">{{ __('teacher::dashboard.overview.top_bundles_title') }}</h4>
+                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.top_bundles_desc') }}</p>
+                        </div>
+                        <a class="teacher-soft-link" href="{{ route('teacher.dashboard.bundles') }}">
+                            {{ __('teacher::dashboard.common.view_all') }}
+                        </a>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        @forelse ($topBundles as $bundleStat)
+                            <div class="teacher-subtle-card">
+                                <strong class="d-block">
+                                    {{ $bundleStat->bundle?->name ?: __('teacher::dashboard.common.unknown_course') }}
+                                </strong>
+                                <small class="d-block text-muted">
+                                    {{ __('teacher::dashboard.overview.top_bundles_sales', ['count' => $bundleStat->sales_count]) }}
+                                </small>
+                                <span class="text-primary fw-semibold">{{ money($bundleStat->net_revenue, 'đ', '0 đ') }}</span>
+                            </div>
+                        @empty
+                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.top_bundles_empty') }}</p>
                         @endforelse
                     </div>
                 </div>

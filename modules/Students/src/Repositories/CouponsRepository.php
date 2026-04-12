@@ -83,6 +83,17 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
                 return false;
             }
         }
+        $bundles = $coupon->bundles();
+        if ($bundles->count()) {
+            if (!$order->bundle_id) {
+                return false;
+            }
+
+            $count = $bundles->where('teacher_course_bundles.id', $order->bundle_id)->count();
+            if (!$count) {
+                return false;
+            }
+        }
         $startStatus = true;
         $endStatus = true;
         if ($coupon->start_date && $now < $coupon->start_date) {
@@ -99,12 +110,24 @@ class CouponsRepository extends BaseRepository implements CouponsRepositoryInter
         return $coupon->courses()->count() > 0;
     }
 
+    public function isBundleCoupon($coupon)
+    {
+        return $coupon->bundles()->count() > 0;
+    }
+
     public function getCourses($coupon, $orderId)
     {
         $course = $coupon->courses()->whereHas('orderDetail', function ($query) use ($orderId) {
             $query->where('order_id', $orderId);
         })->get();
         return $course;
+    }
+
+    public function getBundles($coupon, $orderId)
+    {
+        return $coupon->bundles()->whereHas('orders', function ($query) use ($orderId) {
+            $query->where('id', $orderId);
+        })->get();
     }
 
     public function getAllCoupons()

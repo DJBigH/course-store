@@ -58,6 +58,16 @@ class Coupons extends Model
         return $this->belongsToMany(Courses::class, 'coupons_courses', 'coupon_id', 'course_id')->withoutGlobalScopes();
     }
 
+    public function bundles()
+    {
+        return $this->belongsToMany(
+            \Modules\Teacher\src\Models\TeacherCourseBundle::class,
+            'coupons_teacher_course_bundles',
+            'coupon_id',
+            'bundle_id'
+        );
+    }
+
     public function usages()
     {
         return $this->belongsToMany(Order::class, 'coupons_usage', 'coupon_id', 'order_id');

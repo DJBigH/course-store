@@ -25,6 +25,7 @@ use Modules\Students\src\Http\Requests\Clients\StudentsRequest;
 use Modules\Students\src\Models\Student;
 use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
+use Modules\Teacher\src\Models\TeacherCourseCertificate;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 
 class AccountController extends Controller
@@ -200,6 +201,7 @@ class AccountController extends Controller
 
         $totalLessonsByCourse = [];
         $completedLessonsByCourse = [];
+        $certificateMap = [];
 
         if (!empty($courseIds)) {
             $totalLessonsByCourse = Lesson::query()
@@ -218,9 +220,16 @@ class AccountController extends Controller
                 ->groupBy('course_id')
                 ->pluck('completed_lessons', 'course_id')
                 ->all();
+
+            $certificateMap = TeacherCourseCertificate::query()
+                ->where('student_id', $student->id)
+                ->whereIn('course_id', $courseIds)
+                ->whereNull('revoked_at')
+                ->get()
+                ->keyBy('course_id');
         }
 
-        $courses->getCollection()->transform(function ($course) use ($totalLessonsByCourse, $completedLessonsByCourse) {
+        $courses->getCollection()->transform(function ($course) use ($totalLessonsByCourse, $completedLessonsByCourse, $certificateMap) {
             $totalLessons = (int) ($totalLessonsByCourse[$course->id] ?? 0);
             $completedLessons = min((int) ($completedLessonsByCourse[$course->id] ?? 0), $totalLessons);
             $progressPercent = $totalLessons > 0
@@ -230,6 +239,7 @@ class AccountController extends Controller
             $course->setAttribute('progress_total_lessons', $totalLessons);
             $course->setAttribute('progress_completed_lessons', $completedLessons);
             $course->setAttribute('progress_percent', min($progressPercent, 100));
+            $course->setAttribute('student_certificate', $certificateMap[$course->id] ?? null);
 
             return $course;
         });

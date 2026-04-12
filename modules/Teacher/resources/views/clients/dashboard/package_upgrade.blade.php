@@ -365,13 +365,15 @@
                 </div>
 
                 <div class="teacher-upgrade-section mt-4">
-                    <div class="teacher-upgrade-section__head">
+                    <div class="teacher-upgrade-section__head" data-compare-anchor>
                         <div>
                             <h4>{{ __('teacher::dashboard.package_features.compare_title') }}</h4>
                             <p class="mb-0">{{ __('teacher::dashboard.package_features.compare_description') }}</p>
                         </div>
                     </div>
 
+                    <div class="teacher-upgrade-compare-shell is-collapsed" data-compare-shell>
+                        <div class="teacher-upgrade-compare-shell__inner" data-compare-content>
                     <div class="table-responsive">
                         <table class="table teacher-upgrade-compare mb-0">
                             <thead>
@@ -722,6 +724,15 @@
                                 </div>
                             </details>
                         @endforeach
+                    </div>
+                        </div>
+                        <div class="teacher-upgrade-compare-shell__fade" data-compare-fade aria-hidden="true"></div>
+                    </div>
+                    <div class="teacher-upgrade-compare-shell__actions" data-compare-actions>
+                        <button type="button" class="btn btn-outline-secondary teacher-upgrade-compare-shell__toggle" data-compare-toggle>
+                            <span data-compare-toggle-label>Xem them</span>
+                            <span class="teacher-upgrade-compare-shell__toggle-icon" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </div>
 
@@ -1129,6 +1140,73 @@
             line-height: 1.1;
         }
 
+        .teacher-upgrade-compare-shell {
+            position: relative;
+        }
+
+        .teacher-upgrade-compare-shell__inner {
+            overflow: hidden;
+            transition: max-height 0.42s ease;
+        }
+
+        .teacher-upgrade-compare-shell.is-collapsed .teacher-upgrade-compare-shell__inner {
+            max-height: 700px;
+        }
+
+        .teacher-upgrade-compare-shell:not(.is-collapsed) .teacher-upgrade-compare-shell__inner {
+            max-height: 10000px;
+        }
+
+        .teacher-upgrade-compare-shell__fade {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 140px;
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0), rgba(15, 23, 42, 0.92) 72%, rgba(15, 23, 42, 1));
+            opacity: 0;
+            transition: opacity 0.24s ease;
+        }
+
+        .teacher-upgrade-compare-shell.is-collapsed .teacher-upgrade-compare-shell__fade {
+            opacity: 1;
+        }
+
+        .teacher-upgrade-compare-shell__actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.1rem;
+        }
+
+        .teacher-upgrade-compare-shell__actions.is-hidden {
+            display: none;
+        }
+
+        .teacher-upgrade-compare-shell__toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding-inline: 1.05rem;
+            border-radius: 999px;
+            font-weight: 800;
+        }
+
+        .teacher-upgrade-compare-shell__toggle-icon {
+            width: 10px;
+            height: 10px;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            transform: rotate(45deg);
+            transition: transform 0.2s ease;
+            margin-top: -0.18rem;
+        }
+
+        .teacher-upgrade-compare-shell:not(.is-collapsed) .teacher-upgrade-compare-shell__toggle-icon {
+            transform: rotate(-135deg);
+            margin-top: 0.18rem;
+        }
+
         .teacher-upgrade-compare {
             --bs-table-bg: transparent;
             --bs-table-striped-bg: transparent;
@@ -1531,6 +1609,10 @@
             color: var(--admin-text);
         }
 
+        html[data-theme="light"] .teacher-upgrade-compare-shell__fade {
+            background: linear-gradient(180deg, rgba(248, 250, 252, 0), rgba(248, 250, 252, 0.94) 72%, rgba(248, 250, 252, 1));
+        }
+
         html[data-theme="light"] .teacher-upgrade-compare th,
         html[data-theme="light"] .teacher-upgrade-compare td {
             border-color: var(--admin-border);
@@ -1644,6 +1726,10 @@
         }
 
         @media (max-width: 767.98px) {
+            .teacher-upgrade-compare-shell.is-collapsed .teacher-upgrade-compare-shell__inner {
+                max-height: 560px;
+            }
+
             .teacher-upgrade-hero {
                 flex-direction: column;
             }
@@ -1688,13 +1774,78 @@
             const compareSelectedLabels = [...document.querySelectorAll('[data-compare-selected-label]')];
             const mobileCompareCards = [...document.querySelectorAll('[data-mobile-compare-card]')];
             const mobileCompareSelectedLabels = [...document.querySelectorAll('[data-mobile-compare-selected-label]')];
+            const compareAnchor = document.querySelector('[data-compare-anchor]');
+            const compareShell = document.querySelector('[data-compare-shell]');
+            const compareContent = document.querySelector('[data-compare-content]');
+            const compareActions = document.querySelector('[data-compare-actions]');
+            const compareToggle = document.querySelector('[data-compare-toggle]');
+            const compareToggleLabel = document.querySelector('[data-compare-toggle-label]');
             const unlimitedText = @json(__('teacher::dashboard.courses.unlimited'));
             const currentPackage = @json($currentPackageMap);
             const packageMap = @json($packageMap);
+            const getCollapsedCompareHeight = () => window.matchMedia('(max-width: 767.98px)').matches ? 560 : 700;
 
             const formatMoney = (value) => {
                 const locale = document.documentElement.lang || 'vi';
                 return new Intl.NumberFormat(locale).format(Math.max(Number(value || 0), 0)) + ' đ';
+            };
+
+            const updateCompareToggleState = () => {
+                if (!compareShell || !compareContent || !compareActions || !compareToggleLabel) {
+                    return;
+                }
+
+                const hasOverflow = compareContent.scrollHeight > getCollapsedCompareHeight() + 24;
+                compareActions.classList.toggle('is-hidden', !hasOverflow);
+
+                if (!hasOverflow) {
+                    compareShell.classList.remove('is-collapsed');
+                    compareToggleLabel.textContent = 'Thu gon';
+                    return;
+                }
+
+                compareToggleLabel.textContent = compareShell.classList.contains('is-collapsed') ? 'Xem them' : 'Thu gon';
+            };
+
+            const scrollToCompareTop = () => {
+                if (!compareAnchor) {
+                    return;
+                }
+
+                const top = compareAnchor.getBoundingClientRect().top + window.scrollY - 24;
+                window.scrollTo({
+                    top: Math.max(top, 0),
+                    behavior: 'smooth',
+                });
+            };
+
+            const expandCompare = () => {
+                if (!compareShell || !compareContent) {
+                    return;
+                }
+
+                const hiddenHeight = Math.max(compareContent.scrollHeight - getCollapsedCompareHeight(), 0);
+                compareShell.classList.remove('is-collapsed');
+                updateCompareToggleState();
+
+                if (hiddenHeight > 0) {
+                    window.scrollBy({
+                        top: Math.min(hiddenHeight, 520),
+                        behavior: 'smooth',
+                    });
+                }
+            };
+
+            const collapseCompare = () => {
+                if (!compareShell) {
+                    return;
+                }
+
+                scrollToCompareTop();
+                window.setTimeout(() => {
+                    compareShell.classList.add('is-collapsed');
+                    updateCompareToggleState();
+                }, 120);
             };
 
             const updateCards = () => {
@@ -1794,6 +1945,17 @@
                 input?.addEventListener('change', updatePayments);
             });
 
+            compareToggle?.addEventListener('click', () => {
+                if (!compareShell?.classList.contains('is-collapsed')) {
+                    collapseCompare();
+                    return;
+                }
+
+                expandCompare();
+            });
+
+            window.addEventListener('resize', updateCompareToggleState);
+
             form?.addEventListener('submit', (event) => {
                 const selectedInput = document.querySelector('input[name="package_id"]:checked');
                 if (!selectedInput) {
@@ -1815,6 +1977,7 @@
 
             updateCards();
             updatePayments();
+            updateCompareToggleState();
         })();
     </script>
 @endsection

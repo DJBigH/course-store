@@ -10,17 +10,9 @@
         </div>
 
         @if (!$teacher->packageHasFeature('can_export_orders'))
-            <div class="alert alert-warning border-0 mb-4">
-                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
-                    <div>
-                        <strong>{{ __('teacher::dashboard.package_features.upsell_title') }}</strong>
-                        <div class="mt-1 text-muted">{{ __('teacher::dashboard.package_features.orders_locked_export') }}</div>
-                    </div>
-                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
-                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
-                    </a>
-                </div>
-            </div>
+            @include('teacher::clients.dashboard.partials.package_feature_notice', [
+                'message' => __('teacher::dashboard.package_features.orders_locked_export'),
+            ])
         @endif
 
         <form method="GET" action="{{ route('teacher.dashboard.orders') }}" class="teacher-orders-filter mb-4">

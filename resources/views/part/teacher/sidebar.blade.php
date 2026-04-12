@@ -6,6 +6,10 @@
     $teacherCurrentPackage = $teacherProfile?->application?->package ?? $teacherApplication?->package;
     $teacherCanManageComments = $teacherProfile?->packageHasFeature('can_manage_comments') ?? false;
     $teacherCanManageCoupons = $teacherProfile?->packageHasFeature('can_manage_coupons') ?? false;
+    $teacherCanSendPromotions = $teacherProfile?->packageHasFeature('can_send_promotions') ?? false;
+    $teacherCanSellBundles = $teacherProfile?->packageHasFeature('can_sell_bundles') ?? false;
+    $teacherCanUseAffiliateLinks = $teacherProfile?->packageHasFeature('can_use_affiliate_links') ?? false;
+    $teacherCanIssueCertificates = $teacherProfile?->packageHasFeature('can_issue_certificates') ?? false;
     $teacherCanViewActivityLogs = $teacherProfile?->packageHasFeature('can_view_activity_logs') ?? false;
     $teacherIsActive = $teacherProfile && $teacherProfile->status === 'active';
     $teacherPendingUpgrade = $teacherStudent?->teacherApplications()
@@ -195,6 +199,38 @@
                     {{ __('teacher::dashboard.nav.courses') }}
                 </a>
 
+                @if ($teacherCanSendPromotions)
+                    <a class="nav-link {{ request()->routeIs('teacher.dashboard.promotions*') ? 'active' : '' }}"
+                        href="{{ route('teacher.dashboard.promotions') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
+                        {{ __('teacher::dashboard.nav.promotions') }}
+                    </a>
+                @elseif ($teacherIsActive)
+                    <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
+                        <span class="nav-link-main">
+                            <span class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></span>
+                            <span class="nav-link-text">{{ __('teacher::dashboard.nav.promotions') }}</span>
+                        </span>
+                        @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
+                    </a>
+                @endif
+
+                @if ($teacherCanUseAffiliateLinks)
+                    <a class="nav-link {{ request()->routeIs('teacher.dashboard.affiliate-links*') ? 'active' : '' }}"
+                        href="{{ route('teacher.dashboard.affiliate-links.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-link"></i></div>
+                        {{ __('teacher::dashboard.nav.affiliate_links') }}
+                    </a>
+                @elseif ($teacherIsActive)
+                    <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
+                        <span class="nav-link-main">
+                            <span class="sb-nav-link-icon"><i class="fas fa-link"></i></span>
+                            <span class="nav-link-text">{{ __('teacher::dashboard.nav.affiliate_links') }}</span>
+                        </span>
+                        @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
+                    </a>
+                @endif
+
                 @if ($teacherIsActive)
                     <a class="nav-link {{ request()->routeIs('teacher.dashboard.comments*') ? 'active' : '' }} {{ !$teacherCanManageComments ? 'has-badge' : '' }}"
                         href="{{ route('teacher.dashboard.comments') }}">
@@ -203,7 +239,7 @@
                             <span class="nav-link-text">{{ __('teacher::comments.nav.label') }}</span>
                         </span>
                         @if (!$teacherCanManageComments)
-                            <span class="nav-link-lock">{{ __('teacher::dashboard.package_features.upgrade_badge') }}</span>
+                            @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
                         @endif
                     </a>
                 @endif
@@ -220,7 +256,7 @@
                             <span class="sb-nav-link-icon"><i class="fas fa-lock"></i></span>
                             <span class="nav-link-text">{{ __('teacher::coupons.nav.label') }}</span>
                         </span>
-                        <span class="nav-link-lock">{{ __('teacher::dashboard.package_features.upgrade_badge') }}</span>
+                        @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
                     </a>
                 @endif
 
@@ -229,6 +265,22 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-user-graduate"></i></div>
                     Học viên của tôi
                 </a>
+
+                @if ($teacherCanIssueCertificates)
+                    <a class="nav-link {{ request()->routeIs('teacher.dashboard.certificates*') ? 'active' : '' }}"
+                        href="{{ route('teacher.dashboard.certificates.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-award"></i></div>
+                        {{ __('teacher::dashboard.nav.certificates') }}
+                    </a>
+                @elseif ($teacherIsActive)
+                    <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
+                        <span class="nav-link-main">
+                            <span class="sb-nav-link-icon"><i class="fas fa-award"></i></span>
+                            <span class="nav-link-text">{{ __('teacher::dashboard.nav.certificates') }}</span>
+                        </span>
+                        @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
+                    </a>
+                @endif
 
                 @if ($teacherCanViewActivityLogs)
                     <a class="nav-link {{ request()->routeIs('teacher.dashboard.activity-logs') ? 'active' : '' }}"
@@ -242,7 +294,7 @@
                             <span class="sb-nav-link-icon"><i class="fas fa-clock-rotate-left"></i></span>
                             <span class="nav-link-text">{{ __('teacher::dashboard.nav.activity_logs') }}</span>
                         </span>
-                        <span class="nav-link-lock">{{ __('teacher::dashboard.package_features.upgrade_badge') }}</span>
+                        @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
                     </a>
                 @endif
 
@@ -303,4 +355,3 @@
         </div>
     </nav>
 </div>
-

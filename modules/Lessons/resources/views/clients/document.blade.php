@@ -5,7 +5,9 @@
 <ul class="list-group mt-3 document-list">
     @forelse ($documents as $item)
         @php
-            $canOpenDocument = $hasCourse || (int) $item->is_trial === 1;
+            $availability = $lessonAvailabilityMap[$item->id] ?? null;
+            $canOpenDocument = $availability['can_open'] ?? ($hasCourse || (int) $item->is_trial === 1);
+            $documentLockedMessage = $availability['message'] ?? __('lessons::clients/common.buy_to_view_document');
         @endphp
         <li class="list-group-item d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-2">
@@ -22,7 +24,7 @@
                     </span>
                     <div>
                         <span class="document-name text-muted d-block">{{ $item->name_locale }}</span>
-                        <small class="text-muted">{{ __('lessons::clients/common.buy_to_view_document') }}</small>
+                        <small class="text-muted">{{ $documentLockedMessage }}</small>
                     </div>
                 @endif
             </div>

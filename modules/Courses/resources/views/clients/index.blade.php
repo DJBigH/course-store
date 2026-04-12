@@ -41,9 +41,7 @@
                                 ? (\Illuminate\Support\Str::startsWith($course->thumbnail, ['http://', 'https://']) ? $course->thumbnail : asset($course->thumbnail))
                                 : asset('clients/assets/banner-course.png');
 
-                            $teacherImage = $course->teacher?->image
-                                ? (\Illuminate\Support\Str::startsWith($course->teacher->image, ['http://', 'https://']) ? $course->teacher->image : asset($course->teacher->image))
-                                : asset('clients/assets/course-teacher.png');
+                            $teacherImage = teacherAvatarUrl($course->teacher);
 
                         @endphp
                         <div class="col-12 col-lg-6 mb-4">
@@ -94,7 +92,7 @@
 
                                     <div class="descreption-teacher">
                                         <img src="{{ $teacherImage }}" alt="{{ $course->teacher?->name_locale }}"
-                                            onerror="this.onerror=null;this.src='{{ asset('clients/assets/course-teacher.png') }}';" />
+                                            onerror="this.onerror=null;this.src='{{ asset('resources/assets/teacher.png') }}';" />
                                         <span>
                                             <strong
                                                 style="font-weight: bold">{{ __('courses::clients/common.instructor') }}:</strong>

@@ -59,7 +59,7 @@ return [
             'intro_video_url' => '介绍视频 URL',
             'facebook_url' => 'Facebook URL',
             'youtube_url' => 'YouTube URL',
-            'linkedin_url' => 'LinkedIn URL',
+            'linkedin_url' => 'LinkedIn',
             'cv_file' => '简历链接',
             'identity_file' => '身份证明 / 文件链接',
             'coupon_code' => '优惠码',

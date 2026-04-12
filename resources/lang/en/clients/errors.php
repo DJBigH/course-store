@@ -24,4 +24,10 @@ return [
         'pay_again' => 'Pay again',
         'title' => 'Payment Expired',
     ],
+    'affiliate_link_expired' => [
+        'message_1' => 'This referral link is no longer active',
+        'message_2' => 'The link you just opened is no longer available for sharing.',
+        'message_3' => 'Please go back to the main site or ask the sender for a new link.',
+        'title' => 'Referral link expired',
+    ],
 ];

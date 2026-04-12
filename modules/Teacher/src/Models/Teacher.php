@@ -109,6 +109,11 @@ class Teacher extends Model
         return $this->hasMany(TeacherCourseBundle::class, 'teacher_id', 'id');
     }
 
+    public function affiliateLinks()
+    {
+        return $this->hasMany(TeacherAffiliateLink::class, 'teacher_id', 'id');
+    }
+
     public function ratings()
     {
         return $this->hasMany(TeacherRating::class, 'teacher_id', 'id');

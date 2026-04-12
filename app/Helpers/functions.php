@@ -518,6 +518,29 @@ if (!function_exists('courseCommentAvatar')) {
     }
 }
 
+if (!function_exists('teacherAvatarUrl')) {
+    function teacherAvatarUrl($teacher = null): string
+    {
+        $default = asset('resources/assets/teacher.png');
+
+        if (!$teacher) {
+            return $default;
+        }
+
+        $image = trim((string) ($teacher->image ?? ''));
+
+        if ($image === '') {
+            return $default;
+        }
+
+        if (\Illuminate\Support\Str::startsWith($image, ['http://', 'https://'])) {
+            return $image;
+        }
+
+        return asset(ltrim($image, '/'));
+    }
+}
+
 if (!function_exists('courseCommentModeration')) {
     function courseCommentModeration(string $content): array
     {

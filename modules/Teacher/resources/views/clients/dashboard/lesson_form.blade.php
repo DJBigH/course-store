@@ -128,6 +128,61 @@
                                         <option value="1" @selected(old('is_trial', $lesson?->is_trial ?? 0) == 1)>{{ __('teacher::dashboard.common.yes') }}</option>
                                     </select>
                                 </div>
+                                <div class="col-12">
+                                    <div class="teacher-lesson-release-card">
+                                        <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                                            <div>
+                                                <h5 class="h6 mb-1">Lịch mở bài học</h5>
+                                                <p class="text-muted mb-0">Chọn cách bài học này được mở cho học viên đã mua khóa học.</p>
+                                            </div>
+                                            <span class="teacher-chip">{{ $lesson?->releaseSummary() ?? 'Mở ngay' }}</span>
+                                        </div>
+
+                                        @if ($canScheduleContent)
+                                            @php
+                                                $releaseMode = old('release_mode', $lesson?->release_mode ?: 'immediate');
+                                                $releaseAtValue = old('release_at', $lesson?->release_at?->format('Y-m-d\TH:i'));
+                                            @endphp
+                                            <div class="row g-3">
+                                                <div class="col-12">
+                                                    <label class="form-label">Cách mở bài học</label>
+                                                    <select name="release_mode" class="form-select @error('release_mode') is-invalid @enderror" data-lesson-release-mode>
+                                                        <option value="immediate" @selected($releaseMode === 'immediate')>Mở ngay</option>
+                                                        <option value="datetime" @selected($releaseMode === 'datetime')>Mở theo ngày giờ</option>
+                                                        <option value="days_after_enrollment" @selected($releaseMode === 'days_after_enrollment')>Mở sau X ngày</option>
+                                                        <option value="after_previous_completed" @selected($releaseMode === 'after_previous_completed')>Mở sau khi học xong bài trước</option>
+                                                    </select>
+                                                    @error('release_mode')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6" data-release-group="datetime">
+                                                    <label class="form-label">Mở vào ngày giờ</label>
+                                                    <input type="datetime-local" name="release_at" class="form-control @error('release_at') is-invalid @enderror" value="{{ $releaseAtValue }}">
+                                                    @error('release_at')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6" data-release-group="days_after_enrollment">
+                                                    <label class="form-label">Số ngày sau khi học viên đăng ký</label>
+                                                    <input type="number" min="1" max="3650" name="release_after_days" class="form-control @error('release_after_days') is-invalid @enderror" value="{{ old('release_after_days', $lesson?->release_after_days) }}" placeholder="3">
+                                                    @error('release_after_days')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-12 d-none" data-release-group="after_previous_completed">
+                                                    <div class="alert alert-info mb-0">
+                                                        Bài học này chỉ mở khi học viên đã hoàn thành bài học ngay trước đó trong cùng lộ trình.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="alert alert-info mb-0">
+                                                Gói hiện tại chưa mở quyền hẹn lịch bài học. Trạng thái hiện tại của bài này: <strong>{{ $lesson?->releaseSummary() ?? 'Mở ngay' }}</strong>.
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -162,6 +217,18 @@
             gap: 0.75rem;
             padding-left: 1.15rem;
         }
+
+        .teacher-lesson-release-card {
+            padding: 1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(96, 165, 250, 0.18);
+            background: rgba(15, 23, 42, 0.18);
+        }
+
+        html[data-theme="light"] .teacher-lesson-release-card {
+            background: rgba(248, 250, 252, 0.92);
+            border-color: rgba(148, 163, 184, 0.22);
+        }
     </style>
 @endsection
 
@@ -193,6 +260,28 @@
                 }
                 radio.addEventListener('change', () => showLang(locale));
             });
+
+            const releaseModeInput = document.querySelector('[data-lesson-release-mode]');
+            const releaseGroups = document.querySelectorAll('[data-release-group]');
+
+            const syncReleaseMode = () => {
+                if (!releaseModeInput) {
+                    return;
+                }
+
+                const mode = releaseModeInput.value || 'immediate';
+                releaseGroups.forEach((group) => {
+                    const shouldShow = group.dataset.releaseGroup === mode;
+                    group.classList.toggle('d-none', !shouldShow);
+
+                    group.querySelectorAll('input, select, textarea').forEach((field) => {
+                        field.disabled = !shouldShow;
+                    });
+                });
+            };
+
+            releaseModeInput?.addEventListener('change', syncReleaseMode);
+            syncReleaseMode();
         })();
     </script>
 @endsection

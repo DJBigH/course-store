@@ -12,13 +12,16 @@ use Modules\Orders\src\Models\OrderDetail;
 use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Models\Teacher;
+use Modules\Teacher\src\Models\TeacherCourseBundle;
 use Modules\Teacher\src\Models\TeacherCourseGrant;
 use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
+use Modules\Teacher\src\Support\TeacherPackageUsageResolver;
 
 class TeacherCouponController extends Controller
 {
     public function __construct(
         protected TeacherPackageLifecycleManager $packageLifecycleManager,
+        protected TeacherPackageUsageResolver $packageUsageResolver,
     ) {}
 
     public function index(Request $request)
@@ -36,7 +39,9 @@ class TeacherCouponController extends Controller
         $activeCouponCount = $this->resolveTeacherCouponCount($teacher, false);
         $lockedCouponCount = $this->resolveTeacherLockedCouponCount($teacher);
         $canManageCoupons = $teacher->packageHasFeature('can_manage_coupons');
-        $canCreateCoupons = $canManageCoupons && !$this->isCouponOverLimit($couponLimit, $lockedCouponCount);
+        $couponUsage = $this->packageUsageResolver->build($couponCount, $couponLimit, $canManageCoupons);
+        $hasCouponLimit = (bool) $couponUsage['has_limit'];
+        $canCreateCoupons = (bool) $couponUsage['can_create'];
 
         $coupons = Coupons::query()
             ->with(['courses', 'students'])
@@ -56,10 +61,12 @@ class TeacherCouponController extends Controller
             'teacher',
             'coupons',
             'couponLimit',
+            'couponUsage',
             'couponCount',
             'activeCouponCount',
             'lockedCouponCount',
             'canManageCoupons',
+            'hasCouponLimit',
             'canCreateCoupons'
         ));
     }
@@ -92,8 +99,13 @@ class TeacherCouponController extends Controller
             ->where('teacher_id', $teacher->id)
             ->orderBy('name')
             ->get();
+        $bundles = TeacherCourseBundle::query()
+            ->where('teacher_id', $teacher->id)
+            ->orderBy('name')
+            ->get();
         $assignedStudentIds = [];
         $assignedCourseIds = [];
+        $assignedBundleIds = [];
         $pageTitle = __('teacher::coupons.create_title');
         $pageName = $pageTitle;
         $coupon = null;
@@ -105,8 +117,10 @@ class TeacherCouponController extends Controller
             'coupon',
             'students',
             'courses',
+            'bundles',
             'assignedStudentIds',
-            'assignedCourseIds'
+            'assignedCourseIds',
+            'assignedBundleIds'
         ));
     }
 
@@ -146,8 +160,9 @@ class TeacherCouponController extends Controller
 
         $coupon->students()->sync($assignment['students']);
         $coupon->courses()->sync($assignment['courses']);
+        $coupon->bundles()->sync($assignment['bundles']);
         $this->syncCouponLocks($teacher);
-        $coupon->load(['students', 'courses']);
+        $coupon->load(['students', 'courses', 'bundles']);
         $this->logTeacherCouponActivity(
             $teacher,
             $coupon,
@@ -158,6 +173,7 @@ class TeacherCouponController extends Controller
                 'discount_value' => (int) $coupon->discount_value,
                 'student_count' => $coupon->students->count(),
                 'course_count' => $coupon->courses->count(),
+                'bundle_count' => $coupon->bundles->count(),
             ]
         );
 
@@ -187,8 +203,13 @@ class TeacherCouponController extends Controller
             ->where('teacher_id', $teacher->id)
             ->orderBy('name')
             ->get();
+        $bundles = TeacherCourseBundle::query()
+            ->where('teacher_id', $teacher->id)
+            ->orderBy('name')
+            ->get();
         $assignedStudentIds = $coupon->students()->pluck('students.id')->map(fn ($sid) => (int) $sid)->all();
         $assignedCourseIds = $coupon->courses()->pluck('courses.id')->map(fn ($cid) => (int) $cid)->all();
+        $assignedBundleIds = $coupon->bundles()->pluck('teacher_course_bundles.id')->map(fn ($bid) => (int) $bid)->all();
         $pageTitle = __('teacher::coupons.edit_title');
         $pageName = $pageTitle;
 
@@ -199,8 +220,10 @@ class TeacherCouponController extends Controller
             'coupon',
             'students',
             'courses',
+            'bundles',
             'assignedStudentIds',
-            'assignedCourseIds'
+            'assignedCourseIds',
+            'assignedBundleIds'
         ));
     }
 
@@ -240,8 +263,9 @@ class TeacherCouponController extends Controller
         $coupon->update($data);
         $coupon->students()->sync($assignment['students']);
         $coupon->courses()->sync($assignment['courses']);
+        $coupon->bundles()->sync($assignment['bundles']);
         $this->syncCouponLocks($teacher);
-        $coupon->load(['students', 'courses']);
+        $coupon->load(['students', 'courses', 'bundles']);
         $this->logTeacherCouponActivity(
             $teacher,
             $coupon,
@@ -261,6 +285,7 @@ class TeacherCouponController extends Controller
                 ]),
                 'student_count' => $coupon->students->count(),
                 'course_count' => $coupon->courses->count(),
+                'bundle_count' => $coupon->bundles->count(),
             ]
         );
 
@@ -304,6 +329,22 @@ class TeacherCouponController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($this->resolveCouponLimit($teacher) === null) {
+            $coupon = $this->resolveTeacherCoupon($teacher, $id);
+
+            if ((bool) $coupon->is_package_priority) {
+                $coupon->update([
+                    'is_package_priority' => false,
+                ]);
+            }
+
+            $this->syncCouponLocks($teacher);
+
+            return redirect()
+                ->route('teacher.dashboard.coupons.index')
+                ->with('msg_success', __('teacher::coupons.flash.priority_disabled'));
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
@@ -542,6 +583,8 @@ class TeacherCouponController extends Controller
             'students.*' => ['integer'],
             'courses' => ['nullable', 'array'],
             'courses.*' => ['integer'],
+            'bundles' => ['nullable', 'array'],
+            'bundles.*' => ['integer'],
         ]);
 
         $allowedStudents = $this->resolveTeacherStudents($teacher)
@@ -553,6 +596,11 @@ class TeacherCouponController extends Controller
             ->where('teacher_id', $teacher->id)
             ->pluck('id')
             ->map(fn ($cid) => (int) $cid)
+            ->all();
+        $allowedBundles = TeacherCourseBundle::query()
+            ->where('teacher_id', $teacher->id)
+            ->pluck('id')
+            ->map(fn ($bid) => (int) $bid)
             ->all();
 
         $studentIds = collect($request->input('students', []))
@@ -568,8 +616,14 @@ class TeacherCouponController extends Controller
             ->unique()
             ->values()
             ->all();
+        $bundleIds = collect($request->input('bundles', []))
+            ->map(fn ($bid) => (int) $bid)
+            ->filter(fn ($bid) => in_array($bid, $allowedBundles, true))
+            ->unique()
+            ->values()
+            ->all();
 
-        if (empty($studentIds) && empty($courseIds)) {
+        if (empty($studentIds) && empty($courseIds) && empty($bundleIds)) {
             return null;
         }
 
@@ -590,9 +644,18 @@ class TeacherCouponController extends Controller
             ];
         }
 
+        $bundleSync = [];
+        foreach ($bundleIds as $bundleId) {
+            $bundleSync[$bundleId] = [
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
         return [
             'students' => $studentSync,
             'courses' => $courseSync,
+            'bundles' => $bundleSync,
         ];
     }
 
@@ -703,11 +766,20 @@ class TeacherCouponController extends Controller
                 ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
         }
 
-        if ($this->resolveCouponLimit($teacher) === null) {
+        $couponLimit = $this->resolveCouponLimit($teacher);
+        $couponUsage = $this->packageUsageResolver->build(
+            $this->resolveTeacherCouponCount($teacher),
+            $couponLimit,
+            true
+        );
+
+        if ($couponUsage['can_create']) {
             return null;
         }
 
-        return null;
+        return redirect()
+            ->route('teacher.dashboard.coupons.index')
+            ->with('msg_danger', __('teacher::coupons.flash.limit_reached', ['limit' => $couponLimit]));
     }
 
     private function resolveCouponLimit(Teacher $teacher): ?int

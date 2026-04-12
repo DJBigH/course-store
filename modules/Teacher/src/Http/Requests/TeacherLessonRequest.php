@@ -14,6 +14,9 @@ class TeacherLessonRequest extends FormRequest
             'parent_id' => $parentId > 0 ? $parentId : null,
             'remove_video' => (int) $this->input('remove_video', 0),
             'remove_document' => (int) $this->input('remove_document', 0),
+            'release_mode' => $this->input('release_mode', 'immediate'),
+            'release_at' => $this->filled('release_at') ? $this->input('release_at') : null,
+            'release_after_days' => $this->filled('release_after_days') ? (int) $this->input('release_after_days') : null,
         ]);
     }
 
@@ -43,6 +46,20 @@ class TeacherLessonRequest extends FormRequest
             'description_ja' => ['nullable', 'string'],
             'description_zh' => ['nullable', 'string'],
             'status' => ['required', 'integer', 'in:0,1'],
+            'release_mode' => ['nullable', 'string', 'in:immediate,datetime,days_after_enrollment,after_previous_completed'],
+            'release_at' => ['nullable', 'date'],
+            'release_after_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->sometimes('release_at', ['required'], function ($input) {
+            return ($input->release_mode ?? 'immediate') === 'datetime';
+        });
+
+        $validator->sometimes('release_after_days', ['required'], function ($input) {
+            return ($input->release_mode ?? 'immediate') === 'days_after_enrollment';
+        });
     }
 }

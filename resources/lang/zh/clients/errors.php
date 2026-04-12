@@ -24,4 +24,10 @@ return [
         'pay_again' => '重新支付',
         'title' => '支付已过期',
     ],
+    'affiliate_link_expired' => [
+        'message_1' => '该推荐链接已失效',
+        'message_2' => '您刚打开的链接已不再可用于分享。',
+        'message_3' => '请返回首页，或向发送者索取新的链接。',
+        'title' => '推荐链接已失效',
+    ],
 ];

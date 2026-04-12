@@ -11,6 +11,7 @@
             $canPublishMore = (bool) ($usage['can_publish_more'] ?? true);
             $isOverLimit = (bool) ($usage['is_over_limit'] ?? false);
             $overLimitBy = (int) ($usage['over_limit_by'] ?? 0);
+            $hasLimit = (bool) ($usage['has_limit'] ?? false);
         @endphp
 
         <div class="teacher-courses-hero">
@@ -20,6 +21,26 @@
                 <p class="teacher-courses-desc mb-0">
                     Quan ly khoa hoc theo huong an toan khi ha goi: khoa cu van giu nguyen, con limit se ap vao so khoa dang publish.
                 </p>
+                <div class="teacher-course-subtabs mt-4">
+                    <a href="{{ route('teacher.dashboard.courses') }}"
+                        class="teacher-course-subtabs__tab {{ request()->routeIs('teacher.dashboard.courses*') || request()->routeIs('teacher.dashboard.lessons.*') ? 'active' : '' }}">
+                        <i class="fas fa-book-open"></i>
+                        <span>{{ __('teacher::dashboard.nav.courses') }}</span>
+                    </a>
+                    @if ($teacher->packageHasFeature('can_sell_bundles'))
+                        <a href="{{ route('teacher.dashboard.bundles') }}"
+                            class="teacher-course-subtabs__tab {{ request()->routeIs('teacher.dashboard.bundles*') ? 'active' : '' }}">
+                            <i class="fas fa-layer-group"></i>
+                            <span>{{ __('teacher::dashboard.nav.bundles') }}</span>
+                        </a>
+                    @else
+                        <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="teacher-course-subtabs__tab is-locked">
+                            <i class="fas fa-layer-group"></i>
+                            <span>{{ __('teacher::dashboard.nav.bundles') }}</span>
+                            @include('teacher::clients.dashboard.partials.upgrade_badge')
+                        </a>
+                    @endif
+                </div>
             </div>
             <div class="teacher-courses-hero__actions">
                 @if (!empty($usage))
@@ -54,17 +75,9 @@
         </div>
 
         @if (!$teacher->packageHasFeature('can_duplicate_courses'))
-            <div class="alert alert-warning border-0 mb-4">
-                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
-                    <div>
-                        <strong>{{ __('teacher::dashboard.package_features.upsell_title') }}</strong>
-                        <div class="mt-1 text-muted">{{ __('teacher::dashboard.package_features.courses_locked_duplicate') }}</div>
-                    </div>
-                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
-                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
-                    </a>
-                </div>
-            </div>
+            @include('teacher::clients.dashboard.partials.package_feature_notice', [
+                'message' => __('teacher::dashboard.package_features.courses_locked_duplicate'),
+            ])
         @endif
 
         @if (session('msg_success'))
@@ -74,56 +87,48 @@
             <div class="alert alert-danger">{{ session('msg_danger') }}</div>
         @endif
 
-        @if (!empty($usage))
-            <div class="alert {{ $isOverLimit ? 'alert-warning' : 'alert-info' }} border-0 mb-4">
-                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
-                    <div>
-                        <strong>{{ __('teacher::dashboard.courses.warnings.publish_limit_title') }}</strong>
-                        <div class="mt-1 text-muted">
-                            {{ __('teacher::dashboard.courses.warnings.publish_limit_summary', [
-                                'published' => $publishedCourses,
-                                'total' => $totalCourses,
-                                'limit' => $limitLabel,
-                            ]) }}
-                        </div>
-                        @if ($isOverLimit)
-                            <div class="mt-2">
-                                {{ __('teacher::dashboard.courses.warnings.publish_limit_over', ['count' => $overLimitBy]) }}
-                            </div>
-                        @endif
-                    </div>
-                    @if ($isOverLimit)
-                        <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
-                            {{ __('teacher::dashboard.package_features.upgrade_cta') }}
-                        </a>
-                    @endif
-                </div>
-            </div>
+        @if (!empty($usage) && $hasLimit)
+            @include('teacher::clients.dashboard.partials.package_usage_banner', [
+                'variant' => $isOverLimit ? 'warning' : 'info',
+                'title' => __('teacher::dashboard.courses.warnings.publish_limit_title'),
+                'lines' => [
+                    __('teacher::dashboard.courses.warnings.publish_limit_summary', [
+                        'published' => $publishedCourses,
+                        'total' => $totalCourses,
+                        'limit' => $limitLabel,
+                    ]),
+                    $isOverLimit ? __('teacher::dashboard.courses.warnings.publish_limit_over', ['count' => $overLimitBy]) : null,
+                ],
+                'showUpgrade' => $isOverLimit,
+                'upgradeUrl' => route('teacher.dashboard.package.upgrade'),
+            ])
         @endif
 
-        <div class="teacher-courses-guide">
-            <article class="teacher-courses-guide__item">
-                <span class="teacher-courses-guide__step">1</span>
-                <div>
-                    <strong>Tao hoac giu lai khoa cu</strong>
-                    <p class="mb-0">Khi ha goi, khoa hoc cu khong bi huy. Ban van co the tiep tuc chinh sua noi dung nhu binh thuong.</p>
-                </div>
-            </article>
-            <article class="teacher-courses-guide__item">
-                <span class="teacher-courses-guide__step">2</span>
-                <div>
-                    <strong>Tu chon khoa nao tiep tuc publish</strong>
-                    <p class="mb-0">Neu vuot limit, hay dua mot so khoa ve ban nhap de giai phong slot publish cho khoa quan trong hon.</p>
-                </div>
-            </article>
-            <article class="teacher-courses-guide__item">
-                <span class="teacher-courses-guide__step">3</span>
-                <div>
-                    <strong>Soan bai hoc va cap nhat noi dung</strong>
-                    <p class="mb-0">Ngay ca khi dang vuot limit, ban van co the tao khoa nhap moi va cap nhat bai hoc truoc khi publish.</p>
-                </div>
-            </article>
-        </div>
+        @if ($hasLimit)
+            <div class="teacher-courses-guide">
+                <article class="teacher-courses-guide__item">
+                    <span class="teacher-courses-guide__step">1</span>
+                    <div>
+                        <strong>Tao hoac giu lai khoa cu</strong>
+                        <p class="mb-0">Khi ha goi, khoa hoc cu khong bi huy. Ban van co the tiep tuc chinh sua noi dung nhu binh thuong.</p>
+                    </div>
+                </article>
+                <article class="teacher-courses-guide__item">
+                    <span class="teacher-courses-guide__step">2</span>
+                    <div>
+                        <strong>Tu chon khoa nao tiep tuc publish</strong>
+                        <p class="mb-0">Neu vuot limit, hay dua mot so khoa ve ban nhap de giai phong slot publish cho khoa quan trong hon.</p>
+                    </div>
+                </article>
+                <article class="teacher-courses-guide__item">
+                    <span class="teacher-courses-guide__step">3</span>
+                    <div>
+                        <strong>Soan bai hoc va cap nhat noi dung</strong>
+                        <p class="mb-0">Ngay ca khi dang vuot limit, ban van co the tao khoa nhap moi va cap nhat bai hoc truoc khi publish.</p>
+                    </div>
+                </article>
+            </div>
+        @endif
 
         <div class="row g-3">
             @forelse ($courses as $course)
@@ -144,7 +149,7 @@
                                         {{ __('teacher::dashboard.courses.labels.limited_actions_only') }}
                                     </div>
                                 @endif
-                                @if ($course->is_package_priority)
+                                @if ($hasLimit && $course->is_package_priority)
                                     <div class="teacher-course-card__priority">
                                         {{ __('teacher::dashboard.courses.labels.priority_active') }}
                                     </div>
@@ -235,12 +240,14 @@
                         @endif
 
                         <div class="d-flex flex-wrap gap-2 mt-3">
-                            <form method="POST" action="{{ route('teacher.dashboard.courses.priority', $course->id) }}">
-                                @csrf
-                                <button type="submit" class="btn btn-outline-warning">
-                                    {{ $course->is_package_priority ? __('teacher::dashboard.courses.actions.unprioritize') : __('teacher::dashboard.courses.actions.prioritize') }}
-                                </button>
-                            </form>
+                            @if ($hasLimit)
+                                <form method="POST" action="{{ route('teacher.dashboard.courses.priority', $course->id) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-warning">
+                                        {{ $course->is_package_priority ? __('teacher::dashboard.courses.actions.unprioritize') : __('teacher::dashboard.courses.actions.prioritize') }}
+                                    </button>
+                                </form>
+                            @endif
                             @if (!$isLockedCourse)
                                 <a href="{{ route('teacher.dashboard.lessons.index', $course->id) }}" class="btn btn-primary">
                                     {{ __('teacher::dashboard.courses.actions.lessons') }}
@@ -296,6 +303,67 @@
             {{ $courses->links() }}
         </div>
     </div>
+@endsection
+
+@section('stylesheets')
+    @parent
+    <style>
+        .teacher-course-subtabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.85rem;
+        }
+
+        .teacher-course-subtabs__tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.8rem 1rem;
+            border-radius: 999px;
+            border: 1px solid var(--admin-border);
+            background: color-mix(in srgb, var(--admin-surface-2) 88%, transparent);
+            color: var(--admin-text);
+            text-decoration: none;
+            font-weight: 700;
+            transition: 0.18s ease;
+        }
+
+        .teacher-course-subtabs__tab i {
+            color: var(--admin-primary);
+        }
+
+        .teacher-course-subtabs__tab small {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.18rem 0.45rem;
+            border-radius: 999px;
+            background: rgba(251, 191, 36, 0.14);
+            color: #fcd34d;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .teacher-course-subtabs__tab:hover,
+        .teacher-course-subtabs__tab.active {
+            transform: translateY(-1px);
+            border-color: color-mix(in srgb, var(--admin-primary) 42%, var(--admin-border));
+            background: color-mix(in srgb, var(--admin-primary) 16%, var(--admin-surface));
+            color: var(--admin-text);
+        }
+
+        .teacher-course-subtabs__tab.is-locked {
+            justify-content: space-between;
+        }
+
+        @media (max-width: 767.98px) {
+            .teacher-course-subtabs__tab {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
 @endsection
 
 @section('stylesheets')

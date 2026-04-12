@@ -44,4 +44,19 @@ class TeacherCourseBundle extends Model
             'course_id'
         )->withPivot(['position'])->orderBy('teacher_course_bundle_items.position');
     }
+
+    public function coupons()
+    {
+        return $this->belongsToMany(
+            \Modules\Students\src\Models\Coupons::class,
+            'coupons_teacher_course_bundles',
+            'bundle_id',
+            'coupon_id'
+        );
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(\Modules\Orders\src\Models\Order::class, 'bundle_id', 'id');
+    }
 }

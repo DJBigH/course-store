@@ -59,7 +59,7 @@ return [
             'intro_video_url' => '소개 영상 URL',
             'facebook_url' => 'Facebook URL',
             'youtube_url' => 'YouTube URL',
-            'linkedin_url' => 'LinkedIn URL',
+            'linkedin_url' => 'LinkedIn',
             'cv_file' => 'CV 링크',
             'identity_file' => '신분증 / 서류 링크',
             'coupon_code' => '쿠폰 코드',

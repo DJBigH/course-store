@@ -475,6 +475,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý )
 - Check lại logic của module giáo viên
 - Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại
+- Chưa làm config ngân hàng
+- Thêm cái dùng hợp tác hủy tư cách giáo viên ẩn tất cả những thứ liên quan đến giáo viên đó, tài khoản giáo viên sẽ được hạ xuống tài khoản học viên không vô được màn giáo viên, tất cả các khóa học được cấp hay của bản thân sẽ ẩn đi và chỉ có học viên nào mua thì vẫn dùng được
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -525,7 +527,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Chỉ có super admin mới có quyền xóa nên làm chức năng khóa tài khoản giảng viên vì nếu admin thấy không hoạt động thì khóa lại
 - Đối với user, teacher, student thêm quyền khóa trong phân quyền
 - Check tất cả phân quyền là khi tắt quyền nào thì ẩn quyền nó ở màn đó đi (VD: tắt quyền sửa học viên thì ẩn sửa đi)
-- Với các gói thì xem được chi tiết rõ các gói đó như nào, Thêm so sanh ở đó
+- Với các gói thì xem được chi tiết rõ các gói đó như nào, Thêm so sánh ở đó
+- Khi tạo giáo viên yêu cầu phải thêm rõ cái tài khoản ngân hàng, yêu cầu phải có 1 tài khoản ngân hàng mới được tạo quyền 
+- Trong profile có thêm cái chứng chỉ nx để ấn vô xem
  Teacher:
 - Làm cái hồ sơ giáo viên
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
@@ -542,9 +546,14 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Với trường hợp tài khoản giảng viên họ không dùng nữa và họ không báo với mình thì sao mình không hề biết là họ không dùng nữa ( Done Admin check số ngày hoạt động)
 - Nếu bạn muốn, mình có thể làm thêm một bước nữa là cho cột được chọn có icon ✓ Đang so sánh hoặc một thanh màu chạy dọc ở đầu cột để trực quan hơn nữa. ( Done )
 - Thêm chức năng xem lại lịch sử thao tác, đôi với quản lý học viên cái giám sát học viên học được bao nhiêu % thì thêm vào đó và phần quyền trong gói giúp tôi ( Done )
+- Hướng dẫn cái cấp chứng chỉ ( Done )
 - Nghĩ xem cần thêm chức năng nào khác không ( Tôi muốn chức năng nó có thể liên quan đến các gói của giáo viên để gói đó có giá trị hơn khiến giảng viên mua để sử dụng)
 - Fix 1 số bug liên quan đến limit trong gói
 - À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá ( Chưa xong bên clients)
+- Check lại tất cả đa ngôn ngữ của màn teacher ( Đặc biệt là vi phải có dấu)
+- Yêu cầu rút tiền tôi muốn là cái thêm ngân hàng tách ra riêng và chỉ khi chọn được ngân hàng thì mới nhập được giá tiền và ghi chú và validate (đối với số tiền min là 5k)
+- Cái 2FA của giáo viên và học viên là giống nhau đúng ko ( Cùng 1 logic nên suy nghĩ có cần thay đổi cái 2FA bật/tắt không)
+- Cái defauth avatar khi tạo giáo viên nằm ở resources/assets/teacher.png
+- Thêm chức năng hủy hợp tác ( Đẩy lên admin + lý do và khi hủy thì tất cả bài giảng ẩn đi chỉ có học viên nào đã mua thì vẫn còn sử dụng và bị đẩy khỏi màn giáo viên gửi mail cảm ơn đã hợp tác tài khoản hạ cấp xuống học viên)
 Tổng kết
-- Check lại tất cả đa ngôn ngữ ( Đặc biệt là vi phải có dấu)
 - check lại lần cuối trước khi đẩy lên production

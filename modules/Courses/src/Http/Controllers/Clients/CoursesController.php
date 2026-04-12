@@ -3,6 +3,7 @@
 namespace Modules\Courses\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
+use App\Models\Scopes\ActiveScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -12,6 +13,7 @@ use Modules\Courses\src\Models\Courses;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
+use Modules\Teacher\src\Support\TeacherAffiliateLinkManager;
 use Modules\Teacher\src\Models\TeacherCourseBundle;
 
 class CoursesController extends Controller
@@ -23,7 +25,8 @@ class CoursesController extends Controller
     public function __construct(
         CoursesRepositoryInterface $courseRepository,
         LessonsRepositoryInterface $lessonRepository,
-        OrdersRepositoryInterface $orderRepository
+        OrdersRepositoryInterface $orderRepository,
+        protected TeacherAffiliateLinkManager $affiliateLinkManager
     ) {
         $this->courseRepository = $courseRepository;
         $this->lessonRepository = $lessonRepository;
@@ -112,6 +115,24 @@ class CoursesController extends Controller
             abort(403, 'Khóa học này đang tạm thời bị khóa học tập.');
         }
 
+        if ($course->teacher) {
+            if ($expiredResponse = $this->affiliateLinkManager->ensurePublicAccessAllowed(
+                request(),
+                $course->teacher,
+                'course',
+                (int) $course->id
+            )) {
+                return $expiredResponse;
+            }
+            $this->affiliateLinkManager->captureClick(
+                request(),
+                $course->teacher,
+                'course',
+                (int) $course->id,
+                route('courses.detail', ['locale' => $locale, 'slug' => $slug_locale])
+            );
+        }
+
         $cacheKey = 'course_view_' . $course->id . '_' . request()->ip();
 
         if (!Cache::has($cacheKey)) {
@@ -165,6 +186,24 @@ class CoursesController extends Controller
             ->where('status', true)
             ->firstOrFail();
 
+        if ($bundle->teacher) {
+            if ($expiredResponse = $this->affiliateLinkManager->ensurePublicAccessAllowed(
+                request(),
+                $bundle->teacher,
+                'bundle',
+                (int) $bundle->id
+            )) {
+                return $expiredResponse;
+            }
+            $this->affiliateLinkManager->captureClick(
+                request(),
+                $bundle->teacher,
+                'bundle',
+                (int) $bundle->id,
+                route('courses.bundle.detail', ['locale' => $locale, 'slug' => $slug])
+            );
+        }
+
         $courses = $bundle->items
             ->pluck('course')
             ->filter(function ($course) use ($bundle) {
@@ -194,16 +233,31 @@ class CoursesController extends Controller
                 ? (float) $course->sale_price
                 : (float) $course->price;
         });
+        $detailRows = collect($this->buildBundleOrderDetails($courses, (float) $bundle->price));
+        $remainingDetailRows = $detailRows
+            ->reject(fn ($row) => $ownedCourseIds->contains((int) $row['course_id']))
+            ->values();
+        $remainingCourseIds = $remainingDetailRows->pluck('course_id')->map(fn ($id) => (int) $id)->all();
+        $remainingCourses = $courses
+            ->filter(fn ($course) => in_array((int) $course->id, $remainingCourseIds, true))
+            ->values();
         $hasOwnedCourses = $ownedCourseIds->isNotEmpty();
+        $allCoursesOwned = $remainingCourses->isEmpty();
+        $payableAmount = (float) $remainingDetailRows->sum('price');
+        $ownedValue = (float) max((float) $bundle->price - $payableAmount, 0);
 
         return view('courses::clients.bundle_detail', compact(
             'pageTitle',
             'pageName',
             'bundle',
             'courses',
+            'remainingCourses',
             'sourceTotal',
             'ownedCourseIds',
-            'hasOwnedCourses'
+            'hasOwnedCourses',
+            'allCoursesOwned',
+            'payableAmount',
+            'ownedValue'
         ));
     }
 
@@ -294,6 +348,9 @@ class CoursesController extends Controller
         $orderData = [
             'code' => generateUniqueCouponCode(),
             'student_id' => $studentId,
+            'affiliate_link_id' => $course->teacher
+                ? optional($this->affiliateLinkManager->resolveTrackedLink(request(), $course->teacher, 'course', (int) $course->id))->id
+                : null,
             'discount' => 0,
             'price' => $price,
             'coupon' => null,
@@ -345,17 +402,27 @@ class CoursesController extends Controller
             ->whereIn('courses.id', $courses->pluck('id')->all())
             ->pluck('courses.id');
 
-        if ($ownedCourseIds->isNotEmpty()) {
+        $detailRows = collect($this->buildBundleOrderDetails($courses, (float) $bundle->price))
+            ->reject(fn ($row) => $ownedCourseIds->contains((int) $row['course_id']))
+            ->values();
+
+        if ($detailRows->isEmpty()) {
             return back()
-                ->with('msg', __('teacher::dashboard.bundles.flash.purchase_blocked_owned'))
+                ->with('msg', __('teacher::dashboard.bundles.flash.all_courses_owned'))
                 ->with('msgType', 'danger');
         }
+
+        $payableAmount = (float) $detailRows->sum('price');
 
         $orderData = [
             'code' => generateUniqueCouponCode(),
             'student_id' => $student->id,
+            'bundle_id' => $bundle->id,
+            'affiliate_link_id' => $bundle->teacher
+                ? optional($this->affiliateLinkManager->resolveTrackedLink(request(), $bundle->teacher, 'bundle', (int) $bundle->id))->id
+                : null,
             'discount' => 0,
-            'price' => (float) $bundle->price,
+            'price' => $payableAmount,
             'coupon' => null,
             'status_id' => 1,
             'payment_date' => null,
@@ -363,7 +430,7 @@ class CoursesController extends Controller
 
         $order = $this->orderRepository->createOrderWithDetails(
             $orderData,
-            $this->buildBundleOrderDetails($courses, (float) $bundle->price)
+            $detailRows->all()
         );
 
         return redirect()->route('students.account.checkout', ['locale' => app()->getLocale(), 'id' => $order->id]);

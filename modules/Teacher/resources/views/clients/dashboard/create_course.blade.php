@@ -30,7 +30,7 @@
                 <div class="alert alert-danger">{{ session('msg_danger') }}</div>
             @endif
 
-            @if ($usage && ($usage['is_over_limit'] ?? false))
+            @if ($usage && ($usage['has_limit'] ?? false) && ($usage['is_over_limit'] ?? false))
                 <div class="alert alert-warning">
                     {{ __('teacher::dashboard.courses.warnings.publish_limit_over', ['count' => $usage['over_limit_by'] ?? 0]) }}
                 </div>
@@ -142,16 +142,20 @@
                                 <div class="col-md-6">
                                     <label class="form-label">{{ __('teacher::dashboard.courses.form.price') }}</label>
                                     <input type="hidden" name="price" id="teacher-course-price" value="{{ old('price', $course?->price ?? 0) }}">
-                                    <input
-                                        type="text"
-                                        inputmode="numeric"
-                                        class="form-control @error('price') is-invalid @enderror"
-                                        id="teacher-course-price-display"
-                                        value="{{ old('price', $course?->price ?? 0) }}"
-                                        data-number-format
-                                        data-number-target="teacher-course-price"
-                                        placeholder="0"
-                                    >
+                                    <div class="teacher-money-input">
+                                        <input
+                                            type="text"
+                                            inputmode="numeric"
+                                            class="form-control @error('price') is-invalid @enderror"
+                                            id="teacher-course-price-display"
+                                            value="{{ old('price', $course?->price ?? 0) }}"
+                                            data-money-input
+                                            data-money-target="teacher-course-price"
+                                            placeholder="0"
+                                        >
+                                        <span class="teacher-money-input__unit">đ</span>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Gia toi da 99,999,999d.</small>
                                     @error('price')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -159,16 +163,23 @@
                                 <div class="col-md-6">
                                     <label class="form-label">{{ __('teacher::dashboard.courses.form.sale_price') }}</label>
                                     <input type="hidden" name="sale_price" id="teacher-course-sale-price" value="{{ old('sale_price', $course?->sale_price ?? 0) }}">
-                                    <input
-                                        type="text"
-                                        inputmode="numeric"
-                                        class="form-control @error('sale_price') is-invalid @enderror"
-                                        id="teacher-course-sale-price-display"
-                                        value="{{ old('sale_price', $course?->sale_price ?? 0) }}"
-                                        data-number-format
-                                        data-number-target="teacher-course-sale-price"
-                                        placeholder="0"
-                                    >
+                                    <div class="teacher-money-input">
+                                        <input
+                                            type="text"
+                                            inputmode="numeric"
+                                            class="form-control @error('sale_price') is-invalid @enderror"
+                                            id="teacher-course-sale-price-display"
+                                            value="{{ old('sale_price', $course?->sale_price ?? 0) }}"
+                                            data-money-input
+                                            data-money-target="teacher-course-sale-price"
+                                            placeholder="0"
+                                        >
+                                        <span class="teacher-money-input__unit">đ</span>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Khong duoc lon hon gia goc.</small>
+                                    <div class="invalid-feedback d-none" id="teacher-course-sale-price-realtime-error">
+                                        Gia khuyen mai khong duoc lon hon gia goc.
+                                    </div>
                                     @error('sale_price')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -179,7 +190,7 @@
                                         <option value="0" @selected(old('status', $course?->status ?? 0) == 0)>{{ __('teacher::dashboard.courses.status.draft') }}</option>
                                         <option value="1" @selected(old('status', $course?->status ?? 0) == 1)>{{ __('teacher::dashboard.courses.status.published') }}</option>
                                     </select>
-                                    @if ($usage)
+                                    @if ($usage && ($usage['has_limit'] ?? false))
                                         <small class="text-muted d-block mt-2">
                                             {{ __('teacher::dashboard.courses.warnings.publish_limit_summary', [
                                                 'published' => $usage['published'] ?? $usage['used'] ?? 0,
@@ -265,6 +276,24 @@
             overflow: visible;
         }
 
+        .teacher-money-input {
+            position: relative;
+        }
+
+        .teacher-money-input .form-control {
+            padding-right: 2.75rem;
+        }
+
+        .teacher-money-input__unit {
+            position: absolute;
+            top: 50%;
+            right: 0.95rem;
+            transform: translateY(-50%);
+            color: var(--admin-muted);
+            font-weight: 700;
+            pointer-events: none;
+        }
+
         .teacher-category-list {
             display: flex;
             flex-direction: column;
@@ -338,36 +367,36 @@
                 });
             }
 
-            const formattedInputs = document.querySelectorAll('[data-number-format]');
-            const formatNumber = (value) => {
-                const digits = value.replace(/[^\d]/g, '');
-                if (!digits) {
-                    return '';
+            const form = document.querySelector('.teacher-course-form');
+            const submitButton = form?.querySelector('button[type="submit"]');
+            const priceHidden = document.getElementById('teacher-course-price');
+            const salePriceHidden = document.getElementById('teacher-course-sale-price');
+            const salePriceDisplay = document.getElementById('teacher-course-sale-price-display');
+            const realtimeError = document.getElementById('teacher-course-sale-price-realtime-error');
+
+            const validateSalePrice = () => {
+                if (!priceHidden || !salePriceHidden || !salePriceDisplay || !realtimeError) {
+                    return true;
                 }
-                return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+                const price = Number(priceHidden.value || 0);
+                const salePrice = Number(salePriceHidden.value || 0);
+                const invalid = salePrice > price;
+
+                salePriceDisplay.classList.toggle('is-invalid', invalid);
+                realtimeError.classList.toggle('d-none', !invalid);
+
+                if (submitButton) {
+                    submitButton.disabled = invalid;
+                }
+
+                return !invalid;
             };
 
-            const syncNumberField = (displayEl, hiddenEl) => {
-                const digits = displayEl.value.replace(/[^\d]/g, '');
-                hiddenEl.value = digits;
-                displayEl.value = formatNumber(digits);
-            };
+            document.addEventListener('teacher:money-input-sync', validateSalePrice);
+            window.TeacherMoneyInput?.initAll(form || document);
 
-            formattedInputs.forEach((displayEl) => {
-                const targetId = displayEl.getAttribute('data-number-target');
-                if (!targetId) {
-                    return;
-                }
-                const hiddenEl = document.getElementById(targetId);
-                if (!hiddenEl) {
-                    return;
-                }
-
-                displayEl.value = formatNumber(displayEl.value);
-                displayEl.addEventListener('input', () => syncNumberField(displayEl, hiddenEl));
-                displayEl.addEventListener('blur', () => syncNumberField(displayEl, hiddenEl));
-                syncNumberField(displayEl, hiddenEl);
-            });
+            validateSalePrice();
         })();
     </script>
 @endsection

@@ -23,6 +23,7 @@ use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
+use Modules\Lessons\src\Support\LessonReleaseManager;
 use Modules\Orders\src\Models\OrderDetail;
 use Modules\Students\src\Models\Student;
 use Modules\Students\src\Models\StudentLessonProgress;
@@ -47,6 +48,7 @@ use Modules\Teacher\src\Models\TeacherStudentNote;
 use Modules\Teacher\src\Support\TeacherFinanceCalculator;
 use Modules\Teacher\src\Support\TeacherNotificationCenter;
 use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
+use Modules\Teacher\src\Support\TeacherPackageUsageResolver;
 use Modules\User\src\Models\User;
 use Modules\Video\src\Repositories\VideoRepositoryInterface;
 
@@ -57,8 +59,10 @@ class TeacherDashboardController extends Controller
         protected VideoRepositoryInterface $videoRepository,
         protected DocumentRepositoryInterface $documentRepository,
         protected LessonsRepositoryInterface $lessonRepository,
+        protected LessonReleaseManager $lessonReleaseManager,
         protected TeacherPackageLifecycleManager $packageLifecycleManager,
         protected TeacherNotificationCenter $notificationCenter,
+        protected TeacherPackageUsageResolver $packageUsageResolver,
     ) {}
 
     public function index()
@@ -67,6 +71,7 @@ class TeacherDashboardController extends Controller
         if (!$teacher) {
             return $this->redirectToStatus();
         }
+        $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
 
         $coursesQuery = Courses::query()
             ->withoutGlobalScope(ActiveScope::class)
@@ -75,7 +80,7 @@ class TeacherDashboardController extends Controller
         $orderDetails = $this->paidOrderDetailsQuery($teacher)->get();
         $summary = TeacherFinanceCalculator::summarize(
             $orderDetails,
-            fn () => (float) $teacher->commission_rate
+            fn () => $effectiveCommissionRate
         );
         $payoutRequested = $this->resolveCommittedPayoutAmount($teacher);
 
@@ -92,7 +97,8 @@ class TeacherDashboardController extends Controller
             'available_balance' => max($summary['teacher_revenue'] - $payoutRequested, 0),
         ];
         $recentCourses = $coursesQuery->latest('id')->take(4)->get();
-        $recentSales = TeacherFinanceCalculator::decorate($orderDetails->sortByDesc('created_at')->take(6)->values(), fn () => (float) $teacher->commission_rate);
+        $recentSales = TeacherFinanceCalculator::decorate($orderDetails->sortByDesc('created_at')->take(6)->values(), fn () => $effectiveCommissionRate);
+        $topBundles = $this->resolveTopBundles($teacher);
         $currentPackage = $teacher->application?->package;
         $pendingUpgrade = $this->resolveOpenPackageChangeRequest($teacher);
         $pendingUpgradeStartsAt = $pendingUpgrade?->activates_at;
@@ -127,7 +133,7 @@ class TeacherDashboardController extends Controller
             'pending_upgrade_is_queued' => $pendingUpgradeIsQueued,
         ] : null;
 
-        return view('teacher::clients.dashboard.index', compact('pageTitle', 'pageName', 'teacher', 'stats', 'recentCourses', 'recentSales', 'packageSummary'));
+        return view('teacher::clients.dashboard.index', compact('pageTitle', 'pageName', 'teacher', 'stats', 'recentCourses', 'recentSales', 'topBundles', 'packageSummary', 'effectiveCommissionRate'));
     }
 
     public function upgradePackage()
@@ -493,6 +499,7 @@ class TeacherDashboardController extends Controller
             'facebook_url' => $sourceApplication?->facebook_url,
             'youtube_url' => $sourceApplication?->youtube_url,
             'linkedin_url' => $sourceApplication?->linkedin_url,
+            'custom_links' => $sourceApplication?->custom_links ?? [],
             'intro_video_url' => $sourceApplication?->intro_video_url,
             'cv_file' => $sourceApplication?->cv_file,
             'identity_file' => $sourceApplication?->identity_file,
@@ -866,6 +873,18 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($this->resolveCourseLimit($teacher) === null) {
+            if ((bool) $course->is_package_priority) {
+                $course->update([
+                    'is_package_priority' => false,
+                ]);
+            }
+
+            return redirect()
+                ->route('teacher.dashboard.courses')
+                ->with('msg_success', __('teacher::dashboard.courses.flash.priority_disabled'));
+        }
+
         $wasPriority = (bool) $course->is_package_priority;
         $course->update([
             'is_package_priority' => !$course->is_package_priority,
@@ -1077,6 +1096,7 @@ class TeacherDashboardController extends Controller
             'submitLabel' => __('teacher::dashboard.lessons.actions.create'),
             'position' => $this->nextLessonPosition($course, $defaultParentId),
             'defaultParentId' => $defaultParentId,
+            'canScheduleContent' => $teacher->packageHasFeature('can_schedule_content'),
         ]);
     }
 
@@ -1093,8 +1113,16 @@ class TeacherDashboardController extends Controller
         }
         $data = $request->validated();
 
-        Lesson::query()->create($this->buildLessonPayload($data, $course));
+        $lesson = Lesson::query()->create($this->buildLessonPayload(
+            $data,
+            $course,
+            null,
+            $teacher->packageHasFeature('can_schedule_content')
+        ));
         $this->updateCourseDurations($course->id);
+        $this->logTeacherLessonActivity($teacher, $course, $lesson, 'create_lesson', 'Tạo bài học', [
+            'schedule' => $this->summarizeLessonSchedule($lesson),
+        ]);
 
         return redirect()
             ->route('teacher.dashboard.lessons.index', $course->id)
@@ -1133,6 +1161,7 @@ class TeacherDashboardController extends Controller
             'submitLabel' => __('teacher::dashboard.lessons.actions.update'),
             'position' => $lesson->position,
             'defaultParentId' => $lesson->parent_id ?? 0,
+            'canScheduleContent' => $teacher->packageHasFeature('can_schedule_content'),
         ]);
     }
 
@@ -1150,8 +1179,19 @@ class TeacherDashboardController extends Controller
         $lesson = $this->resolveOwnedLesson($course, $lessonId);
         $data = $request->validated();
 
-        $lesson->update($this->buildLessonPayload($data, $course, $lesson));
+        $oldSchedule = $this->summarizeLessonSchedule($lesson);
+        $lesson->update($this->buildLessonPayload(
+            $data,
+            $course,
+            $lesson,
+            $teacher->packageHasFeature('can_schedule_content')
+        ));
+        $lesson->refresh();
         $this->updateCourseDurations($course->id);
+        $this->logTeacherLessonActivity($teacher, $course, $lesson, 'update_lesson', 'Cập nhật bài học', [
+            'old_schedule' => $oldSchedule,
+            'new_schedule' => $this->summarizeLessonSchedule($lesson),
+        ]);
 
         return redirect()
             ->route('teacher.dashboard.lessons.index', $course->id)
@@ -1235,20 +1275,21 @@ class TeacherDashboardController extends Controller
         if (!$teacher) {
             return $this->redirectToStatus();
         }
+        $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
 
         $pageTitle = __('teacher::dashboard.pages.earnings');
         $pageName = __('teacher::dashboard.pages.earnings');
         $items = $this->paidOrderDetailsQuery($teacher)->paginate(12)->withQueryString();
         $summary = TeacherFinanceCalculator::summarize(
             $this->paidOrderDetailsQuery($teacher)->get(),
-            fn () => (float) $teacher->commission_rate
+            fn () => $effectiveCommissionRate
         );
         $items->setCollection(TeacherFinanceCalculator::decorate(
             $items->getCollection(),
-            fn () => (float) $teacher->commission_rate
+            fn () => $effectiveCommissionRate
         ));
 
-        return view('teacher::clients.dashboard.earnings', compact('pageTitle', 'pageName', 'teacher', 'items', 'summary'));
+        return view('teacher::clients.dashboard.earnings', compact('pageTitle', 'pageName', 'teacher', 'items', 'summary', 'effectiveCommissionRate'));
     }
 
     public function payouts()
@@ -1257,12 +1298,13 @@ class TeacherDashboardController extends Controller
         if (!$teacher) {
             return $this->redirectToStatus();
         }
+        $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
 
         $pageTitle = __('teacher::dashboard.pages.payouts');
         $pageName = __('teacher::dashboard.pages.payouts');
         $summary = TeacherFinanceCalculator::summarize(
             $this->paidOrderDetailsQuery($teacher)->get(),
-            fn () => (float) $teacher->commission_rate
+            fn () => $effectiveCommissionRate
         );
         $requestedAmount = $this->resolveCommittedPayoutAmount($teacher);
         $availableBalance = max($summary['teacher_revenue'] - $requestedAmount, 0);
@@ -1273,6 +1315,8 @@ class TeacherDashboardController extends Controller
             ->latest('id')
             ->take(10)
             ->get();
+        $payoutAccountUsage = $this->resolvePayoutAccountUsage($teacher, $payoutAccounts->count());
+        $bankOptions = $this->resolveVietnamBankOptions();
         $payouts = TeacherPayoutRequest::query()
             ->where('teacher_id', $teacher->id)
             ->latest('id')
@@ -1289,7 +1333,9 @@ class TeacherDashboardController extends Controller
             'availableBalance',
             'payoutAccounts',
             'payoutAccountLimit',
-            'pendingAccountChangeRequests'
+            'pendingAccountChangeRequests',
+            'payoutAccountUsage',
+            'bankOptions'
         ));
     }
 
@@ -1431,7 +1477,7 @@ class TeacherDashboardController extends Controller
 
         $details = TeacherFinanceCalculator::decorate(
             $details,
-            fn() => (float) $teacher->commission_rate
+            fn() => $this->resolveEffectiveCommissionRate($teacher)
         );
 
         $order = $details->first()?->order;
@@ -1500,7 +1546,9 @@ class TeacherDashboardController extends Controller
             'teacher',
             'students',
             'directory'
-        ));
+        ) + [
+            'studentFeatureState' => $this->resolveStudentFeatureState($teacher),
+        ]);
     }
 
     public function activityLogs(Request $request)
@@ -1536,6 +1584,7 @@ class TeacherDashboardController extends Controller
                         ->orWhere('properties->student_name', 'like', '%' . $search . '%')
                         ->orWhere('properties->course_name', 'like', '%' . $search . '%')
                         ->orWhere('properties->coupon_code', 'like', '%' . $search . '%')
+                        ->orWhere('properties->certificate_code', 'like', '%' . $search . '%')
                         ->orWhere('properties->teacher_name', 'like', '%' . $search . '%');
                 });
             });
@@ -2011,7 +2060,9 @@ class TeacherDashboardController extends Controller
             'summary',
             'learningTimeline',
             'activityHistory'
-        ));
+        ) + [
+            'studentFeatureState' => $this->resolveStudentFeatureState($teacher),
+        ]);
     }
 
     public function saveStudentNote(Request $request, int $studentId)
@@ -2085,7 +2136,7 @@ class TeacherDashboardController extends Controller
 
         $summary = TeacherFinanceCalculator::summarize(
             $this->paidOrderDetailsQuery($teacher)->get(),
-            fn () => (float) $teacher->commission_rate
+            fn () => $this->resolveEffectiveCommissionRate($teacher)
         );
         $requestedAmount = $this->resolveCommittedPayoutAmount($teacher);
         $availableBalance = max($summary['teacher_revenue'] - $requestedAmount, 0);
@@ -2235,7 +2286,31 @@ class TeacherDashboardController extends Controller
             return null;
         }
 
-        return $this->packageLifecycleManager->sync($teacher);
+        $teacher = $this->packageLifecycleManager->sync($teacher);
+
+        return $this->syncTeacherCommissionRate($teacher);
+    }
+
+    private function resolveEffectiveCommissionRate(Teacher $teacher): float
+    {
+        $teacher->loadMissing('application.package');
+
+        return (float) ($teacher->application?->package?->commission_rate ?? $teacher->commission_rate ?? 0);
+    }
+
+    private function syncTeacherCommissionRate(Teacher $teacher): Teacher
+    {
+        $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
+
+        if (abs((float) $teacher->commission_rate - $effectiveCommissionRate) < 0.0001) {
+            return $teacher;
+        }
+
+        $teacher->forceFill([
+            'commission_rate' => $effectiveCommissionRate,
+        ])->save();
+
+        return $teacher->fresh(['application.package']);
     }
 
     private function redirectToStatus()
@@ -2544,6 +2619,37 @@ class TeacherDashboardController extends Controller
         return $slug;
     }
 
+    private function resolveTopBundles(Teacher $teacher): Collection
+    {
+        $orders = \Modules\Orders\src\Models\Order::query()
+            ->with(['bundle'])
+            ->whereNotNull('bundle_id')
+            ->where('status_id', 2)
+            ->whereHas('bundle', function ($query) use ($teacher) {
+                $query->where('teacher_id', $teacher->id);
+            })
+            ->get();
+
+        return $orders
+            ->groupBy('bundle_id')
+            ->map(function ($bundleOrders) {
+                $firstOrder = $bundleOrders->first();
+                $bundle = $firstOrder?->bundle;
+
+                return (object) [
+                    'bundle' => $bundle,
+                    'sales_count' => $bundleOrders->count(),
+                    'gross_revenue' => (float) $bundleOrders->sum('total'),
+                    'discount_amount' => (float) $bundleOrders->sum('discount'),
+                    'net_revenue' => (float) $bundleOrders->sum(fn ($order) => max((float) $order->total - (float) ($order->discount ?? 0), 0)),
+                ];
+            })
+            ->filter(fn ($item) => $item->bundle !== null)
+            ->sortByDesc('net_revenue')
+            ->take(5)
+            ->values();
+    }
+
     private function resolveCommittedPayoutAmount(Teacher $teacher): float
     {
         return (float) TeacherPayoutRequest::query()
@@ -2632,6 +2738,52 @@ class TeacherDashboardController extends Controller
         return preg_replace('/\s+/', '', trim((string) $value));
     }
 
+    private function resolveVietnamBankOptions(): array
+    {
+        return [
+            'Vietcombank' => 'Vietcombank',
+            'VietinBank' => 'VietinBank',
+            'BIDV' => 'BIDV',
+            'Agribank' => 'Agribank',
+            'Techcombank' => 'Techcombank',
+            'MB Bank' => 'MB Bank',
+            'ACB' => 'ACB',
+            'VPBank' => 'VPBank',
+            'TPBank' => 'TPBank',
+            'Sacombank' => 'Sacombank',
+            'HDBank' => 'HDBank',
+            'SHB' => 'SHB',
+            'VIB' => 'VIB',
+            'SeABank' => 'SeABank',
+            'OCB' => 'OCB',
+            'Eximbank' => 'Eximbank',
+            'MSB' => 'MSB',
+            'Nam A Bank' => 'Nam A Bank',
+            'SCB' => 'SCB',
+            'ABBank' => 'ABBANK',
+            'PVcomBank' => 'PVcomBank',
+            'Bac A Bank' => 'Bac A Bank',
+            'LienVietPostBank' => 'LPBank',
+            'KienlongBank' => 'KienlongBank',
+            'VietBank' => 'VietBank',
+            'BaoViet Bank' => 'BaoViet Bank',
+            'NCB' => 'NCB',
+            'Saigonbank' => 'Saigonbank',
+            'DongA Bank' => 'DongA Bank',
+            'OceanBank' => 'OceanBank',
+            'CBBank' => 'CBBank',
+            'GPBank' => 'GPBank',
+            'UOB Vietnam' => 'UOB Vietnam',
+            'Standard Chartered Vietnam' => 'Standard Chartered Vietnam',
+            'HSBC Vietnam' => 'HSBC Vietnam',
+            'Shinhan Bank Vietnam' => 'Shinhan Bank Vietnam',
+            'Woori Bank Vietnam' => 'Woori Bank Vietnam',
+            'Public Bank Vietnam' => 'Public Bank Vietnam',
+            'Hong Leong Bank Vietnam' => 'Hong Leong Bank Vietnam',
+            'CIMB Bank Vietnam' => 'CIMB Bank Vietnam',
+        ];
+    }
+
     private function resolveCourseLimit(Teacher $teacher): ?int
     {
         return $teacher->application?->package?->effective_course_limit;
@@ -2640,6 +2792,36 @@ class TeacherDashboardController extends Controller
     private function resolvePayoutAccountLimit(Teacher $teacher): int
     {
         return $teacher->application?->package?->effective_payout_account_limit ?? 3;
+    }
+
+    private function resolvePayoutAccountUsage(Teacher $teacher, int $used): array
+    {
+        $limit = $this->resolvePayoutAccountLimit($teacher);
+
+        return array_merge(
+            $this->packageUsageResolver->build($used, $limit),
+            [
+                'limit_label' => $limit,
+            ]
+        );
+    }
+
+    private function resolveStudentFeatureState(Teacher $teacher): array
+    {
+        $features = [
+            'manage_students' => $teacher->packageHasFeature('can_manage_students'),
+            'grant_courses' => $teacher->packageHasFeature('can_grant_courses'),
+            'export_students' => $teacher->packageHasFeature('can_export_students'),
+            'view_progress' => $teacher->packageHasFeature('can_view_student_progress'),
+        ];
+
+        return [
+            'features' => $features,
+            'is_feature_locked' => in_array(false, $features, true),
+            'can_grant_courses' => $features['grant_courses'],
+            'can_export_students' => $features['export_students'],
+            'can_view_progress' => $features['view_progress'],
+        ];
     }
 
     private function resolveNextPackage(?TeacherPackage $currentPackage): ?TeacherPackage
@@ -2874,6 +3056,40 @@ class TeacherDashboardController extends Controller
         );
     }
 
+    private function logTeacherLessonActivity(
+        Teacher $teacher,
+        Courses $course,
+        Lesson $lesson,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $lesson,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'course_id' => $course->id,
+                'course_name' => $course->name_locale ?: $course->name,
+                'lesson_id' => $lesson->id,
+                'lesson_name' => $lesson->name_locale ?: $lesson->name,
+            ]),
+            'teacher_course_management',
+            $description
+        );
+    }
+
+    private function summarizeLessonSchedule(?Lesson $lesson): array
+    {
+        return [
+            'mode' => $lesson?->release_mode ?: LessonReleaseManager::MODE_IMMEDIATE,
+            'mode_label' => $lesson ? $lesson->releaseSummary() : 'Mở ngay',
+            'release_at' => $lesson?->release_at?->format('Y-m-d H:i:s'),
+            'release_after_days' => $lesson?->release_after_days,
+        ];
+    }
+
     private function resolveStudentManagementHistory(Teacher $teacher, Student $student): Collection
     {
         return ActiveLog::query()
@@ -3106,18 +3322,14 @@ class TeacherDashboardController extends Controller
             ->where('status', 1)
             ->count();
 
-        return [
-            'used' => $publishedCourses,
+        return array_merge(
+            $this->packageUsageResolver->build($publishedCourses, $courseLimit),
+            [
             'published' => $publishedCourses,
             'total' => $totalCourses,
-            'limit' => $courseLimit,
             'limit_label' => $courseLimit === null ? __('teacher::dashboard.courses.unlimited') : $courseLimit,
-            'remaining' => $courseLimit === null ? null : max($courseLimit - $publishedCourses, 0),
-            'can_create' => !($courseLimit !== null && $publishedCourses >= $courseLimit),
-            'can_publish_more' => $courseLimit === null || $publishedCourses < $courseLimit,
-            'is_over_limit' => $courseLimit !== null && $publishedCourses > $courseLimit,
-            'over_limit_by' => $courseLimit === null ? 0 : max($publishedCourses - $courseLimit, 0),
-        ];
+            ]
+        );
     }
 
     private function normalizeCourseStatusForPackage(Teacher $teacher, int $requestedStatus, ?Courses $course = null): int
@@ -3241,7 +3453,7 @@ class TeacherDashboardController extends Controller
             ])->all();
     }
 
-    private function buildLessonPayload(array $data, Courses $course, ?Lesson $lesson = null): array
+    private function buildLessonPayload(array $data, Courses $course, ?Lesson $lesson = null, bool $canScheduleContent = false): array
     {
         $parentId = $this->normalizeLessonParentId($course, (int) ($data['parent_id'] ?? 0), $lesson?->id);
         $videoUrl = trim((string) ($data['video'] ?? ''));
@@ -3293,7 +3505,7 @@ class TeacherDashboardController extends Controller
             $durations = 0;
         }
 
-        return [
+        return array_merge([
             'name' => $data['name'],
             'name_en' => $data['name_en'] ?? null,
             'name_ko' => $data['name_ko'] ?? null,
@@ -3317,7 +3529,7 @@ class TeacherDashboardController extends Controller
             'description_ja' => $data['description_ja'] ?? null,
             'description_zh' => $data['description_zh'] ?? null,
             'status' => (int) ($data['status'] ?? 0),
-        ];
+        ], $this->lessonReleaseManager->normalizePayload($data, $lesson, $canScheduleContent));
     }
 
     private function nextLessonPosition(Courses $course, int $parentId = 0): int
@@ -3657,7 +3869,7 @@ class TeacherDashboardController extends Controller
 
         $decoratedDetails = TeacherFinanceCalculator::decorate(
             $details,
-            fn() => (float) $teacher->commission_rate
+            fn() => $this->resolveEffectiveCommissionRate($teacher)
         );
 
         $orders = $decoratedDetails

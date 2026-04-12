@@ -82,6 +82,7 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
     {
         return DB::transaction(function () use ($orderData, $detailData) {
             $orderData = $this->enrichCustomerSnapshot($orderData);
+            $detailPrice = $this->normalizeMoneyAmount($detailData['price'] ?? 0);
 
             $orderData['total'] = 0;
             $order = Order::create($orderData);
@@ -89,10 +90,10 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
             $detail = OrderDetail::create([
                 'order_id'  => $order->id,
                 'course_id' => $detailData['course_id'],
-                'price'     => $detailData['price'],
+                'price'     => $detailPrice,
             ]);
 
-            $total = $detail->price;
+            $total = $this->normalizeMoneyAmount($detail->price);
 
             $order->update([
                 'total' => $total
@@ -112,17 +113,19 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
             $total = 0;
 
             foreach ($detailRows as $detailRow) {
+                $detailPrice = $this->normalizeMoneyAmount($detailRow['price'] ?? 0);
+
                 $detail = OrderDetail::create([
                     'order_id' => $order->id,
                     'course_id' => $detailRow['course_id'],
-                    'price' => $detailRow['price'],
+                    'price' => $detailPrice,
                 ]);
 
-                $total += (float) $detail->price;
+                $total += $this->normalizeMoneyAmount($detail->price);
             }
 
             $order->update([
-                'total' => $total,
+                'total' => $this->normalizeMoneyAmount($total),
             ]);
 
             return $order;
@@ -242,5 +245,10 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
             && Schema::hasColumn('orders', 'customer_email_snapshot')
             && Schema::hasColumn('orders', 'customer_phone_snapshot')
             && Schema::hasColumn('orders', 'customer_address_snapshot');
+    }
+
+    protected function normalizeMoneyAmount($amount): float
+    {
+        return round(max((float) $amount, 0), 2);
     }
 }

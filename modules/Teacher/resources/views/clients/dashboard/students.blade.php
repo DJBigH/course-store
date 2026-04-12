@@ -55,12 +55,12 @@
 
                 <div class="teacher-students-search__actions">
                     <button type="submit" class="btn btn-primary">Loc danh sach</button>
-                    @if ($teacher->packageHasFeature('can_grant_courses'))
+                    @if ($studentFeatureState['can_grant_courses'])
                         <a href="{{ route('teacher.dashboard.students.grants.create') }}" class="btn btn-outline-secondary">
                             Cap quyen hoc
                         </a>
                     @endif
-                    @if ($teacher->packageHasFeature('can_export_students'))
+                    @if ($studentFeatureState['can_export_students'])
                         <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'excel'], request()->query())) }}"
                             class="btn btn-outline-secondary">
                             Export Excel
@@ -74,32 +74,16 @@
             </form>
         </div>
 
-        @if (
-            !$teacher->packageHasFeature('can_grant_courses')
-            || !$teacher->packageHasFeature('can_export_students')
-            || !$teacher->packageHasFeature('can_view_student_progress')
-        )
-            <div class="alert alert-warning border-0 mb-4">
-                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
-                    <div>
-                        <strong>{{ __('teacher::dashboard.package_features.upsell_title') }}</strong>
-                        <div class="mt-1 text-muted">
-                            @if (!$teacher->packageHasFeature('can_view_student_progress'))
-                                {{ __('teacher::dashboard.package_features.students_locked_progress') }}
-                            @elseif (!$teacher->packageHasFeature('can_grant_courses') && !$teacher->packageHasFeature('can_export_students'))
-                                {{ __('teacher::dashboard.package_features.students_locked_both') }}
-                            @elseif (!$teacher->packageHasFeature('can_grant_courses'))
-                                {{ __('teacher::dashboard.package_features.students_locked_grants') }}
-                            @else
-                                {{ __('teacher::dashboard.package_features.students_locked_export') }}
-                            @endif
-                        </div>
-                    </div>
-                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
-                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
-                    </a>
-                </div>
-            </div>
+        @if ($studentFeatureState['is_feature_locked'])
+            @include('teacher::clients.dashboard.partials.package_feature_notice', [
+                'message' => !$studentFeatureState['can_view_progress']
+                    ? __('teacher::dashboard.package_features.students_locked_progress')
+                    : (!$studentFeatureState['can_grant_courses'] && !$studentFeatureState['can_export_students']
+                        ? __('teacher::dashboard.package_features.students_locked_both')
+                        : (!$studentFeatureState['can_grant_courses']
+                            ? __('teacher::dashboard.package_features.students_locked_grants')
+                            : __('teacher::dashboard.package_features.students_locked_export'))),
+            ])
         @endif
 
         <div class="teacher-students-summary">
@@ -170,7 +154,7 @@
                                 <span>Hoc gan nhat</span>
                                 <strong>{{ optional($student->teacher_last_learning_at)->format('d/m/Y H:i') ?: 'Chua hoc bai nao' }}</strong>
                             </div>
-                            @if ($teacher->packageHasFeature('can_view_student_progress'))
+                            @if ($studentFeatureState['can_view_progress'])
                                 <div class="teacher-student-card__info">
                                     <span>Tien do hoc tong quan</span>
                                     <strong>{{ $student->teacher_progress_percent ?? 0 }}%</strong>
@@ -208,7 +192,7 @@
                             </div>
                         </div>
 
-                        @if ($teacher->packageHasFeature('can_view_student_progress'))
+                        @if ($studentFeatureState['can_view_progress'])
                             <div class="teacher-student-card__progress">
                                 <div class="teacher-student-card__progress-head">
                                     <span>Muc do hoan thanh khoa hoc da co quyen</span>
@@ -258,7 +242,7 @@
                                 <a href="{{ route('teacher.dashboard.students.show', $student->id) }}" class="btn btn-primary btn-sm">
                                     Xem chi tiet
                                 </a>
-                                @if ($teacher->packageHasFeature('can_grant_courses'))
+                                @if ($studentFeatureState['can_grant_courses'])
                                     <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary btn-sm">
                                         Cap quyen hoc
                                     </a>

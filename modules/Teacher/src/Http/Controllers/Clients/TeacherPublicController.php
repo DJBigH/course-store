@@ -8,12 +8,27 @@ use Illuminate\Support\Facades\Auth;
 use Modules\Courses\src\Models\Courses;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherRating;
+use Modules\Teacher\src\Support\TeacherAffiliateLinkManager;
 
 class TeacherPublicController extends Controller
 {
+    public function __construct(
+        protected TeacherAffiliateLinkManager $affiliateLinkManager,
+    ) {}
+
     public function show($locale, string $slug)
     {
         $teacher = $this->findTeacher($slug);
+        if ($expiredResponse = $this->affiliateLinkManager->ensurePublicAccessAllowed(request(), $teacher, 'landing', null)) {
+            return $expiredResponse;
+        }
+        $this->affiliateLinkManager->captureClick(
+            request(),
+            $teacher,
+            'landing',
+            null,
+            route('teacher.public.show', ['locale' => $locale, 'slug' => $slug])
+        );
         $student = Auth::guard('students')->user();
         $canRateTeacher = $student ? $this->studentCanRateTeacher($student->id, $teacher->id) : false;
 

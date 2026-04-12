@@ -34,6 +34,21 @@
                             <span>{{ __('teacher::dashboard.bundles.labels.course_count', ['count' => $courses->count()]) }}</span>
                         </div>
 
+                        @auth('students')
+                            @if ($hasOwnedCourses)
+                                <div class="alert alert-info border-0 bundle-detail-adjusted-alert">
+                                    @if ($allCoursesOwned)
+                                        {{ __('teacher::dashboard.bundles.flash.all_courses_owned') }}
+                                    @else
+                                        {{ __('teacher::dashboard.bundles.public.adjusted_notice', [
+                                            'owned' => $ownedCourseIds->count(),
+                                            'remaining' => $remainingCourses->count(),
+                                        ]) }}
+                                    @endif
+                                </div>
+                            @endif
+                        @endauth
+
                         <div class="bundle-detail-course-list">
                             @foreach ($courses as $course)
                                 @php
@@ -73,23 +88,37 @@
                                 <small>{{ __('teacher::dashboard.bundles.public.bundle_price') }}</small>
                                 <strong>{{ moneyLocale($bundle->price) }}</strong>
                             </div>
+                            @auth('students')
+                                <div>
+                                    <small>{{ __('teacher::dashboard.bundles.public.current_price') }}</small>
+                                    <strong class="bundle-detail-current-price">{{ moneyLocale($payableAmount) }}</strong>
+                                </div>
+                            @endauth
                             <div class="bundle-detail-saved">
                                 <small>{{ __('teacher::dashboard.bundles.public.separate_total') }}</small>
                                 <span>{{ moneyLocale($sourceTotal) }}</span>
                             </div>
+                            @auth('students')
+                                @if ($hasOwnedCourses && !$allCoursesOwned)
+                                    <div class="bundle-detail-saved">
+                                        <small>{{ __('teacher::dashboard.bundles.public.owned_value') }}</small>
+                                        <span>{{ moneyLocale($ownedValue) }}</span>
+                                    </div>
+                                @endif
+                            @endauth
                         </div>
 
                         @auth('students')
-                            @if ($hasOwnedCourses)
+                            @if ($allCoursesOwned)
                                 <div class="alert alert-warning border-0 mb-3">
-                                    {{ __('teacher::dashboard.bundles.flash.purchase_blocked_owned') }}
+                                    {{ __('teacher::dashboard.bundles.flash.all_courses_owned') }}
                                 </div>
                             @else
                                 <form action="{{ route('courses.bundle.create', ['locale' => app()->getLocale()]) }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="bundle_id" value="{{ $bundle->id }}">
                                     <button class="btn btn-primary w-100 bundle-detail-buy-btn">
-                                        {{ __('teacher::dashboard.bundles.public.buy_now') }}
+                                        {{ $hasOwnedCourses ? __('teacher::dashboard.bundles.public.buy_remaining') : __('teacher::dashboard.bundles.public.buy_now') }}
                                     </button>
                                 </form>
                             @endif
@@ -116,6 +145,7 @@
         .bundle-detail-description, .bundle-detail-teacher, .bundle-detail-course-meta { color: #475569; line-height: 1.75; }
         .bundle-detail-section-head { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1rem; }
         .bundle-detail-section-head h3 { margin: 0; color: #0f172a; font-weight: 800; }
+        .bundle-detail-adjusted-alert { line-height: 1.7; }
         .bundle-detail-course-list { display: grid; gap: 1rem; }
         .bundle-detail-course-item { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; border-radius: 18px; border: 1px solid #e2e8f0; background: #f8fafc; }
         .bundle-detail-course-thumb { width: 120px; height: 78px; object-fit: cover; border-radius: 16px; flex-shrink: 0; }
@@ -130,6 +160,7 @@
         .bundle-detail-pricing { display: grid; gap: 0.85rem; margin-bottom: 1rem; }
         .bundle-detail-pricing small, .bundle-detail-saved small { display: block; color: #64748b; }
         .bundle-detail-pricing strong { font-size: 2rem; color: #0f172a; line-height: 1; }
+        .bundle-detail-current-price { color: #0f766e !important; }
         .bundle-detail-saved span { font-weight: 700; color: #1d4ed8; }
         .bundle-detail-buy-btn { min-height: 52px; font-weight: 700; }
         @media (max-width: 991.98px) {

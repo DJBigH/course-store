@@ -7,9 +7,27 @@ use Illuminate\Validation\Rule;
 
 class TeacherCourseRequest extends FormRequest
 {
+    protected const MAX_COURSE_PRICE = 99999999;
+
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $normalizeInteger = static function ($value) {
+            if ($value === null || $value === '') {
+                return 0;
+            }
+
+            return (int) preg_replace('/[^\d]/', '', (string) $value);
+        };
+
+        $this->merge([
+            'price' => $normalizeInteger($this->input('price')),
+            'sale_price' => $normalizeInteger($this->input('sale_price')),
+        ]);
     }
 
     public function rules(): array
@@ -34,13 +52,22 @@ class TeacherCourseRequest extends FormRequest
             'supports_zh' => ['nullable', 'string'],
             'thumbnail' => ['required', 'string', 'max:225'],
             'code' => ['nullable', 'string', 'max:225', Rule::unique('courses', 'code')->ignore($courseId)],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'sale_price' => ['nullable', 'numeric', 'min:0'],
+            'price' => ['required', 'integer', 'min:0', 'max:' . self::MAX_COURSE_PRICE],
+            'sale_price' => ['nullable', 'integer', 'min:0', 'max:' . self::MAX_COURSE_PRICE, 'lte:price'],
             'status' => ['required', 'integer', 'in:0,1'],
             'is_document' => ['required', 'integer', 'in:0,1'],
             'is_learning_locked' => ['required', 'integer', 'in:0,1'],
             'categories' => ['required', 'array', 'min:1'],
             'categories.*' => ['integer', 'distinct', 'exists:categories,id'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'price.max' => 'Gia khoa hoc khong duoc vuot qua 99,999,999d.',
+            'sale_price.max' => 'Gia khuyen mai khong duoc vuot qua 99,999,999d.',
+            'sale_price.lte' => 'Gia khuyen mai phai nho hon hoac bang gia goc.',
         ];
     }
 }

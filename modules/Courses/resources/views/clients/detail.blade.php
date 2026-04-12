@@ -59,7 +59,7 @@
                         <div class="course-video instructor-box mb-4" id="author">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0 instructor-avatar">
-                                    <img src="{{ $course->teacher->image }}" alt="{{ $course->teacher->name_locale }}"
+                                    <img src="{{ teacherAvatarUrl($course->teacher) }}" alt="{{ $course->teacher->name_locale }}"
                                         class="rounded-circle">
                                 </div>
 

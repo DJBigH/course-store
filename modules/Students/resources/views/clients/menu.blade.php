@@ -41,6 +41,14 @@
         </a>
     </li>
     <li class="nav-item">
+        <a href="{{ route('students.account.certificates.index', ['locale' => app()->getLocale()]) }}"
+            class="nav-link {{ request()->routeIs('students.account.certificates.*') ? 'active' : '' }}"
+            data-account-nav>
+            <i class="fa-solid fa-award"></i>
+            Chung chi cua toi
+        </a>
+    </li>
+    <li class="nav-item">
         <a href="{{ route('students.account.my-coupon', ['locale' => app()->getLocale()]) }}"
             class="nav-link {{ activeMenu('students.account.my-coupon') ? 'active' : '' }}"
             data-account-nav>

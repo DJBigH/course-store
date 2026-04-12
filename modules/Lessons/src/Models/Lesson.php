@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
 use Modules\Document\src\Models\Document;
+use Modules\Lessons\src\Support\LessonReleaseManager;
 use Modules\Video\src\Models\Video;
 
 class Lesson extends Model
@@ -41,12 +43,17 @@ class Lesson extends Model
         'description_ja',
         'description_zh',
         'status',
+        'release_mode',
+        'release_at',
+        'release_after_days',
     ];
 
     protected $with = ['video', 'document'];
 
     protected $casts = [
         'deleted_at' => 'datetime',
+        'release_at' => 'datetime',
+        'release_after_days' => 'integer',
     ];
 
     public function children()
@@ -166,5 +173,20 @@ class Lesson extends Model
         $externalDuration = externalVideoDuration($videoUrl);
 
         return $externalDuration > 0 ? $externalDuration : $duration;
+    }
+
+    public function resolveReleaseAt(?Carbon $enrolledAt = null, bool $hasCourse = false): ?Carbon
+    {
+        return app(LessonReleaseManager::class)->resolveAvailableAt($this, $enrolledAt, $hasCourse);
+    }
+
+    public function isReleasedForStudent(bool $hasCourse = false, ?Carbon $enrolledAt = null, array $context = []): bool
+    {
+        return app(LessonReleaseManager::class)->isAvailableForStudent($this, $hasCourse, $enrolledAt, $context);
+    }
+
+    public function releaseSummary(): string
+    {
+        return app(LessonReleaseManager::class)->describeForTeacher($this);
     }
 }

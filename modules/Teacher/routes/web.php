@@ -7,8 +7,10 @@ use Modules\Teacher\src\Http\Controllers\Admin\TeacherAnnouncementController as 
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherFinanceController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherPackageController as AdminTeacherPackageController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherApplicationController as ClientTeacherApplicationController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherAffiliateLinkController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherAuthController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherCouponController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherCertificateController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherDashboardController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherLandingController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherPublicController;
@@ -129,6 +131,12 @@ Route::group([
    Route::get('/thong-bao/announcement/{announcement}/doc', [TeacherDashboardController::class, 'readAnnouncement'])->name('notifications.announcements.read');
    Route::get('/khuyen-mai', [TeacherDashboardController::class, 'promotions'])->name('promotions');
    Route::post('/khuyen-mai', [TeacherDashboardController::class, 'storePromotion'])->name('promotions.store');
+   Route::get('/link-gioi-thieu', [TeacherAffiliateLinkController::class, 'index'])->name('affiliate-links.index');
+   Route::get('/link-gioi-thieu/tao-moi', [TeacherAffiliateLinkController::class, 'create'])->name('affiliate-links.create');
+   Route::post('/link-gioi-thieu/tao-moi', [TeacherAffiliateLinkController::class, 'store'])->name('affiliate-links.store');
+   Route::get('/link-gioi-thieu/{id}/chinh-sua', [TeacherAffiliateLinkController::class, 'edit'])->name('affiliate-links.edit');
+   Route::post('/link-gioi-thieu/{id}/chinh-sua', [TeacherAffiliateLinkController::class, 'update'])->name('affiliate-links.update');
+   Route::delete('/link-gioi-thieu/{id}', [TeacherAffiliateLinkController::class, 'delete'])->name('affiliate-links.delete');
    Route::get('/combo-khoa-hoc', [TeacherDashboardController::class, 'bundles'])->name('bundles');
    Route::get('/combo-khoa-hoc/tao-moi', [TeacherDashboardController::class, 'createBundle'])->name('bundles.create');
    Route::post('/combo-khoa-hoc/tao-moi', [TeacherDashboardController::class, 'storeBundle'])->name('bundles.store');
@@ -151,6 +159,10 @@ Route::group([
    Route::post('/binh-luan/{comment}/reply', [TeacherDashboardController::class, 'replyComment'])->name('comments.reply');
    Route::post('/binh-luan/{comment}/toggle', [TeacherDashboardController::class, 'toggleCommentVisibility'])->name('comments.toggle');
    Route::get('/hoc-vien', [TeacherDashboardController::class, 'students'])->name('students');
+   Route::get('/chung-chi', [TeacherCertificateController::class, 'index'])->name('certificates.index');
+   Route::post('/chung-chi/cap', [TeacherCertificateController::class, 'issue'])->name('certificates.issue');
+   Route::get('/chung-chi/{id}', [TeacherCertificateController::class, 'show'])->name('certificates.show');
+   Route::post('/chung-chi/{id}/thu-hoi', [TeacherCertificateController::class, 'revoke'])->name('certificates.revoke');
    Route::get('/nhat-ky-hoat-dong', [TeacherDashboardController::class, 'activityLogs'])->name('activity-logs');
    Route::get('/don-hang', [TeacherDashboardController::class, 'orders'])->name('orders');
    Route::get('/don-hang/export/{format}', [TeacherDashboardController::class, 'exportOrders'])->name('orders.export');

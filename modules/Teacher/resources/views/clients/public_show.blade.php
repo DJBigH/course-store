@@ -9,7 +9,7 @@
                 <div class="teacher-public-hero">
                     <div class="teacher-public-hero__main">
                         <div class="teacher-public-hero__avatar">
-                            <img src="{{ $teacher->image }}" alt="{{ $teacher->name_locale }}">
+                            <img src="{{ teacherAvatarUrl($teacher) }}" alt="{{ $teacher->name_locale }}">
                         </div>
                         <div>
                             <span class="teacher-public-hero__eyebrow">{{ __('teacher::public.hero_eyebrow') }}</span>

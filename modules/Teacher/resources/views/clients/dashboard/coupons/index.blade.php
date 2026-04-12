@@ -13,7 +13,7 @@
                     <a href="{{ route('teacher.dashboard.coupons.create') }}" class="btn btn-primary">
                         {{ __('teacher::coupons.actions.create') }}
                     </a>
-                @else
+                @elseif ($couponUsage['has_limit'] ?? false)
                     <div class="teacher-disabled-action-wrap">
                         <span class="teacher-disabled-action" title="{{ __('teacher::coupons.flash.limit_reached', ['limit' => $couponLimit]) }}">
                             <button type="button" class="btn btn-primary" disabled>
@@ -28,40 +28,28 @@
             </div>
         </div>
 
-        <div class="alert alert-info border-0 mb-4">
-            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center">
-                <div>
-                    <strong>{{ __('teacher::coupons.limit.title') }}</strong>
-                    <div class="mt-1 text-muted">
-                        {{ __('teacher::coupons.limit.description', [
-                            'count' => $couponCount,
-                            'limit' => $couponLimit ?? __('teacher::coupons.labels.unlimited'),
-                        ]) }}
-                    </div>
-                    <div class="mt-1 text-muted">
-                        {{ __('teacher::coupons.limit.active_description', [
-                            'count' => $activeCouponCount,
-                            'locked' => $lockedCouponCount,
-                            'limit' => $couponLimit ?? __('teacher::coupons.labels.unlimited'),
-                        ]) }}
-                    </div>
-                    @if (!$canManageCoupons)
-                        <div class="mt-2 text-warning">
-                            {{ __('teacher::coupons.limit.feature_locked_notice') }}
-                        </div>
-                    @elseif ($lockedCouponCount > 0)
-                        <div class="mt-2 text-warning">
-                            {{ __('teacher::coupons.limit.locked_notice', ['count' => $lockedCouponCount]) }}
-                        </div>
-                    @endif
-                </div>
-                @if (!$canManageCoupons || ($couponLimit !== null && $lockedCouponCount > 0))
-                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-warning">
-                        {{ __('teacher::dashboard.package_features.upgrade_cta') }}
-                    </a>
-                @endif
-            </div>
-        </div>
+        @if (!$canManageCoupons || ($couponUsage['has_limit'] ?? false))
+            @include('teacher::clients.dashboard.partials.package_usage_banner', [
+                'variant' => 'info',
+                'title' => __('teacher::coupons.limit.title'),
+                'lines' => [
+                    __('teacher::coupons.limit.description', [
+                        'count' => $couponCount,
+                        'limit' => $couponLimit ?? __('teacher::coupons.labels.unlimited'),
+                    ]),
+                    __('teacher::coupons.limit.active_description', [
+                        'count' => $activeCouponCount,
+                        'locked' => $lockedCouponCount,
+                        'limit' => $couponLimit ?? __('teacher::coupons.labels.unlimited'),
+                    ]),
+                    !$canManageCoupons
+                        ? __('teacher::coupons.limit.feature_locked_notice')
+                        : ($lockedCouponCount > 0 ? __('teacher::coupons.limit.locked_notice', ['count' => $lockedCouponCount]) : null),
+                ],
+                'showUpgrade' => !$canManageCoupons || $lockedCouponCount > 0,
+                'upgradeUrl' => route('teacher.dashboard.package.upgrade'),
+            ])
+        @endif
 
         <div class="row g-3">
             @forelse ($coupons as $coupon)
@@ -82,7 +70,7 @@
                                         {{ __('teacher::coupons.labels.limited_actions_only') }}
                                     </div>
                                 @endif
-                                @if ($coupon->is_package_priority)
+                                @if (($couponUsage['has_limit'] ?? false) && $coupon->is_package_priority)
                                     <div class="teacher-coupon-card__priority">
                                         {{ __('teacher::coupons.labels.priority_active') }}
                                     </div>
@@ -182,7 +170,7 @@
                         @endif
 
                         <div class="teacher-coupon-card__actions">
-                            @if ($canManageCoupons)
+                            @if ($canManageCoupons && ($couponUsage['has_limit'] ?? false))
                                 <form action="{{ route('teacher.dashboard.coupons.priority', $coupon->id) }}" method="POST" class="d-inline-block">
                                     @csrf
                                     <button type="submit" class="btn btn-outline-warning btn-sm">
@@ -191,10 +179,10 @@
                                 </form>
                             @endif
                             @if ($canManageCoupons && !$isLockedCoupon)
-                                <a href="{{ route('teacher.dashboard.coupons.edit', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">
+                                <a href="{{ route('teacher.dashboard.coupons.edit', $coupon->id) }}" class="btn btn-outline-warning btn-sm">
                                     {{ __('teacher::coupons.actions.edit') }}
                                 </a>
-                                <a href="{{ route('teacher.dashboard.coupons.courses', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">
+                                <a href="{{ route('teacher.dashboard.coupons.courses', $coupon->id) }}" class="btn btn-outline-primary btn-sm">
                                     {{ __('teacher::coupons.actions.assign_courses') }}
                                 </a>
                                 <a href="{{ route('teacher.dashboard.coupons.students', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">

@@ -123,6 +123,9 @@
                             <button type="button" class="btn btn-outline-secondary btn-sm" data-assign-toggle="courses">
                                 {{ __('teacher::coupons.assign_block.courses') }}
                             </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-assign-toggle="bundles">
+                                {{ __('teacher::coupons.assign_block.bundles') }}
+                            </button>
                         </div>
                         <div class="row g-3">
                             <div class="col-lg-6" data-assign-panel="students">
@@ -150,6 +153,20 @@
                                         </label>
                                     @empty
                                         <div class="text-muted small">{{ __('teacher::coupons.assign_courses_empty') }}</div>
+                                    @endforelse
+                                </div>
+                            </div>
+                            <div class="col-lg-6" data-assign-panel="bundles">
+                                <div class="teacher-coupon-assign__list">
+                                    <div class="teacher-coupon-assign__label">{{ __('teacher::coupons.assign_block.bundles') }}</div>
+                                    @forelse ($bundles as $bundle)
+                                        <label class="teacher-coupon-assign__item">
+                                            <input type="checkbox" name="bundles[]"
+                                                value="{{ $bundle->id }}" @checked(in_array($bundle->id, old('bundles', $assignedBundleIds ?? []), true))>
+                                            <span>{{ $bundle->name }}</span>
+                                        </label>
+                                    @empty
+                                        <div class="text-muted small">{{ __('teacher::coupons.assign_bundles_empty') }}</div>
                                     @endforelse
                                 </div>
                             </div>
@@ -459,9 +476,11 @@
             const initVisibility = () => {
                 const showStudents = hasSelection('students');
                 const showCourses = hasSelection('courses');
+                const showBundles = hasSelection('bundles');
 
                 setPanelVisible('students', showStudents);
                 setPanelVisible('courses', showCourses);
+                setPanelVisible('bundles', showBundles);
             };
 
             initVisibility();

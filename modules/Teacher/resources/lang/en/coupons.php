@@ -11,16 +11,18 @@ return [
     'assign_courses_title' => 'Assign to courses',
     'assign_students_desc' => 'Pick students who will receive coupon :code.',
     'assign_courses_desc' => 'Pick courses that will accept coupon :code.',
+    'assign_bundles_empty' => 'No bundles available for your channel yet.',
     'assign_students_empty' => 'No students available for your channel yet.',
     'assign_courses_empty' => 'No courses available for your channel yet.',
     'validation' => [
-        'assign_required' => 'Please assign this coupon to at least one student or one course.',
+        'assign_required' => 'Please assign this coupon to at least one student, course, or bundle.',
     ],
     'assign_block' => [
         'title' => 'Assign required',
-        'description' => 'You must assign this coupon to at least one student or one course before saving.',
+        'description' => 'You must assign this coupon to at least one student, course, or bundle before saving.',
         'students' => 'Assign students',
         'courses' => 'Assign courses',
+        'bundles' => 'Assign bundles',
     ],
     'hero' => [
         'kicker' => 'Promotions',

@@ -59,7 +59,7 @@ return [
             'intro_video_url' => '紹介動画 URL',
             'facebook_url' => 'Facebook URL',
             'youtube_url' => 'YouTube URL',
-            'linkedin_url' => 'LinkedIn URL',
+            'linkedin_url' => 'LinkedIn',
             'cv_file' => 'CV リンク',
             'identity_file' => '本人確認書類リンク',
             'coupon_code' => 'クーポンコード',

@@ -29,6 +29,9 @@
                 'note_saved' => 'Cap nhat ghi chu hoc vien',
                 'grant_created' => 'Cap quyen hoc thu cong',
                 'grant_revoked' => 'Thu hoi quyen hoc',
+                'certificate_issued' => 'Cap chung chi',
+                'certificate_reissued' => 'Cap lai chung chi',
+                'certificate_revoked' => 'Thu hoi chung chi',
                 'course_created' => 'Tao khoa hoc',
                 'course_updated' => 'Cap nhat khoa hoc',
                 'course_duplicated' => 'Nhan ban khoa hoc',
@@ -72,6 +75,9 @@
             if (!empty($properties['reason_label'])) {
                 $meta[] = $properties['reason_label'];
             }
+            if (!empty($properties['certificate_code'])) {
+                $meta[] = 'Ma chung chi: ' . $properties['certificate_code'];
+            }
             if (!empty($properties['tag_label'])) {
                 $meta[] = 'Tag: ' . $properties['tag_label'];
             }
@@ -83,6 +89,13 @@
             }
             if (isset($properties['course_count'])) {
                 $meta[] = 'Khoa hoc ap dung: ' . (int) $properties['course_count'];
+            }
+            if (!empty($properties['issue_source'])) {
+                $meta[] = 'Nguon: ' . match ($properties['issue_source']) {
+                    'manual' => 'Thu cong',
+                    'auto_completion' => 'Tu dong khi dat 100%',
+                    default => $properties['issue_source'],
+                };
             }
 
             return $meta;
@@ -200,8 +213,11 @@
                                 </div>
                             @endif
 
-                            @if (!empty($properties['note']) && in_array($activity->action, ['grant_created', 'note_saved'], true))
+                            @if (!empty($properties['note']) && in_array($activity->action, ['grant_created', 'note_saved', 'certificate_issued', 'certificate_reissued'], true))
                                 <div class="teacher-activity-item__note">{{ $properties['note'] }}</div>
+                            @endif
+                            @if (!empty($properties['revoke_reason']) && $activity->action === 'certificate_revoked')
+                                <div class="teacher-activity-item__note">{{ $properties['revoke_reason'] }}</div>
                             @endif
                         </div>
                     </article>
