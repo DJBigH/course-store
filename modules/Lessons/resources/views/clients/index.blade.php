@@ -13,30 +13,42 @@
             <div class="row">
                 <div class="col-12 col-lg-8">
                     <div class="video-detail">
-                        @php
-                            $videoUrl = trim((string) ($lesson->video?->url ?? ''));
-                            $videoMeta = videoPlaybackMeta($videoUrl);
-                        @endphp
-
-                        @if ($videoMeta['type'] === 'embed' && !empty($videoMeta['url']))
-                            <div class="ratio ratio-16x9">
-                                <iframe src="{{ $videoMeta['url'] }}" title="Lesson video"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen></iframe>
+                        @if ($lessonScheduleLocked ?? false)
+                            <div class="lesson-release-alert">
+                                <div class="lesson-release-alert__icon">
+                                    <i class="fa-regular fa-clock"></i>
+                                </div>
+                                <div>
+                                    <strong class="d-block mb-2">Bài học chưa tới lịch mở</strong>
+                                    <p class="mb-0">{{ $lessonScheduleMessage }}</p>
+                                </div>
                             </div>
-                        @elseif ($videoMeta['type'] === 'file' && !empty($videoMeta['url']))
-                            <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
-                                <source src="{{ $videoMeta['url'] }}" type="video/mp4" />
-                                <p class="vjs-no-js">{{ __('lessons::clients/common.help') }}</p>
-                            </video>
                         @else
-                            <div class="alert alert-warning">{{ __('lessons::clients/common.no_video') }}</div>
+                            @php
+                                $videoUrl = trim((string) ($lesson->video?->url ?? ''));
+                                $videoMeta = videoPlaybackMeta($videoUrl);
+                            @endphp
+
+                            @if ($videoMeta['type'] === 'embed' && !empty($videoMeta['url']))
+                                <div class="ratio ratio-16x9">
+                                    <iframe src="{{ $videoMeta['url'] }}" title="Lesson video"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowfullscreen></iframe>
+                                </div>
+                            @elseif ($videoMeta['type'] === 'file' && !empty($videoMeta['url']))
+                                <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
+                                    <source src="{{ $videoMeta['url'] }}" type="video/mp4" />
+                                    <p class="vjs-no-js">{{ __('lessons::clients/common.help') }}</p>
+                                </video>
+                            @else
+                                <div class="alert alert-warning">{{ __('lessons::clients/common.no_video') }}</div>
+                            @endif
                         @endif
                     </div>
 
                     <div class="lesson-nav d-flex justify-content-between mt-4">
                         <div>
-                            @if ($prevLesson && ($hasCourse || (int) $prevLesson->is_trial === 1))
+                            @if ($prevLesson && ($lessonAvailabilityMap[$prevLesson->id]['can_open'] ?? ($hasCourse || (int) $prevLesson->is_trial === 1)))
                                 <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $prevLesson->slug_locale]) }}"
                                     class="btn-lesson btn-prev">
                                     <i class="fa-solid fa-arrow-left"></i>
@@ -46,7 +58,7 @@
                         </div>
 
                         <div>
-                            @if ($nextLesson && ($hasCourse || (int) $nextLesson->is_trial === 1))
+                            @if ($nextLesson && ($lessonAvailabilityMap[$nextLesson->id]['can_open'] ?? ($hasCourse || (int) $nextLesson->is_trial === 1)))
                                 <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $nextLesson->slug_locale]) }}"
                                     class="btn-lesson btn-next">
                                     <span>{{ __('lessons::clients/common.next') }}</span>
@@ -74,6 +86,20 @@
                                     'total' => $courseProgress['total_lessons'],
                                 ]) }}
                             </div>
+                        </div>
+
+                        <div class="lesson-certificate-card mb-3 {{ $studentCertificate ? '' : 'd-none' }}" data-certificate-card>
+                            <div class="lesson-certificate-card__head">
+                                <strong>Chung chi hoan thanh</strong>
+                                <span class="lesson-certificate-card__badge">Da cap</span>
+                            </div>
+                            <p class="mb-3">Khoa hoc nay da co chung chi. Ban co the mo ngay de xem va luu PDF.</p>
+                            <a href="{{ $studentCertificate ? route('students.account.certificates.show', ['locale' => app()->getLocale(), 'id' => $studentCertificate->id]) : '#' }}"
+                                class="btn btn-primary w-100"
+                                data-certificate-link
+                                @if (!$studentCertificate) aria-hidden="true" tabindex="-1" @endif>
+                                Xem chung chi
+                            </a>
                         </div>
                     @endif
                     <div class="nav flex">
@@ -103,6 +129,8 @@
         const progressPercentEl = document.querySelector('[data-progress-percent]');
         const progressBarEl = document.querySelector('[data-progress-bar]');
         const progressMetaEl = document.querySelector('[data-progress-meta]');
+        const certificateCardEl = document.querySelector('[data-certificate-card]');
+        const certificateLinkEl = document.querySelector('[data-certificate-link]');
         const lessonToggleFallbackError = @json(__('lessons::clients/common.completion_error'));
         const lockedLessonList = document.querySelectorAll('.js-locked-lesson');
         const lessonPurchaseRequiredMessage = @json(__('courses::clients/common.lesson_purchase_required'));
@@ -175,6 +203,13 @@
                             .replace('__completed__', payload.course_progress.completed_lessons)
                             .replace('__total__', payload.course_progress.total_lessons);
                     }
+
+                    if (payload.certificate && certificateCardEl && certificateLinkEl) {
+                        certificateCardEl.classList.remove('d-none');
+                        certificateLinkEl.href = payload.certificate.url;
+                        certificateLinkEl.removeAttribute('aria-hidden');
+                        certificateLinkEl.removeAttribute('tabindex');
+                    }
                 } catch (error) {
                     setLessonToggleError(error.message || lessonToggleFallbackError);
                 } finally {
@@ -219,6 +254,57 @@
             border-radius: 18px;
             border: 1px solid #dbeafe;
             background: linear-gradient(135deg, #eff6ff, #f8fbff);
+        }
+
+        .lesson-release-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 22px;
+            border-radius: 18px;
+            border: 1px solid rgba(245, 158, 11, 0.24);
+            background: linear-gradient(135deg, rgba(255, 251, 235, 0.96), rgba(254, 243, 199, 0.92));
+            color: #92400e;
+            min-height: 220px;
+        }
+
+        .lesson-release-alert__icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(245, 158, 11, 0.14);
+            color: #d97706;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .lesson-certificate-card {
+            padding: 18px 20px;
+            border-radius: 18px;
+            border: 1px solid rgba(37, 99, 235, 0.16);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(14, 165, 233, 0.06));
+        }
+
+        .lesson-certificate-card__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .lesson-certificate-card__badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(22, 163, 74, 0.12);
+            color: #15803d;
+            font-size: 12px;
+            font-weight: 800;
         }
 
         .lesson-progress-card__head {
@@ -379,6 +465,14 @@
             justify-self: stretch;
         }
 
+        .lesson-availability-note {
+            display: block;
+            margin-top: 2px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #b45309;
+        }
+
         .lesson-title {
             display: block;
             min-width: 0;
@@ -430,6 +524,22 @@
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94));
         }
 
+        html[data-theme="dark"] .lesson-release-alert {
+            border-color: rgba(245, 158, 11, 0.22);
+            background: linear-gradient(135deg, rgba(69, 26, 3, 0.4), rgba(120, 53, 15, 0.28));
+            color: #fde68a;
+        }
+
+        html[data-theme="dark"] .lesson-release-alert__icon {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fbbf24;
+        }
+
+        html[data-theme="dark"] .lesson-certificate-card {
+            border-color: rgba(59, 130, 246, 0.22);
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.94));
+        }
+
         html[data-theme="dark"] .lesson-progress-card__head {
             color: #dbeafe;
         }
@@ -448,6 +558,10 @@
 
         html[data-theme="dark"] .lesson-title {
             color: #e2e8f0;
+        }
+
+        html[data-theme="dark"] .lesson-availability-note {
+            color: #fbbf24;
         }
 
         html[data-theme="dark"] .lesson-time {

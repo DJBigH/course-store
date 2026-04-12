@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\Student;
+use Modules\Teacher\src\Models\TeacherAffiliateLink;
+use Modules\Teacher\src\Models\TeacherCourseBundle;
 
 class Order extends Model
 {
@@ -19,6 +21,8 @@ class Order extends Model
         'id',
         'code',
         'student_id',
+        'bundle_id',
+        'affiliate_link_id',
         'customer_name_snapshot',
         'customer_email_snapshot',
         'customer_phone_snapshot',
@@ -35,6 +39,13 @@ class Order extends Model
         'updated_at',
     ];
 
+    protected $casts = [
+        'total' => 'float',
+        'discount' => 'float',
+        'payment_date' => 'datetime',
+        'payment_complete_date' => 'datetime',
+    ];
+
     public function status(){
         return $this->belongsTo(OrderStatus::class,'status_id','id');
     }
@@ -49,6 +60,16 @@ class Order extends Model
 
     public function students(){
         return $this->belongsTo(Student::class,'student_id','id');
+    }
+
+    public function bundle()
+    {
+        return $this->belongsTo(TeacherCourseBundle::class, 'bundle_id', 'id');
+    }
+
+    public function affiliateLink()
+    {
+        return $this->belongsTo(TeacherAffiliateLink::class, 'affiliate_link_id', 'id');
     }
 
     public function getCustomerNameDisplayAttribute(): string

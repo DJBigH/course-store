@@ -12,9 +12,7 @@
                                     ? (\Illuminate\Support\Str::startsWith($item->thumbnail, ['http://', 'https://']) ? $item->thumbnail : asset($item->thumbnail))
                                     : asset('clients/assets/banner-course.png');
 
-                                $teacherImage = $item->teacher?->image
-                                    ? (\Illuminate\Support\Str::startsWith($item->teacher->image, ['http://', 'https://']) ? $item->teacher->image : asset($item->teacher->image))
-                                    : asset('clients/assets/course-teacher.png');
+                                $teacherImage = teacherAvatarUrl($item->teacher);
                             @endphp
                             <div class="col-12 col-lg-6">
                                 <div class="course-card d-flex">
@@ -48,8 +46,14 @@
 
                                         <div class="course-teacher">
                                             <img src="{{ $teacherImage }}" alt="{{ $item->teacher?->name_locale }}"
-                                                onerror="this.onerror=null;this.src='{{ asset('clients/assets/course-teacher.png') }}';">
+                                                onerror="this.onerror=null;this.src='{{ asset('resources/assets/teacher.png') }}';">
                                             <span>{{ $item->teacher->name_locale }}</span>
+                                        </div>
+
+                                        <div class="course-rating">
+                                            <i class="fa-solid fa-star"></i>
+                                            <strong>{{ $item->ratings_count > 0 ? number_format((float) $item->ratings_avg_rating, 1) : '0.0' }}</strong>
+                                            <span>({{ (int) ($item->ratings_count ?? 0) }})</span>
                                         </div>
 
                                         <div class="course-price">
@@ -168,6 +172,19 @@
 
         .course-price {
             margin-top: 12px;
+        }
+
+        .course-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            color: #b45309;
+            font-size: 14px;
+        }
+
+        .course-rating i {
+            color: #f59e0b;
         }
 
         .price-old {

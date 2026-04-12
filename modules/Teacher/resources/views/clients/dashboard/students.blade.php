@@ -55,20 +55,36 @@
 
                 <div class="teacher-students-search__actions">
                     <button type="submit" class="btn btn-primary">Loc danh sach</button>
-                    <a href="{{ route('teacher.dashboard.students.grants.create') }}" class="btn btn-outline-secondary">
-                        Cap quyen hoc
-                    </a>
-                    <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'excel'], request()->query())) }}"
-                        class="btn btn-outline-secondary">
-                        Export Excel
-                    </a>
-                    <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'csv'], request()->query())) }}"
-                        class="btn btn-outline-secondary">
-                        Export CSV
-                    </a>
+                    @if ($studentFeatureState['can_grant_courses'])
+                        <a href="{{ route('teacher.dashboard.students.grants.create') }}" class="btn btn-outline-secondary">
+                            Cap quyen hoc
+                        </a>
+                    @endif
+                    @if ($studentFeatureState['can_export_students'])
+                        <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'excel'], request()->query())) }}"
+                            class="btn btn-outline-secondary">
+                            Export Excel
+                        </a>
+                        <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'csv'], request()->query())) }}"
+                            class="btn btn-outline-secondary">
+                            Export CSV
+                        </a>
+                    @endif
                 </div>
             </form>
         </div>
+
+        @if ($studentFeatureState['is_feature_locked'])
+            @include('teacher::clients.dashboard.partials.package_feature_notice', [
+                'message' => !$studentFeatureState['can_view_progress']
+                    ? __('teacher::dashboard.package_features.students_locked_progress')
+                    : (!$studentFeatureState['can_grant_courses'] && !$studentFeatureState['can_export_students']
+                        ? __('teacher::dashboard.package_features.students_locked_both')
+                        : (!$studentFeatureState['can_grant_courses']
+                            ? __('teacher::dashboard.package_features.students_locked_grants')
+                            : __('teacher::dashboard.package_features.students_locked_export'))),
+            ])
+        @endif
 
         <div class="teacher-students-summary">
             <div class="teacher-students-summary__item">
@@ -138,6 +154,13 @@
                                 <span>Hoc gan nhat</span>
                                 <strong>{{ optional($student->teacher_last_learning_at)->format('d/m/Y H:i') ?: 'Chua hoc bai nao' }}</strong>
                             </div>
+                            @if ($studentFeatureState['can_view_progress'])
+                                <div class="teacher-student-card__info">
+                                    <span>Tien do hoc tong quan</span>
+                                    <strong>{{ $student->teacher_progress_percent ?? 0 }}%</strong>
+                                    <small>{{ $student->teacher_progress_completed_lessons ?? 0 }} / {{ $student->teacher_progress_total_lessons ?? 0 }} bai</small>
+                                </div>
+                            @endif
                             <div class="teacher-student-card__info">
                                 <span>Tag noi bo</span>
                                 <strong>
@@ -168,6 +191,18 @@
                                 </strong>
                             </div>
                         </div>
+
+                        @if ($studentFeatureState['can_view_progress'])
+                            <div class="teacher-student-card__progress">
+                                <div class="teacher-student-card__progress-head">
+                                    <span>Muc do hoan thanh khoa hoc da co quyen</span>
+                                    <strong>{{ $student->teacher_progress_percent ?? 0 }}%</strong>
+                                </div>
+                                <div class="teacher-student-card__progress-bar">
+                                    <span style="width: {{ $student->teacher_progress_percent ?? 0 }}%"></span>
+                                </div>
+                            </div>
+                        @endif
 
                         <div class="teacher-student-card__courses">
                             <div class="teacher-student-card__section-title">Khoa hoc hoc vien da mua cua ban</div>
@@ -207,9 +242,11 @@
                                 <a href="{{ route('teacher.dashboard.students.show', $student->id) }}" class="btn btn-primary btn-sm">
                                     Xem chi tiet
                                 </a>
-                                <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary btn-sm">
-                                    Cap quyen hoc
-                                </a>
+                                @if ($studentFeatureState['can_grant_courses'])
+                                    <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary btn-sm">
+                                        Cap quyen hoc
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </article>
@@ -438,6 +475,55 @@
             word-break: break-word;
         }
 
+        .teacher-student-card__info small {
+            display: block;
+            margin-top: 0.32rem;
+            color: #7f97b8;
+        }
+
+        .teacher-student-card__progress {
+            margin-top: -0.2rem;
+            margin-bottom: 1rem;
+            padding: 0.95rem 1rem;
+            border-radius: 18px;
+            background: rgba(11, 19, 36, 0.72);
+            border: 1px solid rgba(96, 165, 250, 0.12);
+        }
+
+        .teacher-student-card__progress-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .teacher-student-card__progress-head span {
+            color: #8ca6c6;
+            font-size: 0.92rem;
+        }
+
+        .teacher-student-card__progress-head strong {
+            color: #f8fbff;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .teacher-student-card__progress-bar {
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(148, 163, 184, 0.22);
+        }
+
+        .teacher-student-card__progress-bar span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #38bdf8 0%, #22c55e 100%);
+        }
+
         .teacher-student-card__courses {
             margin-bottom: 1rem;
         }
@@ -531,6 +617,75 @@
             max-width: 640px;
             margin: 0 auto;
             line-height: 1.75;
+        }
+
+        html[data-theme="light"] .teacher-students-shell {
+            background:
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 30%),
+                linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(241, 245, 249, 0.98) 100%);
+        }
+
+        html[data-theme="light"] .teacher-students-kicker {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-students-title {
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-students-desc {
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-students-search,
+        html[data-theme="light"] .teacher-students-summary__item,
+        html[data-theme="light"] .teacher-student-card,
+        html[data-theme="light"] .teacher-students-empty {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-students-search label {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-students-summary__item span,
+        html[data-theme="light"] .teacher-student-card__meta,
+        html[data-theme="light"] .teacher-student-card__info span,
+        html[data-theme="light"] .teacher-student-card__footer span,
+        html[data-theme="light"] .teacher-student-card__section-title,
+        html[data-theme="light"] .teacher-students-empty p {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-students-summary__item strong,
+        html[data-theme="light"] .teacher-student-card__name,
+        html[data-theme="light"] .teacher-student-card__info strong,
+        html[data-theme="light"] .teacher-student-card__footer strong,
+        html[data-theme="light"] .teacher-students-empty h4 {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-student-card__info {
+            background: var(--admin-subtle-bg);
+            border-color: var(--admin-border);
+        }
+
+        html[data-theme="light"] .teacher-student-card__course-chip {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-student-card__course-chip.is-more {
+            background: rgba(14, 165, 233, 0.12);
+            color: #0284c7;
+        }
+
+        html[data-theme="light"] .teacher-students-empty__icon {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(56, 189, 248, 0.14));
+            color: #1d4ed8;
         }
 
         @media (max-width: 1199.98px) {

@@ -44,7 +44,8 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
     public function getCourseActive($slug)
     {
         return $this->model
-            ->withCount('students')
+            ->withCount(['students', 'ratings'])
+            ->withAvg('ratings', 'rating')
             ->where(function ($query) use ($slug) {
                 $query->where('slug', $slug)
                     ->orWhere('slug_en', $slug)
@@ -69,7 +70,8 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
         return $this->model
             ->withoutGlobalScope(ActiveScope::class)
-            ->withCount('students')
+            ->withCount(['students', 'ratings'])
+            ->withAvg('ratings', 'rating')
             ->where(function ($query) use ($slug) {
                 $query->where('slug', $slug)
                     ->orWhere('slug_en', $slug)
@@ -108,7 +110,12 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
     public function getCourses($limit)
     {
-        return $this->model->withCount('students')->limit($limit)->latest()->paginate($limit);
+        return $this->model
+            ->withCount(['students', 'ratings'])
+            ->withAvg('ratings', 'rating')
+            ->limit($limit)
+            ->latest()
+            ->paginate($limit);
     }
 
     public function updateCourse($id, $data = [])
@@ -132,27 +139,53 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
 
     public function getCourseFree()
     {
-        return $this->model->where('price', 0)->where('sale_price', 0)->where('status', 1)->limit(5)->get();
+        return $this->model
+            ->withCount('ratings')
+            ->withAvg('ratings', 'rating')
+            ->where('price', 0)
+            ->where('sale_price', 0)
+            ->where('status', 1)
+            ->limit(5)
+            ->get();
     }
 
     public function getCourseView()
     {
-        return $this->model->orderBy('view', 'DESC')->where('status', 1)->limit(5)->get();
+        return $this->model
+            ->withCount('ratings')
+            ->withAvg('ratings', 'rating')
+            ->orderBy('view', 'DESC')
+            ->where('status', 1)
+            ->limit(5)
+            ->get();
     }
 
     public function getCourseCreateUpdate()
     {
-        return $this->model->orderBy('created_at', 'DESC')->orderBy('updated_at', 'DESC')->where('status', 1)->limit(5)->get();
+        return $this->model
+            ->withCount('ratings')
+            ->withAvg('ratings', 'rating')
+            ->orderBy('created_at', 'DESC')
+            ->orderBy('updated_at', 'DESC')
+            ->where('status', 1)
+            ->limit(5)
+            ->get();
     }
 
     public function getAllCoursesHome()
     {
-        return $this->model->where('status', 1)->get();
+        return $this->model
+            ->withCount('ratings')
+            ->withAvg('ratings', 'rating')
+            ->where('status', 1)
+            ->get();
     }
 
     public function getCourseForYou($studentId)
     {
         return $this->model
+            ->withCount('ratings')
+            ->withAvg('ratings', 'rating')
             ->where('status', 1)
             ->when($studentId, function ($query) use ($studentId) {
                 $query->whereDoesntHave('students', function ($q) use ($studentId) {

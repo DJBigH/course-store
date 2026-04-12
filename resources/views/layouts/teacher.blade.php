@@ -15,6 +15,7 @@
     <meta name="author" content="" />
     <meta name="color-scheme" content="light dark" />
     <title>{{ $pageTitle ?? 'Teacher Portal' }} - BigK Udemy</title>
+    <link rel="shortcut icon" href="{{ asset('clients/assets/LOGO-DSCONS-FAVICON.png') }}" type="image/x-icon">
     <script>
         (() => {
             const storageKey = 'admin-theme';
@@ -691,6 +692,76 @@
             }
 
             applyTheme(root.dataset.theme || 'light');
+        })();
+    </script>
+    <script>
+        (() => {
+            const sanitizeDigits = (value) => String(value ?? '').replace(/[^\d]/g, '');
+            const formatDigits = (value) => {
+                const digits = sanitizeDigits(value);
+
+                if (!digits) {
+                    return '';
+                }
+
+                return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            };
+
+            const initMoneyInput = (displayEl) => {
+                if (!displayEl || displayEl.dataset.moneyInputBound === 'true') {
+                    return null;
+                }
+
+                const targetId = displayEl.getAttribute('data-money-target');
+                const hiddenEl = targetId ? document.getElementById(targetId) : null;
+
+                const sync = () => {
+                    const digits = sanitizeDigits(displayEl.value);
+
+                    if (hiddenEl) {
+                        hiddenEl.value = digits;
+                    }
+
+                    displayEl.value = formatDigits(digits);
+                    displayEl.dispatchEvent(new CustomEvent('teacher:money-input-sync', {
+                        bubbles: true,
+                        detail: {
+                            digits,
+                            numericValue: Number(digits || 0),
+                            hiddenElement: hiddenEl,
+                        },
+                    }));
+                };
+
+                displayEl.addEventListener('input', sync);
+                displayEl.addEventListener('blur', sync);
+                displayEl.dataset.moneyInputBound = 'true';
+                sync();
+
+                return {
+                    displayEl,
+                    hiddenEl,
+                    sync,
+                    getNumericValue: () => Number((hiddenEl?.value ?? sanitizeDigits(displayEl.value)) || 0),
+                };
+            };
+
+            const initMoneyInputs = (scope = document) => {
+                return Array.from(scope.querySelectorAll('[data-money-input]'))
+                    .map((element) => initMoneyInput(element))
+                    .filter(Boolean);
+            };
+
+            window.TeacherMoneyInput = {
+                sanitizeDigits,
+                formatDigits,
+                init: initMoneyInput,
+                initAll: initMoneyInputs,
+            };
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initMoneyInputs(document);
+            });
         })();
     </script>
     @yield('scripts')

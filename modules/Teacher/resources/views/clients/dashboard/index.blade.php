@@ -2,7 +2,7 @@
 
 @section('content')
     @php
-        $commission = rtrim(rtrim(number_format((float) $teacher->commission_rate, 2, '.', ''), '0'), '.');
+        $commission = rtrim(rtrim(number_format((float) ($effectiveCommissionRate ?? $teacher->commission_rate), 2, '.', ''), '0'), '.');
     @endphp
 
     <div class="teacher-page-shell">
@@ -33,6 +33,17 @@
                         {{ __('teacher::dashboard.common.students_count', ['count' => $stats['students']]) }}
                     </span>
                 </div>
+                <a href="{{ $teacher->packageHasFeature('can_send_promotions') ? route('teacher.dashboard.promotions') : route('teacher.dashboard.package.upgrade') }}" class="teacher-overview-shortcut mt-4">
+                    <span class="teacher-overview-shortcut__icon"><i class="fas fa-bullhorn"></i></span>
+                    <div>
+                        <strong>{{ __('teacher::dashboard.promotions.shortcut_title') }}</strong>
+                        <p class="mb-0">
+                            {{ $teacher->packageHasFeature('can_send_promotions')
+                                ? __('teacher::dashboard.promotions.shortcut_description')
+                                : __('teacher::dashboard.promotions.shortcut_locked') }}
+                        </p>
+                    </div>
+                </a>
             </div>
 
             <div class="teacher-hero__rail">
@@ -258,6 +269,36 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-lg-6">
+                <div class="teacher-panel h-100">
+                    <div class="teacher-section-title">
+                        <div>
+                            <h4 class="h5">{{ __('teacher::dashboard.overview.top_bundles_title') }}</h4>
+                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.top_bundles_desc') }}</p>
+                        </div>
+                        <a class="teacher-soft-link" href="{{ route('teacher.dashboard.bundles') }}">
+                            {{ __('teacher::dashboard.common.view_all') }}
+                        </a>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        @forelse ($topBundles as $bundleStat)
+                            <div class="teacher-subtle-card">
+                                <strong class="d-block">
+                                    {{ $bundleStat->bundle?->name ?: __('teacher::dashboard.common.unknown_course') }}
+                                </strong>
+                                <small class="d-block text-muted">
+                                    {{ __('teacher::dashboard.overview.top_bundles_sales', ['count' => $bundleStat->sales_count]) }}
+                                </small>
+                                <span class="text-primary fw-semibold">{{ money($bundleStat->net_revenue, 'đ', '0 đ') }}</span>
+                            </div>
+                        @empty
+                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.top_bundles_empty') }}</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -323,6 +364,85 @@
         .teacher-hero__package-note {
             color: rgba(125, 211, 252, 0.88);
             font-weight: 600;
+        }
+
+        html[data-theme="light"] .teacher-hero {
+            background:
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 24%),
+                radial-gradient(circle at left center, rgba(59, 130, 246, 0.1), transparent 28%),
+                linear-gradient(135deg, #f8fafc 0%, #e2e8f0 60%, #dbeafe 100%);
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-hero__eyebrow {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-hero__title {
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-hero__desc {
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-chip--dark {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini {
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini span {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini strong {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini small {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-hero__mini--glass {
+            background: var(--admin-subtle-bg);
+            border-color: var(--admin-border);
+        }
+
+        html[data-theme="light"] .teacher-hero__package-note {
+            color: #2563eb;
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            color: var(--admin-text);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut:hover {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut__icon {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut strong {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut p {
+            color: var(--admin-muted);
         }
 
         @media (max-width: 991.98px) {

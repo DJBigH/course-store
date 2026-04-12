@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Categories\Src\Models\Category;
 use Modules\Courses\src\Models\CourseComment;
+use Modules\Courses\src\Models\CourseRating;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Orders\src\Models\OrderDetail;
 use Modules\Students\src\Models\Student;
@@ -48,10 +49,18 @@ class Courses extends Model
         'supports_ja',
         'supports_zh',
         'status',
+        'package_locked_at',
+        'package_lock_reason',
+        'is_package_priority',
         'is_learning_locked',
         'view',
         'created_at',
         'updated_at',
+    ];
+
+    protected $casts = [
+        'package_locked_at' => 'datetime',
+        'is_package_priority' => 'boolean',
     ];
 
     protected $with = ['teacher'];
@@ -95,6 +104,11 @@ class Courses extends Model
     public function comments()
     {
         return $this->hasMany(CourseComment::class, 'course_id', 'id');
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(CourseRating::class, 'course_id', 'id');
     }
 
     public function getNameLocaleAttribute(): string

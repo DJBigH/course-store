@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Students\src\Http\Controllers\Clients\TwoFactorController;
 
 Route::get('/login', 'Admin\LoginController@showLoginForm')->middleware('web')->name('login');
-Route::post('/login', 'Admin\LoginController@login')->middleware('web')->name('login');
+Route::post('/login', 'Admin\LoginController@login')->middleware('web')->name('login.post');
 Route::post('/logout', 'Admin\LoginController@logout')->middleware('web')->name('logout');
 Route::get('/admin/forgot-password', 'Admin\ForgotPasswordController@showLinkRequestForm')->middleware('web')->name('admin.password.request');
 Route::post('/admin/forgot-password', 'Admin\ForgotPasswordController@sendResetLinkEmail')->middleware(['web', 'throttle:3,1'])->name('admin.password.email');

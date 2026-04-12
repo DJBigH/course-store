@@ -18,6 +18,8 @@ use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
 
 class TeacherApplicationController extends Controller
 {
+    private const DEFAULT_TEACHER_AVATAR = 'resources/assets/teacher.png';
+
     public function __construct(
         private readonly TeacherPackageLifecycleManager $packageLifecycleManager
     ) {}
@@ -97,7 +99,7 @@ class TeacherApplicationController extends Controller
             'slug' => $this->makeUniqueSlug($displayName, $teacher->id),
             'description' => $application->bio,
             'exp' => $application->experience_years,
-            'image' => $teacher->image ?: null,
+            'image' => $teacher->image ?: self::DEFAULT_TEACHER_AVATAR,
             'status' => 'active',
             'approved_at' => now(),
             'approved_by' => auth()->id(),

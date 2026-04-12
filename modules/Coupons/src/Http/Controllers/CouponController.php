@@ -714,6 +714,7 @@ class CouponController extends Controller
             ? $student->coupons()
             ->active()
             ->visibleForStudent($studentId)
+            ->with('teacher')
             ->paginate(config('paginate.mycoupon_limit'), ['*'], 'my_page')
             : null;
 
@@ -721,7 +722,7 @@ class CouponController extends Controller
             ->active()
             ->visibleForStudent($studentId)
             ->whereHas('courses')
-            ->with('courses')
+            ->with('courses', 'teacher')
             ->paginate(config('paginate.mycoupon_limit'), ['*'], 'course_page');
 
         $publicCoupons = Coupons::query()
@@ -729,6 +730,7 @@ class CouponController extends Controller
             ->visibleForStudent($studentId)
             ->whereDoesntHave('students')
             ->whereDoesntHave('courses')
+            ->with('teacher')
             ->paginate(config('paginate.mycoupon_limit'), ['*'], 'public_page');
 
         return view('coupons::Clients.coupon', compact(

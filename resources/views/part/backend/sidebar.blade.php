@@ -160,6 +160,11 @@
                         <div class="sb-nav-link-icon"><i class="fas fa-layer-group"></i></div>
                         Goi giang vien
                     </a>
+                    <a class="nav-link {{ request()->is('admin/teacher-announcements*') ? 'active' : '' }}"
+                        href="{{ route('teacher-announcements.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
+                        Thong bao teacher
+                    </a>
                     <a class="nav-link {{ request()->is('admin/teacher-finance/earnings*') ? 'active' : '' }}"
                         href="{{ route('teacher-finance.earnings') }}">
                         <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
@@ -241,6 +246,11 @@
                         'title' => 'Liên hệ',
                         'name' => 'contacts',
                     ])
+                    <a class="nav-link {{ request()->is('admin/contacts/support*') ? 'active' : '' }}"
+                        href="{{ route('contacts.support-index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-life-ring"></i></div>
+                        Gop y bao cao
+                    </a>
                 @endif
 
                 @if (auth()->user()

@@ -21,6 +21,10 @@ class OrderDetail extends Model
         'updated_at',
     ];
 
+    protected $casts = [
+        'price' => 'float',
+    ];
+
     public function courses(){
         return $this->belongsTo(Courses::class,'course_id','id')->withoutGlobalScopes();
     }

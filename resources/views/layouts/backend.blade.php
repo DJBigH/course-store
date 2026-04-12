@@ -8,7 +8,8 @@
     <meta name="description" content="" />
     <meta name="author" content="" />
     <meta name="color-scheme" content="light dark" />
-    <title>{{ $pageTitle ?? 'KhÃ´ng tÃ¬m tháº¥y trang' }} - BigK Udemy</title>
+    <title>{{ $pageTitle ?? 'Không tìm thấy trang' }} - BigK Udemy</title>
+    <link rel="shortcut icon" href="{{ asset('clients/assets/LOGO-DSCONS-FAVICON.png') }}" type="image/x-icon">
     <script>
         (() => {
             const storageKey = 'admin-theme';

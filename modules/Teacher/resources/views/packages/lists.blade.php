@@ -27,6 +27,7 @@
                             <th style="width: 56px;"></th>
                             <th>Code</th>
                             <th>Ten goi</th>
+                            <th>Quyen noi bat</th>
                             <th>Thu tu</th>
                             <th>Gia</th>
                             <th>Commission</th>
@@ -44,6 +45,49 @@
                                 <td>
                                     <strong>{{ $package->name }}</strong>
                                     <div class="text-muted small">{{ $package->description }}</div>
+                                </td>
+                                <td>
+                                    <div class="package-feature-pills">
+                                        @if ($package->can_view_student_progress)
+                                            <span class="package-feature-pill is-progress">
+                                                <i class="fa-solid fa-chart-line"></i>
+                                                Xem tien do hoc vien
+                                            </span>
+                                        @endif
+                                        @if ($package->can_manage_students)
+                                            <span class="package-feature-pill is-students">
+                                                <i class="fa-solid fa-users"></i>
+                                                Quan ly hoc vien
+                                            </span>
+                                        @endif
+                                        @if ($package->can_view_activity_logs)
+                                            <span class="package-feature-pill is-activity">
+                                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                                Nhat ky hoat dong
+                                            </span>
+                                        @endif
+                                        @if ($package->can_sell_bundles)
+                                            <span class="package-feature-pill is-growth">
+                                                <i class="fa-solid fa-layer-group"></i>
+                                                Bundle khoa hoc
+                                            </span>
+                                        @endif
+                                        @if ($package->can_send_promotions)
+                                            <span class="package-feature-pill is-growth">
+                                                <i class="fa-solid fa-bullhorn"></i>
+                                                Gui khuyen mai
+                                            </span>
+                                        @endif
+                                        @if ($package->can_issue_certificates)
+                                            <span class="package-feature-pill is-growth">
+                                                <i class="fa-solid fa-award"></i>
+                                                Chung chi
+                                            </span>
+                                        @endif
+                                        @if (!$package->can_view_student_progress && !$package->can_manage_students && !$package->can_view_activity_logs && !$package->can_sell_bundles && !$package->can_send_promotions && !$package->can_issue_certificates)
+                                            <span class="text-muted small">Chua co quyen noi bat</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>#{{ $package->sort_order }}</td>
                                 <td>{{ money($package->price) }}</td>
@@ -67,7 +111,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Chua co goi nao.</td>
+                                <td colspan="9" class="text-center text-muted py-4">Chua co goi nao.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -84,6 +128,53 @@
             user-select: none;
         }
 
+        .package-feature-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            min-width: 210px;
+        }
+
+        .package-feature-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.62rem;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .package-feature-pill i {
+            font-size: 0.72rem;
+        }
+
+        .package-feature-pill.is-progress {
+            color: #0f766e;
+            background: rgba(20, 184, 166, 0.16);
+            border: 1px solid rgba(20, 184, 166, 0.24);
+        }
+
+        .package-feature-pill.is-students {
+            color: #1d4ed8;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .package-feature-pill.is-activity {
+            color: #7c2d12;
+            background: rgba(251, 146, 60, 0.14);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+        }
+
+        .package-feature-pill.is-growth {
+            color: #7c3aed;
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.18);
+        }
+
         tr[data-package-id] {
             transition: background-color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
         }
@@ -98,6 +189,30 @@
 
         html[data-theme="dark"] tr[data-package-id].is-drag-over > * {
             background: rgba(96, 165, 250, 0.16) !important;
+        }
+
+        html[data-theme="dark"] .package-feature-pill.is-progress {
+            color: #99f6e4;
+            background: rgba(20, 184, 166, 0.18);
+            border-color: rgba(45, 212, 191, 0.28);
+        }
+
+        html[data-theme="dark"] .package-feature-pill.is-students {
+            color: #bfdbfe;
+            background: rgba(59, 130, 246, 0.18);
+            border-color: rgba(96, 165, 250, 0.28);
+        }
+
+        html[data-theme="dark"] .package-feature-pill.is-activity {
+            color: #fdba74;
+            background: rgba(249, 115, 22, 0.16);
+            border-color: rgba(251, 146, 60, 0.24);
+        }
+
+        html[data-theme="dark"] .package-feature-pill.is-growth {
+            color: #ddd6fe;
+            background: rgba(139, 92, 246, 0.18);
+            border-color: rgba(167, 139, 250, 0.24);
         }
     </style>
 @endsection
@@ -138,7 +253,7 @@
                 }
 
                 getRows().forEach((row, index) => {
-                    const orderCell = row.children[3];
+                    const orderCell = row.children[4];
                     if (orderCell) {
                         orderCell.textContent = `#${index + 1}`;
                     }

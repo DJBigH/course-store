@@ -3,32 +3,53 @@
 namespace Modules\Teacher\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\NewContactNotification;
+use App\Notifications\StudentNotification;
 use App\Notifications\TeacherCourseGiftInvitationNotification;
 use App\Models\Scopes\ActiveScope;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Modules\ActiveLogs\src\Models\ActiveLog;
+use Modules\Contacts\src\Models\Contacts;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
+use Modules\Courses\src\Models\CourseComment;
+use Modules\Students\src\Models\Coupons;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
+use Modules\Lessons\src\Support\LessonReleaseManager;
 use Modules\Orders\src\Models\OrderDetail;
 use Modules\Students\src\Models\Student;
 use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Students\src\Models\StudentsCourses;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Http\Requests\TeacherCourseRequest;
+use Modules\Teacher\src\Http\Requests\TeacherCourseBundleRequest;
 use Modules\Teacher\src\Http\Requests\TeacherLessonRequest;
+use Modules\Teacher\src\Http\Requests\TeacherPromotionRequest;
+use Modules\Teacher\src\Models\TeacherAnnouncement;
+use Modules\Teacher\src\Models\TeacherAnnouncementRead;
 use Modules\Teacher\src\Models\TeacherApplication;
+use Modules\Teacher\src\Models\TeacherCourseBundle;
 use Modules\Teacher\src\Models\TeacherCourseGrant;
+use Modules\Teacher\src\Models\TeacherNotificationRead;
+use Modules\Teacher\src\Models\TeacherPayoutAccount;
+use Modules\Teacher\src\Models\TeacherPayoutAccountChangeRequest;
 use Modules\Teacher\src\Models\TeacherPayoutRequest;
 use Modules\Teacher\src\Models\TeacherPackage;
+use Modules\Teacher\src\Models\TeacherPromotion;
 use Modules\Teacher\src\Models\TeacherStudentNote;
 use Modules\Teacher\src\Support\TeacherFinanceCalculator;
+use Modules\Teacher\src\Support\TeacherNotificationCenter;
 use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
+use Modules\Teacher\src\Support\TeacherPackageUsageResolver;
+use Modules\User\src\Models\User;
 use Modules\Video\src\Repositories\VideoRepositoryInterface;
 
 class TeacherDashboardController extends Controller
@@ -38,7 +59,10 @@ class TeacherDashboardController extends Controller
         protected VideoRepositoryInterface $videoRepository,
         protected DocumentRepositoryInterface $documentRepository,
         protected LessonsRepositoryInterface $lessonRepository,
+        protected LessonReleaseManager $lessonReleaseManager,
         protected TeacherPackageLifecycleManager $packageLifecycleManager,
+        protected TeacherNotificationCenter $notificationCenter,
+        protected TeacherPackageUsageResolver $packageUsageResolver,
     ) {}
 
     public function index()
@@ -47,6 +71,7 @@ class TeacherDashboardController extends Controller
         if (!$teacher) {
             return $this->redirectToStatus();
         }
+        $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
 
         $coursesQuery = Courses::query()
             ->withoutGlobalScope(ActiveScope::class)
@@ -55,11 +80,9 @@ class TeacherDashboardController extends Controller
         $orderDetails = $this->paidOrderDetailsQuery($teacher)->get();
         $summary = TeacherFinanceCalculator::summarize(
             $orderDetails,
-            fn () => (float) $teacher->commission_rate
+            fn () => $effectiveCommissionRate
         );
-        $payoutRequested = (float) TeacherPayoutRequest::query()
-            ->where('teacher_id', $teacher->id)
-            ->sum('amount');
+        $payoutRequested = $this->resolveCommittedPayoutAmount($teacher);
 
         $pageTitle = __('teacher::dashboard.pages.overview');
         $pageName = __('teacher::dashboard.pages.overview');
@@ -74,7 +97,8 @@ class TeacherDashboardController extends Controller
             'available_balance' => max($summary['teacher_revenue'] - $payoutRequested, 0),
         ];
         $recentCourses = $coursesQuery->latest('id')->take(4)->get();
-        $recentSales = TeacherFinanceCalculator::decorate($orderDetails->sortByDesc('created_at')->take(6)->values(), fn () => (float) $teacher->commission_rate);
+        $recentSales = TeacherFinanceCalculator::decorate($orderDetails->sortByDesc('created_at')->take(6)->values(), fn () => $effectiveCommissionRate);
+        $topBundles = $this->resolveTopBundles($teacher);
         $currentPackage = $teacher->application?->package;
         $pendingUpgrade = $this->resolveOpenPackageChangeRequest($teacher);
         $pendingUpgradeStartsAt = $pendingUpgrade?->activates_at;
@@ -109,7 +133,7 @@ class TeacherDashboardController extends Controller
             'pending_upgrade_is_queued' => $pendingUpgradeIsQueued,
         ] : null;
 
-        return view('teacher::clients.dashboard.index', compact('pageTitle', 'pageName', 'teacher', 'stats', 'recentCourses', 'recentSales', 'packageSummary'));
+        return view('teacher::clients.dashboard.index', compact('pageTitle', 'pageName', 'teacher', 'stats', 'recentCourses', 'recentSales', 'topBundles', 'packageSummary', 'effectiveCommissionRate'));
     }
 
     public function upgradePackage()
@@ -135,6 +159,288 @@ class TeacherDashboardController extends Controller
         $pageName = $pageTitle;
 
         return view('teacher::clients.dashboard.package_upgrade', compact('pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradePackages'));
+    }
+
+    public function notifications()
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $student = auth('students')->user();
+        $notificationSummary = $this->notificationCenter->summary($student, 40);
+        $notifications = $notificationSummary['items'];
+
+        $pageTitle = __('teacher::dashboard.pages.notifications');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.notifications', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'notifications',
+            'notificationSummary'
+        ));
+    }
+
+    public function promotions(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_send_promotions')) {
+            return $featureRedirect;
+        }
+
+        $courseOptions = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'name_en', 'name_ko', 'name_ja', 'name_zh', 'slug', 'slug_en', 'slug_ko', 'slug_ja', 'slug_zh']);
+
+        $promotions = TeacherPromotion::query()
+            ->with(['course'])
+            ->where('teacher_id', $teacher->id)
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $selectedCourseId = (int) $request->query('course_id', 0);
+        $recentPurchaseDays = (int) $request->query('recent_purchase_days', 0);
+        $inactiveLearningDays = (int) $request->query('inactive_learning_days', 0);
+        $recipientPreviewCount = count($this->resolvePromotionRecipientIds(
+            $teacher,
+            $selectedCourseId > 0 ? $selectedCourseId : null,
+            $recentPurchaseDays > 0 ? $recentPurchaseDays : null,
+            $inactiveLearningDays > 0 ? $inactiveLearningDays : null
+        ));
+
+        $pageTitle = __('teacher::dashboard.pages.promotions');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.promotions', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'courseOptions',
+            'promotions',
+            'selectedCourseId',
+            'recentPurchaseDays',
+            'inactiveLearningDays',
+            'recipientPreviewCount'
+        ));
+    }
+
+    public function storePromotion(TeacherPromotionRequest $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_send_promotions', 'teacher.dashboard.promotions')) {
+            return $featureRedirect;
+        }
+
+        $data = $request->validated();
+        $courseId = !empty($data['course_id']) ? (int) $data['course_id'] : null;
+        $recentPurchaseDays = !empty($data['recent_purchase_days']) ? (int) $data['recent_purchase_days'] : null;
+        $inactiveLearningDays = !empty($data['inactive_learning_days']) ? (int) $data['inactive_learning_days'] : null;
+        $selectedCourse = null;
+
+        if ($courseId) {
+            $selectedCourse = Courses::query()
+                ->withoutGlobalScope(ActiveScope::class)
+                ->where('teacher_id', $teacher->id)
+                ->findOrFail($courseId);
+        }
+
+        $recipientIds = $this->resolvePromotionRecipientIds($teacher, $courseId, $recentPurchaseDays, $inactiveLearningDays);
+        if (empty($recipientIds)) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.promotions.flash.no_recipients'));
+        }
+
+        $promotion = DB::transaction(function () use ($teacher, $data, $courseId, $recentPurchaseDays, $inactiveLearningDays, $recipientIds) {
+            return TeacherPromotion::query()->create([
+                'teacher_id' => $teacher->id,
+                'course_id' => $courseId,
+                'created_by_student_id' => auth('students')->id(),
+                'title' => trim((string) $data['title']),
+                'message' => trim((string) $data['message']),
+                'audience_type' => $this->resolvePromotionAudienceType($courseId, $recentPurchaseDays, $inactiveLearningDays),
+                'recipient_count' => count($recipientIds),
+                'filters' => array_filter([
+                    'recent_purchase_days' => $recentPurchaseDays,
+                    'inactive_learning_days' => $inactiveLearningDays,
+                ], fn ($value) => $value !== null && $value !== ''),
+            ]);
+        });
+
+        $notificationPayload = $this->buildPromotionNotificationPayload($teacher, $promotion, $selectedCourse);
+
+        Student::query()
+            ->whereIn('id', $recipientIds)
+            ->chunkById(100, function ($students) use ($notificationPayload) {
+                foreach ($students as $student) {
+                    $student->notify(new StudentNotification($notificationPayload));
+                }
+            });
+
+        return redirect()
+            ->route('teacher.dashboard.promotions')
+            ->with('msg_success', __('teacher::dashboard.promotions.flash.sent', [
+                'count' => $promotion->recipient_count,
+            ]));
+    }
+
+    public function bundles(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_sell_bundles')) {
+            return $featureRedirect;
+        }
+
+        $bundles = TeacherCourseBundle::query()
+            ->withCount('items')
+            ->with(['items.course'])
+            ->where('teacher_id', $teacher->id)
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $pageTitle = __('teacher::dashboard.pages.bundles');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.bundles', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'bundles'
+        ));
+    }
+
+    public function createBundle()
+    {
+        return $this->bundleFormResponse();
+    }
+
+    public function storeBundle(TeacherCourseBundleRequest $request)
+    {
+        return $this->persistBundle($request);
+    }
+
+    public function editBundle(int $bundleId)
+    {
+        return $this->bundleFormResponse($bundleId);
+    }
+
+    public function updateBundle(TeacherCourseBundleRequest $request, int $bundleId)
+    {
+        return $this->persistBundle($request, $bundleId);
+    }
+
+    public function deleteBundle(int $bundleId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_sell_bundles', 'teacher.dashboard.bundles')) {
+            return $featureRedirect;
+        }
+
+        $bundle = TeacherCourseBundle::query()
+            ->where('teacher_id', $teacher->id)
+            ->findOrFail($bundleId);
+
+        $bundle->delete();
+
+        return redirect()
+            ->route('teacher.dashboard.bundles')
+            ->with('msg_success', __('teacher::dashboard.bundles.flash.deleted'));
+    }
+
+    public function readAnnouncement(int $announcementId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $student = auth('students')->user();
+        $currentPackageId = $teacher->currentPackage()?->id;
+        $announcement = TeacherAnnouncement::query()
+            ->active()
+            ->where(function ($query) use ($currentPackageId) {
+                $query->whereDoesntHave('packages');
+
+                if ($currentPackageId) {
+                    $query->orWhereHas('packages', function ($packageQuery) use ($currentPackageId) {
+                        $packageQuery->where('teacher_packages.id', $currentPackageId);
+                    });
+                }
+            })
+            ->findOrFail($announcementId);
+
+        TeacherAnnouncementRead::query()->updateOrCreate(
+            [
+                'announcement_id' => $announcement->id,
+                'student_id' => $student->id,
+            ],
+            [
+                'read_at' => now(),
+            ]
+        );
+
+        TeacherNotificationRead::query()->updateOrCreate(
+            [
+                'student_id' => $student->id,
+                'notification_key' => 'announcement:' . $announcement->id . ':' . ($announcement->updated_at?->timestamp ?? 0),
+            ],
+            [
+                'read_at' => now(),
+            ]
+        );
+
+        $targetUrl = trim((string) ($announcement->action_url ?? ''));
+
+        return redirect()->to($targetUrl !== '' ? $targetUrl : route('teacher.dashboard.notifications'));
+    }
+
+    public function readNotification(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $student = auth('students')->user();
+        $payload = $request->validate([
+            'key' => ['required', 'string', 'max:191'],
+            'redirect' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        TeacherNotificationRead::query()->updateOrCreate(
+            [
+                'student_id' => $student->id,
+                'notification_key' => $payload['key'],
+            ],
+            [
+                'read_at' => now(),
+            ]
+        );
+
+        return redirect()->to($this->sanitizeTeacherNotificationRedirect($payload['redirect'] ?? null));
     }
 
     public function storeUpgradePackage(Request $request)
@@ -171,7 +477,7 @@ class TeacherDashboardController extends Controller
         $sourceApplication = $teacher->application;
         $student = auth('students')->user();
 
-        TeacherApplication::query()->create([
+        $upgradeRequest = TeacherApplication::query()->create([
             'student_id' => $student?->id,
             'teacher_id' => $teacher->id,
             'applicant_type' => $student ? 'student' : 'guest',
@@ -179,7 +485,7 @@ class TeacherDashboardController extends Controller
             'payment_method' => $paymentMethod,
             'coupon_code' => null,
             'discount_amount' => 0,
-            'status' => (float) $targetPackage->price > 0 ? 'pending_payment' : 'pending_review',
+            'status' => (float) $targetPackage->price > 0 ? 'pending_payment' : 'approved',
             'full_name' => $sourceApplication?->full_name ?: $teacher->name,
             'display_name' => $sourceApplication?->display_name ?: $teacher->name,
             'headline' => $sourceApplication?->headline,
@@ -193,12 +499,19 @@ class TeacherDashboardController extends Controller
             'facebook_url' => $sourceApplication?->facebook_url,
             'youtube_url' => $sourceApplication?->youtube_url,
             'linkedin_url' => $sourceApplication?->linkedin_url,
+            'custom_links' => $sourceApplication?->custom_links ?? [],
             'intro_video_url' => $sourceApplication?->intro_video_url,
             'cv_file' => $sourceApplication?->cv_file,
             'identity_file' => $sourceApplication?->identity_file,
             'submitted_at' => now(),
             'admin_note' => 'package_upgrade',
         ]);
+
+        if ((float) $targetPackage->price <= 0) {
+            $action = $this->finalizePackageChange($teacher, $upgradeRequest);
+
+            return $this->redirectAfterPackageChange($action);
+        }
 
         return redirect()->route('teacher.dashboard.package.upgrade.status')
             ->with('msg_success', __('teacher::dashboard.package.flash.created'));
@@ -219,8 +532,10 @@ class TeacherDashboardController extends Controller
         $pageTitle = __('teacher::dashboard.package.status_title');
         $pageName = $pageTitle;
         $currentPackage = $teacher->application?->package;
+        $overLimitWarnings = $this->resolvePackageOverLimitWarnings($teacher, $upgradeRequest);
+        $featureLossWarnings = $this->resolvePackageFeatureLossWarnings($teacher, $upgradeRequest);
 
-        return view('teacher::clients.dashboard.package_upgrade_status', compact('pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradeRequest'));
+        return view('teacher::clients.dashboard.package_upgrade_status', compact('pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradeRequest', 'overLimitWarnings', 'featureLossWarnings'));
     }
 
     public function markUpgradePaid()
@@ -239,12 +554,18 @@ class TeacherDashboardController extends Controller
             return back()->with('msg_danger', __('teacher::dashboard.package.flash.invalid_payment_status'));
         }
 
-        $upgradeRequest->update([
-            'status' => 'pending_review',
-            'submitted_at' => now(),
-        ]);
+        if ($upgradeRequest->payment_method === 'bank_transfer') {
+            $upgradeRequest->update([
+                'status' => 'pending_review',
+                'submitted_at' => now(),
+            ]);
 
-        return back()->with('msg_success', __('teacher::dashboard.package.flash.paid_marked'));
+            return back()->with('msg_success', __('teacher::dashboard.package.flash.bank_transfer_waiting_confirmation'));
+        }
+
+        $action = $this->finalizePackageChange($teacher, $upgradeRequest);
+
+        return $this->redirectAfterPackageChange($action);
     }
 
     public function cancelUpgradePackage()
@@ -283,28 +604,22 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        $this->syncCourseLocks($teacher);
+        $teacher->refresh();
+
         $pageTitle = __('teacher::dashboard.pages.courses');
         $pageName = __('teacher::dashboard.pages.courses');
         $courses = Courses::query()
             ->withoutGlobalScope(ActiveScope::class)
-            ->withCount(['lessons', 'students'])
+            ->withCount(['lessons', 'students', 'ratings'])
+            ->withAvg('ratings', 'rating')
             ->where('teacher_id', $teacher->id)
             ->latest('id')
             ->paginate(12)
             ->withQueryString();
+        $this->attachCourseHistoryPreview($courses, $teacher);
 
-        $courseLimit = $this->resolveCourseLimit($teacher);
-        $courseCount = Courses::query()
-            ->withoutGlobalScope(ActiveScope::class)
-            ->where('teacher_id', $teacher->id)
-            ->count();
-        $usage = [
-            'used' => $courseCount,
-            'limit' => $courseLimit,
-            'limit_label' => $courseLimit === null ? __('teacher::dashboard.courses.unlimited') : $courseLimit,
-            'remaining' => $courseLimit === null ? null : max($courseLimit - $courseCount, 0),
-            'can_create' => $courseLimit === null || $courseCount < $courseLimit,
-        ];
+        $usage = $this->resolvePublishedCourseUsage($teacher);
 
         return view('teacher::clients.dashboard.courses', compact('pageTitle', 'pageName', 'teacher', 'courses', 'usage'));
     }
@@ -337,25 +652,21 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
-        $limitCheck = $this->ensureCourseCreationAllowed($teacher);
-        if ($limitCheck !== null) {
-            return $limitCheck;
-        }
+        $this->syncCourseLocks($teacher);
+        $teacher->refresh();
 
         $pageTitle = __('teacher::dashboard.courses.create_title');
         $pageName = __('teacher::dashboard.courses.create_title');
         $categories = $this->getCourseCategories();
+        $usage = $this->resolvePublishedCourseUsage($teacher);
 
-        $courseLimit = $this->resolveCourseLimit($teacher);
-        $courseCount = Courses::query()
-            ->withoutGlobalScope(ActiveScope::class)
-            ->where('teacher_id', $teacher->id)
-            ->count();
-        $usage = [
-            'used' => $courseCount,
-            'limit' => $courseLimit,
-            'limit_label' => $courseLimit === null ? __('teacher::dashboard.courses.unlimited') : $courseLimit,
-        ];
+        if (!($usage['can_create'] ?? true)) {
+            return redirect()
+                ->route('teacher.dashboard.courses')
+                ->with('msg_danger', __('teacher::dashboard.courses.flash.publish_limit_reached', [
+                    'limit' => $this->resolveCourseLimit($teacher),
+                ]));
+        }
 
         return view('teacher::clients.dashboard.create_course', [
             'pageTitle' => $pageTitle,
@@ -377,18 +688,38 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
-        $limitCheck = $this->ensureCourseCreationAllowed($teacher);
-        if ($limitCheck !== null) {
-            return $limitCheck;
+        $usage = $this->resolvePublishedCourseUsage($teacher);
+        if (!($usage['can_create'] ?? true)) {
+            return redirect()
+                ->route('teacher.dashboard.courses')
+                ->with('msg_danger', __('teacher::dashboard.courses.flash.publish_limit_reached', [
+                    'limit' => $this->resolveCourseLimit($teacher),
+                ]));
         }
 
         $data = $request->validated();
         $course = Courses::query()->create($this->buildCoursePayload($data, $teacher));
         $this->syncCourseCategories($course, $data['categories'] ?? []);
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course->fresh(),
+            'course_created',
+            'Da tao khoa hoc moi',
+            [
+                'status' => (int) $course->status,
+                'price' => (float) $course->price,
+                'sale_price' => (float) $course->sale_price,
+                'category_count' => count($data['categories'] ?? []),
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses')
-            ->with('msg_success', __('teacher::dashboard.courses.flash.created'));
+            ->with('msg_success', __(
+                ((int) $data['status'] === 1 && (int) $course->status !== 1)
+                    ? 'teacher::dashboard.courses.flash.created_as_draft_due_limit'
+                    : 'teacher::dashboard.courses.flash.created'
+            ));
     }
 
     public function editCourse(int $courseId)
@@ -399,6 +730,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $pageTitle = __('teacher::dashboard.courses.edit_title');
         $pageName = __('teacher::dashboard.courses.edit_title');
 
@@ -407,7 +741,7 @@ class TeacherDashboardController extends Controller
             'pageName' => $pageName,
             'teacher' => $teacher,
             'categories' => $this->getCourseCategories(),
-            'usage' => null,
+            'usage' => $this->resolvePublishedCourseUsage($teacher),
             'course' => $course,
             'selectedCategories' => $course->categories()->pluck('categories.id')->all(),
             'formAction' => route('teacher.dashboard.courses.update', $course->id),
@@ -423,14 +757,159 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $data = $request->validated();
+        $before = $course->only(['name', 'price', 'sale_price', 'status', 'is_learning_locked']);
 
         $course->update($this->buildCoursePayload($data, $teacher, $course));
         $this->syncCourseCategories($course, $data['categories'] ?? []);
+        $course->refresh();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            'course_updated',
+            'Da cap nhat khoa hoc',
+            [
+                'before' => $before,
+                'after' => $course->only(['name', 'price', 'sale_price', 'status', 'is_learning_locked']),
+                'category_count' => count($data['categories'] ?? []),
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses')
-            ->with('msg_success', __('teacher::dashboard.courses.flash.updated'));
+            ->with('msg_success', __(
+                ((int) $data['status'] === 1 && (int) $course->status !== 1)
+                    ? 'teacher::dashboard.courses.flash.updated_as_draft_due_limit'
+                    : 'teacher::dashboard.courses.flash.updated'
+            ));
+    }
+
+    public function duplicateCourse(int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_duplicate_courses', 'teacher.dashboard.courses')) {
+            return $featureRedirect;
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
+        $newCourse = $this->performCourseDuplicate($course);
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            'course_duplicated',
+            'Da nhan ban khoa hoc',
+            [
+                'duplicate_course_id' => $newCourse->id,
+                'duplicate_course_name' => $newCourse->name_locale ?: $newCourse->name,
+            ]
+        );
+
+        return redirect()
+            ->route('teacher.dashboard.courses')
+            ->with('msg_success', __('teacher::dashboard.courses.flash.duplicated'));
+    }
+
+    public function updateCourseVisibility(Request $request, int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        $data = $request->validate([
+            'status' => ['required', 'integer', 'in:0,1'],
+        ]);
+
+        $targetStatus = (int) $data['status'];
+        $previousStatus = (int) $course->status;
+        if ($targetStatus === 1) {
+            $this->activateCourseWithinLimit($teacher, $course);
+        } else {
+            $course->update([
+                'status' => 0,
+                'package_locked_at' => null,
+                'package_lock_reason' => null,
+            ]);
+            $this->syncCourseLocks($teacher);
+        }
+        $course->refresh();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            $targetStatus === 1 ? 'course_published' : 'course_moved_to_draft',
+            $targetStatus === 1 ? 'Da dua khoa hoc len publish' : 'Da chuyen khoa hoc ve ban nhap',
+            [
+                'before_status' => $previousStatus,
+                'after_status' => (int) $course->status,
+                'package_lock_reason' => $course->package_lock_reason,
+            ]
+        );
+
+        return redirect()
+            ->route('teacher.dashboard.courses')
+            ->with('msg_success', __(
+                $targetStatus === 1
+                    ? 'teacher::dashboard.courses.flash.published'
+                    : 'teacher::dashboard.courses.flash.drafted'
+            ));
+    }
+
+    public function toggleCoursePriority(int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($this->resolveCourseLimit($teacher) === null) {
+            if ((bool) $course->is_package_priority) {
+                $course->update([
+                    'is_package_priority' => false,
+                ]);
+            }
+
+            return redirect()
+                ->route('teacher.dashboard.courses')
+                ->with('msg_success', __('teacher::dashboard.courses.flash.priority_disabled'));
+        }
+
+        $wasPriority = (bool) $course->is_package_priority;
+        $course->update([
+            'is_package_priority' => !$course->is_package_priority,
+        ]);
+
+        $this->syncCourseLocks($teacher);
+        $course->refresh();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            $course->is_package_priority ? 'course_priority_enabled' : 'course_priority_disabled',
+            $course->is_package_priority ? 'Da bat uu tien goi cho khoa hoc' : 'Da tat uu tien goi cho khoa hoc',
+            [
+                'before_priority' => $wasPriority,
+                'after_priority' => (bool) $course->is_package_priority,
+            ]
+        );
+
+        return redirect()
+            ->route('teacher.dashboard.courses')
+            ->with('msg_success', __(
+                $course->fresh()->is_package_priority
+                    ? 'teacher::dashboard.courses.flash.priority_enabled'
+                    : 'teacher::dashboard.courses.flash.priority_disabled'
+            ));
     }
 
     public function deleteCourse(int $courseId)
@@ -441,8 +920,16 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        $courseSnapshot = $course->only(['id', 'name', 'status']);
         $course->delete();
         Lesson::query()->where('course_id', $course->id)->delete();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            'course_deleted',
+            'Da dua khoa hoc vao thung rac',
+            $courseSnapshot
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses')
@@ -461,23 +948,39 @@ class TeacherDashboardController extends Controller
             abort(404);
         }
 
-        $limit = $this->resolveCourseLimit($teacher);
-        $activeCourses = Courses::query()
-            ->withoutGlobalScope(ActiveScope::class)
-            ->where('teacher_id', $teacher->id)
-            ->count();
-        if ($limit !== null && $activeCourses >= $limit) {
-            return redirect()
-                ->route('teacher.dashboard.courses.trash')
-                ->with('msg_danger', __('teacher::dashboard.courses.flash.restore_limit_reached', ['limit' => $limit]));
-        }
-
+        $wasTrashed = $course->trashed();
+        $originalStatus = (int) $course->status;
         $course->restore();
+        $restoredAsDraft = false;
+        if (
+            $wasTrashed &&
+            (int) $course->status === 1 &&
+            !$this->hasAvailablePublishedCourseSlot($teacher, $course->id)
+        ) {
+            $course->forceFill(['status' => 0])->save();
+            $restoredAsDraft = true;
+        }
         Lesson::query()->onlyTrashed()->where('course_id', $course->id)->restore();
+        $course->refresh();
+        $this->logTeacherCourseActivity(
+            $teacher,
+            $course,
+            'course_restored',
+            $restoredAsDraft ? 'Da khoi phuc khoa hoc ve ban nhap' : 'Da khoi phuc khoa hoc',
+            [
+                'was_trashed' => $wasTrashed,
+                'before_status' => $originalStatus,
+                'after_status' => (int) $course->status,
+            ]
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses.trash')
-            ->with('msg_success', __('teacher::dashboard.courses.flash.restored'));
+            ->with('msg_success', __(
+                $restoredAsDraft
+                    ? 'teacher::dashboard.courses.flash.restored_as_draft_due_limit'
+                    : 'teacher::dashboard.courses.flash.restored'
+            ));
     }
 
     public function forceDeleteCourse(int $courseId)
@@ -491,10 +994,24 @@ class TeacherDashboardController extends Controller
         if (!$course->trashed()) {
             abort(404);
         }
+        $courseName = $course->name_locale ?: $course->name;
+        $courseKey = $course->id;
 
         Lesson::query()->withTrashed()->where('course_id', $course->id)->forceDelete();
         $course->categories()->detach();
         $course->forceDelete();
+        activity_log(
+            'course_force_deleted',
+            null,
+            [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'course_id' => $courseKey,
+                'course_name' => $courseName,
+            ],
+            'teacher_course_management',
+            'Da xoa vinh vien khoa hoc'
+        );
 
         return redirect()
             ->route('teacher.dashboard.courses.trash')
@@ -509,6 +1026,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $pageTitle = __('teacher::dashboard.lessons.title', ['course' => $course->name_locale]);
         $pageName = __('teacher::dashboard.lessons.title_short');
         $modules = Lesson::query()
@@ -529,6 +1049,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId, true);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $pageTitle = __('teacher::dashboard.lessons.trash_title', ['course' => $course->name_locale]);
         $pageName = __('teacher::dashboard.lessons.trash_short');
         $lessons = Lesson::query()
@@ -550,6 +1073,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $pageTitle = __('teacher::dashboard.lessons.create_title', ['course' => $course->name_locale]);
         $pageName = __('teacher::dashboard.lessons.create_short');
         $defaultParentId = (int) request()->query('module', 0);
@@ -570,6 +1096,7 @@ class TeacherDashboardController extends Controller
             'submitLabel' => __('teacher::dashboard.lessons.actions.create'),
             'position' => $this->nextLessonPosition($course, $defaultParentId),
             'defaultParentId' => $defaultParentId,
+            'canScheduleContent' => $teacher->packageHasFeature('can_schedule_content'),
         ]);
     }
 
@@ -581,10 +1108,21 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $data = $request->validated();
 
-        Lesson::query()->create($this->buildLessonPayload($data, $course));
+        $lesson = Lesson::query()->create($this->buildLessonPayload(
+            $data,
+            $course,
+            null,
+            $teacher->packageHasFeature('can_schedule_content')
+        ));
         $this->updateCourseDurations($course->id);
+        $this->logTeacherLessonActivity($teacher, $course, $lesson, 'create_lesson', 'Tạo bài học', [
+            'schedule' => $this->summarizeLessonSchedule($lesson),
+        ]);
 
         return redirect()
             ->route('teacher.dashboard.lessons.index', $course->id)
@@ -599,6 +1137,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId);
         $pageTitle = __('teacher::dashboard.lessons.edit_title', ['lesson' => $lesson->name_locale]);
         $pageName = __('teacher::dashboard.lessons.edit_short');
@@ -620,6 +1161,7 @@ class TeacherDashboardController extends Controller
             'submitLabel' => __('teacher::dashboard.lessons.actions.update'),
             'position' => $lesson->position,
             'defaultParentId' => $lesson->parent_id ?? 0,
+            'canScheduleContent' => $teacher->packageHasFeature('can_schedule_content'),
         ]);
     }
 
@@ -631,11 +1173,25 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId);
         $data = $request->validated();
 
-        $lesson->update($this->buildLessonPayload($data, $course, $lesson));
+        $oldSchedule = $this->summarizeLessonSchedule($lesson);
+        $lesson->update($this->buildLessonPayload(
+            $data,
+            $course,
+            $lesson,
+            $teacher->packageHasFeature('can_schedule_content')
+        ));
+        $lesson->refresh();
         $this->updateCourseDurations($course->id);
+        $this->logTeacherLessonActivity($teacher, $course, $lesson, 'update_lesson', 'Cập nhật bài học', [
+            'old_schedule' => $oldSchedule,
+            'new_schedule' => $this->summarizeLessonSchedule($lesson),
+        ]);
 
         return redirect()
             ->route('teacher.dashboard.lessons.index', $course->id)
@@ -650,6 +1206,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId);
         $branchIds = $this->collectLessonBranchIds($lesson->id);
         Lesson::query()->whereIn('id', $branchIds)->delete();
@@ -668,6 +1227,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId, true);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId, true);
         if (!$lesson->trashed()) {
             abort(404);
@@ -690,6 +1252,9 @@ class TeacherDashboardController extends Controller
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId, true);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
         $lesson = $this->resolveOwnedLesson($course, $lessonId, true);
         if (!$lesson->trashed()) {
             abort(404);
@@ -710,20 +1275,21 @@ class TeacherDashboardController extends Controller
         if (!$teacher) {
             return $this->redirectToStatus();
         }
+        $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
 
         $pageTitle = __('teacher::dashboard.pages.earnings');
         $pageName = __('teacher::dashboard.pages.earnings');
         $items = $this->paidOrderDetailsQuery($teacher)->paginate(12)->withQueryString();
         $summary = TeacherFinanceCalculator::summarize(
             $this->paidOrderDetailsQuery($teacher)->get(),
-            fn () => (float) $teacher->commission_rate
+            fn () => $effectiveCommissionRate
         );
         $items->setCollection(TeacherFinanceCalculator::decorate(
             $items->getCollection(),
-            fn () => (float) $teacher->commission_rate
+            fn () => $effectiveCommissionRate
         ));
 
-        return view('teacher::clients.dashboard.earnings', compact('pageTitle', 'pageName', 'teacher', 'items', 'summary'));
+        return view('teacher::clients.dashboard.earnings', compact('pageTitle', 'pageName', 'teacher', 'items', 'summary', 'effectiveCommissionRate'));
     }
 
     public function payouts()
@@ -732,22 +1298,212 @@ class TeacherDashboardController extends Controller
         if (!$teacher) {
             return $this->redirectToStatus();
         }
+        $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
 
         $pageTitle = __('teacher::dashboard.pages.payouts');
         $pageName = __('teacher::dashboard.pages.payouts');
         $summary = TeacherFinanceCalculator::summarize(
             $this->paidOrderDetailsQuery($teacher)->get(),
-            fn () => (float) $teacher->commission_rate
+            fn () => $effectiveCommissionRate
         );
-        $requestedAmount = (float) TeacherPayoutRequest::query()->where('teacher_id', $teacher->id)->sum('amount');
+        $requestedAmount = $this->resolveCommittedPayoutAmount($teacher);
         $availableBalance = max($summary['teacher_revenue'] - $requestedAmount, 0);
+        $payoutAccounts = $teacher->payoutAccounts()->orderBy('id')->get();
+        $payoutAccountLimit = $this->resolvePayoutAccountLimit($teacher);
+        $pendingAccountChangeRequests = $teacher->payoutAccountChangeRequests()
+            ->with('replaceAccount')
+            ->latest('id')
+            ->take(10)
+            ->get();
+        $payoutAccountUsage = $this->resolvePayoutAccountUsage($teacher, $payoutAccounts->count());
+        $bankOptions = $this->resolveVietnamBankOptions();
         $payouts = TeacherPayoutRequest::query()
             ->where('teacher_id', $teacher->id)
             ->latest('id')
             ->paginate(10)
             ->withQueryString();
 
-        return view('teacher::clients.dashboard.payouts', compact('pageTitle', 'pageName', 'teacher', 'payouts', 'summary', 'requestedAmount', 'availableBalance'));
+        return view('teacher::clients.dashboard.payouts', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'payouts',
+            'summary',
+            'requestedAmount',
+            'availableBalance',
+            'payoutAccounts',
+            'payoutAccountLimit',
+            'pendingAccountChangeRequests',
+            'payoutAccountUsage',
+            'bankOptions'
+        ));
+    }
+
+    public function support()
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $pageTitle = 'Góp ý / Báo cáo';
+        $pageName = $pageTitle;
+        $items = Contacts::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('source', 'teacher_portal')
+            ->whereIn('submission_type', [Contacts::TYPE_FEEDBACK, Contacts::TYPE_REPORT])
+            ->latest('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('teacher::clients.dashboard.support', compact('pageTitle', 'pageName', 'teacher', 'items'));
+    }
+
+    public function orders(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $directory = $this->buildTeacherOrderDirectory($teacher, $request);
+        $groupedOrders = $directory['orders'];
+
+        $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $orders = new LengthAwarePaginator(
+            $groupedOrders->slice(($currentPage - 1) * $perPage, $perPage)->values(),
+            $groupedOrders->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'query' => $request->query(),
+            ]
+        );
+
+        $pageTitle = __('teacher::dashboard.pages.orders');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.orders', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'orders',
+            'directory'
+        ));
+    }
+
+    public function exportOrders(Request $request, string $format = 'csv')
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_export_orders')) {
+            return $featureRedirect;
+        }
+
+        $directory = $this->buildTeacherOrderDirectory($teacher, $request);
+        $orders = $directory['orders'];
+
+        if ($format === 'excel') {
+            $filename = 'teacher-orders-' . now()->format('Ymd-His') . '.xls';
+            $html = view('teacher::clients.dashboard.exports.orders_excel', compact('orders'))->render();
+
+            return response($html, 200, [
+                'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
+
+        $filename = 'teacher-orders-' . now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($orders) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, [
+                __('teacher::dashboard.orders.export.order'),
+                __('teacher::dashboard.orders.export.student'),
+                __('teacher::dashboard.orders.export.email'),
+                __('teacher::dashboard.orders.export.phone'),
+                __('teacher::dashboard.orders.export.payment_method'),
+                __('teacher::dashboard.orders.export.paid_at'),
+                __('teacher::dashboard.orders.export.course_count'),
+                __('teacher::dashboard.orders.export.courses'),
+                __('teacher::dashboard.orders.export.gross'),
+                __('teacher::dashboard.orders.export.discount'),
+                __('teacher::dashboard.orders.export.net'),
+                __('teacher::dashboard.orders.export.revenue'),
+            ]);
+
+            foreach ($orders as $item) {
+                fputcsv($handle, [
+                    $item->order?->code ?: $item->order?->id,
+                    $item->order?->customer_name_display ?: '',
+                    $item->order?->customer_email_display ?: '',
+                    $item->order?->customer_phone_display ?: '',
+                    $item->order?->payment_method_label ?: '',
+                    optional($item->payment_at)->format('Y-m-d H:i:s'),
+                    $item->item_count,
+                    $item->details->pluck(fn ($detail) => $detail->courses?->name_locale ?: $detail->courses?->name ?: '')->implode(' | '),
+                    $item->gross_amount,
+                    $item->allocated_discount,
+                    $item->net_revenue,
+                    $item->teacher_revenue,
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    public function showOrder(int $orderId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $details = $this->paidOrderDetailsQuery($teacher)
+            ->where('order_id', $orderId)
+            ->get();
+
+        if ($details->isEmpty()) {
+            abort(404);
+        }
+
+        $details = TeacherFinanceCalculator::decorate(
+            $details,
+            fn() => $this->resolveEffectiveCommissionRate($teacher)
+        );
+
+        $order = $details->first()?->order;
+        if (!$order) {
+            abort(404);
+        }
+
+        $summary = [
+            'gross_amount' => (float) $details->sum(fn($item) => data_get($item, 'finance_breakdown.gross_amount', 0)),
+            'allocated_discount' => (float) $details->sum(fn($item) => data_get($item, 'finance_breakdown.allocated_discount', 0)),
+            'net_revenue' => (float) $details->sum(fn($item) => data_get($item, 'finance_breakdown.net_revenue', 0)),
+            'teacher_revenue' => (float) $details->sum(fn($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+            'item_count' => $details->count(),
+        ];
+
+        $pageTitle = __('teacher::dashboard.orders.show.title', ['code' => $order->code ?: $order->id]);
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.order_show', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'order',
+            'details',
+            'summary'
+        ));
     }
 
     public function students(Request $request)
@@ -755,6 +1511,10 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
         }
 
         $directory = $this->buildTeacherStudentDirectory($teacher, $request);
@@ -786,7 +1546,173 @@ class TeacherDashboardController extends Controller
             'teacher',
             'students',
             'directory'
+        ) + [
+            'studentFeatureState' => $this->resolveStudentFeatureState($teacher),
+        ]);
+    }
+
+    public function activityLogs(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_view_activity_logs')) {
+            return $featureRedirect;
+        }
+
+        $type = trim((string) $request->query('type', 'all'));
+        $search = trim((string) $request->query('q', ''));
+        $typeMap = [
+            'students' => 'teacher_student_management',
+            'courses' => 'teacher_course_management',
+            'coupons' => 'teacher_coupon_management',
+        ];
+        $selectedType = array_key_exists($type, $typeMap) ? $type : 'all';
+
+        $logsQuery = ActiveLog::query()
+            ->where('properties->teacher_id', $teacher->id)
+            ->whereIn('log_name', array_values($typeMap))
+            ->when($selectedType !== 'all', function ($query) use ($selectedType, $typeMap) {
+                $query->where('log_name', $typeMap[$selectedType]);
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($nested) use ($search) {
+                    $nested->where('action', 'like', '%' . $search . '%')
+                        ->orWhere('description', 'like', '%' . $search . '%')
+                        ->orWhere('properties->student_name', 'like', '%' . $search . '%')
+                        ->orWhere('properties->course_name', 'like', '%' . $search . '%')
+                        ->orWhere('properties->coupon_code', 'like', '%' . $search . '%')
+                        ->orWhere('properties->certificate_code', 'like', '%' . $search . '%')
+                        ->orWhere('properties->teacher_name', 'like', '%' . $search . '%');
+                });
+            });
+
+        $summary = [
+            'total' => (clone $logsQuery)->count(),
+            'students' => (clone $logsQuery)->where('log_name', $typeMap['students'])->count(),
+            'courses' => (clone $logsQuery)->where('log_name', $typeMap['courses'])->count(),
+            'coupons' => (clone $logsQuery)->where('log_name', $typeMap['coupons'])->count(),
+        ];
+
+        $logs = $logsQuery
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        $pageTitle = __('teacher::dashboard.pages.activity_logs');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.activity_logs', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'logs',
+            'summary',
+            'search',
+            'selectedType'
         ));
+    }
+
+    public function comments(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $courses = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->orderBy('name')
+            ->get();
+
+        $selectedCourseId = (int) $request->query('course_id', 0);
+        $selectedCourse = $selectedCourseId > 0
+            ? $courses->firstWhere('id', $selectedCourseId)
+            : $courses->first();
+
+        $threads = $selectedCourse
+            ? courseCommentThreads($selectedCourse->id, true)
+            : collect();
+
+        $pageTitle = __('teacher::comments.page_title');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.comments', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'courses',
+            'selectedCourse',
+            'threads'
+        ));
+    }
+
+    public function replyComment(Request $request, int $commentId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $comment = CourseComment::query()
+            ->whereNull('parent_id')
+            ->whereHas('course', function ($query) use ($teacher) {
+                $query->withoutGlobalScope(ActiveScope::class)
+                    ->where('teacher_id', $teacher->id);
+            })
+            ->findOrFail($commentId);
+
+        $payload = $request->validate([
+            'content' => ['required', 'string', 'min:2', 'max:2000'],
+        ]);
+
+        $content = $this->sanitizeCommentContent($payload['content']);
+
+        if (mb_strlen($content) < 2) {
+            return $this->commentErrorResponse($request, __('teacher::comments.flash.reply_too_short'), 422);
+        }
+
+        $moderation = courseCommentModeration($content);
+
+        CourseComment::create([
+            'course_id' => $comment->course_id,
+            'parent_id' => $comment->id,
+            'student_id' => $teacher->student_id ?? auth('students')->id(),
+            'content' => $content,
+            'is_visible' => true,
+            'is_flagged' => $moderation['is_flagged'],
+            'flagged_terms' => $moderation['is_flagged'] ? implode(', ', $moderation['matched_terms']) : null,
+        ]);
+
+        return $this->renderTeacherCommentThread($request, $comment->course_id, $teacher);
+    }
+
+    public function toggleCommentVisibility(Request $request, int $commentId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_comments')) {
+            return $featureRedirect;
+        }
+
+        $comment = CourseComment::query()
+            ->whereHas('course', function ($query) use ($teacher) {
+                $query->withoutGlobalScope(ActiveScope::class)
+                    ->where('teacher_id', $teacher->id);
+            })
+            ->findOrFail($commentId);
+
+        $comment->update([
+            'is_visible' => !$comment->is_visible,
+        ]);
+
+        return $this->renderTeacherCommentThread($request, $comment->course_id, $teacher);
     }
 
     public function exportStudents(Request $request, string $format = 'csv')
@@ -794,6 +1720,14 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_export_students')) {
+            return $featureRedirect;
         }
 
         $directory = $this->buildTeacherStudentDirectory($teacher, $request);
@@ -843,6 +1777,14 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_grant_courses', 'teacher.dashboard.students')) {
+            return $featureRedirect;
+        }
+
         $selectedStudent = Student::query()
             ->where('id', (int) $request->query('student_id', 0))
             ->first();
@@ -876,6 +1818,14 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_grant_courses', 'teacher.dashboard.students')) {
+            return $featureRedirect;
         }
 
         $data = $request->validate([
@@ -934,6 +1884,26 @@ class TeacherDashboardController extends Controller
             $locale
         ));
 
+        $this->logTeacherStudentActivity(
+            $teacher,
+            $student,
+            'grant_created',
+            'Đã cấp quyền học thủ công',
+            [
+                'course_id' => $course->id,
+                'course_name' => $course->name_locale ?: $course->name,
+                'reason' => $data['reason'],
+                'reason_label' => match ($data['reason']) {
+                    'gift' => 'Quà tặng',
+                    'support' => 'Hỗ trợ',
+                    'special_trial' => 'Học thử đặc biệt',
+                    'compensation' => 'Bù quyền truy cập',
+                    default => $data['reason'],
+                },
+                'note' => trim((string) ($data['note'] ?? '')) ?: null,
+            ]
+        );
+
         return redirect()
             ->route('teacher.dashboard.students.grants.create', ['student_id' => $student->id])
             ->with('msg_success', __('teacher::gifts.flash.invitation_sent'));
@@ -944,6 +1914,14 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_grant_courses', 'teacher.dashboard.students')) {
+            return $featureRedirect;
         }
 
         [$student, $details, $grants] = $this->resolveOwnedStudentContext($teacher, $studentId);
@@ -966,6 +1944,18 @@ class TeacherDashboardController extends Controller
                 ->delete();
         }
 
+        $this->logTeacherStudentActivity(
+            $teacher,
+            $student,
+            'grant_revoked',
+            'Đã thu hồi quyền học thủ công',
+            [
+                'course_id' => $grant->course_id,
+                'course_name' => $grant->course?->name_locale ?: $grant->course?->name,
+                'had_paid_access' => $hasPaidAccess,
+            ]
+        );
+
         return redirect()
             ->route('teacher.dashboard.students.show', $student->id)
             ->with('msg_success', 'Da thu hoi suat cap quyen hoc.');
@@ -976,6 +1966,10 @@ class TeacherDashboardController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
         }
 
         [$student, $details, $grants] = $this->resolveOwnedStudentContext($teacher, $studentId);
@@ -1027,6 +2021,8 @@ class TeacherDashboardController extends Controller
 
             return $course;
         });
+        $progressSummary = $this->summarizeStudentCourseProgress($courses);
+        $activityHistory = $this->resolveStudentManagementHistory($teacher, $student);
 
         $pageTitle = 'Chi tiết học viên';
         $pageName = $pageTitle;
@@ -1035,6 +2031,9 @@ class TeacherDashboardController extends Controller
             'courses' => $courses->count(),
             'grants' => $grants->count(),
             'spent' => (float) $details->sum(fn ($detail) => (float) ($detail->price ?? 0)),
+            'progress_percent' => $progressSummary['progress_percent'],
+            'completed_lessons' => $progressSummary['completed_lessons'],
+            'total_lessons' => $progressSummary['total_lessons'],
             'last_purchase_at' => optional(
                 $details->sortByDesc(function ($detail) {
                     return optional($detail->order?->payment_complete_date ?: $detail->order?->payment_date ?: $detail->created_at)->timestamp ?? 0;
@@ -1059,8 +2058,11 @@ class TeacherDashboardController extends Controller
             'grants',
             'note',
             'summary',
-            'learningTimeline'
-        ));
+            'learningTimeline',
+            'activityHistory'
+        ) + [
+            'studentFeatureState' => $this->resolveStudentFeatureState($teacher),
+        ]);
     }
 
     public function saveStudentNote(Request $request, int $studentId)
@@ -1070,14 +2072,22 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_manage_students')) {
+            return $featureRedirect;
+        }
+
         [$student] = $this->resolveOwnedStudentContext($teacher, $studentId);
+        $existingNote = TeacherStudentNote::query()->firstWhere([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+        ]);
 
         $data = $request->validate([
             'tag' => ['nullable', 'in:potential,support_needed,vip'],
             'note' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        TeacherStudentNote::query()->updateOrCreate(
+        $savedNote = TeacherStudentNote::query()->updateOrCreate(
             [
                 'teacher_id' => $teacher->id,
                 'student_id' => $student->id,
@@ -1085,6 +2095,20 @@ class TeacherDashboardController extends Controller
             [
                 'tag' => $data['tag'] ?? null,
                 'note' => trim((string) ($data['note'] ?? '')) ?: null,
+            ]
+        );
+
+        $this->logTeacherStudentActivity(
+            $teacher,
+            $student,
+            'note_saved',
+            'Đã cập nhật ghi chú nội bộ',
+            [
+                'tag' => $savedNote->tag,
+                'tag_label' => $this->normalizeStudentTagLabel($savedNote->tag),
+                'note_preview' => Str::limit((string) ($savedNote->note ?? ''), 160),
+                'previous_tag' => $existingNote?->tag,
+                'previous_note_preview' => Str::limit((string) ($existingNote?->note ?? ''), 160),
             ]
         );
 
@@ -1102,30 +2126,152 @@ class TeacherDashboardController extends Controller
 
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:10000'],
-            'bank_name' => ['required', 'string', 'max:100'],
-            'bank_account_name' => ['required', 'string', 'max:120'],
-            'bank_account_number' => ['required', 'string', 'max:50'],
+            'account_mode' => ['required', 'in:saved,new'],
+            'payout_account_id' => ['nullable', 'integer'],
+            'bank_name' => ['nullable', 'string', 'max:100'],
+            'bank_account_name' => ['nullable', 'string', 'max:120'],
+            'bank_account_number' => ['nullable', 'string', 'max:50'],
             'note' => ['nullable', 'string'],
         ]);
 
         $summary = TeacherFinanceCalculator::summarize(
             $this->paidOrderDetailsQuery($teacher)->get(),
-            fn () => (float) $teacher->commission_rate
+            fn () => $this->resolveEffectiveCommissionRate($teacher)
         );
-        $requestedAmount = (float) TeacherPayoutRequest::query()->where('teacher_id', $teacher->id)->sum('amount');
+        $requestedAmount = $this->resolveCommittedPayoutAmount($teacher);
         $availableBalance = max($summary['teacher_revenue'] - $requestedAmount, 0);
 
         if ((float) $data['amount'] > $availableBalance) {
             return back()->with('msg_danger', __('teacher::dashboard.payouts.flash.amount_exceeds_balance'));
         }
 
-        TeacherPayoutRequest::query()->create(array_merge($data, [
+        $payoutAccounts = $teacher->payoutAccounts()->orderBy('id')->get();
+        $bankData = $this->resolvePayoutBankData($request, $teacher, $data, $payoutAccounts);
+        if ($bankData instanceof \Illuminate\Http\RedirectResponse) {
+            return $bankData;
+        }
+
+        TeacherPayoutRequest::query()->create([
             'teacher_id' => $teacher->id,
+            'amount' => $data['amount'],
+            'bank_name' => $bankData['bank_name'],
+            'bank_account_name' => $bankData['bank_account_name'],
+            'bank_account_number' => $bankData['bank_account_number'],
+            'note' => trim((string) ($data['note'] ?? '')) ?: null,
             'status' => 'requested',
-        ]));
+        ]);
 
         return redirect()->route('teacher.dashboard.payouts')
             ->with('msg_success', __('teacher::dashboard.payouts.flash.request_sent'));
+    }
+
+    public function storeSupport(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $data = $request->validate([
+            'submission_type' => ['required', 'in:' . Contacts::TYPE_FEEDBACK . ',' . Contacts::TYPE_REPORT],
+            'category' => ['required', 'in:' . implode(',', array_filter(Contacts::categories(), fn ($item) => $item !== 'general_contact'))],
+            'subject' => ['required', 'string', 'max:150'],
+            'message' => ['required', 'string', 'max:2000'],
+            'page_url' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $student = auth('students')->user();
+
+        $contact = Contacts::query()->create([
+            'name' => $student?->name ?: ($teacher->name_locale ?: $teacher->name),
+            'phone' => $student?->phone,
+            'email' => $student?->email,
+            'subject' => $data['subject'],
+            'submission_type' => $data['submission_type'],
+            'category' => $data['category'],
+            'message' => $data['message'],
+            'status' => 0,
+            'workflow_status' => Contacts::STATUS_NEW,
+            'source' => 'teacher_portal',
+            'page_url' => $data['page_url'] ?: route('teacher.dashboard.support'),
+            'student_id' => $student?->id,
+            'teacher_id' => $teacher->id,
+        ]);
+
+        $admins = User::query()->inGroup('super_admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewContactNotification($contact));
+        }
+
+        return redirect()
+            ->route('teacher.dashboard.support')
+            ->with('msg_success', 'Bạn đã gửi góp ý / báo cáo thành công cho admin.');
+    }
+
+    public function storePayoutAccountChangeRequest(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $accounts = $teacher->payoutAccounts()->orderBy('id')->get();
+        $accountLimit = $this->resolvePayoutAccountLimit($teacher);
+        if ($accounts->count() < $accountLimit) {
+            return back()->with('msg_danger', __('teacher::dashboard.payouts.flash.change_request_not_required', [
+                'limit' => $accountLimit,
+            ]));
+        }
+
+        $data = $request->validate([
+            'replace_payout_account_id' => ['required', 'integer'],
+            'bank_name' => ['required', 'string', 'max:100'],
+            'bank_account_name' => ['required', 'string', 'max:120'],
+            'bank_account_number' => ['required', 'string', 'max:50'],
+            'note' => ['nullable', 'string'],
+        ]);
+
+        $replaceAccount = $accounts->firstWhere('id', (int) $data['replace_payout_account_id']);
+        if (!$replaceAccount) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.invalid_saved_account'));
+        }
+
+        $bankData = $this->sanitizeBankData($data);
+        if ($this->findMatchingPayoutAccount($accounts, $bankData)) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.account_already_saved'));
+        }
+
+        $duplicatePendingRequest = $teacher->payoutAccountChangeRequests()
+            ->where('status', 'pending')
+            ->get()
+            ->first(fn (TeacherPayoutAccountChangeRequest $item) => $item->replace_payout_account_id === (int) $replaceAccount->id
+                && $this->bankPayloadMatches($item, $bankData));
+
+        if ($duplicatePendingRequest) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.change_request_exists'));
+        }
+
+        TeacherPayoutAccountChangeRequest::query()->create([
+            'teacher_id' => $teacher->id,
+            'replace_payout_account_id' => $replaceAccount->id,
+            'replace_bank_name' => $replaceAccount->bank_name,
+            'replace_bank_account_name' => $replaceAccount->bank_account_name,
+            'replace_bank_account_number' => $replaceAccount->bank_account_number,
+            'bank_name' => $bankData['bank_name'],
+            'bank_account_name' => $bankData['bank_account_name'],
+            'bank_account_number' => $bankData['bank_account_number'],
+            'note' => trim((string) ($data['note'] ?? '')) ?: null,
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('teacher.dashboard.payouts')
+            ->with('msg_success', __('teacher::dashboard.payouts.flash.change_request_sent'));
     }
 
     private function resolveTeacher(): ?Teacher
@@ -1140,7 +2286,31 @@ class TeacherDashboardController extends Controller
             return null;
         }
 
-        return $this->packageLifecycleManager->sync($teacher);
+        $teacher = $this->packageLifecycleManager->sync($teacher);
+
+        return $this->syncTeacherCommissionRate($teacher);
+    }
+
+    private function resolveEffectiveCommissionRate(Teacher $teacher): float
+    {
+        $teacher->loadMissing('application.package');
+
+        return (float) ($teacher->application?->package?->commission_rate ?? $teacher->commission_rate ?? 0);
+    }
+
+    private function syncTeacherCommissionRate(Teacher $teacher): Teacher
+    {
+        $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
+
+        if (abs((float) $teacher->commission_rate - $effectiveCommissionRate) < 0.0001) {
+            return $teacher;
+        }
+
+        $teacher->forceFill([
+            'commission_rate' => $effectiveCommissionRate,
+        ])->save();
+
+        return $teacher->fresh(['application.package']);
     }
 
     private function redirectToStatus()
@@ -1149,9 +2319,509 @@ class TeacherDashboardController extends Controller
             ->with('msg_danger', __('teacher::dashboard.payouts.flash.inactive_teacher'));
     }
 
+    private function ensurePackageFeatureAllowed(Teacher $teacher, string $feature, string $fallbackRoute = 'teacher.dashboard.index')
+    {
+        if ($teacher->packageHasFeature($feature)) {
+            return null;
+        }
+
+        return redirect()
+            ->route($fallbackRoute)
+            ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
+    }
+
+    private function resolvePromotionRecipientIds(
+        Teacher $teacher,
+        ?int $courseId = null,
+        ?int $recentPurchaseDays = null,
+        ?int $inactiveLearningDays = null
+    ): array
+    {
+        $orderDetailsQuery = $this->paidOrderDetailsQuery($teacher)
+            ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
+            ->when($recentPurchaseDays, function ($query) use ($recentPurchaseDays) {
+                $threshold = Carbon::now()->subDays($recentPurchaseDays)->startOfDay();
+
+                $query->whereHas('order', function ($orderQuery) use ($threshold) {
+                    $orderQuery->where(function ($dateQuery) use ($threshold) {
+                        $dateQuery->where('payment_complete_date', '>=', $threshold)
+                            ->orWhere(function ($fallbackQuery) use ($threshold) {
+                                $fallbackQuery->whereNull('payment_complete_date')
+                                    ->where('payment_date', '>=', $threshold);
+                            });
+                    });
+                });
+            });
+
+        $orderStudentIds = $orderDetailsQuery->get()->pluck('order.student_id');
+
+        $grantStudentIds = collect();
+        if (!$recentPurchaseDays) {
+            $grantStudentIds = $this->teacherCourseGrantsQuery($teacher)
+                ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
+                ->pluck('student_id');
+        }
+
+        $recipientIds = $orderStudentIds
+            ->concat($grantStudentIds)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($inactiveLearningDays) {
+            $recipientIds = $this->filterInactivePromotionRecipients(
+                $teacher,
+                $recipientIds->all(),
+                $courseId,
+                $inactiveLearningDays
+            );
+        }
+
+        return collect($recipientIds)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function buildPromotionNotificationPayload(Teacher $teacher, TeacherPromotion $promotion, $course = null): array
+    {
+        $teacherName = $teacher->name_locale ?: $teacher->name ?: 'Giang vien';
+        $courseName = $course ? (localizedModelField($course, 'name', app()->getLocale()) ?: __('teacher::dashboard.common.unknown_course')) : null;
+        $title = $promotion->title;
+        $message = $promotion->message;
+
+        if ($course && ($course->slug_locale ?: $course->slug)) {
+            $url = route('courses.detail', [
+                'locale' => app()->getLocale(),
+                'slug' => $course->slug_locale ?: $course->slug,
+            ]);
+        } else {
+            $url = route('teacher.public.show', [
+                'locale' => app()->getLocale(),
+                'slug' => $teacher->slug_locale ?: $teacher->slug,
+            ]);
+        }
+
+        return [
+            'type' => 'teacher.promotion',
+            'title' => $title,
+            'title_translations' => [
+                app()->getLocale() => $title,
+            ],
+            'message' => $message,
+            'message_translations' => [
+                app()->getLocale() => $message,
+            ],
+            'url' => $url,
+            'severity' => 'primary',
+            'icon' => 'fas fa-bullhorn',
+            'entity_type' => TeacherPromotion::class,
+            'entity_id' => $promotion->id,
+            'meta' => [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacherName,
+                'course_id' => $course?->id,
+                'course_name' => $courseName,
+                'promotion_id' => $promotion->id,
+            ],
+        ];
+    }
+
+    private function resolvePromotionAudienceType(?int $courseId, ?int $recentPurchaseDays, ?int $inactiveLearningDays): string
+    {
+        if ($courseId && $inactiveLearningDays) {
+            return 'course_inactive_learners';
+        }
+
+        if ($courseId) {
+            return 'course_students';
+        }
+
+        if ($recentPurchaseDays) {
+            return 'recent_buyers';
+        }
+
+        if ($inactiveLearningDays) {
+            return 'inactive_learners';
+        }
+
+        return 'all_students';
+    }
+
+    private function filterInactivePromotionRecipients(
+        Teacher $teacher,
+        array $recipientIds,
+        ?int $courseId,
+        int $inactiveLearningDays
+    ): array {
+        if (empty($recipientIds)) {
+            return [];
+        }
+
+        $threshold = Carbon::now()->subDays($inactiveLearningDays)->endOfDay();
+        $activeStudentIds = StudentLessonProgress::query()
+            ->select('student_id')
+            ->whereIn('student_id', $recipientIds)
+            ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
+            ->when(!$courseId, function ($query) use ($teacher) {
+                $query->whereHas('course', function ($courseQuery) use ($teacher) {
+                    $courseQuery->withoutGlobalScopes()->where('teacher_id', $teacher->id);
+                });
+            })
+            ->where('updated_at', '>', $threshold)
+            ->groupBy('student_id')
+            ->pluck('student_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return collect($recipientIds)
+            ->diff($activeStudentIds)
+            ->values()
+            ->all();
+    }
+
+    private function bundleFormResponse(?int $bundleId = null)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_sell_bundles', 'teacher.dashboard.bundles')) {
+            return $featureRedirect;
+        }
+
+        $bundle = null;
+        if ($bundleId) {
+            $bundle = TeacherCourseBundle::query()
+                ->with('items')
+                ->where('teacher_id', $teacher->id)
+                ->findOrFail($bundleId);
+        }
+
+        $courseOptions = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->where('is_learning_locked', '!=', 1)
+            ->orderBy('name')
+            ->get(['id', 'name', 'name_en', 'name_ko', 'name_ja', 'name_zh', 'price', 'sale_price', 'thumbnail']);
+
+        $pageTitle = $bundle
+            ? __('teacher::dashboard.bundles.edit_title')
+            : __('teacher::dashboard.bundles.create_title');
+        $pageName = $pageTitle;
+
+        return view('teacher::clients.dashboard.bundle_form', compact(
+            'pageTitle',
+            'pageName',
+            'teacher',
+            'bundle',
+            'courseOptions'
+        ));
+    }
+
+    private function persistBundle(TeacherCourseBundleRequest $request, ?int $bundleId = null)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_sell_bundles', 'teacher.dashboard.bundles')) {
+            return $featureRedirect;
+        }
+
+        $data = $request->validated();
+        $courseIds = collect($data['course_ids'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $courses = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->where('is_learning_locked', '!=', 1)
+            ->whereIn('id', $courseIds)
+            ->get(['id']);
+
+        if ($courses->count() < 2 || $courses->count() !== $courseIds->count()) {
+            return back()
+                ->withInput()
+                ->withErrors(['course_ids' => __('teacher::dashboard.bundles.flash.invalid_courses')]);
+        }
+
+        $existingBundle = $bundleId
+            ? TeacherCourseBundle::query()->where('teacher_id', $teacher->id)->findOrFail($bundleId)
+            : null;
+
+        $baseSlug = Str::slug((string) $data['name']);
+        $slug = $this->resolveUniqueBundleSlug($teacher, $baseSlug !== '' ? $baseSlug : 'combo-khoa-hoc', $existingBundle?->id);
+
+        $bundle = DB::transaction(function () use ($teacher, $data, $courseIds, $existingBundle, $slug) {
+            $payload = [
+                'teacher_id' => $teacher->id,
+                'name' => trim((string) $data['name']),
+                'slug' => $slug,
+                'description' => trim((string) ($data['description'] ?? '')),
+                'thumbnail' => trim((string) ($data['thumbnail'] ?? '')),
+                'price' => (float) $data['price'],
+                'status' => (bool) ($data['status'] ?? false),
+            ];
+
+            $bundle = $existingBundle;
+            if ($bundle) {
+                $bundle->update($payload);
+            } else {
+                $payload['position'] = ((int) TeacherCourseBundle::query()->where('teacher_id', $teacher->id)->max('position')) + 1;
+                $bundle = TeacherCourseBundle::query()->create($payload);
+            }
+
+            $bundle->items()->delete();
+
+            foreach ($courseIds->values() as $index => $courseId) {
+                $bundle->items()->create([
+                    'course_id' => $courseId,
+                    'position' => $index + 1,
+                ]);
+            }
+
+            return $bundle;
+        });
+
+        return redirect()
+            ->route('teacher.dashboard.bundles.edit', ['bundle' => $bundle->id])
+            ->with('msg_success', $bundleId
+                ? __('teacher::dashboard.bundles.flash.updated')
+                : __('teacher::dashboard.bundles.flash.created'));
+    }
+
+    private function resolveUniqueBundleSlug(Teacher $teacher, string $baseSlug, ?int $ignoreId = null): string
+    {
+        $slug = $baseSlug;
+        $index = 2;
+
+        while (
+            TeacherCourseBundle::query()
+                ->where('slug', $slug)
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $baseSlug . '-' . $index;
+            $index++;
+        }
+
+        return $slug;
+    }
+
+    private function resolveTopBundles(Teacher $teacher): Collection
+    {
+        $orders = \Modules\Orders\src\Models\Order::query()
+            ->with(['bundle'])
+            ->whereNotNull('bundle_id')
+            ->where('status_id', 2)
+            ->whereHas('bundle', function ($query) use ($teacher) {
+                $query->where('teacher_id', $teacher->id);
+            })
+            ->get();
+
+        return $orders
+            ->groupBy('bundle_id')
+            ->map(function ($bundleOrders) {
+                $firstOrder = $bundleOrders->first();
+                $bundle = $firstOrder?->bundle;
+
+                return (object) [
+                    'bundle' => $bundle,
+                    'sales_count' => $bundleOrders->count(),
+                    'gross_revenue' => (float) $bundleOrders->sum('total'),
+                    'discount_amount' => (float) $bundleOrders->sum('discount'),
+                    'net_revenue' => (float) $bundleOrders->sum(fn ($order) => max((float) $order->total - (float) ($order->discount ?? 0), 0)),
+                ];
+            })
+            ->filter(fn ($item) => $item->bundle !== null)
+            ->sortByDesc('net_revenue')
+            ->take(5)
+            ->values();
+    }
+
+    private function resolveCommittedPayoutAmount(Teacher $teacher): float
+    {
+        return (float) TeacherPayoutRequest::query()
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('status', ['requested', 'processing', 'paid'])
+            ->sum('amount');
+    }
+
+    private function resolvePayoutBankData(Request $request, Teacher $teacher, array $data, Collection $payoutAccounts)
+    {
+        if (($data['account_mode'] ?? null) === 'saved') {
+            $selectedAccount = $payoutAccounts->firstWhere('id', (int) ($data['payout_account_id'] ?? 0));
+            if (!$selectedAccount) {
+                return back()
+                    ->withInput()
+                    ->with('msg_danger', __('teacher::dashboard.payouts.flash.invalid_saved_account'));
+            }
+
+            return [
+                'bank_name' => $selectedAccount->bank_name,
+                'bank_account_name' => $selectedAccount->bank_account_name,
+                'bank_account_number' => $selectedAccount->bank_account_number,
+            ];
+        }
+
+        $request->validate([
+            'bank_name' => ['required', 'string', 'max:100'],
+            'bank_account_name' => ['required', 'string', 'max:120'],
+            'bank_account_number' => ['required', 'string', 'max:50'],
+        ]);
+
+        $bankData = $this->sanitizeBankData($data);
+        $matchedAccount = $this->findMatchingPayoutAccount($payoutAccounts, $bankData);
+        if ($matchedAccount) {
+            return [
+                'bank_name' => $matchedAccount->bank_name,
+                'bank_account_name' => $matchedAccount->bank_account_name,
+                'bank_account_number' => $matchedAccount->bank_account_number,
+            ];
+        }
+
+        $accountLimit = $this->resolvePayoutAccountLimit($teacher);
+        if ($payoutAccounts->count() >= $accountLimit) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.limit_reached_use_change_request', [
+                    'limit' => $accountLimit,
+                ]));
+        }
+
+        TeacherPayoutAccount::query()->create(array_merge($bankData, [
+            'teacher_id' => $teacher->id,
+        ]));
+
+        return $bankData;
+    }
+
+    private function sanitizeBankData(array $data): array
+    {
+        return [
+            'bank_name' => trim((string) ($data['bank_name'] ?? '')),
+            'bank_account_name' => trim((string) ($data['bank_account_name'] ?? '')),
+            'bank_account_number' => preg_replace('/\s+/', '', trim((string) ($data['bank_account_number'] ?? ''))),
+        ];
+    }
+
+    private function findMatchingPayoutAccount(Collection $accounts, array $bankData): ?TeacherPayoutAccount
+    {
+        return $accounts->first(fn (TeacherPayoutAccount $account) => $this->bankPayloadMatches($account, $bankData));
+    }
+
+    private function bankPayloadMatches($accountLike, array $bankData): bool
+    {
+        return $this->normalizeBankText($accountLike->bank_name) === $this->normalizeBankText($bankData['bank_name'])
+            && $this->normalizeBankText($accountLike->bank_account_name) === $this->normalizeBankText($bankData['bank_account_name'])
+            && $this->normalizeBankAccountNumber($accountLike->bank_account_number) === $this->normalizeBankAccountNumber($bankData['bank_account_number']);
+    }
+
+    private function normalizeBankText(?string $value): string
+    {
+        return Str::upper(preg_replace('/\s+/', ' ', trim((string) $value)));
+    }
+
+    private function normalizeBankAccountNumber(?string $value): string
+    {
+        return preg_replace('/\s+/', '', trim((string) $value));
+    }
+
+    private function resolveVietnamBankOptions(): array
+    {
+        return [
+            'Vietcombank' => 'Vietcombank',
+            'VietinBank' => 'VietinBank',
+            'BIDV' => 'BIDV',
+            'Agribank' => 'Agribank',
+            'Techcombank' => 'Techcombank',
+            'MB Bank' => 'MB Bank',
+            'ACB' => 'ACB',
+            'VPBank' => 'VPBank',
+            'TPBank' => 'TPBank',
+            'Sacombank' => 'Sacombank',
+            'HDBank' => 'HDBank',
+            'SHB' => 'SHB',
+            'VIB' => 'VIB',
+            'SeABank' => 'SeABank',
+            'OCB' => 'OCB',
+            'Eximbank' => 'Eximbank',
+            'MSB' => 'MSB',
+            'Nam A Bank' => 'Nam A Bank',
+            'SCB' => 'SCB',
+            'ABBank' => 'ABBANK',
+            'PVcomBank' => 'PVcomBank',
+            'Bac A Bank' => 'Bac A Bank',
+            'LienVietPostBank' => 'LPBank',
+            'KienlongBank' => 'KienlongBank',
+            'VietBank' => 'VietBank',
+            'BaoViet Bank' => 'BaoViet Bank',
+            'NCB' => 'NCB',
+            'Saigonbank' => 'Saigonbank',
+            'DongA Bank' => 'DongA Bank',
+            'OceanBank' => 'OceanBank',
+            'CBBank' => 'CBBank',
+            'GPBank' => 'GPBank',
+            'UOB Vietnam' => 'UOB Vietnam',
+            'Standard Chartered Vietnam' => 'Standard Chartered Vietnam',
+            'HSBC Vietnam' => 'HSBC Vietnam',
+            'Shinhan Bank Vietnam' => 'Shinhan Bank Vietnam',
+            'Woori Bank Vietnam' => 'Woori Bank Vietnam',
+            'Public Bank Vietnam' => 'Public Bank Vietnam',
+            'Hong Leong Bank Vietnam' => 'Hong Leong Bank Vietnam',
+            'CIMB Bank Vietnam' => 'CIMB Bank Vietnam',
+        ];
+    }
+
     private function resolveCourseLimit(Teacher $teacher): ?int
     {
         return $teacher->application?->package?->effective_course_limit;
+    }
+
+    private function resolvePayoutAccountLimit(Teacher $teacher): int
+    {
+        return $teacher->application?->package?->effective_payout_account_limit ?? 3;
+    }
+
+    private function resolvePayoutAccountUsage(Teacher $teacher, int $used): array
+    {
+        $limit = $this->resolvePayoutAccountLimit($teacher);
+
+        return array_merge(
+            $this->packageUsageResolver->build($used, $limit),
+            [
+                'limit_label' => $limit,
+            ]
+        );
+    }
+
+    private function resolveStudentFeatureState(Teacher $teacher): array
+    {
+        $features = [
+            'manage_students' => $teacher->packageHasFeature('can_manage_students'),
+            'grant_courses' => $teacher->packageHasFeature('can_grant_courses'),
+            'export_students' => $teacher->packageHasFeature('can_export_students'),
+            'view_progress' => $teacher->packageHasFeature('can_view_student_progress'),
+        ];
+
+        return [
+            'features' => $features,
+            'is_feature_locked' => in_array(false, $features, true),
+            'can_grant_courses' => $features['grant_courses'],
+            'can_export_students' => $features['export_students'],
+            'can_view_progress' => $features['view_progress'],
+        ];
     }
 
     private function resolveNextPackage(?TeacherPackage $currentPackage): ?TeacherPackage
@@ -1202,8 +2872,261 @@ class TeacherDashboardController extends Controller
             ->first();
     }
 
+    private function finalizePackageChange(Teacher $teacher, TeacherApplication $upgradeRequest): string
+    {
+        $upgradeRequest->forceFill([
+            'status' => 'approved',
+            'submitted_at' => $upgradeRequest->submitted_at ?: now(),
+            'reviewed_at' => now(),
+        ])->save();
+
+        $action = $this->packageLifecycleManager->applyApprovedChange($teacher, $upgradeRequest->fresh(['package']));
+
+        $teacher->refresh();
+
+        return $action;
+    }
+
+    private function redirectAfterPackageChange(string $action)
+    {
+        $flashKey = match ($action) {
+            'extended' => 'teacher::dashboard.package.flash.auto_extended',
+            'queued' => 'teacher::dashboard.package.flash.auto_queued',
+            default => 'teacher::dashboard.package.flash.auto_activated',
+        };
+
+        $route = $action === 'queued'
+            ? route('teacher.dashboard.package.upgrade.status')
+            : route('teacher.dashboard.index');
+
+        return redirect($route)->with('msg_success', __($flashKey));
+    }
+
+    private function resolvePackageOverLimitWarnings(Teacher $teacher, TeacherApplication $upgradeRequest): array
+    {
+        $currentPackage = $teacher->application?->package;
+        $targetPackage = $upgradeRequest->package;
+
+        if (
+            !$currentPackage ||
+            !$targetPackage ||
+            (int) $targetPackage->sort_order >= (int) $currentPackage->sort_order
+        ) {
+            return [];
+        }
+
+        $warnings = [];
+
+        $courseCount = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->count();
+        $targetCourseLimit = $targetPackage->effective_course_limit;
+        if ($targetCourseLimit !== null && $courseCount > $targetCourseLimit) {
+            $warnings[] = __('teacher::dashboard.package.over_limit.course_limit', [
+                'used' => $courseCount,
+                'limit' => $targetCourseLimit,
+            ]);
+        }
+
+        $couponCount = Coupons::query()
+            ->where('teacher_id', $teacher->id)
+            ->count();
+        $targetCouponLimit = $targetPackage->hasFeature('can_manage_coupons')
+            ? $targetPackage->effective_coupon_limit
+            : 0;
+        if ($targetCouponLimit !== null && $couponCount > $targetCouponLimit) {
+            $warnings[] = __('teacher::dashboard.package.over_limit.coupon_limit', [
+                'used' => $couponCount,
+                'limit' => $targetCouponLimit,
+            ]);
+        }
+
+        $payoutAccountCount = TeacherPayoutAccount::query()
+            ->where('teacher_id', $teacher->id)
+            ->count();
+        $targetPayoutLimit = $targetPackage->effective_payout_account_limit;
+        if ($payoutAccountCount > $targetPayoutLimit) {
+            $warnings[] = __('teacher::dashboard.package.over_limit.payout_account_limit', [
+                'used' => $payoutAccountCount,
+                'limit' => $targetPayoutLimit,
+            ]);
+        }
+
+        return $warnings;
+    }
+
+    private function resolvePackageFeatureLossWarnings(Teacher $teacher, TeacherApplication $upgradeRequest): array
+    {
+        $currentPackage = $teacher->application?->package;
+        $targetPackage = $upgradeRequest->package;
+
+        if (
+            !$currentPackage ||
+            !$targetPackage ||
+            (int) $targetPackage->sort_order >= (int) $currentPackage->sort_order
+        ) {
+            return [];
+        }
+
+        $featureKeys = [
+            'can_duplicate_courses',
+            'can_manage_comments',
+            'can_manage_coupons',
+            'can_manage_students',
+            'can_view_student_progress',
+            'can_view_activity_logs',
+            'can_grant_courses',
+            'can_export_orders',
+            'can_export_students',
+        ];
+
+        $warnings = [];
+        foreach ($featureKeys as $featureKey) {
+            if ($currentPackage->hasFeature($featureKey) && !$targetPackage->hasFeature($featureKey)) {
+                $warnings[] = __('teacher::dashboard.package_features.labels.' . $featureKey);
+            }
+        }
+
+        return $warnings;
+    }
+
+    private function summarizeStudentCourseProgress(Collection $courses): array
+    {
+        $totalLessons = (int) $courses->sum('teacher_progress_total_lessons');
+        $completedLessons = (int) $courses->sum('teacher_progress_completed_lessons');
+        $progressPercent = $totalLessons > 0
+            ? min((int) round(($completedLessons * 100) / $totalLessons), 100)
+            : 0;
+
+        return [
+            'total_lessons' => $totalLessons,
+            'completed_lessons' => $completedLessons,
+            'progress_percent' => $progressPercent,
+        ];
+    }
+
+    private function attachCourseHistoryPreview(LengthAwarePaginator $courses, Teacher $teacher): void
+    {
+        $courseIds = collect($courses->items())->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $historyMap = ActiveLog::query()
+            ->where('log_name', 'teacher_course_management')
+            ->where(function ($query) use ($courseIds) {
+                $query->where(function ($subjectQuery) use ($courseIds) {
+                    $subjectQuery->where('subject_type', Courses::class)
+                        ->whereIn('subject_id', $courseIds ?: [0]);
+                })->orWhere(function ($propertyQuery) use ($courseIds) {
+                    $propertyQuery->whereNull('subject_id')
+                        ->whereIn('properties->course_id', $courseIds ?: [0]);
+                });
+            })
+            ->where('properties->teacher_id', $teacher->id)
+            ->latest('id')
+            ->get()
+            ->groupBy(function ($log) {
+                return (int) ($log->subject_id ?: data_get($log->properties, 'course_id', 0));
+            });
+
+        foreach ($courses->items() as $course) {
+            $course->teacher_activity_preview = ($historyMap->get((int) $course->id, collect()) ?? collect())
+                ->take(3)
+                ->values();
+        }
+    }
+
+    private function logTeacherCourseActivity(
+        Teacher $teacher,
+        Courses $course,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $course,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'course_id' => $course->id,
+                'course_name' => $course->name_locale ?: $course->name,
+            ]),
+            'teacher_course_management',
+            $description
+        );
+    }
+
+    private function logTeacherLessonActivity(
+        Teacher $teacher,
+        Courses $course,
+        Lesson $lesson,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $lesson,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'course_id' => $course->id,
+                'course_name' => $course->name_locale ?: $course->name,
+                'lesson_id' => $lesson->id,
+                'lesson_name' => $lesson->name_locale ?: $lesson->name,
+            ]),
+            'teacher_course_management',
+            $description
+        );
+    }
+
+    private function summarizeLessonSchedule(?Lesson $lesson): array
+    {
+        return [
+            'mode' => $lesson?->release_mode ?: LessonReleaseManager::MODE_IMMEDIATE,
+            'mode_label' => $lesson ? $lesson->releaseSummary() : 'Mở ngay',
+            'release_at' => $lesson?->release_at?->format('Y-m-d H:i:s'),
+            'release_after_days' => $lesson?->release_after_days,
+        ];
+    }
+
+    private function resolveStudentManagementHistory(Teacher $teacher, Student $student): Collection
+    {
+        return ActiveLog::query()
+            ->where('log_name', 'teacher_student_management')
+            ->where('subject_type', Student::class)
+            ->where('subject_id', $student->id)
+            ->where('properties->teacher_id', $teacher->id)
+            ->latest('id')
+            ->take(12)
+            ->get();
+    }
+
+    private function logTeacherStudentActivity(
+        Teacher $teacher,
+        Student $student,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $student,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+            ]),
+            'teacher_student_management',
+            $description
+        );
+    }
+
     private function resolveOwnedCourse(Teacher $teacher, int $courseId, bool $withTrashed = false): Courses
     {
+        $this->syncCourseLocks($teacher);
+
         $query = Courses::query()
             ->withoutGlobalScope(ActiveScope::class)
             ->where('teacher_id', $teacher->id)
@@ -1229,25 +3152,104 @@ class TeacherDashboardController extends Controller
         return $query->firstOrFail();
     }
 
-    private function ensureCourseCreationAllowed(Teacher $teacher)
+    private function duplicateTitle(?string $value, string $suffix): ?string
     {
-        $limit = $this->resolveCourseLimit($teacher);
-        if ($limit === null) {
-            return null;
+        if (!$value) {
+            return $value;
         }
 
-        $currentCount = Courses::query()
-            ->withoutGlobalScope(ActiveScope::class)
-            ->where('teacher_id', $teacher->id)
-            ->count();
+        return trim($value . ' (' . $suffix . ')');
+    }
 
-        if ($currentCount < $limit) {
-            return null;
+    private function duplicateSlug(?string $value, string $suffix = 'copy'): ?string
+    {
+        if (!$value) {
+            return $value;
         }
 
-        return redirect()
-            ->route('teacher.dashboard.courses')
-            ->with('msg_danger', __('teacher::dashboard.courses.flash.limit_reached', ['limit' => $limit]));
+        return trim($value . '-' . $suffix . '-' . Str::lower(Str::random(4)), '-');
+    }
+
+    private function duplicateCode(?string $value): string
+    {
+        $base = $value ?: 'COURSE';
+
+        return $base . '-COPY-' . strtoupper(Str::random(4));
+    }
+
+    private function performCourseDuplicate(Courses $course): Courses
+    {
+        return DB::transaction(function () use ($course) {
+            $courseData = $course->getAttributes();
+
+            unset($courseData['id'], $courseData['created_at'], $courseData['updated_at'], $courseData['deleted_at']);
+            $courseData['name'] = $this->duplicateTitle($course->name, 'Bản sao');
+            $courseData['name_ko'] = $this->duplicateTitle($course->name_ko, '복제본');
+            $courseData['name_ja'] = $this->duplicateTitle($course->name_ja, '複製版');
+            $courseData['name_zh'] = $this->duplicateTitle($course->name_zh, '复制版');
+            $courseData['slug'] = $this->duplicateSlug($course->slug, 'copy');
+            $courseData['slug_en'] = $this->duplicateSlug($course->slug_en, 'copy');
+            $courseData['slug_ko'] = $this->duplicateSlug($course->slug_ko, 'copy');
+            $courseData['slug_ja'] = $this->duplicateSlug($course->slug_ja, 'copy');
+            $courseData['slug_zh'] = $this->duplicateSlug($course->slug_zh, 'copy');
+            $courseData['code'] = $this->duplicateCode($course->code);
+            $courseData['status'] = 0;
+            $courseData['is_learning_locked'] = 0;
+            $courseData['view'] = 0;
+
+            $newCourse = $this->courseRepository->create($courseData);
+
+            $categoryIds = $this->courseRepository->getRelatedCategories($course);
+            if (!empty($categoryIds)) {
+                $newCourse->categories()->attach($this->categoriesPivotPayload($categoryIds));
+            }
+
+            $lessonMap = [];
+            $lessons = Lesson::query()
+                ->where('course_id', $course->id)
+                ->orderByRaw('CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END')
+                ->orderBy('parent_id')
+                ->orderBy('position')
+                ->orderBy('id')
+                ->get();
+
+            foreach ($lessons as $lesson) {
+                $lessonData = $lesson->getAttributes();
+
+                unset($lessonData['id'], $lessonData['created_at'], $lessonData['updated_at']);
+
+                $oldParentId = $lessonData['parent_id'] ?? null;
+                $lessonData['course_id'] = $newCourse->id;
+                $lessonData['name'] = $this->duplicateTitle($lesson->name, 'Bản sao');
+                $lessonData['name_ko'] = $this->duplicateTitle($lesson->name_ko, '복제본');
+                $lessonData['name_ja'] = $this->duplicateTitle($lesson->name_ja, '複製版');
+                $lessonData['name_zh'] = $this->duplicateTitle($lesson->name_zh, '复制版');
+                $lessonData['slug'] = $this->duplicateSlug($lesson->slug, 'copy');
+                $lessonData['slug_en'] = $this->duplicateSlug($lesson->slug_en, 'copy');
+                $lessonData['slug_ko'] = $this->duplicateSlug($lesson->slug_ko, 'copy');
+                $lessonData['slug_ja'] = $this->duplicateSlug($lesson->slug_ja, 'copy');
+                $lessonData['slug_zh'] = $this->duplicateSlug($lesson->slug_zh, 'copy');
+                $lessonData['status'] = 0;
+                $lessonData['view'] = 0;
+                $lessonData['parent_id'] = null;
+
+                $newLesson = Lesson::query()->create($lessonData);
+                $lessonMap[$lesson->id] = [
+                    'id' => $newLesson->id,
+                    'parent_id' => $oldParentId,
+                ];
+            }
+
+            foreach ($lessonMap as $map) {
+                if (!empty($map['parent_id']) && isset($lessonMap[$map['parent_id']])) {
+                    Lesson::query()
+                        ->whereKey($map['id'])
+                        ->update(['parent_id' => $lessonMap[$map['parent_id']]['id']]);
+                }
+            }
+
+            return $newCourse;
+        });
     }
 
     private function getCourseCategories()
@@ -1273,6 +3275,8 @@ class TeacherDashboardController extends Controller
 
     private function buildCoursePayload(array $data, Teacher $teacher, ?Courses $course = null): array
     {
+        $normalizedStatus = $this->normalizeCourseStatusForPackage($teacher, (int) $data['status'], $course);
+
         return [
             'teacher_id' => $teacher->id,
             'name' => $data['name'],
@@ -1300,9 +3304,124 @@ class TeacherDashboardController extends Controller
             'sale_price' => (float) ($data['sale_price'] ?? 0),
             'code' => $this->generateCourseCode($data['code'] ?? null, $course?->id),
             'is_document' => (int) $data['is_document'],
-            'status' => (int) $data['status'],
+            'status' => $normalizedStatus,
             'is_learning_locked' => (int) $data['is_learning_locked'],
         ];
+    }
+
+    private function resolvePublishedCourseUsage(Teacher $teacher): array
+    {
+        $courseLimit = $this->resolveCourseLimit($teacher);
+        $totalCourses = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->count();
+        $publishedCourses = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->count();
+
+        return array_merge(
+            $this->packageUsageResolver->build($publishedCourses, $courseLimit),
+            [
+            'published' => $publishedCourses,
+            'total' => $totalCourses,
+            'limit_label' => $courseLimit === null ? __('teacher::dashboard.courses.unlimited') : $courseLimit,
+            ]
+        );
+    }
+
+    private function normalizeCourseStatusForPackage(Teacher $teacher, int $requestedStatus, ?Courses $course = null): int
+    {
+        if ($requestedStatus !== 1) {
+            return 0;
+        }
+
+        return $this->canKeepOrPublishCourse($teacher, $course, $requestedStatus) ? 1 : 0;
+    }
+
+    private function canKeepOrPublishCourse(Teacher $teacher, ?Courses $course, int $requestedStatus): bool
+    {
+        if ($requestedStatus !== 1) {
+            return true;
+        }
+
+        if ($course && (int) $course->status === 1 && !$course->trashed() && !$course->package_locked_at) {
+            return true;
+        }
+
+        return $this->hasAvailablePublishedCourseSlot($teacher, $course?->id);
+    }
+
+    private function hasAvailablePublishedCourseSlot(Teacher $teacher, ?int $ignoreCourseId = null): bool
+    {
+        $limit = $this->resolveCourseLimit($teacher);
+        if ($limit === null) {
+            return true;
+        }
+
+        $publishedCount = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->where('status', 1)
+            ->when($ignoreCourseId, fn ($query) => $query->where('id', '!=', $ignoreCourseId))
+            ->count();
+
+        return $publishedCount < $limit;
+    }
+
+    private function activateCourseWithinLimit(Teacher $teacher, Courses $course): void
+    {
+        $limit = $this->resolveCourseLimit($teacher);
+
+        if ($limit !== null) {
+            $publishedQuery = Courses::query()
+                ->withoutGlobalScope(ActiveScope::class)
+                ->where('teacher_id', $teacher->id)
+                ->where('status', 1)
+                ->where('id', '!=', $course->id);
+
+            if ($publishedQuery->count() >= $limit) {
+                $demoteCourse = (clone $publishedQuery)
+                    ->orderBy('is_package_priority')
+                    ->orderBy('updated_at')
+                    ->orderBy('id')
+                    ->first();
+
+                if ($demoteCourse) {
+                    $demoteCourse->forceFill([
+                        'status' => 0,
+                        'package_locked_at' => now(),
+                        'package_lock_reason' => 'package_limit_locked',
+                    ])->save();
+                }
+            }
+        }
+
+        $course->forceFill([
+            'status' => 1,
+            'package_locked_at' => null,
+            'package_lock_reason' => null,
+        ])->save();
+
+        $this->syncCourseLocks($teacher);
+    }
+
+    private function syncCourseLocks(Teacher $teacher): void
+    {
+        $this->packageLifecycleManager->syncCourseLocks($teacher->fresh(['application.package']));
+    }
+
+    private function ensureCourseManageable(Courses $course)
+    {
+        if (!$course->package_locked_at) {
+            return null;
+        }
+
+        return redirect()
+            ->route('teacher.dashboard.courses')
+            ->with('msg_danger', __('teacher::dashboard.courses.flash.locked_manage_only'));
     }
 
     private function syncCourseCategories(Courses $course, array $categories): void
@@ -1321,7 +3440,20 @@ class TeacherDashboardController extends Controller
         );
     }
 
-    private function buildLessonPayload(array $data, Courses $course, ?Lesson $lesson = null): array
+    private function categoriesPivotPayload(array $categories): array
+    {
+        $timestamp = Carbon::now()->format('Y-m-d H:i:s');
+
+        return collect($categories)
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->mapWithKeys(fn ($categoryId) => [
+                $categoryId => ['created_at' => $timestamp, 'updated_at' => $timestamp],
+            ])->all();
+    }
+
+    private function buildLessonPayload(array $data, Courses $course, ?Lesson $lesson = null, bool $canScheduleContent = false): array
     {
         $parentId = $this->normalizeLessonParentId($course, (int) ($data['parent_id'] ?? 0), $lesson?->id);
         $videoUrl = trim((string) ($data['video'] ?? ''));
@@ -1373,7 +3505,7 @@ class TeacherDashboardController extends Controller
             $durations = 0;
         }
 
-        return [
+        return array_merge([
             'name' => $data['name'],
             'name_en' => $data['name_en'] ?? null,
             'name_ko' => $data['name_ko'] ?? null,
@@ -1397,7 +3529,7 @@ class TeacherDashboardController extends Controller
             'description_ja' => $data['description_ja'] ?? null,
             'description_zh' => $data['description_zh'] ?? null,
             'status' => (int) ($data['status'] ?? 0),
-        ];
+        ], $this->lessonReleaseManager->normalizePayload($data, $lesson, $canScheduleContent));
     }
 
     private function nextLessonPosition(Courses $course, int $parentId = 0): int
@@ -1580,14 +3712,28 @@ class TeacherDashboardController extends Controller
             ->unique()
             ->map(fn ($id) => (int) $id)
             ->all();
+        $courseLessonTotals = Lesson::query()
+            ->when(!empty($teacherCourseIds), fn ($query) => $query->whereIn('course_id', $teacherCourseIds), fn ($query) => $query->whereRaw('1 = 0'))
+            ->whereNotNull('parent_id')
+            ->where('status', 1)
+            ->selectRaw('course_id, COUNT(*) as total_lessons')
+            ->groupBy('course_id')
+            ->pluck('total_lessons', 'course_id');
         $recentLearningMap = StudentLessonProgress::query()
             ->when(!empty($filteredStudentIds), fn ($query) => $query->whereIn('student_id', $filteredStudentIds), fn ($query) => $query->whereRaw('1 = 0'))
             ->when(!empty($teacherCourseIds), fn ($query) => $query->whereIn('course_id', $teacherCourseIds), fn ($query) => $query->whereRaw('1 = 0'))
             ->selectRaw('student_id, MAX(completed_at) as last_learning_at')
             ->groupBy('student_id')
             ->pluck('last_learning_at', 'student_id');
+        $progressRows = StudentLessonProgress::query()
+            ->when(!empty($filteredStudentIds), fn ($query) => $query->whereIn('student_id', $filteredStudentIds), fn ($query) => $query->whereRaw('1 = 0'))
+            ->when(!empty($teacherCourseIds), fn ($query) => $query->whereIn('course_id', $teacherCourseIds), fn ($query) => $query->whereRaw('1 = 0'))
+            ->selectRaw('student_id, course_id, COUNT(DISTINCT lesson_id) as completed_lessons')
+            ->groupBy('student_id', 'course_id')
+            ->get()
+            ->groupBy('student_id');
 
-        $students = $students->map(function (Student $student) use ($detailsByStudent, $grantsByStudent, $notesMap, $recentLearningMap) {
+        $students = $students->map(function (Student $student) use ($detailsByStudent, $grantsByStudent, $notesMap, $recentLearningMap, $progressRows, $courseLessonTotals) {
             $details = $detailsByStudent->get((int) $student->id, collect());
             $grantItems = $grantsByStudent->get((int) $student->id, collect());
             $courses = $details->pluck('courses')
@@ -1600,6 +3746,17 @@ class TeacherDashboardController extends Controller
             })->first();
             $noteItem = $notesMap->get((int) $student->id);
             $lastLearningAt = $recentLearningMap->get((int) $student->id);
+            $studentProgressRows = $progressRows->get((int) $student->id, collect());
+            $totalLessons = $courses->sum(fn ($course) => (int) ($courseLessonTotals[$course->id] ?? 0));
+            $completedLessons = $courses->sum(function ($course) use ($studentProgressRows, $courseLessonTotals) {
+                $totalCourseLessons = (int) ($courseLessonTotals[$course->id] ?? 0);
+                $completedCourseLessons = (int) ($studentProgressRows->firstWhere('course_id', $course->id)?->completed_lessons ?? 0);
+
+                return min($completedCourseLessons, $totalCourseLessons);
+            });
+            $progressPercent = $totalLessons > 0
+                ? min((int) round(($completedLessons * 100) / $totalLessons), 100)
+                : 0;
 
             $student->teacher_course_count = $courses->count();
             $student->teacher_order_count = $details->pluck('order_id')->filter()->unique()->count();
@@ -1614,6 +3771,9 @@ class TeacherDashboardController extends Controller
             $student->teacher_note_preview = $noteItem?->note;
             $student->teacher_tag = $noteItem?->tag;
             $student->teacher_last_learning_at = $lastLearningAt ? Carbon::parse($lastLearningAt) : null;
+            $student->teacher_progress_total_lessons = $totalLessons;
+            $student->teacher_progress_completed_lessons = $completedLessons;
+            $student->teacher_progress_percent = $progressPercent;
 
             return $student;
         });
@@ -1671,6 +3831,86 @@ class TeacherDashboardController extends Controller
             ->latest('id');
     }
 
+    private function buildTeacherOrderDirectory(Teacher $teacher, Request $request): array
+    {
+        $search = trim((string) $request->query('q', ''));
+        $courseId = (int) $request->query('course_id', 0);
+        $paymentMethod = trim((string) $request->query('payment_method', ''));
+        $dateFrom = trim((string) $request->query('date_from', ''));
+        $dateTo = trim((string) $request->query('date_to', ''));
+
+        $courseOptions = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'name_en', 'name_ko', 'name_ja', 'name_zh']);
+
+        $details = $this->paidOrderDetailsQuery($teacher)
+            ->when($courseId > 0, fn($query) => $query->where('course_id', $courseId))
+            ->when($paymentMethod !== '', fn($query) => $query->whereHas('order', fn($orderQuery) => $orderQuery->where('payment_method', $paymentMethod)))
+            ->when($dateFrom !== '', fn($query) => $query->whereHas('order', fn($orderQuery) => $orderQuery->whereDate('payment_complete_date', '>=', $dateFrom)))
+            ->when($dateTo !== '', fn($query) => $query->whereHas('order', fn($orderQuery) => $orderQuery->whereDate('payment_complete_date', '<=', $dateTo)))
+            ->when($search !== '', function ($query) use ($search) {
+                $query->whereHas('order', function ($orderQuery) use ($search) {
+                    $orderQuery->where(function ($nestedQuery) use ($search) {
+                        $nestedQuery->where('code', 'like', '%' . $search . '%')
+                            ->orWhere('customer_name_snapshot', 'like', '%' . $search . '%')
+                            ->orWhere('customer_email_snapshot', 'like', '%' . $search . '%')
+                            ->orWhere('customer_phone_snapshot', 'like', '%' . $search . '%')
+                            ->orWhereHas('students', function ($studentQuery) use ($search) {
+                                $studentQuery->where('name', 'like', '%' . $search . '%')
+                                    ->orWhere('email', 'like', '%' . $search . '%')
+                                    ->orWhere('phone', 'like', '%' . $search . '%');
+                            });
+                    });
+                });
+            })
+            ->get();
+
+        $decoratedDetails = TeacherFinanceCalculator::decorate(
+            $details,
+            fn() => $this->resolveEffectiveCommissionRate($teacher)
+        );
+
+        $orders = $decoratedDetails
+            ->groupBy('order_id')
+            ->map(function ($orderDetails) {
+                $firstDetail = $orderDetails->first();
+                $order = $firstDetail?->order;
+
+                return (object) [
+                    'order' => $order,
+                    'details' => $orderDetails->values(),
+                    'item_count' => $orderDetails->count(),
+                    'gross_amount' => (float) $orderDetails->sum(fn($item) => data_get($item, 'finance_breakdown.gross_amount', 0)),
+                    'allocated_discount' => (float) $orderDetails->sum(fn($item) => data_get($item, 'finance_breakdown.allocated_discount', 0)),
+                    'net_revenue' => (float) $orderDetails->sum(fn($item) => data_get($item, 'finance_breakdown.net_revenue', 0)),
+                    'teacher_revenue' => (float) $orderDetails->sum(fn($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+                    'payment_at' => $order?->payment_complete_date ?: $order?->payment_date ?: $order?->created_at,
+                ];
+            })
+            ->sortByDesc(fn($item) => optional($item->payment_at)->timestamp ?? 0)
+            ->values();
+
+        return [
+            'search' => $search,
+            'courseId' => $courseId,
+            'paymentMethod' => $paymentMethod,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'courseOptions' => $courseOptions,
+            'orders' => $orders,
+            'summary' => [
+                'orders' => $orders->count(),
+                'students' => $orders->pluck('order.student_id')->filter()->unique()->count(),
+                'courses' => $decoratedDetails->pluck('course_id')->filter()->unique()->count(),
+                'gross_amount' => (float) $decoratedDetails->sum(fn($item) => data_get($item, 'finance_breakdown.gross_amount', 0)),
+                'allocated_discount' => (float) $decoratedDetails->sum(fn($item) => data_get($item, 'finance_breakdown.allocated_discount', 0)),
+                'teacher_revenue' => (float) $decoratedDetails->sum(fn($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+            ],
+        ];
+    }
+
     private function teacherCourseGrantsQuery(Teacher $teacher, ?array $statuses = ['accepted'])
     {
         $query = TeacherCourseGrant::query()
@@ -1712,6 +3952,58 @@ class TeacherDashboardController extends Controller
             'vip' => 'VIP',
             default => '',
         };
+    }
+
+    private function renderTeacherCommentThread(Request $request, int $courseId, Teacher $teacher)
+    {
+        $course = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->findOrFail($courseId);
+
+        $threads = courseCommentThreads($course->id, true);
+
+        $html = view('teacher::clients.dashboard.comments_thread', [
+            'course' => $course,
+            'threads' => $threads,
+            'teacher' => $teacher,
+        ])->render();
+
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+            ]);
+        }
+
+        return redirect()->route('teacher.dashboard.comments', ['course_id' => $course->id]);
+    }
+
+    private function commentErrorResponse(Request $request, string $message, int $status = 422)
+    {
+        if ($this->wantsJson($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], $status);
+        }
+
+        return redirect()->back()
+            ->withInput()
+            ->with('msg_danger', $message);
+    }
+
+    private function wantsJson(Request $request): bool
+    {
+        return $request->expectsJson() || $request->ajax();
+    }
+
+    private function sanitizeCommentContent(string $content): string
+    {
+        $plainText = strip_tags(str_replace('&nbsp;', ' ', $content));
+        $plainText = html_entity_decode($plainText, ENT_QUOTES, 'UTF-8');
+
+        return trim(preg_replace('/\s+/u', ' ', $plainText) ?? '');
     }
 
     private function updateCourseDurations(?int $courseId): void
@@ -1758,6 +4050,39 @@ class TeacherDashboardController extends Controller
         }
 
         return $rows;
+    }
+
+    private function sanitizeTeacherNotificationRedirect(?string $redirect): string
+    {
+        $fallback = route('teacher.dashboard.notifications');
+        $redirect = trim((string) $redirect);
+
+        if ($redirect === '') {
+            return $fallback;
+        }
+
+        $parts = parse_url($redirect);
+        if ($parts === false) {
+            return $fallback;
+        }
+
+        $host = $parts['host'] ?? null;
+        $currentHost = request()->getHost();
+        $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+
+        if ($host && !in_array($host, array_filter([$currentHost, $appHost]), true)) {
+            return $fallback;
+        }
+
+        if ($host && !empty($parts['scheme'])) {
+            return $redirect;
+        }
+
+        if (!Str::startsWith($redirect, ['/']) && !Str::startsWith($redirect, url('/'))) {
+            return $fallback;
+        }
+
+        return $redirect;
     }
 }
 

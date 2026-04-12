@@ -33,8 +33,25 @@ class TeacherPackage extends Model
         'price',
         'billing_cycle',
         'course_limit',
+        'payout_account_limit',
         'commission_rate',
         'priority_review',
+        'can_duplicate_courses',
+        'can_manage_comments',
+        'can_manage_coupons',
+        'can_manage_students',
+        'can_view_student_progress',
+        'can_view_activity_logs',
+        'coupon_limit',
+        'can_grant_courses',
+        'can_export_orders',
+        'can_export_students',
+        'can_sell_bundles',
+        'can_schedule_content',
+        'can_send_promotions',
+        'can_issue_certificates',
+        'can_customize_teacher_landing',
+        'can_use_affiliate_links',
         'support_level',
         'support_level_en',
         'support_level_ko',
@@ -48,11 +65,33 @@ class TeacherPackage extends Model
 
     protected $casts = [
         'price' => 'float',
+        'payout_account_limit' => 'integer',
+        'coupon_limit' => 'integer',
         'commission_rate' => 'float',
         'priority_review' => 'boolean',
+        'can_duplicate_courses' => 'boolean',
+        'can_manage_comments' => 'boolean',
+        'can_manage_coupons' => 'boolean',
+        'can_manage_students' => 'boolean',
+        'can_view_student_progress' => 'boolean',
+        'can_view_activity_logs' => 'boolean',
+        'can_grant_courses' => 'boolean',
+        'can_export_orders' => 'boolean',
+        'can_export_students' => 'boolean',
+        'can_sell_bundles' => 'boolean',
+        'can_schedule_content' => 'boolean',
+        'can_send_promotions' => 'boolean',
+        'can_issue_certificates' => 'boolean',
+        'can_customize_teacher_landing' => 'boolean',
+        'can_use_affiliate_links' => 'boolean',
         'status' => 'boolean',
         'is_featured' => 'boolean',
     ];
+
+    public function hasFeature(string $feature): bool
+    {
+        return (bool) ($this->{$feature} ?? false);
+    }
 
     public function scopeVisibleForListing($query)
     {
@@ -79,6 +118,22 @@ class TeacherPackage extends Model
         }
 
         return $this->course_limit;
+    }
+
+    public function getEffectivePayoutAccountLimitAttribute(): int
+    {
+        return max(1, min((int) ($this->payout_account_limit ?? 3), 3));
+    }
+
+    public function getEffectiveCouponLimitAttribute(): ?int
+    {
+        $limit = $this->coupon_limit;
+
+        if ($limit === null) {
+            return null;
+        }
+
+        return max((int) $limit, 1);
     }
 
     public function getNameLocaleAttribute(): string

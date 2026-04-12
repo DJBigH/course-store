@@ -26,12 +26,8 @@ class TeacherProfileUpdateRequest extends FormRequest
             'bio' => trim((string) $this->input('bio')),
             'specialties' => trim((string) $this->input('specialties')),
             'portfolio_url' => trim((string) $this->input('portfolio_url')),
-            'facebook_url' => trim((string) $this->input('facebook_url')),
-            'youtube_url' => trim((string) $this->input('youtube_url')),
             'linkedin_url' => trim((string) $this->input('linkedin_url')),
             'intro_video_url' => trim((string) $this->input('intro_video_url')),
-            'cv_file' => trim((string) $this->input('cv_file')),
-            'identity_file' => trim((string) $this->input('identity_file')),
         ]);
     }
 
@@ -52,7 +48,7 @@ class TeacherProfileUpdateRequest extends FormRequest
             'name' => [Rule::requiredIf($isAccountSection), 'nullable', 'string', 'min:2', 'max:225'],
             'phone' => [Rule::requiredIf($isAccountSection), 'nullable', 'regex:/^(0|\+84)[0-9]{9,10}$/'],
             'address' => ['nullable', 'string', 'max:255'],
-            'image' => [Rule::requiredIf($isAccountSection), 'nullable', 'string', 'max:225'],
+            'image' => ['nullable', 'string', 'max:225'],
 
             'display_name' => [Rule::requiredIf($isProfessionalSection), 'nullable', 'string', 'min:2', 'max:100'],
             'headline' => [Rule::requiredIf($isProfessionalSection), 'nullable', 'string', 'min:2', 'max:255'],
@@ -61,12 +57,32 @@ class TeacherProfileUpdateRequest extends FormRequest
             'bio' => ['nullable', 'string', 'max:5000'],
 
             'portfolio_url' => ['nullable', 'url', 'max:255'],
-            'facebook_url' => ['nullable', 'url', 'max:255'],
-            'youtube_url' => ['nullable', 'url', 'max:255'],
             'linkedin_url' => ['nullable', 'url', 'max:255'],
-            'intro_video_url' => ['nullable', 'url', 'max:255'],
-            'cv_file' => ['nullable', 'string', 'max:255'],
-            'identity_file' => ['nullable', 'string', 'max:255'],
+            'intro_video_url' => [
+                'nullable',
+                'string',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $value = trim((string) $value);
+
+                    if ($value === '') {
+                        return;
+                    }
+
+                    if (filter_var($value, FILTER_VALIDATE_URL)) {
+                        return;
+                    }
+
+                    if (str_starts_with($value, '/storage/') || str_starts_with($value, 'storage/')) {
+                        return;
+                    }
+
+                    $fail('Video gioi thieu URL khong hop le.');
+                },
+            ],
+            'custom_links' => ['nullable', 'array', 'max:10'],
+            'custom_links.*.label' => ['nullable', 'string', 'max:60'],
+            'custom_links.*.url' => ['nullable', 'url', 'max:255'],
 
             'current_password' => [
                 'nullable',
@@ -96,11 +112,9 @@ class TeacherProfileUpdateRequest extends FormRequest
             'min' => __('students::clients/validation.min'),
             'phone.regex' => __('students::clients/validation.regex'),
             'password.confirmed' => __('students::clients/validation.same'),
-            'portfolio_url.url' => 'Portfolio URL khong hop le.',
-            'facebook_url.url' => 'Facebook URL khong hop le.',
-            'youtube_url.url' => 'YouTube URL khong hop le.',
-            'linkedin_url.url' => 'LinkedIn URL khong hop le.',
-            'intro_video_url.url' => 'Video gioi thieu URL khong hop le.',
+            'portfolio_url.url' => 'Portfolio khong hop le.',
+            'linkedin_url.url' => 'LinkedIn khong hop le.',
+            'custom_links.*.url.url' => 'Link tuy chinh khong hop le.',
         ];
     }
 
@@ -117,12 +131,10 @@ class TeacherProfileUpdateRequest extends FormRequest
             'experience_years' => __('teacher::dashboard.profile.fields.experience_years'),
             'specialties' => __('teacher::dashboard.profile.fields.specialties'),
             'portfolio_url' => __('teacher::dashboard.profile.fields.portfolio_url'),
-            'facebook_url' => __('teacher::dashboard.profile.fields.facebook_url'),
-            'youtube_url' => __('teacher::dashboard.profile.fields.youtube_url'),
             'linkedin_url' => __('teacher::dashboard.profile.fields.linkedin_url'),
             'intro_video_url' => __('teacher::dashboard.profile.fields.intro_video_url'),
-            'cv_file' => __('teacher::dashboard.profile.fields.cv_file'),
-            'identity_file' => __('teacher::dashboard.profile.fields.identity_file'),
+            'custom_links.*.label' => __('teacher::dashboard.profile.fields.custom_link_label'),
+            'custom_links.*.url' => __('teacher::dashboard.profile.fields.custom_link_url'),
             'current_password' => __('students::clients/validation.attributes.old_password'),
             'password' => __('students::clients/validation.attributes.password'),
             'password_confirmation' => __('students::clients/validation.attributes.confirm_password'),

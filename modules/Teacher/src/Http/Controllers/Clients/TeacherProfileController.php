@@ -50,12 +50,9 @@ class TeacherProfileController extends Controller
             'experience_years' => $application->experience_years,
             'specialties' => $application?->specialties ?? [],
             'portfolio_url' => (string) ($application->portfolio_url ?? ''),
-            'facebook_url' => (string) ($application->facebook_url ?? ''),
-            'youtube_url' => (string) ($application->youtube_url ?? ''),
             'linkedin_url' => (string) ($application->linkedin_url ?? ''),
+            'custom_links' => $application?->custom_links ?? [],
             'intro_video_url' => (string) ($application->intro_video_url ?? ''),
-            'cv_file' => (string) ($application->cv_file ?? ''),
-            'identity_file' => (string) ($application->identity_file ?? ''),
         ];
 
         if ($updateAccount) {
@@ -84,12 +81,9 @@ class TeacherProfileController extends Controller
 
             if ($updateLinks) {
                 $applicationData['portfolio_url'] = $request->filled('portfolio_url') ? (string) $request->input('portfolio_url') : null;
-                $applicationData['facebook_url'] = $request->filled('facebook_url') ? (string) $request->input('facebook_url') : null;
-                $applicationData['youtube_url'] = $request->filled('youtube_url') ? (string) $request->input('youtube_url') : null;
                 $applicationData['linkedin_url'] = $request->filled('linkedin_url') ? (string) $request->input('linkedin_url') : null;
                 $applicationData['intro_video_url'] = $request->filled('intro_video_url') ? (string) $request->input('intro_video_url') : null;
-                $applicationData['cv_file'] = $request->filled('cv_file') ? (string) $request->input('cv_file') : null;
-                $applicationData['identity_file'] = $request->filled('identity_file') ? (string) $request->input('identity_file') : null;
+                $applicationData['custom_links'] = $this->normalizeCustomLinks($request->input('custom_links', []));
             }
 
             if ($applicationData !== []) {
@@ -131,12 +125,9 @@ class TeacherProfileController extends Controller
                     'experience_years' => $application?->experience_years,
                     'specialties' => $application?->specialties ?? [],
                     'portfolio_url' => (string) ($application?->portfolio_url ?? ''),
-                    'facebook_url' => (string) ($application?->facebook_url ?? ''),
-                    'youtube_url' => (string) ($application?->youtube_url ?? ''),
                     'linkedin_url' => (string) ($application?->linkedin_url ?? ''),
+                    'custom_links' => $application?->custom_links ?? [],
                     'intro_video_url' => (string) ($application?->intro_video_url ?? ''),
-                    'cv_file' => (string) ($application?->cv_file ?? ''),
-                    'identity_file' => (string) ($application?->identity_file ?? ''),
                 ],
                 'workspace' => 'teacher',
             ],
@@ -145,6 +136,13 @@ class TeacherProfileController extends Controller
         );
 
         if (!$updatePassword || blank($request->input('password'))) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'ok',
+                    'message' => __('teacher::dashboard.profile.flash.updated'),
+                ]);
+            }
+
             return back()->with('msg_success', __('teacher::dashboard.profile.flash.updated'));
         }
 
@@ -188,6 +186,21 @@ class TeacherProfileController extends Controller
         return collect(explode(',', (string) $raw))
             ->map(fn ($item) => trim((string) $item))
             ->filter()
+            ->values()
+            ->all();
+    }
+
+    private function normalizeCustomLinks(mixed $rows): array
+    {
+        return collect(is_array($rows) ? $rows : [])
+            ->map(function ($row) {
+                return [
+                    'label' => trim((string) ($row['label'] ?? '')),
+                    'url' => trim((string) ($row['url'] ?? '')),
+                ];
+            })
+            ->filter(fn ($row) => $row['label'] !== '' || $row['url'] !== '')
+            ->filter(fn ($row) => $row['label'] !== '' && $row['url'] !== '')
             ->values()
             ->all();
     }

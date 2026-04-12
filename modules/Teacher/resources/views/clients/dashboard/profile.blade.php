@@ -3,14 +3,28 @@
 @section('content')
     @php
         $teacherLocale = session('locale', app()->getLocale());
+        $teacherCanCustomizeLanding = $teacher?->packageHasFeature('can_customize_teacher_landing') ?? false;
+        $teacherLandingUrl = $teacher
+            ? route('teacher.public.show', ['locale' => $teacherLocale, 'slug' => $teacher->slug_locale ?: $teacher->slug])
+            : route('teacher.dashboard.profile');
+        $teacherLandingActionUrl = $teacherCanCustomizeLanding ? $teacherLandingUrl : route('teacher.dashboard.package.upgrade');
+        $teacherLandingDisplayUrl = preg_replace('#^https?://#', '', $teacherLandingUrl);
         $avatarValue = old('image', $teacher?->image);
         $portfolioValue = old('portfolio_url', $application?->portfolio_url);
         $introVideoValue = old('intro_video_url', $application?->intro_video_url);
-        $facebookValue = old('facebook_url', $application?->facebook_url);
-        $youtubeValue = old('youtube_url', $application?->youtube_url);
         $linkedinValue = old('linkedin_url', $application?->linkedin_url);
-        $cvValue = old('cv_file', $application?->cv_file);
-        $identityValue = old('identity_file', $application?->identity_file);
+        $customLinksValue = old('custom_links', $application?->custom_links ?? []);
+        $customLinksValue = collect(is_array($customLinksValue) ? $customLinksValue : [])
+            ->map(fn ($row) => [
+                'label' => trim((string) ($row['label'] ?? '')),
+                'url' => trim((string) ($row['url'] ?? '')),
+            ])
+            ->values()
+            ->all();
+
+        if (empty($customLinksValue)) {
+            $customLinksValue = [['label' => '', 'url' => '']];
+        }
         $avatarFallback = strtoupper(mb_substr((string) ($application?->display_name ?: $student->name ?: 'T'), 0, 1));
         $extractLabel = static function (?string $value, string $fallback): string {
             $value = trim((string) $value);
@@ -23,9 +37,40 @@
 
             return $label !== '' ? urldecode($label) : $fallback;
         };
+        $displayStoredPath = static function (?string $value): string {
+            $value = trim((string) $value);
+            if ($value === '') {
+                return '';
+            }
+
+            if (str_contains($value, '/storage/') || str_contains($value, 'storage/')) {
+                $path = parse_url($value, PHP_URL_PATH) ?: $value;
+                $label = basename((string) $path);
+
+                return $label !== '' ? urldecode($label) : $value;
+            }
+
+            return $value;
+        };
         $fieldLabel = static function (string $key): string {
             return __("teacher::dashboard.profile.fields.$key");
         };
+        $profileErrorKeys = [
+            'name', 'phone', 'address', 'image',
+            'display_name', 'headline', 'experience_years', 'specialties', 'bio',
+            'portfolio_url', 'linkedin_url', 'intro_video_url',
+        ];
+        $passwordErrorKeys = ['current_password', 'password', 'password_confirmation'];
+        $securityErrorKeys = [];
+        $activeProfileTab = 'profile';
+
+        if (collect($passwordErrorKeys)->contains(fn ($key) => $errors->has($key))) {
+            $activeProfileTab = 'password';
+        } elseif (collect($securityErrorKeys)->contains(fn ($key) => $errors->has($key))) {
+            $activeProfileTab = 'security';
+        } elseif (collect($profileErrorKeys)->contains(fn ($key) => $errors->has($key)) || $errors->has('custom_links.*.url')) {
+            $activeProfileTab = 'profile';
+        }
     @endphp
     <div class="teacher-page-shell">
         <div class="teacher-panel teacher-profile-shell">
@@ -54,12 +99,37 @@
                 <div class="alert alert-danger mb-3">{{ __('teacher::dashboard.common.validation_summary') }}</div>
             @endif
 
-            <form method="POST" action="{{ route('teacher.dashboard.profile.update') }}" class="teacher-profile-form">
+            <div class="teacher-profile-tabs" data-profile-tabs>
+                <button type="button"
+                    class="teacher-profile-tab-button {{ $activeProfileTab === 'profile' ? 'is-active' : '' }}"
+                    data-profile-tab="profile">
+                    <i class="fas fa-id-card"></i>
+                    <span>Ho so giang vien</span>
+                </button>
+                <button type="button"
+                    class="teacher-profile-tab-button {{ $activeProfileTab === 'password' ? 'is-active' : '' }}"
+                    data-profile-tab="password">
+                    <i class="fas fa-key"></i>
+                    <span>Mat khau</span>
+                </button>
+                <button type="button"
+                    class="teacher-profile-tab-button {{ $activeProfileTab === 'security' ? 'is-active' : '' }}"
+                    data-profile-tab="security">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>Bao mat</span>
+                    <span class="teacher-profile-tab-badge {{ $student->two_factor_email_enabled ? 'is-enabled' : 'is-disabled' }}">
+                        {{ $student->two_factor_email_enabled ? 'Bat' : 'Tat' }}
+                    </span>
+                </button>
+            </div>
+
+            <form method="POST" action="{{ route('teacher.dashboard.profile.update') }}" class="teacher-profile-form" id="teacher-profile-form">
                 @csrf
 
-                <div class="row g-4">
-                    <div class="col-xl-7">
-                        <div class="teacher-profile-card">
+                <div class="teacher-profile-tab-panel {{ $activeProfileTab === 'profile' ? 'is-active' : '' }}" data-profile-panel="profile">
+                    <div class="row g-4">
+                        <div class="col-xl-12">
+                            <div class="teacher-profile-card">
                             <h4>{{ __('teacher::dashboard.profile.basic.title') }}</h4>
                             <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.basic.description') }}</p>
 
@@ -72,17 +142,21 @@
                                 <div class="teacher-profile-avatar__content">
                                     <label class="form-label">{{ __('teacher::dashboard.profile.fields.avatar') }} *</label>
                                     <div class="teacher-file-picker">
-                                        <input type="text" id="teacher-profile-avatar" name="image"
-                                            class="form-control @error('image') is-invalid @enderror"
-                                            value="{{ $avatarValue }}"
-                                        placeholder="{{ __('teacher::dashboard.profile.fields.avatar_placeholder') }}" required>
+                                        <input type="hidden" id="teacher-profile-avatar" name="image"
+                                            value="{{ $avatarValue }}">
+                                        <input type="text" id="teacher-profile-avatar-display"
+                                            class="form-control @error('image') is-invalid @enderror" readonly
+                                            value="{{ $displayStoredPath($avatarValue) }}"
+                                            placeholder="{{ __('teacher::dashboard.profile.fields.avatar_placeholder') }}">
                                         <button type="button" class="btn btn-outline-secondary js-lfm"
                                             data-input="teacher-profile-avatar" data-preview-target="avatar"
+                                            data-display-input="teacher-profile-avatar-display"
                                             data-type="image">
                                             {{ __('teacher::dashboard.profile.actions.choose_image') }}
                                         </button>
                                         <button type="button" class="btn btn-outline-danger js-clear-input"
-                                            data-input="teacher-profile-avatar" data-preview-target="avatar">
+                                            data-input="teacher-profile-avatar" data-display-input="teacher-profile-avatar-display"
+                                            data-preview-target="avatar" data-submit-section="account">
                                             {{ __('teacher::dashboard.profile.actions.remove') }}
                                         </button>
                                     </div>
@@ -135,17 +209,48 @@
                             </div>
 
                             <div class="teacher-section-submit mt-4">
-                                <button type="submit" name="profile_section" value="account" class="btn btn-primary">
+                                <button type="submit" name="profile_section" value="account" class="btn btn-primary" formnovalidate>
                                     Luu thong tin tai khoan
                                 </button>
                             </div>
-                        </div>
+                            </div>
 
-                        <div class="teacher-profile-card teacher-profile-card--wide mt-4">
-                            <h4>{{ __('teacher::dashboard.profile.professional.title') }}</h4>
-                            <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.professional.description') }}</p>
+                            <div class="teacher-profile-card teacher-profile-card--wide mt-4">
+                                <div class="teacher-card-header">
+                                <div>
+                                    <h4>{{ __('teacher::dashboard.profile.professional.title') }}</h4>
+                                    <p class="text-muted mb-0">{{ __('teacher::dashboard.profile.professional.description') }}</p>
+                                    <div class="teacher-card-header__meta">
+                                        <span class="teacher-card-header__meta-label">
+                                            <i class="fas fa-globe"></i>
+                                            Landing page
+                                        </span>
+                                        <a href="{{ $teacherLandingActionUrl }}" class="teacher-card-header__meta-link"
+                                            target="_blank" rel="noopener">
+                                            <span>{{ $teacherCanCustomizeLanding ? $teacherLandingDisplayUrl : 'Mo quyen de xem link public' }}</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="teacher-card-header__actions">
+                                    <a href="{{ $teacherLandingActionUrl }}"
+                                        class="btn teacher-card-header__button {{ $teacherCanCustomizeLanding ? 'btn-outline-secondary' : 'btn-outline-warning' }}"
+                                        target="_blank" rel="noopener">
+                                        <i class="fas fa-window-maximize me-2"></i>
+                                        {{ $teacherCanCustomizeLanding ? 'Xem' : 'Nang cap' }}
+                                    </a>
+                                    @if ($teacherCanCustomizeLanding)
+                                        <button type="button"
+                                            class="btn btn-outline-secondary teacher-card-header__button js-copy-static-link"
+                                            data-copy-value="{{ $teacherLandingUrl }}"
+                                            data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">
+                                            <i class="fas fa-link me-2"></i>
+                                            Sao chep link
+                                        </button>
+                                    @endif
+                                </div>
+                                </div>
 
-                            <div class="row g-3">
+                                <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">{{ $fieldLabel('display_name') }} *</label>
                                     <input type="text" name="display_name"
@@ -190,114 +295,25 @@
 
                                 <div class="col-12">
                                     <label class="form-label">{{ $fieldLabel('bio') }}</label>
-                                    <textarea name="bio" rows="5" class="form-control ckeditor @error('bio') is-invalid @enderror" 
-                                        maxlength="5000">{{ old('bio', $application?->bio) }}</textarea>
+                                    <textarea name="bio" id="teacher-profile-bio" rows="8" class="form-control ckeditor @error('bio') is-invalid @enderror">{{ old('bio', $application?->bio) }}</textarea>
                                     @error('bio')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
-
-                            <div class="teacher-section-submit mt-4">
-                                <button type="submit" name="profile_section" value="professional" class="btn btn-primary">
-                                    Luu thong tin nghe nghiep
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="col-xl-5">
-                        <div class="teacher-profile-card">
-                            <h4>{{ __('teacher::dashboard.profile.password.title') }}</h4>
-                            <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.password.description') }}</p>
-
-                            <div class="teacher-profile-note">
-                                <i class="fas fa-circle-info"></i>
-                                <span>{{ __('teacher::dashboard.profile.password.hint') }}</span>
-                            </div>
-
-                            <div class="row g-3 mt-1">
-                                <div class="col-12">
-                                    <label class="form-label">{{ __('teacher::dashboard.profile.fields.current_password') }}</label>
-                                    <input type="password" name="current_password"
-                                        class="form-control @error('current_password') is-invalid @enderror"
-                                        autocomplete="current-password">
-                                    @error('current_password')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
                                 </div>
 
-                                <div class="col-12">
-                                    <label class="form-label">{{ __('teacher::dashboard.profile.fields.password') }}</label>
-                                    <input type="password" name="password"
-                                        class="form-control @error('password') is-invalid @enderror"
-                                        autocomplete="new-password">
-                                    @error('password')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                <div class="teacher-section-submit mt-4">
+                                    <button type="submit" name="profile_section" value="professional" class="btn btn-primary" formnovalidate>
+                                        Luu thong tin nghe nghiep
+                                    </button>
                                 </div>
-
-                                <div class="col-12">
-                                    <label class="form-label">{{ __('teacher::dashboard.profile.fields.password_confirmation') }}</label>
-                                    <input type="password" name="password_confirmation"
-                                        class="form-control @error('password_confirmation') is-invalid @enderror" autocomplete="new-password">
-                                    @error('password_confirmation')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="teacher-section-submit mt-4">
-                                <button type="submit" name="profile_section" value="password" class="btn btn-primary">
-                                    Luu mat khau
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="teacher-profile-card mt-4">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
-                                <div>
-                                    <h4>{{ __('teacher::dashboard.profile.two_factor.title') }}</h4>
-                                    <p class="text-muted mb-0">{{ __('teacher::dashboard.profile.two_factor.description') }}</p>
-                                </div>
-                                <span class="badge {{ $student->two_factor_email_enabled ? 'bg-success' : 'bg-secondary' }}">
-                                    {{ $student->two_factor_email_enabled ? __('teacher::dashboard.profile.two_factor.enabled') : __('teacher::dashboard.profile.two_factor.disabled') }}
-                                </span>
-                            </div>
-
-                            @if ($student->two_factor_email_enabled && $student->two_factor_email_enabled_at)
-                                <div class="teacher-profile-meta mt-3">
-                                    {{ __('teacher::dashboard.profile.two_factor.enabled_at', ['date' => $student->two_factor_email_enabled_at->format('d/m/Y H:i:s')]) }}
-                                </div>
-                            @endif
-
-                            <div class="teacher-profile-actions mt-3">
-                                @if ($student->two_factor_email_enabled)
-                                    <form action="{{ route('students.account.two-factor.disable', ['locale' => $teacherLocale]) }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="return_route" value="teacher.dashboard.profile">
-                                        <button type="submit" class="btn btn-outline-danger">
-                                            {{ __('teacher::dashboard.profile.two_factor.disable_button') }}
-                                        </button>
-                                    </form>
-                                @else
-                                    <form action="{{ route('students.account.two-factor.enable', ['locale' => $teacherLocale]) }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="return_route" value="teacher.dashboard.profile">
-                                        <button type="submit" class="btn btn-primary">
-                                            {{ __('teacher::dashboard.profile.two_factor.enable_button') }}
-                                        </button>
-                                    </form>
-                                @endif
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="teacher-profile-card teacher-profile-card--links">
-                    <h4>{{ __('teacher::dashboard.profile.links.title') }}</h4>
-                    <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.links.description') }}</p>
+                    <div class="teacher-profile-card teacher-profile-card--links mt-4">
+                        <h4>{{ __('teacher::dashboard.profile.links.title') }}</h4>
+                        <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.links.description') }}</p>
 
                     <div class="teacher-links-layout">
                         <section class="teacher-links-group">
@@ -316,7 +332,7 @@
                                         <div class="teacher-link-actions">
                                             <a href="{{ $portfolioValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-portfolio" target="_blank" rel="noopener noreferrer" @if (empty($portfolioValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.preview') }}</a>
                                             <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-portfolio" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                            <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-portfolio">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
+                                            <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-portfolio" data-submit-section="links">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
                                         </div>
                                     </div>
                                     @error('portfolio_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -327,13 +343,13 @@
                                         <label class="form-label">{{ $fieldLabel('intro_video_url') }}</label>
                                         <div class="teacher-link-field">
                                             <div class="teacher-link-input">
-                                                <input type="url" id="teacher-profile-intro-video" name="intro_video_url" class="form-control @error('intro_video_url') is-invalid @enderror" value="{{ $introVideoValue }}">
+                                                <input type="text" id="teacher-profile-intro-video" name="intro_video_url" class="form-control @error('intro_video_url') is-invalid @enderror" value="{{ $introVideoValue }}" placeholder="https://... hoac /storage/...">
                                             </div>
                                             <div class="teacher-link-actions">
                                                 <button type="button" class="btn btn-outline-secondary js-lfm" data-input="teacher-profile-intro-video" data-type="video">{{ __('teacher::dashboard.profile.actions.choose_video') }}</button>
                                                 <a href="{{ $introVideoValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-intro-video" target="_blank" rel="noopener noreferrer" @if (empty($introVideoValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.watch') }}</a>
                                                 <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-intro-video" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-intro-video">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
+                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-intro-video" data-submit-section="links">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
                                             </div>
                                         </div>
                                         @error('intro_video_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -352,37 +368,7 @@
                                     </div>
                                 </div>
 
-                                <div class="teacher-link-socials">
-                                    <div class="teacher-link-panel">
-                                        <label class="form-label">{{ $fieldLabel('facebook_url') }}</label>
-                                        <div class="teacher-link-field">
-                                            <div class="teacher-link-input">
-                                                <input type="url" id="teacher-profile-facebook" name="facebook_url" class="form-control @error('facebook_url') is-invalid @enderror" value="{{ $facebookValue }}">
-                                            </div>
-                                            <div class="teacher-link-actions">
-                                                <a href="{{ $facebookValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-facebook" target="_blank" rel="noopener noreferrer" @if (empty($facebookValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.open') }}</a>
-                                                <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-facebook" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-facebook">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
-                                            </div>
-                                        </div>
-                                        @error('facebook_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                                    </div>
-
-                                    <div class="teacher-link-panel">
-                                        <label class="form-label">{{ $fieldLabel('youtube_url') }}</label>
-                                        <div class="teacher-link-field">
-                                            <div class="teacher-link-input">
-                                                <input type="url" id="teacher-profile-youtube" name="youtube_url" class="form-control @error('youtube_url') is-invalid @enderror" value="{{ $youtubeValue }}">
-                                            </div>
-                                            <div class="teacher-link-actions">
-                                                <a href="{{ $youtubeValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-youtube" target="_blank" rel="noopener noreferrer" @if (empty($youtubeValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.open') }}</a>
-                                                <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-youtube" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-youtube">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
-                                            </div>
-                                        </div>
-                                        @error('youtube_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                                    </div>
-
+                                <div class="teacher-link-socials teacher-link-socials--single">
                                     <div class="teacher-link-panel">
                                         <label class="form-label">{{ $fieldLabel('linkedin_url') }}</label>
                                         <div class="teacher-link-field">
@@ -392,7 +378,7 @@
                                             <div class="teacher-link-actions">
                                                 <a href="{{ $linkedinValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-linkedin" target="_blank" rel="noopener noreferrer" @if (empty($linkedinValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.open') }}</a>
                                                 <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-linkedin" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-linkedin">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
+                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-linkedin" data-submit-section="links">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
                                             </div>
                                         </div>
                                         @error('linkedin_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -403,83 +389,165 @@
 
                         <section class="teacher-links-group">
                             <div class="teacher-links-group__header">
-                                <h5>{{ __('teacher::dashboard.profile.links.verification_title') }}</h5>
-                                <p>{{ __('teacher::dashboard.profile.links.verification_description') }}</p>
+                                <h5>{{ __('teacher::dashboard.profile.links.custom_title') }}</h5>
+                                <p>{{ __('teacher::dashboard.profile.links.custom_description') }}</p>
                             </div>
 
                             <div class="teacher-links-stack">
-                                <div class="teacher-link-feature">
-                                    <div class="teacher-link-feature__form">
-                                        <label class="form-label">{{ $fieldLabel('cv_file') }}</label>
-                                        <div class="teacher-link-field">
-                                            <div class="teacher-link-input">
-                                                <input type="text" id="teacher-profile-cv" name="cv_file" class="form-control @error('cv_file') is-invalid @enderror" value="{{ $cvValue }}">
+                                <div class="teacher-custom-links" data-custom-links data-next-index="{{ count($customLinksValue) }}">
+                                    <div class="teacher-custom-links__list" data-custom-links-list>
+                                        @foreach ($customLinksValue as $index => $customLink)
+                                            <div class="teacher-custom-link-row" data-custom-link-row>
+                                                <div class="teacher-custom-link-row__fields">
+                                                    <div>
+                                                        <label class="form-label">{{ $fieldLabel('custom_link_label') }}</label>
+                                                        <input type="text"
+                                                            name="custom_links[{{ $index }}][label]"
+                                                            class="form-control"
+                                                            value="{{ $customLink['label'] ?? '' }}"
+                                                            maxlength="60"
+                                                            placeholder="TikTok">
+                                                    </div>
+                                                    <div>
+                                                        <label class="form-label">{{ $fieldLabel('custom_link_url') }}</label>
+                                                        <input type="url"
+                                                            id="teacher-custom-link-{{ $index }}"
+                                                            name="custom_links[{{ $index }}][url]"
+                                                            class="form-control @error("custom_links.$index.url") is-invalid @enderror"
+                                                            value="{{ $customLink['url'] ?? '' }}"
+                                                            placeholder="https://...">
+                                                        @error("custom_links.$index.url")
+                                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+                                                <div class="teacher-link-actions">
+                                                    <a href="{{ $customLink['url'] ?? '' }}"
+                                                        class="btn btn-outline-secondary js-link-action"
+                                                        data-input="teacher-custom-link-{{ $index }}"
+                                                        target="_blank" rel="noopener noreferrer"
+                                                        @if (empty($customLink['url'])) hidden @endif>
+                                                        {{ __('teacher::dashboard.profile.actions.open') }}
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-secondary js-copy-link"
+                                                        data-input="teacher-custom-link-{{ $index }}"
+                                                        data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">
+                                                        {{ __('teacher::dashboard.profile.actions.copy') }}
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger js-remove-custom-link" data-submit-section="links">
+                                                        {{ __('teacher::dashboard.profile.actions.remove') }}
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div class="teacher-link-actions">
-                                                <button type="button" class="btn btn-outline-secondary js-lfm" data-input="teacher-profile-cv" data-type="file">{{ __('teacher::dashboard.profile.actions.choose_file') }}</button>
-                                                <a href="{{ $cvValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-cv" target="_blank" rel="noopener noreferrer" @if (empty($cvValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.preview') }}</a>
-                                                <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-cv" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-cv">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
-                                            </div>
-                                        </div>
-                                        @error('cv_file')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                        @endforeach
                                     </div>
-                                    <div class="teacher-link-feature__preview">
-                                        <div class="teacher-resource-card" data-resource-card data-input="teacher-profile-cv" data-resource-type="document" data-fallback-label="{{ $fieldLabel('cv_file') }}" @if (empty($cvValue)) hidden @endif>
-                                            <div class="teacher-resource-card__media">
-                                                <img data-resource-image alt="{{ $fieldLabel('cv_file') }}" hidden>
-                                                <iframe data-resource-pdf title="{{ $fieldLabel('cv_file') }}" hidden></iframe>
-                                                <div class="teacher-resource-card__icon" data-resource-icon><i class="fas fa-file-lines"></i></div>
-                                            </div>
-                                            <div class="teacher-resource-card__content">
-                                                <strong>{{ $fieldLabel('cv_file') }}</strong>
-                                                <span data-resource-name>{{ $extractLabel($cvValue, $fieldLabel('cv_file')) }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="teacher-link-feature">
-                                    <div class="teacher-link-feature__form">
-                                        <label class="form-label">{{ $fieldLabel('identity_file') }}</label>
-                                        <div class="teacher-link-field">
-                                            <div class="teacher-link-input">
-                                                <input type="text" id="teacher-profile-identity" name="identity_file" class="form-control @error('identity_file') is-invalid @enderror" value="{{ $identityValue }}">
-                                            </div>
-                                            <div class="teacher-link-actions">
-                                                <button type="button" class="btn btn-outline-secondary js-lfm" data-input="teacher-profile-identity" data-type="file">{{ __('teacher::dashboard.profile.actions.choose_file') }}</button>
-                                                <a href="{{ $identityValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-identity" target="_blank" rel="noopener noreferrer" @if (empty($identityValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.preview') }}</a>
-                                                <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-identity" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-identity">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
-                                            </div>
-                                        </div>
-                                        @error('identity_file')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                                    </div>
-                                    <div class="teacher-link-feature__preview">
-                                        <div class="teacher-resource-card" data-resource-card data-input="teacher-profile-identity" data-resource-type="document" data-fallback-label="{{ $fieldLabel('identity_file') }}" @if (empty($identityValue)) hidden @endif>
-                                            <div class="teacher-resource-card__media">
-                                                <img data-resource-image alt="{{ $fieldLabel('identity_file') }}" hidden>
-                                                <iframe data-resource-pdf title="{{ $fieldLabel('identity_file') }}" hidden></iframe>
-                                                <div class="teacher-resource-card__icon teacher-resource-card__icon--identity" data-resource-icon><i class="fas fa-id-card"></i></div>
-                                            </div>
-                                            <div class="teacher-resource-card__content">
-                                                <strong>{{ $fieldLabel('identity_file') }}</strong>
-                                                <span data-resource-name>{{ $extractLabel($identityValue, $fieldLabel('identity_file')) }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <button type="button" class="btn btn-outline-primary teacher-custom-links__add" data-add-custom-link>
+                                        + Thêm link
+                                    </button>
                                 </div>
                             </div>
                         </section>
                     </div>
 
-                    <div class="teacher-section-submit mt-4">
-                        <button type="submit" name="profile_section" value="links" class="btn btn-primary">
-                            Luu lien ket ho so
-                        </button>
+                        <div class="teacher-section-submit mt-4">
+                            <button type="submit" name="profile_section" value="links" class="btn btn-primary" formnovalidate>
+                                Luu lien ket ho so
+                            </button>
+                        </div>
                     </div>
                 </div>
 
+                <div class="teacher-profile-tab-panel {{ $activeProfileTab === 'password' ? 'is-active' : '' }}" data-profile-panel="password">
+                    <div class="teacher-profile-card teacher-profile-card--narrow">
+                        <h4>{{ __('teacher::dashboard.profile.password.title') }}</h4>
+                        <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.password.description') }}</p>
+
+                        <div class="teacher-profile-note">
+                            <i class="fas fa-circle-info"></i>
+                            <span>{{ __('teacher::dashboard.profile.password.hint') }}</span>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-12">
+                                <label class="form-label">{{ __('teacher::dashboard.profile.fields.current_password') }}</label>
+                                <input type="password" name="current_password"
+                                    class="form-control @error('current_password') is-invalid @enderror"
+                                    autocomplete="current-password">
+                                @error('current_password')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">{{ __('teacher::dashboard.profile.fields.password') }}</label>
+                                <input type="password" name="password"
+                                    class="form-control @error('password') is-invalid @enderror"
+                                    autocomplete="new-password">
+                                @error('password')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">{{ __('teacher::dashboard.profile.fields.password_confirmation') }}</label>
+                                <input type="password" name="password_confirmation"
+                                    class="form-control @error('password_confirmation') is-invalid @enderror" autocomplete="new-password">
+                                @error('password_confirmation')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="teacher-section-submit mt-4">
+                            <button type="submit" name="profile_section" value="password" class="btn btn-primary" formnovalidate>
+                                Luu mat khau
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="teacher-profile-tab-panel {{ $activeProfileTab === 'security' ? 'is-active' : '' }}" data-profile-panel="security">
+                    <div class="teacher-profile-card teacher-profile-card--narrow">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <h4>{{ __('teacher::dashboard.profile.two_factor.title') }}</h4>
+                                <p class="text-muted mb-0">{{ __('teacher::dashboard.profile.two_factor.description') }}</p>
+                            </div>
+                            <span class="badge {{ $student->two_factor_email_enabled ? 'bg-success' : 'bg-secondary' }}">
+                                {{ $student->two_factor_email_enabled ? __('teacher::dashboard.profile.two_factor.enabled') : __('teacher::dashboard.profile.two_factor.disabled') }}
+                            </span>
+                        </div>
+
+                        @if ($student->two_factor_email_enabled && $student->two_factor_email_enabled_at)
+                            <div class="teacher-profile-meta mt-3">
+                                {{ __('teacher::dashboard.profile.two_factor.enabled_at', ['date' => $student->two_factor_email_enabled_at->format('d/m/Y H:i:s')]) }}
+                            </div>
+                        @endif
+
+                        <div class="teacher-profile-actions mt-3">
+                            @if ($student->two_factor_email_enabled)
+                                <button type="submit" class="btn btn-outline-danger" form="teacher-two-factor-disable-form">
+                                    {{ __('teacher::dashboard.profile.two_factor.disable_button') }}
+                                </button>
+                            @else
+                                <button type="submit" class="btn btn-primary" form="teacher-two-factor-enable-form">
+                                    {{ __('teacher::dashboard.profile.two_factor.enable_button') }}
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+
+            <form id="teacher-two-factor-enable-form" action="{{ route('students.account.two-factor.enable', ['locale' => $teacherLocale]) }}" method="POST" class="d-none">
+                @csrf
+                <input type="hidden" name="return_route" value="teacher.dashboard.profile">
+            </form>
+
+            <form id="teacher-two-factor-disable-form" action="{{ route('students.account.two-factor.disable', ['locale' => $teacherLocale]) }}" method="POST" class="d-none">
+                @csrf
+                <input type="hidden" name="return_route" value="teacher.dashboard.profile">
             </form>
         </div>
     </div>
@@ -497,6 +565,77 @@
             gap: 1.5rem;
         }
 
+        .teacher-profile-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .teacher-profile-tab-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            border: 1px solid var(--admin-border);
+            background: color-mix(in srgb, var(--admin-card-bg, #121a2c) 84%, transparent);
+            color: var(--admin-text);
+            border-radius: 999px;
+            min-height: 44px;
+            padding: 0.7rem 1.1rem;
+            font-weight: 700;
+            transition: 0.2s ease;
+        }
+
+        .teacher-profile-tab-button.is-active {
+            background: linear-gradient(135deg, #1f8efa 0%, #33d5c3 100%);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 14px 30px rgba(31, 142, 250, 0.22);
+        }
+
+        .teacher-profile-tab-button i {
+            font-size: 0.95rem;
+        }
+
+        .teacher-profile-tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 24px;
+            padding: 0.15rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .teacher-profile-tab-badge.is-enabled {
+            background: rgba(27, 197, 109, 0.16);
+            color: #7dffb2;
+            border: 1px solid rgba(27, 197, 109, 0.28);
+        }
+
+        .teacher-profile-tab-badge.is-disabled {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--admin-muted-text);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .teacher-profile-tab-button.is-active .teacher-profile-tab-badge.is-disabled {
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .teacher-profile-tab-panel {
+            display: none;
+        }
+
+        .teacher-profile-tab-panel.is-active {
+            display: block;
+        }
+
         .teacher-profile-card {
             padding: 1.35rem;
             border-radius: 22px;
@@ -508,9 +647,79 @@
             padding: 1.5rem;
         }
 
+        .teacher-profile-card--narrow {
+            max-width: 760px;
+        }
+
         .teacher-profile-card h4 {
             margin-bottom: 0.35rem;
             font-weight: 800;
+        }
+
+        .teacher-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .teacher-card-header__actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+        }
+
+        .teacher-card-header .btn {
+            white-space: nowrap;
+        }
+
+        .teacher-card-header__meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.55rem;
+            flex-wrap: wrap;
+        }
+
+        .teacher-card-header__meta-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--admin-muted-text);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .teacher-card-header__meta-link {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--admin-card-bg, #121a2c) 82%, transparent);
+            border: 1px solid var(--admin-border);
+            color: var(--admin-text);
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .teacher-card-header__meta-link span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .teacher-card-header__button {
+            min-height: 40px;
+            padding-inline: 0.95rem;
+            border-radius: 999px;
+            font-size: 0.92rem;
+            font-weight: 700;
         }
 
         .teacher-profile-note {
@@ -631,6 +840,10 @@
             gap: 1rem;
         }
 
+        .teacher-link-socials--single {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
         .teacher-link-feature {
             display: grid;
             grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
@@ -670,6 +883,35 @@
 
         .teacher-link-actions .btn {
             min-height: 42px;
+        }
+
+        .teacher-custom-links {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .teacher-custom-links__list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .teacher-custom-links__add {
+            justify-self: flex-start;
+        }
+
+        .teacher-custom-link-row {
+            display: grid;
+            gap: 0.8rem;
+            padding: 1rem;
+            border-radius: 18px;
+            background: color-mix(in srgb, var(--admin-surface) 86%, transparent);
+            border: 1px solid color-mix(in srgb, var(--admin-border) 88%, transparent);
+        }
+
+        .teacher-custom-link-row__fields {
+            display: grid;
+            grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.3fr);
+            gap: 1rem;
         }
 
         .teacher-file-picker .form-control {
@@ -762,10 +1004,61 @@
             max-width: 100%;
         }
 
+        html[data-theme="dark"] .teacher-profile-card .cke {
+            border-color: var(--admin-border);
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+        }
+
+        html[data-theme="dark"] .teacher-profile-card .cke_top,
+        html[data-theme="dark"] .teacher-profile-card .cke_bottom {
+            background: #162033;
+            border-color: var(--admin-border);
+            box-shadow: none;
+        }
+
+        html[data-theme="dark"] .teacher-profile-card .cke_chrome {
+            background: #162033;
+            border-color: var(--admin-border);
+        }
+
+        html[data-theme="dark"] .teacher-profile-card .cke_toolgroup {
+            background: #1a2740;
+            border-color: #334155;
+            box-shadow: none;
+        }
+
+        html[data-theme="dark"] .teacher-profile-card a.cke_button_off:hover,
+        html[data-theme="dark"] .teacher-profile-card a.cke_button_off:focus,
+        html[data-theme="dark"] .teacher-profile-card a.cke_button_off:active,
+        html[data-theme="dark"] .teacher-profile-card .cke_combo_button:hover,
+        html[data-theme="dark"] .teacher-profile-card .cke_combo_button:focus {
+            background: #22314d;
+            border-color: #3b4f70;
+        }
+
+        html[data-theme="dark"] .teacher-profile-card .cke_button_icon {
+            filter: invert(0.9) hue-rotate(180deg);
+        }
+
+        html[data-theme="dark"] .teacher-profile-card .cke_button_label,
+        html[data-theme="dark"] .teacher-profile-card .cke_combo_text,
+        html[data-theme="dark"] .teacher-profile-card .cke_combo_open,
+        html[data-theme="dark"] .teacher-profile-card .cke_toolgroup a,
+        html[data-theme="dark"] .teacher-profile-card .cke_path_item,
+        html[data-theme="dark"] .teacher-profile-card .cke_path_empty {
+            color: #dbe7f5 !important;
+        }
+
+        html[data-theme="dark"] .teacher-profile-card .cke_contents {
+            border-color: var(--admin-border);
+            background: #0b1324;
+        }
+
         @media (max-width: 1199.98px) {
             .teacher-links-layout,
             .teacher-link-feature,
-            .teacher-link-socials {
+            .teacher-link-socials,
+            .teacher-custom-link-row__fields {
                 grid-template-columns: 1fr;
             }
         }
@@ -784,9 +1077,23 @@
                 padding: 1.1rem;
             }
 
+            .teacher-card-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .teacher-card-header__actions {
+                justify-content: stretch;
+            }
+
+            .teacher-card-header__meta-link {
+                width: 100%;
+            }
+
             .teacher-links-layout,
             .teacher-link-feature,
-            .teacher-link-socials {
+            .teacher-link-socials,
+            .teacher-custom-link-row__fields {
                 grid-template-columns: 1fr;
             }
 
@@ -833,9 +1140,143 @@
 @endsection
 
 @section('scripts')
+    <script src="{{ asset('backend/plugins/ckeditor/ckeditor.js') }}"></script>
     <script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
     <script>
         (() => {
+            const getCkEditorContentCss = (dark) => dark
+                ? `
+                    html, body {
+                        background: #0b1324 !important;
+                        color: #e2e8f0 !important;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 12px 14px;
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                    }
+                    a { color: #93c5fd !important; }
+                    table, td, th { border-color: #334155 !important; }
+                    blockquote {
+                        border-left: 4px solid #334155;
+                        color: #cbd5e1;
+                        background: rgba(255,255,255,0.03);
+                        padding: 0.75rem 1rem;
+                    }
+                    pre, code {
+                        background: #111827;
+                        color: #e2e8f0;
+                    }
+                `
+                : `
+                    html, body {
+                        background: #ffffff !important;
+                        color: #111827 !important;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 12px 14px;
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                    }
+                    a { color: #2563eb !important; }
+                    table, td, th { border-color: #dbe4f0 !important; }
+                    blockquote {
+                        border-left: 4px solid #cbd5e1;
+                        color: #334155;
+                        background: #f8fafc;
+                        padding: 0.75rem 1rem;
+                    }
+                    pre, code {
+                        background: #f8fafc;
+                        color: #111827;
+                    }
+                `;
+
+            const syncCkEditorInstanceTheme = (editor) => {
+                if (!editor || editor.status === 'destroyed') {
+                    return;
+                }
+
+                const dark = document.documentElement.dataset.theme === 'dark';
+                const container = editor.container;
+
+                if (container) {
+                    if (dark) {
+                        container.addClass('cke_admin_dark');
+                    } else {
+                        container.removeClass('cke_admin_dark');
+                    }
+                }
+
+                if (editor.document && editor.document.getHead()) {
+                    const head = editor.document.getHead();
+                    const existingStyle = head.findOne('style[data-admin-cke-theme]');
+
+                    if (existingStyle) {
+                        existingStyle.remove();
+                    }
+
+                    const style = new CKEDITOR.dom.element('style');
+                    style.setAttribute('type', 'text/css');
+                    style.setAttribute('data-admin-cke-theme', '1');
+                    style.setHtml(getCkEditorContentCss(dark));
+                    head.append(style);
+
+                    const body = editor.document.getBody();
+                    if (body) {
+                        body.setStyle('background', dark ? '#0b1324' : '#ffffff');
+                        body.setStyle('color', dark ? '#e2e8f0' : '#111827');
+                    }
+                }
+            };
+
+            const syncAllCkEditorThemes = () => {
+                if (typeof CKEDITOR === 'undefined' || !CKEDITOR.instances) {
+                    return;
+                }
+
+                Object.values(CKEDITOR.instances).forEach(syncCkEditorInstanceTheme);
+            };
+
+            const initCkEditors = () => {
+                if (typeof CKEDITOR === 'undefined') {
+                    return;
+                }
+
+                document.querySelectorAll('textarea.ckeditor').forEach((textarea) => {
+                    if (!textarea.id) {
+                        textarea.id = `editor-${Math.random().toString(36).slice(2, 10)}`;
+                    }
+
+                    if (textarea.dataset.ckeditorInitialized === '1' || CKEDITOR.instances[textarea.id]) {
+                        return;
+                    }
+
+                    textarea.dataset.ckeditorInitialized = '1';
+
+                    try {
+                        CKEDITOR.replace(textarea.id, {
+                            height: 280,
+                        });
+                    } catch (error) {
+                        textarea.dataset.ckeditorInitialized = '0';
+                        console.error(error);
+                    }
+                });
+
+                if (!window.__teacherProfileCkThemeBound) {
+                    CKEDITOR.on('instanceReady', (event) => {
+                        syncCkEditorInstanceTheme(event.editor);
+                    });
+
+                    window.__teacherProfileCkThemeBound = true;
+                }
+
+                window.setTimeout(syncAllCkEditorThemes, 0);
+            };
+
             const avatarPreview = document.querySelector('[data-avatar-preview]');
 
             const syncLinkActions = (inputId) => {
@@ -890,6 +1331,84 @@
                     return decodeURIComponent(parts.pop() || fallback);
                 } catch (error) {
                     return cleaned;
+                }
+            };
+
+            const compactStorageValue = (value) => {
+                const cleaned = (value || '').trim();
+                if (!cleaned) {
+                    return '';
+                }
+
+                try {
+                    const url = new URL(cleaned, window.location.origin);
+                    const path = url.pathname || cleaned;
+
+                    if (path.includes('/storage/') || cleaned.includes('/storage/')) {
+                        const parts = path.split('/').filter(Boolean);
+                        return decodeURIComponent(parts.pop() || cleaned);
+                    }
+
+                    return cleaned;
+                } catch (error) {
+                    if (cleaned.includes('/storage/')) {
+                        const parts = cleaned.split('/').filter(Boolean);
+                        return decodeURIComponent(parts.pop() || cleaned);
+                    }
+
+                    return cleaned;
+                }
+            };
+
+            const syncCompactDisplay = (inputId, displayInputId) => {
+                const input = document.getElementById(inputId);
+                const displayInput = document.getElementById(displayInputId);
+
+                if (!input || !displayInput) {
+                    return;
+                }
+
+                displayInput.value = compactStorageValue(input.value);
+            };
+
+            const submitProfileSection = async (trigger, section) => {
+                if (!section) {
+                    return;
+                }
+
+                const form = trigger.closest('form');
+                if (!form) {
+                    return;
+                }
+
+                let hiddenInput = form.querySelector('input[name="profile_section"][data-auto-submit]');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'profile_section';
+                    hiddenInput.dataset.autoSubmit = '1';
+                    form.appendChild(hiddenInput);
+                }
+
+                hiddenInput.value = section;
+                form.noValidate = true;
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Profile autosave failed: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error(error);
                 }
             };
 
@@ -982,10 +1501,82 @@
                 }
             };
 
+            const profileTabButtons = document.querySelectorAll('[data-profile-tab]');
+            const profileTabPanels = document.querySelectorAll('[data-profile-panel]');
+
+            const activateProfileTab = (tab) => {
+                if (!tab) {
+                    return;
+                }
+
+                profileTabButtons.forEach((button) => {
+                    button.classList.toggle('is-active', button.dataset.profileTab === tab);
+                });
+
+                profileTabPanels.forEach((panel) => {
+                    panel.classList.toggle('is-active', panel.dataset.profilePanel === tab);
+                });
+            };
+
+            profileTabButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    activateProfileTab(button.dataset.profileTab);
+                });
+            });
+
+            const initialActiveTab = document.querySelector('[data-profile-tab].is-active')?.dataset.profileTab
+                || document.querySelector('[data-profile-panel].is-active')?.dataset.profilePanel
+                || 'profile';
+
+            activateProfileTab(initialActiveTab);
+
             $('.js-lfm').each(function() {
                 const button = $(this);
                 const type = button.data('type') || 'file';
                 button.filemanager(type);
+            });
+
+            document.querySelectorAll('.js-lfm').forEach((button) => {
+                if (button.dataset.boundPicker === '1') {
+                    return;
+                }
+
+                button.dataset.boundPicker = '1';
+                const inputId = button.dataset.input;
+                const displayInputId = button.dataset.displayInput;
+                const input = document.getElementById(inputId);
+
+                if (!input) {
+                    return;
+                }
+
+                const syncAll = () => {
+                    if (displayInputId) {
+                        syncCompactDisplay(inputId, displayInputId);
+                    }
+                    syncLinkActions(inputId);
+                    syncResourceCard(inputId);
+                    if (button.dataset.previewTarget === 'avatar') {
+                        syncAvatarPreview();
+                    }
+                };
+
+                input.addEventListener('input', syncAll);
+                input.addEventListener('change', syncAll);
+                button.addEventListener('click', () => {
+                    const initialValue = input.value;
+                    const pollTimer = window.setInterval(() => {
+                        if (input.value !== initialValue) {
+                            syncAll();
+                            window.clearInterval(pollTimer);
+                        }
+                    }, 300);
+
+                    window.setTimeout(() => {
+                        window.clearInterval(pollTimer);
+                    }, 10000);
+                });
+                syncAll();
             });
 
             document.querySelectorAll('.js-clear-input').forEach((button) => {
@@ -999,13 +1590,26 @@
                     syncLinkActions(button.dataset.input);
                     syncResourceCard(button.dataset.input);
 
+                    if (button.dataset.displayInput) {
+                        syncCompactDisplay(button.dataset.input, button.dataset.displayInput);
+                    }
+
                     if (button.dataset.previewTarget === 'avatar') {
                         syncAvatarPreview();
+                    }
+
+                    if (button.dataset.submitSection) {
+                        submitProfileSection(button, button.dataset.submitSection);
                     }
                 });
             });
 
             document.querySelectorAll('.js-link-action').forEach((link) => {
+                if (link.dataset.boundLinkAction === '1') {
+                    return;
+                }
+
+                link.dataset.boundLinkAction = '1';
                 const inputId = link.dataset.input;
                 const input = document.getElementById(inputId);
                 input?.addEventListener('input', () => {
@@ -1017,6 +1621,11 @@
             });
 
             document.querySelectorAll('.js-copy-link').forEach((button) => {
+                if (button.dataset.boundCopyAction === '1') {
+                    return;
+                }
+
+                button.dataset.boundCopyAction = '1';
                 const defaultLabel = button.textContent.trim();
                 const copiedLabel = button.dataset.copiedLabel || defaultLabel;
                 const inputId = button.dataset.input;
@@ -1041,9 +1650,162 @@
                 });
             });
 
+            document.querySelectorAll('.js-copy-static-link').forEach((button) => {
+                if (button.dataset.boundStaticCopy === '1') {
+                    return;
+                }
+
+                button.dataset.boundStaticCopy = '1';
+                const defaultLabel = button.textContent.trim();
+                const copiedLabel = button.dataset.copiedLabel || defaultLabel;
+                const value = button.dataset.copyValue || '';
+
+                button.addEventListener('click', async () => {
+                    if (!value.trim()) {
+                        return;
+                    }
+
+                    try {
+                        await navigator.clipboard.writeText(value);
+                        button.textContent = copiedLabel;
+                        window.setTimeout(() => {
+                            button.textContent = defaultLabel;
+                        }, 1400);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                });
+            });
+
+            const customLinksRoot = document.querySelector('[data-custom-links]');
+
+            if (customLinksRoot) {
+                const customLinksList = customLinksRoot.querySelector('[data-custom-links-list]');
+                const addCustomLinkButton = customLinksRoot.querySelector('[data-add-custom-link]');
+
+                const bindLinkHelpers = (scope) => {
+                    scope.querySelectorAll('.js-link-action').forEach((link) => {
+                        const inputId = link.dataset.input;
+                        const input = document.getElementById(inputId);
+                        if (!input || input.dataset.boundLinkAction === '1') {
+                            return;
+                        }
+
+                        input.dataset.boundLinkAction = '1';
+                        input.addEventListener('input', () => {
+                            syncLinkActions(inputId);
+                        });
+                        syncLinkActions(inputId);
+                    });
+
+                    scope.querySelectorAll('.js-copy-link').forEach((button) => {
+                        if (button.dataset.boundCopyAction === '1') {
+                            return;
+                        }
+
+                        button.dataset.boundCopyAction = '1';
+                        const defaultLabel = button.textContent.trim();
+                        const copiedLabel = button.dataset.copiedLabel || defaultLabel;
+                        const inputId = button.dataset.input;
+
+                        button.addEventListener('click', async () => {
+                            const input = document.getElementById(inputId);
+                            const value = input?.value?.trim() || '';
+                            if (!value) {
+                                return;
+                            }
+
+                            try {
+                                await navigator.clipboard.writeText(value);
+                                button.textContent = copiedLabel;
+                                window.setTimeout(() => {
+                                    button.textContent = defaultLabel;
+                                }, 1400);
+                            } catch (error) {
+                                input?.focus();
+                                input?.select();
+                            }
+                        });
+                    });
+                };
+
+                customLinksRoot.addEventListener('click', (event) => {
+                    const removeButton = event.target.closest('.js-remove-custom-link');
+                    if (!removeButton) {
+                        return;
+                    }
+
+                    const rows = customLinksList.querySelectorAll('[data-custom-link-row]');
+                    const row = removeButton.closest('[data-custom-link-row]');
+                    if (!row) {
+                        return;
+                    }
+
+                    if (rows.length <= 1) {
+                        row.querySelectorAll('input').forEach((input) => {
+                            input.value = '';
+                            if (input.id) {
+                                syncLinkActions(input.id);
+                            }
+                        });
+                        if (removeButton.dataset.submitSection) {
+                            submitProfileSection(removeButton, removeButton.dataset.submitSection);
+                        }
+                        return;
+                    }
+
+                    row.remove();
+                    if (removeButton.dataset.submitSection) {
+                        submitProfileSection(removeButton, removeButton.dataset.submitSection);
+                    }
+                });
+
+                addCustomLinkButton?.addEventListener('click', () => {
+                    const nextIndex = Number(customLinksRoot.dataset.nextIndex || '0');
+                    customLinksRoot.dataset.nextIndex = String(nextIndex + 1);
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'teacher-custom-link-row';
+                    wrapper.setAttribute('data-custom-link-row', '');
+
+                    wrapper.innerHTML = `
+                        <div class="teacher-custom-link-row__fields">
+                            <div>
+                                <label class="form-label">{{ $fieldLabel('custom_link_label') }}</label>
+                                <input type="text" name="custom_links[${nextIndex}][label]" class="form-control" maxlength="60" placeholder="TikTok">
+                            </div>
+                            <div>
+                                <label class="form-label">{{ $fieldLabel('custom_link_url') }}</label>
+                                <input type="url" id="teacher-custom-link-${nextIndex}" name="custom_links[${nextIndex}][url]" class="form-control" placeholder="https://...">
+                            </div>
+                        </div>
+                        <div class="teacher-link-actions">
+                            <a href="#" class="btn btn-outline-secondary js-link-action" data-input="teacher-custom-link-${nextIndex}" target="_blank" rel="noopener noreferrer" hidden>{{ __('teacher::dashboard.profile.actions.open') }}</a>
+                            <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-custom-link-${nextIndex}" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
+                            <button type="button" class="btn btn-outline-danger js-remove-custom-link" data-submit-section="links">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
+                        </div>
+                    `;
+
+                    customLinksList.appendChild(wrapper);
+                    bindLinkHelpers(wrapper);
+                });
+
+                bindLinkHelpers(customLinksRoot);
+            }
+
             const avatarInput = document.getElementById('teacher-profile-avatar');
             avatarInput?.addEventListener('input', syncAvatarPreview);
             syncAvatarPreview();
+            initCkEditors();
+
+            const themeObserver = new MutationObserver(() => {
+                syncAllCkEditorThemes();
+            });
+
+            themeObserver.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['data-theme'],
+            });
         })();
     </script>
 @endsection

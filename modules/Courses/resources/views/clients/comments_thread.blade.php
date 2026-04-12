@@ -6,6 +6,14 @@
         </div>
     </div>
 
+    <div id="course-rating-wrap" class="mt-3">
+        @include('courses::clients.partials.rating_panel', [
+            'course' => $course,
+            'canRate' => $canRate ?? false,
+            'viewerCourseRating' => $viewerCourseRating ?? null,
+        ])
+    </div>
+
     @if (auth('students')->check() && $canComment)
         <form class="course-comment-form mt-3" data-comment-form
             action="{{ route('courses.comments.store', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}"
@@ -24,18 +32,40 @@
         <div class="alert alert-info mt-3 mb-0">{{ __('courses::clients/common.comment_login_to_join') }}</div>
     @endif
 
+    @php
+        $teacherStudentId = $course->teacher?->student_id;
+        $resolveCommentRole = function ($comment) use ($teacherStudentId) {
+            if ($comment->user_id) {
+                return 'admin';
+            }
+            if ($teacherStudentId && (int) $comment->student_id === (int) $teacherStudentId) {
+                return 'teacher';
+            }
+            return 'student';
+        };
+        $resolveRoleLabel = function (string $role) {
+            return match ($role) {
+                'admin' => __('courses::clients/common.comment_role_admin'),
+                'teacher' => __('courses::clients/common.comment_role_teacher'),
+                default => __('courses::clients/common.comment_role_student'),
+            };
+        };
+    @endphp
+
     <div class="course-comments-list mt-4">
         @forelse ($threads as $comment)
+            @php
+                $commentRole = $resolveCommentRole($comment);
+            @endphp
             <div class="comment-thread {{ !$comment->is_visible ? 'is-hidden-comment' : '' }}">
-                <div
-                    class="comment-card {{ $comment->author_role === 'admin' ? 'is-admin' : 'is-student' }}">
-                    <img src="{{ courseCommentAvatar($comment->id . '-' . $comment->author_role) }}"
+                <div class="comment-card {{ $commentRole === 'admin' ? 'is-admin' : 'is-student' }}">
+                    <img src="{{ courseCommentAvatar($comment->id . '-' . $commentRole) }}"
                         alt="{{ $comment->author_name }}" class="comment-avatar">
                     <div class="comment-main">
                         <div class="comment-meta">
                             <strong>{{ $comment->author_name }}</strong>
-                            <span class="badge {{ $comment->author_role === 'admin' ? 'bg-primary' : 'bg-success' }}">
-                                {{ $comment->author_role === 'admin' ? __('courses::clients/common.comment_role_admin') : __('courses::clients/common.comment_role_student') }}
+                            <span class="badge {{ $commentRole === 'admin' ? 'bg-primary' : 'bg-success' }}">
+                                {{ $resolveRoleLabel($commentRole) }}
                             </span>
                             <span class="comment-time">{{ optional($comment->created_at)->format('d/m/Y H:i:s') }}</span>
                             @if ($comment->is_flagged)
@@ -67,15 +97,17 @@
                 @if ($comment->replies->isNotEmpty())
                     <div class="comment-replies">
                         @foreach ($comment->replies as $reply)
-                            <div class="comment-card reply-card {{ !$reply->is_visible ? 'is-hidden-comment' : '' }} {{ $reply->author_role === 'admin' ? 'is-admin' : 'is-student' }}">
-                                <img src="{{ courseCommentAvatar($reply->id . '-' . $reply->author_role) }}"
+                            @php
+                                $replyRole = $resolveCommentRole($reply);
+                            @endphp
+                            <div class="comment-card reply-card {{ !$reply->is_visible ? 'is-hidden-comment' : '' }} {{ $replyRole === 'admin' ? 'is-admin' : 'is-student' }}">
+                                <img src="{{ courseCommentAvatar($reply->id . '-' . $replyRole) }}"
                                     alt="{{ $reply->author_name }}" class="comment-avatar">
                                 <div class="comment-main">
                                     <div class="comment-meta">
                                         <strong>{{ $reply->author_name }}</strong>
-                                        <span
-                                            class="badge {{ $reply->author_role === 'admin' ? 'bg-primary' : 'bg-success' }}">
-                                            {{ $reply->author_role === 'admin' ? __('courses::clients/common.comment_role_admin') : __('courses::clients/common.comment_role_student') }}
+                                        <span class="badge {{ $replyRole === 'admin' ? 'bg-primary' : 'bg-success' }}">
+                                            {{ $resolveRoleLabel($replyRole) }}
                                         </span>
                                         <span
                                             class="comment-time">{{ optional($reply->created_at)->format('d/m/Y H:i:s') }}</span>

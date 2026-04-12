@@ -15,6 +15,8 @@ use Modules\Courses\src\Models\Courses;
 use Modules\Orders\src\Models\Order;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherApplication;
+use Modules\Teacher\src\Models\TeacherRating;
+use Modules\Courses\src\Models\CourseRating;
 
 class Student extends Authenticatable implements MustVerifyEmail, CanResetPassword, HasLocalePreference
 {
@@ -113,5 +115,15 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
     public function teacherApplications()
     {
         return $this->hasMany(TeacherApplication::class, 'student_id', 'id');
+    }
+
+    public function courseRatings()
+    {
+        return $this->hasMany(CourseRating::class, 'student_id', 'id');
+    }
+
+    public function teacherRatings()
+    {
+        return $this->hasMany(TeacherRating::class, 'student_id', 'id');
     }
 }

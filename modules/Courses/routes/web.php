@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Courses\src\Http\Controllers\Clients\CoursesController;
 
 Route::prefix('admin')->group(function () {
    Route::prefix('courses')->name('courses.')->group(function () {
@@ -37,6 +38,7 @@ Route::group([
    'middleware' => ['setLocale']
 ], function () {
    Route::get('/khoa-hoc', 'Clients\CoursesController@index')->name('home');
+   Route::get('/combo-khoa-hoc/{slug}', [CoursesController::class, 'bundleDetail'])->name('bundle.detail');
    Route::get('/khoa-hoc/{slug}', 'Clients\CoursesController@detail')->name('detail');
    Route::post('/khoa-hoc/{slug}/comments', 'Clients\CourseCommentController@store')
       ->middleware(['auth:students', 'verified', 'user.block'])
@@ -47,9 +49,13 @@ Route::group([
    Route::post('/khoa-hoc/{slug}/comments/{commentId}/toggle-visibility', 'Clients\CourseCommentController@toggleVisibility')
       ->middleware(['auth'])
       ->name('comments.toggle');
+   Route::post('/khoa-hoc/{slug}/rating', 'Clients\CourseRatingController@store')
+      ->middleware(['auth:students', 'verified', 'user.block'])
+      ->name('rating.store');
    Route::prefix('data')->name('data.')->group(function () {
       Route::get('/trial/{lessonId?}', 'Clients\CoursesController@getTrialVideo')->name('trial');
       Route::get('/stream', 'Clients\CoursesController@streamVideo')->name('stream');
    });
+   Route::post('/tao-don-combo', [CoursesController::class, 'createBundleOrder'])->middleware(['auth:students', 'verified', 'user.block'])->name('bundle.create');
    Route::post('/tao-don', 'Clients\CoursesController@create')->middleware(['auth:students', 'verified', 'user.block'])->name('create');
 });

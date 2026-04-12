@@ -5,8 +5,10 @@ namespace Modules\Contacts\src\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Modules\ActiveLogs\src\Models\ActiveLog;
+use Modules\Contacts\src\Models\Contacts;
 use Modules\Contacts\src\Repositories\ContactsRepositoryInterface;
 
 class ContactController extends Controller
@@ -20,23 +22,47 @@ class ContactController extends Controller
 
     public function index()
     {
-        $pageTitle = 'Liên hệ thông tin';
+        $pageTitle = 'Liên hệ';
         $pageName = 'Liên hệ';
 
-        return view('contacts::index', compact('pageName', 'pageTitle'));
+        return view('contacts::index', compact('pageName', 'pageTitle'))
+            ->with('mode', 'contact');
+    }
+
+    public function supportIndex()
+    {
+        $pageTitle = 'Góp ý / Báo cáo';
+        $pageName = 'Góp ý / Báo cáo';
+
+        return view('contacts::index', compact('pageName', 'pageTitle'))
+            ->with('mode', 'support');
     }
 
     public function trash()
     {
-        $pageTitle = 'Thùng rác liên hệ';
-        $pageName = 'Liên hệ';
+        $pageTitle = 'Thùng rác hỗ trợ';
+        $pageName = 'Hỗ trợ';
 
         return view('contacts::trash', compact('pageName', 'pageTitle'));
     }
 
     public function data(Request $request)
     {
-        $contacts = $this->contactrepository->getContacts();
+        $contacts = $this->contactrepository->getContacts()
+            ->where('submission_type', Contacts::TYPE_CONTACT);
+        return $this->renderDatatable($contacts, $request);
+    }
+
+    public function supportData(Request $request)
+    {
+        $contacts = $this->contactrepository->getContacts()
+            ->whereIn('submission_type', [Contacts::TYPE_FEEDBACK, Contacts::TYPE_REPORT])
+            ->where('source', 'teacher_portal');
+        return $this->renderDatatable($contacts, $request);
+    }
+
+    protected function renderDatatable($contacts, Request $request)
+    {
         $user = auth()->user();
         $canLogs = $user?->hasPermission('contacts.logs');
         $canView = $user?->hasPermission('contacts.view');
@@ -49,12 +75,21 @@ class ContactController extends Controller
                 $query->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('email', 'like', '%' . $keyword . '%')
                     ->orWhere('phone', 'like', '%' . $keyword . '%')
+                    ->orWhere('subject', 'like', '%' . $keyword . '%')
                     ->orWhere('message', 'like', '%' . $keyword . '%');
             });
         }
 
-        if ($request->filled('status_filter')) {
-            $contacts->where('status', (int) $request->input('status_filter'));
+        if ($request->filled('submission_type')) {
+            $contacts->where('submission_type', $request->input('submission_type'));
+        }
+
+        if ($request->filled('category')) {
+            $contacts->where('category', $request->input('category'));
+        }
+
+        if ($request->filled('workflow_status')) {
+            $contacts->where('workflow_status', $request->input('workflow_status'));
         }
 
         if ($request->filled('from_date')) {
@@ -66,65 +101,26 @@ class ContactController extends Controller
         }
 
         return datatables()->of($contacts)
-            ->addColumn(
-                'select',
-                fn($c) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $c->id . '"></div>'
-            )
-            ->addColumn(
-                'logs',
-                fn($c) => $canLogs ? '<a href="' . route('contacts.logs', $c->id) . '" class="btn btn-sm btn-secondary"><i class="fas fa-clock"></i></a>' : '<span class="text-muted small">-</span>'
-            )
-            ->addColumn('name', fn($c) => $c->name)
-            ->addColumn('phone', fn($c) => $c->phone)
-            ->addColumn('email', fn($c) => $c->email)
-            ->addColumn('status', function ($c) {
-                return $c->status == 1
-                    ? '<span class="badge bg-success">Đã tiếp nhận</span>'
-                    : '<span class="badge bg-warning text-dark">Chờ tiếp xử</span>';
-            })
-            ->addColumn('created_at', function ($c) {
-                return Carbon::parse($c->created_at)->format('d/m/Y H:i:s');
-            })
-            ->addColumn(
-                'view',
-                fn($c) => $canView ? '<a href="' . route('contacts.show', $c->id) . '" class="btn btn-sm btn-primary">Xem</a>' : '<span class="text-muted small">Không có quyền</span>'
-            )
-            ->addColumn(
-                'delete',
-                fn($c) => $canDelete ? '<a href="' . route('contacts.delete', $c->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>' : '<span class="text-muted small">Không có quyền</span>'
-            )
-            ->rawColumns(['select', 'status', 'view', 'delete', 'logs'])
-            ->make(true);
+            ->addColumn('select', fn($c) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $c->id . '"></div>')
+            ->addColumn('logs', fn($c) => $canLogs ? '<a href="' . route('contacts.logs', $c->id) . '" class="btn btn-sm btn-secondary"><i class="fas fa-clock"></i></a>' : '<span class="text-muted small">-</span>')
+            ->addColumn('name', fn($c) => e($c->name))
+            ->addColumn('submission_type', fn($c) => $this->renderTypeBadge($c))
+            ->addColumn('category', fn($c) => e($this->categoryLabel($c->category)))
+            ->addColumn('phone', fn($c) => e($c->phone))
+            ->addColumn('email', fn($c) => e((string) $c->email))
+            ->addColumn('status', fn($c) => $this->renderWorkflowBadge($c))
+            ->addColumn('created_at', fn($c) => Carbon::parse($c->created_at)->format('d/m/Y H:i:s'))
+            ->addColumn('view', function ($c) use ($canView) {
+                if (!$canView) {
+                    return '<span class="text-muted small">Không có quyền</span>';
+                }
 
-        return datatables()->of($contacts)
-            ->addColumn(
-                'select',
-                fn($c) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $c->id . '"></div>'
-            )
-            ->addColumn(
-                'logs',
-                fn($c) => '<a href="' . route('contacts.logs', $c->id) . '" class="btn btn-sm btn-secondary"><i class="fas fa-clock"></i></a>'
-            )
-            ->addColumn('name', fn($c) => $c->name)
-            ->addColumn('phone', fn($c) => $c->phone)
-            ->addColumn('email', fn($c) => $c->email)
-            ->addColumn('status', function ($c) {
-                return $c->status == 1
-                    ? '<span class="badge bg-success">Đã tiếp nhận</span>'
-                    : '<span class="badge bg-warning text-dark">Chờ tiếp xử</span>';
+                $route = $c->submission_type === Contacts::TYPE_CONTACT ? 'contacts.show' : 'contacts.support-show';
+
+                return '<a href="' . route($route, $c->id) . '" class="btn btn-sm btn-primary">Xem</a>';
             })
-            ->addColumn('created_at', function ($c) {
-                return Carbon::parse($c->created_at)->format('d/m/Y H:i:s');
-            })
-            ->addColumn(
-                'view',
-                fn($c) => '<a href="' . route('contacts.show', $c->id) . '" class="btn btn-sm btn-primary">Xem</a>'
-            )
-            ->addColumn(
-                'delete',
-                fn($c) => '<a href="' . route('contacts.delete', $c->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>'
-            )
-            ->rawColumns(['select', 'status', 'view', 'delete', 'logs'])
+            ->addColumn('delete', fn($c) => $canDelete ? '<a href="' . route('contacts.delete', $c->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>' : '<span class="text-muted small">Không có quyền</span>')
+            ->rawColumns(['select', 'submission_type', 'status', 'view', 'delete', 'logs'])
             ->make(true);
     }
 
@@ -132,12 +128,12 @@ class ContactController extends Controller
     {
         $canRestore = auth()->user()?->canAnyPermission(['contacts.soft_delete', 'contacts.delete']);
         $canForceDelete = auth()->user()?->hasPermission('contacts.force_delete');
-        $contacts = \Modules\Contacts\src\Models\Contacts::query()->onlyTrashed()->latest('deleted_at');
+        $contacts = Contacts::query()->onlyTrashed()->latest('deleted_at');
 
         return datatables()->of($contacts)
             ->addColumn('select', fn($c) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $c->id . '"></div>')
             ->addColumn('name', fn($c) => e($c->name))
-            ->addColumn('email', fn($c) => e($c->email))
+            ->addColumn('email', fn($c) => e((string) $c->email))
             ->addColumn('phone', fn($c) => e($c->phone))
             ->addColumn('deleted_at', fn($c) => Carbon::parse($c->deleted_at)->format('d/m/Y H:i:s'))
             ->addColumn('restore', function ($c) use ($canRestore) {
@@ -155,7 +151,7 @@ class ContactController extends Controller
                     return '<span class="text-muted small">Không có quyền</span>';
                 }
 
-                return '<form method="POST" action="' . route('contacts.force-delete', $c->id) . '" class="d-inline-block" onsubmit="return confirm(\'Xóa vĩnh viễn liên hệ này?\');">'
+                return '<form method="POST" action="' . route('contacts.force-delete', $c->id) . '" class="d-inline-block" onsubmit="return confirm(\'Xóa vĩnh viễn yêu cầu này?\');">'
                     . csrf_field()
                     . method_field('DELETE')
                     . '<button type="submit" class="btn btn-outline-danger btn-sm">Xóa vĩnh viễn</button>'
@@ -167,16 +163,35 @@ class ContactController extends Controller
 
     public function show($id)
     {
-        $pageTitle = 'Chi tiết liên hệ thông tin';
+        $pageTitle = 'Chi tiết liên hệ';
         $pageName = 'Liên hệ';
-
-        $contact = $this->contactrepository->find($id);
+        $contact = Contacts::query()->with(['student', 'teacher'])
+            ->where('submission_type', Contacts::TYPE_CONTACT)
+            ->find($id);
 
         if (!$contact) {
             abort(404);
         }
 
-        return view('contacts::show', compact('contact', 'pageName', 'pageTitle'));
+        return view('contacts::show', compact('contact', 'pageName', 'pageTitle'))
+            ->with('mode', 'contact');
+    }
+
+    public function supportShow($id)
+    {
+        $pageTitle = 'Chi tiết góp ý / báo cáo';
+        $pageName = 'Góp ý / Báo cáo';
+        $contact = Contacts::query()->with(['student', 'teacher'])
+            ->whereIn('submission_type', [Contacts::TYPE_FEEDBACK, Contacts::TYPE_REPORT])
+            ->where('source', 'teacher_portal')
+            ->find($id);
+
+        if (!$contact) {
+            abort(404);
+        }
+
+        return view('contacts::show', compact('contact', 'pageName', 'pageTitle'))
+            ->with('mode', 'support');
     }
 
     public function bulkAction(Request $request)
@@ -190,7 +205,7 @@ class ContactController extends Controller
 
         if ($selectedIds->isEmpty()) {
             throw ValidationException::withMessages([
-                'bulk_action' => 'Vui lòng chọn ít nhất một liên hệ.',
+                'bulk_action' => 'Vui lòng chọn ít nhất một yêu cầu.',
             ]);
         }
 
@@ -199,53 +214,26 @@ class ContactController extends Controller
             ->filter();
 
         if ($contacts->isEmpty()) {
-            return back()->with('msg_danger', 'Không tìm thấy liên hệ để xử lý.');
+            return back()->with('msg_danger', 'Không tìm thấy yêu cầu để xử lý.');
         }
 
         if ($action === 'accept') {
             foreach ($contacts as $contact) {
-                if ((int) $contact->status === 0) {
-                    $this->contactrepository->update($contact->id, ['status' => 1]);
-
-                    activity_log(
-                        action: 'accept',
-                        subject: $contact,
-                        properties: [
-                            'old' => ['status' => 0],
-                            'new' => ['status' => 1],
-                        ],
-                        logName: 'Tiếp nhận hàng loạt',
-                        description: 'Tiếp nhận liên hệ'
-                    );
-                }
+                $this->contactrepository->update($contact->id, [
+                    'status' => 1,
+                    'workflow_status' => Contacts::STATUS_IN_PROGRESS,
+                ]);
             }
 
-            return back()->with('msg', 'Đã tiếp nhận ' . $contacts->count() . ' liên hệ.');
+            return back()->with('msg', 'Đã tiếp nhận ' . $contacts->count() . ' yêu cầu.');
         }
 
         if ($action === 'delete') {
             foreach ($contacts as $contact) {
-                $snapshot = $contact->toArray();
                 $this->contactrepository->delete($contact->id);
-
-                activity_log(
-                    action: 'delete',
-                    subject: $contact,
-                    properties: [
-                        'data' => [
-                            'name' => $snapshot['name'] ?? null,
-                            'email' => $snapshot['email'] ?? null,
-                            'phone' => $snapshot['phone'] ?? null,
-                            'status' => $snapshot['status'] ?? null,
-                            'created_at' => $snapshot['created_at'] ?? null,
-                        ]
-                    ],
-                    logName: 'Xóa hàng loạt',
-                    description: 'Xóa liên hệ'
-                );
             }
 
-            return back()->with('msg', 'Đã xóa ' . $contacts->count() . ' liên hệ.');
+            return back()->with('msg', 'Đã xóa ' . $contacts->count() . ' yêu cầu.');
         }
 
         return back()->with('msg_danger', 'Thao tác hàng loạt không hợp lệ.');
@@ -262,14 +250,14 @@ class ContactController extends Controller
 
         if ($selectedIds->isEmpty()) {
             throw ValidationException::withMessages([
-                'bulk_action' => 'Vui lòng chọn ít nhất một liên hệ trong thùng rác.',
+                'bulk_action' => 'Vui lòng chọn ít nhất một yêu cầu trong thùng rác.',
             ]);
         }
 
-        $contacts = \Modules\Contacts\src\Models\Contacts::query()->onlyTrashed()->whereIn('id', $selectedIds)->get();
+        $contacts = Contacts::query()->onlyTrashed()->whereIn('id', $selectedIds)->get();
 
         if ($contacts->isEmpty()) {
-            return back()->with('msg_danger', 'Không tìm thấy liên hệ hợp lệ trong thùng rác.');
+            return back()->with('msg_danger', 'Không tìm thấy yêu cầu hợp lệ trong thùng rác.');
         }
 
         if ($action === 'restore') {
@@ -277,7 +265,7 @@ class ContactController extends Controller
                 $contact->restore();
             }
 
-            return back()->with('msg', 'Đã khôi phục ' . $contacts->count() . ' liên hệ.');
+            return back()->with('msg', 'Đã khôi phục ' . $contacts->count() . ' yêu cầu.');
         }
 
         if ($action === 'force_delete') {
@@ -285,7 +273,7 @@ class ContactController extends Controller
                 $contact->forceDelete();
             }
 
-            return back()->with('msg', 'Đã xóa vĩnh viễn ' . $contacts->count() . ' liên hệ.');
+            return back()->with('msg', 'Đã xóa vĩnh viễn ' . $contacts->count() . ' yêu cầu.');
         }
 
         return back()->with('msg_danger', 'Thao tác trong thùng rác không hợp lệ.');
@@ -299,35 +287,31 @@ class ContactController extends Controller
             abort(404);
         }
 
-        $old = is_object($contact) && method_exists($contact, 'toArray') ? $contact->toArray() : (array) $contact;
+        $this->contactrepository->update($id, [
+            'status' => 1,
+            'workflow_status' => Contacts::STATUS_IN_PROGRESS,
+        ]);
 
-        if ((int) $contact->status === 0) {
-            $this->contactrepository->update($id, ['status' => 1]);
+        return back()->with('msg', 'Tiếp nhận yêu cầu thành công.');
+    }
 
-            $fresh = $this->contactrepository->find($id);
-            $new = $fresh ? $fresh->toArray() : ['status' => 1];
+    public function updateStatus(Request $request, $id)
+    {
+        $contact = $this->contactrepository->find($id);
 
-            activity_log(
-                action: 'accept',
-                subject: $fresh ?? $contact,
-                properties: [
-                    'old' => ['status' => $old['status'] ?? 0],
-                    'new' => ['status' => $new['status'] ?? 1],
-                ],
-                logName: 'Liên hệ',
-                description: 'Tiếp nhận liên hệ'
-            );
-        } else {
-            activity_log(
-                action: 'accept',
-                subject: $contact,
-                properties: ['status' => $contact->status],
-                logName: 'Chấp nhận',
-                description: 'Liên hệ đã được tiếp nhận trước đó'
-            );
+        if (!$contact) {
+            abort(404);
         }
 
-        return back()->with('msg', 'Tiếp nhận liên hệ thành công');
+        $data = $request->validate([
+            'workflow_status' => ['required', Rule::in(Contacts::workflowStatuses())],
+            'admin_note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $data['status'] = in_array($data['workflow_status'], [Contacts::STATUS_IN_PROGRESS, Contacts::STATUS_RESOLVED], true) ? 1 : 0;
+        $this->contactrepository->update($id, $data);
+
+        return back()->with('msg', 'Đã cập nhật trạng thái xử lý.');
     }
 
     public function delete($id)
@@ -338,27 +322,10 @@ class ContactController extends Controller
             abort(404);
         }
 
-        $snapshot = $contact->toArray();
         $status = $this->contactrepository->delete($id);
 
         if ($status) {
-            activity_log(
-                action: 'delete',
-                subject: $contact,
-                properties: [
-                    'data' => [
-                        'name' => $snapshot['name'] ?? null,
-                        'email' => $snapshot['email'] ?? null,
-                        'phone' => $snapshot['phone'] ?? null,
-                        'status' => $snapshot['status'] ?? null,
-                        'created_at' => $snapshot['created_at'] ?? null,
-                    ]
-                ],
-                logName: 'Xóa',
-                description: 'Xóa liên hệ'
-            );
-
-            return redirect()->route('contacts.index')->with('msg', 'Xóa liên hệ thành công');
+            return redirect()->route('contacts.index')->with('msg', 'Xóa yêu cầu thành công');
         }
 
         return back()->with('msg_danger', 'Xóa thất bại');
@@ -366,7 +333,7 @@ class ContactController extends Controller
 
     public function restore($id)
     {
-        $contact = \Modules\Contacts\src\Models\Contacts::query()->onlyTrashed()->find($id);
+        $contact = Contacts::query()->onlyTrashed()->find($id);
 
         if (!$contact) {
             abort(404);
@@ -374,12 +341,12 @@ class ContactController extends Controller
 
         $contact->restore();
 
-        return back()->with('msg', 'Khôi phục liên hệ thành công.');
+        return back()->with('msg', 'Khôi phục yêu cầu thành công.');
     }
 
     public function forceDelete($id)
     {
-        $contact = \Modules\Contacts\src\Models\Contacts::query()->onlyTrashed()->find($id);
+        $contact = Contacts::query()->onlyTrashed()->find($id);
 
         if (!$contact) {
             abort(404);
@@ -387,7 +354,7 @@ class ContactController extends Controller
 
         $contact->forceDelete();
 
-        return back()->with('msg', 'Đã xóa vĩnh viễn liên hệ.');
+        return back()->with('msg', 'Đã xóa vĩnh viễn yêu cầu.');
     }
 
     public function logs(Request $request, $id)
@@ -431,5 +398,51 @@ class ContactController extends Controller
             ->withQueryString();
 
         return view('contacts::logs', compact('pageTitle', 'contacts', 'logs'));
+    }
+
+    protected function renderTypeBadge(Contacts $contact): string
+    {
+        $map = [
+            Contacts::TYPE_CONTACT => ['Liên hệ', 'bg-info-subtle text-info-emphasis'],
+            Contacts::TYPE_FEEDBACK => ['Góp ý', 'bg-primary-subtle text-primary-emphasis'],
+            Contacts::TYPE_REPORT => ['Báo cáo', 'bg-danger-subtle text-danger-emphasis'],
+        ];
+
+        [$label, $classes] = $map[$contact->submission_type] ?? ['Khác', 'bg-secondary-subtle text-secondary-emphasis'];
+
+        return '<span class="badge rounded-pill ' . $classes . '">' . e($label) . '</span>';
+    }
+
+    protected function renderWorkflowBadge(Contacts $contact): string
+    {
+        $map = [
+            Contacts::STATUS_NEW => ['Mới gửi', 'bg-warning text-dark'],
+            Contacts::STATUS_IN_PROGRESS => ['Đang xử lý', 'bg-info text-dark'],
+            Contacts::STATUS_NEED_INFO => ['Cần thêm thông tin', 'bg-secondary'],
+            Contacts::STATUS_RESOLVED => ['Đã giải quyết', 'bg-success'],
+            Contacts::STATUS_REJECTED => ['Đã từ chối', 'bg-danger'],
+        ];
+
+        [$label, $classes] = $map[$contact->workflow_status] ?? ['Mới gửi', 'bg-warning text-dark'];
+
+        return '<span class="badge ' . $classes . '">' . e($label) . '</span>';
+    }
+
+    protected function categoryLabel(?string $category): string
+    {
+        return match ($category) {
+            'general_contact' => 'Liên hệ chung',
+            'feature_request' => 'Tính năng mới',
+            'ui_ux' => 'UI/UX',
+            'teacher_portal' => 'Teacher portal',
+            'student_portal' => 'Student portal',
+            'payment_package' => 'Thanh toán / gói',
+            'system_bug' => 'Lỗi hệ thống',
+            'course_lesson' => 'Khóa học / bài học',
+            'comment_rating' => 'Bình luận / đánh giá',
+            'content_violation' => 'Nội dung vi phạm',
+            'account' => 'Tài khoản',
+            default => 'Khác',
+        };
     }
 }

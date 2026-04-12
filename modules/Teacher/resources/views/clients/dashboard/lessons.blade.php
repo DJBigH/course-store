@@ -54,9 +54,13 @@
 
                 @if ($module->subLessons->isNotEmpty())
                     <div class="row g-3">
-                        @foreach ($module->subLessons as $lesson)
+                        @foreach ($module->subLessons->values() as $lesson)
                             <div class="col-lg-6">
-                                @include('teacher::clients.dashboard.partials.lesson_item', ['lesson' => $lesson, 'course' => $course])
+                                @include('teacher::clients.dashboard.partials.lesson_item', [
+                                    'lesson' => $lesson,
+                                    'course' => $course,
+                                    'previousLesson' => $loop->index > 0 ? $module->subLessons->values()->get($loop->index - 1) : null,
+                                ])
                             </div>
                         @endforeach
                     </div>

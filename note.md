@@ -472,6 +472,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó))
 - Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
 - Làm cái mã giảm giá dành riêng cho đăng ký giáo viên 
+- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý )
+- Check lại logic của module giáo viên
+- Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại
+- Chưa làm config ngân hàng
+- Thêm cái dùng hợp tác hủy tư cách giáo viên ẩn tất cả những thứ liên quan đến giáo viên đó, tài khoản giáo viên sẽ được hạ xuống tài khoản học viên không vô được màn giáo viên, tất cả các khóa học được cấp hay của bản thân sẽ ẩn đi và chỉ có học viên nào mua thì vẫn dùng được
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -516,17 +521,39 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Chưa check validate đăng ký giáo viên
 - Làm cái mã giảm giá dành riêng cho đăng ký giáo viên
 - Thêm cái danh mục dành cho các gói mua của giáo viên ( Gói hợp tác, Gói theo tháng/năm, Gói j đó...)
+- Làm cái trang xem profile của giảng viên ( Giảng viên sẽ hiện ra profile khi đăng ký đổ ra, và có rating giảng viên, có bao nhiêu khóa học, bài giảng trong website )
+- Đối với tài khoản đã được nâng lên làm teacher thì sẽ có tất cả các khóa học mà mình tạo ra 
+- Đối với tài khoản đã được nâng lên làm teacher sẽ bỏ cái trở thành giáo viên
+- Chỉ có super admin mới có quyền xóa nên làm chức năng khóa tài khoản giảng viên vì nếu admin thấy không hoạt động thì khóa lại
+- Đối với user, teacher, student thêm quyền khóa trong phân quyền
+- Check tất cả phân quyền là khi tắt quyền nào thì ẩn quyền nó ở màn đó đi (VD: tắt quyền sửa học viên thì ẩn sửa đi)
+- Với các gói thì xem được chi tiết rõ các gói đó như nào, Thêm so sánh ở đó
+- Khi tạo giáo viên yêu cầu phải thêm rõ cái tài khoản ngân hàng, yêu cầu phải có 1 tài khoản ngân hàng mới được tạo quyền 
+- Trong profile có thêm cái chứng chỉ nx để ấn vô xem
  Teacher:
 - Làm cái hồ sơ giáo viên
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
-- Làm quản lý bình luận những khóa học của giáo viên đó
-- Làm quản lý mã giảm giá
+- Làm quản lý bình luận những khóa học của giáo viên đó ( Done )
+- Làm quản lý mã giảm giá ( Done )
 - Làm quản lý đơn hàng
-- Với cái xử lý rút tiền thì nhập 1 lần tài khoản sẽ lưu tài khoản đó tôi đa 3 tài khoản ngân hàng khác nhau với tài khoản t4 sẽ phải xin từ admin accpet mới thay đổi và khi thay đổi sẽ thay thay 1 trong 3 tài khoản đó
-- Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...)
-- Góp ý hoặc báo cáo với admin
-- Nghĩ xem cần thêm chức năng nào khác không
+- Với cái xử lý rút tiền thì nhập 1 lần tài khoản sẽ lưu tài khoản đó tôi đa 3 tài khoản ngân hàng khác nhau với tài khoản t4 sẽ phải xin từ admin accpet mới thay đổi và khi thay đổi sẽ thay thay 1 trong 3 tài khoản đó ( Done )
+- Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...) hay có thêm chức năng j để giới hạn không
+- Khi đã là giáo viên rồi thì khi đổi gói có cần admin duyệt không hay tự động chuyển gói ( Góp ý cho tôi ) ( Done )
+- Làm chức năng góp ý hoặc báo cáo với admin ( kiểu tôi muốn thêm danh mục j đó để phát triển) ( Done )
+- Thêm các noti vào cái chuông như kiểu: có bình luận, có người mua khóa học, mã giảm giá sắp hết hạn hay số lượt, gói giáo viên sắp hết hạn, các tính năng mới j đó admin cập nhập dành riêng cho giáo viên ( Done )
+- với trường hợp giáo viên mua gói tháng/năm thì khi hết hạn và họ không gia hạn thì xử lý như nào ( Done tự về gói free nếu không gia hạn gói )
+- Với trường hợp họ đang dùng gói không giới hạn khóa học hay mã giảm giá thì khi họ hạ gói xuống nó limit thì xử lý như nào ( Done sẽ cho họ active)
+- Với trường hợp tài khoản giảng viên họ không dùng nữa và họ không báo với mình thì sao mình không hề biết là họ không dùng nữa ( Done Admin check số ngày hoạt động)
+- Nếu bạn muốn, mình có thể làm thêm một bước nữa là cho cột được chọn có icon ✓ Đang so sánh hoặc một thanh màu chạy dọc ở đầu cột để trực quan hơn nữa. ( Done )
+- Thêm chức năng xem lại lịch sử thao tác, đôi với quản lý học viên cái giám sát học viên học được bao nhiêu % thì thêm vào đó và phần quyền trong gói giúp tôi ( Done )
+- Hướng dẫn cái cấp chứng chỉ ( Done )
+- Nghĩ xem cần thêm chức năng nào khác không ( Tôi muốn chức năng nó có thể liên quan đến các gói của giáo viên để gói đó có giá trị hơn khiến giảng viên mua để sử dụng)
+- Fix 1 số bug liên quan đến limit trong gói
+- À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá ( Chưa xong bên clients)
+- Check lại tất cả đa ngôn ngữ của màn teacher ( Đặc biệt là vi phải có dấu)
+- Yêu cầu rút tiền tôi muốn là cái thêm ngân hàng tách ra riêng và chỉ khi chọn được ngân hàng thì mới nhập được giá tiền và ghi chú và validate (đối với số tiền min là 5k)
+- Cái 2FA của giáo viên và học viên là giống nhau đúng ko ( Cùng 1 logic nên suy nghĩ có cần thay đổi cái 2FA bật/tắt không)
+- Cái defauth avatar khi tạo giáo viên nằm ở resources/assets/teacher.png
+- Thêm chức năng hủy hợp tác ( Đẩy lên admin + lý do và khi hủy thì tất cả bài giảng ẩn đi chỉ có học viên nào đã mua thì vẫn còn sử dụng và bị đẩy khỏi màn giáo viên gửi mail cảm ơn đã hợp tác tài khoản hạ cấp xuống học viên)
 Tổng kết
 - check lại lần cuối trước khi đẩy lên production
-
-

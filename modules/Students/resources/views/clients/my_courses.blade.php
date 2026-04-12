@@ -91,6 +91,15 @@
                                                             <a
                                                                 href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}">{{ $course->name_locale }}</a>
                                                         </div>
+                                                        @if ($course->student_certificate)
+                                                            <div class="account-courses-certificate">
+                                                                <a href="{{ route('students.account.certificates.show', ['locale' => app()->getLocale(), 'id' => $course->student_certificate->id]) }}"
+                                                                    class="account-courses-certificate__badge">
+                                                                    <i class="bi bi-award me-1"></i>
+                                                                    Da co chung chi
+                                                                </a>
+                                                            </div>
+                                                        @endif
                                                         <small class="text-muted account-courses-course__meta">
                                                             {{ __('students::clients/account.my_course.updated_at') }}:
                                                             {{ format_date_dmy($course->updated_at) }}
@@ -279,6 +288,28 @@
             color: #64748b !important;
         }
 
+        .account-courses-certificate {
+            margin-top: 10px;
+        }
+
+        .account-courses-certificate__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.42rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .account-courses-certificate__badge:hover {
+            background: rgba(37, 99, 235, 0.18);
+            color: #1e40af;
+        }
+
         .account-courses-progress-cell {
             min-width: 220px;
         }
@@ -368,6 +399,16 @@
         html[data-theme="dark"] .account-courses-course__meta,
         html[data-theme="dark"] .account-course-progress__head span {
             color: #9fb4cb !important;
+        }
+
+        html[data-theme="dark"] .account-courses-certificate__badge {
+            background: rgba(96, 165, 250, 0.16);
+            color: #bfdbfe;
+        }
+
+        html[data-theme="dark"] .account-courses-certificate__badge:hover {
+            background: rgba(96, 165, 250, 0.22);
+            color: #dbeafe;
         }
 
         html[data-theme="dark"] .account-courses-index,

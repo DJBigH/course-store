@@ -39,6 +39,9 @@ class Teacher extends Model
         'approved_by',
         'package_started_at',
         'package_expires_at',
+        'last_active_at',
+        'inactive_teacher_notified_at',
+        'inactive_admin_notified_at',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -49,6 +52,9 @@ class Teacher extends Model
         'commission_rate' => 'float',
         'package_started_at' => 'datetime',
         'package_expires_at' => 'datetime',
+        'last_active_at' => 'datetime',
+        'inactive_teacher_notified_at' => 'datetime',
+        'inactive_admin_notified_at' => 'datetime',
     ];
 
     public function student()
@@ -61,14 +67,56 @@ class Teacher extends Model
         return $this->belongsTo(TeacherApplication::class, 'application_id', 'id');
     }
 
+    public function currentPackage(): ?TeacherPackage
+    {
+        $this->loadMissing('application.package');
+
+        return $this->application?->package;
+    }
+
+    public function packageHasFeature(string $feature): bool
+    {
+        return (bool) $this->currentPackage()?->hasFeature($feature);
+    }
+
     public function payoutRequests()
     {
         return $this->hasMany(TeacherPayoutRequest::class, 'teacher_id', 'id');
     }
 
+    public function payoutAccounts()
+    {
+        return $this->hasMany(TeacherPayoutAccount::class, 'teacher_id', 'id');
+    }
+
+    public function payoutAccountChangeRequests()
+    {
+        return $this->hasMany(TeacherPayoutAccountChangeRequest::class, 'teacher_id', 'id');
+    }
+
     public function studentNotes()
     {
         return $this->hasMany(TeacherStudentNote::class, 'teacher_id', 'id');
+    }
+
+    public function courses()
+    {
+        return $this->hasMany(\Modules\Courses\src\Models\Courses::class, 'teacher_id', 'id');
+    }
+
+    public function bundles()
+    {
+        return $this->hasMany(TeacherCourseBundle::class, 'teacher_id', 'id');
+    }
+
+    public function affiliateLinks()
+    {
+        return $this->hasMany(TeacherAffiliateLink::class, 'teacher_id', 'id');
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(TeacherRating::class, 'teacher_id', 'id');
     }
 
     public function getDescriptionLocaleAttribute(): string

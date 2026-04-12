@@ -26,4 +26,5 @@ return [
     //All Coupon
     'all_coupon' => 'General discount codes',
     'no_coupon' => 'There are no general discount codes available.',
+    'created_by_teacher' => 'Created by instructor',
 ];

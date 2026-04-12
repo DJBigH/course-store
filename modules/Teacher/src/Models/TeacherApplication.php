@@ -32,6 +32,7 @@ class TeacherApplication extends Model
         'facebook_url',
         'youtube_url',
         'linkedin_url',
+        'custom_links',
         'intro_video_url',
         'cv_file',
         'identity_file',
@@ -49,6 +50,7 @@ class TeacherApplication extends Model
 
     protected $casts = [
         'specialties' => 'array',
+        'custom_links' => 'array',
         'discount_amount' => 'float',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',

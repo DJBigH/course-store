@@ -5,8 +5,12 @@
         <div class="card-body p-4">
             <div class="admin-page-actions">
                 <div>
-                    <h5 class="mb-1">Danh sách liên hệ</h5>
-                    <p class="text-muted mb-0">Theo dõi yêu cầu liên hệ, trạng thái tiếp nhận và lịch sử xử lý.</p>
+                    <h5 class="mb-1">{{ ($mode ?? 'contact') === 'support' ? 'Danh sách góp ý / báo cáo' : 'Danh sách liên hệ' }}</h5>
+                    <p class="text-muted mb-0">
+                        {{ ($mode ?? 'contact') === 'support'
+                            ? 'Theo dõi góp ý phát triển và báo cáo sự cố gửi đến admin.'
+                            : 'Theo dõi các yêu cầu liên hệ và tư vấn từ người dùng.' }}
+                    </p>
                 </div>
                 @if (auth()->user()?->canAnyPermission(['contacts.soft_delete', 'contacts.delete', 'contacts.force_delete']))
                     <a href="{{ route('contacts.trash') }}" class="btn btn-light border">
@@ -28,24 +32,53 @@
 
             <form id="contact-filter-form" class="admin-filter-panel mb-4">
                 <div class="row g-3">
-                    <div class="col-lg-4 col-md-6">
-                        <label class="form-label">Từ khóa</label>
-                        <input type="text" class="form-control" name="q" id="filter-q"
-                            placeholder="Tên, email, số điện thoại, nội dung...">
-                    </div>
                     <div class="col-lg-3 col-md-6">
+                        <label class="form-label">Từ khóa</label>
+                        <input type="text" class="form-control" name="q" id="filter-q" placeholder="Tên, email, tiêu đề, nội dung...">
+                    </div>
+                    @if (($mode ?? 'contact') === 'support')
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label">Loại gửi</label>
+                            <select class="form-select" name="submission_type" id="filter-type">
+                                <option value="">Tất cả</option>
+                                <option value="feedback">Góp ý</option>
+                                <option value="report">Báo cáo</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label">Danh mục</label>
+                            <select class="form-select" name="category" id="filter-category">
+                                <option value="">Tất cả</option>
+                                <option value="feature_request">Tính năng mới</option>
+                                <option value="ui_ux">UI/UX</option>
+                                <option value="teacher_portal">Teacher portal</option>
+                                <option value="student_portal">Student portal</option>
+                                <option value="payment_package">Thanh toán / gói</option>
+                                <option value="system_bug">Lỗi hệ thống</option>
+                                <option value="course_lesson">Khóa học / bài học</option>
+                                <option value="comment_rating">Bình luận / đánh giá</option>
+                                <option value="content_violation">Nội dung vi phạm</option>
+                                <option value="account">Tài khoản</option>
+                                <option value="other">Khác</option>
+                            </select>
+                        </div>
+                    @endif
+                    <div class="col-lg-2 col-md-6">
                         <label class="form-label">Trạng thái</label>
-                        <select class="form-select" name="status_filter" id="filter-status">
+                        <select class="form-select" name="workflow_status" id="filter-status">
                             <option value="">Tất cả</option>
-                            <option value="0">Chờ tiếp xử</option>
-                            <option value="1">Đã tiếp nhận</option>
+                            <option value="new">Mới gửi</option>
+                            <option value="in_progress">Đang xử lý</option>
+                            <option value="need_info">Cần thêm thông tin</option>
+                            <option value="resolved">Đã giải quyết</option>
+                            <option value="rejected">Đã từ chối</option>
                         </select>
                     </div>
-                    <div class="col-lg-2 col-md-6">
+                    <div class="col-lg-1 col-md-6">
                         <label class="form-label">Từ ngày</label>
                         <input type="date" class="form-control" name="from_date" id="filter-from-date">
                     </div>
-                    <div class="col-lg-2 col-md-6">
+                    <div class="col-lg-1 col-md-6">
                         <label class="form-label">Đến ngày</label>
                         <input type="date" class="form-control" name="to_date" id="filter-to-date">
                     </div>
@@ -66,11 +99,11 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-count">0</span> Liên hệ được chọn
+                            <span id="selected-count">0</span> yêu cầu được chọn
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @if (auth()->user()?->hasPermission('contacts.update'))
-                                <button type="button" class="btn btn-success bulk-action-trigger" data-action="accept">Tiếp nhận</button>
+                                <button type="button" class="btn btn-success bulk-action-trigger" data-action="accept">Đánh dấu đang xử lý</button>
                             @endif
                             @if (auth()->user()?->canAnyPermission(['contacts.soft_delete', 'contacts.delete']))
                                 <button type="button" class="btn btn-outline-danger bulk-action-trigger" data-action="delete">Xóa</button>
@@ -87,7 +120,11 @@
                             <th class="text-center" style="width: 48px;">
                                 <input type="checkbox" id="select-all-records" class="form-check-input">
                             </th>
-                            <th>Tên</th>
+                            <th>Người gửi</th>
+                            @if (($mode ?? 'contact') === 'support')
+                                <th>Loại</th>
+                                <th>Danh mục</th>
+                            @endif
                             <th>Số điện thoại</th>
                             <th>Email</th>
                             <th>Trạng thái</th>
@@ -141,13 +178,10 @@
             border-color: #2b3b53;
         }
 
-        html[data-theme="dark"] .bulk-toolbar__summary {
-            color: #cbd5e1;
-        }
-
+        html[data-theme="dark"] .bulk-toolbar__summary,
         html[data-theme="dark"] #datatable tbody td,
         html[data-theme="dark"] #datatable tbody a {
-            color: #e2e8f0;
+            color: #cbd5e1;
         }
     </style>
 @endsection
@@ -167,60 +201,28 @@
                     url: "{{ route('contacts.data') }}",
                     data: function(d) {
                         d.q = $('#filter-q').val();
-                        d.status_filter = $('#filter-status').val();
+                        d.submission_type = $('#filter-type').val();
+                        d.category = $('#filter-category').val();
+                        d.workflow_status = $('#filter-status').val();
                         d.from_date = $('#filter-from-date').val();
                         d.to_date = $('#filter-to-date').val();
                     }
                 },
-                columns: [{
-                        data: 'select',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'name'
-                    },
-                    {
-                        data: 'phone'
-                    },
-                    {
-                        data: 'email'
-                    },
-                    {
-                        data: 'status'
-                    },
-                    {
-                        data: 'created_at'
-                    },
-                    {
-                        data: 'logs'
-                    },
-                    {
-                        data: 'view'
-                    },
-                    {
-                        data: 'delete'
-                    }
+                columns: [
+                    { data: 'select', orderable: false, searchable: false },
+                    { data: 'name' },
+                    @if (($mode ?? 'contact') === 'support')
+                    { data: 'submission_type' },
+                    { data: 'category' },
+                    @endif
+                    { data: 'phone' },
+                    { data: 'email' },
+                    { data: 'status' },
+                    { data: 'created_at' },
+                    { data: 'logs' },
+                    { data: 'view' },
+                    { data: 'delete' }
                 ],
-                language: {
-                    processing: 'Đang xử lý...',
-                    search: 'Tìm kiếm:',
-                    lengthMenu: 'Hiển thị _MENU_ bản ghi',
-                    info: 'Hiển thị từ _START_ đến _END_ của _TOTAL_ bản ghi',
-                    infoEmpty: 'Hiển thị 0 đến 0 của 0 bản ghi',
-                    infoFiltered: '(lọc từ _MAX_ bản ghi)',
-                    loadingRecords: 'Đang tải...',
-                    zeroRecords: 'Không tìm thấy bản ghi nào',
-                    emptyTable: 'Không có dữ liệu trong bảng',
-                    paginate: {
-                        previous: 'Trước',
-                        next: 'Tiếp'
-                    },
-                    aria: {
-                        sortAscending: ': sắp xếp tăng dần',
-                        sortDescending: ': sắp xếp giảm dần'
-                    }
-                },
                 drawCallback: function() {
                     syncCheckboxState();
                 }
@@ -250,37 +252,25 @@
 
             $('#datatable').on('change', '.bulk-row-checkbox', function() {
                 const id = $(this).val();
-
-                if ($(this).is(':checked')) {
-                    selectedIds.add(id);
-                } else {
-                    selectedIds.delete(id);
-                }
-
+                $(this).is(':checked') ? selectedIds.add(id) : selectedIds.delete(id);
                 syncCheckboxState();
             });
 
             $('#select-all-records').on('change', function() {
                 $('.bulk-row-checkbox').each(function() {
                     const id = $(this).val();
-
-                    if ($('#select-all-records').is(':checked')) {
-                        selectedIds.add(id);
-                    } else {
-                        selectedIds.delete(id);
-                    }
+                    $('#select-all-records').is(':checked') ? selectedIds.add(id) : selectedIds.delete(id);
                 });
-
                 syncCheckboxState();
             });
 
             $('.bulk-action-trigger').on('click', function() {
                 if (selectedIds.size === 0) {
-                    alert('Vui lòng chọn ít nhất một liên hệ.');
+                    alert('Vui lòng chọn ít nhất một yêu cầu.');
                     return;
                 }
 
-                if ($(this).data('action') === 'delete' && !confirm('Xóa các liên hệ đã chọn?')) {
+                if ($(this).data('action') === 'delete' && !confirm('Xóa các yêu cầu đã chọn?')) {
                     return;
                 }
 

@@ -7,6 +7,12 @@
                 <div>
                     <h3 class="fw-bold mb-2">{{ $course ? __('teacher::dashboard.courses.edit_title') : __('teacher::dashboard.courses.create_title') }}</h3>
                     <p class="text-muted mb-0">{{ $course ? __('teacher::dashboard.courses.edit_description') : __('teacher::dashboard.courses.create_description') }}</p>
+                    @if ($course?->package_locked_at)
+                        <div class="teacher-limit-lock mt-3">
+                            <span class="teacher-limit-lock__badge">{{ __('teacher::dashboard.courses.labels.limited_actions_only') }}</span>
+                            <div class="teacher-limit-lock__text">{{ __('teacher::dashboard.courses.warnings.locked_manage_only') }}</div>
+                        </div>
+                    @endif
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     @if ($usage)
@@ -22,6 +28,12 @@
 
             @if (session('msg_danger'))
                 <div class="alert alert-danger">{{ session('msg_danger') }}</div>
+            @endif
+
+            @if ($usage && ($usage['has_limit'] ?? false) && ($usage['is_over_limit'] ?? false))
+                <div class="alert alert-warning">
+                    {{ __('teacher::dashboard.courses.warnings.publish_limit_over', ['count' => $usage['over_limit_by'] ?? 0]) }}
+                </div>
             @endif
 
             @if ($errors->any())
@@ -129,16 +141,45 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">{{ __('teacher::dashboard.courses.form.price') }}</label>
-                                    <input type="number" name="price" min="0" step="0.01"
-                                        class="form-control @error('price') is-invalid @enderror" value="{{ old('price', $course?->price ?? 0) }}">
+                                    <input type="hidden" name="price" id="teacher-course-price" value="{{ old('price', $course?->price ?? 0) }}">
+                                    <div class="teacher-money-input">
+                                        <input
+                                            type="text"
+                                            inputmode="numeric"
+                                            class="form-control @error('price') is-invalid @enderror"
+                                            id="teacher-course-price-display"
+                                            value="{{ old('price', $course?->price ?? 0) }}"
+                                            data-money-input
+                                            data-money-target="teacher-course-price"
+                                            placeholder="0"
+                                        >
+                                        <span class="teacher-money-input__unit">đ</span>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Gia toi da 99,999,999d.</small>
                                     @error('price')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">{{ __('teacher::dashboard.courses.form.sale_price') }}</label>
-                                    <input type="number" name="sale_price" min="0" step="0.01"
-                                        class="form-control @error('sale_price') is-invalid @enderror" value="{{ old('sale_price', $course?->sale_price ?? 0) }}">
+                                    <input type="hidden" name="sale_price" id="teacher-course-sale-price" value="{{ old('sale_price', $course?->sale_price ?? 0) }}">
+                                    <div class="teacher-money-input">
+                                        <input
+                                            type="text"
+                                            inputmode="numeric"
+                                            class="form-control @error('sale_price') is-invalid @enderror"
+                                            id="teacher-course-sale-price-display"
+                                            value="{{ old('sale_price', $course?->sale_price ?? 0) }}"
+                                            data-money-input
+                                            data-money-target="teacher-course-sale-price"
+                                            placeholder="0"
+                                        >
+                                        <span class="teacher-money-input__unit">đ</span>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Khong duoc lon hon gia goc.</small>
+                                    <div class="invalid-feedback d-none" id="teacher-course-sale-price-realtime-error">
+                                        Gia khuyen mai khong duoc lon hon gia goc.
+                                    </div>
                                     @error('sale_price')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -149,6 +190,15 @@
                                         <option value="0" @selected(old('status', $course?->status ?? 0) == 0)>{{ __('teacher::dashboard.courses.status.draft') }}</option>
                                         <option value="1" @selected(old('status', $course?->status ?? 0) == 1)>{{ __('teacher::dashboard.courses.status.published') }}</option>
                                     </select>
+                                    @if ($usage && ($usage['has_limit'] ?? false))
+                                        <small class="text-muted d-block mt-2">
+                                            {{ __('teacher::dashboard.courses.warnings.publish_limit_summary', [
+                                                'published' => $usage['published'] ?? $usage['used'] ?? 0,
+                                                'total' => $usage['total'] ?? $usage['used'] ?? 0,
+                                                'limit' => $usage['limit_label'] ?? __('teacher::dashboard.courses.unlimited'),
+                                            ]) }}
+                                        </small>
+                                    @endif
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">{{ __('teacher::dashboard.courses.form.is_document') }}</label>
@@ -205,8 +255,43 @@
 
 @section('stylesheets')
     <style>
+        .teacher-limit-lock__badge {
+            display: inline-flex;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(248, 113, 113, 0.14);
+            color: #b91c1c;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+
+        .teacher-limit-lock__text {
+            margin-top: 0.6rem;
+            color: var(--admin-warning, #b45309);
+            font-weight: 600;
+        }
+
         .teacher-course-form .teacher-panel {
             overflow: visible;
+        }
+
+        .teacher-money-input {
+            position: relative;
+        }
+
+        .teacher-money-input .form-control {
+            padding-right: 2.75rem;
+        }
+
+        .teacher-money-input__unit {
+            position: absolute;
+            top: 50%;
+            right: 0.95rem;
+            transform: translateY(-50%);
+            color: var(--admin-muted);
+            font-weight: 700;
+            pointer-events: none;
         }
 
         .teacher-category-list {
@@ -281,6 +366,37 @@
                     codeInput.value = `KH${random}`;
                 });
             }
+
+            const form = document.querySelector('.teacher-course-form');
+            const submitButton = form?.querySelector('button[type="submit"]');
+            const priceHidden = document.getElementById('teacher-course-price');
+            const salePriceHidden = document.getElementById('teacher-course-sale-price');
+            const salePriceDisplay = document.getElementById('teacher-course-sale-price-display');
+            const realtimeError = document.getElementById('teacher-course-sale-price-realtime-error');
+
+            const validateSalePrice = () => {
+                if (!priceHidden || !salePriceHidden || !salePriceDisplay || !realtimeError) {
+                    return true;
+                }
+
+                const price = Number(priceHidden.value || 0);
+                const salePrice = Number(salePriceHidden.value || 0);
+                const invalid = salePrice > price;
+
+                salePriceDisplay.classList.toggle('is-invalid', invalid);
+                realtimeError.classList.toggle('d-none', !invalid);
+
+                if (submitButton) {
+                    submitButton.disabled = invalid;
+                }
+
+                return !invalid;
+            };
+
+            document.addEventListener('teacher:money-input-sync', validateSalePrice);
+            window.TeacherMoneyInput?.initAll(form || document);
+
+            validateSalePrice();
         })();
     </script>
 @endsection

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Courses\src\Models\Courses;
 use Modules\Orders\src\Models\Order;
+use Modules\Teacher\src\Models\Teacher;
 
 class Coupons extends Model
 {
@@ -16,6 +17,7 @@ class Coupons extends Model
     protected $table = 'coupons';
 
     protected $fillable = [
+        'teacher_id',
         'code',
         'discount_type',
         'discount_value',
@@ -24,6 +26,9 @@ class Coupons extends Model
         'per_student_once',
         'start_date',
         'end_date',
+        'package_locked_at',
+        'package_lock_reason',
+        'is_package_priority',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -31,8 +36,10 @@ class Coupons extends Model
 
     protected $casts = [
         'per_student_once' => 'boolean',
+        'is_package_priority' => 'boolean',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'package_locked_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 
@@ -41,9 +48,24 @@ class Coupons extends Model
         return $this->belongsToMany(Student::class, 'coupons_students', 'coupon_id', 'student_id');
     }
 
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
+    }
+
     public function courses()
     {
         return $this->belongsToMany(Courses::class, 'coupons_courses', 'coupon_id', 'course_id')->withoutGlobalScopes();
+    }
+
+    public function bundles()
+    {
+        return $this->belongsToMany(
+            \Modules\Teacher\src\Models\TeacherCourseBundle::class,
+            'coupons_teacher_course_bundles',
+            'coupon_id',
+            'bundle_id'
+        );
     }
 
     public function usages()
@@ -69,6 +91,7 @@ class Coupons extends Model
                 $sub->whereNull('end_date')
                     ->orWhere('end_date', '>=', $now);
             })
+            ->whereNull('package_locked_at')
             ->whereRaw(
                 '(coupons.count is null or coupons.count = 0 or (select count(*) from coupons_usage where coupons_usage.coupon_id = coupons.id) < coupons.count)'
             );

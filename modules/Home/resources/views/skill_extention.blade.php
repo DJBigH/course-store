@@ -19,7 +19,7 @@
                              </a>
                          </h5>
                          <div class="descreption-teacher">
-                             <img src="/clients/assets/course-teacher.png" alt="" />
+                             <img src="{{ asset('resources/assets/teacher.png') }}" alt="" />
                              <span>Nguyễn Chí Ngọc</span>
                          </div>
                          <p class="descreption-price">
@@ -46,7 +46,7 @@
                              </a>
                          </h5>
                          <div class="descreption-teacher">
-                             <img src="/clients/assets/course-teacher.png" alt="" />
+                             <img src="{{ asset('resources/assets/teacher.png') }}" alt="" />
                              <span>Nguyễn Chí Ngọc</span>
                          </div>
                          <p class="descreption-price">
@@ -73,7 +73,7 @@
                              </a>
                          </h5>
                          <div class="descreption-teacher">
-                             <img src="/clients/assets/course-teacher.png" alt="" />
+                             <img src="{{ asset('resources/assets/teacher.png') }}" alt="" />
                              <span>Nguyễn Chí Ngọc</span>
                          </div>
                          <p class="descreption-price">
@@ -100,7 +100,7 @@
                              </a>
                          </h5>
                          <div class="descreption-teacher">
-                             <img src="/clients/assets/course-teacher.png" alt="" />
+                             <img src="{{ asset('resources/assets/teacher.png') }}" alt="" />
                              <span>Nguyễn Chí Ngọc</span>
                          </div>
                          <p class="descreption-price">
@@ -127,7 +127,7 @@
                              </a>
                          </h5>
                          <div class="descreption-teacher">
-                             <img src="/clients/assets/course-teacher.png" alt="" />
+                             <img src="{{ asset('resources/assets/teacher.png') }}" alt="" />
                              <span>Nguyễn Chí Ngọc</span>
                          </div>
                          <p class="descreption-price">
@@ -154,7 +154,7 @@
                              </a>
                          </h5>
                          <div class="descreption-teacher">
-                             <img src="/clients/assets/course-teacher.png" alt="" />
+                             <img src="{{ asset('resources/assets/teacher.png') }}" alt="" />
                              <span>Nguyễn Chí Ngọc</span>
                          </div>
                          <p class="descreption-price">
@@ -181,7 +181,7 @@
                              </a>
                          </h5>
                          <div class="descreption-teacher">
-                             <img src="/clients/assets/course-teacher.png" alt="" />
+                             <img src="{{ asset('resources/assets/teacher.png') }}" alt="" />
                              <span>Nguyễn Chí Ngọc</span>
                          </div>
                          <p class="descreption-price">

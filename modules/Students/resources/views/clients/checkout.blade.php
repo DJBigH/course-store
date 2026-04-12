@@ -119,7 +119,7 @@
                                                     {{ $item?->courses?->name_locale }}
                                                 </td>
                                                 <td class="text-end text-danger fw-semibold">
-                                                    {{ moneyLocale($item?->courses?->sale_price ?: $item?->courses?->price) }}
+                                                    {{ moneyLocale($item?->price) }}
                                                 </td>
                                                 <td data-label="{{ __('students::clients/checkout.checkout.instructor') }}">
                                                     {{ $item?->courses?->teacher?->name_locale }}

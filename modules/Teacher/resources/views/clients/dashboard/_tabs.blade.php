@@ -11,6 +11,18 @@
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.earnings') ? 'active' : '' }}">
         {{ __('teacher::dashboard.nav.earnings') }}
     </a>
+    @if (($teacher ?? null)?->packageHasFeature('can_send_promotions'))
+        <a href="{{ route('teacher.dashboard.promotions') }}"
+            class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.promotions') ? 'active' : '' }}">
+            {{ __('teacher::dashboard.nav.promotions') }}
+        </a>
+    @endif
+    @if (($teacher ?? null)?->packageHasFeature('can_sell_bundles'))
+        <a href="{{ route('teacher.dashboard.bundles') }}"
+            class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.bundles*') ? 'active' : '' }}">
+            {{ __('teacher::dashboard.nav.bundles') }}
+        </a>
+    @endif
     <a href="{{ route('teacher.dashboard.payouts') }}"
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.payouts') ? 'active' : '' }}">
         {{ __('teacher::dashboard.nav.payouts') }}

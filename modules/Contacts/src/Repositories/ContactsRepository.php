@@ -15,6 +15,21 @@ class ContactsRepository extends BaseRepository implements ContactsRepositoryInt
 
     public function getContacts()
     {
-        return $this->model->select(['id', 'name', 'phone', 'email','message','status', 'created_at'])->latest();
+        return $this->model->select([
+            'id',
+            'name',
+            'phone',
+            'email',
+            'subject',
+            'submission_type',
+            'category',
+            'message',
+            'status',
+            'workflow_status',
+            'source',
+            'student_id',
+            'teacher_id',
+            'created_at',
+        ])->latest();
     }
 }
