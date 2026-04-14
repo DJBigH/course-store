@@ -22,4 +22,6 @@ php artisan view:cache || true
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
+php artisan queue:work --sleep=3 --tries=3 --timeout=90 &
+
 apache2-foreground

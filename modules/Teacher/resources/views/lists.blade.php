@@ -102,6 +102,7 @@
                             <th class="text-center" style="width: 48px;">
                                 <input type="checkbox" id="select-all-records" class="form-check-input">
                             </th>
+                            <th>Huy hiá»‡u</th>
                             <th>Ã¡ÂºÂ¢nh</th>
                             <th>TÃƒÂªn</th>
                             <th>Kinh nghiÃ¡Â»â€¡m</th>
@@ -182,6 +183,25 @@
             color: #991b1b;
         }
 
+        .teacher-admin-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+
+        .teacher-admin-badge--blue { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; border-color: rgba(59, 130, 246, 0.18); }
+        .teacher-admin-badge--gold { background: rgba(245, 158, 11, 0.14); color: #b45309; border-color: rgba(245, 158, 11, 0.18); }
+        .teacher-admin-badge--emerald { background: rgba(16, 185, 129, 0.14); color: #047857; border-color: rgba(16, 185, 129, 0.18); }
+        .teacher-admin-badge--violet { background: rgba(139, 92, 246, 0.14); color: #7c3aed; border-color: rgba(139, 92, 246, 0.18); }
+        .teacher-admin-badge--rose { background: rgba(244, 63, 94, 0.14); color: #e11d48; border-color: rgba(244, 63, 94, 0.18); }
+        .teacher-admin-badge--slate { background: rgba(100, 116, 139, 0.14); color: #334155; border-color: rgba(100, 116, 139, 0.18); }
+
         html[data-theme="dark"] .admin-filter-panel {
             background: linear-gradient(180deg, #162033 0%, #111827 100%);
             border-color: #2b3b53;
@@ -250,6 +270,11 @@
                 },
                 columns: [{
                         data: 'select',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'badge',
                         orderable: false,
                         searchable: false
                     },

@@ -368,6 +368,7 @@ class TeacherNotificationCenter
             'can_grant_courses',
             'can_export_orders',
             'can_export_students',
+            'can_import_export_lessons',
             'can_sell_bundles',
             'can_schedule_content',
             'can_send_promotions',

@@ -55,6 +55,7 @@
         $fieldLabel = static function (string $key): string {
             return __("teacher::dashboard.profile.fields.$key");
         };
+        $teacherBadge = $teacher?->primary_badge;
         $profileErrorKeys = [
             'name', 'phone', 'address', 'image',
             'display_name', 'headline', 'experience_years', 'specialties', 'bio',
@@ -78,6 +79,11 @@
                 <div>
                     <h3 class="fw-bold mb-2">{{ __('teacher::dashboard.profile.title') }}</h3>
                     <p class="text-muted mb-0">{{ __('teacher::dashboard.profile.description') }}</p>
+                    {{-- @if ($teacherBadge)
+                        <div class="teacher-profile-current-badge teacher-profile-current-badge--{{ $teacherBadge['tone'] }}">
+                            {{ $teacherBadge['label'] }}
+                        </div>
+                    @endif --}}
                 </div>
                 <span class="teacher-status-badge">
                     {{ $student->two_factor_email_enabled ? __('teacher::dashboard.profile.two_factor.enabled') : __('teacher::dashboard.profile.two_factor.disabled') }}
@@ -132,6 +138,13 @@
                             <div class="teacher-profile-card">
                             <h4>{{ __('teacher::dashboard.profile.basic.title') }}</h4>
                             <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.basic.description') }}</p>
+
+                            @if ($teacherBadge)
+                                <div class="teacher-profile-badge-banner teacher-profile-badge-banner--{{ $teacherBadge['tone'] }}">
+                                    <strong>Huy hiệu</strong>
+                                    <span class="">{{ $teacherBadge['label'] }}</span>
+                                </div>
+                            @endif
 
                             <div class="teacher-profile-avatar mb-4">
                                 <div class="teacher-profile-avatar__preview" data-avatar-preview>
@@ -655,6 +668,122 @@
             margin-bottom: 0.35rem;
             font-weight: 800;
         }
+
+        .teacher-profile-current-badge,
+        .teacher-profile-badge-banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            width: fit-content;
+            max-width: 100%;
+            margin-top: 0.85rem;
+            padding: 0.5rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            border: 1px solid transparent;
+        }
+
+        .teacher-profile-badge-banner {
+            position: relative;
+            display: inline-grid;
+            grid-template-columns: 48px minmax(0, 1fr);
+            align-items: center;
+            column-gap: 0.9rem;
+            row-gap: 0.12rem;
+            width: min(100%, 360px);
+            margin: 0 0 1.25rem;
+            padding: 0.9rem 1rem;
+            border-radius: 18px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .teacher-profile-badge-banner::before {
+            content: "★";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            grid-row: 1 / span 2;
+            border-radius: 14px;
+            font-size: 1.15rem;
+            background: rgba(255, 255, 255, 0.12);
+            color: currentColor;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            position: relative;
+            z-index: 1;
+        }
+
+        .teacher-profile-badge-banner strong,
+        .teacher-profile-badge-banner span {
+            display: block;
+            position: relative;
+            z-index: 1;
+            grid-column: 2;
+        }
+
+        .teacher-profile-badge-banner strong {
+            margin: 0;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.72;
+            line-height: 1.2;
+        }
+
+        .teacher-profile-badge-banner span {
+            margin-top: 0;
+            font-size: 1.08rem;
+            font-weight: 900;
+            line-height: 1.25;
+            letter-spacing: 0.01em;
+        }
+
+        .teacher-profile-current-badge--blue,
+        .teacher-profile-badge-banner--blue { background: rgba(59, 130, 246, 0.14); color: #bfdbfe; border-color: rgba(96, 165, 250, 0.24); }
+        .teacher-profile-current-badge--gold,
+        .teacher-profile-badge-banner--gold { background: rgba(245, 158, 11, 0.16); color: #fde68a; border-color: rgba(251, 191, 36, 0.24); }
+        .teacher-profile-current-badge--emerald,
+        .teacher-profile-badge-banner--emerald { background: rgba(16, 185, 129, 0.16); color: #a7f3d0; border-color: rgba(52, 211, 153, 0.24); }
+        .teacher-profile-current-badge--violet,
+        .teacher-profile-badge-banner--violet { background: rgba(139, 92, 246, 0.16); color: #ddd6fe; border-color: rgba(167, 139, 250, 0.24); }
+        .teacher-profile-current-badge--rose,
+        .teacher-profile-badge-banner--rose { background: rgba(244, 63, 94, 0.16); color: #fecdd3; border-color: rgba(251, 113, 133, 0.24); }
+        .teacher-profile-current-badge--slate,
+        .teacher-profile-badge-banner--slate { background: rgba(148, 163, 184, 0.16); color: #e2e8f0; border-color: rgba(148, 163, 184, 0.24); }
+
+        .teacher-profile-badge-banner--blue::before { content: "✓"; }
+        .teacher-profile-badge-banner--gold::before { content: "★"; }
+        .teacher-profile-badge-banner--emerald::before { content: "↗"; }
+        .teacher-profile-badge-banner--violet::before { content: "✦"; }
+        .teacher-profile-badge-banner--rose::before { content: "⚡"; }
+        .teacher-profile-badge-banner--slate::before { content: "◆"; }
+
+        .teacher-profile-badge-banner--blue { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(59, 130, 246, 0.1); }
+        .teacher-profile-badge-banner--gold { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(245, 158, 11, 0.12); }
+        .teacher-profile-badge-banner--emerald { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(16, 185, 129, 0.12); }
+        .teacher-profile-badge-banner--violet { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(139, 92, 246, 0.12); }
+        .teacher-profile-badge-banner--rose { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(244, 63, 94, 0.12); }
+        .teacher-profile-badge-banner--slate { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(100, 116, 139, 0.12); }
+
+        html[data-theme="light"] .teacher-profile-badge-banner {
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        html[data-theme="light"] .teacher-profile-badge-banner::before {
+            background: rgba(255, 255, 255, 0.72);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        html[data-theme="light"] .teacher-profile-badge-banner--blue { color: #1d4ed8; }
+        html[data-theme="light"] .teacher-profile-badge-banner--gold { color: #b45309; }
+        html[data-theme="light"] .teacher-profile-badge-banner--emerald { color: #047857; }
+        html[data-theme="light"] .teacher-profile-badge-banner--violet { color: #7c3aed; }
+        html[data-theme="light"] .teacher-profile-badge-banner--rose { color: #e11d48; }
+        html[data-theme="light"] .teacher-profile-badge-banner--slate { color: #334155; }
 
         .teacher-card-header {
             display: flex;

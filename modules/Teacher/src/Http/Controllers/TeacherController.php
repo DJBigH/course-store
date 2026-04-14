@@ -164,7 +164,16 @@ class TeacherController extends Controller
                     ? '<img src="' . $teachers->image . '" style="width: 80px; border-radius: 12px;">'
                     : 'KhÃƒÂ´ng cÃƒÂ³ Ã¡ÂºÂ£nh';
             })
-            ->rawColumns(['select', 'edit', 'delete', 'image', 'logs', 'last_active_at', 'inactive_days'])
+            ->addColumn('badge', function ($teachers) {
+                $badge = $teachers->primary_badge;
+
+                if (!$badge) {
+                    return '<span class="text-muted small">Chua co</span>';
+                }
+
+                return '<span class="teacher-admin-badge teacher-admin-badge--' . e($badge['tone']) . '">' . e($badge['label']) . '</span>';
+            })
+            ->rawColumns(['select', 'edit', 'delete', 'image', 'logs', 'last_active_at', 'inactive_days', 'badge'])
             ->toJson();
     }
 
@@ -267,6 +276,7 @@ class TeacherController extends Controller
     public function store(TeacherRequest $request)
     {
         $data = $request->except(['_token']);
+        $data = array_merge($data, $this->normalizeBadgePayload($request));
         $teacher = $this->teacherRepository->create($data);
 
         activity_log(
@@ -304,6 +314,7 @@ class TeacherController extends Controller
 
         $old = $teacherModel->toArray();
         $data = $request->except('_token');
+        $data = array_merge($data, $this->normalizeBadgePayload($request));
 
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
@@ -342,6 +353,51 @@ class TeacherController extends Controller
         }
 
         return back()->with('msg_danger', __('teacher::messages.update.failure'));
+    }
+
+    private function normalizeBadgePayload(Request $request): array
+    {
+        $badgeKey = trim((string) $request->input('badge_key', 'none'));
+        $badgeLabel = trim((string) $request->input('badge_label', ''));
+        $badgeTone = trim((string) $request->input('badge_tone', 'slate'));
+
+        $payload = [
+            'badge_key' => null,
+            'badge_label' => null,
+            'badge_tone' => null,
+            'is_verified_badge' => false,
+            'is_premium_badge' => false,
+        ];
+
+        if ($badgeKey === '' || $badgeKey === 'none') {
+            return $payload;
+        }
+
+        if ($badgeKey === 'verified') {
+            $payload['badge_key'] = 'verified';
+            $payload['is_verified_badge'] = true;
+
+            return $payload;
+        }
+
+        if ($badgeKey === 'premium') {
+            $payload['badge_key'] = 'premium';
+            $payload['is_premium_badge'] = true;
+
+            return $payload;
+        }
+
+        if ($badgeKey === 'custom') {
+            $payload['badge_key'] = 'custom';
+            $payload['badge_label'] = $badgeLabel !== '' ? $badgeLabel : 'Custom Badge';
+            $payload['badge_tone'] = $badgeTone !== '' ? $badgeTone : 'slate';
+
+            return $payload;
+        }
+
+        $payload['badge_key'] = $badgeKey;
+
+        return $payload;
     }
 
     public function delete($id)

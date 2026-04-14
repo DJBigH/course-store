@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Categories\Src\Models\Category;
 use Modules\Courses\src\Models\CourseComment;
 use Modules\Courses\src\Models\CourseRating;
+use Modules\Courses\src\Models\CourseViewTracking;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Orders\src\Models\OrderDetail;
 use Modules\Students\src\Models\Student;
@@ -109,6 +110,11 @@ class Courses extends Model
     public function ratings()
     {
         return $this->hasMany(CourseRating::class, 'course_id', 'id');
+    }
+
+    public function viewTrackings()
+    {
+        return $this->hasMany(CourseViewTracking::class, 'course_id', 'id');
     }
 
     public function getNameLocaleAttribute(): string

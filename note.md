@@ -477,6 +477,10 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại
 - Chưa làm config ngân hàng
 - Thêm cái dùng hợp tác hủy tư cách giáo viên ẩn tất cả những thứ liên quan đến giáo viên đó, tài khoản giáo viên sẽ được hạ xuống tài khoản học viên không vô được màn giáo viên, tất cả các khóa học được cấp hay của bản thân sẽ ẩn đi và chỉ có học viên nào mua thì vẫn dùng được
+- Tỷ lệ chuyển đổi: xem bao nhiêu người xem trang, xem bao nhiêu người vào trang j nhiều nhất
+- Đối với cái thông báo giảng viên đổi thành thông báo thì làm nó như 1 cái email kiểu viết tạo đúng input tiêu đề, nội dung, có j kèm có button không và dùng đúng giao diện chung của email web và chọn thông báo cho ai và trong đó có 1 cái là thông báo cho học viên hay giảng viên
+- Thêm chức năng quản lý huy hiệu ( CURD, xóa mềm có thùng rác để khôi phục và cho tự thêm màu với từng huy hiệu và cho thêm icon và cung cấp nơi xem mã màu và icon để admin dễ dang dung và thay thế )
+- Sắp xếp lại nội dung trong dashboard của admin
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -530,6 +534,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Với các gói thì xem được chi tiết rõ các gói đó như nào, Thêm so sánh ở đó
 - Khi tạo giáo viên yêu cầu phải thêm rõ cái tài khoản ngân hàng, yêu cầu phải có 1 tài khoản ngân hàng mới được tạo quyền 
 - Trong profile có thêm cái chứng chỉ nx để ấn vô xem
+- À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá ( Chưa xong bên clients )
+- Ở trang chủ thêm cái ô button lựa chọn theo nổi bật, nhiều view, giáo viên nổi bật.
+- Thêm cái thông báo khi vào màn teacher và popup khi vào màn teacher 
  Teacher:
 - Làm cái hồ sơ giáo viên
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
@@ -547,13 +554,19 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Nếu bạn muốn, mình có thể làm thêm một bước nữa là cho cột được chọn có icon ✓ Đang so sánh hoặc một thanh màu chạy dọc ở đầu cột để trực quan hơn nữa. ( Done )
 - Thêm chức năng xem lại lịch sử thao tác, đôi với quản lý học viên cái giám sát học viên học được bao nhiêu % thì thêm vào đó và phần quyền trong gói giúp tôi ( Done )
 - Hướng dẫn cái cấp chứng chỉ ( Done )
-- Nghĩ xem cần thêm chức năng nào khác không ( Tôi muốn chức năng nó có thể liên quan đến các gói của giáo viên để gói đó có giá trị hơn khiến giảng viên mua để sử dụng)
+- Cái defauth avatar khi tạo giáo viên nằm ở resources/assets/teacher.png ( Done )
+- Nghĩ xem cần thêm chức năng nào khác không ( Tôi muốn chức năng nó có thể liên quan đến các gói của giáo viên để gói đó có giá trị hơn khiến giảng viên mua để sử dụng) ( Done hiện tại còn thêm j ở tương lai thêm sau )
+- Sắp xếp lại nội dung trong dashboard của teacher ( Done )
+- Huy hiệu verified/premium teacher ( Done )
+- Đối với cái khuyễn mãi thì làm nó như 1 cái email kiểu viết tạo đúng input tiêu đề, nội dung (ckeditor đúng light mode/dark mode), có j kèm có button không và dùng đúng giao diện chung của email web ( Done )
+- Với những cái notification mà kiểu email thì sẽ xử lý như nào cho nó hiện cái noti ra à hay là cho hiện noti bấm vào thì sẽ có phần đọc noti đó như email tôi đang không biết xử lý cái notification và tôi thêm cho tôi cái 2 checkbox dành cho email và thông báo tại web
+- Thêm cái preview dành cho bài học ( Xem được video trước và chỉ cần bấm vào thì hiện modal giống phần học thử bên client xem video có hoạt dộng ổn không )
 - Fix 1 số bug liên quan đến limit trong gói
-- À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá ( Chưa xong bên clients)
-- Check lại tất cả đa ngôn ngữ của màn teacher ( Đặc biệt là vi phải có dấu)
 - Yêu cầu rút tiền tôi muốn là cái thêm ngân hàng tách ra riêng và chỉ khi chọn được ngân hàng thì mới nhập được giá tiền và ghi chú và validate (đối với số tiền min là 5k)
-- Cái 2FA của giáo viên và học viên là giống nhau đúng ko ( Cùng 1 logic nên suy nghĩ có cần thay đổi cái 2FA bật/tắt không)
-- Cái defauth avatar khi tạo giáo viên nằm ở resources/assets/teacher.png
 - Thêm chức năng hủy hợp tác ( Đẩy lên admin + lý do và khi hủy thì tất cả bài giảng ẩn đi chỉ có học viên nào đã mua thì vẫn còn sử dụng và bị đẩy khỏi màn giáo viên gửi mail cảm ơn đã hợp tác tài khoản hạ cấp xuống học viên)
+- Gộp tất cả các import/execport vào 1 quyền ở trong gói
+- Cái 2FA của giáo viên và học viên là giống nhau đúng ko ( Cùng 1 logic nên suy nghĩ có cần thay đổi cái 2FA bật/tắt không)
+- Check lại tất cả đa ngôn ngữ của màn teacher ( Đặc biệt là vi phải có dấu)
 Tổng kết
+- Tìm tất cả file .bak
 - check lại lần cuối trước khi đẩy lên production
