@@ -10,6 +10,15 @@ class Teacher extends Model
 {
     use SoftDeletes;
 
+    public const BADGE_PRESETS = [
+        'verified' => ['label' => 'Verified Teacher', 'icon' => 'check', 'tone' => 'blue'],
+        'premium' => ['label' => 'Premium Teacher', 'icon' => 'star', 'tone' => 'gold'],
+        'top_seller' => ['label' => 'Top Seller', 'icon' => 'chart', 'tone' => 'emerald'],
+        'expert' => ['label' => 'Expert Mentor', 'icon' => 'spark', 'tone' => 'violet'],
+        'featured' => ['label' => 'Featured Teacher', 'icon' => 'bolt', 'tone' => 'rose'],
+        'custom' => ['label' => 'Custom Badge', 'icon' => 'bookmark', 'tone' => 'slate'],
+    ];
+
     protected $table = 'teacher';
 
     protected $fillable = [
@@ -34,6 +43,11 @@ class Teacher extends Model
         'student_id',
         'application_id',
         'status',
+        'is_verified_badge',
+        'is_premium_badge',
+        'badge_key',
+        'badge_label',
+        'badge_tone',
         'commission_rate',
         'approved_at',
         'approved_by',
@@ -49,6 +63,8 @@ class Teacher extends Model
 
     protected $casts = [
         'approved_at' => 'datetime',
+        'is_verified_badge' => 'boolean',
+        'is_premium_badge' => 'boolean',
         'commission_rate' => 'float',
         'package_started_at' => 'datetime',
         'package_expires_at' => 'datetime',
@@ -180,5 +196,60 @@ class Teacher extends Model
         }
 
         return $this->slug ?: $this->slug_en ?: $this->slug_ko ?: $this->slug_ja ?: $this->slug_zh ?: '';
+    }
+
+    public function getBadgeLabelsAttribute(): array
+    {
+        return $this->primary_badge ? [$this->primary_badge] : [];
+    }
+
+    public static function badgeOptions(): array
+    {
+        return self::BADGE_PRESETS;
+    }
+
+    public function getPrimaryBadgeAttribute(): ?array
+    {
+        $badgeKey = trim((string) ($this->badge_key ?? ''));
+
+        if ($badgeKey !== '') {
+            if ($badgeKey === 'custom' && trim((string) $this->badge_label) !== '') {
+                return [
+                    'key' => 'custom',
+                    'label' => trim((string) $this->badge_label),
+                    'icon' => 'bookmark',
+                    'tone' => trim((string) ($this->badge_tone ?: 'slate')),
+                ];
+            }
+
+            if (isset(self::BADGE_PRESETS[$badgeKey])) {
+                return [
+                    'key' => $badgeKey,
+                    'label' => self::BADGE_PRESETS[$badgeKey]['label'],
+                    'icon' => self::BADGE_PRESETS[$badgeKey]['icon'],
+                    'tone' => self::BADGE_PRESETS[$badgeKey]['tone'],
+                ];
+            }
+        }
+
+        if ($this->is_verified_badge) {
+            return [
+                'key' => 'verified',
+                'label' => self::BADGE_PRESETS['verified']['label'],
+                'icon' => self::BADGE_PRESETS['verified']['icon'],
+                'tone' => self::BADGE_PRESETS['verified']['tone'],
+            ];
+        }
+
+        if ($this->is_premium_badge) {
+            return [
+                'key' => 'premium',
+                'label' => self::BADGE_PRESETS['premium']['label'],
+                'icon' => self::BADGE_PRESETS['premium']['icon'],
+                'tone' => self::BADGE_PRESETS['premium']['tone'],
+            ];
+        }
+
+        return null;
     }
 }

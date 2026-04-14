@@ -42,6 +42,7 @@
                                 : asset('clients/assets/banner-course.png');
 
                             $teacherImage = teacherAvatarUrl($course->teacher);
+                            $teacherBadge = $course->teacher?->primary_badge;
 
                         @endphp
                         <div class="col-12 col-lg-6 mb-4">
@@ -93,10 +94,13 @@
                                     <div class="descreption-teacher">
                                         <img src="{{ $teacherImage }}" alt="{{ $course->teacher?->name_locale }}"
                                             onerror="this.onerror=null;this.src='{{ asset('resources/assets/teacher.png') }}';" />
-                                        <span>
+                                        <span class="course-teacher-meta">
                                             <strong
                                                 style="font-weight: bold">{{ __('courses::clients/common.instructor') }}:</strong>
                                             {{ $course->teacher?->name_locale }}
+                                            @if ($teacherBadge)
+                                                <span class="course-teacher-badge course-teacher-badge--{{ $teacherBadge['tone'] }}">{{ $teacherBadge['label'] }}</span>
+                                            @endif
                                         </span>
                                     </div>
 
@@ -219,6 +223,32 @@
         .empty-course p {
             font-size: 15px;
         }
+
+        .course-teacher-meta {
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+        }
+
+        .course-teacher-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.22rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+
+        .course-teacher-badge--blue { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; border-color: rgba(59, 130, 246, 0.18); }
+        .course-teacher-badge--gold { background: rgba(245, 158, 11, 0.14); color: #b45309; border-color: rgba(245, 158, 11, 0.18); }
+        .course-teacher-badge--emerald { background: rgba(16, 185, 129, 0.14); color: #047857; border-color: rgba(16, 185, 129, 0.18); }
+        .course-teacher-badge--violet { background: rgba(139, 92, 246, 0.14); color: #7c3aed; border-color: rgba(139, 92, 246, 0.18); }
+        .course-teacher-badge--rose { background: rgba(244, 63, 94, 0.14); color: #e11d48; border-color: rgba(244, 63, 94, 0.18); }
+        .course-teacher-badge--slate { background: rgba(100, 116, 139, 0.14); color: #334155; border-color: rgba(100, 116, 139, 0.18); }
 
         html[data-theme="dark"] .empty-course {
             background: rgba(15, 23, 42, 0.88);

@@ -131,6 +131,7 @@ Route::group([
    Route::get('/thong-bao/announcement/{announcement}/doc', [TeacherDashboardController::class, 'readAnnouncement'])->name('notifications.announcements.read');
    Route::get('/khuyen-mai', [TeacherDashboardController::class, 'promotions'])->name('promotions');
    Route::post('/khuyen-mai', [TeacherDashboardController::class, 'storePromotion'])->name('promotions.store');
+   Route::post('/khuyen-mai/gui-thu', [TeacherDashboardController::class, 'testPromotion'])->name('promotions.test');
    Route::get('/link-gioi-thieu', [TeacherAffiliateLinkController::class, 'index'])->name('affiliate-links.index');
    Route::get('/link-gioi-thieu/tao-moi', [TeacherAffiliateLinkController::class, 'create'])->name('affiliate-links.create');
    Route::post('/link-gioi-thieu/tao-moi', [TeacherAffiliateLinkController::class, 'store'])->name('affiliate-links.store');
@@ -186,6 +187,13 @@ Route::group([
    Route::delete('/khoa-hoc/{course}/xoa-vinh-vien', [TeacherDashboardController::class, 'forceDeleteCourse'])->name('courses.force-delete');
    Route::get('/khoa-hoc/{course}/bai-hoc', [TeacherDashboardController::class, 'lessons'])->name('lessons.index');
    Route::get('/khoa-hoc/{course}/bai-hoc/thung-rac', [TeacherDashboardController::class, 'lessonsTrash'])->name('lessons.trash');
+   Route::get('/khoa-hoc/{course}/bai-hoc/export/{format?}', [TeacherDashboardController::class, 'exportLessons'])->name('lessons.export');
+   Route::get('/khoa-hoc/{course}/bai-hoc/import/template', [TeacherDashboardController::class, 'downloadLessonImportTemplate'])->name('lessons.import.template');
+   Route::get('/khoa-hoc/{course}/bai-hoc/import/example/{format?}', [TeacherDashboardController::class, 'downloadLessonImportExample'])->name('lessons.import.example');
+   Route::post('/khoa-hoc/{course}/bai-hoc/import/preview', [TeacherDashboardController::class, 'previewLessonImport'])->name('lessons.import.preview');
+   Route::post('/khoa-hoc/{course}/bai-hoc/import', [TeacherDashboardController::class, 'importLessons'])->name('lessons.import');
+   Route::post('/khoa-hoc/{course}/bai-hoc/import/confirm', [TeacherDashboardController::class, 'confirmLessonImport'])->name('lessons.import.confirm');
+   Route::post('/khoa-hoc/{course}/bai-hoc/import/clear', [TeacherDashboardController::class, 'clearLessonImportPreview'])->name('lessons.import.clear');
    Route::get('/khoa-hoc/{course}/bai-hoc/tao-moi', [TeacherDashboardController::class, 'createLesson'])->name('lessons.create');
    Route::post('/khoa-hoc/{course}/bai-hoc/tao-moi', [TeacherDashboardController::class, 'storeLesson'])->name('lessons.store');
    Route::get('/khoa-hoc/{course}/bai-hoc/{lesson}/chinh-sua', [TeacherDashboardController::class, 'editLesson'])->name('lessons.edit');

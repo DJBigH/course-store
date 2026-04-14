@@ -105,6 +105,40 @@
                 </div>
             </div>
 
+            <div class="col-12">
+                <div class="mb-3">
+                    <label class="form-label">Huy hiệu giảng viên</label>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <select class="form-select" id="badge_key" name="badge_key">
+                                <option value="none" @selected(old('badge_key', 'none') === 'none')>KhÃ´ng hiá»ƒn thá»‹ huy hiá»‡u</option>
+                                <option value="verified" @selected(old('badge_key') === 'verified')>Verified Teacher</option>
+                                <option value="premium" @selected(old('badge_key') === 'premium')>Premium Teacher</option>
+                                <option value="top_seller" @selected(old('badge_key') === 'top_seller')>Top Seller</option>
+                                <option value="expert" @selected(old('badge_key') === 'expert')>Expert Mentor</option>
+                                <option value="featured" @selected(old('badge_key') === 'featured')>Featured Teacher</option>
+                                <option value="custom" @selected(old('badge_key') === 'custom')>Tá»± táº¡o huy hiá»‡u</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4" data-custom-badge-wrap @if (old('badge_key') !== 'custom') style="display:none;" @endif>
+                            <input type="text" class="form-control" name="badge_label" maxlength="100"
+                                value="{{ old('badge_label') }}" placeholder="VÃ­ dá»¥: Best Mentor 2026">
+                        </div>
+                        <div class="col-md-2" data-custom-badge-wrap @if (old('badge_key') !== 'custom') style="display:none;" @endif>
+                            <select class="form-select" name="badge_tone">
+                                <option value="blue" @selected(old('badge_tone') === 'blue')>Blue</option>
+                                <option value="gold" @selected(old('badge_tone') === 'gold')>Gold</option>
+                                <option value="emerald" @selected(old('badge_tone') === 'emerald')>Emerald</option>
+                                <option value="violet" @selected(old('badge_tone') === 'violet')>Violet</option>
+                                <option value="rose" @selected(old('badge_tone') === 'rose')>Rose</option>
+                                <option value="slate" @selected(old('badge_tone', 'slate') === 'slate')>Slate</option>
+                            </select>
+                        </div>
+                    </div>
+                    <small class="text-muted">Bật để tăng độ uy tín và làm nổi bật hồ sơ giảng viên trên giao diện public.</small>
+                </div>
+            </div>
+
             @foreach (['vi' => 'description', 'en' => 'description_en', 'ko' => 'description_ko', 'ja' => 'description_ja', 'zh' => 'description_zh'] as $locale => $field)
                 <div class="col-12">
                     <div class="lang-block lang-{{ $locale }} {{ $locale !== 'vi' ? 'd-none' : '' }}">
@@ -195,6 +229,22 @@
             locales.forEach((locale) => {
                 document.getElementById('lang_' + locale)?.addEventListener('change', () => showLang(locale));
             });
+        })();
+
+        (() => {
+            const badgeSelect = document.getElementById('badge_key');
+            const customWraps = Array.from(document.querySelectorAll('[data-custom-badge-wrap]'));
+            if (!badgeSelect || !customWraps.length) return;
+
+            const syncBadgeFields = () => {
+                const isCustom = badgeSelect.value === 'custom';
+                customWraps.forEach((item) => {
+                    item.style.display = isCustom ? '' : 'none';
+                });
+            };
+
+            badgeSelect.addEventListener('change', syncBadgeFields);
+            syncBadgeFields();
         })();
 
         function toSlug(title) {

@@ -18,6 +18,7 @@
     if (request()->getQueryString()) {
         $teacherCurrentUrl .= '?' . request()->getQueryString();
     }
+    $teacherHeaderBadge = $teacherStudent?->teacher?->primary_badge;
 @endphp
 
 <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
@@ -37,6 +38,11 @@
     </button>
 
     <div class="d-none d-md-flex align-items-center ms-auto me-0 me-md-3 my-2 my-md-0 teacher-header-meta">
+        @if ($teacherHeaderBadge)
+            <span class="teacher-header-badge teacher-header-badge--{{ $teacherHeaderBadge['tone'] }}">
+                {{ $teacherHeaderBadge['label'] }}
+            </span>
+        @endif
         <div class="dropdown">
             <button class="teacher-header-link dropdown-toggle teacher-header-link--dropdown" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
@@ -200,6 +206,26 @@
     .teacher-header-meta {
         gap: 0.65rem;
     }
+
+    .teacher-header-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.72rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .teacher-header-badge--blue { background: rgba(59, 130, 246, 0.14); color: #bfdbfe; border-color: rgba(96, 165, 250, 0.24); }
+    .teacher-header-badge--gold { background: rgba(245, 158, 11, 0.16); color: #fde68a; border-color: rgba(251, 191, 36, 0.24); }
+    .teacher-header-badge--emerald { background: rgba(16, 185, 129, 0.16); color: #a7f3d0; border-color: rgba(52, 211, 153, 0.24); }
+    .teacher-header-badge--violet { background: rgba(139, 92, 246, 0.16); color: #ddd6fe; border-color: rgba(167, 139, 250, 0.24); }
+    .teacher-header-badge--rose { background: rgba(244, 63, 94, 0.16); color: #fecdd3; border-color: rgba(251, 113, 133, 0.24); }
+    .teacher-header-badge--slate { background: rgba(148, 163, 184, 0.16); color: #e2e8f0; border-color: rgba(148, 163, 184, 0.24); }
 
     .teacher-sidebar-toggle {
         position: relative;

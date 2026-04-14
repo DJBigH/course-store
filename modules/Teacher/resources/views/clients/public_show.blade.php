@@ -14,6 +14,13 @@
                         <div>
                             <span class="teacher-public-hero__eyebrow">{{ __('teacher::public.hero_eyebrow') }}</span>
                             <h2 class="teacher-public-hero__name">{{ $teacher->name_locale }}</h2>
+                            @if (!empty($teacher->badge_labels))
+                                <div class="teacher-public-badges">
+                                    @foreach ($teacher->badge_labels as $badge)
+                                        <span class="teacher-public-badge teacher-public-badge--{{ $badge['key'] }}">{{ $badge['label'] }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
                             <div class="teacher-public-hero__meta">
                                 <span><i class="fa-solid fa-briefcase me-2"></i>{{ $teacher->exp }} {{ __('teacher::public.experience_years') }}</span>
                                 <span><i class="fa-solid fa-book-open me-2"></i>{{ __('teacher::public.course_count', ['count' => $courses->count()]) }}</span>
@@ -134,6 +141,45 @@
             flex-wrap: wrap;
             gap: 1rem;
             color: #475569;
+        }
+        .teacher-public-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            margin: -0.05rem 0 0.85rem;
+        }
+        .teacher-public-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.48rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+        .teacher-public-badge::before {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 0.82rem;
+        }
+        .teacher-public-badge--verified {
+            background: rgba(37, 99, 235, 0.1);
+            color: #1d4ed8;
+            border-color: rgba(37, 99, 235, 0.18);
+        }
+        .teacher-public-badge--verified::before {
+            content: "\f058";
+        }
+        .teacher-public-badge--premium {
+            background: rgba(245, 158, 11, 0.12);
+            color: #b45309;
+            border-color: rgba(245, 158, 11, 0.18);
+        }
+        .teacher-public-badge--premium::before {
+            content: "\f005";
         }
         .teacher-public-rating__summary {
             display: flex;

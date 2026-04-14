@@ -163,6 +163,7 @@ class TeacherPackageController extends Controller
             'can_grant_courses' => $request->boolean('can_grant_courses'),
             'can_export_orders' => $request->boolean('can_export_orders'),
             'can_export_students' => $request->boolean('can_export_students'),
+            'can_import_export_lessons' => $request->boolean('can_import_export_lessons'),
             'can_sell_bundles' => $request->boolean('can_sell_bundles'),
             'can_schedule_content' => $request->boolean('can_schedule_content'),
             'can_send_promotions' => $request->boolean('can_send_promotions'),

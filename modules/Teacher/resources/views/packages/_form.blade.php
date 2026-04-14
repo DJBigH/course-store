@@ -334,6 +334,13 @@
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_import_export_lessons" value="1"
+                            {{ old('can_import_export_lessons', $package->can_import_export_lessons ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep import/export bai hoc</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_sell_bundles" value="1"
                             {{ old('can_sell_bundles', $package->can_sell_bundles ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label">Cho phep ban combo / bundle khoa hoc</label>

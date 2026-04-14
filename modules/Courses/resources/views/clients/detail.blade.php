@@ -72,6 +72,13 @@
                                             {{ $course->teacher->name_locale }}
                                         </a>
                                     </h5>
+                                    @if (!empty($course->teacher->badge_labels))
+                                        <div class="teacher-mini-badges mt-2">
+                                            @foreach ($course->teacher->badge_labels as $badge)
+                                                <span class="teacher-mini-badge teacher-mini-badge--{{ $badge['key'] }}">{{ $badge['label'] }}</span>
+                                            @endforeach
+                                        </div>
+                                    @endif
 
                                     <div class="d-flex align-items-center gap-2 text-muted">
                                         <i class="bi bi-mortarboard"></i>
@@ -147,6 +154,13 @@
                                     <i class="fa-solid fa-user-graduate text-primary"></i>
                                     <span>{{ __('courses::clients/common.instructor') }}:</span>
                                     <strong>{{ $course->teacher->name_locale }}</strong>
+                                    @if (!empty($course->teacher->badge_labels))
+                                        <span class="teacher-inline-badges">
+                                            @foreach ($course->teacher->badge_labels as $badge)
+                                                <span class="teacher-inline-badge teacher-inline-badge--{{ $badge['key'] }}">{{ $badge['label'] }}</span>
+                                            @endforeach
+                                        </span>
+                                    @endif
                                     <small class="text-muted">({{ $course->teacher->exp }}
                                         {{ __('courses::clients/common.exp') }})</small>
                                 </li>
@@ -234,6 +248,65 @@
 @section('stylesheets')
     <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
     <style>
+        .teacher-mini-badges,
+        .teacher-inline-badges {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .teacher-mini-badge,
+        .teacher-inline-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+            line-height: 1;
+        }
+
+        .teacher-mini-badge::before,
+        .teacher-inline-badge::before {
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 11px;
+        }
+
+        .teacher-mini-badge--verified,
+        .teacher-inline-badge--verified {
+            background: rgba(37, 99, 235, 0.1);
+            color: #1d4ed8;
+            border-color: rgba(37, 99, 235, 0.18);
+        }
+
+        .teacher-mini-badge--verified::before,
+        .teacher-inline-badge--verified::before {
+            content: "\f058";
+        }
+
+        .teacher-mini-badge--premium,
+        .teacher-inline-badge--premium {
+            background: rgba(245, 158, 11, 0.12);
+            color: #b45309;
+            border-color: rgba(245, 158, 11, 0.18);
+        }
+
+        .teacher-mini-badge--premium::before,
+        .teacher-inline-badge--premium::before {
+            content: "\f005";
+        }
+
+        .teacher-inline-badges {
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
         .course-comments-shell {
             border-radius: 18px;
         }

@@ -41,6 +41,11 @@ class TeacherRequest extends FormRequest
             'description_zh' => 'nullable',
             'exp' => 'required|integer',
             'image' => 'required|max:225',
+            'is_verified_badge' => 'nullable|boolean',
+            'is_premium_badge' => 'nullable|boolean',
+            'badge_key' => 'nullable|string|in:none,verified,premium,top_seller,expert,featured,custom',
+            'badge_label' => 'nullable|string|max:100',
+            'badge_tone' => 'nullable|string|in:blue,gold,emerald,violet,rose,slate',
         ];
         return $rules;
     }

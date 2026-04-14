@@ -55,6 +55,7 @@ class TeacherPackageRequest extends FormRequest
             'can_grant_courses' => ['nullable', 'boolean'],
             'can_export_orders' => ['nullable', 'boolean'],
             'can_export_students' => ['nullable', 'boolean'],
+            'can_import_export_lessons' => ['nullable', 'boolean'],
             'can_sell_bundles' => ['nullable', 'boolean'],
             'can_schedule_content' => ['nullable', 'boolean'],
             'can_send_promotions' => ['nullable', 'boolean'],

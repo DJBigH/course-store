@@ -2,6 +2,7 @@
 
 namespace Modules\Teacher\src\Http\Controllers\Clients;
 
+use App\Mail\TeacherPromotionMail;
 use App\Http\Controllers\Controller;
 use App\Notifications\NewContactNotification;
 use App\Notifications\StudentNotification;
@@ -12,12 +13,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Contacts\src\Models\Contacts;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
 use Modules\Courses\src\Models\CourseComment;
+use Modules\Courses\src\Models\CourseViewTracking;
 use Modules\Students\src\Models\Coupons;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Document\src\Repositories\DocumentRepositoryInterface;
@@ -25,6 +28,7 @@ use Modules\Lessons\src\Models\Lesson;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Lessons\src\Support\LessonReleaseManager;
 use Modules\Orders\src\Models\OrderDetail;
+use Modules\Orders\src\Models\OrderStatus;
 use Modules\Students\src\Models\Student;
 use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Students\src\Models\StudentsCourses;
@@ -65,19 +69,24 @@ class TeacherDashboardController extends Controller
         protected TeacherPackageUsageResolver $packageUsageResolver,
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
         }
         $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
+        $dashboardRange = $this->resolveTeacherDashboardRange((string) $request->query('range', 'today'));
+        $dashboardRangeOptions = $this->resolveTeacherDashboardRangeOptions();
 
         $coursesQuery = Courses::query()
             ->withoutGlobalScope(ActiveScope::class)
             ->where('teacher_id', $teacher->id);
 
-        $orderDetails = $this->paidOrderDetailsQuery($teacher)->get();
+        $orderDetails = $this->applyTeacherDashboardRangeToPaidQuery(
+            $this->paidOrderDetailsQuery($teacher),
+            $dashboardRange
+        )->get();
         $summary = TeacherFinanceCalculator::summarize(
             $orderDetails,
             fn () => $effectiveCommissionRate
@@ -96,6 +105,9 @@ class TeacherDashboardController extends Controller
             'platform_revenue' => $summary['platform_revenue'],
             'available_balance' => max($summary['teacher_revenue'] - $payoutRequested, 0),
         ];
+        $conversionSummary = $this->buildTeacherConversionSummary($teacher, $dashboardRange);
+        $revenueInsights = $this->buildTeacherRevenueInsights($teacher, $effectiveCommissionRate, $dashboardRange);
+        $coursePerformance = $this->buildTeacherCoursePerformance($teacher, $effectiveCommissionRate, $dashboardRange);
         $recentCourses = $coursesQuery->latest('id')->take(4)->get();
         $recentSales = TeacherFinanceCalculator::decorate($orderDetails->sortByDesc('created_at')->take(6)->values(), fn () => $effectiveCommissionRate);
         $topBundles = $this->resolveTopBundles($teacher);
@@ -133,7 +145,21 @@ class TeacherDashboardController extends Controller
             'pending_upgrade_is_queued' => $pendingUpgradeIsQueued,
         ] : null;
 
-        return view('teacher::clients.dashboard.index', compact('pageTitle', 'pageName', 'teacher', 'stats', 'recentCourses', 'recentSales', 'topBundles', 'packageSummary', 'effectiveCommissionRate'));
+        $overviewPayload = $this->buildTeacherOverviewDashboardPayload(
+            $teacher,
+            $effectiveCommissionRate,
+            $dashboardRange,
+            $stats,
+            $conversionSummary,
+            $revenueInsights,
+            $coursePerformance
+        );
+
+        if ($request->boolean('ajax')) {
+            return response()->json($overviewPayload);
+        }
+
+        return view('teacher::clients.dashboard.index', compact('pageTitle', 'pageName', 'teacher', 'stats', 'dashboardRange', 'dashboardRangeOptions', 'conversionSummary', 'revenueInsights', 'coursePerformance', 'recentCourses', 'recentSales', 'topBundles', 'packageSummary', 'effectiveCommissionRate', 'overviewPayload'));
     }
 
     public function upgradePackage()
@@ -201,22 +227,35 @@ class TeacherDashboardController extends Controller
             ->orderByDesc('id')
             ->get(['id', 'name', 'name_en', 'name_ko', 'name_ja', 'name_zh', 'slug', 'slug_en', 'slug_ko', 'slug_ja', 'slug_zh']);
 
+        $oldInput = session()->getOldInput();
+        $selectedCourseId = (int) ($oldInput['course_id'] ?? $request->query('course_id', 0));
+        $recentPurchaseDays = (int) ($oldInput['recent_purchase_days'] ?? $request->query('recent_purchase_days', 0));
+        $inactiveLearningDays = (int) ($oldInput['inactive_learning_days'] ?? $request->query('inactive_learning_days', 0));
+        $recipientMode = trim((string) ($oldInput['recipient_mode'] ?? $request->query('recipient_mode', 'all')));
+        $selectedStudentIds = collect($oldInput['student_ids'] ?? $request->query('student_ids', []))
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
         $promotions = TeacherPromotion::query()
             ->with(['course'])
             ->where('teacher_id', $teacher->id)
             ->latest('id')
             ->paginate(10)
             ->withQueryString();
-
-        $selectedCourseId = (int) $request->query('course_id', 0);
-        $recentPurchaseDays = (int) $request->query('recent_purchase_days', 0);
-        $inactiveLearningDays = (int) $request->query('inactive_learning_days', 0);
+        $availablePromotionStudents = $this->resolvePromotionStudentOptions($teacher);
         $recipientPreviewCount = count($this->resolvePromotionRecipientIds(
             $teacher,
+            $recipientMode,
             $selectedCourseId > 0 ? $selectedCourseId : null,
             $recentPurchaseDays > 0 ? $recentPurchaseDays : null,
-            $inactiveLearningDays > 0 ? $inactiveLearningDays : null
+            $inactiveLearningDays > 0 ? $inactiveLearningDays : null,
+            $selectedStudentIds
         ));
+        $promotionTemplates = $this->resolvePromotionTemplateDefinitions($teacher);
+        $teacherPublicUrl = $this->resolveTeacherPromotionFallbackUrl($teacher, app()->getLocale());
 
         $pageTitle = __('teacher::dashboard.pages.promotions');
         $pageName = $pageTitle;
@@ -230,7 +269,12 @@ class TeacherDashboardController extends Controller
             'selectedCourseId',
             'recentPurchaseDays',
             'inactiveLearningDays',
-            'recipientPreviewCount'
+            'recipientMode',
+            'selectedStudentIds',
+            'recipientPreviewCount',
+            'promotionTemplates',
+            'teacherPublicUrl',
+            'availablePromotionStudents'
         ));
     }
 
@@ -246,9 +290,22 @@ class TeacherDashboardController extends Controller
         }
 
         $data = $request->validated();
+        $recipientMode = trim((string) ($data['recipient_mode'] ?? 'all'));
+        $selectedStudentIds = collect($data['student_ids'] ?? [])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
         $courseId = !empty($data['course_id']) ? (int) $data['course_id'] : null;
         $recentPurchaseDays = !empty($data['recent_purchase_days']) ? (int) $data['recent_purchase_days'] : null;
         $inactiveLearningDays = !empty($data['inactive_learning_days']) ? (int) $data['inactive_learning_days'] : null;
+        $promotionTemplate = trim((string) ($data['promotion_template'] ?? 'custom'));
+        $messageHtml = trim((string) ($data['message_html'] ?? ''));
+        $messagePlain = trim(preg_replace('/\s+/', ' ', strip_tags(html_entity_decode($messageHtml, ENT_QUOTES, 'UTF-8'))));
+        $ctaEnabled = $request->boolean('cta_enabled');
+        $ctaLabel = $ctaEnabled ? trim((string) ($data['cta_label'] ?? '')) : '';
+        $ctaUrl = $ctaEnabled ? trim((string) ($data['cta_url'] ?? '')) : '';
         $selectedCourse = null;
 
         if ($courseId) {
@@ -258,25 +315,32 @@ class TeacherDashboardController extends Controller
                 ->findOrFail($courseId);
         }
 
-        $recipientIds = $this->resolvePromotionRecipientIds($teacher, $courseId, $recentPurchaseDays, $inactiveLearningDays);
+        $recipientIds = $this->resolvePromotionRecipientIds($teacher, $recipientMode, $courseId, $recentPurchaseDays, $inactiveLearningDays, $selectedStudentIds);
         if (empty($recipientIds)) {
             return back()
                 ->withInput()
                 ->with('msg_danger', __('teacher::dashboard.promotions.flash.no_recipients'));
         }
 
-        $promotion = DB::transaction(function () use ($teacher, $data, $courseId, $recentPurchaseDays, $inactiveLearningDays, $recipientIds) {
+        $promotion = DB::transaction(function () use ($teacher, $data, $recipientMode, $selectedStudentIds, $courseId, $recentPurchaseDays, $inactiveLearningDays, $recipientIds, $promotionTemplate, $messageHtml, $messagePlain, $ctaEnabled, $ctaLabel, $ctaUrl) {
             return TeacherPromotion::query()->create([
                 'teacher_id' => $teacher->id,
                 'course_id' => $courseId,
                 'created_by_student_id' => auth('students')->id(),
                 'title' => trim((string) $data['title']),
-                'message' => trim((string) $data['message']),
-                'audience_type' => $this->resolvePromotionAudienceType($courseId, $recentPurchaseDays, $inactiveLearningDays),
+                'message' => $messagePlain,
+                'audience_type' => $this->resolvePromotionAudienceType($recipientMode, $courseId, $recentPurchaseDays, $inactiveLearningDays),
                 'recipient_count' => count($recipientIds),
                 'filters' => array_filter([
+                    'recipient_mode' => $recipientMode,
+                    'student_ids' => $recipientMode === 'manual' ? $selectedStudentIds : null,
                     'recent_purchase_days' => $recentPurchaseDays,
                     'inactive_learning_days' => $inactiveLearningDays,
+                    'template' => $promotionTemplate !== '' ? $promotionTemplate : 'custom',
+                    'message_html' => $messageHtml !== '' ? $messageHtml : null,
+                    'cta_enabled' => $ctaEnabled ? 1 : null,
+                    'cta_label' => $ctaLabel !== '' ? $ctaLabel : null,
+                    'cta_url' => $ctaUrl !== '' ? $ctaUrl : null,
                 ], fn ($value) => $value !== null && $value !== ''),
             ]);
         });
@@ -285,9 +349,19 @@ class TeacherDashboardController extends Controller
 
         Student::query()
             ->whereIn('id', $recipientIds)
-            ->chunkById(100, function ($students) use ($notificationPayload) {
+            ->chunkById(100, function ($students) use ($notificationPayload, $teacher, $promotion, $selectedCourse) {
                 foreach ($students as $student) {
                     $student->notify(new StudentNotification($notificationPayload));
+
+                    if (!empty($student->email)) {
+                        $locale = method_exists($student, 'preferredLocale')
+                            ? (string) $student->preferredLocale()
+                            : (string) app()->getLocale();
+
+                        Mail::to($student->email)
+                            ->locale($locale)
+                            ->queue(new TeacherPromotionMail($teacher, $promotion, $student, $locale, $selectedCourse));
+                    }
                 }
             });
 
@@ -296,6 +370,79 @@ class TeacherDashboardController extends Controller
             ->with('msg_success', __('teacher::dashboard.promotions.flash.sent', [
                 'count' => $promotion->recipient_count,
             ]));
+    }
+
+    public function testPromotion(TeacherPromotionRequest $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_send_promotions', 'teacher.dashboard.promotions')) {
+            return $featureRedirect;
+        }
+
+        $student = auth('students')->user();
+        if (!$student || empty($student->email)) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', 'Tài khoản giảng viên hiện chưa có email để nhận thư test.');
+        }
+
+        $data = $request->validated();
+        $recipientMode = trim((string) ($data['recipient_mode'] ?? 'all'));
+        $selectedStudentIds = collect($data['student_ids'] ?? [])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+        $courseId = !empty($data['course_id']) ? (int) $data['course_id'] : null;
+        $messageHtml = trim((string) ($data['message_html'] ?? ''));
+        $messagePlain = trim(preg_replace('/\s+/', ' ', strip_tags(html_entity_decode($messageHtml, ENT_QUOTES, 'UTF-8'))));
+        $ctaEnabled = $request->boolean('cta_enabled');
+        $ctaLabel = $ctaEnabled ? trim((string) ($data['cta_label'] ?? '')) : '';
+        $ctaUrl = $ctaEnabled ? trim((string) ($data['cta_url'] ?? '')) : '';
+        $selectedCourse = null;
+
+        if ($courseId) {
+            $selectedCourse = Courses::query()
+                ->withoutGlobalScope(ActiveScope::class)
+                ->where('teacher_id', $teacher->id)
+                ->findOrFail($courseId);
+        }
+
+        $promotion = new TeacherPromotion([
+            'teacher_id' => $teacher->id,
+            'course_id' => $courseId,
+            'created_by_student_id' => $student->id,
+            'title' => trim((string) ($data['title'] ?? '')),
+            'message' => $messagePlain,
+            'audience_type' => 'test_send',
+            'recipient_count' => 1,
+            'filters' => array_filter([
+                'recipient_mode' => $recipientMode,
+                'student_ids' => $recipientMode === 'manual' ? $selectedStudentIds : null,
+                'template' => trim((string) ($data['promotion_template'] ?? 'custom')) ?: 'custom',
+                'message_html' => $messageHtml !== '' ? $messageHtml : null,
+                'cta_enabled' => $ctaEnabled ? 1 : null,
+                'cta_label' => $ctaLabel !== '' ? $ctaLabel : null,
+                'cta_url' => $ctaUrl !== '' ? $ctaUrl : null,
+            ], fn ($value) => $value !== null && $value !== ''),
+        ]);
+
+        $locale = method_exists($student, 'preferredLocale')
+            ? (string) $student->preferredLocale()
+            : (string) app()->getLocale();
+
+        Mail::to($student->email)
+            ->locale($locale)
+            ->queue(new TeacherPromotionMail($teacher, $promotion, $student, $locale, $selectedCourse));
+
+        return back()
+            ->withInput()
+            ->with('msg_success', 'Đã đưa email test vào email của bạn.');
     }
 
     public function bundles(Request $request)
@@ -581,7 +728,7 @@ class TeacherDashboardController extends Controller
         }
 
         if (!in_array($upgradeRequest->status, ['pending_payment', 'pending_review'], true)) {
-            return back()->with('msg_danger', 'Yêu cầu đổi gói này không còn có thể hủy.');
+            return back()->with('msg_danger', 'YÃªu cáº§u Ä‘á»•i gÃ³i nÃ y khÃ´ng cÃ²n cÃ³ thá»ƒ há»§y.');
         }
 
         $upgradeRequest->update([
@@ -594,7 +741,7 @@ class TeacherDashboardController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.package.upgrade')
-            ->with('msg_success', 'Đã hủy yêu cầu đổi gói.');
+            ->with('msg_success', 'ÄÃ£ há»§y yÃªu cáº§u Ä‘á»•i gÃ³i.');
     }
 
     public function courses()
@@ -1038,7 +1185,12 @@ class TeacherDashboardController extends Controller
             ->orderBy('position')
             ->get();
 
-        return view('teacher::clients.dashboard.lessons', compact('pageTitle', 'pageName', 'teacher', 'course', 'modules'));
+        return view('teacher::clients.dashboard.lessons', compact('pageTitle', 'pageName', 'teacher', 'course', 'modules') + [
+            'canImportExportLessons' => $teacher->packageHasFeature('can_import_export_lessons'),
+            'existingModuleSelectors' => $this->buildExistingLessonModuleSelectors($course),
+            'lessonImportColumns' => $this->lessonImportColumns(),
+            'lessonImportPreview' => $this->getLessonImportPreview($course),
+        ]);
     }
 
     public function lessonsTrash(int $courseId)
@@ -1063,6 +1215,302 @@ class TeacherDashboardController extends Controller
         $trashedLessonRows = $this->flattenTrashedLessons($lessons);
 
         return view('teacher::clients.dashboard.lessons_trash', compact('pageTitle', 'pageName', 'teacher', 'course', 'trashedLessonRows'));
+    }
+
+    public function exportLessons(Request $request, int $courseId, string $format = 'csv')
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_import_export_lessons', 'teacher.dashboard.lessons.index', [$course->id])) {
+            return $featureRedirect;
+        }
+
+        if ($format !== 'csv') {
+            abort(404);
+        }
+
+        $rows = $this->buildLessonExportRows($course);
+        $filename = 'teacher-lessons-' . $course->id . '-' . now()->format('Ymd-His') . '.csv';
+
+        return $this->streamCsvDownload($filename, $this->lessonImportColumns(), $rows);
+    }
+
+    public function downloadLessonImportTemplate(int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_import_export_lessons', 'teacher.dashboard.lessons.index', [$course->id])) {
+            return $featureRedirect;
+        }
+
+        $filename = 'lesson-import-template-' . $course->id . '.csv';
+        $rows = $this->lessonImportTemplateRows();
+
+        return $this->streamCsvDownload($filename, $this->lessonImportColumns(), $rows);
+    }
+
+    public function downloadLessonImportExample(int $courseId, ?string $format = 'csv')
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_import_export_lessons', 'teacher.dashboard.lessons.index', [$course->id])) {
+            return $featureRedirect;
+        }
+
+        $format = Str::lower((string) $format);
+        $rows = $this->lessonImportExampleRows();
+
+        if ($format === 'xlsx') {
+            $filename = 'lesson-import-example-' . $course->id . '.xlsx';
+
+            return $this->streamXlsxDownload($filename, $this->lessonImportColumns(), $rows);
+        }
+
+        $filename = 'lesson-import-example-' . $course->id . '.csv';
+
+        return $this->streamCsvDownload($filename, $this->lessonImportColumns(), $rows);
+    }
+
+    public function importLessons(Request $request, int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_import_export_lessons', 'teacher.dashboard.lessons.index', [$course->id])) {
+            return $featureRedirect;
+        }
+
+        $payload = $request->validate([
+            'lesson_import_file' => ['required', 'file', 'mimes:csv,txt,xlsx', 'max:4096'],
+        ]);
+
+        $result = $this->validateLessonImportFile(
+            $payload['lesson_import_file']->getRealPath(),
+            $payload['lesson_import_file']->getClientOriginalExtension(),
+            $course,
+            $teacher->packageHasFeature('can_schedule_content')
+        );
+
+        if (!empty($result['errors'])) {
+            session()->forget($this->lessonImportPreviewSessionKey($course->id));
+
+            return redirect()
+                ->route('teacher.dashboard.lessons.index', $course->id)
+                ->with('msg_danger', __('teacher::dashboard.lessons.import.flash.validation_failed'))
+                ->with('lesson_import_errors', $result['errors'])
+                ->with('lesson_import_summary', $result['summary'] ?? null);
+        }
+
+        $createdRows = DB::transaction(function () use ($result, $teacher, $course) {
+            $createdModules = [];
+            $createdRows = [];
+
+            foreach ($result['rows'] as $row) {
+                $parentId = null;
+                if ($row['type'] === 'lesson') {
+                    $parentId = $this->resolveImportedLessonParentId($row['parent_selector'], $createdModules, $course);
+                }
+
+                $lesson = Lesson::query()->create($this->buildLessonPayload(
+                    [
+                        'name' => $row['name'],
+                        'name_en' => $row['name_en'],
+                        'name_ko' => $row['name_ko'],
+                        'name_ja' => $row['name_ja'],
+                        'name_zh' => $row['name_zh'],
+                        'parent_id' => $parentId,
+                        'is_trial' => $row['type'] === 'module' ? 0 : $row['is_trial'],
+                        'position' => $row['position'],
+                        'video' => $row['video'],
+                        'document' => $row['document'],
+                        'description' => $row['description'],
+                        'description_en' => $row['description_en'],
+                        'description_ko' => $row['description_ko'],
+                        'description_ja' => $row['description_ja'],
+                        'description_zh' => $row['description_zh'],
+                        'status' => $row['status'],
+                        'release_mode' => $row['release_mode'],
+                        'release_at' => $row['release_at'],
+                        'release_after_days' => $row['release_after_days'],
+                    ],
+                    $course,
+                    null,
+                    $teacher->packageHasFeature('can_schedule_content')
+                ));
+
+                if ($row['type'] === 'module' && $row['module_ref'] !== '') {
+                    $createdModules[$row['module_ref']] = (int) $lesson->id;
+                }
+
+                $createdRows[] = [
+                    'lesson' => $lesson,
+                    'row' => $row,
+                ];
+            }
+
+            return $createdRows;
+        });
+
+        foreach ($createdRows as $createdRow) {
+            $lesson = $createdRow['lesson'];
+            $row = $createdRow['row'];
+
+            $this->logTeacherLessonActivity(
+                $teacher,
+                $course,
+                $lesson,
+                'import_lesson',
+                'Import bÃ i há»c tá»« CSV',
+                [
+                    'import_type' => $row['type'],
+                    'import_line' => $row['line'],
+                    'module_ref' => $row['module_ref'],
+                    'parent_selector' => $row['parent_selector'],
+                    'schedule' => $this->summarizeLessonSchedule($lesson),
+                ]
+            );
+        }
+
+        $this->updateCourseDurations($course->id);
+
+        return redirect()
+            ->route('teacher.dashboard.lessons.index', $course->id)
+            ->with('msg_success', __('teacher::dashboard.lessons.import.flash.success', [
+                'count' => count($createdRows),
+            ]))
+            ->with('lesson_import_summary', [
+                'total_rows' => count($createdRows),
+                'imported_modules' => collect($createdRows)->where('row.type', 'module')->count(),
+                'imported_lessons' => collect($createdRows)->where('row.type', 'lesson')->count(),
+            ]);
+    }
+
+    public function previewLessonImport(Request $request, int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_import_export_lessons', 'teacher.dashboard.lessons.index', [$course->id])) {
+            return $featureRedirect;
+        }
+
+        $payload = $request->validate([
+            'lesson_import_file' => ['required', 'file', 'mimes:csv,txt,xlsx', 'max:4096'],
+        ]);
+
+        $result = $this->validateLessonImportFile(
+            $payload['lesson_import_file']->getRealPath(),
+            $payload['lesson_import_file']->getClientOriginalExtension(),
+            $course,
+            $teacher->packageHasFeature('can_schedule_content')
+        );
+
+        if (!empty($result['errors'])) {
+            return redirect()
+                ->route('teacher.dashboard.lessons.index', $course->id)
+                ->with('msg_danger', __('teacher::dashboard.lessons.import.flash.validation_failed'))
+                ->with('lesson_import_errors', $result['errors'])
+                ->with('lesson_import_summary', $result['summary'] ?? null);
+        }
+
+        $this->storeLessonImportPreview($course, [
+            'rows' => $result['rows'],
+            'summary' => $result['summary'],
+            'file_name' => $payload['lesson_import_file']->getClientOriginalName(),
+            'detected_format' => Str::lower((string) $payload['lesson_import_file']->getClientOriginalExtension()),
+            'generated_at' => now()->format('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()
+            ->route('teacher.dashboard.lessons.index', $course->id)
+            ->with('msg_success', __('teacher::dashboard.lessons.import.flash.preview_ready', [
+                'count' => $result['summary']['total_rows'] ?? 0,
+            ]));
+    }
+
+    public function confirmLessonImport(int $courseId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
+            return $lockedRedirect;
+        }
+
+        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_import_export_lessons', 'teacher.dashboard.lessons.index', [$course->id])) {
+            return $featureRedirect;
+        }
+
+        $preview = $this->getLessonImportPreview($course);
+        if (empty($preview['rows']) || !is_array($preview['rows'])) {
+            return redirect()
+                ->route('teacher.dashboard.lessons.index', $course->id)
+                ->with('msg_danger', __('teacher::dashboard.lessons.import.flash.preview_missing'));
+        }
+
+        $createdRows = $this->persistImportedLessons($teacher, $course, $preview['rows']);
+        session()->forget($this->lessonImportPreviewSessionKey($course->id));
+
+        return redirect()
+            ->route('teacher.dashboard.lessons.index', $course->id)
+            ->with('msg_success', __('teacher::dashboard.lessons.import.flash.success', [
+                'count' => count($createdRows),
+            ]))
+            ->with('lesson_import_summary', [
+                'total_rows' => count($createdRows),
+                'imported_modules' => collect($createdRows)->where('row.type', 'module')->count(),
+                'imported_lessons' => collect($createdRows)->where('row.type', 'lesson')->count(),
+            ]);
+    }
+
+    public function clearLessonImportPreview(int $courseId)
+    {
+        session()->forget($this->lessonImportPreviewSessionKey($courseId));
+
+        return redirect()
+            ->route('teacher.dashboard.lessons.index', $courseId)
+            ->with('msg_success', __('teacher::dashboard.lessons.import.flash.preview_cleared'));
     }
 
     public function createLesson(int $courseId)
@@ -1120,7 +1568,7 @@ class TeacherDashboardController extends Controller
             $teacher->packageHasFeature('can_schedule_content')
         ));
         $this->updateCourseDurations($course->id);
-        $this->logTeacherLessonActivity($teacher, $course, $lesson, 'create_lesson', 'Tạo bài học', [
+        $this->logTeacherLessonActivity($teacher, $course, $lesson, 'create_lesson', 'Táº¡o bÃ i há»c', [
             'schedule' => $this->summarizeLessonSchedule($lesson),
         ]);
 
@@ -1188,7 +1636,7 @@ class TeacherDashboardController extends Controller
         ));
         $lesson->refresh();
         $this->updateCourseDurations($course->id);
-        $this->logTeacherLessonActivity($teacher, $course, $lesson, 'update_lesson', 'Cập nhật bài học', [
+        $this->logTeacherLessonActivity($teacher, $course, $lesson, 'update_lesson', 'Cáº­p nháº­t bÃ i há»c', [
             'old_schedule' => $oldSchedule,
             'new_schedule' => $this->summarizeLessonSchedule($lesson),
         ]);
@@ -1269,27 +1717,50 @@ class TeacherDashboardController extends Controller
             ->with('msg_success', __('teacher::dashboard.lessons.flash.force_deleted'));
     }
 
-    public function earnings()
+    public function earnings(Request $request)
     {
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
         }
         $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
+        $dashboardRange = $this->resolveTeacherDashboardRange((string) $request->query('range', 'today'));
+        $dashboardRangeOptions = $this->resolveTeacherDashboardRangeOptions();
 
         $pageTitle = __('teacher::dashboard.pages.earnings');
         $pageName = __('teacher::dashboard.pages.earnings');
-        $items = $this->paidOrderDetailsQuery($teacher)->paginate(12)->withQueryString();
+        $items = $this->applyTeacherDashboardRangeToPaidQuery(
+            $this->paidOrderDetailsQuery($teacher),
+            $dashboardRange
+        )->paginate(12)->withQueryString();
         $summary = TeacherFinanceCalculator::summarize(
-            $this->paidOrderDetailsQuery($teacher)->get(),
+            $this->applyTeacherDashboardRangeToPaidQuery(
+                $this->paidOrderDetailsQuery($teacher),
+                $dashboardRange
+            )->get(),
             fn () => $effectiveCommissionRate
         );
+        $revenueInsights = $this->buildTeacherRevenueInsights($teacher, $effectiveCommissionRate, $dashboardRange);
+        $coursePerformance = $this->buildTeacherCoursePerformance($teacher, $effectiveCommissionRate, $dashboardRange);
         $items->setCollection(TeacherFinanceCalculator::decorate(
             $items->getCollection(),
             fn () => $effectiveCommissionRate
         ));
 
-        return view('teacher::clients.dashboard.earnings', compact('pageTitle', 'pageName', 'teacher', 'items', 'summary', 'effectiveCommissionRate'));
+        $earningsPayload = $this->buildTeacherEarningsDashboardPayload(
+            $teacher,
+            $effectiveCommissionRate,
+            $dashboardRange,
+            $summary,
+            $revenueInsights,
+            $coursePerformance
+        );
+
+        if ($request->boolean('ajax')) {
+            return response()->json($earningsPayload);
+        }
+
+        return view('teacher::clients.dashboard.earnings', compact('pageTitle', 'pageName', 'teacher', 'items', 'summary', 'dashboardRange', 'dashboardRangeOptions', 'revenueInsights', 'coursePerformance', 'effectiveCommissionRate', 'earningsPayload'));
     }
 
     public function payouts()
@@ -1888,16 +2359,16 @@ class TeacherDashboardController extends Controller
             $teacher,
             $student,
             'grant_created',
-            'Đã cấp quyền học thủ công',
+            'ÄÃ£ cáº¥p quyá»n há»c thá»§ cÃ´ng',
             [
                 'course_id' => $course->id,
                 'course_name' => $course->name_locale ?: $course->name,
                 'reason' => $data['reason'],
                 'reason_label' => match ($data['reason']) {
-                    'gift' => 'Quà tặng',
-                    'support' => 'Hỗ trợ',
-                    'special_trial' => 'Học thử đặc biệt',
-                    'compensation' => 'Bù quyền truy cập',
+                    'gift' => 'QuÃ  táº·ng',
+                    'support' => 'Há»— trá»£',
+                    'special_trial' => 'Há»c thá»­ Ä‘áº·c biá»‡t',
+                    'compensation' => 'BÃ¹ quyá»n truy cáº­p',
                     default => $data['reason'],
                 },
                 'note' => trim((string) ($data['note'] ?? '')) ?: null,
@@ -1948,7 +2419,7 @@ class TeacherDashboardController extends Controller
             $teacher,
             $student,
             'grant_revoked',
-            'Đã thu hồi quyền học thủ công',
+            'ÄÃ£ thu há»“i quyá»n há»c thá»§ cÃ´ng',
             [
                 'course_id' => $grant->course_id,
                 'course_name' => $grant->course?->name_locale ?: $grant->course?->name,
@@ -2024,7 +2495,7 @@ class TeacherDashboardController extends Controller
         $progressSummary = $this->summarizeStudentCourseProgress($courses);
         $activityHistory = $this->resolveStudentManagementHistory($teacher, $student);
 
-        $pageTitle = 'Chi tiết học viên';
+        $pageTitle = 'Chi tiáº¿t há»c viÃªn';
         $pageName = $pageTitle;
         $summary = [
             'orders' => $orders->count(),
@@ -2102,7 +2573,7 @@ class TeacherDashboardController extends Controller
             $teacher,
             $student,
             'note_saved',
-            'Đã cập nhật ghi chú nội bộ',
+            'ÄÃ£ cáº­p nháº­t ghi chÃº ná»™i bá»™',
             [
                 'tag' => $savedNote->tag,
                 'tag_label' => $this->normalizeStudentTagLabel($savedNote->tag),
@@ -2114,7 +2585,7 @@ class TeacherDashboardController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.students.show', $student->id)
-            ->with('msg_success', 'Đã lưu ghi chú nội bộ cho học viên.');
+            ->with('msg_success', 'ÄÃ£ lÆ°u ghi chÃº ná»™i bá»™ cho há»c viÃªn.');
     }
 
     public function storePayout(Request $request)
@@ -2319,24 +2790,50 @@ class TeacherDashboardController extends Controller
             ->with('msg_danger', __('teacher::dashboard.payouts.flash.inactive_teacher'));
     }
 
-    private function ensurePackageFeatureAllowed(Teacher $teacher, string $feature, string $fallbackRoute = 'teacher.dashboard.index')
+    private function ensurePackageFeatureAllowed(
+        Teacher $teacher,
+        string $feature,
+        string $fallbackRoute = 'teacher.dashboard.index',
+        array $routeParameters = []
+    )
     {
         if ($teacher->packageHasFeature($feature)) {
             return null;
         }
 
         return redirect()
-            ->route($fallbackRoute)
+            ->route($fallbackRoute, $routeParameters)
             ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
     }
 
     private function resolvePromotionRecipientIds(
         Teacher $teacher,
+        string $recipientMode = 'all',
         ?int $courseId = null,
         ?int $recentPurchaseDays = null,
-        ?int $inactiveLearningDays = null
+        ?int $inactiveLearningDays = null,
+        array $manualStudentIds = []
     ): array
     {
+        if ($recipientMode === 'manual') {
+            $allowedIds = $this->resolvePromotionStudentOptions($teacher)->pluck('id')->all();
+
+            return collect($manualStudentIds)
+                ->filter(fn ($id) => in_array((int) $id, $allowedIds, true))
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        if ($recipientMode === 'all') {
+            return $this->resolvePromotionStudentOptions($teacher)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all();
+        }
+
         $orderDetailsQuery = $this->paidOrderDetailsQuery($teacher)
             ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
             ->when($recentPurchaseDays, function ($query) use ($recentPurchaseDays) {
@@ -2386,24 +2883,55 @@ class TeacherDashboardController extends Controller
             ->all();
     }
 
+    private function resolvePromotionStudentOptions(Teacher $teacher): Collection
+    {
+        $orderStudentIds = $this->paidOrderDetailsQuery($teacher)
+            ->get()
+            ->pluck('order.student_id');
+
+        $grantStudentIds = $this->teacherCourseGrantsQuery($teacher)
+            ->pluck('student_id');
+
+        $studentIds = $orderStudentIds
+            ->concat($grantStudentIds)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($studentIds->isEmpty()) {
+            return collect();
+        }
+
+        return Student::query()
+            ->whereIn('id', $studentIds->all())
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'phone'])
+            ->map(function ($student) use ($orderStudentIds, $grantStudentIds) {
+                return (object) [
+                    'id' => (int) $student->id,
+                    'name' => trim((string) ($student->name ?: 'Học viên')),
+                    'email' => trim((string) ($student->email ?? '')),
+                    'phone' => trim((string) ($student->phone ?? '')),
+                    'has_paid_order' => $orderStudentIds->contains($student->id),
+                    'has_grant' => $grantStudentIds->contains($student->id),
+                ];
+            })
+            ->values();
+    }
+
     private function buildPromotionNotificationPayload(Teacher $teacher, TeacherPromotion $promotion, $course = null): array
     {
         $teacherName = $teacher->name_locale ?: $teacher->name ?: 'Giang vien';
         $courseName = $course ? (localizedModelField($course, 'name', app()->getLocale()) ?: __('teacher::dashboard.common.unknown_course')) : null;
         $title = $promotion->title;
         $message = $promotion->message;
-
-        if ($course && ($course->slug_locale ?: $course->slug)) {
-            $url = route('courses.detail', [
-                'locale' => app()->getLocale(),
-                'slug' => $course->slug_locale ?: $course->slug,
-            ]);
-        } else {
-            $url = route('teacher.public.show', [
-                'locale' => app()->getLocale(),
-                'slug' => $teacher->slug_locale ?: $teacher->slug,
-            ]);
-        }
+        $template = trim((string) ($promotion->filters['template'] ?? 'custom'));
+        $messageHtml = $promotion->filters['message_html'] ?? null;
+        $ctaEnabled = !empty($promotion->filters['cta_enabled']);
+        $ctaLabel = $promotion->filters['cta_label'] ?? null;
+        $ctaUrl = $promotion->filters['cta_url'] ?? null;
+        $url = $ctaEnabled && $ctaUrl ? $ctaUrl : $this->resolveTeacherPromotionCourseUrl($teacher, $course, app()->getLocale());
 
         return [
             'type' => 'teacher.promotion',
@@ -2426,12 +2954,83 @@ class TeacherDashboardController extends Controller
                 'course_id' => $course?->id,
                 'course_name' => $courseName,
                 'promotion_id' => $promotion->id,
+                'template' => $template,
+                'message_html' => $messageHtml,
+                'cta_enabled' => $ctaEnabled,
+                'cta_label' => $ctaLabel,
+                'cta_url' => $ctaUrl,
             ],
         ];
     }
 
-    private function resolvePromotionAudienceType(?int $courseId, ?int $recentPurchaseDays, ?int $inactiveLearningDays): string
+    private function resolvePromotionTemplateDefinitions(Teacher $teacher): array
     {
+        $teacherName = trim((string) ($teacher->name_locale ?: $teacher->name ?: 'Giang vien'));
+
+        return [
+            'custom' => [
+                'label' => 'Tự viết',
+                'title' => '',
+                'html' => '<p>Xin chào học viên,</p><p>Mình gửi tới bạn một cập nhật mới từ khóa học của mình.</p><p>Cảm ơn bạn đã luôn đồng hành.</p>',
+                'cta_enabled' => false,
+                'cta_label' => '',
+            ],
+            'flash_sale' => [
+                'label' => 'Flash sale',
+                'title' => 'Flash sale hôm nay từ ' . $teacherName,
+                'html' => '<p>Xin chào học viên,</p><p>Mình đang mở ưu đãi trong thời gian ngắn cho khóa học <strong>__COURSE_NAME__</strong>. Nếu bạn đang muốn học tiếp hoặc mua thêm khóa mới, đây là thời điểm rất tốt để bắt đầu.</p><p>Ưu đãi có thể kết thúc sớm, bạn xem ngay để không bỏ lỡ.</p>',
+                'cta_enabled' => true,
+                'cta_label' => 'Xem ưu đãi ngay',
+            ],
+            'reactivation' => [
+                'label' => 'Tái kích hoạt học viên',
+                'title' => 'Bạn quay lại học cùng ' . $teacherName . ' nhé',
+                'html' => '<p>Xin chào học viên,</p><p>Mình thấy bạn đã tạm dừng một thời gian ở khóa <strong>__COURSE_NAME__</strong>. Mình vừa cập nhật thêm nội dung và muốn mời bạn quay lại để học tiếp cho đúng lộ trình.</p><p>Nếu bạn cần một cú hích nhỏ để bắt đầu lại, mình đã để sẵn nút truy cập nhanh bên dưới.</p>',
+                'cta_enabled' => true,
+                'cta_label' => 'Học tiếp ngay',
+            ],
+            'new_course' => [
+                'label' => 'Ra khóa mới',
+                'title' => 'Khóa học mới đã lên sóng',
+                'html' => '<p>Xin chào học viên,</p><p>Mình vừa ra mắt một khóa học mới với nội dung thực chiến hơn, cập nhật hơn và rất phù hợp để bạn học tiếp sau lộ trình hiện tại.</p><p>Bạn có thể xem chi tiết ngay để biết khóa học này có phù hợp với mình đến đâu, hoặc ghé trang của <strong>__TEACHER_NAME__</strong> để xem thêm các khóa học khác.</p>',
+                'cta_enabled' => true,
+                'cta_label' => 'Xem khóa học mới',
+            ],
+        ];
+    }
+
+    private function resolveTeacherPromotionCourseUrl(Teacher $teacher, $course = null, ?string $locale = null): string
+    {
+        $locale = $locale ?: app()->getLocale();
+
+        if ($course && ($course->slug_locale ?: $course->slug)) {
+            return route('courses.detail', [
+                'locale' => $locale,
+                'slug' => $course->slug_locale ?: $course->slug,
+            ]);
+        }
+
+        return $this->resolveTeacherPromotionFallbackUrl($teacher, $locale);
+    }
+
+    private function resolveTeacherPromotionFallbackUrl(Teacher $teacher, ?string $locale = null): string
+    {
+        return route('teacher.public.show', [
+            'locale' => $locale ?: app()->getLocale(),
+            'slug' => $teacher->slug_locale ?: $teacher->slug,
+        ]);
+    }
+
+    private function resolvePromotionAudienceType(string $recipientMode, ?int $courseId, ?int $recentPurchaseDays, ?int $inactiveLearningDays): string
+    {
+        if ($recipientMode === 'manual') {
+            return 'manual_students';
+        }
+
+        if ($recipientMode === 'all') {
+            return 'all_students';
+        }
+
         if ($courseId && $inactiveLearningDays) {
             return 'course_inactive_learners';
         }
@@ -3084,7 +3683,7 @@ class TeacherDashboardController extends Controller
     {
         return [
             'mode' => $lesson?->release_mode ?: LessonReleaseManager::MODE_IMMEDIATE,
-            'mode_label' => $lesson ? $lesson->releaseSummary() : 'Mở ngay',
+            'mode_label' => $lesson ? $lesson->releaseSummary() : 'Má»Ÿ ngay',
             'release_at' => $lesson?->release_at?->format('Y-m-d H:i:s'),
             'release_after_days' => $lesson?->release_after_days,
         ];
@@ -3183,10 +3782,10 @@ class TeacherDashboardController extends Controller
             $courseData = $course->getAttributes();
 
             unset($courseData['id'], $courseData['created_at'], $courseData['updated_at'], $courseData['deleted_at']);
-            $courseData['name'] = $this->duplicateTitle($course->name, 'Bản sao');
-            $courseData['name_ko'] = $this->duplicateTitle($course->name_ko, '복제본');
-            $courseData['name_ja'] = $this->duplicateTitle($course->name_ja, '複製版');
-            $courseData['name_zh'] = $this->duplicateTitle($course->name_zh, '复制版');
+            $courseData['name'] = $this->duplicateTitle($course->name, 'Báº£n sao');
+            $courseData['name_ko'] = $this->duplicateTitle($course->name_ko, 'ë³µì œë³¸');
+            $courseData['name_ja'] = $this->duplicateTitle($course->name_ja, 'è¤‡è£½ç‰ˆ');
+            $courseData['name_zh'] = $this->duplicateTitle($course->name_zh, 'å¤åˆ¶ç‰ˆ');
             $courseData['slug'] = $this->duplicateSlug($course->slug, 'copy');
             $courseData['slug_en'] = $this->duplicateSlug($course->slug_en, 'copy');
             $courseData['slug_ko'] = $this->duplicateSlug($course->slug_ko, 'copy');
@@ -3220,10 +3819,10 @@ class TeacherDashboardController extends Controller
 
                 $oldParentId = $lessonData['parent_id'] ?? null;
                 $lessonData['course_id'] = $newCourse->id;
-                $lessonData['name'] = $this->duplicateTitle($lesson->name, 'Bản sao');
-                $lessonData['name_ko'] = $this->duplicateTitle($lesson->name_ko, '복제본');
-                $lessonData['name_ja'] = $this->duplicateTitle($lesson->name_ja, '複製版');
-                $lessonData['name_zh'] = $this->duplicateTitle($lesson->name_zh, '复制版');
+                $lessonData['name'] = $this->duplicateTitle($lesson->name, 'Báº£n sao');
+                $lessonData['name_ko'] = $this->duplicateTitle($lesson->name_ko, 'ë³µì œë³¸');
+                $lessonData['name_ja'] = $this->duplicateTitle($lesson->name_ja, 'è¤‡è£½ç‰ˆ');
+                $lessonData['name_zh'] = $this->duplicateTitle($lesson->name_zh, 'å¤åˆ¶ç‰ˆ');
                 $lessonData['slug'] = $this->duplicateSlug($lesson->slug, 'copy');
                 $lessonData['slug_en'] = $this->duplicateSlug($lesson->slug_en, 'copy');
                 $lessonData['slug_ko'] = $this->duplicateSlug($lesson->slug_ko, 'copy');
@@ -3558,6 +4157,971 @@ class TeacherDashboardController extends Controller
         return $query->exists() ? $parentId : 0;
     }
 
+    private function lessonImportColumns(): array
+    {
+        return [
+            'type',
+            'module_ref',
+            'parent_selector',
+            'name',
+            'name_en',
+            'name_ko',
+            'name_ja',
+            'name_zh',
+            'description',
+            'description_en',
+            'description_ko',
+            'description_ja',
+            'description_zh',
+            'position',
+            'is_trial',
+            'status',
+            'video',
+            'document',
+            'release_mode',
+            'release_at',
+            'release_after_days',
+        ];
+    }
+
+    private function buildExistingLessonModuleSelectors(Courses $course): array
+    {
+        return Lesson::query()
+            ->where('course_id', $course->id)
+            ->whereNull('parent_id')
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (Lesson $lesson) => [
+                'value' => 'id:' . $lesson->id,
+                'label' => 'id:' . $lesson->id . ' - ' . ($lesson->name_locale ?: $lesson->name),
+            ])
+            ->all();
+    }
+
+    private function buildLessonExportRows(Courses $course): array
+    {
+        $rows = [];
+        $modules = Lesson::query()
+            ->where('course_id', $course->id)
+            ->whereNull('parent_id')
+            ->with(['subLessons' => fn ($query) => $query->orderBy('position')->orderBy('id')])
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($modules as $module) {
+            $moduleRef = 'module-' . $module->id;
+            $rows[] = $this->formatLessonExportRow($module, 'module', $moduleRef, '');
+
+            foreach ($module->subLessons as $lesson) {
+                $rows[] = $this->formatLessonExportRow($lesson, 'lesson', '', 'ref:' . $moduleRef);
+            }
+        }
+
+        return $rows;
+    }
+
+    private function formatLessonExportRow(Lesson $lesson, string $type, string $moduleRef, string $parentSelector): array
+    {
+        return [
+            'type' => $type,
+            'module_ref' => $moduleRef,
+            'parent_selector' => $parentSelector,
+            'name' => $lesson->name,
+            'name_en' => $lesson->name_en,
+            'name_ko' => $lesson->name_ko,
+            'name_ja' => $lesson->name_ja,
+            'name_zh' => $lesson->name_zh,
+            'description' => $lesson->description,
+            'description_en' => $lesson->description_en,
+            'description_ko' => $lesson->description_ko,
+            'description_ja' => $lesson->description_ja,
+            'description_zh' => $lesson->description_zh,
+            'position' => $lesson->position,
+            'is_trial' => $type === 'lesson' ? (int) $lesson->is_trial : 0,
+            'status' => (int) $lesson->status,
+            'video' => $lesson->video?->url,
+            'document' => $lesson->document?->url,
+            'release_mode' => $lesson->release_mode ?: LessonReleaseManager::MODE_IMMEDIATE,
+            'release_at' => $lesson->release_at?->format('Y-m-d H:i:s'),
+            'release_after_days' => $lesson->release_after_days,
+        ];
+    }
+
+    private function lessonImportTemplateRows(): array
+    {
+        return [
+            [
+                'type' => 'module',
+                'module_ref' => 'MOD-INTRO',
+                'parent_selector' => '',
+                'name' => 'Module má»Ÿ Ä‘áº§u',
+                'name_en' => 'Introduction module',
+                'name_ko' => '',
+                'name_ja' => '',
+                'name_zh' => '',
+                'description' => 'NhÃ³m bÃ i há»c giá»›i thiá»‡u',
+                'description_en' => '',
+                'description_ko' => '',
+                'description_ja' => '',
+                'description_zh' => '',
+                'position' => '1',
+                'is_trial' => '0',
+                'status' => '1',
+                'video' => '',
+                'document' => '',
+                'release_mode' => 'immediate',
+                'release_at' => '',
+                'release_after_days' => '',
+            ],
+            [
+                'type' => 'lesson',
+                'module_ref' => '',
+                'parent_selector' => 'ref:MOD-INTRO',
+                'name' => 'BÃ i 1',
+                'name_en' => 'Lesson 1',
+                'name_ko' => '',
+                'name_ja' => '',
+                'name_zh' => '',
+                'description' => 'Ná»™i dung bÃ i há»c Ä‘áº§u tiÃªn',
+                'description_en' => '',
+                'description_ko' => '',
+                'description_ja' => '',
+                'description_zh' => '',
+                'position' => '1',
+                'is_trial' => '1',
+                'status' => '1',
+                'video' => 'https://example.com/video-1',
+                'document' => 'https://example.com/document-1.pdf',
+                'release_mode' => 'immediate',
+                'release_at' => '',
+                'release_after_days' => '',
+            ],
+            [
+                'type' => 'lesson',
+                'module_ref' => '',
+                'parent_selector' => 'id:12',
+                'name' => 'BÃ i gáº¯n vÃ o module sáºµn cÃ³',
+                'name_en' => 'Attach to an existing module',
+                'name_ko' => '',
+                'name_ja' => '',
+                'name_zh' => '',
+                'description' => 'VÃ­ dá»¥ dÃ¹ng id cá»§a module Ä‘Ã£ cÃ³ trong khÃ³a há»c',
+                'description_en' => '',
+                'description_ko' => '',
+                'description_ja' => '',
+                'description_zh' => '',
+                'position' => '',
+                'is_trial' => '0',
+                'status' => '0',
+                'video' => '',
+                'document' => '',
+                'release_mode' => 'immediate',
+                'release_at' => '',
+                'release_after_days' => '',
+            ],
+        ];
+    }
+
+    private function lessonImportExampleRows(): array
+    {
+        return [
+            [
+                'type' => 'module',
+                'module_ref' => 'MOD-FOUNDATION',
+                'parent_selector' => '',
+                'name' => 'Module ná»n táº£ng',
+                'name_en' => 'Foundation module',
+                'name_ko' => 'ê¸°ì´ˆ ëª¨ë“ˆ',
+                'name_ja' => 'åŸºç¤Žãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«',
+                'name_zh' => 'åŸºç¡€æ¨¡å—',
+                'description' => 'NhÃ³m bÃ i giÃºp há»c viÃªn lÃ m quen vá»›i khÃ³a há»c vÃ  chuáº©n bá»‹ tÃ i nguyÃªn cáº§n thiáº¿t.',
+                'description_en' => 'A starter module that helps students prepare before diving into the core lessons.',
+                'description_ko' => '',
+                'description_ja' => '',
+                'description_zh' => '',
+                'position' => '1',
+                'is_trial' => '0',
+                'status' => '1',
+                'video' => '',
+                'document' => '',
+                'release_mode' => 'immediate',
+                'release_at' => '',
+                'release_after_days' => '',
+            ],
+            [
+                'type' => 'lesson',
+                'module_ref' => '',
+                'parent_selector' => 'ref:MOD-FOUNDATION',
+                'name' => 'BÃ i 1 - CÃ¡ch dÃ¹ng khÃ³a há»c',
+                'name_en' => 'Lesson 1 - How to use this course',
+                'name_ko' => '',
+                'name_ja' => '',
+                'name_zh' => '',
+                'description' => 'Video onboarding, lá»™ trÃ¬nh há»c vÃ  checklist tÃ i nguyÃªn cáº§n chuáº©n bá»‹.',
+                'description_en' => 'Onboarding video, study roadmap, and a quick resource checklist.',
+                'description_ko' => '',
+                'description_ja' => '',
+                'description_zh' => '',
+                'position' => '1',
+                'is_trial' => '1',
+                'status' => '1',
+                'video' => 'https://example.com/videos/course-onboarding',
+                'document' => 'https://example.com/docs/course-checklist.pdf',
+                'release_mode' => 'immediate',
+                'release_at' => '',
+                'release_after_days' => '',
+            ],
+            [
+                'type' => 'lesson',
+                'module_ref' => '',
+                'parent_selector' => 'ref:MOD-FOUNDATION',
+                'name' => 'BÃ i 2 - Thiáº¿t láº­p mÃ´i trÆ°á»ng',
+                'name_en' => 'Lesson 2 - Setup workspace',
+                'name_ko' => '',
+                'name_ja' => '',
+                'name_zh' => '',
+                'description' => 'HÆ°á»›ng dáº«n cÃ i Ä‘áº·t cÃ´ng cá»¥ vÃ  táº£i file thá»±c hÃ nh trÆ°á»›c khi há»c.',
+                'description_en' => 'Setup guide for tools and practice files before starting the real project.',
+                'description_ko' => '',
+                'description_ja' => '',
+                'description_zh' => '',
+                'position' => '2',
+                'is_trial' => '0',
+                'status' => '1',
+                'video' => 'https://example.com/videos/setup-workspace',
+                'document' => '',
+                'release_mode' => 'days_after_enrollment',
+                'release_at' => '',
+                'release_after_days' => '2',
+            ],
+            [
+                'type' => 'lesson',
+                'module_ref' => '',
+                'parent_selector' => 'id:12',
+                'name' => 'BÃ i thÃªm vÃ o module sáºµn cÃ³',
+                'name_en' => 'Lesson added to an existing module',
+                'name_ko' => '',
+                'name_ja' => '',
+                'name_zh' => '',
+                'description' => 'VÃ­ dá»¥ nÃ y dÃ¹ng parent_selector dáº¡ng id Ä‘á»ƒ gáº¯n vÃ o module Ä‘Ã£ cÃ³ sáºµn trong khÃ³a há»c.',
+                'description_en' => 'This sample shows how to attach a lesson to an existing module by id.',
+                'description_ko' => '',
+                'description_ja' => '',
+                'description_zh' => '',
+                'position' => '3',
+                'is_trial' => '0',
+                'status' => '0',
+                'video' => '',
+                'document' => 'https://example.com/docs/existing-module-note.pdf',
+                'release_mode' => 'immediate',
+                'release_at' => '',
+                'release_after_days' => '',
+            ],
+        ];
+    }
+
+    private function streamCsvDownload(string $filename, array $headers, array $rows)
+    {
+        return response()->streamDownload(function () use ($headers, $rows) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, $headers);
+
+            foreach ($rows as $row) {
+                fputcsv($handle, collect($headers)->map(fn ($header) => $row[$header] ?? '')->all());
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    private function streamXlsxDownload(string $filename, array $headers, array $rows)
+    {
+        return response()->streamDownload(function () use ($headers, $rows) {
+            $tempFile = tempnam(sys_get_temp_dir(), 'lesson-xlsx-');
+            if ($tempFile === false) {
+                throw new \RuntimeException('Unable to create temporary XLSX file.');
+            }
+
+            $zip = new \ZipArchive();
+            if ($zip->open($tempFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+                @unlink($tempFile);
+                throw new \RuntimeException('Unable to open temporary XLSX archive.');
+            }
+
+            $allRows = array_merge([$headers], array_map(
+                fn ($row) => collect($headers)->map(fn ($header) => (string) ($row[$header] ?? ''))->all(),
+                $rows
+            ));
+
+            $sharedStringIndex = [];
+            $sharedStrings = [];
+            $sheetRowsXml = '';
+
+            foreach ($allRows as $rowIndex => $rowValues) {
+                $cellsXml = '';
+
+                foreach (array_values($rowValues) as $columnIndex => $value) {
+                    $value = (string) $value;
+                    if ($value === '') {
+                        continue;
+                    }
+
+                    if (!array_key_exists($value, $sharedStringIndex)) {
+                        $sharedStringIndex[$value] = count($sharedStrings);
+                        $sharedStrings[] = $value;
+                    }
+
+                    $cellRef = $this->xlsxColumnLetters($columnIndex) . ($rowIndex + 1);
+                    $cellsXml .= '<c r="' . $cellRef . '" t="s"><v>' . $sharedStringIndex[$value] . '</v></c>';
+                }
+
+                $sheetRowsXml .= '<row r="' . ($rowIndex + 1) . '">' . $cellsXml . '</row>';
+            }
+
+            $sharedStringsXml = '';
+            foreach ($sharedStrings as $value) {
+                $sharedStringsXml .= '<si><t xml:space="preserve">' . htmlspecialchars($value, ENT_XML1) . '</t></si>';
+            }
+
+            $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+                . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+                . '<Default Extension="xml" ContentType="application/xml"/>'
+                . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+                . '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+                . '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>'
+                . '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>'
+                . '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>'
+                . '</Types>');
+            $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+                . '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>'
+                . '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>'
+                . '</Relationships>');
+            $zip->addFromString('docProps/app.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">'
+                . '<Application>BigK Udemy</Application>'
+                . '</Properties>');
+            $zip->addFromString('docProps/core.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+                . '<dc:title>Lesson Import Example</dc:title>'
+                . '<dc:creator>BigK Udemy</dc:creator>'
+                . '<cp:lastModifiedBy>BigK Udemy</cp:lastModifiedBy>'
+                . '<dcterms:created xsi:type="dcterms:W3CDTF">' . now()->toAtomString() . '</dcterms:created>'
+                . '<dcterms:modified xsi:type="dcterms:W3CDTF">' . now()->toAtomString() . '</dcterms:modified>'
+                . '</cp:coreProperties>');
+            $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                . '<sheets><sheet name="Lessons" sheetId="1" r:id="rId1"/></sheets>'
+                . '</workbook>');
+            $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+                . '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>'
+                . '</Relationships>');
+            $zip->addFromString('xl/sharedStrings.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="' . count($sharedStrings) . '" uniqueCount="' . count($sharedStrings) . '">'
+                . $sharedStringsXml
+                . '</sst>');
+            $zip->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+                . '<sheetData>' . $sheetRowsXml . '</sheetData>'
+                . '</worksheet>');
+
+            $zip->close();
+
+            readfile($tempFile);
+            @unlink($tempFile);
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    private function xlsxColumnLetters(int $index): string
+    {
+        $letters = '';
+        $index++;
+
+        while ($index > 0) {
+            $remainder = ($index - 1) % 26;
+            $letters = chr(65 + $remainder) . $letters;
+            $index = (int) floor(($index - 1) / 26);
+        }
+
+        return $letters;
+    }
+
+    private function lessonImportPreviewSessionKey(int $courseId): string
+    {
+        return 'teacher_lesson_import_preview_' . $courseId;
+    }
+
+    private function storeLessonImportPreview(Courses $course, array $payload): void
+    {
+        session()->put($this->lessonImportPreviewSessionKey($course->id), $payload);
+    }
+
+    private function getLessonImportPreview(Courses $course): ?array
+    {
+        $preview = session($this->lessonImportPreviewSessionKey($course->id));
+
+        return is_array($preview) ? $preview : null;
+    }
+
+    private function validateLessonImportFile(string $path, ?string $extension, Courses $course, bool $canScheduleContent): array
+    {
+        $expectedHeaders = $this->lessonImportColumns();
+        $normalizedExtension = Str::lower((string) $extension);
+
+        $fileData = $normalizedExtension === 'xlsx'
+            ? $this->readXlsxRows($path)
+            : $this->readCsvRows($path);
+
+        if (!empty($fileData['errors'])) {
+            return [
+                'rows' => [],
+                'errors' => $fileData['errors'],
+            ];
+        }
+
+        $headers = collect($fileData['headers'] ?? [])
+            ->map(fn ($value) => Str::lower(trim((string) $value)))
+            ->values()
+            ->all();
+
+        if ($headers !== $expectedHeaders) {
+            return [
+                'rows' => [],
+                'errors' => [
+                    'Invalid import header. Please use the latest export/template file.',
+                ],
+            ];
+        }
+
+        $rawRows = [];
+        foreach ($fileData['rows'] ?? [] as $rowData) {
+            $normalized = [];
+
+            foreach ($expectedHeaders as $index => $header) {
+                $normalized[$header] = trim((string) ($rowData['values'][$index] ?? ''));
+            }
+
+            if (collect($normalized)->every(fn ($value) => $value === '')) {
+                continue;
+            }
+
+            $normalized['line'] = (int) ($rowData['line'] ?? 0);
+            $rawRows[] = $normalized;
+        }
+
+        $errors = [];
+        if (count($rawRows) === 0) {
+            $errors[] = 'The import file does not contain any data rows.';
+        }
+
+        $lessonRowCount = collect($rawRows)
+            ->filter(fn ($row) => Str::lower((string) ($row['type'] ?? '')) === 'lesson')
+            ->count();
+
+        if ($lessonRowCount > 20) {
+            $errors[] = 'Each import allows up to 20 lesson rows.';
+        }
+
+        $moduleRefs = [];
+        $existingModuleIds = Lesson::query()
+            ->where('course_id', $course->id)
+            ->whereNull('parent_id')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $validatedRows = [];
+        foreach ($rawRows as $row) {
+            $lineErrors = [];
+            $type = Str::lower($row['type']);
+            if (!in_array($type, ['module', 'lesson'], true)) {
+                $lineErrors[] = 'type must be either module or lesson.';
+            }
+
+            if ($row['name'] === '') {
+                $lineErrors[] = 'name is required.';
+            }
+
+            $moduleRef = $row['module_ref'];
+            if ($type === 'module') {
+                if ($moduleRef === '') {
+                    $lineErrors[] = 'Module rows must include module_ref.';
+                } elseif (isset($moduleRefs[$moduleRef])) {
+                    $lineErrors[] = 'module_ref duplicates line ' . $moduleRefs[$moduleRef] . '.';
+                } else {
+                    $moduleRefs[$moduleRef] = $row['line'];
+                }
+
+                if ($row['parent_selector'] !== '') {
+                    $lineErrors[] = 'Module rows cannot include parent_selector.';
+                }
+            }
+
+            if ($type === 'lesson' && $row['parent_selector'] === '') {
+                $lineErrors[] = 'Lesson rows must include parent_selector.';
+            }
+
+            if ($row['position'] !== '' && (!ctype_digit($row['position']) || (int) $row['position'] < 1)) {
+                $lineErrors[] = 'position must be an integer >= 1.';
+            }
+
+            if ($row['is_trial'] !== '' && !in_array($row['is_trial'], ['0', '1'], true)) {
+                $lineErrors[] = 'is_trial must be 0 or 1.';
+            }
+
+            if ($row['status'] !== '' && !in_array($row['status'], ['0', '1'], true)) {
+                $lineErrors[] = 'status must be 0 or 1.';
+            }
+
+            $releaseMode = $row['release_mode'] !== '' ? $row['release_mode'] : LessonReleaseManager::MODE_IMMEDIATE;
+            if (!in_array($releaseMode, [
+                LessonReleaseManager::MODE_IMMEDIATE,
+                LessonReleaseManager::MODE_DATETIME,
+                LessonReleaseManager::MODE_DAYS_AFTER_ENROLLMENT,
+                LessonReleaseManager::MODE_AFTER_PREVIOUS_COMPLETED,
+            ], true)) {
+                $lineErrors[] = 'release_mode is invalid.';
+            }
+
+            if (!$canScheduleContent && $releaseMode !== LessonReleaseManager::MODE_IMMEDIATE) {
+                $lineErrors[] = 'Your current package only supports release_mode=immediate.';
+            }
+
+            if ($releaseMode === LessonReleaseManager::MODE_DATETIME
+                && ($row['release_at'] === '' || strtotime($row['release_at']) === false)
+            ) {
+                $lineErrors[] = 'release_at must be a valid datetime when release_mode=datetime.';
+            }
+
+            if ($releaseMode === LessonReleaseManager::MODE_DAYS_AFTER_ENROLLMENT
+                && ($row['release_after_days'] === '' || !ctype_digit($row['release_after_days']) || (int) $row['release_after_days'] < 1)
+            ) {
+                $lineErrors[] = 'release_after_days must be an integer >= 1 when release_mode=days_after_enrollment.';
+            }
+
+            if (!empty($lineErrors)) {
+                foreach ($lineErrors as $lineError) {
+                    $errors[] = 'Line ' . $row['line'] . ': ' . $lineError;
+                }
+            }
+
+            $validatedRows[] = [
+                'line' => $row['line'],
+                'type' => $type,
+                'module_ref' => $moduleRef,
+                'parent_selector' => $row['parent_selector'],
+                'name' => $row['name'],
+                'name_en' => $row['name_en'] ?: null,
+                'name_ko' => $row['name_ko'] ?: null,
+                'name_ja' => $row['name_ja'] ?: null,
+                'name_zh' => $row['name_zh'] ?: null,
+                'description' => $row['description'] ?: null,
+                'description_en' => $row['description_en'] ?: null,
+                'description_ko' => $row['description_ko'] ?: null,
+                'description_ja' => $row['description_ja'] ?: null,
+                'description_zh' => $row['description_zh'] ?: null,
+                'position' => $row['position'] !== '' ? (int) $row['position'] : null,
+                'is_trial' => $row['is_trial'] !== '' ? (int) $row['is_trial'] : 0,
+                'status' => $row['status'] !== '' ? (int) $row['status'] : 1,
+                'video' => $row['video'] ?: null,
+                'document' => $row['document'] ?: null,
+                'release_mode' => $releaseMode,
+                'release_at' => $row['release_at'] !== '' ? $row['release_at'] : null,
+                'release_after_days' => $row['release_after_days'] !== '' ? (int) $row['release_after_days'] : null,
+            ];
+        }
+
+        foreach ($validatedRows as $row) {
+            if ($row['type'] !== 'lesson' || $row['parent_selector'] === '') {
+                continue;
+            }
+
+            $selector = $row['parent_selector'];
+            if (Str::startsWith($selector, 'ref:')) {
+                $ref = substr($selector, 4);
+                if ($ref === '' || !isset($moduleRefs[$ref])) {
+                    $errors[] = 'Line ' . $row['line'] . ': parent_selector references a module_ref that does not exist in this file.';
+                }
+
+                continue;
+            }
+
+            if (Str::startsWith($selector, 'id:')) {
+                $id = (int) substr($selector, 3);
+                if ($id <= 0 || !in_array($id, $existingModuleIds, true)) {
+                    $errors[] = 'Line ' . $row['line'] . ': parent_selector uses a module id that does not exist in this course.';
+                }
+
+                continue;
+            }
+
+            $errors[] = 'Line ' . $row['line'] . ': parent_selector must use ref:MODULE_REF or id:MODULE_ID.';
+        }
+
+        return [
+            'rows' => $validatedRows,
+            'errors' => array_values(array_unique($errors)),
+            'summary' => [
+                'total_rows' => count($validatedRows),
+                'imported_modules' => collect($validatedRows)->where('type', 'module')->count(),
+                'imported_lessons' => collect($validatedRows)->where('type', 'lesson')->count(),
+            ],
+        ];
+    }
+
+    private function persistImportedLessons(Teacher $teacher, Courses $course, array $rows): array
+    {
+        $createdRows = DB::transaction(function () use ($teacher, $course, $rows) {
+            $createdModules = [];
+            $createdRows = [];
+
+            foreach ($rows as $row) {
+                $parentId = null;
+                if (($row['type'] ?? null) === 'lesson') {
+                    $parentId = $this->resolveImportedLessonParentId((string) ($row['parent_selector'] ?? ''), $createdModules, $course);
+                }
+
+                $lesson = Lesson::query()->create($this->buildLessonPayload(
+                    [
+                        'name' => $row['name'] ?? null,
+                        'name_en' => $row['name_en'] ?? null,
+                        'name_ko' => $row['name_ko'] ?? null,
+                        'name_ja' => $row['name_ja'] ?? null,
+                        'name_zh' => $row['name_zh'] ?? null,
+                        'parent_id' => $parentId,
+                        'is_trial' => ($row['type'] ?? null) === 'module' ? 0 : ($row['is_trial'] ?? 0),
+                        'position' => $row['position'] ?? null,
+                        'video' => $row['video'] ?? null,
+                        'document' => $row['document'] ?? null,
+                        'description' => $row['description'] ?? null,
+                        'description_en' => $row['description_en'] ?? null,
+                        'description_ko' => $row['description_ko'] ?? null,
+                        'description_ja' => $row['description_ja'] ?? null,
+                        'description_zh' => $row['description_zh'] ?? null,
+                        'status' => $row['status'] ?? 1,
+                        'release_mode' => $row['release_mode'] ?? LessonReleaseManager::MODE_IMMEDIATE,
+                        'release_at' => $row['release_at'] ?? null,
+                        'release_after_days' => $row['release_after_days'] ?? null,
+                    ],
+                    $course,
+                    null,
+                    $teacher->packageHasFeature('can_schedule_content')
+                ));
+
+                if (($row['type'] ?? null) === 'module' && !empty($row['module_ref'])) {
+                    $createdModules[$row['module_ref']] = (int) $lesson->id;
+                }
+
+                $createdRows[] = [
+                    'lesson' => $lesson,
+                    'row' => $row,
+                ];
+            }
+
+            return $createdRows;
+        });
+
+        foreach ($createdRows as $createdRow) {
+            $lesson = $createdRow['lesson'];
+            $row = $createdRow['row'];
+
+            $this->logTeacherLessonActivity(
+                $teacher,
+                $course,
+                $lesson,
+                'import_lesson',
+                'Import lesson from file',
+                [
+                    'import_type' => $row['type'] ?? null,
+                    'import_line' => $row['line'] ?? null,
+                    'module_ref' => $row['module_ref'] ?? null,
+                    'parent_selector' => $row['parent_selector'] ?? null,
+                    'schedule' => $this->summarizeLessonSchedule($lesson),
+                ]
+            );
+        }
+
+        $this->updateCourseDurations($course->id);
+
+        return $createdRows;
+    }
+
+    private function readCsvRows(string $path): array
+    {
+        $handle = fopen($path, 'r');
+        if ($handle === false) {
+            return [
+                'headers' => [],
+                'rows' => [],
+                'errors' => ['Cannot read the import file.'],
+            ];
+        }
+
+        $headerRow = fgetcsv($handle);
+        if ($headerRow === false) {
+            fclose($handle);
+
+            return [
+                'headers' => [],
+                'rows' => [],
+                'errors' => ['The import file is empty or is not a valid CSV.'],
+            ];
+        }
+
+        $headers = collect($headerRow)
+            ->map(function ($value, $index) {
+                $value = trim((string) $value);
+
+                if ($index === 0) {
+                    $value = ltrim($value, chr(239) . chr(187) . chr(191));
+                }
+
+                return $value;
+            })
+            ->values()
+            ->all();
+
+        $rows = [];
+        $line = 1;
+        while (($row = fgetcsv($handle)) !== false) {
+            $line++;
+            $rows[] = [
+                'line' => $line,
+                'values' => $row,
+            ];
+        }
+
+        fclose($handle);
+
+        return [
+            'headers' => $headers,
+            'rows' => $rows,
+            'errors' => [],
+        ];
+    }
+
+    private function readXlsxRows(string $path): array
+    {
+        if (!class_exists(\ZipArchive::class)) {
+            return [
+                'headers' => [],
+                'rows' => [],
+                'errors' => ['The server cannot read XLSX files because ZipArchive is unavailable.'],
+            ];
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($path) !== true) {
+            return [
+                'headers' => [],
+                'rows' => [],
+                'errors' => ['Cannot open the XLSX file for import.'],
+            ];
+        }
+
+        $sharedStrings = $this->xlsxSharedStrings($zip);
+        $worksheetPath = $this->xlsxFirstWorksheetPath($zip);
+        if ($worksheetPath === null) {
+            $zip->close();
+
+            return [
+                'headers' => [],
+                'rows' => [],
+                'errors' => ['No worksheet data was found in the XLSX file.'],
+            ];
+        }
+
+        $worksheetXml = $zip->getFromName($worksheetPath);
+        $zip->close();
+
+        if ($worksheetXml === false) {
+            return [
+                'headers' => [],
+                'rows' => [],
+                'errors' => ['Cannot read the first worksheet in the XLSX file.'],
+            ];
+        }
+
+        $worksheet = @simplexml_load_string($worksheetXml);
+        if ($worksheet === false || !isset($worksheet->sheetData)) {
+            return [
+                'headers' => [],
+                'rows' => [],
+                'errors' => ['The XLSX worksheet content is invalid.'],
+            ];
+        }
+
+        $sheetRows = [];
+        foreach ($worksheet->sheetData->row as $rowNode) {
+            $line = (int) ($rowNode['r'] ?? 0);
+            $cells = [];
+
+            foreach ($rowNode->c as $cellNode) {
+                $reference = (string) ($cellNode['r'] ?? '');
+                $columnIndex = $this->xlsxColumnIndexFromReference($reference);
+                $cells[$columnIndex] = $this->xlsxCellValue($cellNode, $sharedStrings);
+            }
+
+            if (!empty($cells)) {
+                ksort($cells);
+            }
+
+            $sheetRows[] = [
+                'line' => $line,
+                'values' => array_values($cells),
+            ];
+        }
+
+        if (empty($sheetRows)) {
+            return [
+                'headers' => [],
+                'rows' => [],
+                'errors' => ['The XLSX file is empty.'],
+            ];
+        }
+
+        $headerRow = array_shift($sheetRows);
+
+        return [
+            'headers' => $headerRow['values'] ?? [],
+            'rows' => $sheetRows,
+            'errors' => [],
+        ];
+    }
+
+    private function xlsxSharedStrings(\ZipArchive $zip): array
+    {
+        $xml = $zip->getFromName('xl/sharedStrings.xml');
+        if ($xml === false) {
+            return [];
+        }
+
+        $sharedStrings = @simplexml_load_string($xml);
+        if ($sharedStrings === false) {
+            return [];
+        }
+
+        $values = [];
+        foreach ($sharedStrings->si as $item) {
+            if (isset($item->t)) {
+                $values[] = (string) $item->t;
+                continue;
+            }
+
+            $text = '';
+            foreach ($item->r as $run) {
+                $text .= (string) ($run->t ?? '');
+            }
+            $values[] = $text;
+        }
+
+        return $values;
+    }
+
+    private function xlsxFirstWorksheetPath(\ZipArchive $zip): ?string
+    {
+        $workbookXml = $zip->getFromName('xl/workbook.xml');
+        if ($workbookXml === false) {
+            return null;
+        }
+
+        $workbook = @simplexml_load_string($workbookXml);
+        if ($workbook === false || !isset($workbook->sheets->sheet[0])) {
+            return null;
+        }
+
+        $namespaces = $workbook->getNamespaces(true);
+        $attributes = $workbook->sheets->sheet[0]->attributes($namespaces['r'] ?? null);
+        $relationshipId = (string) ($attributes['id'] ?? '');
+        if ($relationshipId === '') {
+            return null;
+        }
+
+        $relsXml = $zip->getFromName('xl/_rels/workbook.xml.rels');
+        if ($relsXml === false) {
+            return null;
+        }
+
+        $relationships = @simplexml_load_string($relsXml);
+        if ($relationships === false) {
+            return null;
+        }
+
+        foreach ($relationships->Relationship as $relationship) {
+            if ((string) ($relationship['Id'] ?? '') !== $relationshipId) {
+                continue;
+            }
+
+            $target = (string) ($relationship['Target'] ?? '');
+            if ($target === '') {
+                return null;
+            }
+
+            return Str::startsWith($target, 'xl/') ? $target : 'xl/' . ltrim($target, '/');
+        }
+
+        return null;
+    }
+
+    private function xlsxCellValue(\SimpleXMLElement $cellNode, array $sharedStrings): string
+    {
+        $type = (string) ($cellNode['t'] ?? '');
+        $value = isset($cellNode->v) ? (string) $cellNode->v : '';
+
+        if ($type === 's') {
+            return $sharedStrings[(int) $value] ?? '';
+        }
+
+        if ($type === 'inlineStr') {
+            return isset($cellNode->is->t) ? (string) $cellNode->is->t : '';
+        }
+
+        if ($type === 'b') {
+            return $value === '1' ? '1' : '0';
+        }
+
+        return trim($value);
+    }
+
+    private function xlsxColumnIndexFromReference(string $reference): int
+    {
+        if (!preg_match('/^[A-Z]+/i', $reference, $matches)) {
+            return 0;
+        }
+
+        $letters = strtoupper($matches[0]);
+        $index = 0;
+        foreach (str_split($letters) as $letter) {
+            $index = ($index * 26) + (ord($letter) - 64);
+        }
+
+        return max($index - 1, 0);
+    }
+
+    private function resolveImportedLessonParentId(string $parentSelector, array $createdModules, Courses $course): ?int
+    {
+        if (Str::startsWith($parentSelector, 'ref:')) {
+            return $createdModules[substr($parentSelector, 4)] ?? null;
+        }
+
+        if (Str::startsWith($parentSelector, 'id:')) {
+            return $this->normalizeLessonParentId($course, (int) substr($parentSelector, 3)) ?: null;
+        }
+
+        return $createdModules[$parentSelector] ?? null;
+    }
+
     private function generateCourseSlug(string $value, string $column, ?int $ignoreId = null): string
     {
         $baseSlug = Str::slug($value);
@@ -3831,6 +5395,470 @@ class TeacherDashboardController extends Controller
             ->latest('id');
     }
 
+    private function teacherOrderDetailsQuery(Teacher $teacher)
+    {
+        return OrderDetail::query()
+            ->with(['courses', 'order.status', 'order.students'])
+            ->whereHas('courses', function ($query) use ($teacher) {
+                $query->withoutGlobalScopes()->withTrashed()->where('teacher_id', $teacher->id);
+            })
+            ->latest('id');
+    }
+
+    private function resolvePaidOrderStatusId(): int
+    {
+        return (int) (OrderStatus::query()->where('is_success', true)->value('id') ?? 2);
+    }
+
+    private function resolveTeacherDashboardRange(string $range): array
+    {
+        $range = Str::lower(trim($range));
+        $end = now()->endOfDay();
+
+        return match ($range) {
+            'today' => [
+                'key' => 'today',
+                'start' => now()->startOfDay(),
+                'end' => $end,
+                'label' => 'Hôm nay',
+            ],
+            '7d' => [
+                'key' => '7d',
+                'start' => now()->subDays(6)->startOfDay(),
+                'end' => $end,
+                'label' => '7 ngày',
+            ],
+            '14d' => [
+                'key' => '14d',
+                'start' => now()->subDays(13)->startOfDay(),
+                'end' => $end,
+                'label' => '14 ngày',
+            ],
+            '30d', 'month' => [
+                'key' => 'month',
+                'start' => now()->subDays(29)->startOfDay(),
+                'end' => $end,
+                'label' => 'Tháng này',
+            ],
+            '90d', 'year' => [
+                'key' => 'year',
+                'start' => now()->subDays(364)->startOfDay(),
+                'end' => $end,
+                'label' => '90 ngày',
+            ],
+            default => [
+                'key' => 'today',
+                'start' => now()->startOfDay(),
+                'end' => $end,
+                'label' => '30 ngày',
+            ],
+        };
+    }
+
+    private function resolveTeacherDashboardRangeOptions(): array
+    {
+        return array_map(
+            fn (string $key) => $this->resolveTeacherDashboardRange($key),
+            ['today', '7d', '14d', 'month', 'year']
+        );
+    }
+
+    private function applyTeacherDashboardRangeToPaidQuery($query, array $range)
+    {
+        return $query->whereHas('order', function ($orderQuery) use ($range) {
+            $orderQuery->where(function ($dateQuery) use ($range) {
+                $dateQuery->whereBetween('payment_complete_date', [$range['start'], $range['end']])
+                    ->orWhere(function ($fallbackQuery) use ($range) {
+                        $fallbackQuery->whereNull('payment_complete_date')
+                            ->whereBetween('payment_date', [$range['start'], $range['end']]);
+                    })
+                    ->orWhere(function ($createdFallbackQuery) use ($range) {
+                        $createdFallbackQuery->whereNull('payment_complete_date')
+                            ->whereNull('payment_date')
+                            ->whereBetween('created_at', [$range['start'], $range['end']]);
+                    });
+            });
+        });
+    }
+
+    private function buildTeacherConversionSummary(Teacher $teacher, array $range): array
+    {
+        $paidStatusId = $this->resolvePaidOrderStatusId();
+        $allDetails = $this->teacherOrderDetailsQuery($teacher)->get();
+
+        $allOrders = $allDetails
+            ->pluck('order')
+            ->filter()
+            ->unique('id')
+            ->values();
+
+        $paidOrders = $allOrders
+            ->where('status_id', $paidStatusId)
+            ->values();
+
+        $monthOrders = $allOrders
+            ->filter(fn ($order) => optional($order->created_at)?->between($range['start'], $range['end']))
+            ->values();
+        $monthPaidOrders = $monthOrders
+            ->where('status_id', $paidStatusId)
+            ->values();
+
+        $paymentStartedOrders = $allOrders
+            ->filter(fn ($order) => !empty($order->payment_date) && optional($order->payment_date)?->between($range['start'], $range['end']))
+            ->values();
+        $paidCompletedOrders = $paidOrders
+            ->filter(fn ($order) => optional($order->payment_complete_date ?: $order->payment_date ?: $order->created_at)?->between($range['start'], $range['end']))
+            ->values();
+
+        $failedOrders = $allOrders
+            ->filter(function ($order) use ($paidStatusId) {
+                if ((int) $order->status_id === $paidStatusId) {
+                    return false;
+                }
+
+                $statusName = Str::lower((string) ($order->status?->name_locale ?: $order->status?->name ?: ''));
+
+                return Str::contains($statusName, ['thất bại', 'that bai', 'failed', 'cancel', 'hủy', 'huy']);
+            })
+            ->values();
+
+        $monthlyConversionRate = $monthOrders->count() > 0
+            ? round(($monthPaidOrders->count() * 100) / $monthOrders->count(), 1)
+            : 0.0;
+        $paymentConversionRate = $paymentStartedOrders->count() > 0
+            ? round(($paidCompletedOrders->count() * 100) / $paymentStartedOrders->count(), 1)
+            : 0.0;
+        $failedRate = $allOrders->count() > 0
+            ? round(($failedOrders->count() * 100) / $allOrders->count(), 1)
+            : 0.0;
+        $aov = $paidOrders->count() > 0
+            ? round((float) $paidOrders->sum('total') / $paidOrders->count())
+            : 0.0;
+
+        return [
+            'orders_total' => $allOrders->count(),
+            'orders_paid' => $paidOrders->count(),
+            'orders_this_month' => $monthOrders->count(),
+            'orders_paid_this_month' => $monthPaidOrders->count(),
+            'payment_started' => $paymentStartedOrders->count(),
+            'payment_completed' => $paidCompletedOrders->count(),
+            'failed_orders' => $failedOrders->count(),
+            'conversion_rate_created' => $monthlyConversionRate,
+            'conversion_rate_payment' => $paymentConversionRate,
+            'failed_rate' => $failedRate,
+            'average_order_value' => $aov,
+        ];
+    }
+
+    private function buildTeacherRevenueInsights(Teacher $teacher, float $effectiveCommissionRate, array $range): array
+    {
+        $paidDetails = TeacherFinanceCalculator::decorate(
+            $this->applyTeacherDashboardRangeToPaidQuery(
+                $this->paidOrderDetailsQuery($teacher),
+                $range
+            )->get(),
+            fn () => $effectiveCommissionRate
+        );
+
+        $daily = $paidDetails
+            ->groupBy(fn ($detail) => optional($detail->order?->payment_complete_date ?: $detail->order?->payment_date ?: $detail->created_at)?->format('Y-m-d'))
+            ->map(function ($rows, $date) {
+                return (object) [
+                    'date' => $date,
+                    'orders' => $rows->pluck('order_id')->filter()->unique()->count(),
+                    'courses' => $rows->pluck('course_id')->filter()->unique()->count(),
+                    'gross_amount' => (float) $rows->sum(fn ($item) => data_get($item, 'finance_breakdown.gross_amount', 0)),
+                    'teacher_revenue' => (float) $rows->sum(fn ($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+                ];
+            })
+            ->sortByDesc('date')
+            ->take(14)
+            ->values();
+
+        $monthly = $paidDetails
+            ->groupBy(fn ($detail) => optional($detail->order?->payment_complete_date ?: $detail->order?->payment_date ?: $detail->created_at)?->format('Y-m'))
+            ->map(function ($rows, $month) {
+                return (object) [
+                    'month' => $month,
+                    'orders' => $rows->pluck('order_id')->filter()->unique()->count(),
+                    'courses' => $rows->pluck('course_id')->filter()->unique()->count(),
+                    'gross_amount' => (float) $rows->sum(fn ($item) => data_get($item, 'finance_breakdown.gross_amount', 0)),
+                    'teacher_revenue' => (float) $rows->sum(fn ($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+                ];
+            })
+            ->sortByDesc('month')
+            ->take(6)
+            ->values();
+
+        $byCourse = $paidDetails
+            ->groupBy('course_id')
+            ->map(function ($rows) {
+                $first = $rows->first();
+
+                return (object) [
+                    'course_name' => $first?->courses?->name_locale ?: __('teacher::dashboard.common.unknown_course'),
+                    'orders' => $rows->pluck('order_id')->filter()->unique()->count(),
+                    'students' => $rows->pluck('order.student_id')->filter()->unique()->count(),
+                    'gross_amount' => (float) $rows->sum(fn ($item) => data_get($item, 'finance_breakdown.gross_amount', 0)),
+                    'teacher_revenue' => (float) $rows->sum(fn ($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+                ];
+            })
+            ->sortByDesc('teacher_revenue')
+            ->take(8)
+            ->values();
+
+        return [
+            'daily' => $daily,
+            'monthly' => $monthly,
+            'courses' => $byCourse,
+        ];
+    }
+
+    private function buildTeacherCoursePerformance(Teacher $teacher, float $effectiveCommissionRate, array $range): Collection
+    {
+        $courses = Courses::query()
+            ->withoutGlobalScope(ActiveScope::class)
+            ->where('teacher_id', $teacher->id)
+            ->get(['id', 'name', 'name_en', 'name_ko', 'name_ja', 'name_zh', 'view']);
+
+        $viewTrackingMap = CourseViewTracking::query()
+            ->selectRaw('course_id, COUNT(*) as tracked_views')
+            ->whereIn('course_id', $courses->pluck('id')->all())
+            ->whereBetween('view_date', [
+                $range['start']->toDateString(),
+                $range['end']->toDateString(),
+            ])
+            ->groupBy('course_id')
+            ->get()
+            ->keyBy('course_id');
+
+        $paidDetails = TeacherFinanceCalculator::decorate(
+            $this->applyTeacherDashboardRangeToPaidQuery(
+                $this->paidOrderDetailsQuery($teacher),
+                $range
+            )->get(),
+            fn () => $effectiveCommissionRate
+        );
+
+        $courseRevenueMap = $paidDetails
+            ->groupBy('course_id')
+            ->map(function ($rows) {
+                return [
+                    'orders' => $rows->pluck('order_id')->filter()->unique()->count(),
+                    'students' => $rows->pluck('order.student_id')->filter()->unique()->count(),
+                    'teacher_revenue' => (float) $rows->sum(fn ($item) => data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+                ];
+            });
+
+        return $courses
+            ->map(function ($course) use ($courseRevenueMap, $viewTrackingMap) {
+                $courseStats = $courseRevenueMap->get($course->id, [
+                    'orders' => 0,
+                    'students' => 0,
+                    'teacher_revenue' => 0.0,
+                ]);
+                $views = (int) ($viewTrackingMap->get($course->id)?->tracked_views ?? 0);
+                $orders = (int) ($courseStats['orders'] ?? 0);
+
+                return (object) [
+                    'course_name' => $course->name_locale ?: __('teacher::dashboard.common.unknown_course'),
+                    'views' => $views,
+                    'orders' => $orders,
+                    'students' => (int) ($courseStats['students'] ?? 0),
+                    'teacher_revenue' => (float) ($courseStats['teacher_revenue'] ?? 0),
+                    'conversion_rate' => $views > 0 ? round(($orders * 100) / $views, 2) : 0.0,
+                ];
+            })
+            ->sortByDesc(fn ($row) => [$row->teacher_revenue, $row->orders, $row->views])
+            ->take(8)
+            ->values();
+    }
+
+    private function buildTeacherOverviewDashboardPayload(
+        Teacher $teacher,
+        float $effectiveCommissionRate,
+        array $range,
+        array $stats,
+        array $conversionSummary,
+        array $revenueInsights,
+        Collection $coursePerformance
+    ): array {
+        return [
+            'range' => [
+                'key' => $range['key'],
+                'label' => $range['label'],
+                'start' => $range['start']->toDateString(),
+                'end' => $range['end']->toDateString(),
+            ],
+            'stats' => [
+                'courses' => number_format((int) ($stats['courses'] ?? 0)),
+                'active_courses' => number_format((int) ($stats['active_courses'] ?? 0)),
+                'students' => number_format((int) ($stats['students'] ?? 0)),
+                'available_balance' => money((float) ($stats['available_balance'] ?? 0), 'đ', '0 đ'),
+                'gross_revenue' => money((float) ($stats['gross_revenue'] ?? 0), 'đ', '0 đ'),
+                'allocated_discount' => money((float) ($stats['allocated_discount'] ?? 0), 'đ', '0 đ'),
+                'estimated_revenue' => money((float) ($stats['estimated_revenue'] ?? 0), 'đ', '0 đ'),
+                'platform_revenue' => money((float) ($stats['platform_revenue'] ?? 0), 'đ', '0 đ'),
+            ],
+            'conversion' => [
+                'created' => number_format((int) ($conversionSummary['orders_this_month'] ?? 0)),
+                'paid' => number_format((int) ($conversionSummary['orders_paid_this_month'] ?? 0)),
+                'rate' => number_format((float) ($conversionSummary['conversion_rate_created'] ?? 0), 1) . '%',
+                'failed' => number_format((int) ($conversionSummary['failed_orders'] ?? 0)),
+            ],
+            'revenue_rows' => $this->serializeTeacherRevenueDailyRows($revenueInsights['daily'] ?? collect(), 5),
+            'revenue_chart' => $this->serializeTeacherRevenueChart($revenueInsights['daily'] ?? collect(), 7, 'overview'),
+            'course_performance' => $this->serializeTeacherCoursePerformanceRows($coursePerformance),
+            'course_performance_empty' => __('teacher::dashboard.earnings.empty'),
+        ];
+    }
+
+    private function buildTeacherEarningsDashboardPayload(
+        Teacher $teacher,
+        float $effectiveCommissionRate,
+        array $range,
+        array $summary,
+        array $revenueInsights,
+        Collection $coursePerformance
+    ): array {
+        $latestItems = TeacherFinanceCalculator::decorate(
+            $this->applyTeacherDashboardRangeToPaidQuery(
+                $this->paidOrderDetailsQuery($teacher),
+                $range
+            )->take(12)->get(),
+            fn () => $effectiveCommissionRate
+        );
+
+        return [
+            'range' => [
+                'key' => $range['key'],
+                'label' => $range['label'],
+                'start' => $range['start']->toDateString(),
+                'end' => $range['end']->toDateString(),
+            ],
+            'summary' => [
+                'gross_revenue' => money((float) ($summary['gross_amount'] ?? 0), 'đ', '0 đ'),
+                'teacher_revenue' => money((float) ($summary['teacher_revenue'] ?? 0), 'đ', '0 đ'),
+            ],
+            'daily_rows' => $this->serializeTeacherRevenueDailyRows($revenueInsights['daily'] ?? collect()),
+            'monthly_rows' => $this->serializeTeacherRevenueMonthlyRows($revenueInsights['monthly'] ?? collect()),
+            'course_rows' => $this->serializeTeacherRevenueCourseRows($revenueInsights['courses'] ?? collect()),
+            'revenue_chart' => $this->serializeTeacherRevenueChart($revenueInsights['daily'] ?? collect(), 10, 'earnings'),
+            'course_performance' => $this->serializeTeacherCoursePerformanceCards($coursePerformance),
+            'items' => $this->serializeTeacherEarningItems($latestItems),
+            'empty' => __('teacher::dashboard.earnings.empty'),
+        ];
+    }
+
+    private function serializeTeacherRevenueDailyRows(Collection $rows, int $limit = 14): array
+    {
+        return $rows->take($limit)->map(function ($row) {
+            return [
+                'period' => Carbon::parse($row->date)->format('d/m/Y'),
+                'short_period' => Carbon::parse($row->date)->format('d/m'),
+                'orders' => number_format((int) $row->orders),
+                'gross' => money((float) $row->gross_amount, 'đ', '0 đ'),
+                'revenue' => money((float) $row->teacher_revenue, 'đ', '0 đ'),
+            ];
+        })->values()->all();
+    }
+
+    private function serializeTeacherRevenueMonthlyRows(Collection $rows): array
+    {
+        return $rows->map(function ($row) {
+            return [
+                'period' => Carbon::createFromFormat('Y-m', $row->month)->format('m/Y'),
+                'orders' => number_format((int) $row->orders),
+                'revenue' => money((float) $row->teacher_revenue, 'đ', '0 đ'),
+            ];
+        })->values()->all();
+    }
+
+    private function serializeTeacherRevenueCourseRows(Collection $rows): array
+    {
+        return $rows->map(function ($row) {
+            return [
+                'course_name' => $row->course_name,
+                'orders' => number_format((int) $row->orders),
+                'revenue' => money((float) $row->teacher_revenue, 'đ', '0 đ'),
+            ];
+        })->values()->all();
+    }
+
+    private function serializeTeacherRevenueChart(Collection $rows, int $limit, string $palette): array
+    {
+        $chartRows = $rows->take($limit)->reverse()->values();
+        $maxRevenue = max((float) ($chartRows->max('teacher_revenue') ?? 0), 1);
+        $palettes = [
+            'overview' => [
+                ['#60a5fa', '#2563eb'],
+                ['#38bdf8', '#0f766e'],
+                ['#f59e0b', '#ea580c'],
+            ],
+            'earnings' => [
+                ['#34d399', '#059669'],
+                ['#22c55e', '#15803d'],
+                ['#f59e0b', '#dc2626'],
+            ],
+        ];
+        $activePalette = $palettes[$palette] ?? $palettes['overview'];
+
+        return $chartRows->map(function ($row, $index) use ($maxRevenue, $activePalette) {
+            $colors = $activePalette[$index % count($activePalette)];
+
+            return [
+                'label' => Carbon::parse($row->date)->format('d/m'),
+                'value' => money((float) $row->teacher_revenue, 'đ', '0 đ'),
+                'height' => round(max((((float) $row->teacher_revenue) / $maxRevenue) * 100, 8), 2),
+                'start_color' => $colors[0],
+                'end_color' => $colors[1],
+            ];
+        })->values()->all();
+    }
+
+    private function serializeTeacherCoursePerformanceRows(Collection $rows): array
+    {
+        return $rows->map(function ($row) {
+            return [
+                'course_name' => $row->course_name,
+                'views' => number_format((int) $row->views),
+                'orders' => number_format((int) $row->orders),
+                'conversion_rate' => number_format((float) $row->conversion_rate, 2) . '%',
+                'revenue' => money((float) $row->teacher_revenue, 'đ', '0 đ'),
+            ];
+        })->values()->all();
+    }
+
+    private function serializeTeacherCoursePerformanceCards(Collection $rows): array
+    {
+        $items = $rows->take(6)->values();
+        $maxRevenue = max((float) ($items->max('teacher_revenue') ?? 0), 1);
+
+        return $items->map(function ($row) use ($maxRevenue) {
+            return [
+                'course_name' => $row->course_name,
+                'revenue' => money((float) $row->teacher_revenue, 'đ', '0 đ'),
+                'width' => round(max((((float) $row->teacher_revenue) / $maxRevenue) * 100, 4), 2),
+                'meta' => number_format((int) $row->views) . ' view • ' . number_format((int) $row->orders) . ' đơn • ' . number_format((float) $row->conversion_rate, 2) . '%',
+            ];
+        })->values()->all();
+    }
+
+    private function serializeTeacherEarningItems(Collection $items): array
+    {
+        return $items->map(function ($item) {
+            return [
+                'order_code' => '#' . ($item->order?->code ?: '-'),
+                'course_name' => $item->courses?->name_locale ?: '-',
+                'student_name' => $item->order?->students?->name ?: '-',
+                'gross' => money((float) data_get($item, 'finance_breakdown.gross_amount', 0), 'đ', '0 đ'),
+                'discount' => '-' . money((float) data_get($item, 'finance_breakdown.allocated_discount', 0), 'đ', '0 đ'),
+                'net' => money((float) data_get($item, 'finance_breakdown.net_revenue', 0), 'đ', '0 đ'),
+                'revenue' => money((float) data_get($item, 'finance_breakdown.teacher_revenue', 0), 'đ', '0 đ'),
+            ];
+        })->values()->all();
+    }
+
     private function buildTeacherOrderDirectory(Teacher $teacher, Request $request): array
     {
         $search = trim((string) $request->query('q', ''));
@@ -3947,8 +5975,8 @@ class TeacherDashboardController extends Controller
     private function normalizeStudentTagLabel(?string $tag): string
     {
         return match ($tag) {
-            'potential' => 'Tiềm năng',
-            'support_needed' => 'Cần hỗ trợ',
+            'potential' => 'Tiá»m nÄƒng',
+            'support_needed' => 'Cáº§n há»— trá»£',
             'vip' => 'VIP',
             default => '',
         };
@@ -4085,5 +6113,6 @@ class TeacherDashboardController extends Controller
         return $redirect;
     }
 }
+
 
 

@@ -7,9 +7,11 @@ use App\Models\Scopes\ActiveScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Iman\Streamer\VideoStreamer;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
+use Modules\Courses\src\Models\CourseViewTracking;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
@@ -133,12 +135,7 @@ class CoursesController extends Controller
             );
         }
 
-        $cacheKey = 'course_view_' . $course->id . '_' . request()->ip();
-
-        if (!Cache::has($cacheKey)) {
-            $course->increment('view');
-            Cache::put($cacheKey, true, now()->addMinutes(30));
-        }
+        $this->trackCourseView($course, $student?->id);
 
         $pageTitle = $course->name_locale;
         $pageName = $course->name_locale;
@@ -511,5 +508,45 @@ class CoursesController extends Controller
         }
 
         return $allocated;
+    }
+
+    private function trackCourseView(Courses $course, ?int $studentId = null): void
+    {
+        $visitorHash = $this->resolveCourseVisitorHash($course->id, $studentId);
+        $cacheKey = 'course_view_tracking_' . $course->id . '_' . $visitorHash;
+
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
+        $tracking = CourseViewTracking::query()->firstOrCreate(
+            [
+                'course_id' => $course->id,
+                'view_date' => now()->toDateString(),
+                'visitor_hash' => $visitorHash,
+            ],
+            [
+                'student_id' => $studentId,
+                'viewed_at' => now(),
+            ]
+        );
+
+        if ($tracking->wasRecentlyCreated) {
+            $course->increment('view');
+        }
+
+        Cache::put($cacheKey, true, now()->addMinutes(30));
+    }
+
+    private function resolveCourseVisitorHash(int $courseId, ?int $studentId = null): string
+    {
+        if ($studentId) {
+            return hash('sha256', 'student:' . $studentId . ':course:' . $courseId);
+        }
+
+        $ipAddress = (string) request()->ip();
+        $userAgent = (string) request()->userAgent();
+
+        return hash('sha256', 'guest:' . $courseId . ':' . $ipAddress . ':' . Str::limit($userAgent, 180, ''));
     }
 }
