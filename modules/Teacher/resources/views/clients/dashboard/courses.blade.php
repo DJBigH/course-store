@@ -252,6 +252,11 @@
                                 <a href="{{ route('teacher.dashboard.lessons.index', $course->id) }}" class="btn btn-primary">
                                     {{ __('teacher::dashboard.courses.actions.lessons') }}
                                 </a>
+                                @if ($teacher->packageHasFeature('can_manage_quizzes'))
+                                    <a href="{{ route('teacher.dashboard.quizzes.index', $course->id) }}" class="btn btn-outline-info">
+                                        🧩 Quiz
+                                    </a>
+                                @endif
                                 <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-outline-secondary">
                                     {{ __('teacher::dashboard.courses.actions.edit') }}
                                 </a>

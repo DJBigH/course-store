@@ -332,25 +332,34 @@ if (!function_exists('videoEmbedUrl')) {
         $host = strtolower((string) parse_url($url, PHP_URL_HOST));
         $path = (string) parse_url($url, PHP_URL_PATH);
 
-        if (str_contains($host, 'youtu.be')) {
-            $id = trim($path, '/');
-            return $id ? "https://www.youtube.com/embed/{$id}" : null;
-        }
+        // Youtube
+        if (str_contains($host, 'youtube.com') || str_contains($host, 'youtu.be')) {
+            $id = null;
 
-        if (str_contains($host, 'youtube.com') && str_contains($path, '/embed/')) {
-            $id = trim(str_replace('/embed/', '', $path), '/');
-            return $id ? "https://www.youtube.com/embed/{$id}" : null;
-        }
+            if (str_contains($host, 'youtu.be')) {
+                $id = trim($path, '/');
+            } elseif (str_contains($path, '/embed/')) {
+                $id = trim(str_replace('/embed/', '', $path), '/');
+            } elseif (str_contains($path, '/shorts/')) {
+                $id = trim(str_replace('/shorts/', '', $path), '/');
+            } elseif (str_contains($path, '/v/')) {
+                $id = trim(str_replace('/v/', '', $path), '/');
+            } elseif (str_contains($path, '/watch')) {
+                $query = (string) parse_url($url, PHP_URL_QUERY);
+                parse_str($query, $params);
+                $id = $params['v'] ?? null;
+            } else {
+                // Trường hợp m.youtube.com hoặc các link khác không có /watch
+                $query = (string) parse_url($url, PHP_URL_QUERY);
+                parse_str($query, $params);
+                $id = $params['v'] ?? null;
+            }
 
-        if (str_contains($host, 'youtube.com') && str_contains($path, '/shorts/')) {
-            $id = trim(str_replace('/shorts/', '', $path), '/');
-            return $id ? "https://www.youtube.com/embed/{$id}" : null;
-        }
+            // Clean up ID if there are extra segments
+            if ($id && str_contains($id, '/')) {
+                $id = explode('/', $id)[0];
+            }
 
-        if (str_contains($host, 'youtube.com')) {
-            $query = (string) parse_url($url, PHP_URL_QUERY);
-            parse_str($query, $params);
-            $id = $params['v'] ?? null;
             return $id ? "https://www.youtube.com/embed/{$id}" : null;
         }
 

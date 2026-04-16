@@ -559,14 +559,21 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Sắp xếp lại nội dung trong dashboard của teacher ( Done )
 - Huy hiệu verified/premium teacher ( Done )
 - Đối với cái khuyễn mãi thì làm nó như 1 cái email kiểu viết tạo đúng input tiêu đề, nội dung (ckeditor đúng light mode/dark mode), có j kèm có button không và dùng đúng giao diện chung của email web ( Done )
-- Với những cái notification mà kiểu email thì sẽ xử lý như nào cho nó hiện cái noti ra à hay là cho hiện noti bấm vào thì sẽ có phần đọc noti đó như email tôi đang không biết xử lý cái notification và tôi thêm cho tôi cái 2 checkbox dành cho email và thông báo tại web
-- Thêm cái preview dành cho bài học ( Xem được video trước và chỉ cần bấm vào thì hiện modal giống phần học thử bên client xem video có hoạt dộng ổn không )
-- Fix 1 số bug liên quan đến limit trong gói
-- Yêu cầu rút tiền tôi muốn là cái thêm ngân hàng tách ra riêng và chỉ khi chọn được ngân hàng thì mới nhập được giá tiền và ghi chú và validate (đối với số tiền min là 5k)
+- Thêm chức năng giao bài quiz ( Done )
+- Thêm chức năng tạo câu hỏi = AI ( Done )
+- Với những cái notification mà kiểu email thì sẽ xử lý như nào cho nó hiện cái noti ra à hay là cho hiện noti bấm vào thì sẽ có phần đọc noti đó như email tôi đang không biết xử lý cái notification và tôi thêm cho tôi cái 2 checkbox dành cho email và thông báo tại web ( Done )
+- Thêm cái preview dành cho bài học ( Xem được video trước và chỉ cần bấm vào thì hiện modal giống phần học thử như bên client xem video có hoạt dộng ổn không ) ( Done )
+- Fix 1 số bug liên quan đến tất cả các limit trong gói ( Done )
+- Với AI quiz thêm quyền vào trong admin ( Done )
+- Yêu cầu rút tiền tôi muốn là cái thêm ngân hàng tách ra riêng và chỉ khi chọn được ngân hàng thì mới nhập được giá tiền và ghi chú và validate (đối với số tiền min là 5k) ( Done )
 - Thêm chức năng hủy hợp tác ( Đẩy lên admin + lý do và khi hủy thì tất cả bài giảng ẩn đi chỉ có học viên nào đã mua thì vẫn còn sử dụng và bị đẩy khỏi màn giáo viên gửi mail cảm ơn đã hợp tác tài khoản hạ cấp xuống học viên)
 - Gộp tất cả các import/execport vào 1 quyền ở trong gói
 - Cái 2FA của giáo viên và học viên là giống nhau đúng ko ( Cùng 1 logic nên suy nghĩ có cần thay đổi cái 2FA bật/tắt không)
 - Check lại tất cả đa ngôn ngữ của màn teacher ( Đặc biệt là vi phải có dấu)
+- Cái quiz check tương lai xem nó có nên làm cái quiz tự do cho nhiêu người vào làm không
 Tổng kết
 - Tìm tất cả file .bak
 - check lại lần cuối trước khi đẩy lên production
+
+
+

@@ -6,6 +6,7 @@ use Modules\Teacher\src\Http\Controllers\Admin\TeacherApplicationController as A
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherAnnouncementController as AdminTeacherAnnouncementController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherFinanceController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherPackageController as AdminTeacherPackageController;
+use Modules\Teacher\src\Http\Controllers\Clients\StudentQuizController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherApplicationController as ClientTeacherApplicationController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherAffiliateLinkController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherAuthController;
@@ -15,6 +16,7 @@ use Modules\Teacher\src\Http\Controllers\Clients\TeacherDashboardController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherLandingController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherPublicController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherProfileController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherQuizController;
 
 Route::prefix('admin')->group(function () {
    Route::prefix('teacher')->name('teacher.')->group(function () {
@@ -186,6 +188,22 @@ Route::group([
    Route::post('/khoa-hoc/{course}/khoi-phuc', [TeacherDashboardController::class, 'restoreCourse'])->name('courses.restore');
    Route::delete('/khoa-hoc/{course}/xoa-vinh-vien', [TeacherDashboardController::class, 'forceDeleteCourse'])->name('courses.force-delete');
    Route::get('/khoa-hoc/{course}/bai-hoc', [TeacherDashboardController::class, 'lessons'])->name('lessons.index');
+   Route::get('/khoa-hoc/{course}/bai-hoc/{lesson}/preview-data', [TeacherDashboardController::class, 'getLessonPreviewData'])->name('lessons.preview_data');
+   Route::get('/khoa-hoc/{course}/quiz', [TeacherQuizController::class, 'index'])->name('quizzes.index');
+   Route::post('/khoa-hoc/{course}/quiz', [TeacherQuizController::class, 'store'])->name('quizzes.store');
+   Route::get('/khoa-hoc/{course}/quiz/{quiz}/edit', [TeacherQuizController::class, 'edit'])->name('quizzes.edit');
+   Route::post('/khoa-hoc/{course}/quiz/{quiz}/assign', [TeacherQuizController::class, 'assign'])->name('quizzes.assign');
+   Route::get('/khoa-hoc/{course}/quiz/{quiz}/results', [TeacherQuizController::class, 'results'])->name('quizzes.results');
+   Route::get('/khoa-hoc/{course}/quiz/{quiz}/results/export', [TeacherQuizController::class, 'exportResults'])->name('quizzes.results.export');
+   Route::post('/khoa-hoc/{course}/quiz/{quiz}', [TeacherQuizController::class, 'update'])->name('quizzes.update');
+   Route::delete('/khoa-hoc/{course}/quiz/{quiz}', [TeacherQuizController::class, 'destroy'])->name('quizzes.destroy');
+   Route::post('/khoa-hoc/{course}/quiz/{quiz}/cau-hoi', [TeacherQuizController::class, 'storeQuestion'])->name('quizzes.question.store');
+   Route::post('/khoa-hoc/{course}/quiz/{quiz}/cau-hoi/{question}', [TeacherQuizController::class, 'updateQuestion'])->name('quizzes.question.update');
+   Route::delete('/khoa-hoc/{course}/quiz/{quiz}/cau-hoi/{question}', [TeacherQuizController::class, 'deleteQuestion'])->name('quizzes.question.delete');
+   Route::post('/khoa-hoc/{course}/quiz/{quiz}/ai-generate', [TeacherQuizController::class, 'generateAiQuestions'])->name('quizzes.ai.generate');
+   Route::get('/khoa-hoc/{course}/quiz/{quiz}/import/template', [TeacherQuizController::class, 'importTemplate'])->name('quizzes.import.template');
+   Route::post('/khoa-hoc/{course}/quiz/{quiz}/import', [TeacherQuizController::class, 'importQuestions'])->name('quizzes.import');
+   Route::get('/khoa-hoc/{course}/quiz/{quiz}/export', [TeacherQuizController::class, 'exportQuestions'])->name('quizzes.export');
    Route::get('/khoa-hoc/{course}/bai-hoc/thung-rac', [TeacherDashboardController::class, 'lessonsTrash'])->name('lessons.trash');
    Route::get('/khoa-hoc/{course}/bai-hoc/export/{format?}', [TeacherDashboardController::class, 'exportLessons'])->name('lessons.export');
    Route::get('/khoa-hoc/{course}/bai-hoc/import/template', [TeacherDashboardController::class, 'downloadLessonImportTemplate'])->name('lessons.import.template');
@@ -204,7 +222,21 @@ Route::group([
    Route::get('/doanh-thu', [TeacherDashboardController::class, 'earnings'])->name('earnings');
    Route::get('/rut-tien', [TeacherDashboardController::class, 'payouts'])->name('payouts');
    Route::post('/rut-tien', [TeacherDashboardController::class, 'storePayout'])->name('payouts.store');
+   Route::post('/rut-tien/tai-khoan', [TeacherDashboardController::class, 'storePayoutAccount'])->name('payouts.account.store');
    Route::post('/rut-tien/yeu-cau-doi-tai-khoan', [TeacherDashboardController::class, 'storePayoutAccountChangeRequest'])->name('payouts.account-change.store');
    Route::get('/gop-y-bao-cao', [TeacherDashboardController::class, 'support'])->name('support');
    Route::post('/gop-y-bao-cao', [TeacherDashboardController::class, 'storeSupport'])->name('support.store');
+});
+
+// ─── Routes làm bài quiz dành cho học viên ──────────────────────────────────
+// Prefix /teacher/quiz/... nhưng dùng middleware học viên, KHÔNG yêu cầu teacher.active
+Route::group([
+    'prefix'     => 'teacher',
+    'as'         => 'teacher.dashboard.',
+    'middleware' => ['setLocale', 'auth:students', 'user.block'],
+], function () {
+    Route::get('/lam-bai/{course}/{quiz}', [StudentQuizController::class, 'show'])->name('quizzes.show');
+    Route::post('/lam-bai/{course}/{quiz}/bat-dau', [StudentQuizController::class, 'start'])->name('quizzes.start');
+    Route::post('/lam-bai/{course}/{quiz}/nop-bai', [StudentQuizController::class, 'submit'])->name('quizzes.submit');
+    Route::get('/lam-bai/{course}/{quiz}/ket-qua/{submission}', [StudentQuizController::class, 'result'])->name('quizzes.result');
 });

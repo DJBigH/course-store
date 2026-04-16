@@ -20,12 +20,14 @@ class TeacherPromotionRequest extends FormRequest
             'course_id' => ['nullable', 'integer', 'min:1'],
             'recent_purchase_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
             'inactive_learning_days' => ['nullable', 'integer', 'min:1', 'max:3650'],
-            'promotion_template' => ['nullable', 'string', 'in:custom,flash_sale,reactivation,new_course'],
+            'promotion_template' => ['nullable', 'string', 'max:50'],
             'title' => ['required', 'string', 'max:160'],
-            'message_html' => ['required', 'string', 'max:20000'],
+            'message_html' => ['required', 'string', 'max:100000'],
             'cta_enabled' => ['nullable', 'boolean'],
-            'cta_label' => ['nullable', 'required_if:cta_enabled,1', 'string', 'max:80'],
-            'cta_url' => ['nullable', 'required_if:cta_enabled,1', 'url', 'max:1000'],
+            'cta_label' => ['nullable', 'required_with:cta_enabled', 'string', 'max:80'],
+            'cta_url' => ['nullable', 'required_with:cta_enabled', 'url', 'max:1000'],
+            'send_via_web' => ['nullable', 'boolean'],
+            'send_via_email' => ['nullable', 'boolean'],
         ];
     }
 

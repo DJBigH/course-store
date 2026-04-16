@@ -288,11 +288,40 @@
                             </div>
                         </div>
 
+                        <div class="teacher-promotions-channel-card mb-4" style="padding: 1rem; border-radius: 18px; background: rgba(12, 19, 34, 0.72); border: 1px solid rgba(96, 165, 250, 0.12);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                <div>
+                                    <h5 style="margin-bottom: 0.3rem; color: #f8fbff;">Kênh gửi thông báo</h5>
+                                    <p class="mb-0" style="color: #94a3b8; font-size:0.9rem;">Chọn kênh bạn muốn truyền tải thông điệp này đến Học viên.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-4 mt-3">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" name="send_via_web" id="send_via_web" value="1" checked required onchange="validateChannels()">
+                                    <label class="form-check-label text-light fw-semibold" for="send_via_web">Gửi Web Notification</label>
+                                </div>
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" name="send_via_email" id="send_via_email" value="1" checked onchange="validateChannels()">
+                                    <label class="form-check-label text-light fw-semibold" for="send_via_email">Gửi Email trực tiếp</label>
+                                </div>
+                            </div>
+                            <script>
+                                function validateChannels() {
+                                    const web = document.getElementById('send_via_web');
+                                    const email = document.getElementById('send_via_email');
+                                    if(!web.checked && !email.checked) {
+                                        web.setCustomValidity('Bạn phải chọn ít nhất 1 kênh nhận thông báo');
+                                    } else {
+                                        web.setCustomValidity('');
+                                    }
+                                }
+                            </script>
+                        </div>
+
                         <div class="teacher-promotions-form__footer">
                             <div class="teacher-promotions-form__hint">
                                 Sẽ gửi tới khoảng <strong data-promo-live-count>{{ $recipientPreviewCount }}</strong> người
                                 theo lựa chọn hiện tại.
-                                {{-- <span>Email thật sẽ được đưa vào queue và notification vẫn được gửi như cũ.</span> --}}
                             </div>
                             <div class="teacher-promotions-actions">
                                 <button type="submit" class="btn btn-outline-light"

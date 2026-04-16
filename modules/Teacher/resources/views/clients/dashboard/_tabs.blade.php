@@ -11,6 +11,26 @@
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.earnings') ? 'active' : '' }}">
         {{ __('teacher::dashboard.nav.earnings') }}
     </a>
+    @php($quizLocked = !(($teacher ?? null)?->packageHasFeature('can_manage_quizzes')))
+    @if (!$quizLocked)
+        <a href="{{ route('teacher.dashboard.courses') }}"
+            class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.quizzes*') ? 'active' : '' }}"
+            title="Chọn khóa học để quản lý quiz">
+            🧩 Quiz
+        </a>
+    @else
+        @include('teacher::clients.dashboard.partials.package_feature_notice', [
+            'title' => 'Gói hiện tại chưa có quyền quản lý quiz',
+            'message' => 'Nâng cấp gói để mở quyền tạo, sửa, giao và xem kết quả quiz cho học viên.',
+            'upgradeUrl' => route('teacher.dashboard.package.upgrade'),
+            'showUpgrade' => true,
+        ])
+        <a href="{{ route('teacher.dashboard.package.upgrade') }}"
+            class="teacher-dashboard-tab teacher-dashboard-tab--locked"
+            title="Nâng cấp để mở quyền quản lý quiz">
+            🧩 Quiz <span class="teacher-dashboard-tab__lock">Khoá</span>
+        </a>
+    @endif
     @if (($teacher ?? null)?->packageHasFeature('can_send_promotions'))
         <a href="{{ route('teacher.dashboard.promotions') }}"
             class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.promotions') ? 'active' : '' }}">
@@ -55,5 +75,23 @@
         background: var(--admin-primary);
         color: #fff;
         transform: translateY(-1px);
+    }
+
+    .teacher-dashboard-tab--locked {
+        opacity: 0.72;
+        border: 1px dashed rgba(148, 163, 184, 0.55);
+        background: rgba(148, 163, 184, 0.08);
+    }
+
+    .teacher-dashboard-tab__lock {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.18rem 0.45rem;
+        margin-left: 0.45rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #fff;
+        background: #f59e0b;
     }
 </style>

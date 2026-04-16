@@ -769,6 +769,7 @@ return [
     'package_features' => [
         'feature_locked' => 'Your current instructor package does not include this feature. Please upgrade your package to continue.',
         'upsell_title' => 'Unlock more package features',
+        'upsell_submessage' => 'After upgrading, you will get the full quiz management toolkit in the teacher dashboard.',
         'upgrade_badge' => 'Upgrade',
         'upgrade_cta' => 'Upgrade package',
         'compare_title' => 'Compare package features',
@@ -823,6 +824,7 @@ return [
             'can_manage_students' => 'Unlock the student management area, keep private notes, and review student-related action history.',
             'can_view_student_progress' => 'Allow teachers to view learning percentages, completed lessons, and latest learning milestones inside student management.',
             'can_view_activity_logs' => 'Unlock the combined instructor activity log for student, course, and coupon actions.',
+            'can_manage_quizzes' => 'Unlock quiz creation, editing, assignment, and result tracking for learners.',
             'can_grant_courses' => 'Manually grant course access to a learner without requiring a paid order.',
             'can_export_orders' => 'Export Excel or CSV files using the current order filters.',
             'can_export_students' => 'Export Excel or CSV files using the current learner filters.',

@@ -130,6 +130,7 @@
             'can_manage_students' => __('teacher::dashboard.package_features.labels.can_manage_students'),
             'can_view_student_progress' => __('teacher::dashboard.package_features.labels.can_view_student_progress'),
             'can_view_activity_logs' => __('teacher::dashboard.package_features.labels.can_view_activity_logs'),
+            'can_manage_quizzes' => __('teacher::dashboard.package_features.labels.can_manage_quizzes'),
             'can_grant_courses' => __('teacher::dashboard.package_features.labels.can_grant_courses'),
             'can_export_orders' => __('teacher::dashboard.package_features.labels.can_export_orders'),
             'can_export_students' => __('teacher::dashboard.package_features.labels.can_export_students'),

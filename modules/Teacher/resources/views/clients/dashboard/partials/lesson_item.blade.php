@@ -39,9 +39,26 @@
     @endif
 
     <div class="d-flex flex-wrap gap-2">
-        <a href="{{ route('teacher.dashboard.lessons.edit', [$course->id, $lesson->id]) }}" class="btn btn-sm btn-outline-primary">
-            {{ __('teacher::dashboard.lessons.actions.edit') }}
+        <a href="{{ route('teacher.dashboard.lessons.edit', [$course->id, $lesson->id]) }}" class="btn btn-sm btn-outline-primary" title="{{ __('teacher::dashboard.lessons.actions.edit') }}">
+            <i class="fa-solid fa-pen-to-square"></i>
         </a>
+        @if ($lesson->parent_id && $lesson->video)
+            <button type="button" class="btn btn-sm btn-outline-info js-lesson-preview-btn" 
+                data-id="{{ $lesson->id }}" 
+                data-url="{{ route('teacher.dashboard.lessons.preview_data', [$course->id, $lesson->id]) }}"
+                title="Xem trước video">
+                <i class="fa-solid fa-play"></i>
+            </button>
+        @endif
+        @if ($lesson->parent_id && isset($teacher) && $teacher?->packageHasFeature('can_manage_quizzes'))
+            <a href="{{ route('teacher.dashboard.quizzes.index', $course->id) }}" class="btn btn-sm btn-outline-success">
+                Tạo quiz
+            </a>
+        @elseif ($lesson->parent_id)
+            <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-outline-warning" title="Nâng cấp để mở quyền quản lý quiz">
+                Tạo quiz <span class="ms-1 badge bg-warning text-dark">Khóa</span>
+            </a>
+        @endif
         @if (!$lesson->parent_id)
             <a href="{{ route('teacher.dashboard.lessons.create', [$course->id, 'module' => $lesson->id]) }}" class="btn btn-sm btn-outline-secondary">
                 {{ __('teacher::dashboard.lessons.actions.add_child') }}

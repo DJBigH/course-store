@@ -306,6 +306,8 @@ class TeacherDashboardController extends Controller
         $ctaEnabled = $request->boolean('cta_enabled');
         $ctaLabel = $ctaEnabled ? trim((string) ($data['cta_label'] ?? '')) : '';
         $ctaUrl = $ctaEnabled ? trim((string) ($data['cta_url'] ?? '')) : '';
+        $sendViaWeb = $request->boolean('send_via_web', true);
+        $sendViaEmail = $request->boolean('send_via_email', true);
         $selectedCourse = null;
 
         if ($courseId) {
@@ -341,6 +343,8 @@ class TeacherDashboardController extends Controller
                     'cta_enabled' => $ctaEnabled ? 1 : null,
                     'cta_label' => $ctaLabel !== '' ? $ctaLabel : null,
                     'cta_url' => $ctaUrl !== '' ? $ctaUrl : null,
+                    'send_via_web' => $sendViaWeb,
+                    'send_via_email' => $sendViaEmail,
                 ], fn ($value) => $value !== null && $value !== ''),
             ]);
         });
@@ -349,18 +353,20 @@ class TeacherDashboardController extends Controller
 
         Student::query()
             ->whereIn('id', $recipientIds)
-            ->chunkById(100, function ($students) use ($notificationPayload, $teacher, $promotion, $selectedCourse) {
+            ->chunkById(100, function ($students) use ($notificationPayload, $teacher, $promotion, $selectedCourse, $sendViaWeb, $sendViaEmail) {
                 foreach ($students as $student) {
-                    $student->notify(new StudentNotification($notificationPayload));
+                    if ($sendViaWeb) {
+                        $student->notify(new StudentNotification($notificationPayload));
+                    }
 
-                    if (!empty($student->email)) {
+                    if ($sendViaEmail && !empty($student->email)) {
                         $locale = method_exists($student, 'preferredLocale')
                             ? (string) $student->preferredLocale()
                             : (string) app()->getLocale();
 
                         Mail::to($student->email)
                             ->locale($locale)
-                            ->queue(new TeacherPromotionMail($teacher, $promotion, $student, $locale, $selectedCourse));
+                            ->queue(TeacherPromotionMail::fromModels($teacher, $promotion, $student, $locale, $selectedCourse));
                     }
                 }
             });
@@ -438,7 +444,7 @@ class TeacherDashboardController extends Controller
 
         Mail::to($student->email)
             ->locale($locale)
-            ->queue(new TeacherPromotionMail($teacher, $promotion, $student, $locale, $selectedCourse));
+            ->queue(TeacherPromotionMail::fromModels($teacher, $promotion, $student, $locale, $selectedCourse));
 
         return back()
             ->withInput()
@@ -807,12 +813,10 @@ class TeacherDashboardController extends Controller
         $categories = $this->getCourseCategories();
         $usage = $this->resolvePublishedCourseUsage($teacher);
 
-        if (!($usage['can_create'] ?? true)) {
+        if (!($usage['can_create_draft'] ?? true)) {
             return redirect()
                 ->route('teacher.dashboard.courses')
-                ->with('msg_danger', __('teacher::dashboard.courses.flash.publish_limit_reached', [
-                    'limit' => $this->resolveCourseLimit($teacher),
-                ]));
+                ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
         }
 
         return view('teacher::clients.dashboard.create_course', [
@@ -836,15 +840,20 @@ class TeacherDashboardController extends Controller
         }
 
         $usage = $this->resolvePublishedCourseUsage($teacher);
-        if (!($usage['can_create'] ?? true)) {
+        if (!($usage['can_create_draft'] ?? true)) {
             return redirect()
                 ->route('teacher.dashboard.courses')
-                ->with('msg_danger', __('teacher::dashboard.courses.flash.publish_limit_reached', [
-                    'limit' => $this->resolveCourseLimit($teacher),
-                ]));
+                ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
         }
 
         $data = $request->validated();
+        
+        // Force draft if trying to publish but over limit
+        if ((int) $data['status'] === 1 && !($usage['can_create'] ?? true)) {
+            $data['status'] = 0;
+            $limitMessage = __('teacher::dashboard.courses.flash.created_as_draft_due_limit', ['limit' => $usage['limit'] ?? 0]);
+        }
+
         $course = Courses::query()->create($this->buildCoursePayload($data, $teacher));
         $this->syncCourseCategories($course, $data['categories'] ?? []);
         $this->logTeacherCourseActivity(
@@ -862,11 +871,7 @@ class TeacherDashboardController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.courses')
-            ->with('msg_success', __(
-                ((int) $data['status'] === 1 && (int) $course->status !== 1)
-                    ? 'teacher::dashboard.courses.flash.created_as_draft_due_limit'
-                    : 'teacher::dashboard.courses.flash.created'
-            ));
+            ->with('msg_success', $limitMessage ?? __('teacher::dashboard.courses.flash.created'));
     }
 
     public function editCourse(int $courseId)
@@ -941,15 +946,16 @@ class TeacherDashboardController extends Controller
             return $this->redirectToStatus();
         }
 
-        if ($featureRedirect = $this->ensurePackageFeatureAllowed($teacher, 'can_duplicate_courses', 'teacher.dashboard.courses')) {
-            return $featureRedirect;
+        $usage = $this->resolvePublishedCourseUsage($teacher);
+        if (!($usage['can_create_draft'] ?? true)) {
+            return back()->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
         if ($lockedRedirect = $this->ensureCourseManageable($course)) {
             return $lockedRedirect;
         }
-        $newCourse = $this->performCourseDuplicate($course);
+        $newCourse = $this->performCourseDuplicate($course, $teacher);
         $this->logTeacherCourseActivity(
             $teacher,
             $course,
@@ -1391,7 +1397,7 @@ class TeacherDashboardController extends Controller
                 $course,
                 $lesson,
                 'import_lesson',
-                'Import bÃ i há»c tá»« CSV',
+                'Import bÃ i há» c tá»« CSV',
                 [
                     'import_type' => $row['type'],
                     'import_line' => $row['line'],
@@ -1665,6 +1671,40 @@ class TeacherDashboardController extends Controller
         return redirect()
             ->route('teacher.dashboard.lessons.index', $course->id)
             ->with('msg_success', __('teacher::dashboard.lessons.flash.deleted'));
+    }
+
+    public function getLessonPreviewData(int $courseId, int $lessonId)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $course = $this->resolveOwnedCourse($teacher, $courseId);
+        if (!$course) {
+            return response()->json(['success' => false, 'message' => 'Course not found'], 404);
+        }
+
+        $lesson = $this->resolveOwnedLesson($course, $lessonId);
+        if (!$lesson) {
+            return response()->json(['success' => false, 'message' => 'Lesson not found'], 404);
+        }
+
+        if (!$lesson->video) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bài học này không có video để xem trước.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $lesson->id,
+                'name' => $lesson->name_locale,
+                'video' => videoPlaybackMeta($lesson->video->url, app()->getLocale()),
+            ],
+        ]);
     }
 
     public function restoreLesson(int $courseId, int $lessonId)
@@ -2596,7 +2636,7 @@ class TeacherDashboardController extends Controller
         }
 
         $data = $request->validate([
-            'amount' => ['required', 'numeric', 'min:10000'],
+            'amount' => ['required', 'numeric', 'min:5000'],
             'account_mode' => ['required', 'in:saved,new'],
             'payout_account_id' => ['nullable', 'integer'],
             'bank_name' => ['nullable', 'string', 'max:100'],
@@ -2634,6 +2674,45 @@ class TeacherDashboardController extends Controller
 
         return redirect()->route('teacher.dashboard.payouts')
             ->with('msg_success', __('teacher::dashboard.payouts.flash.request_sent'));
+    }
+
+    public function storePayoutAccount(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            return $this->redirectToStatus();
+        }
+
+        $data = $request->validate([
+            'bank_name' => ['required', 'string', 'max:100'],
+            'bank_account_name' => ['required', 'string', 'max:120'],
+            'bank_account_number' => ['required', 'string', 'max:50'],
+        ]);
+
+        $bankData = $this->sanitizeBankData($data);
+        $accounts = $teacher->payoutAccounts()->orderBy('id')->get();
+
+        if ($this->findMatchingPayoutAccount($accounts, $bankData)) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.account_already_saved'));
+        }
+
+        $accountLimit = $this->resolvePayoutAccountLimit($teacher);
+        if ($accounts->count() >= $accountLimit) {
+            return back()
+                ->withInput()
+                ->with('msg_danger', __('teacher::dashboard.payouts.flash.limit_reached_use_change_request', [
+                    'limit' => $accountLimit,
+                ]));
+        }
+
+        TeacherPayoutAccount::query()->create(array_merge($bankData, [
+            'teacher_id' => $teacher->id,
+        ]));
+
+        return redirect()->route('teacher.dashboard.payouts')
+            ->with('msg_success', __('teacher::dashboard.payouts.flash.account_saved_success'));
     }
 
     public function storeSupport(Request $request)
@@ -2931,7 +3010,8 @@ class TeacherDashboardController extends Controller
         $ctaEnabled = !empty($promotion->filters['cta_enabled']);
         $ctaLabel = $promotion->filters['cta_label'] ?? null;
         $ctaUrl = $promotion->filters['cta_url'] ?? null;
-        $url = $ctaEnabled && $ctaUrl ? $ctaUrl : $this->resolveTeacherPromotionCourseUrl($teacher, $course, app()->getLocale());
+        // Inbox Routing instead of direct route
+        $url = route('students.promotions.show', ['promotion' => $promotion->id, 'locale' => app()->getLocale()]);
 
         return [
             'type' => 'teacher.promotion',

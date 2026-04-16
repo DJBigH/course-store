@@ -1,6 +1,7 @@
 @php
     $noticeTitle = $title ?? __('teacher::dashboard.package_features.upsell_title');
     $noticeMessage = $message ?? __('teacher::dashboard.package_features.feature_locked');
+    $noticeSubmessage = $submessage ?? __('teacher::dashboard.package_features.upsell_submessage');
     $noticeVariant = $variant ?? 'warning';
     $noticeUpgradeUrl = $upgradeUrl ?? route('teacher.dashboard.package.upgrade');
     $noticeShowUpgrade = $showUpgrade ?? true;
@@ -11,6 +12,9 @@
         <div>
             <strong>{{ $noticeTitle }}</strong>
             <div class="mt-1 text-muted">{{ $noticeMessage }}</div>
+            @if ($noticeSubmessage)
+                <div class="mt-2 small text-muted">{{ $noticeSubmessage }}</div>
+            @endif
         </div>
         @if ($noticeShowUpgrade)
             <a href="{{ $noticeUpgradeUrl }}" class="btn btn-sm btn-warning">

@@ -327,8 +327,38 @@
 
         .teacher-students-search__row {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 0.75rem;
+        }
+
+        #teacher-students-search {
+            grid-column: span 2;
+        }
+
+        .teacher-students-shell .form-control,
+        .teacher-students-shell .form-select {
+            background-color: rgba(11, 19, 36, 0.72);
+            border-color: rgba(96, 165, 250, 0.15);
+            color: #f8fbff;
+        }
+
+        .teacher-students-shell .form-control::placeholder {
+            color: #64748b;
+        }
+
+        .teacher-students-shell .form-control:focus,
+        .teacher-students-shell .form-select:focus {
+            background-color: rgba(11, 19, 36, 0.9);
+            border-color: #38bdf8;
+            color: #fff;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+        }
+
+        html[data-theme="light"] .teacher-students-shell .form-control,
+        html[data-theme="light"] .teacher-students-shell .form-select {
+            background-color: #fff;
+            border-color: #e2e8f0;
+            color: #1e293b;
         }
 
         .teacher-students-search__actions {

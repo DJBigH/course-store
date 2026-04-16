@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
     'brand' => [
@@ -759,12 +759,14 @@ return [
             'change_request_not_required' => 'Bạn vẫn còn có thể lưu trực tiếp tối đa :limit tài khoản, chưa cần gửi yêu cầu thay đổi.',
             'change_request_exists' => 'Đã có một yêu cầu thay đổi tài khoản giống hệt đang chờ duyệt.',
             'change_request_sent' => 'Đã gửi yêu cầu thay đổi tài khoản ngân hàng tới admin để chờ duyệt.',
+            'account_saved_success' => 'Đã lưu tài khoản ngân hàng thành công.',
             'inactive_teacher' => 'Tài khoản của bạn chưa được kích hoạt khu giảng viên.',
         ],
     ],
     'package_features' => [
         'feature_locked' => 'Gói giảng viên hiện tại của bạn chưa bao gồm tính năng này. Vui lòng nâng cấp gói để tiếp tục.',
         'upsell_title' => 'Mở khóa thêm tính năng theo gói',
+        'upsell_submessage' => 'Sau khi nâng cấp, bạn sẽ dùng được toàn bộ công cụ quản lý quiz trong teacher dashboard.',
         'upgrade_badge' => 'Nâng cấp',
         'upgrade_cta' => 'Nâng cấp gói',
         'compare_title' => 'So sánh quyền theo gói',
@@ -797,6 +799,7 @@ return [
             'can_manage_students' => 'Quản lý học viên',
             'can_view_student_progress' => 'Xem tiến độ học viên',
             'can_view_activity_logs' => 'Xem nhật ký hoạt động',
+            'can_manage_quizzes' => 'Quản lý quiz',
             'can_grant_courses' => 'Cấp quyền học thủ công',
             'can_export_orders' => 'Export đơn hàng',
             'can_export_students' => 'Export học viên',
@@ -819,6 +822,7 @@ return [
             'can_manage_students' => 'Mở khu quản lý học viên, ghi chú nội bộ và xem lại lịch sử thao tác liên quan đến học viên.',
             'can_view_student_progress' => 'Cho phép xem % tiến độ học, số bài đã học và mốc học gần nhất của học viên trong khu quản lý học viên.',
             'can_view_activity_logs' => 'Mở màn hình nhật ký hoạt động giảng viên để xem tập trung log học viên, khóa học và mã giảm giá.',
+            'can_manage_quizzes' => 'Mở tính năng tạo, chỉnh sửa, giao và xem kết quả quiz cho học viên.',
             'can_grant_courses' => 'Tặng quyền truy cập khóa học thủ công cho học viên mà không cần tạo đơn hàng thanh toán.',
             'can_export_orders' => 'Xuất file Excel hoặc CSV theo đúng bộ lọc đơn hàng hiện tại.',
             'can_export_students' => 'Xuất file Excel hoặc CSV theo đúng bộ lọc học viên hiện tại.',

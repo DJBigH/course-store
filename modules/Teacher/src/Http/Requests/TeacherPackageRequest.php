@@ -51,6 +51,8 @@ class TeacherPackageRequest extends FormRequest
             'can_manage_students' => ['nullable', 'boolean'],
             'can_view_student_progress' => ['nullable', 'boolean'],
             'can_view_activity_logs' => ['nullable', 'boolean'],
+            'can_manage_quizzes' => ['nullable', 'boolean'],
+            'ai_quiz_limit' => ['nullable', 'integer', 'min:1'],
             'coupon_limit' => ['nullable', 'integer', 'min:1'],
             'can_grant_courses' => ['nullable', 'boolean'],
             'can_export_orders' => ['nullable', 'boolean'],

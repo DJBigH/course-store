@@ -1,5 +1,63 @@
 @extends('layouts.teacher')
 
+@section('stylesheets')
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <style>
+        .lesson-preview-modal .modal-content {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .lesson-preview-modal .modal-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+        }
+
+        .lesson-preview-modal .modal-title {
+            color: #f8fafc;
+            font-weight: 700;
+        }
+
+        .lesson-preview-modal .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .video-container iframe,
+        .video-container .video-js {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-container .video-js {
+            padding-top: 0 !important;
+        }
+
+        .preview-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 10;
+            color: #fff;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="teacher-panel">
         <div class="teacher-section-title mb-4">
@@ -14,11 +72,29 @@
                 <a href="{{ route('teacher.dashboard.lessons.trash', $course->id) }}" class="btn btn-outline-secondary">
                     {{ __('teacher::dashboard.lessons.actions.trash') }}
                 </a>
+                @if ($teacher->packageHasFeature('can_manage_quizzes'))
+                    <a href="{{ route('teacher.dashboard.quizzes.index', $course->id) }}" class="btn btn-outline-primary">
+                        Tạo quiz
+                    </a>
+                @else
+                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-outline-warning" title="Nâng cấp để mở quyền quản lý quiz">
+                        Tạo quiz <span class="ms-1 badge bg-warning text-dark">Khóa</span>
+                    </a>
+                @endif
                 <a href="{{ route('teacher.dashboard.lessons.create', $course->id) }}" class="btn btn-primary">
                     {{ __('teacher::dashboard.lessons.actions.create') }}
                 </a>
             </div>
         </div>
+
+        @if (!$teacher->packageHasFeature('can_manage_quizzes'))
+            @include('teacher::clients.dashboard.partials.package_feature_notice', [
+                'title' => 'Gói hiện tại chưa có quyền quản lý quiz',
+                'message' => 'Nâng cấp gói để mở quyền tạo, sửa, giao và xem kết quả quiz cho học viên. Bạn sẽ có đầy đủ công cụ quản lý quiz trong dashboard sau khi nâng cấp.',
+                'upgradeUrl' => route('teacher.dashboard.package.upgrade'),
+                'showUpgrade' => true,
+            ])
+        @endif
 
         @if (!$canImportExportLessons)
             @include('teacher::clients.dashboard.partials.package_feature_notice', [
@@ -128,11 +204,13 @@
 
                 <form method="POST" action="{{ route('teacher.dashboard.lessons.import.preview', $course->id) }}" enctype="multipart/form-data" class="mt-3">
                     @csrf
-                    <div class="row g-3 align-items-end">
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">{{ __('teacher::dashboard.lessons.import.file_label') }}</label>
+                    </div>
+                    <div class="row g-3 align-items-start">
                         <div class="col-lg-8">
-                            <label class="form-label">{{ __('teacher::dashboard.lessons.import.file_label') }}</label>
                             <input type="file" name="lesson_import_file" accept=".csv,.txt,.xlsx" class="form-control @error('lesson_import_file') is-invalid @enderror">
-                            <div class="form-text">{{ __('teacher::dashboard.lessons.import.file_help') }}</div>
+                            <div class="form-text mt-1 text-muted">{{ __('teacher::dashboard.lessons.import.file_help') }}</div>
                             @error('lesson_import_file')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -394,5 +472,121 @@
             background: rgba(16, 185, 129, 0.14);
             color: #86efac;
         }
+
+        /* Dark mode fixes for import section */
+        html[data-theme="dark"] .teacher-import-card {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        html[data-theme="dark"] .teacher-import-stat {
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        html[data-theme="dark"] .form-control:disabled,
+        html[data-theme="dark"] .form-select:disabled {
+            background-color: rgba(15, 23, 42, 0.6);
+            color: rgba(255, 255, 255, 0.7);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        html[data-theme="dark"] .teacher-import-guide__item span {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        html[data-theme="dark"] .form-text.text-muted {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
     </style>
+
+    <!-- Lesson Preview Modal -->
+    <div class="modal fade lesson-preview-modal" id="lessonPreviewModal" tabindex="-1" aria-labelledby="lessonPreviewModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="lessonPreviewModalLabel">Xem trước bài học</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="video-container" id="previewVideoContainer">
+                        <div class="preview-loading d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="previewPlayerArea"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('scripts')
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const $modal = $('#lessonPreviewModal');
+            const $playerArea = $('#previewPlayerArea');
+            const $loading = $('.preview-loading');
+            let player = null;
+
+            $('.js-lesson-preview-btn').on('click', function() {
+                const url = $(this).data('url');
+                const title = $(this).attr('title') || 'Xem trước bài học';
+
+                $modal.find('.modal-title').text(title);
+                $modal.modal('show');
+                $loading.removeClass('d-none');
+                $playerArea.empty();
+
+                if (player) {
+                    player.dispose();
+                    player = null;
+                }
+
+                $.get(url, function(response) {
+                    $loading.addClass('d-none');
+                    if (response.success) {
+                        const videoData = response.data.video;
+                        $modal.find('.modal-title').text(response.data.name);
+
+                        if (videoData.type === 'embed') {
+                            $playerArea.html(`<iframe src="${videoData.url}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`);
+                        } else if (videoData.type === 'file') {
+                            const videoId = 'preview-player-' + response.data.id;
+                            $playerArea.html(`<video id="${videoId}" class="video-js vjs-big-play-centered vjs-fluid" controls preload="auto">
+                                <source src="${videoData.url}" type="video/mp4">
+                            </video>`);
+
+                            player = videojs(videoId, {
+                                autoplay: true,
+                                fluid: true
+                            });
+                        }
+                    } else {
+                        $playerArea.html(`<div class="p-5 text-center text-white">
+                            <i class="fa-solid fa-circle-exclamation fs-1 mb-3 text-warning"></i>
+                            <p>${response.message || 'Không thể tải dữ liệu video.'}</p>
+                        </div>`);
+                    }
+                }).fail(function() {
+                    $loading.addClass('d-none');
+                    $playerArea.html(`<div class="p-5 text-center text-white">
+                        <i class="fa-solid fa-triangle-exclamation fs-1 mb-3 text-danger"></i>
+                        <p>Đã xảy ra lỗi khi kết nối đến máy chủ.</p>
+                    </div>`);
+                });
+            });
+
+            $modal.on('hidden.bs.modal', function() {
+                if (player) {
+                    player.dispose();
+                    player = null;
+                }
+                $playerArea.empty();
+            });
+        });
+    </script>
 @endsection

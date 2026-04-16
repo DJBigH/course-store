@@ -28,6 +28,7 @@
                             <th>Code</th>
                             <th>Ten goi</th>
                             <th>Quyen noi bat</th>
+                            <th>Badge quyen</th>
                             <th>Thu tu</th>
                             <th>Gia</th>
                             <th>Commission</th>
@@ -66,6 +67,12 @@
                                                 Nhat ky hoat dong
                                             </span>
                                         @endif
+                                        @if ($package->can_manage_quizzes)
+                                            <span class="package-feature-pill is-growth">
+                                                <i class="fa-solid fa-square-check"></i>
+                                                Quan ly quiz
+                                            </span>
+                                        @endif
                                         @if ($package->can_sell_bundles)
                                             <span class="package-feature-pill is-growth">
                                                 <i class="fa-solid fa-layer-group"></i>
@@ -84,7 +91,7 @@
                                                 Chung chi
                                             </span>
                                         @endif
-                                        @if (!$package->can_view_student_progress && !$package->can_manage_students && !$package->can_view_activity_logs && !$package->can_sell_bundles && !$package->can_send_promotions && !$package->can_issue_certificates)
+                                        @if (!$package->can_view_student_progress && !$package->can_manage_students && !$package->can_view_activity_logs && !$package->can_manage_quizzes && !$package->can_sell_bundles && !$package->can_send_promotions && !$package->can_issue_certificates)
                                             <span class="text-muted small">Chua co quyen noi bat</span>
                                         @endif
                                     </div>

@@ -42,6 +42,9 @@ class TeacherPackage extends Model
         'can_manage_students',
         'can_view_student_progress',
         'can_view_activity_logs',
+        'can_manage_quizzes',
+        'can_use_ai_quiz',
+        'ai_quiz_limit',
         'coupon_limit',
         'can_grant_courses',
         'can_export_orders',
@@ -68,6 +71,7 @@ class TeacherPackage extends Model
         'price' => 'float',
         'payout_account_limit' => 'integer',
         'coupon_limit' => 'integer',
+        'ai_quiz_limit' => 'integer',
         'commission_rate' => 'float',
         'priority_review' => 'boolean',
         'can_duplicate_courses' => 'boolean',
@@ -76,6 +80,8 @@ class TeacherPackage extends Model
         'can_manage_students' => 'boolean',
         'can_view_student_progress' => 'boolean',
         'can_view_activity_logs' => 'boolean',
+        'can_manage_quizzes' => 'boolean',
+        'can_use_ai_quiz' => 'boolean',
         'can_grant_courses' => 'boolean',
         'can_export_orders' => 'boolean',
         'can_export_students' => 'boolean',
@@ -130,6 +136,21 @@ class TeacherPackage extends Model
     public function getEffectiveCouponLimitAttribute(): ?int
     {
         $limit = $this->coupon_limit;
+
+        if ($limit === null) {
+            return null;
+        }
+
+        return max((int) $limit, 1);
+    }
+
+    public function getEffectiveAiQuizLimitAttribute(): ?int
+    {
+        $limit = $this->ai_quiz_limit;
+
+        if ($limit === null && $this->code === 'free') {
+            return 3;
+        }
 
         if ($limit === null) {
             return null;
