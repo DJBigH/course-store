@@ -53,7 +53,7 @@
             return $value;
         };
         $fieldLabel = static function (string $key): string {
-            return __("teacher::dashboard.profile.fields.$key");
+            return __("courses::teacher/messages.profile.fields.$key");
         };
         $teacherBadge = $teacher?->primary_badge;
         $profileErrorKeys = [
@@ -77,8 +77,8 @@
         <div class="teacher-panel teacher-profile-shell">
             <div class="teacher-section-title">
                 <div>
-                    <h3 class="fw-bold mb-2">{{ __('teacher::dashboard.profile.title') }}</h3>
-                    <p class="text-muted mb-0">{{ __('teacher::dashboard.profile.description') }}</p>
+                    <h3 class="fw-bold mb-2">{{ __('courses::teacher/messages.profile.title') }}</h3>
+                    <p class="text-muted mb-0">{{ __('courses::teacher/messages.profile.description') }}</p>
                     {{-- @if ($teacherBadge)
                         <div class="teacher-profile-current-badge teacher-profile-current-badge--{{ $teacherBadge['tone'] }}">
                             {{ $teacherBadge['label'] }}
@@ -86,7 +86,7 @@
                     @endif --}}
                 </div>
                 <span class="teacher-status-badge">
-                    {{ $student->two_factor_email_enabled ? __('teacher::dashboard.profile.two_factor.enabled') : __('teacher::dashboard.profile.two_factor.disabled') }}
+                    {{ $student->two_factor_email_enabled ? __('courses::teacher/messages.profile.two_factor.enabled') : __('courses::teacher/messages.profile.two_factor.disabled') }}
                 </span>
             </div>
 
@@ -102,31 +102,33 @@
             @endif
 
             @if ($errors->any())
-                <div class="alert alert-danger mb-3">{{ __('teacher::dashboard.common.validation_summary') }}</div>
+                <div class="alert alert-danger mb-3">{{ __('courses::teacher/messages.common.validation_summary') }}</div>
             @endif
 
-            <div class="teacher-profile-tabs" data-profile-tabs>
-                <button type="button"
-                    class="teacher-profile-tab-button {{ $activeProfileTab === 'profile' ? 'is-active' : '' }}"
-                    data-profile-tab="profile">
-                    <i class="fas fa-id-card"></i>
-                    <span>Ho so giang vien</span>
-                </button>
-                <button type="button"
-                    class="teacher-profile-tab-button {{ $activeProfileTab === 'password' ? 'is-active' : '' }}"
-                    data-profile-tab="password">
-                    <i class="fas fa-key"></i>
-                    <span>Mat khau</span>
-                </button>
-                <button type="button"
-                    class="teacher-profile-tab-button {{ $activeProfileTab === 'security' ? 'is-active' : '' }}"
-                    data-profile-tab="security">
-                    <i class="fas fa-shield-halved"></i>
-                    <span>Bao mat</span>
-                    <span class="teacher-profile-tab-badge {{ $student->two_factor_email_enabled ? 'is-enabled' : 'is-disabled' }}">
-                        {{ $student->two_factor_email_enabled ? 'Bat' : 'Tat' }}
-                    </span>
-                </button>
+            <div class="teacher-profile-tabs-scroll">
+                <div class="teacher-profile-tabs" data-profile-tabs>
+                    <button type="button"
+                        class="teacher-profile-tab-button {{ $activeProfileTab === 'profile' ? 'is-active' : '' }}"
+                        data-profile-tab="profile">
+                        <i class="fas fa-id-card"></i>
+                        <span>{{ __('courses::teacher/messages.profile.tabs.profile') }}</span>
+                    </button>
+                    <button type="button"
+                        class="teacher-profile-tab-button {{ $activeProfileTab === 'password' ? 'is-active' : '' }}"
+                        data-profile-tab="password">
+                        <i class="fas fa-key"></i>
+                        <span>{{ __('courses::teacher/messages.profile.tabs.password') }}</span>
+                    </button>
+                    <button type="button"
+                        class="teacher-profile-tab-button {{ $activeProfileTab === 'security' ? 'is-active' : '' }}"
+                        data-profile-tab="security">
+                        <i class="fas fa-shield-halved"></i>
+                        <span>{{ __('courses::teacher/messages.profile.tabs.security') }}</span>
+                        <span class="teacher-profile-tab-badge {{ $student->two_factor_email_enabled ? 'is-enabled' : 'is-disabled' }}">
+                            {{ $student->two_factor_email_enabled ? __('courses::teacher/messages.profile.two_factor.enabled_short') : __('courses::teacher/messages.profile.two_factor.disabled_short') }}
+                        </span>
+                    </button>
+                </div>
             </div>
 
             <form method="POST" action="{{ route('teacher.dashboard.profile.update') }}" class="teacher-profile-form" id="teacher-profile-form">
@@ -136,41 +138,41 @@
                     <div class="row g-4">
                         <div class="col-xl-12">
                             <div class="teacher-profile-card">
-                            <h4>{{ __('teacher::dashboard.profile.basic.title') }}</h4>
-                            <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.basic.description') }}</p>
+                            <h4>{{ __('courses::teacher/messages.profile.basic.title') }}</h4>
+                            <p class="text-muted mb-4">{{ __('courses::teacher/messages.profile.basic.description') }}</p>
 
                             @if ($teacherBadge)
                                 <div class="teacher-profile-badge-banner teacher-profile-badge-banner--{{ $teacherBadge['tone'] }}">
-                                    <strong>Huy hiệu</strong>
+                                    <strong>{{ __('courses::teacher/messages.profile.basic.badge_label') }}</strong>
                                     <span class="">{{ $teacherBadge['label'] }}</span>
                                 </div>
                             @endif
 
                             <div class="teacher-profile-avatar mb-4">
                                 <div class="teacher-profile-avatar__preview" data-avatar-preview>
-                                    <img src="{{ $avatarValue }}" alt="{{ __('teacher::dashboard.profile.fields.avatar') }}"
+                                    <img src="{{ $avatarValue }}" alt="{{ __('courses::teacher/messages.profile.fields.avatar') }}"
                                         @if (empty($avatarValue)) hidden @endif>
                                     <span @if (!empty($avatarValue)) hidden @endif>{{ $avatarFallback }}</span>
                                 </div>
                                 <div class="teacher-profile-avatar__content">
-                                    <label class="form-label">{{ __('teacher::dashboard.profile.fields.avatar') }} *</label>
+                                    <label class="form-label">{{ __('courses::teacher/messages.profile.fields.avatar') }} *</label>
                                     <div class="teacher-file-picker">
                                         <input type="hidden" id="teacher-profile-avatar" name="image"
                                             value="{{ $avatarValue }}">
                                         <input type="text" id="teacher-profile-avatar-display"
                                             class="form-control @error('image') is-invalid @enderror" readonly
                                             value="{{ $displayStoredPath($avatarValue) }}"
-                                            placeholder="{{ __('teacher::dashboard.profile.fields.avatar_placeholder') }}">
+                                            placeholder="{{ __('courses::teacher/messages.profile.fields.avatar_placeholder') }}">
                                         <button type="button" class="btn btn-outline-secondary js-lfm"
                                             data-input="teacher-profile-avatar" data-preview-target="avatar"
                                             data-display-input="teacher-profile-avatar-display"
                                             data-type="image">
-                                            {{ __('teacher::dashboard.profile.actions.choose_image') }}
+                                            {{ __('courses::teacher/messages.profile.actions.choose_image') }}
                                         </button>
                                         <button type="button" class="btn btn-outline-danger js-clear-input"
                                             data-input="teacher-profile-avatar" data-display-input="teacher-profile-avatar-display"
                                             data-preview-target="avatar" data-submit-section="account">
-                                            {{ __('teacher::dashboard.profile.actions.remove') }}
+                                            {{ __('courses::teacher/messages.profile.actions.remove') }}
                                         </button>
                                     </div>
                                     @error('image')
@@ -181,7 +183,7 @@
 
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::dashboard.profile.fields.name') }} *</label>
+                                    <label class="form-label">{{ __('courses::teacher/messages.profile.fields.name') }} *</label>
                                     <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
                                         value="{{ old('name', $student->name) }}" maxlength="225" required>
                                     @error('name')
@@ -190,13 +192,13 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::dashboard.profile.fields.email') }}</label>
+                                    <label class="form-label">{{ __('courses::teacher/messages.profile.fields.email') }}</label>
                                     <input type="email" class="form-control" value="{{ $student->email }}" readonly>
-                                    <div class="form-text">{{ __('teacher::dashboard.profile.basic.email_hint') }}</div>
+                                    <div class="form-text">{{ __('courses::teacher/messages.profile.basic.email_hint') }}</div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::dashboard.profile.fields.phone') }} *</label>
+                                    <label class="form-label">{{ __('courses::teacher/messages.profile.fields.phone') }} *</label>
                                     <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
                                         value="{{ old('phone', $student->phone) }}" inputmode="tel" required>
                                     @error('phone')
@@ -205,14 +207,14 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::dashboard.profile.fields.package') }}</label>
+                                    <label class="form-label">{{ __('courses::teacher/messages.profile.fields.package') }}</label>
                                     <input type="text" class="form-control"
-                                        value="{{ $teacher?->application?->package?->name_locale ?: $teacher?->application?->package?->name ?: __('teacher::dashboard.profile.basic.no_package') }}"
+                                        value="{{ $teacher?->application?->package?->name_locale ?: $teacher?->application?->package?->name ?: __('courses::teacher/messages.profile.basic.no_package') }}"
                                         readonly>
                                 </div>
 
                                 <div class="col-12">
-                                    <label class="form-label">{{ __('teacher::dashboard.profile.fields.address') }}</label>
+                                    <label class="form-label">{{ __('courses::teacher/messages.profile.fields.address') }}</label>
                                     <input type="text" name="address" class="form-control @error('address') is-invalid @enderror"
                                         value="{{ old('address', $student->address) }}" maxlength="255">
                                     @error('address')
@@ -223,7 +225,7 @@
 
                             <div class="teacher-section-submit mt-4">
                                 <button type="submit" name="profile_section" value="account" class="btn btn-primary" formnovalidate>
-                                    Luu thong tin tai khoan
+                                    {{ __('courses::teacher/messages.profile.actions.save_account') }}
                                 </button>
                             </div>
                             </div>
@@ -231,16 +233,16 @@
                             <div class="teacher-profile-card teacher-profile-card--wide mt-4">
                                 <div class="teacher-card-header">
                                 <div>
-                                    <h4>{{ __('teacher::dashboard.profile.professional.title') }}</h4>
-                                    <p class="text-muted mb-0">{{ __('teacher::dashboard.profile.professional.description') }}</p>
+                                    <h4>{{ __('courses::teacher/messages.profile.professional.title') }}</h4>
+                                    <p class="text-muted mb-0">{{ __('courses::teacher/messages.profile.professional.description') }}</p>
                                     <div class="teacher-card-header__meta">
                                         <span class="teacher-card-header__meta-label">
                                             <i class="fas fa-globe"></i>
-                                            Landing page
+                                            {{ __('courses::teacher/messages.profile.professional.landing_page_label') }}
                                         </span>
                                         <a href="{{ $teacherLandingActionUrl }}" class="teacher-card-header__meta-link"
                                             target="_blank" rel="noopener">
-                                            <span>{{ $teacherCanCustomizeLanding ? $teacherLandingDisplayUrl : 'Mo quyen de xem link public' }}</span>
+                                            <span>{{ $teacherCanCustomizeLanding ? $teacherLandingDisplayUrl : __('courses::teacher/messages.profile.professional.landing_page_locked') }}</span>
                                         </a>
                                     </div>
                                 </div>
@@ -249,15 +251,15 @@
                                         class="btn teacher-card-header__button {{ $teacherCanCustomizeLanding ? 'btn-outline-secondary' : 'btn-outline-warning' }}"
                                         target="_blank" rel="noopener">
                                         <i class="fas fa-window-maximize me-2"></i>
-                                        {{ $teacherCanCustomizeLanding ? 'Xem' : 'Nang cap' }}
+                                        {{ $teacherCanCustomizeLanding ? __('courses::teacher/messages.profile.professional.view') : __('courses::teacher/messages.profile.professional.upgrade') }}
                                     </a>
                                     @if ($teacherCanCustomizeLanding)
                                         <button type="button"
                                             class="btn btn-outline-secondary teacher-card-header__button js-copy-static-link"
                                             data-copy-value="{{ $teacherLandingUrl }}"
-                                            data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">
+                                            data-copied-label="{{ __('courses::teacher/messages.profile.actions.copied') }}">
                                             <i class="fas fa-link me-2"></i>
-                                            Sao chep link
+                                            {{ __('courses::teacher/messages.profile.professional.copy_link') }}
                                         </button>
                                     @endif
                                 </div>
@@ -317,7 +319,7 @@
 
                                 <div class="teacher-section-submit mt-4">
                                     <button type="submit" name="profile_section" value="professional" class="btn btn-primary" formnovalidate>
-                                        Luu thong tin nghe nghiep
+                                        {{ __('courses::teacher/messages.profile.actions.save_professional') }}
                                     </button>
                                 </div>
                             </div>
@@ -325,14 +327,14 @@
                     </div>
 
                     <div class="teacher-profile-card teacher-profile-card--links mt-4">
-                        <h4>{{ __('teacher::dashboard.profile.links.title') }}</h4>
-                        <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.links.description') }}</p>
+                        <h4>{{ __('courses::teacher/messages.profile.links.title') }}</h4>
+                        <p class="text-muted mb-4">{{ __('courses::teacher/messages.profile.links.description') }}</p>
 
                     <div class="teacher-links-layout">
                         <section class="teacher-links-group">
                             <div class="teacher-links-group__header">
-                                <h5>{{ __('teacher::dashboard.profile.links.public_title') }}</h5>
-                                <p>{{ __('teacher::dashboard.profile.links.public_description') }}</p>
+                                <h5>{{ __('courses::teacher/messages.profile.links.public_title') }}</h5>
+                                <p>{{ __('courses::teacher/messages.profile.links.public_description') }}</p>
                             </div>
 
                             <div class="teacher-links-stack">
@@ -343,9 +345,9 @@
                                             <input type="url" id="teacher-profile-portfolio" name="portfolio_url" class="form-control @error('portfolio_url') is-invalid @enderror" value="{{ $portfolioValue }}">
                                         </div>
                                         <div class="teacher-link-actions">
-                                            <a href="{{ $portfolioValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-portfolio" target="_blank" rel="noopener noreferrer" @if (empty($portfolioValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.preview') }}</a>
-                                            <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-portfolio" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                            <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-portfolio" data-submit-section="links">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
+                                            <a href="{{ $portfolioValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-portfolio" target="_blank" rel="noopener noreferrer" @if (empty($portfolioValue)) hidden @endif>{{ __('courses::teacher/messages.profile.actions.preview') }}</a>
+                                            <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-portfolio" data-copied-label="{{ __('courses::teacher/messages.profile.actions.copied') }}">{{ __('courses::teacher/messages.profile.actions.copy') }}</button>
+                                            <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-portfolio" data-submit-section="links">{{ __('courses::teacher/messages.profile.actions.remove') }}</button>
                                         </div>
                                     </div>
                                     @error('portfolio_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -359,10 +361,10 @@
                                                 <input type="text" id="teacher-profile-intro-video" name="intro_video_url" class="form-control @error('intro_video_url') is-invalid @enderror" value="{{ $introVideoValue }}" placeholder="https://... hoac /storage/...">
                                             </div>
                                             <div class="teacher-link-actions">
-                                                <button type="button" class="btn btn-outline-secondary js-lfm" data-input="teacher-profile-intro-video" data-type="video">{{ __('teacher::dashboard.profile.actions.choose_video') }}</button>
-                                                <a href="{{ $introVideoValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-intro-video" target="_blank" rel="noopener noreferrer" @if (empty($introVideoValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.watch') }}</a>
-                                                <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-intro-video" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-intro-video" data-submit-section="links">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
+                                                <button type="button" class="btn btn-outline-secondary js-lfm" data-input="teacher-profile-intro-video" data-type="video">{{ __('courses::teacher/messages.profile.actions.choose_video') }}</button>
+                                                <a href="{{ $introVideoValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-intro-video" target="_blank" rel="noopener noreferrer" @if (empty($introVideoValue)) hidden @endif>{{ __('courses::teacher/messages.profile.actions.watch') }}</a>
+                                                <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-intro-video" data-copied-label="{{ __('courses::teacher/messages.profile.actions.copied') }}">{{ __('courses::teacher/messages.profile.actions.copy') }}</button>
+                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-intro-video" data-submit-section="links">{{ __('courses::teacher/messages.profile.actions.remove') }}</button>
                                             </div>
                                         </div>
                                         @error('intro_video_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -389,9 +391,9 @@
                                                 <input type="url" id="teacher-profile-linkedin" name="linkedin_url" class="form-control @error('linkedin_url') is-invalid @enderror" value="{{ $linkedinValue }}">
                                             </div>
                                             <div class="teacher-link-actions">
-                                                <a href="{{ $linkedinValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-linkedin" target="_blank" rel="noopener noreferrer" @if (empty($linkedinValue)) hidden @endif>{{ __('teacher::dashboard.profile.actions.open') }}</a>
-                                                <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-linkedin" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-linkedin" data-submit-section="links">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
+                                                <a href="{{ $linkedinValue }}" class="btn btn-outline-secondary js-link-action" data-input="teacher-profile-linkedin" target="_blank" rel="noopener noreferrer" @if (empty($linkedinValue)) hidden @endif>{{ __('courses::teacher/messages.profile.actions.open') }}</a>
+                                                <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-profile-linkedin" data-copied-label="{{ __('courses::teacher/messages.profile.actions.copied') }}">{{ __('courses::teacher/messages.profile.actions.copy') }}</button>
+                                                <button type="button" class="btn btn-outline-danger js-clear-input" data-input="teacher-profile-linkedin" data-submit-section="links">{{ __('courses::teacher/messages.profile.actions.remove') }}</button>
                                             </div>
                                         </div>
                                         @error('linkedin_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -402,8 +404,8 @@
 
                         <section class="teacher-links-group">
                             <div class="teacher-links-group__header">
-                                <h5>{{ __('teacher::dashboard.profile.links.custom_title') }}</h5>
-                                <p>{{ __('teacher::dashboard.profile.links.custom_description') }}</p>
+                                <h5>{{ __('courses::teacher/messages.profile.links.custom_title') }}</h5>
+                                <p>{{ __('courses::teacher/messages.profile.links.custom_description') }}</p>
                             </div>
 
                             <div class="teacher-links-stack">
@@ -440,22 +442,22 @@
                                                         data-input="teacher-custom-link-{{ $index }}"
                                                         target="_blank" rel="noopener noreferrer"
                                                         @if (empty($customLink['url'])) hidden @endif>
-                                                        {{ __('teacher::dashboard.profile.actions.open') }}
+                                                        {{ __('courses::teacher/messages.profile.actions.open') }}
                                                     </a>
                                                     <button type="button" class="btn btn-outline-secondary js-copy-link"
                                                         data-input="teacher-custom-link-{{ $index }}"
-                                                        data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">
-                                                        {{ __('teacher::dashboard.profile.actions.copy') }}
+                                                        data-copied-label="{{ __('courses::teacher/messages.profile.actions.copied') }}">
+                                                        {{ __('courses::teacher/messages.profile.actions.copy') }}
                                                     </button>
                                                     <button type="button" class="btn btn-outline-danger js-remove-custom-link" data-submit-section="links">
-                                                        {{ __('teacher::dashboard.profile.actions.remove') }}
+                                                        {{ __('courses::teacher/messages.profile.actions.remove') }}
                                                     </button>
                                                 </div>
                                             </div>
                                         @endforeach
                                     </div>
                                     <button type="button" class="btn btn-outline-primary teacher-custom-links__add" data-add-custom-link>
-                                        + Thêm link
+                                        {{ __('courses::teacher/messages.profile.actions.add_link') }}
                                     </button>
                                 </div>
                             </div>
@@ -464,7 +466,7 @@
 
                         <div class="teacher-section-submit mt-4">
                             <button type="submit" name="profile_section" value="links" class="btn btn-primary" formnovalidate>
-                                Luu lien ket ho so
+                                {{ __('courses::teacher/messages.profile.actions.save_links') }}
                             </button>
                         </div>
                     </div>
@@ -472,17 +474,17 @@
 
                 <div class="teacher-profile-tab-panel {{ $activeProfileTab === 'password' ? 'is-active' : '' }}" data-profile-panel="password">
                     <div class="teacher-profile-card teacher-profile-card--narrow">
-                        <h4>{{ __('teacher::dashboard.profile.password.title') }}</h4>
-                        <p class="text-muted mb-4">{{ __('teacher::dashboard.profile.password.description') }}</p>
+                        <h4>{{ __('courses::teacher/messages.profile.password.title') }}</h4>
+                        <p class="text-muted mb-4">{{ __('courses::teacher/messages.profile.password.description') }}</p>
 
                         <div class="teacher-profile-note">
                             <i class="fas fa-circle-info"></i>
-                            <span>{{ __('teacher::dashboard.profile.password.hint') }}</span>
+                            <span>{{ __('courses::teacher/messages.profile.password.hint') }}</span>
                         </div>
 
                         <div class="row g-3 mt-1">
                             <div class="col-12">
-                                <label class="form-label">{{ __('teacher::dashboard.profile.fields.current_password') }}</label>
+                                <label class="form-label">{{ __('courses::teacher/messages.profile.fields.current_password') }}</label>
                                 <input type="password" name="current_password"
                                     class="form-control @error('current_password') is-invalid @enderror"
                                     autocomplete="current-password">
@@ -492,7 +494,7 @@
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label">{{ __('teacher::dashboard.profile.fields.password') }}</label>
+                                <label class="form-label">{{ __('courses::teacher/messages.profile.fields.password') }}</label>
                                 <input type="password" name="password"
                                     class="form-control @error('password') is-invalid @enderror"
                                     autocomplete="new-password">
@@ -502,7 +504,7 @@
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label">{{ __('teacher::dashboard.profile.fields.password_confirmation') }}</label>
+                                <label class="form-label">{{ __('courses::teacher/messages.profile.fields.password_confirmation') }}</label>
                                 <input type="password" name="password_confirmation"
                                     class="form-control @error('password_confirmation') is-invalid @enderror" autocomplete="new-password">
                                 @error('password_confirmation')
@@ -513,7 +515,7 @@
 
                         <div class="teacher-section-submit mt-4">
                             <button type="submit" name="profile_section" value="password" class="btn btn-primary" formnovalidate>
-                                Luu mat khau
+                                {{ __('courses::teacher/messages.profile.actions.save_password') }}
                             </button>
                         </div>
                     </div>
@@ -523,28 +525,28 @@
                     <div class="teacher-profile-card teacher-profile-card--narrow">
                         <div class="d-flex justify-content-between align-items-start gap-3">
                             <div>
-                                <h4>{{ __('teacher::dashboard.profile.two_factor.title') }}</h4>
-                                <p class="text-muted mb-0">{{ __('teacher::dashboard.profile.two_factor.description') }}</p>
+                                <h4>{{ __('courses::teacher/messages.profile.two_factor.title') }}</h4>
+                                <p class="text-muted mb-0">{{ __('courses::teacher/messages.profile.two_factor.description') }}</p>
                             </div>
                             <span class="badge {{ $student->two_factor_email_enabled ? 'bg-success' : 'bg-secondary' }}">
-                                {{ $student->two_factor_email_enabled ? __('teacher::dashboard.profile.two_factor.enabled') : __('teacher::dashboard.profile.two_factor.disabled') }}
+                                {{ $student->two_factor_email_enabled ? __('courses::teacher/messages.profile.two_factor.enabled') : __('courses::teacher/messages.profile.two_factor.disabled') }}
                             </span>
                         </div>
 
                         @if ($student->two_factor_email_enabled && $student->two_factor_email_enabled_at)
                             <div class="teacher-profile-meta mt-3">
-                                {{ __('teacher::dashboard.profile.two_factor.enabled_at', ['date' => $student->two_factor_email_enabled_at->format('d/m/Y H:i:s')]) }}
+                                {{ __('courses::teacher/messages.profile.two_factor.enabled_at', ['date' => $student->two_factor_email_enabled_at->format('d/m/Y H:i:s')]) }}
                             </div>
                         @endif
 
                         <div class="teacher-profile-actions mt-3">
                             @if ($student->two_factor_email_enabled)
                                 <button type="submit" class="btn btn-outline-danger" form="teacher-two-factor-disable-form">
-                                    {{ __('teacher::dashboard.profile.two_factor.disable_button') }}
+                                    {{ __('courses::teacher/messages.profile.two_factor.disable_button') }}
                                 </button>
                             @else
                                 <button type="submit" class="btn btn-primary" form="teacher-two-factor-enable-form">
-                                    {{ __('teacher::dashboard.profile.two_factor.enable_button') }}
+                                    {{ __('courses::teacher/messages.profile.two_factor.enable_button') }}
                                 </button>
                             @endif
                         </div>
@@ -578,11 +580,23 @@
             gap: 1.5rem;
         }
 
+        .teacher-profile-tabs-scroll {
+            width: 100%;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 4px;
+        }
+
+        .teacher-profile-tabs-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
         .teacher-profile-tabs {
             display: flex;
-            flex-wrap: wrap;
             gap: 0.75rem;
             margin-bottom: 1.25rem;
+            min-width: max-content;
         }
 
         .teacher-profile-tab-button {
@@ -604,7 +618,7 @@
             background: linear-gradient(135deg, #1f8efa 0%, #33d5c3 100%);
             border-color: transparent;
             color: #fff;
-            box-shadow: 0 14px 30px rgba(31, 142, 250, 0.22);
+            box-shadow: 0 10px 24px rgba(31, 142, 250, 0.22);
         }
 
         .teacher-profile-tab-button i {
@@ -652,8 +666,9 @@
         .teacher-profile-card {
             padding: 1.35rem;
             border-radius: 22px;
-            background: var(--admin-subtle-bg);
-            border: 1px solid var(--admin-border);
+            background: var(--admin-glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--admin-glass-border);
         }
 
         .teacher-profile-card--wide {
@@ -778,19 +793,31 @@
             box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
         }
 
-        html[data-theme="light"] .teacher-profile-badge-banner--blue { color: #1d4ed8; }
-        html[data-theme="light"] .teacher-profile-badge-banner--gold { color: #b45309; }
-        html[data-theme="light"] .teacher-profile-badge-banner--emerald { color: #047857; }
+        html[data-theme="light"] .teacher-profile-badge-banner--blue { color: #2563eb; }
+        html[data-theme="light"] .teacher-profile-badge-banner--gold { color: #d97706; }
+        html[data-theme="light"] .teacher-profile-badge-banner--emerald { color: #059669; }
         html[data-theme="light"] .teacher-profile-badge-banner--violet { color: #7c3aed; }
         html[data-theme="light"] .teacher-profile-badge-banner--rose { color: #e11d48; }
-        html[data-theme="light"] .teacher-profile-badge-banner--slate { color: #334155; }
+        html[data-theme="light"] .teacher-profile-badge-banner--slate { color: #475569; }
+
+        html[data-theme="light"] .teacher-profile-card {
+            background: #ffffff;
+            border-color: var(--admin-border);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+        }
+
+        html[data-theme="light"] .teacher-profile-tab-button {
+            background: #ffffff;
+            border-color: var(--admin-border);
+        }
 
         .teacher-card-header {
             display: flex;
+            flex-wrap: wrap;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 1.25rem;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
         }
 
         .teacher-card-header__actions {
@@ -1909,9 +1936,9 @@
                             </div>
                         </div>
                         <div class="teacher-link-actions">
-                            <a href="#" class="btn btn-outline-secondary js-link-action" data-input="teacher-custom-link-${nextIndex}" target="_blank" rel="noopener noreferrer" hidden>{{ __('teacher::dashboard.profile.actions.open') }}</a>
-                            <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-custom-link-${nextIndex}" data-copied-label="{{ __('teacher::dashboard.profile.actions.copied') }}">{{ __('teacher::dashboard.profile.actions.copy') }}</button>
-                            <button type="button" class="btn btn-outline-danger js-remove-custom-link" data-submit-section="links">{{ __('teacher::dashboard.profile.actions.remove') }}</button>
+                            <a href="#" class="btn btn-outline-secondary js-link-action" data-input="teacher-custom-link-${nextIndex}" target="_blank" rel="noopener noreferrer" hidden>{{ __('courses::teacher/messages.profile.actions.open') }}</a>
+                            <button type="button" class="btn btn-outline-secondary js-copy-link" data-input="teacher-custom-link-${nextIndex}" data-copied-label="{{ __('courses::teacher/messages.profile.actions.copied') }}">{{ __('courses::teacher/messages.profile.actions.copy') }}</button>
+                            <button type="button" class="btn btn-outline-danger js-remove-custom-link" data-submit-section="links">{{ __('courses::teacher/messages.profile.actions.remove') }}</button>
                         </div>
                     `;
 

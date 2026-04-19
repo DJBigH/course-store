@@ -52,7 +52,7 @@ class TeacherCouponController extends Controller
             ->withQueryString();
         $this->attachCouponHistoryPreview($coupons, $teacher);
 
-        $pageTitle = __('teacher::coupons.page_title');
+        $pageTitle = __('coupons::teacher/messages.page_title');
         $pageName = $pageTitle;
 
         return view('teacher::clients.dashboard.coupons.index', compact(
@@ -106,7 +106,7 @@ class TeacherCouponController extends Controller
         $assignedStudentIds = [];
         $assignedCourseIds = [];
         $assignedBundleIds = [];
-        $pageTitle = __('teacher::coupons.create_title');
+        $pageTitle = __('coupons::teacher/messages.create_title');
         $pageName = $pageTitle;
         $coupon = null;
 
@@ -150,7 +150,7 @@ class TeacherCouponController extends Controller
         $assignment = $this->validateAssignment($request, $teacher);
         if ($assignment === null) {
             return back()->withErrors([
-                'students' => __('teacher::coupons.validation.assign_required'),
+                'students' => __('coupons::teacher/messages.validation.assign_required'),
             ])->withInput();
         }
 
@@ -167,7 +167,7 @@ class TeacherCouponController extends Controller
             $teacher,
             $coupon,
             'coupon_created',
-            'Da tao ma giam gia moi',
+            __('coupons::teacher/messages.logs.created'),
             [
                 'discount_type' => $coupon->discount_type,
                 'discount_value' => (int) $coupon->discount_value,
@@ -179,7 +179,7 @@ class TeacherCouponController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.coupons.edit', $coupon->id)
-            ->with('msg_success', __('teacher::coupons.flash.created'));
+            ->with('msg_success', __('coupons::teacher/messages.flash.created'));
     }
 
     public function edit(int $id)
@@ -210,7 +210,7 @@ class TeacherCouponController extends Controller
         $assignedStudentIds = $coupon->students()->pluck('students.id')->map(fn ($sid) => (int) $sid)->all();
         $assignedCourseIds = $coupon->courses()->pluck('courses.id')->map(fn ($cid) => (int) $cid)->all();
         $assignedBundleIds = $coupon->bundles()->pluck('teacher_course_bundles.id')->map(fn ($bid) => (int) $bid)->all();
-        $pageTitle = __('teacher::coupons.edit_title');
+        $pageTitle = __('coupons::teacher/messages.edit_title');
         $pageName = $pageTitle;
 
         return view('teacher::clients.dashboard.coupons.form', compact(
@@ -246,7 +246,7 @@ class TeacherCouponController extends Controller
         $assignment = $this->validateAssignment($request, $teacher);
         if ($assignment === null) {
             return back()->withErrors([
-                'students' => __('teacher::coupons.validation.assign_required'),
+                'students' => __('coupons::teacher/messages.validation.assign_required'),
             ])->withInput();
         }
 
@@ -291,7 +291,7 @@ class TeacherCouponController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.coupons.edit', $coupon->id)
-            ->with('msg_success', __('teacher::coupons.flash.updated'));
+            ->with('msg_success', __('coupons::teacher/messages.flash.updated'));
     }
 
     public function delete(int $id)
@@ -321,7 +321,7 @@ class TeacherCouponController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.coupons.index')
-            ->with('msg_success', __('teacher::coupons.flash.deleted'));
+            ->with('msg_success', __('coupons::teacher/messages.flash.deleted'));
     }
 
     public function togglePriority(int $id)
@@ -344,7 +344,7 @@ class TeacherCouponController extends Controller
 
             return redirect()
                 ->route('teacher.dashboard.coupons.index')
-                ->with('msg_success', __('teacher::coupons.flash.priority_disabled'));
+                ->with('msg_success', __('coupons::teacher/messages.flash.priority_disabled'));
         }
 
         $coupon = $this->resolveTeacherCoupon($teacher, $id);
@@ -370,8 +370,8 @@ class TeacherCouponController extends Controller
             ->route('teacher.dashboard.coupons.index')
             ->with('msg_success', __(
                 $coupon->fresh()->is_package_priority
-                    ? 'teacher::coupons.flash.priority_enabled'
-                    : 'teacher::coupons.flash.priority_disabled'
+                    ? 'coupons::teacher/messages.flash.priority_enabled'
+                    : 'coupons::teacher/messages.flash.priority_disabled'
             ));
     }
 
@@ -393,7 +393,7 @@ class TeacherCouponController extends Controller
         $students = $this->resolveTeacherStudents($teacher);
         $assignedStudentIds = $coupon->students()->pluck('students.id')->map(fn ($sid) => (int) $sid)->all();
 
-        $pageTitle = __('teacher::coupons.assign_students_title');
+        $pageTitle = __('coupons::teacher/messages.assign_students_title');
         $pageName = $pageTitle;
 
         return view('teacher::clients.dashboard.coupons.assign_students', compact(
@@ -451,7 +451,7 @@ class TeacherCouponController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.coupons.students', $coupon->id)
-            ->with('msg_success', __('teacher::coupons.flash.students_updated'));
+            ->with('msg_success', __('coupons::teacher/messages.flash.students_updated'));
     }
 
     public function courses(int $id)
@@ -476,7 +476,7 @@ class TeacherCouponController extends Controller
             ->get();
         $assignedCourseIds = $coupon->courses()->pluck('courses.id')->map(fn ($cid) => (int) $cid)->all();
 
-        $pageTitle = __('teacher::coupons.assign_courses_title');
+        $pageTitle = __('coupons::teacher/messages.assign_courses_title');
         $pageName = $pageTitle;
 
         return view('teacher::clients.dashboard.coupons.assign_courses', compact(
@@ -540,7 +540,7 @@ class TeacherCouponController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.coupons.courses', $coupon->id)
-            ->with('msg_success', __('teacher::coupons.flash.courses_updated'));
+            ->with('msg_success', __('coupons::teacher/messages.flash.courses_updated'));
     }
 
     private function validateCoupon(Request $request, ?int $id = null): array
@@ -755,7 +755,7 @@ class TeacherCouponController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.index')
-            ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
+            ->with('msg_danger', __('courses::teacher/messages.package_features.feature_locked'));
     }
 
     private function ensureCouponCreationAllowed(Teacher $teacher)
@@ -763,7 +763,7 @@ class TeacherCouponController extends Controller
         if (!$teacher->packageHasFeature('can_manage_coupons')) {
             return redirect()
                 ->route('teacher.dashboard.coupons.index')
-                ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
+                ->with('msg_danger', __('courses::teacher/messages.package_features.feature_locked'));
         }
 
         $couponLimit = $this->resolveCouponLimit($teacher);
@@ -779,7 +779,7 @@ class TeacherCouponController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.coupons.index')
-            ->with('msg_danger', __('teacher::coupons.flash.limit_reached', ['limit' => $couponLimit]));
+            ->with('msg_danger', __('coupons::teacher/messages.flash.limit_reached', ['limit' => $couponLimit]));
     }
 
     private function resolveCouponLimit(Teacher $teacher): ?int
@@ -827,7 +827,7 @@ class TeacherCouponController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.coupons.index')
-            ->with('msg_danger', __('teacher::coupons.flash.locked_manage_only'));
+            ->with('msg_danger', __('coupons::teacher/messages.flash.locked_manage_only'));
     }
 
     private function syncCouponLocks(Teacher $teacher): void
@@ -846,7 +846,7 @@ class TeacherCouponController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.coupons.index')
-            ->with('msg_danger', __('teacher::coupons.flash.limit_reached', ['limit' => $couponLimit]));
+            ->with('msg_danger', __('coupons::teacher/messages.flash.limit_reached', ['limit' => $couponLimit]));
     }
 
     private function resolveTeacherStudents(Teacher $teacher)

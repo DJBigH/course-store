@@ -135,6 +135,7 @@ class SettingController extends Controller
             'popup_notice_link_url_ja',
             'popup_notice_link_url_zh',
             'popup_notice_snooze_minutes',
+            'ai_quiz_enabled',
         ];
 
         $allowedSettingKeys = [];

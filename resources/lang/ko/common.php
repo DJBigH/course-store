@@ -25,5 +25,6 @@ return [
     'payment_policy'       => '결제 정책',
     'terms_of_service' => '서비스 약관',
     'privacy_policy'       => '개인정보 처리방침',
+    'free'                 => '무료',
 
 ];

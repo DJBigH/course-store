@@ -25,7 +25,7 @@ return [
         'setup_password_hint' => 'Liên kết này sẽ đưa bạn đến màn hình tạo mật khẩu mới cho tài khoản giảng viên.',
         'existing_account_hint' => 'Nếu bạn quên mật khẩu hiện tại, hãy dùng chức năng quên mật khẩu ở trang đăng nhập giảng viên.',
         'admin_note' => 'Ghi chú từ admin:',
-        'closing' => 'Bạn có thể theo dõi trạng thái gói và thời gian hiệu lực ngay trong workspace giảng viên.',
+        'closing' => 'Bạn có thể theo dõi trạng thái gói và thời gian hiệu lực ngay trong bảng điều khiển giảng viên.',
         'signature' => 'Trân trọng,',
         'brand' => 'BigK Udemy',
     ],

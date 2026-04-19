@@ -1,0 +1,90 @@
+<?php
+
+return [
+    'title' => 'Quản lý đơn hàng',
+    'description' => 'Theo dõi và quản lý các giao dịch mua khóa học từ học viên của bạn.',
+    'empty' => 'Chưa có đơn hàng nào phù hợp với điều kiện tìm kiếm.',
+    'pages' => [
+        'index' => 'Quản lý đơn hàng',
+        'show' => 'Chi tiết đơn hàng #:code',
+    ],
+    'filters' => [
+        'search' => 'Tìm kiếm',
+        'search_placeholder' => 'Mã đơn hàng, tên học viên...',
+        'course' => 'Khóa học',
+        'payment_method' => 'Thanh toán',
+        'all' => 'Tất cả',
+        'date_from' => 'Từ ngày',
+        'date_to' => 'Đến ngày',
+    ],
+    'actions' => [
+        'filter' => 'Lọc kết quả',
+        'reset' => 'Đặt lại',
+        'export_excel' => 'Xuất Excel',
+        'export_csv' => 'Xuất CSV',
+        'view_detail' => 'Chi tiết',
+    ],
+    'summary' => [
+        'orders' => 'Tổng đơn',
+        'students' => 'Học viên',
+        'courses' => 'Khóa học',
+        'gross' => 'Doanh thu gộp',
+        'discount' => 'Giảm giá',
+        'revenue' => 'Thực nhận (Ước tính)',
+        'net' => 'Doanh thu thuần',
+    ],
+    'list' => [
+        'order_code' => 'Đơn hàng #:code',
+        'item_count' => 'Số lượng khóa học',
+    ],
+    'table' => [
+        'course' => 'Khóa học',
+        'gross' => 'Giá bán',
+        'discount' => 'Giảm giá',
+        'net' => 'Thuần',
+        'revenue' => 'Thực nhận',
+    ],
+    'status' => [
+        'paid' => 'Đã thanh toán',
+        'unknown' => 'Không rõ',
+        'no_time' => 'N/A',
+    ],
+    'payment' => [
+        'bank' => 'Chuyển khoản ngân hàng',
+        'bank_transfer' => 'Chuyển khoản ngân hàng',
+        'vnpay' => 'VNPay',
+        'momo' => 'MoMo',
+        'free' => 'Miễn phí',
+        'unknown' => 'Chưa xác định',
+    ],
+    'export' => [
+        'order' => 'Đơn hàng',
+        'student' => 'Học viên',
+        'email' => 'Email',
+        'phone' => 'Số điện thoại',
+        'payment_method' => 'Phương thức',
+        'paid_at' => 'Ngày thanh toán',
+        'course_count' => 'Số lượng',
+        'courses' => 'Danh sách khóa học',
+        'gross' => 'Gross',
+        'discount' => 'Discount',
+        'net' => 'Net',
+        'revenue' => 'Thực nhận',
+    ],
+    'show' => [
+        'title' => 'Chi tiết đơn hàng #:code',
+        'student_info' => 'Thông tin học viên',
+        'payment_info' => 'Thanh toán',
+        'summary_title' => 'Tổng quan đơn hàng (Phần của bạn)',
+        'item_list' => 'Chi tiết sản phẩm',
+        'labels' => [
+            'name' => 'Họ và tên',
+            'email' => 'Email',
+            'phone' => 'Điện thoại',
+            'method' => 'Phương thức thanh toán',
+            'date' => 'Ngày thanh toán',
+            'status' => 'Trạng thái',
+            'commission' => 'Tỷ lệ hoa hồng',
+        ]
+    ]
+];

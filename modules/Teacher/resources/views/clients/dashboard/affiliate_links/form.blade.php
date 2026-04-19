@@ -4,21 +4,21 @@
     <div class="teacher-panel teacher-affiliate-form-shell">
         <div class="teacher-affiliate-form-hero">
             <div>
-                <span class="teacher-affiliate-form-kicker">{{ __('teacher::dashboard.nav.affiliate_links') }}</span>
+                <span class="teacher-affiliate-form-kicker">{{ __('courses::teacher/messages.nav.affiliate_links') }}</span>
                 <h3 class="teacher-affiliate-form-title">
-                    {{ $link ? __('teacher::dashboard.affiliate_links.edit') : __('teacher::dashboard.affiliate_links.create') }}
+                    {{ $link ? __('courses::teacher/messages.affiliate_links.edit') : __('courses::teacher/messages.affiliate_links.create') }}
                 </h3>
                 <p class="teacher-affiliate-form-desc mb-0">
-                    {{ $link ? __('teacher::dashboard.affiliate_links.edit_description') : __('teacher::dashboard.affiliate_links.create_description') }}
+                    {{ $link ? __('courses::teacher/messages.affiliate_links.edit_description') : __('courses::teacher/messages.affiliate_links.create_description') }}
                 </p>
             </div>
             <a href="{{ route('teacher.dashboard.affiliate-links.index') }}" class="btn btn-outline-secondary">
-                {{ __('teacher::dashboard.common.back') }}
+                {{ __('courses::teacher/messages.common.back') }}
             </a>
         </div>
 
         @if ($errors->any())
-            <div class="alert alert-danger border-0">{{ __('teacher::dashboard.common.validation_summary') }}</div>
+            <div class="alert alert-danger border-0">{{ __('courses::teacher/messages.common.validation_summary') }}</div>
         @endif
 
         <form method="POST"
@@ -29,29 +29,29 @@
             <div class="row g-4">
                 <div class="col-lg-7">
                     <div class="teacher-affiliate-form-block">
-                        <h4>{{ __('teacher::dashboard.affiliate_links.form.content_title') }}</h4>
+                        <h4>{{ __('courses::teacher/messages.affiliate_links.form.content_title') }}</h4>
                         <div class="teacher-affiliate-form-grid">
                             <div>
-                                <label class="form-label">{{ __('teacher::dashboard.affiliate_links.fields.name') }}</label>
+                                <label class="form-label">{{ __('courses::teacher/messages.affiliate_links.fields.name') }}</label>
                                 <input type="text" name="name" class="form-control" maxlength="120"
                                     value="{{ old('name', $link?->name) }}" required>
-                                <div class="form-text">{{ __('teacher::dashboard.affiliate_links.form.name_help') }}</div>
+                                <div class="form-text">{{ __('courses::teacher/messages.affiliate_links.form.name_help') }}</div>
                             </div>
                             <div>
-                                <label class="form-label">{{ __('teacher::dashboard.affiliate_links.fields.target_type') }}</label>
+                                <label class="form-label">{{ __('courses::teacher/messages.affiliate_links.fields.target_type') }}</label>
                                 <select name="target_type" class="form-select affiliate-target-type" required>
                                     @foreach (['course', 'bundle', 'landing'] as $targetType)
                                         <option value="{{ $targetType }}"
                                             {{ old('target_type', $link?->target_type ?? 'course') === $targetType ? 'selected' : '' }}>
-                                            {{ __('teacher::dashboard.affiliate_links.target_types.' . $targetType) }}
+                                            {{ __('courses::teacher/messages.affiliate_links.target_types.' . $targetType) }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="affiliate-target-group" data-target-group="course">
-                                <label class="form-label">{{ __('teacher::dashboard.affiliate_links.form.course_target') }}</label>
+                                <label class="form-label">{{ __('courses::teacher/messages.affiliate_links.form.course_target') }}</label>
                                 <select name="target_id_course" class="form-select">
-                                    <option value="">{{ __('teacher::dashboard.affiliate_links.form.choose_course') }}</option>
+                                    <option value="">{{ __('courses::teacher/messages.affiliate_links.form.choose_course') }}</option>
                                     @foreach ($courseOptions as $courseOption)
                                         <option value="{{ $courseOption->id }}"
                                             {{ old('target_type', $link?->target_type ?? 'course') === 'course' && (int) old('target_id_course', $link?->target_type === 'course' ? $link?->target_id : null) === (int) $courseOption->id ? 'selected' : '' }}>
@@ -61,9 +61,9 @@
                                 </select>
                             </div>
                             <div class="affiliate-target-group" data-target-group="bundle">
-                                <label class="form-label">{{ __('teacher::dashboard.affiliate_links.form.bundle_target') }}</label>
+                                <label class="form-label">{{ __('courses::teacher/messages.affiliate_links.form.bundle_target') }}</label>
                                 <select name="target_id_bundle" class="form-select">
-                                    <option value="">{{ __('teacher::dashboard.affiliate_links.form.choose_bundle') }}</option>
+                                    <option value="">{{ __('courses::teacher/messages.affiliate_links.form.choose_bundle') }}</option>
                                     @foreach ($bundleOptions as $bundleOption)
                                         <option value="{{ $bundleOption->id }}"
                                             {{ old('target_type', $link?->target_type ?? 'course') === 'bundle' && (int) old('target_id_bundle', $link?->target_type === 'bundle' ? $link?->target_id : null) === (int) $bundleOption->id ? 'selected' : '' }}>
@@ -74,7 +74,7 @@
                             </div>
                             <div class="affiliate-target-group" data-target-group="landing">
                                 <div class="teacher-affiliate-form-hint">
-                                    {{ __('teacher::dashboard.affiliate_links.form.landing_hint') }}
+                                    {{ __('courses::teacher/messages.affiliate_links.form.landing_hint') }}
                                 </div>
                             </div>
                         </div>
@@ -83,15 +83,15 @@
 
                 <div class="col-lg-5">
                     <div class="teacher-affiliate-form-block">
-                        <h4>{{ __('teacher::dashboard.affiliate_links.form.status_title') }}</h4>
+                        <h4>{{ __('courses::teacher/messages.affiliate_links.form.status_title') }}</h4>
                         <div class="teacher-affiliate-form-grid">
                             @if ($link)
                                 <div>
-                                    <label class="form-label">{{ __('teacher::dashboard.affiliate_links.fields.code') }}</label>
+                                    <label class="form-label">{{ __('courses::teacher/messages.affiliate_links.fields.code') }}</label>
                                     <input type="text" class="form-control" value="{{ $link->code }}" readonly>
                                 </div>
                                 <div>
-                                    <label class="form-label">{{ __('teacher::dashboard.affiliate_links.fields.public_url') }}</label>
+                                    <label class="form-label">{{ __('courses::teacher/messages.affiliate_links.fields.public_url') }}</label>
                                     <input type="text" class="form-control" value="{{ $link->public_url ?? '' }}" readonly>
                                 </div>
                             @endif
@@ -101,9 +101,9 @@
                                 <input class="form-check-input" type="checkbox" name="status" value="1" id="affiliate-status"
                                     {{ old('status', $link?->status ?? true) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="affiliate-status">
-                                    {{ __('teacher::dashboard.affiliate_links.fields.status') }}
+                                    {{ __('courses::teacher/messages.affiliate_links.fields.status') }}
                                 </label>
-                                <div class="form-text">{{ __('teacher::dashboard.affiliate_links.form.status_help') }}</div>
+                                <div class="form-text">{{ __('courses::teacher/messages.affiliate_links.form.status_help') }}</div>
                             </div>
                         </div>
                     </div>
@@ -114,10 +114,10 @@
 
             <div class="teacher-affiliate-form-actions">
                 <a href="{{ route('teacher.dashboard.affiliate-links.index') }}" class="btn btn-outline-secondary">
-                    {{ __('teacher::dashboard.common.cancel') }}
+                    {{ __('courses::teacher/messages.common.cancel') }}
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    {{ __('teacher::dashboard.affiliate_links.actions.save') }}
+                    {{ __('courses::teacher/messages.affiliate_links.actions.save') }}
                 </button>
             </div>
         </form>

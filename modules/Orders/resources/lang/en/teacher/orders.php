@@ -1,0 +1,90 @@
+<?php
+
+return [
+    'title' => 'Order Management',
+    'description' => 'Track and manage course transactions from your students.',
+    'empty' => 'No orders found matching your search criteria.',
+    'pages' => [
+        'index' => 'Order Management',
+        'show' => 'Order Detail #:code',
+    ],
+    'filters' => [
+        'search' => 'Search',
+        'search_placeholder' => 'Order code, student name...',
+        'course' => 'Course',
+        'payment_method' => 'Payment',
+        'all' => 'All',
+        'date_from' => 'From Date',
+        'date_to' => 'To Date',
+    ],
+    'actions' => [
+        'filter' => 'Filter Results',
+        'reset' => 'Reset',
+        'export_excel' => 'Export Excel',
+        'export_csv' => 'Export CSV',
+        'view_detail' => 'Details',
+    ],
+    'summary' => [
+        'orders' => 'Total Orders',
+        'students' => 'Students',
+        'courses' => 'Courses',
+        'gross' => 'Gross Revenue',
+        'discount' => 'Discount',
+        'revenue' => 'Net Received (Estimated)',
+        'net' => 'Net Revenue',
+    ],
+    'list' => [
+        'order_code' => 'Order #:code',
+        'item_count' => 'Number of Courses',
+    ],
+    'table' => [
+        'course' => 'Course',
+        'gross' => 'Gross',
+        'discount' => 'Discount',
+        'net' => 'Net',
+        'revenue' => 'Received',
+    ],
+    'status' => [
+        'paid' => 'Paid',
+        'unknown' => 'Unknown',
+        'no_time' => 'N/A',
+    ],
+    'payment' => [
+        'bank' => 'Bank Transfer',
+        'bank_transfer' => 'Bank Transfer',
+        'vnpay' => 'VNPay',
+        'momo' => 'MoMo',
+        'free' => 'Free',
+        'unknown' => 'Unknown',
+    ],
+    'export' => [
+        'order' => 'Order',
+        'student' => 'Student',
+        'email' => 'Email',
+        'phone' => 'Phone',
+        'payment_method' => 'Method',
+        'paid_at' => 'Paid At',
+        'course_count' => 'Count',
+        'courses' => 'Courses List',
+        'gross' => 'Gross',
+        'discount' => 'Discount',
+        'net' => 'Net',
+        'revenue' => 'Revenue',
+    ],
+    'show' => [
+        'title' => 'Order Detail #:code',
+        'student_info' => 'Student Information',
+        'payment_info' => 'Payment',
+        'summary_title' => 'Order Overview (Your Portion)',
+        'item_list' => 'Item Details',
+        'labels' => [
+            'name' => 'Full Name',
+            'email' => 'Email',
+            'phone' => 'Phone',
+            'method' => 'Payment Method',
+            'date' => 'Payment Date',
+            'status' => 'Status',
+            'commission' => 'Commission Rate',
+        ]
+    ]
+];

@@ -82,53 +82,68 @@ if (!function_exists('format_money_value')) {
     }
 }
 
-function moneyLocale($number)
+function moneyLocale($number, $showZero = false)
 {
     $locale = app()->getLocale();
 
     if ($locale === 'en') {
-        return moneyUS($number);
+        return moneyUS($number, '$', __('common.free'), $showZero);
     }
 
     if ($locale === 'ko') {
-        return moneyKR($number);
+        return moneyKR($number, '₩', __('common.free'), $showZero);
     }
 
     if ($locale === 'ja') {
-        return moneyJP($number);
+        return moneyJP($number, '¥', __('common.free'), $showZero);
     }
 
     if ($locale === 'zh') {
-        return moneyCN($number);
+        return moneyCN($number, 'CN¥', __('common.free'), $showZero);
     }
 
     // mặc định VI
-    return money($number);
+    return money($number, 'đ', __('common.free'), $showZero);
 }
 
 
-function money($number, $currency = 'đ', $freeText = 'Miễn phí')
+function money($number, $currency = 'đ', $freeText = 'Miễn phí', $showZero = false)
 {
+    if ($showZero && (string)$number === '0') {
+        return '0 ' . $currency;
+    }
     return !empty($number) ? format_money_value($number) . ' ' . $currency : $freeText;
 }
 
-function moneyUS($number, $currency = '$', $freeText = 'Free')
+function moneyUS($number, $currency = '$', $freeText = 'Free', $showZero = false)
 {
+    if ($showZero && (string)$number === '0') {
+        return $currency . '0.00';
+    }
     return !empty($number) ? $currency . format_money_value(vnd_to_usd($number), 2) : $freeText;
 }
 
-function moneyKR($number, $currency = '₩', $freeText = '무료')
+function moneyKR($number, $currency = '₩', $freeText = '무료', $showZero = false)
 {
+    if ($showZero && (string)$number === '0') {
+        return $currency . '0';
+    }
     return !empty($number) ? $currency . format_money_value(vnd_to_currency($number, 'krw', 0)) : $freeText;
 }
 
-function moneyJP($number, $currency = '¥', $freeText = '無料')
+function moneyJP($number, $currency = '¥', $freeText = '無料', $showZero = false)
 {
+    if ($showZero && (string)$number === '0') {
+        return $currency . '0';
+    }
     return !empty($number) ? $currency . format_money_value(vnd_to_currency($number, 'jpy', 0)) : $freeText;
 }
 
-function moneyCN($number, $currency = 'CN¥', $freeText = '免费')
+function moneyCN($number, $currency = 'CN¥', $freeText = '免费', $showZero = false)
 {
+    if ($showZero && (string)$number === '0') {
+        return $currency . '0.00';
+    }
     return !empty($number) ? $currency . format_money_value(vnd_to_currency($number, 'cny', 2), 2) : $freeText;
 }
 
@@ -332,25 +347,34 @@ if (!function_exists('videoEmbedUrl')) {
         $host = strtolower((string) parse_url($url, PHP_URL_HOST));
         $path = (string) parse_url($url, PHP_URL_PATH);
 
-        if (str_contains($host, 'youtu.be')) {
-            $id = trim($path, '/');
-            return $id ? "https://www.youtube.com/embed/{$id}" : null;
-        }
+        // Youtube
+        if (str_contains($host, 'youtube.com') || str_contains($host, 'youtu.be')) {
+            $id = null;
 
-        if (str_contains($host, 'youtube.com') && str_contains($path, '/embed/')) {
-            $id = trim(str_replace('/embed/', '', $path), '/');
-            return $id ? "https://www.youtube.com/embed/{$id}" : null;
-        }
+            if (str_contains($host, 'youtu.be')) {
+                $id = trim($path, '/');
+            } elseif (str_contains($path, '/embed/')) {
+                $id = trim(str_replace('/embed/', '', $path), '/');
+            } elseif (str_contains($path, '/shorts/')) {
+                $id = trim(str_replace('/shorts/', '', $path), '/');
+            } elseif (str_contains($path, '/v/')) {
+                $id = trim(str_replace('/v/', '', $path), '/');
+            } elseif (str_contains($path, '/watch')) {
+                $query = (string) parse_url($url, PHP_URL_QUERY);
+                parse_str($query, $params);
+                $id = $params['v'] ?? null;
+            } else {
+                // Trường hợp m.youtube.com hoặc các link khác không có /watch
+                $query = (string) parse_url($url, PHP_URL_QUERY);
+                parse_str($query, $params);
+                $id = $params['v'] ?? null;
+            }
 
-        if (str_contains($host, 'youtube.com') && str_contains($path, '/shorts/')) {
-            $id = trim(str_replace('/shorts/', '', $path), '/');
-            return $id ? "https://www.youtube.com/embed/{$id}" : null;
-        }
+            // Clean up ID if there are extra segments
+            if ($id && str_contains($id, '/')) {
+                $id = explode('/', $id)[0];
+            }
 
-        if (str_contains($host, 'youtube.com')) {
-            $query = (string) parse_url($url, PHP_URL_QUERY);
-            parse_str($query, $params);
-            $id = $params['v'] ?? null;
             return $id ? "https://www.youtube.com/embed/{$id}" : null;
         }
 

@@ -89,7 +89,9 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
             'students_courses',
             'student_id',
             'course_id'
-        )->withPivot('status');
+        )->withoutGlobalScopes([\App\Models\Scopes\ActiveScope::class])
+            ->whereIn('courses.status', [1, 2])
+            ->withPivot('status');
     }
 
     public function coupons()

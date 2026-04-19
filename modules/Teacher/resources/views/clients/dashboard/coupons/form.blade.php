@@ -4,18 +4,18 @@
     <div class="teacher-panel teacher-coupon-form">
         <div class="teacher-coupon-form__head">
             <div>
-                <span class="teacher-coupon-form__kicker">{{ __('teacher::coupons.hero.kicker') }}</span>
+                <span class="teacher-coupon-form__kicker">{{ __('coupons::teacher/messages.hero.kicker') }}</span>
                 <h3 class="teacher-coupon-form__title">{{ $pageTitle }}</h3>
-                <p class="teacher-coupon-form__desc mb-0">{{ __('teacher::coupons.form.description') }}</p>
+                <p class="teacher-coupon-form__desc mb-0">{{ __('coupons::teacher/messages.form.description') }}</p>
                 @if ($coupon?->package_locked_at)
                     <div class="teacher-limit-lock mt-3">
-                        <span class="teacher-limit-lock__badge">{{ __('teacher::coupons.labels.limited_actions_only') }}</span>
-                        <div class="teacher-limit-lock__text">{{ __('teacher::coupons.flash.locked_manage_only') }}</div>
+                        <span class="teacher-limit-lock__badge">{{ __('coupons::teacher/messages.labels.limited_actions_only') }}</span>
+                        <div class="teacher-limit-lock__text">{{ __('coupons::teacher/messages.flash.locked_manage_only') }}</div>
                     </div>
                 @endif
             </div>
             <a href="{{ route('teacher.dashboard.coupons.index') }}" class="btn btn-outline-secondary">
-                {{ __('teacher::coupons.actions.back') }}
+                {{ __('coupons::teacher/messages.actions.back') }}
             </a>
         </div>
 
@@ -23,33 +23,33 @@
             @csrf
             <div class="row g-3">
                 <div class="col-lg-6">
-                    <label class="form-label">{{ __('teacher::coupons.form.code') }}</label>
+                    <label class="form-label">{{ __('coupons::teacher/messages.form.code') }}</label>
                     <div class="teacher-coupon-code-field">
                         <input type="text" name="code" id="teacher-coupon-code" class="form-control" value="{{ old('code', $coupon->code ?? '') }}" placeholder="WELCOME10">
                         <button
                             type="button"
                             class="btn btn-outline-secondary teacher-coupon-code-generate"
                             data-generate-code
-                            title="{{ __('teacher::coupons.actions.random_code') }}"
-                            aria-label="{{ __('teacher::coupons.actions.random_code') }}"
+                            title="{{ __('coupons::teacher/messages.actions.random_code') }}"
+                            aria-label="{{ __('coupons::teacher/messages.actions.random_code') }}"
                         >
                             <i class="fas fa-random"></i>
                         </button>
                     </div>
-                    <small class="text-muted d-block mt-2">{{ __('teacher::coupons.form.code_hint') }}</small>
+                    <small class="text-muted d-block mt-2">{{ __('coupons::teacher/messages.form.code_hint') }}</small>
                     @error('code')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-lg-3">
-                    <label class="form-label">{{ __('teacher::coupons.form.discount_type') }}</label>
+                    <label class="form-label">{{ __('coupons::teacher/messages.form.discount_type') }}</label>
                     <select name="discount_type" class="form-select">
                         <option value="percent" @selected(old('discount_type', $coupon->discount_type ?? 'percent') === 'percent')>%</option>
                         <option value="value" @selected(old('discount_type', $coupon->discount_type ?? '') === 'value')>VND</option>
                     </select>
                 </div>
                 <div class="col-lg-3">
-                    <label class="form-label">{{ __('teacher::coupons.form.discount_value') }}</label>
+                    <label class="form-label">{{ __('coupons::teacher/messages.form.discount_value') }}</label>
                     <input type="hidden" name="discount_value" id="teacher-coupon-discount" value="{{ old('discount_value', $coupon->discount_value ?? '') }}">
                     <input
                         type="text"
@@ -63,7 +63,7 @@
                     >
                 </div>
                 <div class="col-lg-4">
-                    <label class="form-label">{{ __('teacher::coupons.form.total_condition') }}</label>
+                    <label class="form-label">{{ __('coupons::teacher/messages.form.total_condition') }}</label>
                     <input type="hidden" name="total_condition" id="teacher-coupon-total" value="{{ old('total_condition', $coupon->total_condition ?? '') }}">
                     <input
                         type="text"
@@ -77,7 +77,7 @@
                     >
                 </div>
                 <div class="col-lg-4">
-                    <label class="form-label">{{ __('teacher::coupons.form.count') }}</label>
+                    <label class="form-label">{{ __('coupons::teacher/messages.form.count') }}</label>
                     <input type="hidden" name="count" id="teacher-coupon-count" value="{{ old('count', $coupon->count ?? '') }}">
                     <input
                         type="text"
@@ -91,26 +91,26 @@
                     >
                 </div>
                 <div class="col-lg-4">
-                    <label class="form-label">{{ __('teacher::coupons.form.per_student_once') }}</label>
+                    <label class="form-label">{{ __('coupons::teacher/messages.form.per_student_once') }}</label>
                     <select name="per_student_once" class="form-select">
-                        <option value="1" @selected((string) old('per_student_once', $coupon?->per_student_once ? '1' : '0') === '1')>{{ __('teacher::coupons.labels.once') }}</option>
-                        <option value="0" @selected((string) old('per_student_once', $coupon?->per_student_once ? '1' : '0') === '0')>{{ __('teacher::coupons.labels.multi') }}</option>
+                        <option value="1" @selected((string) old('per_student_once', $coupon?->per_student_once ? '1' : '0') === '1')>{{ __('coupons::teacher/messages.labels.once') }}</option>
+                        <option value="0" @selected((string) old('per_student_once', $coupon?->per_student_once ? '1' : '0') === '0')>{{ __('coupons::teacher/messages.labels.multi') }}</option>
                     </select>
                 </div>
                 <div class="col-lg-6">
-                    <label class="form-label">{{ __('teacher::coupons.form.start_date') }}</label>
+                    <label class="form-label">{{ __('coupons::teacher/messages.form.start_date') }}</label>
                     <input type="date" name="start_date" class="form-control" value="{{ old('start_date', optional($coupon?->start_date)->format('Y-m-d')) }}">
                 </div>
                 <div class="col-lg-6">
-                    <label class="form-label">{{ __('teacher::coupons.form.end_date') }}</label>
+                    <label class="form-label">{{ __('coupons::teacher/messages.form.end_date') }}</label>
                     <input type="date" name="end_date" class="form-control" value="{{ old('end_date', optional($coupon?->end_date)->format('Y-m-d')) }}">
                 </div>
                 <div class="col-12">
                     <div class="teacher-coupon-assign">
                         <div class="teacher-coupon-assign__head">
                             <div>
-                                <h5 class="mb-1">{{ __('teacher::coupons.assign_block.title') }}</h5>
-                                <p class="text-muted mb-0">{{ __('teacher::coupons.assign_block.description') }}</p>
+                                <h5 class="mb-1">{{ __('coupons::teacher/messages.assign_block.title') }}</h5>
+                                <p class="text-muted mb-0">{{ __('coupons::teacher/messages.assign_block.description') }}</p>
                             </div>
                             @error('students')
                                 <div class="text-danger small">{{ $message }}</div>
@@ -118,19 +118,19 @@
                         </div>
                         <div class="teacher-coupon-assign__toggles">
                             <button type="button" class="btn btn-outline-secondary btn-sm" data-assign-toggle="students">
-                                {{ __('teacher::coupons.assign_block.students') }}
+                                {{ __('coupons::teacher/messages.assign_block.students') }}
                             </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm" data-assign-toggle="courses">
-                                {{ __('teacher::coupons.assign_block.courses') }}
+                                {{ __('coupons::teacher/messages.assign_block.courses') }}
                             </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm" data-assign-toggle="bundles">
-                                {{ __('teacher::coupons.assign_block.bundles') }}
+                                {{ __('coupons::teacher/messages.assign_block.bundles') }}
                             </button>
                         </div>
                         <div class="row g-3">
                             <div class="col-lg-6" data-assign-panel="students">
                                 <div class="teacher-coupon-assign__list">
-                                    <div class="teacher-coupon-assign__label">{{ __('teacher::coupons.assign_block.students') }}</div>
+                                    <div class="teacher-coupon-assign__label">{{ __('coupons::teacher/messages.assign_block.students') }}</div>
                                     @forelse ($students as $student)
                                         <label class="teacher-coupon-assign__item">
                                             <input type="checkbox" name="students[]"
@@ -138,13 +138,13 @@
                                             <span>{{ $student->name }} ({{ $student->email }})</span>
                                         </label>
                                     @empty
-                                        <div class="text-muted small">{{ __('teacher::coupons.assign_students_empty') }}</div>
+                                        <div class="text-muted small">{{ __('coupons::teacher/messages.assign_students_empty') }}</div>
                                     @endforelse
                                 </div>
                             </div>
                             <div class="col-lg-6" data-assign-panel="courses">
                                 <div class="teacher-coupon-assign__list">
-                                    <div class="teacher-coupon-assign__label">{{ __('teacher::coupons.assign_block.courses') }}</div>
+                                    <div class="teacher-coupon-assign__label">{{ __('coupons::teacher/messages.assign_block.courses') }}</div>
                                     @forelse ($courses as $course)
                                         <label class="teacher-coupon-assign__item">
                                             <input type="checkbox" name="courses[]"
@@ -152,13 +152,13 @@
                                             <span>{{ $course->name }}</span>
                                         </label>
                                     @empty
-                                        <div class="text-muted small">{{ __('teacher::coupons.assign_courses_empty') }}</div>
+                                        <div class="text-muted small">{{ __('coupons::teacher/messages.assign_courses_empty') }}</div>
                                     @endforelse
                                 </div>
                             </div>
                             <div class="col-lg-6" data-assign-panel="bundles">
                                 <div class="teacher-coupon-assign__list">
-                                    <div class="teacher-coupon-assign__label">{{ __('teacher::coupons.assign_block.bundles') }}</div>
+                                    <div class="teacher-coupon-assign__label">{{ __('coupons::teacher/messages.assign_block.bundles') }}</div>
                                     @forelse ($bundles as $bundle)
                                         <label class="teacher-coupon-assign__item">
                                             <input type="checkbox" name="bundles[]"
@@ -166,7 +166,7 @@
                                             <span>{{ $bundle->name }}</span>
                                         </label>
                                     @empty
-                                        <div class="text-muted small">{{ __('teacher::coupons.assign_bundles_empty') }}</div>
+                                        <div class="text-muted small">{{ __('coupons::teacher/messages.assign_bundles_empty') }}</div>
                                     @endforelse
                                 </div>
                             </div>
@@ -177,14 +177,14 @@
 
             <div class="teacher-coupon-form__actions">
                 <button type="submit" class="btn btn-primary">
-                    {{ $coupon ? __('teacher::coupons.actions.update') : __('teacher::coupons.actions.create') }}
+                    {{ $coupon ? __('coupons::teacher/messages.actions.update') : __('coupons::teacher/messages.actions.create') }}
                 </button>
                 @if ($coupon)
                     <a href="{{ route('teacher.dashboard.coupons.courses', $coupon->id) }}" class="btn btn-outline-secondary">
-                        {{ __('teacher::coupons.actions.assign_courses') }}
+                        {{ __('coupons::teacher/messages.actions.assign_courses') }}
                     </a>
                     <a href="{{ route('teacher.dashboard.coupons.students', $coupon->id) }}" class="btn btn-outline-secondary">
-                        {{ __('teacher::coupons.actions.assign_students') }}
+                        {{ __('coupons::teacher/messages.actions.assign_students') }}
                     </a>
                 @endif
             </div>

@@ -3,38 +3,38 @@
 @section('content')
     @php
         $typeLabels = [
-            'feedback' => 'Góp ý',
-            'report' => 'Báo cáo',
+            'feedback' => __('courses::teacher/messages.support.types.feedback'),
+            'report' => __('courses::teacher/messages.support.types.report'),
         ];
 
         $categoryLabels = [
-            'feature_request' => 'Tính năng mới',
-            'ui_ux' => 'Giao diện / UX',
-            'teacher_portal' => 'Teacher portal',
-            'student_portal' => 'Student portal',
-            'payment_package' => 'Thanh toán / gói',
-            'system_bug' => 'Lỗi hệ thống',
-            'course_lesson' => 'Khóa học / bài học',
-            'comment_rating' => 'Bình luận / đánh giá',
-            'content_violation' => 'Nội dung vi phạm',
-            'account' => 'Tài khoản',
-            'other' => 'Khác',
+            'feature_request' => __('courses::teacher/messages.support.categories.feature_request'),
+            'ui_ux' => __('courses::teacher/messages.support.categories.ui_ux'),
+            'teacher_portal' => __('courses::teacher/messages.support.categories.teacher_portal'),
+            'student_portal' => __('courses::teacher/messages.support.categories.student_portal'),
+            'payment_package' => __('courses::teacher/messages.support.categories.payment_package'),
+            'system_bug' => __('courses::teacher/messages.support.categories.system_bug'),
+            'course_lesson' => __('courses::teacher/messages.support.categories.course_lesson'),
+            'comment_rating' => __('courses::teacher/messages.support.categories.comment_rating'),
+            'content_violation' => __('courses::teacher/messages.support.categories.content_violation'),
+            'account' => __('courses::teacher/messages.support.categories.account'),
+            'other' => __('courses::teacher/messages.support.categories.other'),
         ];
 
         $statusLabels = [
-            'new' => 'Mới gửi',
-            'in_progress' => 'Đang xử lý',
-            'need_info' => 'Cần thêm thông tin',
-            'resolved' => 'Đã giải quyết',
-            'rejected' => 'Đã từ chối',
+            'new' => __('courses::teacher/messages.support.status.new'),
+            'in_progress' => __('courses::teacher/messages.support.status.in_progress'),
+            'need_info' => __('courses::teacher/messages.support.status.need_info'),
+            'resolved' => __('courses::teacher/messages.support.status.resolved'),
+            'rejected' => __('courses::teacher/messages.support.status.rejected'),
         ];
     @endphp
 
     <div class="teacher-panel">
         <div class="teacher-section-title mb-4">
             <div>
-                <h3 class="fw-bold mb-2">{{ __('teacher::dashboard.pages.support') }}</h3>
-                <p class="text-muted mb-0">Gửi đề xuất phát triển sản phẩm hoặc báo cáo sự cố trực tiếp cho admin ngay trong khu giảng viên.</p>
+                <h3 class="fw-bold mb-2">{{ __('courses::teacher/messages.pages.support') }}</h3>
+                <p class="text-muted mb-0">{{ __('courses::teacher/messages.support.description') }}</p>
             </div>
         </div>
 
@@ -55,22 +55,22 @@
         <div class="row g-4">
             <div class="col-lg-5">
                 <div class="teacher-panel h-100">
-                    <h4 class="h5 fw-bold mb-3">Gửi mới</h4>
+                    <h4 class="h5 fw-bold mb-3">{{ __('courses::teacher/messages.support.form.title') }}</h4>
 
                     <form method="POST" action="{{ route('teacher.dashboard.support.store') }}">
                         @csrf
                         <input type="hidden" name="page_url" value="{{ url()->current() }}">
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Loại gửi</label>
+                            <label class="form-label fw-semibold">{{ __('courses::teacher/messages.support.form.type_label') }}</label>
                             <select name="submission_type" class="form-select">
-                                <option value="feedback" @selected(old('submission_type', 'feedback') === 'feedback')>Góp ý</option>
-                                <option value="report" @selected(old('submission_type') === 'report')>Báo cáo</option>
+                                <option value="feedback" @selected(old('submission_type', 'feedback') === 'feedback')>{{ __('courses::teacher/messages.support.types.feedback') }}</option>
+                                <option value="report" @selected(old('submission_type') === 'report')>{{ __('courses::teacher/messages.support.types.report') }}</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Danh mục</label>
+                            <label class="form-label fw-semibold">{{ __('courses::teacher/messages.support.form.category_label') }}</label>
                             <select name="category" class="form-select">
                                 @foreach ($categoryLabels as $value => $label)
                                     <option value="{{ $value }}" @selected(old('category') === $value)>{{ $label }}</option>
@@ -79,47 +79,47 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Tiêu đề ngắn</label>
+                            <label class="form-label fw-semibold">{{ __('courses::teacher/messages.support.form.subject_label') }}</label>
                             <input
                                 type="text"
                                 name="subject"
                                 class="form-control"
                                 value="{{ old('subject') }}"
-                                placeholder="Ví dụ: Cần thêm export doanh thu theo tháng"
+                                placeholder="{{ __('courses::teacher/messages.support.form.subject_placeholder') }}"
                             >
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Mô tả chi tiết</label>
+                            <label class="form-label fw-semibold">{{ __('courses::teacher/messages.support.form.message_label') }}</label>
                             <textarea
                                 name="message"
                                 rows="7"
                                 class="form-control"
-                                placeholder="Mô tả rõ ý tưởng hoặc vấn đề bạn đang gặp..."
+                                placeholder="{{ __('courses::teacher/messages.support.form.message_placeholder') }}"
                             >{{ old('message') }}</textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Gửi cho admin</button>
+                        <button type="submit" class="btn btn-primary w-100">{{ __('courses::teacher/messages.support.form.submit') }}</button>
                     </form>
                 </div>
             </div>
 
             <div class="col-lg-7">
                 <div class="teacher-panel h-100">
-                    <h4 class="h5 fw-bold mb-3">Lịch sử đã gửi</h4>
+                    <h4 class="h5 fw-bold mb-3">{{ __('courses::teacher/messages.support.history.title') }}</h4>
 
                     @if ($items->isEmpty())
-                        <div class="border rounded-3 p-4 text-muted">Bạn chưa gửi góp ý hoặc báo cáo nào.</div>
+                        <div class="border rounded-3 p-4 text-muted">{{ __('courses::teacher/messages.support.history.empty') }}</div>
                     @else
                         <div class="table-responsive">
                             <table class="table align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Loại</th>
-                                        <th>Danh mục</th>
-                                        <th>Tiêu đề</th>
-                                        <th>Trạng thái</th>
-                                        <th>Gửi lúc</th>
+                                        <th>{{ __('courses::teacher/messages.support.history.table.type') }}</th>
+                                        <th>{{ __('courses::teacher/messages.support.history.table.category') }}</th>
+                                        <th>{{ __('courses::teacher/messages.support.history.table.subject') }}</th>
+                                        <th>{{ __('courses::teacher/messages.support.history.table.status') }}</th>
+                                        <th>{{ __('courses::teacher/messages.support.history.table.submitted_at') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

@@ -23,14 +23,14 @@ class TeacherController extends Controller
 
     public function index()
     {
-        $pageTitle = 'QuÃ¡ÂºÂ£n lÃƒÂ½ giÃƒÂ¡o viÃƒÂªn';
+        $pageTitle = __('teacher::admin.titles.index');
 
         return view('teacher::lists', compact('pageTitle'));
     }
 
     public function trash()
     {
-        $pageTitle = 'ThÃƒÂ¹ng rÃƒÂ¡c giÃ¡ÂºÂ£ng viÃƒÂªn';
+        $pageTitle = __('teacher::admin.titles.trash');
 
         return view('teacher::trash', compact('pageTitle'));
     }
@@ -118,13 +118,13 @@ class TeacherController extends Controller
                 return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teachers->id . '"></div>';
             })
             ->addColumn('logs', function ($teachers) use ($canLogs) {
-                return $canLogs ? '<a href="' . route('teacher.logs', $teachers->id) . '" class="btn btn-light border">LÃ¡Â»â€¹ch sÃ¡Â»Â­</a>' : '<span class="text-muted small">KhÃƒÂ´ng cÃƒÂ³ quyÃ¡Â»Ân</span>';
+                return $canLogs ? '<a href="' . route('teacher.logs', $teachers->id) . '" class="btn btn-light border">' . __('teacher::admin.actions.logs') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
             })
             ->addColumn('edit', function ($teachers) use ($canEdit) {
-                return $canEdit ? '<a href="' . route('teacher.edit', $teachers->id) . '" class="btn btn-warning">SÃ¡Â»Â­a</a>' : '<span class="text-muted small">KhÃƒÂ´ng cÃƒÂ³ quyÃ¡Â»Ân</span>';
+                return $canEdit ? '<a href="' . route('teacher.edit', $teachers->id) . '" class="btn btn-warning">' . __('teacher::admin.actions.edit') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
             })
             ->addColumn('delete', function ($teachers) use ($canDelete) {
-                return $canDelete ? '<a href="' . route('teacher.delete', $teachers->id) . '" class="btn btn-outline-danger delete-action">XÃƒÂ³a</a>' : '<span class="text-muted small">KhÃƒÂ´ng cÃƒÂ³ quyÃ¡Â»Ân</span>';
+                return $canDelete ? '<a href="' . route('teacher.delete', $teachers->id) . '" class="btn btn-outline-danger delete-action">' . __('teacher::admin.actions.delete') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
             })
             ->editColumn('created_at', function ($teachers) {
                 return Carbon::parse($teachers->created_at)->format('d/m/Y H:i:s');
@@ -134,7 +134,7 @@ class TeacherController extends Controller
                     return Carbon::parse($teachers->last_active_at)->format('d/m/Y H:i:s');
                 }
 
-                return '<span class="text-warning small">ChÆ°a cÃ³ hoáº¡t Ä‘á»™ng</span>';
+                return '<span class="text-warning small">' . __('teacher::admin.table.not_active_yet') . '</span>';
             })
             ->addColumn('inactive_days', function ($teachers) {
                 $reference = $teachers->last_active_at ?: $teachers->created_at;
@@ -150,25 +150,25 @@ class TeacherController extends Controller
                 }
 
                 if (!$teachers->last_active_at) {
-                    return '<span class="activity-age ' . $tone . '">' . $days . ' ngày</span><div class="small text-muted">Chưa từng hoạt động</div>';
+                    return '<span class="activity-age ' . $tone . '">' . $days . ' ' . __('teacher::admin.table.days_unit') . '</span><div class="small text-muted">' . __('teacher::admin.table.never_active') . '</div>';
                 }
 
                 if ($days === 0) {
-                    return '<span class="activity-age activity-age--fresh">Hôm nay</span>';
+                    return '<span class="activity-age activity-age--fresh">' . __('teacher::admin.table.today') . '</span>';
                 }
 
-                return '<span class="activity-age ' . $tone . '">' . $days . ' ngày</span>';
+                return '<span class="activity-age ' . $tone . '">' . $days . ' ' . __('teacher::admin.table.days_unit') . '</span>';
             })
             ->editColumn('image', function ($teachers) {
                 return $teachers->image
                     ? '<img src="' . $teachers->image . '" style="width: 80px; border-radius: 12px;">'
-                    : 'KhÃƒÂ´ng cÃƒÂ³ Ã¡ÂºÂ£nh';
+                    : __('teacher::admin.table.no_image');
             })
             ->addColumn('badge', function ($teachers) {
                 $badge = $teachers->primary_badge;
 
                 if (!$badge) {
-                    return '<span class="text-muted small">Chua co</span>';
+                    return '<span class="text-muted small">' . __('teacher::admin.table.no_badge') . '</span>';
                 }
 
                 return '<span class="teacher-admin-badge teacher-admin-badge--' . e($badge['tone']) . '">' . e($badge['label']) . '</span>';
@@ -188,29 +188,29 @@ class TeacherController extends Controller
             ->addColumn('image', function ($teacher) {
                 return $teacher->image
                     ? '<img src="' . $teacher->image . '" style="width: 80px; border-radius: 12px;">'
-                    : 'KhÃƒÂ´ng cÃƒÂ³ Ã¡ÂºÂ£nh';
+                    : __('teacher::admin.table.no_image');
             })
             ->addColumn('name', fn($teacher) => e($teacher->name_locale))
             ->addColumn('deleted_at', fn($teacher) => Carbon::parse($teacher->deleted_at)->format('d/m/Y H:i:s'))
             ->addColumn('restore', function ($teacher) use ($canRestore) {
                 if (!$canRestore) {
-                    return '<span class="text-muted small">KhÃƒÂ´ng cÃƒÂ³ quyÃ¡Â»Ân</span>';
+                    return '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
                 }
 
                 return '<form method="POST" action="' . route('teacher.restore', $teacher->id) . '" class="d-inline-block">'
                     . csrf_field()
-                    . '<button type="submit" class="btn btn-success">KhÃƒÂ´i phÃ¡Â»Â¥c</button>'
+                    . '<button type="submit" class="btn btn-success">' . __('teacher::admin.actions.restore') . '</button>'
                     . '</form>';
             })
             ->addColumn('force_delete', function ($teacher) use ($canForceDelete) {
                 if (!$canForceDelete) {
-                    return '<span class="text-muted small">KhÃƒÂ´ng cÃƒÂ³ quyÃ¡Â»Ân</span>';
+                    return '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
                 }
 
-                return '<form method="POST" action="' . route('teacher.force-delete', $teacher->id) . '" class="d-inline-block" onsubmit="return confirm(\'XÃƒÂ³a vÃ„Â©nh viÃ¡Â»â€¦n giÃ¡ÂºÂ£ng viÃƒÂªn nÃƒÂ y?\');">'
+                return '<form method="POST" action="' . route('teacher.force-delete', $teacher->id) . '" class="d-inline-block" onsubmit="return confirm(\'' . __('teacher::admin.actions.confirm_force_delete') . '\');">'
                     . csrf_field()
                     . method_field('DELETE')
-                    . '<button type="submit" class="btn btn-outline-danger">XÃƒÂ³a vÃ„Â©nh viá»…n</button>'
+                    . '<button type="submit" class="btn btn-outline-danger">' . __('teacher::admin.actions.force_delete') . '</button>'
                     . '</form>';
             })
             ->rawColumns(['select', 'image', 'restore', 'force_delete'])
@@ -219,7 +219,7 @@ class TeacherController extends Controller
 
     public function create()
     {
-        $pageTitle = 'ThÃƒÂªm mÃ¡Â»â€ºi giÃ¡ÂºÂ£ng viÃƒÂªn';
+        $pageTitle = __('teacher::admin.titles.create');
 
         return view('teacher::create', compact('pageTitle'));
     }
@@ -235,7 +235,7 @@ class TeacherController extends Controller
 
         if ($selectedIds->isEmpty()) {
             throw ValidationException::withMessages([
-                'bulk_action' => 'Vui lÃƒÂ²ng chÃ¡Â»Ân ÃƒÂ­t nhÃ¡ÂºÂ¥t mÃ¡Â»â„¢t giÃ¡ÂºÂ£ng viÃƒÂªn.',
+                'bulk_action' => __('teacher::admin.messages.select_at_least_one'),
             ]);
         }
 
@@ -244,7 +244,7 @@ class TeacherController extends Controller
             ->filter();
 
         if ($teachers->isEmpty()) {
-            return back()->with('msg_danger', 'KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y giÃ¡ÂºÂ£ng viÃƒÂªn Ã„â€˜Ã¡Â»Æ’ xÃ¡Â»Â­ lÃƒÂ½.');
+            return back()->with('msg_danger', __('teacher::admin.messages.not_found'));
         }
 
         if ($action === 'delete') {
@@ -262,15 +262,15 @@ class TeacherController extends Controller
                         'data' => $snapshot,
                         'deleted_image' => $image ? basename($image) : null,
                     ],
-                    logName: 'XÃƒÂ³a hÃƒÂ ng loáº¡t',
-                    description: 'XÃƒÂ³a giÃƒÂ¡o viÃƒÂªn'
+                    logName: __('teacher::admin.logs.bulk_delete'),
+                    description: __('teacher::admin.logs.bulk_delete_desc')
                 );
             }
 
-            return back()->with('msg', 'Ã„ÂÃƒÂ£ xÃƒÂ³a ' . $teachers->count() . ' giÃ¡ÂºÂ£ng viÃƒÂªn.');
+            return back()->with('msg', __('teacher::admin.messages.bulk_deleted', ['count' => $teachers->count()]));
         }
 
-        return back()->with('msg_danger', 'Thao tÃƒÂ¡c hÃƒÂ ng loáº¡t khÃƒÂ´ng há»£p lá»‡.');
+        return back()->with('msg_danger', __('teacher::admin.messages.invalid_bulk_action'));
     }
 
     public function store(TeacherRequest $request)
@@ -285,16 +285,16 @@ class TeacherController extends Controller
             properties: [
                 'data' => array_diff_key($data, array_flip(['password'])),
             ],
-            logName: 'ThÃƒÂªm mÃ¡Â»â€ºi',
-            description: 'TÃ¡ÂºÂ¡o mÃ¡Â»â€ºi giÃ¡o viÃªn'
+            logName: __('teacher::admin.logs.create'),
+            description: __('teacher::admin.logs.create_desc')
         );
 
-        return redirect()->route('teacher.index')->with('msg', __('teacher::messages.create.success'));
+        return redirect()->route('teacher.index')->with('msg', __('teacher::admin.messages.create_success'));
     }
 
     public function edit($id)
     {
-        $pageTitle = 'CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t giÃ¡o viÃªn';
+        $pageTitle = __('teacher::admin.titles.edit');
         $teacher = $this->teacherRepository->find($id);
 
         if (empty($teacher)) {
@@ -345,14 +345,14 @@ class TeacherController extends Controller
                     'old' => $old,
                     'new' => $new,
                 ],
-                logName: 'CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t',
-                description: 'CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t giÃ¡o viÃªn'
+                logName: __('teacher::admin.logs.update'),
+                description: __('teacher::admin.logs.update_desc')
             );
 
-            return back()->with('msg', __('teacher::messages.update.success'));
+            return back()->with('msg', __('teacher::admin.messages.update_success'));
         }
 
-        return back()->with('msg_danger', __('teacher::messages.update.failure'));
+        return back()->with('msg_danger', __('teacher::admin.messages.update_failure'));
     }
 
     private function normalizeBadgePayload(Request $request): array
@@ -422,14 +422,14 @@ class TeacherController extends Controller
                     'data' => $snapshot,
                     'deleted_image' => $image ? basename($image) : null,
                 ],
-                logName: 'XÃƒÂ³a',
-                description: 'XÃƒÂ³a giÃƒÂ¡o viÃƒÂªn'
+                logName: __('teacher::admin.logs.delete'),
+                description: __('teacher::admin.logs.delete_desc')
             );
 
-            return back()->with('msg', __('teacher::messages.delete.success'));
+            return back()->with('msg', __('teacher::admin.messages.delete_success'));
         }
 
-        return back()->with('msg_danger', 'XÃƒÂ³a tháº¥t báº¡i');
+        return back()->with('msg_danger', __('teacher::admin.messages.delete_failed'));
     }
 
     public function trashBulkAction(Request $request)
@@ -443,14 +443,14 @@ class TeacherController extends Controller
 
         if ($selectedIds->isEmpty()) {
             throw ValidationException::withMessages([
-                'bulk_action' => 'Vui lÃƒÂ²ng chÃ¡Â»Ân ÃƒÂ­t nhÃ¡ÂºÂ¥t mÃ¡Â»â„¢t giÃ¡ÂºÂ£ng viÃƒÂªn trong thÃƒÂ¹ng rÃƒÂ¡c.',
+                'bulk_action' => __('teacher::admin.messages.select_at_least_one'),
             ]);
         }
 
         $teachers = \Modules\Teacher\src\Models\Teacher::query()->onlyTrashed()->whereIn('id', $selectedIds)->get();
 
         if ($teachers->isEmpty()) {
-            return back()->with('msg_danger', 'KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y giÃ¡ÂºÂ£ng viÃƒÂªn há»£p lá»‡ trong thÃƒÂ¹ng rÃƒÂ¡c.');
+            return back()->with('msg_danger', __('teacher::admin.messages.not_found'));
         }
 
         if ($action === 'restore') {
@@ -458,14 +458,14 @@ class TeacherController extends Controller
                 $teacher->restore();
             }
 
-            return back()->with('msg', 'Ã„ÂÃƒÂ£ khÃƒÂ´i phá»¥c ' . $teachers->count() . ' giÃ¡ÂºÂ£ng viÃƒÂªn.');
+            return back()->with('msg', __('teacher::admin.messages.restore_success'));
         }
 
         if ($action === 'force_delete') {
             $teacherHasCourses = $teachers->first(fn($teacher) => $this->teacherHasCourses($teacher->id));
 
             if ($teacherHasCourses) {
-                return back()->with('msg_danger', 'KhÃƒÂ´ng thá»ƒ xÃƒÂ³a vÃ„Â©nh viá»…n giÃ¡ÂºÂ£ng viÃƒÂªn cÃƒÂ²n khÃƒÂ³a há»c Ã„â€˜ang gáº¯n.');
+                return back()->with('msg_danger', __('teacher::admin.messages.cannot_delete_has_courses'));
             }
 
             foreach ($teachers as $teacher) {
@@ -476,10 +476,10 @@ class TeacherController extends Controller
                 $teacher->forceDelete();
             }
 
-            return back()->with('msg', 'Ã„ÂÃƒÂ£ xÃƒÂ³a vÃ„Â©nh viá»…n ' . $teachers->count() . ' giÃ¡ÂºÂ£ng viÃƒÂªn.');
+            return back()->with('msg', __('teacher::admin.messages.force_delete_success'));
         }
 
-        return back()->with('msg_danger', 'Thao tÃƒÂ¡c trong thÃƒÂ¹ng rÃƒÂ¡c khÃƒÂ´ng há»£p lá»‡.');
+        return back()->with('msg_danger', __('teacher::admin.messages.invalid_bulk_action'));
     }
 
     public function restore($id)
@@ -492,7 +492,7 @@ class TeacherController extends Controller
 
         $teacher->restore();
 
-        return back()->with('msg', 'KhÃƒÂ´i phá»¥c giÃ¡ÂºÂ£ng viÃƒÂªn thÃƒÂ nh cÃƒÂ´ng.');
+        return back()->with('msg', __('teacher::admin.messages.restore_success'));
     }
 
     public function forceDelete($id)
@@ -504,7 +504,7 @@ class TeacherController extends Controller
         }
 
         if ($this->teacherHasCourses($teacher->id)) {
-            return back()->with('msg_danger', 'KhÃƒÂ´ng thá»ƒ xÃƒÂ³a vÃ„Â©nh viá»…n giÃ¡ÂºÂ£ng viÃƒÂªn cÃƒÂ²n khÃƒÂ³a há»c Ã„â€˜ang gáº¯n.');
+            return back()->with('msg_danger', __('teacher::admin.messages.cannot_delete_has_courses'));
         }
 
         if ($teacher->image) {
@@ -513,7 +513,7 @@ class TeacherController extends Controller
 
         $teacher->forceDelete();
 
-        return back()->with('msg', 'Ã„ÂÃƒÂ£ xÃƒÂ³a vÃ„Â©nh viá»…n giÃ¡ÂºÂ£ng viÃƒÂªn.');
+        return back()->with('msg', __('teacher::admin.messages.force_delete_success'));
     }
 
     public function logs(Request $request, $id)
@@ -524,7 +524,7 @@ class TeacherController extends Controller
             abort(404);
         }
 
-        $pageTitle = "LÃ¡Â»â€¹ch sÃ¡Â»Â­: {$teacher->name}";
+        $pageTitle = __('teacher::admin.titles.logs', ['name' => $teacher->name]);
 
         $query = ActiveLog::query()
             ->where('subject_type', get_class($teacher))

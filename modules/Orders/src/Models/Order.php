@@ -132,13 +132,10 @@ class Order extends Model
 
     public function getPaymentMethodLabelAttribute(): string
     {
-        return match ($this->payment_method_code) {
-            'bank', 'bank_transfer' => 'Chuyển khoản ngân hàng',
-            'vnpay' => 'VNPay',
-            'momo' => 'MoMo',
-            'free' => 'Miễn phí',
-            default => 'Chưa xác định',
-        };
+        $key = 'orders::teacher/orders.payment.' . $this->payment_method_code;
+        $label = __($key);
+
+        return $label !== $key ? $label : $this->payment_method_code;
     }
     public function getPaymentMethodBadgeStyleAttribute(): string
     {

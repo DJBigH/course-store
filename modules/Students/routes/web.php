@@ -54,6 +54,8 @@ Route::group(['as' => 'students.'], function () {
       Route::post('/thanh-toan/{id}/vnpay', 'Clients\CheckoutController@vnpay')->name('checkout-vnpay');
       Route::post('/thanh-toan/{id}/momo', 'Clients\CheckoutController@momo')->name('checkout-momo');
 
+      Route::get('/tin-nhan/khuyen-mai/{promotion}', 'Clients\AccountController@showPromotion')->name('promotions.show');
+
       Route::prefix('coupons')->group(function () {
          Route::post('/verify', 'Clients\CouponsController@verify')->name('coupons');
          Route::post('/remove', 'Clients\CouponsController@remove')->name('coupons-remove');

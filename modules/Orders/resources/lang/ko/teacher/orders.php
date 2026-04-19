@@ -1,0 +1,90 @@
+<?php
+
+return [
+    'title' => '주문 관리',
+    'description' => '수강생들의 강의 구매 거래 내역을 추적하고 관리합니다.',
+    'empty' => '검색 조건에 맞는 주문 내역이 없습니다.',
+    'pages' => [
+        'index' => '주문 관리',
+        'show' => '주문 상세 #:code',
+    ],
+    'filters' => [
+        'search' => '검색',
+        'search_placeholder' => '주문 코드, 수강생 이름...',
+        'course' => '강의',
+        'payment_method' => '결제 방법',
+        'all' => '전체',
+        'date_from' => '시작일',
+        'date_to' => '종료일',
+    ],
+    'actions' => [
+        'filter' => '필터링',
+        'reset' => '초기화',
+        'export_excel' => 'Excel 내보내기',
+        'export_csv' => 'CSV 내보내기',
+        'view_detail' => '상세 보기',
+    ],
+    'summary' => [
+        'orders' => '총 주문',
+        'students' => '수강생',
+        'courses' => '강의 수',
+        'gross' => '총 매출',
+        'discount' => '할인 금액',
+        'revenue' => '실수령액 (예상)',
+        'net' => '순매출',
+    ],
+    'list' => [
+        'order_code' => '주문 #:code',
+        'item_count' => '강의 수',
+    ],
+    'table' => [
+        'course' => '강의',
+        'gross' => '판매가',
+        'discount' => '할인',
+        'net' => '순액',
+        'revenue' => '실수령액',
+    ],
+    'status' => [
+        'paid' => '결제 완료',
+        'unknown' => '알 수 없음',
+        'no_time' => '해당 없음',
+    ],
+    'payment' => [
+        'bank' => '계좌 이체',
+        'bank_transfer' => '계좌 이체',
+        'vnpay' => 'VNPay',
+        'momo' => 'MoMo',
+        'free' => '무료',
+        'unknown' => '알 수 없음',
+    ],
+    'export' => [
+        'order' => '주문',
+        'student' => '수강생',
+        'email' => '이메일',
+        'phone' => '전화번호',
+        'payment_method' => '결제 수단',
+        'paid_at' => '결제일',
+        'course_count' => '수량',
+        'courses' => '강의 목록',
+        'gross' => '총액',
+        'discount' => '할인',
+        'net' => '순액',
+        'revenue' => '수익',
+    ],
+    'show' => [
+        'title' => '주문 상세 #:code',
+        'student_info' => '수강생 정보',
+        'payment_info' => '결제 정보',
+        'summary_title' => '주문 요약 (귀하의 몫)',
+        'item_list' => '상품 상세',
+        'labels' => [
+            'name' => '성함',
+            'email' => '이메일',
+            'phone' => '전화번호',
+            'method' => '결제 수단',
+            'date' => '결제일',
+            'status' => '상태',
+            'commission' => '수수료율',
+        ]
+    ]
+];

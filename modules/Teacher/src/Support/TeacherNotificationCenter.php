@@ -70,7 +70,7 @@ class TeacherNotificationCenter
                     'id' => 'database-' . $notification->id,
                     'title' => notificationText($notification, 'title', notificationTypeLabel($notification->type)),
                     'message' => notificationText($notification, 'message', ''),
-                    'type_label' => __('teacher::dashboard.notifications.types.system'),
+                    'type_label' => __('courses::teacher/messages.notifications.types.system'),
                     'icon' => notificationIconClass($notification),
                     'severity' => notificationSeverityClass($notification),
                     'url' => route('students.notifications.read', [
@@ -102,16 +102,16 @@ class TeacherNotificationCenter
             ->take(4)
             ->get()
             ->map(function (CourseComment $comment) {
-                $courseName = localizedModelField($comment->course, 'name', app()->getLocale()) ?: __('teacher::dashboard.common.unknown_course');
+                $courseName = localizedModelField($comment->course, 'name', app()->getLocale()) ?: __('courses::teacher/messages.common.unknown_course');
 
                 return [
                     'id' => 'comment-' . $comment->id,
-                    'title' => __('teacher::dashboard.notifications.types.comment_title'),
-                    'message' => __('teacher::dashboard.notifications.comment_message', [
+                    'title' => __('courses::teacher/messages.notifications.types.comment_title'),
+                    'message' => __('courses::teacher/messages.notifications.comment_message', [
                         'student' => $comment->student?->name ?: $comment->author_name,
                         'course' => $courseName,
                     ]),
-                    'type_label' => __('teacher::dashboard.notifications.types.comments'),
+                    'type_label' => __('courses::teacher/messages.notifications.types.comments'),
                     'icon' => 'fas fa-comments',
                     'severity' => 'primary',
                     'notification_key' => 'comment:' . $comment->id,
@@ -135,17 +135,17 @@ class TeacherNotificationCenter
             ->take(4)
             ->get()
             ->map(function (OrderDetail $detail) {
-                $courseName = localizedModelField($detail->courses, 'name', app()->getLocale()) ?: __('teacher::dashboard.common.unknown_course');
+                $courseName = localizedModelField($detail->courses, 'name', app()->getLocale()) ?: __('courses::teacher/messages.common.unknown_course');
                 $studentName = $detail->order?->customer_name_display ?: ($detail->order?->students?->name ?: 'Học viên');
 
                 return [
                     'id' => 'sale-' . $detail->id,
-                    'title' => __('teacher::dashboard.notifications.types.sale_title'),
-                    'message' => __('teacher::dashboard.notifications.sale_message', [
+                    'title' => __('courses::teacher/messages.notifications.types.sale_title'),
+                    'message' => __('courses::teacher/messages.notifications.sale_message', [
                         'student' => $studentName,
                         'course' => $courseName,
                     ]),
-                    'type_label' => __('teacher::dashboard.notifications.types.sales'),
+                    'type_label' => __('courses::teacher/messages.notifications.types.sales'),
                     'icon' => 'fas fa-bag-shopping',
                     'severity' => 'success',
                     'notification_key' => 'sale:' . $detail->id,
@@ -188,22 +188,22 @@ class TeacherNotificationCenter
 
                 if ($daysLeft !== null && $daysLeft >= 0) {
                     $messageParts[] = $daysLeft === 0
-                        ? __('teacher::dashboard.notifications.coupon_expires_today', ['code' => $coupon->code])
-                        : __('teacher::dashboard.notifications.coupon_expiring_message', [
+                        ? __('courses::teacher/messages.notifications.coupon_expires_today', ['code' => $coupon->code])
+                        : __('courses::teacher/messages.notifications.coupon_expiring_message', [
                             'code' => $coupon->code,
                             'days' => $daysLeft,
                         ]);
                 }
 
                 if ($remaining !== null && $remaining <= 3) {
-                    $messageParts[] = __('teacher::dashboard.notifications.coupon_remaining_message', ['count' => $remaining]);
+                    $messageParts[] = __('courses::teacher/messages.notifications.coupon_remaining_message', ['count' => $remaining]);
                 }
 
                 return [
                     'id' => 'coupon-' . $coupon->id,
-                    'title' => __('teacher::dashboard.notifications.types.coupon_title'),
+                    'title' => __('courses::teacher/messages.notifications.types.coupon_title'),
                     'message' => trim(implode(' ', array_filter($messageParts))),
-                    'type_label' => __('teacher::dashboard.notifications.types.coupons'),
+                    'type_label' => __('courses::teacher/messages.notifications.types.coupons'),
                     'icon' => 'fas fa-ticket',
                     'severity' => (($daysLeft !== null && $daysLeft <= 1) || ($remaining !== null && $remaining <= 1)) ? 'danger' : 'warning',
                     'notification_key' => 'coupon:' . $coupon->id . ':' . ($coupon->updated_at?->timestamp ?? 0) . ':' . ($remaining ?? 'na') . ':' . ($daysLeft ?? 'na'),
@@ -224,13 +224,13 @@ class TeacherNotificationCenter
             if ($daysLeft <= 14) {
                 $items->push([
                     'id' => 'package-expiring-' . $teacher->id,
-                    'title' => __('teacher::dashboard.notifications.types.package_expiring_title'),
-                    'message' => __('teacher::dashboard.notifications.package_expiring_message', [
-                        'package' => $currentPackage?->name_locale ?: __('teacher::dashboard.profile.basic.no_package'),
+                    'title' => __('courses::teacher/messages.notifications.types.package_expiring_title'),
+                    'message' => __('courses::teacher/messages.notifications.package_expiring_message', [
+                        'package' => $currentPackage?->name_locale ?: __('courses::teacher/messages.profile.basic.no_package'),
                         'date' => $teacher->package_expires_at->format('d/m/Y'),
                         'days' => $daysLeft,
                     ]),
-                    'type_label' => __('teacher::dashboard.notifications.types.package'),
+                    'type_label' => __('courses::teacher/messages.notifications.types.package'),
                     'icon' => 'fas fa-hourglass-half',
                     'severity' => $daysLeft <= 3 ? 'danger' : 'warning',
                     'notification_key' => 'package-expiring:' . $teacher->id . ':' . ($teacher->package_expires_at?->timestamp ?? 0),
@@ -251,18 +251,18 @@ class TeacherNotificationCenter
                 $items->push([
                     'id' => 'package-features-' . $currentPackage->id,
                     'title' => $updatedRecently
-                        ? __('teacher::dashboard.notifications.types.package_feature_updated_title')
-                        : __('teacher::dashboard.notifications.types.package_feature_title'),
+                        ? __('courses::teacher/messages.notifications.types.package_feature_updated_title')
+                        : __('courses::teacher/messages.notifications.types.package_feature_title'),
                     'message' => $updatedRecently
-                        ? __('teacher::dashboard.notifications.package_feature_updated_message', [
+                        ? __('courses::teacher/messages.notifications.package_feature_updated_message', [
                             'package' => $packageName,
                             'features' => $featureHighlights->implode(', '),
                         ])
-                        : __('teacher::dashboard.notifications.package_feature_message', [
+                        : __('courses::teacher/messages.notifications.package_feature_message', [
                             'package' => $packageName,
                             'features' => $featureHighlights->implode(', '),
                         ]),
-                    'type_label' => __('teacher::dashboard.notifications.types.package'),
+                    'type_label' => __('courses::teacher/messages.notifications.types.package'),
                     'icon' => 'fas fa-sparkles',
                     'severity' => 'info',
                     'notification_key' => 'package-features:' . $currentPackage->id . ':' . ($currentPackage->updated_at?->timestamp ?? 0),
@@ -301,7 +301,7 @@ class TeacherNotificationCenter
                 'id' => 'announcement-' . $announcement->id,
                 'title' => $announcement->title_locale,
                 'message' => $announcement->message_locale,
-                'type_label' => __('teacher::dashboard.notifications.types.announcement'),
+                'type_label' => __('courses::teacher/messages.notifications.types.announcement'),
                 'icon' => $announcement->icon ?: 'fas fa-bullhorn',
                 'severity' => $announcement->is_pinned ? 'primary' : 'info',
                 'notification_key' => 'announcement:' . $announcement->id . ':' . ($announcement->updated_at?->timestamp ?? 0),
@@ -351,11 +351,11 @@ class TeacherNotificationCenter
         $features = collect();
 
         if ($package->effective_course_limit) {
-            $features->push(__('teacher::dashboard.package_features.labels.course_limit') . ': ' . $package->effective_course_limit);
+            $features->push(__('courses::teacher/messages.package_features.labels.course_limit') . ': ' . $package->effective_course_limit);
         }
 
         if ($package->effective_coupon_limit) {
-            $features->push(__('teacher::dashboard.package_features.labels.coupon_limit') . ': ' . $package->effective_coupon_limit);
+            $features->push(__('courses::teacher/messages.package_features.labels.coupon_limit') . ': ' . $package->effective_coupon_limit);
         }
 
         foreach ([
@@ -366,18 +366,17 @@ class TeacherNotificationCenter
             'can_view_activity_logs',
             'can_duplicate_courses',
             'can_grant_courses',
-            'can_export_orders',
-            'can_export_students',
-            'can_import_export_lessons',
+            'can_import_export',
             'can_sell_bundles',
             'can_schedule_content',
             'can_send_promotions',
             'can_issue_certificates',
+            'can_verify_certificates',
             'can_customize_teacher_landing',
             'can_use_affiliate_links',
         ] as $featureKey) {
             if ($package->hasFeature($featureKey)) {
-                $features->push(__('teacher::dashboard.package_features.labels.' . $featureKey));
+                $features->push(__('courses::teacher/messages.package_features.labels.' . $featureKey));
             }
         }
 

@@ -481,6 +481,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Đối với cái thông báo giảng viên đổi thành thông báo thì làm nó như 1 cái email kiểu viết tạo đúng input tiêu đề, nội dung, có j kèm có button không và dùng đúng giao diện chung của email web và chọn thông báo cho ai và trong đó có 1 cái là thông báo cho học viên hay giảng viên
 - Thêm chức năng quản lý huy hiệu ( CURD, xóa mềm có thùng rác để khôi phục và cho tự thêm màu với từng huy hiệu và cho thêm icon và cung cấp nơi xem mã màu và icon để admin dễ dang dung và thay thế )
 - Sắp xếp lại nội dung trong dashboard của admin
+- Thêm chức năng viết được mô tả các chức năng trong gói đấy kiểu ( AI quiz: mổ tả là gì...)
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -542,9 +543,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
 - Làm quản lý bình luận những khóa học của giáo viên đó ( Done )
 - Làm quản lý mã giảm giá ( Done )
-- Làm quản lý đơn hàng
+- Làm quản lý đơn hàng ( Done )
 - Với cái xử lý rút tiền thì nhập 1 lần tài khoản sẽ lưu tài khoản đó tôi đa 3 tài khoản ngân hàng khác nhau với tài khoản t4 sẽ phải xin từ admin accpet mới thay đổi và khi thay đổi sẽ thay thay 1 trong 3 tài khoản đó ( Done )
-- Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...) hay có thêm chức năng j để giới hạn không
+- Dựa theo các gói thì có làm chức năng giới hạn j với các gói không kiểu ( Gói free có 2 khóa, không nhân bản, không bình luận được,...) hay có thêm chức năng j để giới hạn không ( Done )
 - Khi đã là giáo viên rồi thì khi đổi gói có cần admin duyệt không hay tự động chuyển gói ( Góp ý cho tôi ) ( Done )
 - Làm chức năng góp ý hoặc báo cáo với admin ( kiểu tôi muốn thêm danh mục j đó để phát triển) ( Done )
 - Thêm các noti vào cái chuông như kiểu: có bình luận, có người mua khóa học, mã giảm giá sắp hết hạn hay số lượt, gói giáo viên sắp hết hạn, các tính năng mới j đó admin cập nhập dành riêng cho giáo viên ( Done )
@@ -559,14 +560,44 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Sắp xếp lại nội dung trong dashboard của teacher ( Done )
 - Huy hiệu verified/premium teacher ( Done )
 - Đối với cái khuyễn mãi thì làm nó như 1 cái email kiểu viết tạo đúng input tiêu đề, nội dung (ckeditor đúng light mode/dark mode), có j kèm có button không và dùng đúng giao diện chung của email web ( Done )
-- Với những cái notification mà kiểu email thì sẽ xử lý như nào cho nó hiện cái noti ra à hay là cho hiện noti bấm vào thì sẽ có phần đọc noti đó như email tôi đang không biết xử lý cái notification và tôi thêm cho tôi cái 2 checkbox dành cho email và thông báo tại web
-- Thêm cái preview dành cho bài học ( Xem được video trước và chỉ cần bấm vào thì hiện modal giống phần học thử bên client xem video có hoạt dộng ổn không )
-- Fix 1 số bug liên quan đến limit trong gói
-- Yêu cầu rút tiền tôi muốn là cái thêm ngân hàng tách ra riêng và chỉ khi chọn được ngân hàng thì mới nhập được giá tiền và ghi chú và validate (đối với số tiền min là 5k)
-- Thêm chức năng hủy hợp tác ( Đẩy lên admin + lý do và khi hủy thì tất cả bài giảng ẩn đi chỉ có học viên nào đã mua thì vẫn còn sử dụng và bị đẩy khỏi màn giáo viên gửi mail cảm ơn đã hợp tác tài khoản hạ cấp xuống học viên)
-- Gộp tất cả các import/execport vào 1 quyền ở trong gói
-- Cái 2FA của giáo viên và học viên là giống nhau đúng ko ( Cùng 1 logic nên suy nghĩ có cần thay đổi cái 2FA bật/tắt không)
-- Check lại tất cả đa ngôn ngữ của màn teacher ( Đặc biệt là vi phải có dấu)
+- Thêm chức năng giao bài quiz ( Done )
+- Thêm chức năng tạo câu hỏi = AI ( Done )
+- Với những cái notification mà kiểu email thì sẽ xử lý như nào cho nó hiện cái noti ra à hay là cho hiện noti bấm vào thì sẽ có phần đọc noti đó như email tôi đang không biết xử lý cái notification và tôi thêm cho tôi cái 2 checkbox dành cho email và thông báo tại web ( Done )
+- Thêm cái preview dành cho bài học ( Xem được video trước và chỉ cần bấm vào thì hiện modal giống phần học thử như bên client xem video có hoạt dộng ổn không ) ( Done )
+- Fix 1 số bug liên quan đến tất cả các limit trong gói ( Done )
+- Với AI quiz thêm quyền vào trong admin ( Done )
+- Yêu cầu rút tiền tôi muốn là cái thêm ngân hàng tách ra riêng và chỉ khi chọn được ngân hàng thì mới nhập được giá tiền và ghi chú và validate (đối với số tiền min là 5k) ( Done )
+- Thêm chức năng hủy hợp tác ( Đẩy lên admin + lý do và khi hủy thì tất cả bài giảng ẩn đi chỉ có học viên nào đã mua thì vẫn còn sử dụng và bị đẩy khỏi màn giáo viên gửi mail cảm ơn đã hợp tác tài khoản hạ cấp xuống học viên) ( Done )
+- Gộp tất cả các import/execport vào 1 quyền ở trong gói ( Done )
+- Check lại toàn bộ màn giáo viên xem cần thêm,sửa,xóa j không và xem có bug hay j không thì sửa luôn (tạo file plan từ logic -> layout -> code) ( Done )
+- Check lại tất cả đa ngôn ngữ ( lang ) của màn teacher ( Đặc biệt là vi phải có dấu những j liên quan thì phải tự điều chỉnh lại)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module dashboard ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module khóa học của tôi ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module bài giảng ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module doanh thu (http://127.0.0.1:8000/teacher/doanh-thu) ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module yêu cầu rút tiền ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module mã giảm giá ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module khuyến mãi ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module hồ sơ ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module thông báo ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module link giới thiệu ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module học viên ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module bình luận ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module chứng chỉ ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module nhật ký hoạt động ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module gói giảng viên ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module gớp ý/ báo cáo ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module hủy hợp tác ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module log ( những chỗ nào bị Mojibake hãy sửa ngay)
+- Rà lại toàn bộ màn teacher check lại tất cả chỗ nào thiếu đa ngôn ngữ (VI/EN/JA/KO/ZH) ( những chỗ nào bị Mojibake hãy sửa ngay) (những chỗ nào bị lỗi UI hãy sửa ngay) (Đặc biệt là module nào thì viết file lang module đó không đóng hết vào 1 file có thể tách nhiều thứ trong file lang VD: list, edit, create, detail, modal, button, title, ... ) ( Viêt plan-> code-> test )
+- Giá tiền khóa học sẽ đúng với ngôn ngữ của nó và khi tính giá thì theo tiền tệ của ngôn ngữ đó và cho biết là tiền đổi sang tiền nào là bao nhiêu ( và thêm 1 cái là học viên mua = tiền ngôn ngữ nào thì + theo tiền ngôn ngữ đó, thêm % phí chuyển đổi bên admin và cho giảng viên biết là bao nhiêu, bên admin dùng api nào free và update theo ngày để biết tỉ giá tiền quốc tế để dựa vào đó tính toán) (VD: giáo viên nhập giá khóa học 10k thì tự tính toán với tỉ giá mà admin đã set để tính các tiền quốc tế)
+- 2 nút chuông và tài khoản ở header bị lỗi trong dark mode
+- Tự làm cái sidebar đa ngôn ngữ
+- Check xem file log có chỗ nào thiếu không
+- Khi nhân bản thêm cái xác nhận
 Tổng kết
-- Tìm tất cả file .bak
+- Tìm tất cả file .bak ( Done )
 - check lại lần cuối trước khi đẩy lên production
+
+
+

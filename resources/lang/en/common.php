@@ -25,5 +25,6 @@ return [
     'payment_policy'       => 'Payment Policy',
     'terms_of_service' => 'Terms of Service',
     'privacy_policy'       => 'Privacy Policy',
+    'free'                 => 'Free',
 
 ];

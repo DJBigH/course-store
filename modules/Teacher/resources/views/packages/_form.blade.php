@@ -17,6 +17,17 @@
         'ja' => ['label' => 'JA', 'name' => 'Japanese'],
         'zh' => ['label' => 'ZH', 'name' => 'Chinese'],
     ];
+    $featureBadges = [
+        ['key' => 'can_manage_students', 'label' => 'Quan ly hoc vien'],
+        ['key' => 'can_view_student_progress', 'label' => 'Xem tien do'],
+        ['key' => 'can_view_activity_logs', 'label' => 'Nhat ky hoat dong'],
+        ['key' => 'can_manage_quizzes', 'label' => 'Quan ly quiz'],
+        ['key' => 'can_use_ai_quiz', 'label' => 'AI Quiz Generator'],
+        ['key' => 'can_import_export_lessons', 'label' => 'Import/Export bai hoc'],
+        ['key' => 'can_sell_bundles', 'label' => 'Bundle khoa hoc'],
+        ['key' => 'can_send_promotions', 'label' => 'Gui khuyen mai'],
+        ['key' => 'can_issue_certificates', 'label' => 'Cap chung chi'],
+    ];
     $defaultPreviewName = old('name', $package->name ?? '');
     $defaultPreviewTagline = old('tagline', $package->tagline ?? '');
     $defaultPreviewBadge = old('badge_text', $package->badge_text ?? '');
@@ -197,6 +208,14 @@
 
                             <div class="package-preview-card__cta">Đăng ký với gói này</div>
                         </div>
+
+                        <div class="mt-3 d-flex flex-wrap gap-2">
+                            @foreach ($featureBadges as $badge)
+                                <span class="badge rounded-pill text-bg-light border {{ old($badge['key'], $package->{$badge['key']} ?? false) ? 'text-success border-success' : 'text-muted' }}">
+                                    {{ $badge['label'] }}
+                                </span>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
@@ -254,6 +273,13 @@
                         value="{{ old('coupon_limit', $package->coupon_limit ?? '') }}"
                         placeholder="De trong = khong gioi han">
                     <div class="form-text">Chi ap dung khi da bat quyen quan ly coupon.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">AI Quiz Limit / day</label>
+                    <input type="number" class="form-control" name="ai_quiz_limit" min="1"
+                        value="{{ old('ai_quiz_limit', $package->ai_quiz_limit ?? '') }}"
+                        placeholder="De trong = 3 (Free) / Ko gioi han">
+                    <div class="form-text">Số Quiz tối đa tạo bằng AI 1 ngày. Cần bật quyền "Quan ly quiz".</div>
                 </div>
             </div>
         </div>
@@ -313,30 +339,30 @@
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_manage_quizzes" value="1"
+                            {{ old('can_manage_quizzes', $package->can_manage_quizzes ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep quan ly quiz</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_use_ai_quiz" value="1"
+                            {{ old('can_use_ai_quiz', $package->can_use_ai_quiz ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep dùng AI tao Quiz (Gemini)</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_grant_courses" value="1"
                             {{ old('can_grant_courses', $package->can_grant_courses ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label">Cho phep cap quyen hoc thu cong</label>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-12">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="can_export_orders" value="1"
-                            {{ old('can_export_orders', $package->can_export_orders ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep export don hang</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="can_export_students" value="1"
-                            {{ old('can_export_students', $package->can_export_students ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep export hoc vien</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="can_import_export_lessons" value="1"
-                            {{ old('can_import_export_lessons', $package->can_import_export_lessons ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep import/export bai hoc</label>
+                        <input class="form-check-input" type="checkbox" name="can_import_export" value="1"
+                            {{ old('can_import_export', $package->can_import_export ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep Import/Export dữ liệu (Đơn hàng, Học viên, Bài học, Quiz)</label>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -365,6 +391,13 @@
                         <input class="form-check-input" type="checkbox" name="can_issue_certificates" value="1"
                             {{ old('can_issue_certificates', $package->can_issue_certificates ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label">Cho phep cap chung chi hoan thanh</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_verify_certificates" value="1"
+                            {{ old('can_verify_certificates', $package->can_verify_certificates ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Xac thuc chung chi cong khai (QR Code)</label>
                     </div>
                 </div>
                 <div class="col-md-4">

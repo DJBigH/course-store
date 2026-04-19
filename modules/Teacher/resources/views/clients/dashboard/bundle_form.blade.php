@@ -10,12 +10,12 @@
     <div class="teacher-panel teacher-bundle-form-shell">
         <div class="teacher-bundle-form-hero">
             <div>
-                <span class="teacher-bundle-form-kicker">{{ __('teacher::dashboard.bundles.hero_kicker') }}</span>
-                <h3 class="teacher-bundle-form-title">{{ $bundle ? __('teacher::dashboard.bundles.edit_title') : __('teacher::dashboard.bundles.create_title') }}</h3>
-                <p class="teacher-bundle-form-desc mb-0">{{ $bundle ? __('teacher::dashboard.bundles.edit_description') : __('teacher::dashboard.bundles.create_description') }}</p>
+                <span class="teacher-bundle-form-kicker">{{ __('teacher::teacher/bundle/list.hero_kicker') }}</span>
+                <h3 class="teacher-bundle-form-title">{{ $bundle ? __('teacher::teacher/bundle/edit.edit_title') : __('teacher::teacher/bundle/add.create_title') }}</h3>
+                <p class="teacher-bundle-form-desc mb-0">{{ $bundle ? __('teacher::teacher/bundle/edit.edit_description') : __('teacher::teacher/bundle/add.create_description') }}</p>
             </div>
             <a href="{{ route('teacher.dashboard.bundles') }}" class="btn btn-outline-secondary">
-                {{ __('teacher::dashboard.common.back') }}
+                {{ __('teacher::teacher/course/common.actions.back') }}
             </a>
         </div>
 
@@ -24,7 +24,7 @@
         @endif
 
         @if ($errors->any())
-            <div class="alert alert-danger border-0">{{ __('teacher::dashboard.common.validation_summary') }}</div>
+            <div class="alert alert-danger border-0">{{ __('teacher::teacher/course/common.validation_summary') }}</div>
         @endif
 
         <form method="POST"
@@ -35,20 +35,20 @@
             <div class="row g-4">
                 <div class="col-lg-7">
                     <div class="teacher-bundle-form-block">
-                        <h4>{{ __('teacher::dashboard.bundles.form.content_title') }}</h4>
+                        <h4>{{ __('teacher::teacher/bundle/common.form.content_title') }}</h4>
                         <div class="teacher-bundle-form-grid">
                             <div>
-                                <label class="form-label">{{ __('teacher::dashboard.bundles.form.name') }}</label>
+                                <label class="form-label">{{ __('teacher::teacher/bundle/common.form.name') }}</label>
                                 <input type="text" name="name" class="form-control" maxlength="160"
                                     value="{{ old('name', $bundle?->name) }}" required>
                             </div>
                             <div>
-                                <label class="form-label">{{ __('teacher::dashboard.bundles.form.thumbnail') }}</label>
+                                <label class="form-label">{{ __('teacher::teacher/bundle/common.form.thumbnail') }}</label>
                                 <input type="text" name="thumbnail" class="form-control" maxlength="255"
                                     value="{{ old('thumbnail', $bundle?->thumbnail) }}">
                             </div>
                             <div class="col-12">
-                                <label class="form-label">{{ __('teacher::dashboard.bundles.form.description') }}</label>
+                                <label class="form-label">{{ __('teacher::teacher/bundle/common.form.description') }}</label>
                                 <textarea name="description" class="form-control" rows="6">{{ old('description', $bundle?->description) }}</textarea>
                             </div>
                         </div>
@@ -57,20 +57,20 @@
 
                 <div class="col-lg-5">
                     <div class="teacher-bundle-form-block">
-                        <h4>{{ __('teacher::dashboard.bundles.form.pricing_title') }}</h4>
+                        <h4>{{ __('teacher::teacher/bundle/common.form.pricing_title') }}</h4>
                         <div class="teacher-bundle-form-grid">
                             <div>
-                                <label class="form-label">{{ __('teacher::dashboard.bundles.form.price') }}</label>
+                                <label class="form-label">{{ __('teacher::teacher/bundle/common.form.price') }}</label>
                                 <input type="number" step="0.01" min="0" name="price" class="form-control"
                                     value="{{ old('price', $bundle?->price) }}" required>
-                                <div class="form-text">{{ __('teacher::dashboard.bundles.form.price_help') }}</div>
+                                <div class="form-text">{{ __('teacher::teacher/bundle/common.form.price_help') }}</div>
                             </div>
                             <div class="form-check teacher-bundle-form-check">
                                 <input type="hidden" name="status" value="0">
                                 <input class="form-check-input" type="checkbox" name="status" value="1" id="bundle-status"
                                     {{ old('status', $bundle?->status ?? true) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="bundle-status">
-                                    {{ __('teacher::dashboard.bundles.form.status') }}
+                                    {{ __('teacher::teacher/bundle/common.form.status') }}
                                 </label>
                             </div>
                         </div>
@@ -79,8 +79,8 @@
             </div>
 
             <div class="teacher-bundle-form-block mt-4">
-                <h4>{{ __('teacher::dashboard.bundles.form.courses_title') }}</h4>
-                <p class="teacher-bundle-form-note">{{ __('teacher::dashboard.bundles.form.courses_help') }}</p>
+                <h4>{{ __('teacher::teacher/bundle/common.form.courses_title') }}</h4>
+                <p class="teacher-bundle-form-note">{{ __('teacher::teacher/bundle/common.form.courses_help') }}</p>
 
                 <div class="teacher-bundle-course-list">
                     @foreach ($courseOptions as $courseOption)
@@ -101,10 +101,10 @@
 
             <div class="teacher-bundle-form-actions">
                 <a href="{{ route('teacher.dashboard.bundles') }}" class="btn btn-outline-secondary">
-                    {{ __('teacher::dashboard.common.cancel') }}
+                    {{ __('teacher::teacher/course/common.actions.cancel') }}
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    {{ $bundle ? __('teacher::dashboard.bundles.actions.update') : __('teacher::dashboard.bundles.actions.create') }}
+                    {{ $bundle ? __('teacher::teacher/bundle/common.actions.update') : __('teacher::teacher/bundle/common.actions.create') }}
                 </button>
             </div>
         </form>

@@ -2,19 +2,19 @@
 
 @section('content')
     @include('part.backend.activity_logs', [
-        'pageTitle' => $pageTitle ?? 'Lịch sử giảng viên',
+        'pageTitle' => $pageTitle ?? __('courses::teacher/messages.logs.title'),
         'backUrl' => route('teacher.index'),
-        'backLabel' => 'Quay lại danh sách',
-        'entityTitle' => 'Thông tin giảng viên',
+        'backLabel' => __('courses::teacher/messages.logs.back'),
+        'entityTitle' => __('courses::teacher/messages.logs.entity_title'),
         'entityItems' => [
-            'Tên' => $teacher->name ?? 'N/A',
-            'Kinh nghiệm' => $teacher->exp ?? 'N/A',
+            __('courses::teacher/messages.logs.fields.name') => $teacher->name ?? 'N/A',
+            __('courses::teacher/messages.logs.fields.exp') => $teacher->exp ?? 'N/A',
             'ID' => '#' . ($teacher->id ?? '-'),
         ],
         'filterActions' => [
-            'create' => 'Tạo mới',
-            'update' => 'Cập nhật',
-            'delete' => 'Xóa',
+            'create' => __('courses::teacher/messages.logs.actions.create'),
+            'update' => __('courses::teacher/messages.logs.actions.update'),
+            'delete' => __('courses::teacher/messages.logs.actions.delete'),
         ],
         'logs' => $logs,
     ])

@@ -1,0 +1,90 @@
+<?php
+
+return [
+    'title' => '订单管理',
+    'description' => '跟踪和管理来自学员的课程购买交易。',
+    'empty' => '未找到符合搜索条件的订单。',
+    'pages' => [
+        'index' => '订单管理',
+        'show' => '订单详情 #:code',
+    ],
+    'filters' => [
+        'search' => '搜索',
+        'search_placeholder' => '订单号、学员姓名...',
+        'course' => '课程',
+        'payment_method' => '支付方式',
+        'all' => '全部',
+        'date_from' => '开始日期',
+        'date_to' => '结束日期',
+    ],
+    'actions' => [
+        'filter' => '筛选结果',
+        'reset' => '重置',
+        'export_excel' => '导出 Excel',
+        'export_csv' => '导出 CSV',
+        'view_detail' => '详情',
+    ],
+    'summary' => [
+        'orders' => '订单总数',
+        'students' => '学员人数',
+        'courses' => '课程数量',
+        'gross' => '总收收入',
+        'discount' => '折扣金额',
+        'revenue' => '实际收入 (预计)',
+        'net' => '净收入',
+    ],
+    'list' => [
+        'order_code' => '订单 #:code',
+        'item_count' => '课程数量',
+    ],
+    'table' => [
+        'course' => '课程',
+        'gross' => '售价',
+        'discount' => '折扣',
+        'net' => '净额',
+        'revenue' => '实收',
+    ],
+    'status' => [
+        'paid' => '已支付',
+        'unknown' => '未知',
+        'no_time' => '暂无',
+    ],
+    'payment' => [
+        'bank' => '银行转账',
+        'bank_transfer' => '银行转账',
+        'vnpay' => 'VNPay',
+        'momo' => 'MoMo',
+        'free' => '免费',
+        'unknown' => '未知',
+    ],
+    'export' => [
+        'order' => '订单',
+        'student' => '学员',
+        'email' => '邮箱',
+        'phone' => '电话',
+        'payment_method' => '方式',
+        'paid_at' => '支付时间',
+        'course_count' => '数量',
+        'courses' => '课程列表',
+        'gross' => '总额',
+        'discount' => '折扣',
+        'net' => '净额',
+        'revenue' => '收入',
+    ],
+    'show' => [
+        'title' => '订单详情 #:code',
+        'student_info' => '学员信息',
+        'payment_info' => '支付信息',
+        'summary_title' => '订单概览 (您的份额)',
+        'item_list' => '商品详情',
+        'labels' => [
+            'name' => '姓名',
+            'email' => '邮箱',
+            'phone' => '电话',
+            'method' => '支付方式',
+            'date' => '支付日期',
+            'status' => '状态',
+            'commission' => '佣金比例',
+        ]
+    ]
+];

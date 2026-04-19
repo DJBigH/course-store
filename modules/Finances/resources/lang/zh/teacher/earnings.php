@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'overview' => [
+        'ranges' => [
+            'today' => '今日',
+            '7d' => '过去7天',
+            '14d' => '过去14天',
+            'month' => '本月',
+            'year' => '今年',
+            'viewing_data' => '正在查看数据',
+            'current_filter_prefix' => '当前筛选：:prefix',
+            'ready' => '就绪',
+        ],
+    ],
+    'common' => [
+        'currency_symbol' => '¥',
+        'loading' => '正在加载...',
+        'failed_to_load' => '加载数据失败',
+    ],
+    'title' => '讲师收益',
+    'description' => '查看有关您的课程收入和购买的详细见解。',
+    'gross_revenue' => '总收入',
+    'teacher_revenue' => '讲师收益 (:rate%)',
+    'empty' => '此期间没有数据。',
+    'breakdown' => [
+        'daily_title' => '按日',
+        'daily_description' => '每日收益详情。',
+        'monthly_title' => '按月',
+        'monthly_description' => '每月收益详情。',
+        'course_title' => '按课程',
+        'course_description' => '每门课程的收益。',
+        'table' => [
+            'period' => '时间段',
+            'orders' => '订单数',
+            'revenue' => '收益',
+        ],
+    ],
+    'charts' => [
+        'daily_revenue_title' => '收入图表',
+        'daily_revenue_desc' => '近期收入趋势。',
+        'highlights' => '亮点',
+        'conversion_title' => '课程表现',
+        'conversion_desc' => '各课程的转化率和收入。',
+        'bar_legend' => '表现',
+        'view_metric' => ':count 浏览',
+        'order_metric' => ':count 订单',
+    ],
+    'recent_transactions_title' => '近期交易',
+    'recent_transactions_desc' => '已成功购买的订单列表。',
+    'recent_transactions_note' => '注：仅显示已确认支付成功的交易。',
+    'table' => [
+        'order' => '订单 ID',
+        'course' => '课程',
+        'student' => '学员',
+        'gross' => '原价',
+        'discount' => '折扣',
+        'net' => '净收入',
+        'revenue' => '您的分成',
+    ],
+];

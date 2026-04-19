@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'overview' => [
+        'ranges' => [
+            'today' => '本日',
+            '7d' => '過去7日間',
+            '14d' => '過去14日間',
+            'month' => '今月',
+            'year' => '今年',
+            'viewing_data' => 'データ表示中',
+            'current_filter_prefix' => '現在のフィルター: :prefix',
+            'ready' => '準備完了',
+        ],
+    ],
+    'common' => [
+        'currency_symbol' => '¥',
+        'loading' => '読み込み中...',
+        'failed_to_load' => 'データの読み込みに失敗しました',
+    ],
+    'title' => '講師の収益',
+    'description' => 'コースの収益と購入に関する詳細なインサイトを表示します。',
+    'gross_revenue' => '総売上',
+    'teacher_revenue' => '講師の収益 (:rate%)',
+    'empty' => 'この期間のデータはありません。',
+    'breakdown' => [
+        'daily_title' => '日次',
+        'daily_description' => '日ごとの詳細な収益。',
+        'monthly_title' => '月次',
+        'monthly_description' => '月ごとの詳細な収益。',
+        'course_title' => 'コース別',
+        'course_description' => 'コースごとの収益。',
+        'table' => [
+            'period' => '期間',
+            'orders' => '注文数',
+            'revenue' => '収益',
+        ],
+    ],
+    'charts' => [
+        'daily_revenue_title' => '売上チャート',
+        'daily_revenue_desc' => '最近の収益傾向。',
+        'highlights' => 'ハイライト',
+        'conversion_title' => 'コースパフォーマンス',
+        'conversion_desc' => 'コースごとのコンバージョン率と収益。',
+        'bar_legend' => 'パフォーマンス',
+        'view_metric' => ':count 閲覧',
+        'order_metric' => ':count 注文',
+    ],
+    'recent_transactions_title' => '最近の取引',
+    'recent_transactions_desc' => '購入完了した注文の一覧。',
+    'recent_transactions_note' => '注：お支払い完了が確認された取引のみ表示されます。',
+    'table' => [
+        'order' => '注文ID',
+        'course' => 'コース',
+        'student' => '受講生',
+        'gross' => '販売価格',
+        'discount' => '割引',
+        'net' => '純売上',
+        'revenue' => '受取額',
+    ],
+];

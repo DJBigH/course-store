@@ -1,0 +1,90 @@
+<?php
+
+return [
+    'title' => '注文管理',
+    'description' => '受講生によるコースの購入取引を追跡および管理します。',
+    'empty' => '検索条件に一致する注文は見つかりませんでした。',
+    'pages' => [
+        'index' => '注文管理',
+        'show' => '注文詳細 #:code',
+    ],
+    'filters' => [
+        'search' => '検索',
+        'search_placeholder' => '注文コード、受講生名...',
+        'course' => 'コース',
+        'payment_method' => '支払い方法',
+        'all' => 'すべて',
+        'date_from' => '開始日',
+        'date_to' => '終了日',
+    ],
+    'actions' => [
+        'filter' => '絞り込む',
+        'reset' => 'リセット',
+        'export_excel' => 'Excel出力',
+        'export_csv' => 'CSV出力',
+        'view_detail' => '詳細',
+    ],
+    'summary' => [
+        'orders' => '総注文数',
+        'students' => '受講生数',
+        'courses' => 'コース数',
+        'gross' => '総売上',
+        'discount' => '割引額',
+        'revenue' => '実受領額 (推定)',
+        'net' => '純売上',
+    ],
+    'list' => [
+        'order_code' => '注文 #:code',
+        'item_count' => 'コース数',
+    ],
+    'table' => [
+        'course' => 'コース',
+        'gross' => '価格',
+        'discount' => '割引',
+        'net' => '純額',
+        'revenue' => '実受領額',
+    ],
+    'status' => [
+        'paid' => '支払い済み',
+        'unknown' => '不明',
+        'no_time' => '該当なし',
+    ],
+    'payment' => [
+        'bank' => '銀行振込',
+        'bank_transfer' => '銀行振込',
+        'vnpay' => 'VNPay',
+        'momo' => 'MoMo',
+        'free' => '無料',
+        'unknown' => '不明',
+    ],
+    'export' => [
+        'order' => '注文',
+        'student' => '受講生',
+        'email' => 'メール',
+        'phone' => '電話',
+        'payment_method' => '支払い方法',
+        'paid_at' => '支払い日',
+        'course_count' => '数量',
+        'courses' => 'コースリスト',
+        'gross' => '総額',
+        'discount' => '割引',
+        'net' => '純額',
+        'revenue' => '収益',
+    ],
+    'show' => [
+        'title' => '注文詳細 #:code',
+        'student_info' => '受講生情報',
+        'payment_info' => '支払い情報',
+        'summary_title' => '注文概要 (あなたの取り分)',
+        'item_list' => '商品詳細',
+        'labels' => [
+            'name' => '氏名',
+            'email' => 'メール',
+            'phone' => '電話番号',
+            'method' => '支払い方法',
+            'date' => '支払い日',
+            'status' => 'ステータス',
+            'commission' => '手数料率',
+        ]
+    ]
+];

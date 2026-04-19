@@ -4,24 +4,24 @@
     <div class="teacher-panel teacher-coupons-shell">
         <div class="teacher-coupons-hero">
             <div>
-                <span class="teacher-coupons-kicker">{{ __('teacher::coupons.hero.kicker') }}</span>
-                <h3 class="teacher-coupons-title">{{ __('teacher::coupons.hero.title') }}</h3>
-                <p class="teacher-coupons-desc mb-0">{{ __('teacher::coupons.hero.description') }}</p>
+                <span class="teacher-coupons-kicker">{{ __('coupons::teacher/messages.hero.kicker') }}</span>
+                <h3 class="teacher-coupons-title">{{ __('coupons::teacher/messages.hero.title') }}</h3>
+                <p class="teacher-coupons-desc mb-0">{{ __('coupons::teacher/messages.hero.description') }}</p>
             </div>
             <div class="teacher-coupons-actions">
                 @if ($canCreateCoupons)
                     <a href="{{ route('teacher.dashboard.coupons.create') }}" class="btn btn-primary">
-                        {{ __('teacher::coupons.actions.create') }}
+                        {{ __('coupons::teacher/messages.actions.create') }}
                     </a>
                 @elseif ($couponUsage['has_limit'] ?? false)
                     <div class="teacher-disabled-action-wrap">
-                        <span class="teacher-disabled-action" title="{{ __('teacher::coupons.flash.limit_reached', ['limit' => $couponLimit]) }}">
+                        <span class="teacher-disabled-action" title="{{ __('coupons::teacher/messages.flash.limit_reached', ['limit' => $couponLimit]) }}">
                             <button type="button" class="btn btn-primary" disabled>
-                                {{ __('teacher::coupons.actions.create') }}
+                                {{ __('coupons::teacher/messages.actions.create') }}
                             </button>
                         </span>
                         <div class="teacher-disabled-action__note">
-                            {{ __('teacher::coupons.flash.limit_reached', ['limit' => $couponLimit]) }}
+                            {{ __('coupons::teacher/messages.flash.limit_reached', ['limit' => $couponLimit]) }}
                         </div>
                     </div>
                 @endif
@@ -31,20 +31,20 @@
         @if (!$canManageCoupons || ($couponUsage['has_limit'] ?? false))
             @include('teacher::clients.dashboard.partials.package_usage_banner', [
                 'variant' => 'info',
-                'title' => __('teacher::coupons.limit.title'),
+                'title' => __('coupons::teacher/messages.limit.title'),
                 'lines' => [
-                    __('teacher::coupons.limit.description', [
+                    __('coupons::teacher/messages.limit.description', [
                         'count' => $couponCount,
-                        'limit' => $couponLimit ?? __('teacher::coupons.labels.unlimited'),
+                        'limit' => $couponLimit ?? __('coupons::teacher/messages.labels.unlimited'),
                     ]),
-                    __('teacher::coupons.limit.active_description', [
+                    __('coupons::teacher/messages.limit.active_description', [
                         'count' => $activeCouponCount,
                         'locked' => $lockedCouponCount,
-                        'limit' => $couponLimit ?? __('teacher::coupons.labels.unlimited'),
+                        'limit' => $couponLimit ?? __('coupons::teacher/messages.labels.unlimited'),
                     ]),
                     !$canManageCoupons
-                        ? __('teacher::coupons.limit.feature_locked_notice')
-                        : ($lockedCouponCount > 0 ? __('teacher::coupons.limit.locked_notice', ['count' => $lockedCouponCount]) : null),
+                        ? __('coupons::teacher/messages.limit.feature_locked_notice')
+                        : ($lockedCouponCount > 0 ? __('coupons::teacher/messages.limit.locked_notice', ['count' => $lockedCouponCount]) : null),
                 ],
                 'showUpgrade' => !$canManageCoupons || $lockedCouponCount > 0,
                 'upgradeUrl' => route('teacher.dashboard.package.upgrade'),
@@ -63,70 +63,70 @@
                                 <h4 class="teacher-coupon-card__code mb-0">{{ $coupon->code }}</h4>
                                 <p class="teacher-coupon-card__meta mb-0">
                                     {{ $coupon->discount_type === 'percent' ? $coupon->discount_value . '%' : money($coupon->discount_value) }}
-                                    {{ __('teacher::coupons.labels.discount') }}
+                                    {{ __('coupons::teacher/messages.labels.discount') }}
                                 </p>
                                 @if ($isLockedCoupon)
                                     <div class="teacher-coupon-card__limit-badge">
-                                        {{ __('teacher::coupons.labels.limited_actions_only') }}
+                                        {{ __('coupons::teacher/messages.labels.limited_actions_only') }}
                                     </div>
                                 @endif
                                 @if (($couponUsage['has_limit'] ?? false) && $coupon->is_package_priority)
                                     <div class="teacher-coupon-card__priority">
-                                        {{ __('teacher::coupons.labels.priority_active') }}
+                                        {{ __('coupons::teacher/messages.labels.priority_active') }}
                                     </div>
                                 @endif
                             </div>
                             <span class="teacher-coupon-card__badge">
                                 @if ($coupon->package_locked_at)
-                                    {{ __('teacher::coupons.labels.locked') }}
+                                    {{ __('coupons::teacher/messages.labels.locked') }}
                                 @else
-                                    {{ $coupon->per_student_once ? __('teacher::coupons.labels.once') : __('teacher::coupons.labels.multi') }}
+                                    {{ $coupon->per_student_once ? __('coupons::teacher/messages.labels.once') : __('coupons::teacher/messages.labels.multi') }}
                                 @endif
                             </span>
                         </div>
 
                         @if ($coupon->package_locked_at)
                             <div class="teacher-coupon-card__lock">
-                                {{ __('teacher::coupons.labels.lock_reason_' . ($coupon->package_lock_reason ?: 'package_limit_locked')) }}
+                                {{ __('coupons::teacher/messages.labels.lock_reason_' . ($coupon->package_lock_reason ?: 'package_limit_locked')) }}
                             </div>
                         @endif
 
                         <div class="teacher-coupon-card__grid">
                             <div class="teacher-coupon-card__info">
-                                <span>{{ __('teacher::coupons.labels.total_condition') }}</span>
-                                <strong>{{ $coupon->total_condition ? money($coupon->total_condition) : __('teacher::coupons.labels.none') }}</strong>
+                                <span>{{ __('coupons::teacher/messages.labels.total_condition') }}</span>
+                                <strong>{{ $coupon->total_condition ? money($coupon->total_condition) : __('coupons::teacher/messages.labels.none') }}</strong>
                             </div>
                             <div class="teacher-coupon-card__info">
-                                <span>{{ __('teacher::coupons.labels.usage_limit') }}</span>
+                                <span>{{ __('coupons::teacher/messages.labels.usage_limit') }}</span>
                                 <strong>
                                     @if ($coupon->count)
                                         {{ max($coupon->count - ($coupon->usagescoupon_count ?? 0), 0) }} / {{ $coupon->count }}
                                     @else
-                                        {{ __('teacher::coupons.labels.unlimited') }}
+                                        {{ __('coupons::teacher/messages.labels.unlimited') }}
                                     @endif
                                 </strong>
                             </div>
                             <div class="teacher-coupon-card__info">
-                                <span>{{ __('teacher::coupons.labels.time_range') }}</span>
+                                <span>{{ __('coupons::teacher/messages.labels.time_range') }}</span>
                                 <strong>
                                     @if ($coupon->start_date && $coupon->end_date)
                                         {{ \Carbon\Carbon::parse($coupon->start_date)->format('d/m/Y') }}
                                         ->
                                         {{ \Carbon\Carbon::parse($coupon->end_date)->format('d/m/Y') }}
                                     @else
-                                        {{ __('teacher::coupons.labels.unlimited') }}
+                                        {{ __('coupons::teacher/messages.labels.unlimited') }}
                                     @endif
                                 </strong>
                             </div>
                             <div class="teacher-coupon-card__info">
-                                <span>{{ __('teacher::coupons.labels.applies') }}</span>
+                                <span>{{ __('coupons::teacher/messages.labels.applies') }}</span>
                                 <strong>
                                     @if ($coupon->courses->isNotEmpty())
-                                        {{ __('teacher::coupons.labels.course_limited', ['count' => $coupon->courses->count()]) }}
+                                        {{ __('coupons::teacher/messages.labels.course_limited', ['count' => $coupon->courses->count()]) }}
                                     @elseif ($coupon->students->isNotEmpty())
-                                        {{ __('teacher::coupons.labels.student_limited', ['count' => $coupon->students->count()]) }}
+                                        {{ __('coupons::teacher/messages.labels.student_limited', ['count' => $coupon->students->count()]) }}
                                     @else
-                                        {{ __('teacher::coupons.labels.all') }}
+                                        {{ __('coupons::teacher/messages.labels.all') }}
                                     @endif
                                 </strong>
                             </div>
@@ -134,37 +134,37 @@
 
                         @if ($teacher->packageHasFeature('can_view_activity_logs'))
                             <div class="teacher-coupon-card__history">
-                                <div class="teacher-coupon-card__history-title">Lich su thao tac gan nhat</div>
+                                <div class="teacher-coupon-card__history-title">{{ __('coupons::teacher/messages.labels.recent_activity') }}</div>
                                 <div class="teacher-coupon-card__history-list">
                                     @forelse ($coupon->teacher_activity_preview ?? collect() as $activity)
                                         <article class="teacher-coupon-card__history-item">
                                             <strong>
                                                 {{ match ($activity->action) {
-                                                    'coupon_created' => 'Tao ma giam gia',
-                                                    'coupon_updated' => 'Cap nhat ma giam gia',
-                                                    'coupon_deleted' => 'Xoa ma giam gia',
-                                                    'coupon_priority_enabled' => 'Bat uu tien goi',
-                                                    'coupon_priority_disabled' => 'Tat uu tien goi',
-                                                    'coupon_students_updated' => 'Cap nhat hoc vien ap dung',
-                                                    'coupon_courses_updated' => 'Cap nhat khoa hoc ap dung',
+                                                    'coupon_created' => __('coupons::teacher/messages.logs.created'),
+                                                    'coupon_updated' => __('coupons::teacher/messages.logs.updated'),
+                                                    'coupon_deleted' => __('coupons::teacher/messages.logs.deleted'),
+                                                    'coupon_priority_enabled' => __('coupons::teacher/messages.logs.priority_enabled'),
+                                                    'coupon_priority_disabled' => __('coupons::teacher/messages.logs.priority_disabled'),
+                                                    'coupon_students_updated' => __('coupons::teacher/messages.logs.students_updated'),
+                                                    'coupon_courses_updated' => __('coupons::teacher/messages.logs.courses_updated'),
                                                     default => $activity->description ?: $activity->action,
                                                 } }}
                                             </strong>
                                             <span>{{ optional($activity->created_at)->format('d/m/Y H:i') }}</span>
                                         </article>
                                     @empty
-                                        <div class="teacher-coupon-card__history-empty">Chua co thao tac nao duoc ghi lai.</div>
+                                        <div class="teacher-coupon-card__history-empty">{{ __('coupons::teacher/messages.labels.no_activity') }}</div>
                                     @endforelse
                                 </div>
                             </div>
                         @else
                             <div class="teacher-coupon-card__history teacher-coupon-card__history--locked">
-                                <div class="teacher-coupon-card__history-title">Lich su thao tac gan nhat</div>
+                                <div class="teacher-coupon-card__history-title">{{ __('coupons::teacher/messages.labels.recent_activity') }}</div>
                                 <div class="teacher-coupon-card__history-empty">
-                                    {{ __('teacher::dashboard.package_features.activity_logs_locked') }}
+                                    {{ __('courses::teacher/messages.package_features.activity_logs_locked') }}
                                 </div>
                                 <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-outline-warning mt-3">
-                                    {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                                    {{ __('courses::teacher/messages.package_features.upgrade_cta') }}
                                 </a>
                             </div>
                         @endif
@@ -174,26 +174,26 @@
                                 <form action="{{ route('teacher.dashboard.coupons.priority', $coupon->id) }}" method="POST" class="d-inline-block">
                                     @csrf
                                     <button type="submit" class="btn btn-outline-warning btn-sm">
-                                        {{ $coupon->is_package_priority ? __('teacher::coupons.actions.unprioritize') : __('teacher::coupons.actions.prioritize') }}
+                                        {{ $coupon->is_package_priority ? __('coupons::teacher/messages.actions.unprioritize') : __('coupons::teacher/messages.actions.prioritize') }}
                                     </button>
                                 </form>
                             @endif
                             @if ($canManageCoupons && !$isLockedCoupon)
                                 <a href="{{ route('teacher.dashboard.coupons.edit', $coupon->id) }}" class="btn btn-outline-warning btn-sm">
-                                    {{ __('teacher::coupons.actions.edit') }}
+                                    {{ __('coupons::teacher/messages.actions.edit') }}
                                 </a>
                                 <a href="{{ route('teacher.dashboard.coupons.courses', $coupon->id) }}" class="btn btn-outline-primary btn-sm">
-                                    {{ __('teacher::coupons.actions.assign_courses') }}
+                                    {{ __('coupons::teacher/messages.actions.assign_courses') }}
                                 </a>
                                 <a href="{{ route('teacher.dashboard.coupons.students', $coupon->id) }}" class="btn btn-outline-secondary btn-sm">
-                                    {{ __('teacher::coupons.actions.assign_students') }}
+                                    {{ __('coupons::teacher/messages.actions.assign_students') }}
                                 </a>
                             @endif
-                            <form action="{{ route('teacher.dashboard.coupons.delete', $coupon->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('{{ __('teacher::coupons.confirm_delete') }}');">
+                            <form action="{{ route('teacher.dashboard.coupons.delete', $coupon->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('{{ __('coupons::teacher/messages.confirm_delete') }}');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-outline-danger btn-sm">
-                                    {{ __('teacher::coupons.actions.delete') }}
+                                    {{ __('coupons::teacher/messages.actions.delete') }}
                                 </button>
                             </form>
                         </div>
@@ -203,8 +203,8 @@
                 <div class="col-12">
                     <div class="teacher-coupons-empty">
                         <div class="teacher-coupons-empty__icon"><i class="fas fa-ticket"></i></div>
-                        <h4>{{ __('teacher::coupons.empty.title') }}</h4>
-                        <p class="mb-0">{{ __('teacher::coupons.empty.description') }}</p>
+                        <h4>{{ __('coupons::teacher/messages.empty.title') }}</h4>
+                        <p class="mb-0">{{ __('coupons::teacher/messages.empty.description') }}</p>
                     </div>
                 </div>
             @endforelse
@@ -383,12 +383,12 @@
             padding: 0.95rem 1rem;
             border-radius: 16px;
             border: 1px solid rgba(96, 165, 250, 0.12);
-            background: rgba(11, 19, 36, 0.72);
+            background: var(--admin-history-bg);
         }
 
         .teacher-coupon-card__history-title {
             margin-bottom: 0.7rem;
-            color: #dbeafe;
+            color: var(--admin-history-text);
             font-size: 0.9rem;
             font-weight: 800;
         }
@@ -406,14 +406,15 @@
         }
 
         .teacher-coupon-card__history-item strong {
-            color: #f8fbff;
+            color: var(--admin-history-text);
             font-size: 0.9rem;
             font-weight: 700;
         }
 
         .teacher-coupon-card__history-item span,
         .teacher-coupon-card__history-empty {
-            color: #8ca6c6;
+            color: var(--admin-history-text);
+            opacity: 0.8;
             font-size: 0.8rem;
             line-height: 1.5;
         }

@@ -4,12 +4,12 @@
     <div class="teacher-panel">
         <div class="teacher-section-title mb-4">
             <div>
-                <h3 class="fw-bold mb-2">{{ __('teacher::dashboard.courses.trash_title') }}</h3>
-                <p class="text-muted mb-0">{{ __('teacher::dashboard.courses.trash_description') }}</p>
+                <h3 class="fw-bold mb-2">{{ __('teacher::teacher/course/list.trash_title') }}</h3>
+                <p class="text-muted mb-0">{{ __('teacher::teacher/course/list.trash_description') }}</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a href="{{ route('teacher.dashboard.courses') }}" class="btn btn-outline-secondary">
-                    {{ __('teacher::dashboard.common.back') }}
+                    {{ __('teacher::teacher/course/common.actions.back') }}
                 </a>
             </div>
         </div>
@@ -27,24 +27,24 @@
                     <article class="teacher-stat-card teacher-course-card">
                         <strong class="d-block mb-2">{{ $course->name_locale }}</strong>
                         <div class="text-muted small mb-3">
-                            {{ __('teacher::dashboard.courses.labels.deleted_at', ['time' => optional($course->deleted_at)->format('d/m/Y H:i')]) }}
+                            {{ __('teacher::teacher/course/common.labels.deleted_at', ['time' => optional($course->deleted_at)->format('d/m/Y H:i')]) }}
                         </div>
                         <div class="d-flex flex-wrap gap-2 small">
-                            <span class="teacher-chip">{{ __('teacher::dashboard.courses.labels.lessons', ['count' => $course->lessons_count]) }}</span>
-                            <span class="teacher-chip">{{ __('teacher::dashboard.courses.labels.students', ['count' => $course->students_count]) }}</span>
+                            <span class="teacher-chip">{{ __('teacher::teacher/course/common.labels.lessons', ['count' => $course->lessons_count]) }}</span>
+                            <span class="teacher-chip">{{ __('teacher::teacher/course/common.labels.students', ['count' => $course->students_count]) }}</span>
                         </div>
                         <div class="d-flex flex-wrap gap-2 mt-3">
                             <form method="POST" action="{{ route('teacher.dashboard.courses.restore', $course->id) }}">
                                 @csrf
                                 <button type="submit" class="btn btn-sm btn-outline-primary">
-                                    {{ __('teacher::dashboard.courses.actions.restore') }}
+                                    {{ __('teacher::teacher/course/common.actions.restore') }}
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('teacher.dashboard.courses.force-delete', $course->id) }}" onsubmit="return confirm('{{ __('teacher::dashboard.courses.confirm_force_delete') }}')">
+                            <form method="POST" action="{{ route('teacher.dashboard.courses.force-delete', $course->id) }}" onsubmit="return confirm('{{ __('teacher::teacher/course/list.confirm_force_delete') }}')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    {{ __('teacher::dashboard.courses.actions.force_delete') }}
+                                    {{ __('teacher::teacher/course/common.actions.force_delete') }}
                                 </button>
                             </form>
                         </div>
@@ -53,7 +53,7 @@
             @empty
                 <div class="col-12">
                     <div class="teacher-panel">
-                        <p class="text-muted mb-0">{{ __('teacher::dashboard.courses.trash_empty') }}</p>
+                        <p class="text-muted mb-0">{{ __('teacher::teacher/course/list.trash_empty') }}</p>
                     </div>
                 </div>
             @endforelse

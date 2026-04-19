@@ -192,6 +192,15 @@
                                                 </div>
                                             @endif
                                         </div>
+                                        <div class="col-12 mt-3">
+                                            <div class="border rounded-3 p-3">
+                                                <div class="form-check form-switch mb-0">
+                                                    <input class="form-check-input" type="checkbox" id="ai_quiz_enabled" name="ai_quiz_enabled" value="1" @checked(old('ai_quiz_enabled', $settings['ai_quiz_enabled'] ?? '1') == '1')>
+                                                    <label class="form-check-label" for="ai_quiz_enabled">Cho phép Gi?ng viên t?o Quiz b?ng AI (Generative AI)</label>
+                                                </div>
+                                            </div>
+                                            <small class="text-muted d-block mt-1">S? d?ng API Key c?a Gemini. Khi t?t, nút "T?o b?ng AI" s? ?n kh?i màn hình C?p nh?t Quiz.</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

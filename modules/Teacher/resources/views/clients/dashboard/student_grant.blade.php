@@ -4,15 +4,15 @@
     <div class="teacher-panel teacher-student-grant-shell">
         <div class="teacher-student-grant-hero">
             <div>
-                <span class="teacher-student-grant-kicker">{{ __('teacher::gifts.teacher.kicker') }}</span>
-                <h3 class="teacher-student-grant-title">{{ __('teacher::gifts.teacher.hero_title') }}</h3>
+                <span class="teacher-student-grant-kicker">{{ __('students::teacher/messages.hero_kicker') }}</span>
+                <h3 class="teacher-student-grant-title">{{ __('students::teacher/messages.grant.hero_title') }}</h3>
                 <p class="teacher-student-grant-desc mb-0">
-                    {{ __('teacher::gifts.teacher.hero_description') }}
+                    {{ __('students::teacher/messages.grant.hero_description') }}
                 </p>
             </div>
             <div class="teacher-student-grant-actions">
                 <a href="{{ route('teacher.dashboard.students') }}" class="btn btn-outline-secondary">
-                    {{ __('teacher::gifts.teacher.back_to_students') }}
+                    {{ __('students::teacher/messages.grant.back_to_students') }}
                 </a>
             </div>
         </div>
@@ -28,30 +28,30 @@
         <div class="row g-3">
             <div class="col-xl-7">
                 <section class="teacher-student-grant-card">
-                    <h4>{{ __('teacher::gifts.teacher.form_title') }}</h4>
+                    <h4>{{ __('students::teacher/messages.grant.form_title') }}</h4>
                     <form method="POST" action="{{ route('teacher.dashboard.students.grants.store') }}" class="teacher-student-grant-form">
                         @csrf
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label">{{ __('teacher::gifts.teacher.student_email') }}</label>
+                                <label class="form-label">{{ __('students::teacher/messages.grant.fields.email') }}</label>
                                 <input
                                     type="email"
                                     name="student_email"
                                     class="form-control @error('student_email') is-invalid @enderror"
                                     value="{{ old('student_email', $selectedEmail ?? '') }}"
-                                    placeholder="{{ __('teacher::gifts.teacher.student_email_placeholder') }}">
+                                    placeholder="{{ __('students::teacher/messages.grant.fields.email_placeholder') }}">
                                 @error('student_email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                                 <small class="text-white-50 d-block mt-2">
-                                    {{ __('teacher::gifts.teacher.student_email_hint') }}
+                                    {{ __('students::teacher/messages.grant.fields.email_hint') }}
                                 </small>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">{{ __('teacher::gifts.teacher.course') }}</label>
+                                <label class="form-label">{{ __('students::teacher/messages.grant.fields.course') }}</label>
                                 <select name="course_id" class="form-select @error('course_id') is-invalid @enderror">
-                                    <option value="">{{ __('teacher::gifts.teacher.course_placeholder') }}</option>
+                                    <option value="">{{ __('students::teacher/messages.grant.fields.course_placeholder') }}</option>
                                     @foreach ($courses as $course)
                                         <option value="{{ $course->id }}" @selected((int) old('course_id') === (int) $course->id)>
                                             {{ $course->name_locale ?: $course->name }}
@@ -64,12 +64,12 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">{{ __('teacher::gifts.teacher.reason') }}</label>
+                                <label class="form-label">{{ __('students::teacher/messages.grant.fields.reason') }}</label>
                                 <select name="reason" class="form-select @error('reason') is-invalid @enderror">
-                                    <option value="gift" @selected(old('reason', 'gift') === 'gift')>{{ __('teacher::gifts.reasons.gift') }}</option>
-                                    <option value="support" @selected(old('reason') === 'support')>{{ __('teacher::gifts.reasons.support') }}</option>
-                                    <option value="special_trial" @selected(old('reason') === 'special_trial')>{{ __('teacher::gifts.reasons.special_trial') }}</option>
-                                    <option value="compensation" @selected(old('reason') === 'compensation')>{{ __('teacher::gifts.reasons.compensation') }}</option>
+                                    <option value="gift" @selected(old('reason', 'gift') === 'gift')>{{ __('students::teacher/messages.grant.reason_options.gift') }}</option>
+                                    <option value="support" @selected(old('reason') === 'support')>{{ __('students::teacher/messages.grant.reason_options.support') }}</option>
+                                    <option value="special_trial" @selected(old('reason') === 'special_trial')>{{ __('students::teacher/messages.grant.reason_options.special_trial') }}</option>
+                                    <option value="compensation" @selected(old('reason') === 'compensation')>{{ __('students::teacher/messages.grant.reason_options.compensation') }}</option>
                                 </select>
                                 @error('reason')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -77,13 +77,13 @@
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label">{{ __('teacher::gifts.teacher.note') }}</label>
+                                <label class="form-label">{{ __('students::teacher/messages.grant.fields.note') }}</label>
                                 <input
                                     type="text"
                                     name="note"
                                     class="form-control @error('note') is-invalid @enderror"
                                     value="{{ old('note') }}"
-                                    placeholder="{{ __('teacher::gifts.teacher.note_placeholder') }}">
+                                    placeholder="{{ __('students::teacher/messages.grant.fields.note_placeholder') }}">
                                 @error('note')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -91,36 +91,36 @@
                         </div>
 
                         <div class="teacher-student-grant-form__hint">
-                            <strong>{{ __('teacher::gifts.teacher.flow_title') }}</strong>
+                            <strong>{{ __('students::teacher/messages.grant.flow.title') }}</strong>
                             <ul class="mb-0 mt-2">
-                                <li>{{ __('teacher::gifts.teacher.flow_steps.step_1') }}</li>
-                                <li>{{ __('teacher::gifts.teacher.flow_steps.step_2') }}</li>
-                                <li>{{ __('teacher::gifts.teacher.flow_steps.step_3') }}</li>
+                                <li>{{ __('students::teacher/messages.grant.flow.step_1') }}</li>
+                                <li>{{ __('students::teacher/messages.grant.flow.step_2') }}</li>
+                                <li>{{ __('students::teacher/messages.grant.flow.step_3') }}</li>
                             </ul>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">{{ __('teacher::gifts.teacher.submit') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('students::teacher/messages.grant.actions.submit') }}</button>
                     </form>
                 </section>
             </div>
 
             <div class="col-xl-5">
                 <section class="teacher-student-grant-card">
-                    <h4>{{ __('teacher::gifts.teacher.recent_title') }}</h4>
+                    <h4>{{ __('students::teacher/messages.grant.recent_title') }}</h4>
                     <div class="teacher-student-grant-log">
                         @forelse ($recentGrants as $grant)
                             <article class="teacher-student-grant-log__item">
-                                <strong>{{ $grant->student?->name ?: $grant->student?->email ?: __('teacher::gifts.common.student') }}</strong>
-                                <span>{{ $grant->course?->name_locale ?: $grant->course?->name ?: __('teacher::gifts.common.course') }}</span>
+                                <strong>{{ $grant->student?->name ?: $grant->student?->email ?: __('students::teacher/messages.grant.fields.student') }}</strong>
+                                <span>{{ $grant->course?->name_locale ?: $grant->course?->name ?: __('students::teacher/messages.grant.fields.course') }}</span>
                                 <small>
-                                    {{ __('teacher::gifts.reasons.' . $grant->reason) }}
+                                    {{ __('students::teacher/messages.grant.reason_options.' . $grant->reason) }}
                                     •
-                                    {{ $grant->status === 'accepted' ? __('teacher::gifts.status.accepted') : __('teacher::gifts.status.pending') }}
+                                    {{ $grant->status === 'accepted' ? __('students::teacher/messages.grant.status.accepted') : __('students::teacher/messages.grant.status.pending') }}
                                     • {{ optional($grant->invited_at ?: $grant->created_at)->format('d/m/Y H:i') }}
                                 </small>
                             </article>
                         @empty
-                            <p class="mb-0 text-white-50">{{ __('teacher::gifts.teacher.no_recent') }}</p>
+                            <p class="mb-0 text-white-50">{{ __('students::teacher/messages.grant.no_recent') }}</p>
                         @endforelse
                     </div>
                 </section>

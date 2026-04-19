@@ -34,7 +34,7 @@
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
     <style>
         :root {
-            --admin-bg: #f4f7fb;
+            --admin-bg: #f5f8fc;
             --admin-surface: #ffffff;
             --admin-border: #dbe4f0;
             --admin-text: #0f172a;
@@ -42,23 +42,25 @@
             --admin-primary: #2563eb;
             --teacher-accent: #0ea5e9;
             --teacher-accent-2: #22c55e;
-            --teacher-glow: rgba(14, 165, 233, 0.18);
+            --teacher-glow: rgba(14, 165, 233, 0.12);
             --teacher-warm: #f59e0b;
-            --admin-topnav-bg: rgba(15, 23, 42, 0.96);
-            --admin-topnav-border: rgba(148, 163, 184, 0.14);
+            --admin-topnav-bg: rgba(255, 255, 255, 0.94);
+            --admin-topnav-border: rgba(148, 163, 184, 0.12);
             --admin-sidebar-gradient:
-                radial-gradient(circle at top left, rgba(37, 99, 235, 0.28), transparent 28%),
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.22), transparent 28%),
                 linear-gradient(180deg, #0f172a 0%, #172554 100%);
-            --admin-card-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
-            --admin-dropdown-shadow: 0 18px 35px rgba(15, 23, 42, 0.12);
-            --admin-form-bg: rgba(255, 255, 255, 0.96);
+            --admin-card-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+            --admin-dropdown-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+            --admin-form-bg: #ffffff;
             --admin-subtle-bg: #f8fafc;
-            --admin-hover-bg: #f8fafc;
+            --admin-hover-bg: #f1f5f9;
             --admin-input-bg: #ffffff;
             --admin-link: #0f172a;
             --admin-link-muted: #475569;
             --admin-surface-2: #f8fafc;
             --admin-surface-3: #eef4fb;
+            --admin-glass-bg: rgba(255, 255, 255, 0.75);
+            --admin-glass-border: rgba(255, 255, 255, 0.5);
             --admin-success-bg: #dcfce7;
             --admin-success-text: #166534;
             --admin-success-border: #86efac;
@@ -71,46 +73,62 @@
             --admin-info-bg: #dbeafe;
             --admin-info-text: #1d4ed8;
             --admin-info-border: #93c5fd;
+            --admin-sidebar-bg: #ffffff;
+            --admin-sidebar-text: #0f172a;
+            --admin-sidebar-hover: #f1f5f9;
+            --admin-sidebar-border: #e2e8f0;
+            --admin-sidebar-icon: #475569;
+            --admin-history-bg: #f8fafc;
+            --admin-history-text: #1e293b;
         }
 
         html[data-theme="dark"] {
-            --admin-bg: #0b1220;
-            --admin-surface: #111827;
-            --admin-border: #2b3b53;
-            --admin-text: #e2e8f0;
-            --admin-muted: #a8b6c9;
-            --admin-primary: #60a5fa;
-            --teacher-accent: #38bdf8;
-            --teacher-accent-2: #4ade80;
-            --teacher-glow: rgba(56, 189, 248, 0.22);
-            --teacher-warm: #fbbf24;
-            --admin-topnav-bg: rgba(8, 15, 31, 0.96);
-            --admin-topnav-border: rgba(71, 85, 105, 0.35);
+            --admin-bg: #070d19;
+            --admin-surface: #0f172a;
+            --admin-border: #1e293b;
+            --admin-text: #f1f5f9;
+            --admin-muted: #94a3b8;
+            --admin-primary: #3b82f6;
+            --teacher-accent: #0ea5e9;
+            --teacher-accent-2: #10b981;
+            --teacher-glow: rgba(14, 165, 233, 0.15);
+            --teacher-warm: #f59e0b;
+            --admin-topnav-bg: rgba(8, 15, 31, 0.88);
+            --admin-topnav-border: rgba(30, 41, 59, 0.8);
             --admin-sidebar-gradient:
-                radial-gradient(circle at top left, rgba(96, 165, 250, 0.2), transparent 28%),
+                radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 28%),
                 linear-gradient(180deg, #020617 0%, #0f172a 100%);
-            --admin-card-shadow: 0 18px 40px rgba(2, 6, 23, 0.35);
-            --admin-dropdown-shadow: 0 18px 35px rgba(2, 6, 23, 0.45);
-            --admin-form-bg: rgba(15, 23, 42, 0.92);
-            --admin-subtle-bg: #172235;
-            --admin-hover-bg: #1a2940;
-            --admin-input-bg: #0b1324;
-            --admin-link: #e2e8f0;
-            --admin-link-muted: #cbd5e1;
-            --admin-surface-2: #162033;
-            --admin-surface-3: #1a2740;
-            --admin-success-bg: rgba(34, 197, 94, 0.16);
-            --admin-success-text: #86efac;
-            --admin-success-border: rgba(34, 197, 94, 0.34);
-            --admin-danger-bg: rgba(239, 68, 68, 0.16);
-            --admin-danger-text: #fca5a5;
-            --admin-danger-border: rgba(239, 68, 68, 0.34);
-            --admin-warning-bg: rgba(245, 158, 11, 0.16);
-            --admin-warning-text: #fcd34d;
-            --admin-warning-border: rgba(245, 158, 11, 0.34);
-            --admin-info-bg: rgba(59, 130, 246, 0.16);
-            --admin-info-text: #93c5fd;
-            --admin-info-border: rgba(59, 130, 246, 0.34);
+            --admin-card-shadow: 0 14px 30px rgba(2, 6, 23, 0.6);
+            --admin-dropdown-shadow: 0 18px 35px rgba(2, 6, 23, 0.75);
+            --admin-form-bg: #111827;
+            --admin-subtle-bg: #1e293b;
+            --admin-hover-bg: #1e293b;
+            --admin-input-bg: #0f172a;
+            --admin-link: #f1f5f9;
+            --admin-link-muted: #94a3b8;
+            --admin-surface-2: #0f172a;
+            --admin-surface-3: #1e293b;
+            --admin-glass-bg: rgba(15, 23, 42, 0.65);
+            --admin-glass-border: rgba(255, 255, 255, 0.08);
+            --admin-success-bg: rgba(16, 185, 129, 0.15);
+            --admin-success-text: #34d399;
+            --admin-success-border: rgba(16, 185, 129, 0.25);
+            --admin-danger-bg: rgba(239, 68, 68, 0.15);
+            --admin-danger-text: #f87171;
+            --admin-danger-border: rgba(239, 68, 68, 0.25);
+            --admin-warning-bg: rgba(245, 158, 11, 0.15);
+            --admin-warning-text: #fbbf24;
+            --admin-warning-border: rgba(245, 158, 11, 0.25);
+            --admin-info-bg: rgba(59, 130, 246, 0.15);
+            --admin-info-text: #60a5fa;
+            --admin-info-border: rgba(59, 130, 246, 0.25);
+            --admin-sidebar-bg: #0f172a;
+            --admin-sidebar-text: rgba(255, 255, 255, 0.78);
+            --admin-sidebar-hover: rgba(255, 255, 255, 0.1);
+            --admin-sidebar-border: rgba(255, 255, 255, 0.08);
+            --admin-sidebar-icon: rgba(255, 255, 255, 0.6);
+            --admin-history-bg: rgba(15, 23, 42, 0.58);
+            --admin-history-text: #f8fbff;
         }
 
         body.sb-nav-fixed {
@@ -187,28 +205,57 @@
         }
 
         .sb-sidenav {
+            background: var(--admin-sidebar-bg);
+            border-right: 1px solid var(--admin-sidebar-border);
+        }
+
+        html[data-theme="dark"] .sb-sidenav {
             background: var(--admin-sidebar-gradient);
+            border-right: 0;
         }
 
         .sb-sidenav .sb-sidenav-menu .nav .nav-link {
             margin: 0.18rem 0.75rem;
             padding: 0.82rem 1rem;
             border-radius: 14px;
-            color: rgba(255, 255, 255, 0.78);
+            color: var(--admin-sidebar-text);
             transition: 0.2s ease;
         }
 
         .sb-sidenav .sb-sidenav-menu .nav .nav-link:hover,
         .sb-sidenav .sb-sidenav-menu .nav .nav-link.active,
         .sb-sidenav .sb-sidenav-menu .nav .nav-link.is-active {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--admin-sidebar-hover);
+            color: var(--admin-primary);
+        }
+
+        html[data-theme="dark"] .sb-sidenav .sb-sidenav-menu .nav .nav-link:hover,
+        html[data-theme="dark"] .sb-sidenav .sb-sidenav-menu .nav .nav-link.active,
+        html[data-theme="dark"] .sb-sidenav .sb-sidenav-menu .nav .nav-link.is-active {
             color: #fff;
+        }
+
+        .sb-nav-link-icon {
+            color: var(--admin-sidebar-icon) !important;
+            transition: color 0.2s ease;
+        }
+
+        .active .sb-nav-link-icon,
+        .is-active .sb-nav-link-icon,
+        .nav-link:hover .sb-nav-link-icon {
+            color: var(--admin-primary) !important;
+        }
+
+        html[data-theme="dark"] .active .sb-nav-link-icon,
+        html[data-theme="dark"] .is-active .sb-nav-link-icon,
+        html[data-theme="dark"] .nav-link:hover .sb-nav-link-icon {
+            color: #fff !important;
         }
 
         .sb-sidenav .sb-sidenav-menu .nav .sb-sidenav-menu-heading {
             padding: 1rem 1.5rem 0.65rem;
-            color: rgba(255, 255, 255, 0.48);
-            font-size: 0.76rem;
+            color: var(--admin-muted);
+            font-size: 0.72rem;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -571,15 +618,26 @@
             gap: 0.55rem;
             min-height: 40px;
             padding: 0.4rem 0.9rem;
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            border: 1px solid var(--admin-border);
             border-radius: 999px;
-            color: #fff;
-            background: rgba(255, 255, 255, 0.08);
+            color: var(--admin-text);
+            background: var(--admin-surface-3);
             transition: 0.2s ease;
         }
 
         .theme-toggle-admin:hover {
+            color: var(--admin-primary);
+            background: var(--admin-hover-bg);
+            border-color: var(--admin-primary);
+        }
+
+        html[data-theme="dark"] .theme-toggle-admin {
+            border: 1px solid rgba(255, 255, 255, 0.18);
             color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        html[data-theme="dark"] .theme-toggle-admin:hover {
             background: rgba(255, 255, 255, 0.14);
             border-color: rgba(255, 255, 255, 0.28);
         }
@@ -647,8 +705,8 @@
 
                 document.querySelectorAll('[data-admin-theme-toggle]').forEach((button) => {
                     const isDark = theme === 'dark';
-                    const nextThemeLabel = isDark ? @json(__('teacher::dashboard.header.light_mode')) : @json(__('teacher::dashboard.header.dark_mode'));
-                    const nextThemeTitle = isDark ? @json(__('teacher::dashboard.header.switch_to_light')) : @json(__('teacher::dashboard.header.switch_to_dark'));
+                    const nextThemeLabel = isDark ? @json(__('teacher/header.light_mode')) : @json(__('teacher/header.dark_mode'));
+                    const nextThemeTitle = isDark ? @json(__('teacher/header.switch_to_light')) : @json(__('teacher/header.switch_to_dark'));
                     const label = button.querySelector('[data-admin-theme-label]');
 
                     button.setAttribute('aria-pressed', String(isDark));

@@ -5,12 +5,12 @@
         <div class="teacher-panel teacher-upgrade-shell">
             <div class="teacher-upgrade-hero">
                 <div>
-                    <span class="teacher-upgrade-kicker">{{ __('teacher::dashboard.package.status_title') }}</span>
-                    <h3 class="teacher-upgrade-title">{{ __('teacher::dashboard.package.status_title') }}</h3>
-                    <p class="teacher-upgrade-desc mb-0">{{ __('teacher::dashboard.package.status_description') }}</p>
+                    <span class="teacher-upgrade-kicker">{{ __('teacher::teacher/package/common.status_title') }}</span>
+                    <h3 class="teacher-upgrade-title">{{ __('teacher::teacher/package/common.status_title') }}</h3>
+                    <p class="teacher-upgrade-desc mb-0">{{ __('teacher::teacher/package/status.status_description') }}</p>
                 </div>
                 <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-outline-secondary teacher-upgrade-back">
-                    {{ __('teacher::dashboard.common.back') }}
+                    {{ __('teacher::teacher/package/status.back') }}
                 </a>
             </div>
 
@@ -35,16 +35,16 @@
                         $noticeDescription = null;
 
                         if ($upgradeRequest->status === 'pending_review' && $upgradeRequest->payment_method === 'bank_transfer') {
-                            $noticeTitle = __('teacher::dashboard.package.notice.bank_transfer_title');
-                            $noticeDescription = __('teacher::dashboard.package.notice.bank_transfer_description');
+                            $noticeTitle = __('teacher::teacher/package/status.notice.bank_transfer_title');
+                            $noticeDescription = __('teacher::teacher/package/status.notice.bank_transfer_description');
                         } elseif ($isQueuedActivation && $isDowngrade) {
-                            $noticeTitle = __('teacher::dashboard.package.notice.downgrade_title');
-                            $noticeDescription = __('teacher::dashboard.package.notice.downgrade_description', [
+                            $noticeTitle = __('teacher::teacher/package/status.notice.downgrade_title');
+                            $noticeDescription = __('teacher::teacher/package/status.notice.downgrade_description', [
                                 'date' => $upgradeRequest->activates_at->format('d/m/Y'),
                             ]);
                         } elseif ($upgradeRequest->activates_at) {
-                            $noticeTitle = __('teacher::dashboard.package.notice.activation_title');
-                            $noticeDescription = __('teacher::dashboard.package.notice.activation_description', [
+                            $noticeTitle = __('teacher::teacher/package/status.notice.activation_title');
+                            $noticeDescription = __('teacher::teacher/package/status.notice.activation_description', [
                                 'date' => $upgradeRequest->activates_at->format('d/m/Y'),
                             ]);
                         }
@@ -54,19 +54,22 @@
                         <div class="col-lg-6">
                             <div class="teacher-upgrade-card h-100">
                                 <div class="teacher-upgrade-card__top">
-                                    <span class="teacher-upgrade-card__tag">{{ __('teacher::dashboard.package.current_title') }}</span>
+                                    <span class="teacher-upgrade-card__tag">{{ __('teacher::teacher/package/common.current_title') }}</span>
                                 </div>
                                 <div class="teacher-upgrade-card__body">
                                     <h5>{{ $currentPackage?->name_locale ?: $currentPackage?->name }}</h5>
                                     <p class="teacher-upgrade-card__desc mb-0">
-                                        {{ __('teacher::dashboard.package.current_meta', [
+                                        {{ __('teacher::teacher/package/common.current_meta', [
                                             'commission' => rtrim(rtrim(number_format((float) ($currentPackage?->commission_rate ?? 0), 2, '.', ''), '0'), '.'),
-                                            'limit' => $currentPackage?->effective_course_limit ?: __('teacher::dashboard.courses.unlimited'),
+                                            'limit' => $currentPackage?->effective_course_limit ?: __('teacher::teacher/course/list.labels.unlimited'),
                                         ]) }}
                                     </p>
                                     @if ($teacher->package_expires_at)
                                         <p class="teacher-upgrade-card__time mb-0">
-                                            Hết hạn {{ $teacher->package_expires_at->format('d/m/Y') }} • còn {{ max(now()->startOfDay()->diffInDays($teacher->package_expires_at->copy()->startOfDay(), false), 0) }} ngày
+                                            {{ __('teacher::teacher/package/common.expires_at', [
+                                                'date' => $teacher->package_expires_at->format('d/m/Y'),
+                                                'days' => max(now()->startOfDay()->diffInDays($teacher->package_expires_at->copy()->startOfDay(), false), 0)
+                                            ]) }}
                                         </p>
                                     @endif
                                 </div>
@@ -82,7 +85,7 @@
                                 @endif
 
                                 <div class="teacher-upgrade-card__top">
-                                    <span class="teacher-upgrade-card__tag">{{ __('teacher::dashboard.package.target_title') }}</span>
+                                    <span class="teacher-upgrade-card__tag">{{ __('teacher::teacher/package/common.target_title') }}</span>
                                     @if (($upgradeRequest->package?->badge_text_locale ?: '') !== '')
                                         <span class="teacher-upgrade-card__badge">{{ $upgradeRequest->package?->badge_text_locale }}</span>
                                     @endif
@@ -90,19 +93,19 @@
                                 <div class="teacher-upgrade-card__body">
                                     <h5>{{ $upgradeRequest->package?->name_locale ?: $upgradeRequest->package?->name }}</h5>
                                     <div class="teacher-upgrade-card__price">
-                                        {{ $upgradeRequest->payable_amount > 0 ? money($upgradeRequest->payable_amount) : '0 đ' }}
+                                        {{ $upgradeRequest->payable_amount > 0 ? moneyLocale($upgradeRequest->payable_amount) : moneyLocale(0) }}
                                     </div>
                                     <p class="teacher-upgrade-card__desc mb-0">
-                                        {{ __('teacher::dashboard.package.current_meta', [
+                                        {{ __('teacher::teacher/package/common.current_meta', [
                                             'commission' => rtrim(rtrim(number_format((float) ($upgradeRequest->package?->commission_rate ?? 0), 2, '.', ''), '0'), '.'),
-                                            'limit' => $upgradeRequest->package?->effective_course_limit ?: __('teacher::dashboard.courses.unlimited'),
+                                            'limit' => $upgradeRequest->package?->effective_course_limit ?: __('teacher::teacher/course/list.labels.unlimited'),
                                         ]) }}
                                     </p>
                                     @if ($upgradeRequest->activates_at)
                                         <p class="teacher-upgrade-card__time mb-0">
-                                            {{ $upgradeRequest->activated_at ? 'Bắt đầu' : 'Sẽ bắt đầu' }} {{ $upgradeRequest->activates_at->format('d/m/Y') }}
+                                            {{ $upgradeRequest->activated_at ? __('teacher::teacher/package/status.status.starts_at') : __('teacher::teacher/package/status.status.will_start_at') }} {{ $upgradeRequest->activates_at->format('d/m/Y') }}
                                             @if ($upgradeRequest->package_expires_at)
-                                                • hết hạn {{ $upgradeRequest->package_expires_at->format('d/m/Y') }}
+                                                • {{ __('teacher::teacher/package/common.current_expiry_short', ['date' => $upgradeRequest->package_expires_at->format('d/m/Y')]) }}
                                             @endif
                                         </p>
                                     @endif
@@ -125,8 +128,8 @@
                         <div class="teacher-upgrade-warning mt-4">
                             <div class="teacher-upgrade-warning__icon">!</div>
                             <div>
-                                <div class="teacher-upgrade-warning__title">{{ __('teacher::dashboard.package.over_limit.title') }}</div>
-                                <p class="teacher-upgrade-warning__desc">{{ __('teacher::dashboard.package.over_limit.description') }}</p>
+                                <div class="teacher-upgrade-warning__title">{{ __('teacher::teacher/package/status.over_limit.title') }}</div>
+                                <p class="teacher-upgrade-warning__desc">{{ __('teacher::teacher/package/status.over_limit.description') }}</p>
                                 <ul class="teacher-upgrade-warning__list mb-0">
                                     @foreach ($overLimitWarnings as $warning)
                                         <li>{{ $warning }}</li>
@@ -140,8 +143,8 @@
                         <div class="teacher-upgrade-warning is-feature-loss mt-4">
                             <div class="teacher-upgrade-warning__icon">!</div>
                             <div>
-                                <div class="teacher-upgrade-warning__title">{{ __('teacher::dashboard.package.feature_loss.title') }}</div>
-                                <p class="teacher-upgrade-warning__desc">{{ __('teacher::dashboard.package.feature_loss.description') }}</p>
+                                <div class="teacher-upgrade-warning__title">{{ __('teacher::teacher/package/status.feature_loss.title') }}</div>
+                                <p class="teacher-upgrade-warning__desc">{{ __('teacher::teacher/package/status.feature_loss.description') }}</p>
                                 <ul class="teacher-upgrade-warning__list mb-0">
                                     @foreach ($featureLossWarnings as $warning)
                                         <li>{{ $warning }}</li>
@@ -154,13 +157,13 @@
                     @if ($upgradeRequest->status === 'pending_payment')
                         <div class="teacher-upgrade-action mt-4">
                             <div>
-                                <div class="teacher-upgrade-action__title">{{ __('teacher::dashboard.package.pending_payment_title') }}</div>
-                                <p class="teacher-upgrade-action__desc mb-0">{{ __('teacher::dashboard.package.pending_payment_description') }}</p>
+                                <div class="teacher-upgrade-action__title">{{ __('teacher::teacher/package/status.pending_payment_title') }}</div>
+                                <p class="teacher-upgrade-action__desc mb-0">{{ __('teacher::teacher/package/common.pending_payment_description') }}</p>
                             </div>
                             <form method="POST" action="{{ route('teacher.dashboard.package.upgrade.mark-paid') }}">
                                 @csrf
                                 <button type="submit" class="btn btn-primary">
-                                    {{ __('teacher::dashboard.package.mark_paid') }}
+                                    {{ __('teacher::teacher/package/status.mark_paid') }}
                                 </button>
                             </form>
                         </div>
@@ -169,28 +172,28 @@
 
                 <div class="col-xl-4">
                     <aside class="teacher-upgrade-summary">
-                        <div class="teacher-upgrade-summary__label">{{ __('teacher::dashboard.package.status_title') }}</div>
+                        <div class="teacher-upgrade-summary__label">{{ __('teacher::teacher/package/common.status_title') }}</div>
                         <div class="teacher-upgrade-summary__name">{{ $upgradeRequest->display_status }}</div>
                         <div class="teacher-upgrade-summary__price">
-                            {{ $upgradeRequest->payable_amount > 0 ? money($upgradeRequest->payable_amount) : '0 đ' }}
+                            {{ $upgradeRequest->payable_amount > 0 ? moneyLocale($upgradeRequest->payable_amount) : moneyLocale(0) }}
                         </div>
                         <p class="teacher-upgrade-summary__meta">{{ $upgradeRequest->payment_method_label }}</p>
 
                         <div class="teacher-upgrade-summary__stats">
                             <div class="teacher-upgrade-summary__stat">
-                                <span>{{ __('teacher::dashboard.package.labels.status') }}</span>
+                                <span>{{ __('teacher::teacher/package/status.labels.status') }}</span>
                                 <strong>{{ $upgradeRequest->display_status }}</strong>
                             </div>
                             <div class="teacher-upgrade-summary__stat">
-                                <span>{{ __('teacher::dashboard.package.labels.payable') }}</span>
-                                <strong>{{ $upgradeRequest->payable_amount > 0 ? money($upgradeRequest->payable_amount) : '0 đ' }}</strong>
+                                <span>{{ __('teacher::teacher/package/status.labels.payable') }}</span>
+                                <strong>{{ $upgradeRequest->payable_amount > 0 ? moneyLocale($upgradeRequest->payable_amount) : moneyLocale(0) }}</strong>
                             </div>
                             <div class="teacher-upgrade-summary__stat">
-                                <span>{{ __('teacher::dashboard.package.labels.payment_method') }}</span>
+                                <span>{{ __('teacher::teacher/package/common.payment_method') }}</span>
                                 <strong>{{ $upgradeRequest->payment_method_label }}</strong>
                             </div>
                             <div class="teacher-upgrade-summary__stat">
-                                <span>{{ __('teacher::dashboard.package.labels.submitted_at') }}</span>
+                                <span>{{ __('teacher::teacher/package/status.labels.submitted_at') }}</span>
                                 <strong>{{ optional($upgradeRequest->submitted_at)->format('d/m/Y H:i') ?: '-' }}</strong>
                             </div>
                         </div>
@@ -201,15 +204,15 @@
         <button
             type="submit"
             class="btn btn-outline-danger w-100"
-            onclick="return confirm('Bạn có chắc chắn muốn hủy yêu cầu đổi gói này không?')"
+            onclick="return confirm(@json(__('teacher::teacher/package/status.confirm.cancel_request')))"
         >
-            Hủy giao dịch
+            {{ __('teacher::teacher/package/status.actions.cancel_transaction') }}
         </button>
     </form>
 @endif
 
                         <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-outline-secondary w-100 mt-4">
-                            {{ __('teacher::dashboard.common.back') }}
+                            {{ __('teacher::teacher/package/status.back') }}
                         </a>
                     </aside>
                 </div>

@@ -18,6 +18,7 @@ class TeacherPackageUsageResolver
             'has_limit' => $hasLimit,
             'is_unlimited' => $isUnlimited,
             'remaining' => $remaining,
+            'can_create_draft' => $featureEnabled,
             'can_create' => $featureEnabled && ($limit === null || $used < $limit),
             'can_publish_more' => $featureEnabled && ($limit === null || $used < $limit),
             'is_over_limit' => $hasLimit && $used > $limit,

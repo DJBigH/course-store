@@ -2,10 +2,10 @@
 
 @php
     $accessLabel = match (true) {
-        $summary['orders'] > 0 && $summary['grants'] > 0 => 'Da mua + duoc tang',
-        $summary['orders'] > 0 => 'Da mua',
-        $summary['grants'] > 0 => 'Duoc tang',
-        default => 'Chua xac dinh',
+        $summary['orders'] > 0 && $summary['grants'] > 0 => __('students::teacher/messages.show.summary.access_labels.paid_granted'),
+        $summary['orders'] > 0 => __('students::teacher/messages.show.summary.access_labels.paid'),
+        $summary['grants'] > 0 => __('students::teacher/messages.show.summary.access_labels.granted'),
+        default => __('students::teacher/messages.show.summary.access_labels.unknown'),
     };
 @endphp
 
@@ -13,21 +13,20 @@
     <div class="teacher-panel teacher-student-show-shell">
         <div class="teacher-student-show-hero">
             <div>
-                <span class="teacher-student-show-kicker">Chi tiet hoc vien</span>
+                <span class="teacher-student-show-kicker">{{ __('students::teacher/messages.show.hero_kicker') }}</span>
                 <h3 class="teacher-student-show-title">{{ $student->name }}</h3>
                 <p class="teacher-student-show-desc mb-0">
-                    Day la thong tin hoc vien da mua hoac duoc cap quyen hoc trong cac khoa hoc cua ban.
-                    Ban co the theo doi lich su mua, lich su cap quyen va luu ghi chu noi bo de cham soc hoc vien tot hon.
+                    {{ __('students::teacher/messages.show.hero_description') }}
                 </p>
             </div>
             <div class="teacher-student-show-actions">
-                <a href="{{ route('teacher.dashboard.students') }}" class="btn btn-outline-secondary">Quay lai danh sach</a>
+                <a href="{{ route('teacher.dashboard.students') }}" class="btn btn-outline-secondary">{{ __('students::teacher/messages.show.back_cta') }}</a>
                 @if ($studentFeatureState['can_grant_courses'])
                     <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary">
-                        Cap quyen hoc
+                        {{ __('students::teacher/messages.show.grant_cta') }}
                     </a>
                 @endif
-                <a href="mailto:{{ $student->email }}" class="btn btn-primary">Gui email</a>
+                <a href="mailto:{{ $student->email }}" class="btn btn-primary">{{ __('students::teacher/messages.show.email_cta') }}</a>
             </div>
         </div>
 
@@ -42,71 +41,71 @@
         @if (!$studentFeatureState['can_grant_courses'] || !$studentFeatureState['can_view_progress'])
             @include('teacher::clients.dashboard.partials.package_feature_notice', [
                 'message' => !$studentFeatureState['can_view_progress']
-                    ? __('teacher::dashboard.package_features.students_locked_progress')
-                    : __('teacher::dashboard.package_features.students_locked_grants'),
+                    ? __('courses::teacher/messages.package_features.students_locked_progress')
+                    : __('courses::teacher/messages.package_features.students_locked_grants'),
             ])
         @endif
 
         <div class="teacher-student-show-summary">
             <div class="teacher-student-show-summary__item">
-                <span>Khoa hoc dang co quyen</span>
+                <span>{{ __('students::teacher/messages.show.summary.granted_courses') }}</span>
                 <strong>{{ $summary['courses'] }}</strong>
             </div>
             <div class="teacher-student-show-summary__item">
-                <span>Don da thanh toan</span>
+                <span>{{ __('students::teacher/messages.show.summary.paid_orders') }}</span>
                 <strong>{{ $summary['orders'] }}</strong>
             </div>
             <div class="teacher-student-show-summary__item">
-                <span>Suat teacher da cap</span>
+                <span>{{ __('students::teacher/messages.show.summary.teacher_grants') }}</span>
                 <strong>{{ $summary['grants'] }}</strong>
             </div>
             <div class="teacher-student-show-summary__item">
-                <span>Loai truy cap</span>
+                <span>{{ __('students::teacher/messages.show.summary.access_type') }}</span>
                 <strong>{{ $accessLabel }}</strong>
             </div>
             <div class="teacher-student-show-summary__item">
-                <span>Tong chi tieu</span>
+                <span>{{ __('students::teacher/messages.show.summary.total_spent') }}</span>
                 <strong>{{ money($summary['spent']) }}</strong>
             </div>
             @if ($studentFeatureState['can_view_progress'])
                 <div class="teacher-student-show-summary__item">
-                    <span>Tien do hoc tong quan</span>
+                    <span>{{ __('students::teacher/messages.show.summary.learning_progress') }}</span>
                     <strong>{{ $summary['progress_percent'] ?? 0 }}%</strong>
-                    <small>{{ $summary['completed_lessons'] ?? 0 }} / {{ $summary['total_lessons'] ?? 0 }} bai</small>
+                    <small>{{ __('students::teacher/messages.show.summary.lessons_count', ['count' => $summary['completed_lessons'] ?? 0]) }} / {{ $summary['total_lessons'] ?? 0 }}</small>
                 </div>
             @endif
             <div class="teacher-student-show-summary__item">
-                <span>Lan mua gan nhat</span>
-                <strong>{{ optional($summary['last_purchase_at'])->format('d/m/Y H:i') ?: 'Chua co du lieu' }}</strong>
+                <span>{{ __('students::teacher/messages.show.summary.last_purchase') }}</span>
+                <strong>{{ optional($summary['last_purchase_at'])->format('d/m/Y H:i') ?: __('students::teacher/messages.show.summary.no_purchase_data') }}</strong>
             </div>
         </div>
 
         <div class="row g-3">
             <div class="col-xl-4">
                 <section class="teacher-student-show-card">
-                    <h4>Thong tin lien he</h4>
+                    <h4>{{ __('students::teacher/messages.show.info.title') }}</h4>
                     <div class="teacher-student-show-info-list">
                         <div>
-                            <span>Email</span>
+                            <span>{{ __('students::teacher/messages.show.info.email') }}</span>
                             <strong>{{ $student->email }}</strong>
                         </div>
                         <div>
-                            <span>So dien thoai</span>
-                            <strong>{{ $student->phone ?: 'Chua cap nhat' }}</strong>
+                            <span>{{ __('students::teacher/messages.show.info.phone') }}</span>
+                            <strong>{{ $student->phone ?: __('students::teacher/messages.show.info.not_updated') }}</strong>
                         </div>
                         <div>
-                            <span>Dia chi</span>
-                            <strong>{{ $student->address ?: 'Chua cap nhat dia chi' }}</strong>
+                            <span>{{ __('students::teacher/messages.show.info.address') }}</span>
+                            <strong>{{ $student->address ?: __('students::teacher/messages.show.info.no_address') }}</strong>
                         </div>
                         <div>
-                            <span>Trang thai tai khoan</span>
+                            <span>{{ __('students::teacher/messages.show.info.status') }}</span>
                             <strong>
                                 @if ($student->deleted_at)
-                                    Da xoa mem
+                                    {{ __('students::teacher/messages.show.info.status_deleted') }}
                                 @elseif (!$student->email_verified_at)
-                                    Chua xac minh email
+                                    {{ __('students::teacher/messages.show.info.status_unverified') }}
                                 @else
-                                    Dang hoat dong
+                                    {{ __('students::teacher/messages.show.info.status_active') }}
                                 @endif
                             </strong>
                         </div>
@@ -116,37 +115,37 @@
                 <section class="teacher-student-show-card">
                     <div class="teacher-student-show-card__head">
                         <div>
-                            <h4 class="mb-1">Ghi chu noi bo</h4>
-                            <p class="mb-0">Chi teacher moi nhin thay phan nay.</p>
+                            <h4 class="mb-1">{{ __('students::teacher/messages.show.internal_notes.title') }}</h4>
+                            <p class="mb-0">{{ __('students::teacher/messages.show.internal_notes.help') }}</p>
                         </div>
                     </div>
                     <form method="POST" action="{{ route('teacher.dashboard.students.note', $student->id) }}">
                         @csrf
                         <div class="mb-3">
-                            <label class="form-label">Tag noi bo</label>
+                            <label class="form-label">{{ __('students::teacher/messages.show.internal_notes.tag_label') }}</label>
                             <select name="tag" class="form-select">
-                                <option value="">Chua phan loai</option>
-                                <option value="potential" @selected(old('tag', $note?->tag) === 'potential')>Tiem nang</option>
-                                <option value="support_needed" @selected(old('tag', $note?->tag) === 'support_needed')>Can ho tro</option>
-                                <option value="vip" @selected(old('tag', $note?->tag) === 'vip')>VIP</option>
+                                <option value="">{{ __('students::teacher/messages.show.internal_notes.no_tag') }}</option>
+                                <option value="potential" @selected(old('tag', $note?->tag) === 'potential')>{{ __('students::teacher/messages.show.internal_notes.tag_potential') }}</option>
+                                <option value="support_needed" @selected(old('tag', $note?->tag) === 'support_needed')>{{ __('students::teacher/messages.show.internal_notes.tag_support') }}</option>
+                                <option value="vip" @selected(old('tag', $note?->tag) === 'vip')>{{ __('students::teacher/messages.show.internal_notes.tag_vip') }}</option>
                             </select>
                         </div>
                         <textarea
                             name="note"
                             class="form-control @error('note') is-invalid @enderror"
                             rows="8"
-                            placeholder="Vi du: hoc vien can ho tro them, nen uu tien lien he, da duoc tang khoa hoc...">{{ old('note', $note?->note) }}</textarea>
+                            placeholder="{{ __('students::teacher/messages.show.internal_notes.placeholder') }}">{{ old('note', $note?->note) }}</textarea>
                         @error('note')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <button type="submit" class="btn btn-primary mt-3">Luu ghi chu noi bo</button>
+                        <button type="submit" class="btn btn-primary mt-3">{{ __('students::teacher/messages.show.internal_notes.submit') }}</button>
                     </form>
                 </section>
             </div>
 
             <div class="col-xl-8">
                 <section class="teacher-student-show-card">
-                    <h4>Khoa hoc hoc vien dang co quyen</h4>
+                    <h4>{{ __('students::teacher/messages.show.courses.title') }}</h4>
                     <div class="teacher-student-show-course-grid">
                         @forelse ($courses as $course)
                             @php
@@ -158,13 +157,13 @@
                                     <strong>{{ $course->name_locale ?: $course->name }}</strong>
                                     <span>
                                         @if ($isPaid && $isGranted)
-                                            Da mua + duoc tang
+                                            {{ __('students::teacher/messages.show.courses.status.paid_granted') }}
                                         @elseif ($isPaid)
-                                            Da mua
+                                            {{ __('students::teacher/messages.show.courses.status.paid') }}
                                         @elseif ($isGranted)
-                                            Duoc tang
+                                            {{ __('students::teacher/messages.show.courses.status.granted') }}
                                         @else
-                                            Dang co quyen
+                                            {{ __('students::teacher/messages.show.courses.status.active') }}
                                         @endif
                                     </span>
                                 </div>
@@ -172,29 +171,32 @@
                                 @if ($studentFeatureState['can_view_progress'])
                                 <div class="teacher-student-show-course__progress">
                                     <div class="teacher-student-show-course__progress-head">
-                                        <small>Tien do hoc</small>
+                                        <small>{{ __('students::teacher/messages.show.courses.progress_label') }}</small>
                                         <strong>{{ $course->teacher_progress_percent }}%</strong>
                                     </div>
                                     <div class="teacher-student-show-course__progress-bar">
                                         <span style="width: {{ $course->teacher_progress_percent }}%"></span>
                                     </div>
                                     <small>
-                                        {{ $course->teacher_progress_completed_lessons }} / {{ $course->teacher_progress_total_lessons }} bai da hoc
+                                        {{ __('students::teacher/messages.show.courses.lessons_completed', [
+                                            'completed' => $course->teacher_progress_completed_lessons,
+                                            'total' => $course->teacher_progress_total_lessons
+                                        ]) }}
                                         @if ($course->teacher_progress_last_completed_at)
-                                            • gan nhat {{ optional($course->teacher_progress_last_completed_at)->format('d/m/Y H:i') }}
+                                            • {{ __('students::teacher/messages.show.courses.last_activity', ['time' => optional($course->teacher_progress_last_completed_at)->format('d/m/Y H:i')]) }}
                                         @endif
                                     </small>
                                 </div>
                                 @endif
                             </article>
                         @empty
-                            <p class="mb-0 text-white-50">Hoc vien nay chua co quyen vao khoa hoc nao cua ban.</p>
+                            <p class="mb-0 text-white-50">{{ __('students::teacher/messages.show.courses.empty') }}</p>
                         @endforelse
                     </div>
                 </section>
 
                 <section class="teacher-student-show-card">
-                    <h4>Lich su cap quyen hoc</h4>
+                    <h4>{{ __('students::teacher/messages.show.grants.title') }}</h4>
                     <div class="teacher-student-show-grant-list">
                         @forelse ($grants as $grant)
                             <article class="teacher-student-show-grant">
@@ -203,10 +205,10 @@
                                         <strong>{{ $grant->course?->name_locale ?: $grant->course?->name ?: 'Khoa hoc' }}</strong>
                                         <span>
                                             {{ match ($grant->reason) {
-                                                'gift' => 'Qua tang',
-                                                'support' => 'Ho tro',
-                                                'special_trial' => 'Hoc thu dac biet',
-                                                'compensation' => 'Bu quyen truy cap',
+                                                'gift' => __('students::teacher/messages.show.grants.reasons.gift'),
+                                                'support' => __('students::teacher/messages.show.grants.reasons.support'),
+                                                'special_trial' => __('students::teacher/messages.show.grants.reasons.special_trial'),
+                                                'compensation' => __('students::teacher/messages.show.grants.reasons.compensation'),
                                                 default => $grant->reason,
                                             } }}
                                             • {{ optional($grant->created_at)->format('d/m/Y H:i') }}
@@ -216,8 +218,8 @@
                                         <form method="POST" action="{{ route('teacher.dashboard.students.grants.revoke', ['student' => $student->id, 'grant' => $grant->id]) }}">
                                             @csrf
                                             <button type="submit" class="btn btn-outline-danger btn-sm"
-                                                onclick="return confirm('Thu hoi suat cap quyen hoc nay? Khoa hoc da mua that se khong bi anh huong.')">
-                                                Thu hoi quyen hoc
+                                                onclick="return confirm('{{ __('students::teacher/messages.show.grants.revoke_confirm') }}')">
+                                                {{ __('students::teacher/messages.show.grants.revoke_cta') }}
                                             </button>
                                         </form>
                                     @endif
@@ -227,14 +229,14 @@
                                 @endif
                             </article>
                         @empty
-                            <p class="mb-0 text-white-50">Chua co lan cap quyen hoc nao cho hoc vien nay.</p>
+                            <p class="mb-0 text-white-50">{{ __('students::teacher/messages.show.grants.empty') }}</p>
                         @endforelse
                     </div>
                 </section>
 
                 @if ($teacher->packageHasFeature('can_view_activity_logs'))
                     <section class="teacher-student-show-card">
-                        <h4>Lich su thao tac voi hoc vien</h4>
+                        <h4>{{ __('students::teacher/messages.show.activity.title') }}</h4>
                         <div class="teacher-student-show-activity-list">
                             @forelse ($activityHistory as $activity)
                                 @php
@@ -245,46 +247,46 @@
                                         <div>
                                             <strong>
                                                 {{ match ($activity->action) {
-                                                    'note_saved' => 'Cap nhat ghi chu noi bo',
-                                                    'grant_created' => 'Cap quyen hoc thu cong',
-                                                    'grant_revoked' => 'Thu hoi quyen hoc',
+                                                    'note_saved' => __('courses::teacher/messages.activity_logs.actions.note_saved'),
+                                                    'grant_created' => __('courses::teacher/messages.activity_logs.actions.grant_created'),
+                                                    'grant_revoked' => __('courses::teacher/messages.activity_logs.actions.grant_revoked'),
                                                     default => $activity->description ?: $activity->action,
                                                 } }}
                                             </strong>
                                             <span>{{ optional($activity->created_at)->format('d/m/Y H:i') }}</span>
                                         </div>
                                         <span class="teacher-student-show-activity__badge">
-                                            {{ $activityProperties['course_name'] ?? ($activityProperties['tag_label'] ?? 'Hoc vien') }}
+                                            {{ $activityProperties['course_name'] ?? ($activityProperties['tag_label'] ?? __('courses::teacher/messages.activity_logs.type_labels.students')) }}
                                         </span>
                                     </div>
-                                    <p class="mb-2">{{ $activity->description ?: 'Khong co mo ta chi tiet.' }}</p>
+                                    <p class="mb-2">{{ $activity->description ?: __('students::teacher/messages.show.activity.no_desc') }}</p>
                                     @if (!empty($activityProperties['note_preview']))
-                                        <small>Ghi chu: {{ $activityProperties['note_preview'] }}</small>
+                                        <small>{{ __('students::teacher/messages.show.activity.meta_note', ['content' => $activityProperties['note_preview']]) }}</small>
                                     @elseif (!empty($activityProperties['reason_label']) || !empty($activityProperties['reason']))
-                                        <small>Ly do: {{ $activityProperties['reason_label'] ?? $activityProperties['reason'] }}</small>
+                                        <small>{{ __('students::teacher/messages.show.activity.meta_reason', ['content' => $activityProperties['reason_label'] ?? $activityProperties['reason']]) }}</small>
                                     @elseif (array_key_exists('had_paid_access', $activityProperties))
                                         <small>
-                                            {{ $activityProperties['had_paid_access'] ? 'Hoc vien van con quyen do da mua khoa hoc.' : 'Neu khong co don mua, quyen hoc da duoc thu hoi hoan toan.' }}
+                                            {{ $activityProperties['had_paid_access'] ? __('students::teacher/messages.show.activity.meta_paid_true') : __('students::teacher/messages.show.activity.meta_paid_false') }}
                                         </small>
                                     @endif
                                 </article>
                             @empty
-                                <p class="mb-0 text-white-50">Chua co thao tac nao duoc ghi lai cho hoc vien nay.</p>
+                                <p class="mb-0 text-white-50">{{ __('students::teacher/messages.show.activity.empty') }}</p>
                             @endforelse
                         </div>
                     </section>
                 @else
                     <section class="teacher-student-show-card teacher-student-show-card--locked">
-                        <h4>Lich su thao tac voi hoc vien</h4>
-                        <p class="mb-3">{{ __('teacher::dashboard.package_features.activity_logs_locked') }}</p>
+                        <h4>{{ __('students::teacher/messages.show.activity.title') }}</h4>
+                        <p class="mb-3">{{ __('courses::teacher/messages.package_features.activity_logs_locked') }}</p>
                         <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-outline-warning">
-                            {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                            {{ __('courses::teacher/messages.package_features.upgrade_cta') }}
                         </a>
                     </section>
                 @endif
 
                 <section class="teacher-student-show-card">
-                    <h4>Lich su mua khoa hoc cua ban</h4>
+                    <h4>{{ __('students::teacher/messages.show.orders.title') }}</h4>
                     <div class="teacher-student-show-order-list">
                         @forelse ($orders as $order)
                             @php
@@ -293,9 +295,9 @@
                             <article class="teacher-student-show-order">
                                 <div class="teacher-student-show-order__head">
                                     <div>
-                                        <strong>Don #{{ $order->code ?: $order->id }}</strong>
+                                        <strong>{{ __('students::teacher/messages.show.orders.order_code', ['code' => $order->code ?: $order->id]) }}</strong>
                                         <span>
-                                            {{ optional($order->payment_complete_date ?: $order->payment_date ?: $order->created_at)->format('d/m/Y H:i') ?: 'Chua co thoi gian' }}
+                                            {{ optional($order->payment_complete_date ?: $order->payment_date ?: $order->created_at)->format('d/m/Y H:i') ?: __('students::teacher/messages.show.orders.no_time') }}
                                         </span>
                                     </div>
                                     <span class="teacher-student-show-order__badge">
@@ -309,13 +311,13 @@
                                 </div>
                             </article>
                         @empty
-                            <p class="mb-0 text-white-50">Hoc vien nay chua mua khoa hoc nao cua ban.</p>
+                            <p class="mb-0 text-white-50">{{ __('students::teacher/messages.show.orders.empty') }}</p>
                         @endforelse
                     </div>
                 </section>
 
                 <section class="teacher-student-show-card">
-                    <h4>Timeline hoat dong hoc</h4>
+                    <h4>{{ __('students::teacher/messages.show.timeline.title') }}</h4>
                     <div class="teacher-student-show-timeline">
                         @forelse ($learningTimeline as $timelineItem)
                             <article class="teacher-student-show-timeline__item">
@@ -324,12 +326,12 @@
                                     <strong>{{ $timelineItem->lesson?->name_locale ?: $timelineItem->lesson?->name ?: 'Bai hoc' }}</strong>
                                     <span>
                                         {{ $timelineItem->course?->name_locale ?: $timelineItem->course?->name ?: 'Khoa hoc' }}
-                                        • Hoan thanh luc {{ optional($timelineItem->completed_at)->format('d/m/Y H:i') }}
+                                        • {{ __('students::teacher/messages.show.timeline.completed_at', ['time' => optional($timelineItem->completed_at)->format('d/m/Y H:i')]) }}
                                     </span>
                                 </div>
                             </article>
                         @empty
-                            <p class="mb-0 text-white-50">Chua co du lieu tien do hoc trong cac khoa cua ban.</p>
+                            <p class="mb-0 text-white-50">{{ __('students::teacher/messages.show.timeline.empty') }}</p>
                         @endforelse
                     </div>
                 </section>
@@ -342,8 +344,8 @@
     <style>
         .teacher-student-show-shell {
             background:
-                radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 30%),
-                linear-gradient(180deg, rgba(17, 24, 39, 0.94) 0%, rgba(15, 23, 42, 0.98) 100%);
+                radial-gradient(circle at top right, var(--teacher-glow), transparent 30%),
+                linear-gradient(180deg, var(--admin-surface-2) 0%, var(--admin-bg) 100%);
         }
 
         .teacher-student-show-hero {
@@ -395,10 +397,11 @@
 
         .teacher-student-show-summary__item,
         .teacher-student-show-card {
-            border: 1px solid rgba(96, 165, 250, 0.16);
-            border-radius: 22px;
-            background: rgba(18, 28, 50, 0.72);
-            box-shadow: 0 18px 42px rgba(2, 6, 23, 0.18);
+            border: 1px solid var(--admin-border);
+            border-radius: 24px;
+            background: var(--admin-glass-bg);
+            backdrop-filter: blur(12px);
+            box-shadow: var(--admin-card-shadow);
         }
 
         .teacher-student-show-summary__item {
@@ -637,24 +640,62 @@
             align-items: start;
         }
 
-        .teacher-student-show-timeline__dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 999px;
-            margin-top: 0.35rem;
-            background: linear-gradient(135deg, #38bdf8, #22c55e);
-            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+        html[data-theme="light"] .teacher-student-show-shell {
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
         }
 
-        .teacher-student-show-timeline__content strong {
-            display: block;
-            color: #f8fbff;
-            margin-bottom: 0.25rem;
+        html[data-theme="light"] .teacher-student-show-title {
+            color: #0f172a;
         }
 
-        .teacher-student-show-timeline__content span {
-            color: #8ca6c6;
-            line-height: 1.65;
+        html[data-theme="light"] .teacher-student-show-desc {
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-student-show-summary__item,
+        html[data-theme="light"] .teacher-student-show-card {
+            background: #ffffff;
+            border-color: var(--admin-border);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+        }
+
+        html[data-theme="light"] .teacher-student-show-summary__item strong,
+        html[data-theme="light"] .teacher-student-show-card h4,
+        html[data-theme="light"] .teacher-student-show-info-list strong,
+        html[data-theme="light"] .teacher-student-show-course strong,
+        html[data-theme="light"] .teacher-student-show-grant__head strong,
+        html[data-theme="light"] .teacher-student-show-order__head strong,
+        html[data-theme="light"] .teacher-student-show-timeline__content strong {
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-student-show-course,
+        html[data-theme="light"] .teacher-student-show-activity,
+        html[data-theme="light"] .teacher-student-show-grant,
+        html[data-theme="light"] .teacher-student-show-order {
+            background: var(--admin-subtle-bg);
+            border-color: var(--admin-border);
+        }
+
+        html[data-theme="light"] .teacher-student-show-summary__item span,
+        html[data-theme="light"] .teacher-student-show-info-list span,
+        html[data-theme="light"] .teacher-student-show-course span,
+        html[data-theme="light"] .teacher-student-show-grant__head span,
+        html[data-theme="light"] .teacher-student-show-order__head span,
+        html[data-theme="light"] .teacher-student-show-timeline__content span,
+        html[data-theme="light"] .teacher-student-show-activity__head span {
+            color: #64748b;
+        }
+
+        html[data-theme="light"] .teacher-student-show-activity__badge,
+        html[data-theme="light"] .teacher-student-show-order__badge {
+            background: rgba(37, 99, 235, 0.08);
+            color: #2563eb !important;
+        }
+
+        html[data-theme="light"] .teacher-student-show-order__courses span {
+            background: rgba(14, 165, 233, 0.08);
+            color: #0ea5e9;
         }
 
         @media (max-width: 1400px) {

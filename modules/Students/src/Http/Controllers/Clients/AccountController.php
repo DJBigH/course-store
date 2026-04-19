@@ -461,6 +461,19 @@ class AccountController extends Controller
             ->with('msg_success', __('students::clients/account.profile.deactivate_success_logout'));
     }
 
+    public function showPromotion($locale, $id)
+    {
+        $pageTitle = 'Thông báo Khuyến mãi';
+        $pageName = $pageTitle;
+        $student = Auth::guard('students')->user();
+
+        $promotion = \Modules\Teacher\src\Models\TeacherPromotion::query()
+            ->with(['teacher', 'course'])
+            ->findOrFail($id);
+
+        return view('students::clients.promotion_show', compact('pageTitle', 'pageName', 'promotion', 'student'));
+    }
+
     public function activityHistory(Request $request)
     {
         $pageTitle = __('students::clients/account.activity_history.title');

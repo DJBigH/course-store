@@ -3,10 +3,10 @@
 @section('content')
     @php
         $typeLabels = [
-            'all' => __('teacher::dashboard.activity_logs.all_types'),
-            'students' => __('teacher::dashboard.activity_logs.type_labels.students'),
-            'courses' => __('teacher::dashboard.activity_logs.type_labels.courses'),
-            'coupons' => __('teacher::dashboard.activity_logs.type_labels.coupons'),
+            'all' => __('students::teacher/messages.activity_logs.all_types'),
+            'students' => __('students::teacher/messages.activity_logs.type_labels.students'),
+            'courses' => __('students::teacher/messages.activity_logs.type_labels.courses'),
+            'coupons' => __('students::teacher/messages.activity_logs.type_labels.coupons'),
         ];
         $typeBadgeClass = function ($logName) {
             return match ($logName) {
@@ -18,37 +18,37 @@
         };
         $typeLabel = function ($logName) {
             return match ($logName) {
-                'teacher_student_management' => __('teacher::dashboard.activity_logs.type_labels.students'),
-                'teacher_course_management' => __('teacher::dashboard.activity_logs.type_labels.courses'),
-                'teacher_coupon_management' => __('teacher::dashboard.activity_logs.type_labels.coupons'),
-                default => __('teacher::dashboard.activity_logs.all_types'),
+                'teacher_student_management' => __('students::teacher/messages.activity_logs.type_labels.students'),
+                'teacher_course_management' => __('students::teacher/messages.activity_logs.type_labels.courses'),
+                'teacher_coupon_management' => __('students::teacher/messages.activity_logs.type_labels.coupons'),
+                default => __('students::teacher/messages.activity_logs.all_types'),
             };
         };
         $activityTitle = function ($activity) {
             return match ($activity->action) {
-                'note_saved' => 'Cap nhat ghi chu hoc vien',
-                'grant_created' => 'Cap quyen hoc thu cong',
-                'grant_revoked' => 'Thu hoi quyen hoc',
-                'certificate_issued' => 'Cap chung chi',
-                'certificate_reissued' => 'Cap lai chung chi',
-                'certificate_revoked' => 'Thu hoi chung chi',
-                'course_created' => 'Tao khoa hoc',
-                'course_updated' => 'Cap nhat khoa hoc',
-                'course_duplicated' => 'Nhan ban khoa hoc',
-                'course_published' => 'Dua khoa hoc len publish',
-                'course_moved_to_draft' => 'Chuyen khoa hoc ve nhap',
-                'course_priority_enabled' => 'Bat uu tien giu active',
-                'course_priority_disabled' => 'Tat uu tien giu active',
-                'course_deleted' => 'Chuyen khoa hoc vao thung rac',
-                'course_restored' => 'Khoi phuc khoa hoc',
-                'course_force_deleted' => 'Xoa vinh vien khoa hoc',
-                'coupon_created' => 'Tao ma giam gia',
-                'coupon_updated' => 'Cap nhat ma giam gia',
-                'coupon_deleted' => 'Xoa ma giam gia',
-                'coupon_priority_enabled' => 'Bat uu tien ma giam gia',
-                'coupon_priority_disabled' => 'Tat uu tien ma giam gia',
-                'coupon_students_updated' => 'Cap nhat hoc vien ap dung coupon',
-                'coupon_courses_updated' => 'Cap nhat khoa hoc ap dung coupon',
+                'note_saved' => __('students::teacher/messages.activity_logs.actions.note_saved'),
+                'grant_created' => __('students::teacher/messages.activity_logs.actions.grant_created'),
+                'grant_revoked' => __('students::teacher/messages.activity_logs.actions.grant_revoked'),
+                'certificate_issued' => __('students::teacher/messages.activity_logs.actions.certificate_issued'),
+                'certificate_reissued' => __('students::teacher/messages.activity_logs.actions.certificate_reissued'),
+                'certificate_revoked' => __('students::teacher/messages.activity_logs.actions.certificate_revoked'),
+                'course_created' => __('students::teacher/messages.activity_logs.actions.course_created'),
+                'course_updated' => __('students::teacher/messages.activity_logs.actions.course_updated'),
+                'course_duplicated' => __('students::teacher/messages.activity_logs.actions.course_duplicated'),
+                'course_published' => __('students::teacher/messages.activity_logs.actions.course_published'),
+                'course_moved_to_draft' => __('students::teacher/messages.activity_logs.actions.course_moved_to_draft'),
+                'course_priority_enabled' => __('students::teacher/messages.activity_logs.actions.course_priority_enabled'),
+                'course_priority_disabled' => __('students::teacher/messages.activity_logs.actions.course_priority_disabled'),
+                'course_deleted' => __('students::teacher/messages.activity_logs.actions.course_deleted'),
+                'course_restored' => __('students::teacher/messages.activity_logs.actions.course_restored'),
+                'course_force_deleted' => __('students::teacher/messages.activity_logs.actions.course_force_deleted'),
+                'coupon_created' => __('students::teacher/messages.activity_logs.actions.coupon_created'),
+                'coupon_updated' => __('students::teacher/messages.activity_logs.actions.coupon_updated'),
+                'coupon_deleted' => __('students::teacher/messages.activity_logs.actions.coupon_deleted'),
+                'coupon_priority_enabled' => __('students::teacher/messages.activity_logs.actions.coupon_priority_enabled'),
+                'coupon_priority_disabled' => __('students::teacher/messages.activity_logs.actions.coupon_priority_disabled'),
+                'coupon_students_updated' => __('students::teacher/messages.activity_logs.actions.coupon_students_updated'),
+                'coupon_courses_updated' => __('students::teacher/messages.activity_logs.actions.coupon_courses_updated'),
                 default => $activity->description ?: $activity->action,
             };
         };
@@ -57,13 +57,13 @@
 
             return match ($activity->log_name) {
                 'teacher_student_management' => !empty($properties['student_name'])
-                    ? __('teacher::dashboard.activity_logs.subject_student', ['name' => $properties['student_name']])
+                    ? __('students::teacher/messages.activity_logs.subject_student', ['name' => $properties['student_name']])
                     : null,
                 'teacher_course_management' => !empty($properties['course_name'])
-                    ? __('teacher::dashboard.activity_logs.subject_course', ['name' => $properties['course_name']])
+                    ? __('students::teacher/messages.activity_logs.subject_course', ['name' => $properties['course_name']])
                     : null,
                 'teacher_coupon_management' => !empty($properties['coupon_code'])
-                    ? __('teacher::dashboard.activity_logs.subject_coupon', ['code' => $properties['coupon_code']])
+                    ? __('students::teacher/messages.activity_logs.subject_coupon', ['code' => $properties['coupon_code']])
                     : null,
                 default => null,
             };
@@ -76,26 +76,28 @@
                 $meta[] = $properties['reason_label'];
             }
             if (!empty($properties['certificate_code'])) {
-                $meta[] = 'Ma chung chi: ' . $properties['certificate_code'];
+                $meta[] = __('students::teacher/messages.activity_logs.meta.certificate_code', ['code' => $properties['certificate_code']]);
             }
             if (!empty($properties['tag_label'])) {
-                $meta[] = 'Tag: ' . $properties['tag_label'];
+                $meta[] = __('students::teacher/messages.activity_logs.meta.tag', ['label' => $properties['tag_label']]);
             }
             if (!empty($properties['duplicate_course_name'])) {
-                $meta[] = 'Ban sao: ' . $properties['duplicate_course_name'];
+                $meta[] = __('students::teacher/messages.activity_logs.meta.duplicate_course', ['name' => $properties['duplicate_course_name']]);
             }
             if (isset($properties['student_count'])) {
-                $meta[] = 'Hoc vien ap dung: ' . (int) $properties['student_count'];
+                $meta[] = __('students::teacher/messages.activity_logs.meta.applied_students', ['count' => (int) $properties['student_count']]);
             }
             if (isset($properties['course_count'])) {
-                $meta[] = 'Khoa hoc ap dung: ' . (int) $properties['course_count'];
+                $meta[] = __('students::teacher/messages.activity_logs.meta.applied_courses', ['count' => (int) $properties['course_count']]);
             }
             if (!empty($properties['issue_source'])) {
-                $meta[] = 'Nguon: ' . match ($properties['issue_source']) {
-                    'manual' => 'Thu cong',
-                    'auto_completion' => 'Tu dong khi dat 100%',
-                    default => $properties['issue_source'],
-                };
+                $meta[] = __('students::teacher/messages.activity_logs.meta.source', [
+                    'label' => match ($properties['issue_source']) {
+                        'manual' => __('students::teacher/messages.activity_logs.meta.source_manual'),
+                        'auto_completion' => __('students::teacher/messages.activity_logs.meta.source_auto'),
+                        default => $properties['issue_source'],
+                    }
+                ]);
             }
 
             return $meta;
@@ -105,12 +107,12 @@
     <div class="teacher-panel teacher-activity-shell">
         <div class="teacher-activity-hero">
             <div>
-                <span class="teacher-activity-kicker">{{ __('teacher::dashboard.nav.activity_logs') }}</span>
-                <h3 class="teacher-activity-title">{{ __('teacher::dashboard.activity_logs.title') }}</h3>
-                <p class="teacher-activity-desc mb-0">{{ __('teacher::dashboard.activity_logs.description') }}</p>
+                <span class="teacher-activity-kicker">{{ __('courses::teacher/messages.nav.activity_logs') }}</span>
+                <h3 class="teacher-activity-title">{{ __('students::teacher/messages.activity_logs.title') }}</h3>
+                <p class="teacher-activity-desc mb-0">{{ __('students::teacher/messages.activity_logs.description') }}</p>
             </div>
             <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-outline-secondary">
-                {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                {{ __('courses::teacher/messages.package_features.upgrade_cta') }}
             </a>
         </div>
 
@@ -123,36 +125,36 @@
 
         <div class="teacher-activity-stats">
             <article class="teacher-activity-stat">
-                <span>{{ __('teacher::dashboard.activity_logs.stats_total') }}</span>
+                <span>{{ __('students::teacher/messages.activity_logs.stats_total') }}</span>
                 <strong>{{ $summary['total'] ?? 0 }}</strong>
             </article>
             <article class="teacher-activity-stat">
-                <span>{{ __('teacher::dashboard.activity_logs.stats_students') }}</span>
+                <span>{{ __('students::teacher/messages.activity_logs.stats_students') }}</span>
                 <strong>{{ $summary['students'] ?? 0 }}</strong>
             </article>
             <article class="teacher-activity-stat">
-                <span>{{ __('teacher::dashboard.activity_logs.stats_courses') }}</span>
+                <span>{{ __('students::teacher/messages.activity_logs.stats_courses') }}</span>
                 <strong>{{ $summary['courses'] ?? 0 }}</strong>
             </article>
             <article class="teacher-activity-stat">
-                <span>{{ __('teacher::dashboard.activity_logs.stats_coupons') }}</span>
+                <span>{{ __('students::teacher/messages.activity_logs.stats_coupons') }}</span>
                 <strong>{{ $summary['coupons'] ?? 0 }}</strong>
             </article>
         </div>
 
         <form method="GET" class="teacher-activity-filters">
             <div class="teacher-activity-filter">
-                <label for="teacher-activity-search">{{ __('teacher::dashboard.orders.filters.search') }}</label>
+                <label for="teacher-activity-search">{{ __('courses::teacher/messages.orders.filters.search') }}</label>
                 <input
                     id="teacher-activity-search"
                     type="text"
                     name="q"
                     value="{{ $search }}"
                     class="form-control"
-                    placeholder="{{ __('teacher::dashboard.activity_logs.search_placeholder') }}">
+                    placeholder="{{ __('students::teacher/messages.activity_logs.search_placeholder') }}">
             </div>
             <div class="teacher-activity-filter">
-                <label for="teacher-activity-type">{{ __('teacher::dashboard.activity_logs.filter_type') }}</label>
+                <label for="teacher-activity-type">{{ __('students::teacher/messages.activity_logs.filter_type') }}</label>
                 <select id="teacher-activity-type" name="type" class="form-select">
                     @foreach ($typeLabels as $typeKey => $label)
                         <option value="{{ $typeKey }}" @selected($selectedType === $typeKey)>{{ $label }}</option>
@@ -160,16 +162,16 @@
                 </select>
             </div>
             <div class="teacher-activity-filter teacher-activity-filter--actions">
-                <button type="submit" class="btn btn-primary">{{ __('teacher::dashboard.activity_logs.actions.filter') }}</button>
-                <a href="{{ route('teacher.dashboard.activity-logs') }}" class="btn btn-outline-secondary">{{ __('teacher::dashboard.activity_logs.actions.reset') }}</a>
+                <button type="submit" class="btn btn-primary">{{ __('students::teacher/messages.activity_logs.actions.filter') }}</button>
+                <a href="{{ route('teacher.dashboard.activity-logs') }}" class="btn btn-outline-secondary">{{ __('students::teacher/messages.activity_logs.actions.reset') }}</a>
             </div>
         </form>
 
         <section class="teacher-activity-timeline">
             <div class="teacher-activity-timeline__head">
                 <div>
-                    <h4>{{ __('teacher::dashboard.activity_logs.timeline_title') }}</h4>
-                    <p class="mb-0">{{ __('teacher::dashboard.activity_logs.timeline_hint') }}</p>
+                    <h4>{{ __('students::teacher/messages.activity_logs.timeline_title') }}</h4>
+                    <p class="mb-0">{{ __('students::teacher/messages.activity_logs.timeline_hint') }}</p>
                 </div>
             </div>
 
@@ -222,7 +224,7 @@
                         </div>
                     </article>
                 @empty
-                    <div class="teacher-activity-empty">{{ __('teacher::dashboard.activity_logs.empty') }}</div>
+                    <div class="teacher-activity-empty">{{ __('students::teacher/messages.activity_logs.empty') }}</div>
                 @endforelse
             </div>
 
