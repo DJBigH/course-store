@@ -12,7 +12,7 @@ class TeacherAnnouncementController extends Controller
 {
     public function index()
     {
-        $pageTitle = 'Thong bao teacher theo goi';
+        $pageTitle = __('teacher::admin.titles.announcements');
         $announcements = TeacherAnnouncement::query()
             ->with('packages')
             ->orderByDesc('is_pinned')
@@ -24,7 +24,7 @@ class TeacherAnnouncementController extends Controller
 
     public function create()
     {
-        $pageTitle = 'Them thong bao teacher';
+        $pageTitle = __('teacher::admin.titles.create_announcement');
         $announcement = new TeacherAnnouncement([
             'status' => true,
             'is_pinned' => false,
@@ -46,12 +46,12 @@ class TeacherAnnouncementController extends Controller
         });
 
         return redirect()->route('teacher-announcements.edit', $announcement->id)
-            ->with('msg', 'Da tao thong bao teacher thanh cong.');
+            ->with('msg', __('teacher::admin.messages.announcement_create_success'));
     }
 
     public function edit(int $id)
     {
-        $pageTitle = 'Cap nhat thong bao teacher';
+        $pageTitle = __('teacher::admin.titles.edit_announcement');
         $announcement = TeacherAnnouncement::query()->with('packages')->findOrFail($id);
         $packages = TeacherPackage::query()->orderBy('sort_order')->get();
         $selectedPackageIds = $announcement->packages->pluck('id')->map(fn ($id) => (int) $id)->all();
@@ -69,7 +69,7 @@ class TeacherAnnouncementController extends Controller
         });
 
         return redirect()->route('teacher-announcements.edit', $announcement->id)
-            ->with('msg', 'Da cap nhat thong bao teacher.');
+            ->with('msg', __('teacher::admin.messages.announcement_update_success'));
     }
 
     public function delete(int $id)
@@ -77,7 +77,7 @@ class TeacherAnnouncementController extends Controller
         TeacherAnnouncement::query()->findOrFail($id)->delete();
 
         return redirect()->route('teacher-announcements.index')
-            ->with('msg', 'Da xoa thong bao teacher.');
+            ->with('msg', __('teacher::admin.messages.announcement_delete_success'));
     }
 
     private function payload(TeacherAnnouncementRequest $request): array

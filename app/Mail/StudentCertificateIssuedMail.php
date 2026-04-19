@@ -22,7 +22,7 @@ class StudentCertificateIssuedMail extends Mailable implements ShouldQueue
     {
         app()->setLocale($this->mailLocale);
 
-        return $this->subject('BigK Udemy - Ban vua nhan duoc chung chi hoan thanh')
+        return $this->subject(__('teacher::dashboard.certificates.mail.subject', ['app_name' => config('app.name')]))
             ->view('emails.student-certificate-issued', [
                 'certificate' => $this->certificate,
                 'certificateUrl' => route('students.account.certificates.show', [

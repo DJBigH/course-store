@@ -111,7 +111,7 @@ return [
             'not_selected' => 'Chưa chọn gói',
             'coupon' => 'Mã :code giảm :amount',
             'payable' => 'Thanh toán :amount',
-            'commission' => 'Commission :rate%',
+            'commission' => 'Hoa hồng :rate%',
             'quick_guide' => 'Hướng dẫn nhanh',
         ],
         'payment_guide' => [

@@ -41,7 +41,7 @@
         @else
             @if (!$teacher->packageHasFeature('can_manage_comments'))
                 @include('teacher::clients.dashboard.partials.package_feature_notice', [
-                    'message' => __('teacher::dashboard.package_features.comments_locked_manage'),
+                    'message' => __('courses::teacher/messages.package_features.comments_locked_manage'),
                 ])
             @endif
             @include('teacher::clients.dashboard.comments_thread', [

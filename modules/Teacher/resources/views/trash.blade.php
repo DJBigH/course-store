@@ -5,12 +5,12 @@
         <div class="card-body p-4">
             <div class="admin-page-actions">
                 <div>
-                    <h5 class="mb-1">Thùng rác giảng viên</h5>
-                    <p class="text-muted mb-0">Khôi phục giảng viên đã xóa mềm hoặc xóa vĩnh viễn khi không còn ràng buộc.</p>
+                    <h5 class="mb-1">{{ __('courses::teacher/messages.trash.title') }}</h5>
+                    <p class="text-muted mb-0">{{ __('courses::teacher/messages.trash.description') }}</p>
                 </div>
                 <a href="{{ route('teacher.index') }}" class="btn btn-light border">
                     <i class="fa-solid fa-arrow-left me-2"></i>
-                    Quay lại danh sách
+                    {{ __('courses::teacher/messages.trash.return') }}
                 </a>
             </div>
 
@@ -32,14 +32,14 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-trash-count">0</span> giảng viên được chọn
+                            <span id="selected-trash-count">0</span> {{ __('courses::teacher/messages.trash.selected_count', ['count' => '']) }}
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @if (auth()->user()?->canAnyPermission(['teachers.soft_delete', 'teachers.delete']))
-                                <button type="button" class="btn btn-success bulk-trash-action-trigger" data-action="restore">Khôi phục</button>
+                                <button type="button" class="btn btn-success bulk-trash-action-trigger" data-action="restore">{{ __('courses::teacher/messages.trash.restore') }}</button>
                             @endif
                             @if (auth()->user()?->hasPermission('teachers.force_delete'))
-                                <button type="button" class="btn btn-outline-danger bulk-trash-action-trigger" data-action="force_delete">Xóa vĩnh viễn</button>
+                                <button type="button" class="btn btn-outline-danger bulk-trash-action-trigger" data-action="force_delete">{{ __('courses::teacher/messages.trash.force_delete') }}</button>
                             @endif
                         </div>
                     </div>
@@ -53,11 +53,11 @@
                             <th class="text-center" style="width: 48px;">
                                 <input type="checkbox" id="select-all-trashed-records" class="form-check-input">
                             </th>
-                            <th>Ảnh</th>
-                            <th>Tên</th>
-                            <th>Thời gian xóa</th>
-                            <th>Khôi phục</th>
-                            <th>Xóa vĩnh viễn</th>
+                            <th>{{ __('courses::teacher/messages.trash.table.image') }}</th>
+                            <th>{{ __('courses::teacher/messages.trash.table.name') }}</th>
+                            <th>{{ __('courses::teacher/messages.trash.table.deleted_at') }}</th>
+                            <th>{{ __('courses::teacher/messages.trash.table.restore') }}</th>
+                            <th>{{ __('courses::teacher/messages.trash.table.force_delete') }}</th>
                         </tr>
                     </thead>
                 </table>
@@ -142,22 +142,22 @@
                     }
                 ],
                 language: {
-                    processing: 'Đang xử lý...',
-                    search: 'Tìm kiếm:',
-                    lengthMenu: 'Hiển thị _MENU_ bản ghi',
-                    info: 'Hiển thị từ _START_ đến _END_ của _TOTAL_ bản ghi',
-                    infoEmpty: 'Hiển thị 0 đến 0 của 0 bản ghi',
-                    infoFiltered: '(lọc từ _MAX_ bản ghi)',
-                    loadingRecords: 'Đang tải...',
-                    zeroRecords: 'Không tìm thấy bản ghi nào',
-                    emptyTable: 'Không có dữ liệu trong bảng',
+                    processing: "{{ __('courses::teacher/messages.trash.datatable.processing') }}",
+                    search: "{{ __('courses::teacher/messages.trash.datatable.search') }}",
+                    lengthMenu: "{{ __('courses::teacher/messages.trash.datatable.lengthMenu') }}",
+                    info: "{{ __('courses::teacher/messages.trash.datatable.info') }}",
+                    infoEmpty: "{{ __('courses::teacher/messages.trash.datatable.infoEmpty') }}",
+                    infoFiltered: "{{ __('courses::teacher/messages.trash.datatable.infoFiltered') }}",
+                    loadingRecords: "{{ __('courses::teacher/messages.trash.datatable.loadingRecords') }}",
+                    zeroRecords: "{{ __('courses::teacher/messages.trash.datatable.zeroRecords') }}",
+                    emptyTable: "{{ __('courses::teacher/messages.trash.datatable.emptyTable') }}",
                     paginate: {
-                        previous: 'Trước',
-                        next: 'Tiếp'
+                        previous: "{{ __('courses::teacher/messages.trash.datatable.paginate.previous') }}",
+                        next: "{{ __('courses::teacher/messages.trash.datatable.paginate.next') }}"
                     },
                     aria: {
-                        sortAscending: ': sắp xếp tăng dần',
-                        sortDescending: ': sắp xếp giảm dần'
+                        sortAscending: "{{ __('courses::teacher/messages.trash.datatable.aria.sortAscending') }}",
+                        sortDescending: "{{ __('courses::teacher/messages.trash.datatable.aria.sortDescending') }}"
                     }
                 },
                 drawCallback: function() {
@@ -205,11 +205,11 @@
 
             $('.bulk-trash-action-trigger').on('click', function() {
                 if (selectedIds.size === 0) {
-                    alert('Vui lòng chọn ít nhất một giảng viên trong thùng rác.');
+                    alert("{{ __('courses::teacher/messages.trash.alert.none_selected') }}");
                     return;
                 }
 
-                if ($(this).data('action') === 'force_delete' && !confirm('Xóa vĩnh viễn các giảng viên đã chọn?')) {
+                if ($(this).data('action') === 'force_delete' && !confirm("{{ __('courses::teacher/messages.trash.confirm.force_delete') }}")) {
                     return;
                 }
 

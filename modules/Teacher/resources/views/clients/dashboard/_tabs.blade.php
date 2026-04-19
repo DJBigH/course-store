@@ -1,51 +1,55 @@
 <div class="teacher-dashboard-tabs mb-4">
     <a href="{{ route('teacher.dashboard.index') }}"
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.index') ? 'active' : '' }}">
-        {{ __('teacher::dashboard.nav.overview') }}
+        {{ __('courses::teacher/messages.nav.overview') }}
     </a>
     <a href="{{ route('teacher.dashboard.courses') }}"
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.courses') ? 'active' : '' }}">
-        {{ __('teacher::dashboard.nav.courses') }}
+        {{ __('courses::teacher/messages.nav.courses') }}
     </a>
     <a href="{{ route('teacher.dashboard.earnings') }}"
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.earnings') ? 'active' : '' }}">
-        {{ __('teacher::dashboard.nav.earnings') }}
+        {{ __('courses::teacher/messages.nav.earnings') }}
     </a>
     @php($quizLocked = !(($teacher ?? null)?->packageHasFeature('can_manage_quizzes')))
     @if (!$quizLocked)
         <a href="{{ route('teacher.dashboard.courses') }}"
             class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.quizzes*') ? 'active' : '' }}"
-            title="Chọn khóa học để quản lý quiz">
-            🧩 Quiz
+            title="{{ __('courses::teacher/messages.nav.quiz.title') }}">
+            🧩 {{ __('courses::teacher/messages.nav.quiz.label') }}
         </a>
     @else
         @include('teacher::clients.dashboard.partials.package_feature_notice', [
-            'title' => 'Gói hiện tại chưa có quyền quản lý quiz',
-            'message' => 'Nâng cấp gói để mở quyền tạo, sửa, giao và xem kết quả quiz cho học viên.',
+            'title' => __('courses::teacher/messages.package_features.quiz_management_locked'),
+            'message' => __('courses::teacher/messages.package_features.quiz_management_locked_desc'),
             'upgradeUrl' => route('teacher.dashboard.package.upgrade'),
             'showUpgrade' => true,
         ])
         <a href="{{ route('teacher.dashboard.package.upgrade') }}"
             class="teacher-dashboard-tab teacher-dashboard-tab--locked"
-            title="Nâng cấp để mở quyền quản lý quiz">
-            🧩 Quiz <span class="teacher-dashboard-tab__lock">Khoá</span>
+            title="{{ __('courses::teacher/messages.nav.quiz.locked_title') }}">
+            🧩 {{ __('courses::teacher/messages.nav.quiz.label') }} <span class="teacher-dashboard-tab__lock">{{ __('courses::teacher/messages.nav.quiz.locked_badge') }}</span>
         </a>
     @endif
     @if (($teacher ?? null)?->packageHasFeature('can_send_promotions'))
         <a href="{{ route('teacher.dashboard.promotions') }}"
             class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.promotions') ? 'active' : '' }}">
-            {{ __('teacher::dashboard.nav.promotions') }}
+            {{ __('courses::teacher/messages.nav.promotions') }}
         </a>
     @endif
     @if (($teacher ?? null)?->packageHasFeature('can_sell_bundles'))
         <a href="{{ route('teacher.dashboard.bundles') }}"
             class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.bundles*') ? 'active' : '' }}">
-            {{ __('teacher::dashboard.nav.bundles') }}
+            {{ __('courses::teacher/messages.nav.bundles') }}
         </a>
     @endif
     <a href="{{ route('teacher.dashboard.payouts') }}"
         class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.payouts') ? 'active' : '' }}">
-        {{ __('teacher::dashboard.nav.payouts') }}
+        {{ __('courses::teacher/messages.nav.payouts') }}
+    </a>
+    <a href="{{ route('teacher.dashboard.cancellation') }}"
+        class="teacher-dashboard-tab {{ request()->routeIs('teacher.dashboard.cancellation') ? 'active' : '' }}">
+        <i class="fa-solid fa-user-slash me-1"></i>{{ __('courses::teacher/messages.nav.cancellation') }}
     </a>
 </div>
 

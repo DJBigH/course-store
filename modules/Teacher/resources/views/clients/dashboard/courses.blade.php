@@ -6,7 +6,7 @@
             $usedCourses = (int) ($usage['used'] ?? 0);
             $publishedCourses = (int) ($usage['published'] ?? $usedCourses);
             $totalCourses = (int) ($usage['total'] ?? $usedCourses);
-            $limitLabel = $usage['limit_label'] ?? __('teacher::dashboard.courses.unlimited');
+            $limitLabel = $usage['limit_label'] ?? __('teacher::teacher/course/list.unlimited');
             $canCreate = (bool) ($usage['can_create'] ?? false);
             $canPublishMore = (bool) ($usage['can_publish_more'] ?? true);
             $isOverLimit = (bool) ($usage['is_over_limit'] ?? false);
@@ -16,27 +16,27 @@
 
         <div class="teacher-courses-hero">
             <div>
-                <span class="teacher-courses-kicker">Khu vuc quan ly khoa hoc</span>
-                <h3 class="teacher-courses-title">{{ __('teacher::dashboard.courses.title') }}</h3>
+                <span class="teacher-courses-kicker">{{ __('teacher::teacher/course/list.hero_kicker') }}</span>
+                <h3 class="teacher-courses-title">{{ __('teacher::teacher/course/list.title') }}</h3>
                 <p class="teacher-courses-desc mb-0">
-                    Quan ly khoa hoc theo huong an toan khi ha goi: khoa cu van giu nguyen, con limit se ap vao so khoa dang publish.
+                    {{ __('teacher::teacher/course/list.description') }}
                 </p>
                 <div class="teacher-course-subtabs mt-4">
                     <a href="{{ route('teacher.dashboard.courses') }}"
                         class="teacher-course-subtabs__tab {{ request()->routeIs('teacher.dashboard.courses*') || request()->routeIs('teacher.dashboard.lessons.*') ? 'active' : '' }}">
                         <i class="fas fa-book-open"></i>
-                        <span>{{ __('teacher::dashboard.nav.courses') }}</span>
+                        <span>{{ __('teacher::teacher/course/list.title') }}</span>
                     </a>
                     @if ($teacher->packageHasFeature('can_sell_bundles'))
                         <a href="{{ route('teacher.dashboard.bundles') }}"
                             class="teacher-course-subtabs__tab {{ request()->routeIs('teacher.dashboard.bundles*') ? 'active' : '' }}">
                             <i class="fas fa-layer-group"></i>
-                            <span>{{ __('teacher::dashboard.nav.bundles') }}</span>
+                            <span>{{ __('teacher::teacher/bundle/list.title') }}</span>
                         </a>
                     @else
                         <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="teacher-course-subtabs__tab is-locked">
                             <i class="fas fa-layer-group"></i>
-                            <span>{{ __('teacher::dashboard.nav.bundles') }}</span>
+                            <span>{{ __('teacher::teacher/bundle/list.title') }}</span>
                             @include('teacher::clients.dashboard.partials.upgrade_badge')
                         </a>
                     @endif
@@ -45,38 +45,38 @@
             <div class="teacher-courses-hero__actions">
                 @if (!empty($usage))
                     <div class="teacher-courses-usage">
-                        <span>{{ __('teacher::dashboard.courses.labels.published_count') }}</span>
+                        <span>{{ __('teacher::teacher/course/list.labels.published_count') }}</span>
                         <strong>{{ $publishedCourses }}</strong>
                         <span>/</span>
                         <strong>{{ $limitLabel }}</strong>
-                        <span>{{ __('teacher::dashboard.courses.labels.published_courses') }}</span>
+                        <span>{{ __('teacher::teacher/course/list.labels.published_courses') }}</span>
                     </div>
                 @endif
                 @if ($canCreate)
                     <a href="{{ route('teacher.dashboard.courses.create') }}" class="btn btn-primary btn-lg">
-                        Tao khoa hoc moi
+                        {{ __('teacher::teacher/course/add.create_title') }}
                     </a>
                 @else
                     <div class="teacher-disabled-action-wrap">
-                        <span class="teacher-disabled-action" title="{{ __('teacher::dashboard.courses.flash.publish_limit_reached', ['limit' => $usage['limit']]) }}">
+                        <span class="teacher-disabled-action" title="{{ __('teacher::teacher/course/common.flash.publish_limit_reached', ['limit' => $usage['limit']]) }}">
                             <button type="button" class="btn btn-primary btn-lg" disabled>
-                                Tao khoa hoc moi
+                                {{ __('teacher::teacher/course/add.create_title') }}
                             </button>
                         </span>
                         <div class="teacher-disabled-action__note">
-                            {{ __('teacher::dashboard.courses.flash.publish_limit_reached', ['limit' => $usage['limit']]) }}
+                            {{ __('teacher::teacher/course/common.flash.publish_limit_reached', ['limit' => $usage['limit']]) }}
                         </div>
                     </div>
                 @endif
                 <a href="{{ route('teacher.dashboard.courses.trash') }}" class="btn btn-outline-secondary">
-                    {{ __('teacher::dashboard.courses.actions.trash') }}
+                    {{ __('teacher::teacher/course/common.actions.trash') }}
                 </a>
             </div>
         </div>
 
         @if (!$teacher->packageHasFeature('can_duplicate_courses'))
             @include('teacher::clients.dashboard.partials.package_feature_notice', [
-                'message' => __('teacher::dashboard.package_features.courses_locked_duplicate'),
+                'message' => __('teacher::teacher/course/common.warnings.courses_locked_duplicate'),
             ])
         @endif
 
@@ -90,14 +90,14 @@
         @if (!empty($usage) && $hasLimit)
             @include('teacher::clients.dashboard.partials.package_usage_banner', [
                 'variant' => $isOverLimit ? 'warning' : 'info',
-                'title' => __('teacher::dashboard.courses.warnings.publish_limit_title'),
+                'title' => __('teacher::teacher/course/common.warnings.publish_limit_title'),
                 'lines' => [
-                    __('teacher::dashboard.courses.warnings.publish_limit_summary', [
+                    __('teacher::teacher/course/common.warnings.publish_limit_summary', [
                         'published' => $publishedCourses,
                         'total' => $totalCourses,
                         'limit' => $limitLabel,
                     ]),
-                    $isOverLimit ? __('teacher::dashboard.courses.warnings.publish_limit_over', ['count' => $overLimitBy]) : null,
+                    $isOverLimit ? __('teacher::teacher/course/common.warnings.publish_limit_over', ['count' => $overLimitBy]) : null,
                 ],
                 'showUpgrade' => $isOverLimit,
                 'upgradeUrl' => route('teacher.dashboard.package.upgrade'),
@@ -109,22 +109,22 @@
                 <article class="teacher-courses-guide__item">
                     <span class="teacher-courses-guide__step">1</span>
                     <div>
-                        <strong>Tao hoac giu lai khoa cu</strong>
-                        <p class="mb-0">Khi ha goi, khoa hoc cu khong bi huy. Ban van co the tiep tuc chinh sua noi dung nhu binh thuong.</p>
+                        <strong>{{ __('teacher::teacher/course/list.guide.step_1_title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/course/list.guide.step_1_desc') }}</p>
                     </div>
                 </article>
                 <article class="teacher-courses-guide__item">
                     <span class="teacher-courses-guide__step">2</span>
                     <div>
-                        <strong>Tu chon khoa nao tiep tuc publish</strong>
-                        <p class="mb-0">Neu vuot limit, hay dua mot so khoa ve ban nhap de giai phong slot publish cho khoa quan trong hon.</p>
+                        <strong>{{ __('teacher::teacher/course/list.guide.step_2_title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/course/list.guide.step_2_desc') }}</p>
                     </div>
                 </article>
                 <article class="teacher-courses-guide__item">
                     <span class="teacher-courses-guide__step">3</span>
                     <div>
-                        <strong>Soan bai hoc va cap nhat noi dung</strong>
-                        <p class="mb-0">Ngay ca khi dang vuot limit, ban van co the tao khoa nhap moi va cap nhat bai hoc truoc khi publish.</p>
+                        <strong>{{ __('teacher::teacher/course/list.guide.step_3_title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/course/list.guide.step_3_desc') }}</p>
                     </div>
                 </article>
             </div>
@@ -142,100 +142,100 @@
                             <div>
                                 <strong class="d-block mb-2 teacher-course-card__title">{{ $course->name_locale }}</strong>
                                 <div class="teacher-course-card__status {{ $course->status ? 'is-active' : 'is-hidden' }}">
-                                    {{ $course->status ? __('teacher::dashboard.courses.status.published') : __('teacher::dashboard.courses.status.draft') }}
+                                    {{ $course->status ? __('teacher::teacher/course/common.status.published') : __('teacher::teacher/course/common.status.draft') }}
                                 </div>
                                 @if ($isLockedCourse)
                                     <div class="teacher-course-card__limit-badge">
-                                        {{ __('teacher::dashboard.courses.labels.limited_actions_only') }}
+                                        {{ __('teacher::teacher/course/common.labels.limited_actions_only') }}
                                     </div>
                                 @endif
                                 @if ($hasLimit && $course->is_package_priority)
                                     <div class="teacher-course-card__priority">
-                                        {{ __('teacher::dashboard.courses.labels.priority_active') }}
+                                        {{ __('teacher::teacher/course/common.labels.priority_active') }}
                                     </div>
                                 @endif
                             </div>
                             @if (!$isLockedCourse)
                                 <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-sm btn-outline-primary">
-                                    {{ __('teacher::dashboard.courses.actions.edit') }}
+                                    {{ __('teacher::teacher/course/common.actions.edit') }}
                                 </a>
                             @endif
                         </div>
 
                         <div class="teacher-course-card__stats">
                             <div class="teacher-course-card__stat">
-                                <span>Bai hoc</span>
+                                <span>{{ __('teacher::teacher/course/list.card.lessons') }}</span>
                                 <strong>{{ $course->lessons_count }}</strong>
                             </div>
                             <div class="teacher-course-card__stat">
-                                <span>Hoc vien da mua</span>
+                                <span>{{ __('teacher::teacher/course/list.card.students') }}</span>
                                 <strong>{{ $course->students_count }}</strong>
                             </div>
                             <div class="teacher-course-card__stat">
-                                <span>Gia dang ban</span>
-                                <strong>{{ money($course->sale_price ?: $course->price) }}</strong>
+                                <span>{{ __('teacher::teacher/course/list.card.price') }}</span>
+                                <strong>{{ moneyLocale($course->sale_price ?: $course->price) }}</strong>
                             </div>
                             <div class="teacher-course-card__stat">
-                                <span>Danh gia</span>
+                                <span>{{ __('teacher::teacher/course/list.card.ratings') }}</span>
                                 <strong>{{ $course->ratings_count > 0 ? number_format((float) $course->ratings_avg_rating, 1) . ' / 5' : '0.0 / 5' }}</strong>
                             </div>
                         </div>
 
                         <div class="teacher-course-card__help">
                             @if ($isLockedCourse)
-                                {{ __('teacher::dashboard.courses.warnings.locked_manage_only') }}
+                                {{ __('teacher::teacher/course/common.warnings.locked_manage_only') }}
                             @else
-                                Ban van co the soan bai hoc va cap nhat noi dung cho khoa nay, ke ca khi khoa dang o trang thai nhap.
+                                {{ __('teacher::teacher/course/list.card.edit_help') }}
                             @endif
                         </div>
 
                         @if ($teacher->packageHasFeature('can_view_activity_logs'))
                             <div class="teacher-course-card__history">
-                                <div class="teacher-course-card__history-title">Lich su thao tac gan nhat</div>
+                                <div class="teacher-course-card__history-title">{{ __('teacher::teacher/course/list.card.history_title') }}</div>
                                 <div class="teacher-course-card__history-list">
                                     @forelse ($course->teacher_activity_preview ?? collect() as $activity)
                                         <article class="teacher-course-card__history-item">
                                             <strong>
                                                 {{ match ($activity->action) {
-                                                    'course_created' => 'Tao khoa hoc',
-                                                    'course_updated' => 'Cap nhat khoa hoc',
-                                                    'course_duplicated' => 'Nhan ban khoa hoc',
-                                                    'course_published' => 'Dua len publish',
-                                                    'course_moved_to_draft' => 'Chuyen ve ban nhap',
-                                                    'course_priority_enabled' => 'Bat uu tien goi',
-                                                    'course_priority_disabled' => 'Tat uu tien goi',
-                                                    'course_deleted' => 'Dua vao thung rac',
-                                                    'course_restored' => 'Khoi phuc khoa hoc',
-                                                    'course_force_deleted' => 'Xoa vinh vien',
+                                                    'course_created' => __('teacher::teacher/course/common.history.course_created'),
+                                                    'course_updated' => __('teacher::teacher/course/common.history.course_updated'),
+                                                    'course_duplicated' => __('teacher::teacher/course/common.history.course_duplicated'),
+                                                    'course_published' => __('teacher::teacher/course/common.history.course_published'),
+                                                    'course_moved_to_draft' => __('teacher::teacher/course/common.history.course_moved_to_draft'),
+                                                    'course_priority_enabled' => __('teacher::teacher/course/common.history.course_priority_enabled'),
+                                                    'course_priority_disabled' => __('teacher::teacher/course/common.history.course_priority_disabled'),
+                                                    'course_deleted' => __('teacher::teacher/course/common.history.course_deleted'),
+                                                    'course_restored' => __('teacher::teacher/course/common.history.course_restored'),
+                                                    'course_force_deleted' => __('teacher::teacher/course/common.history.course_force_deleted'),
                                                     default => $activity->description ?: $activity->action,
                                                 } }}
                                             </strong>
                                             <span>{{ optional($activity->created_at)->format('d/m/Y H:i') }}</span>
                                         </article>
                                     @empty
-                                        <div class="teacher-course-card__history-empty">Chua co thao tac nao duoc ghi lai.</div>
+                                        <div class="teacher-course-card__history-empty">{{ __('teacher::teacher/course/list.card.history_empty') }}</div>
                                     @endforelse
                                 </div>
                             </div>
                         @else
                             <div class="teacher-course-card__history teacher-course-card__history--locked">
-                                <div class="teacher-course-card__history-title">Lich su thao tac gan nhat</div>
+                                <div class="teacher-course-card__history-title">{{ __('teacher::teacher/course/list.card.history_title') }}</div>
                                 <div class="teacher-course-card__history-empty">
-                                    {{ __('teacher::dashboard.package_features.activity_logs_locked') }}
+                                    {{ __('teacher::teacher/common.feature_locked') }}
                                 </div>
                                 <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-outline-warning mt-3">
-                                    {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                                    {{ __('teacher::teacher/dashboard.overview.package.upgrade_cta_simple') }}
                                 </a>
                             </div>
                         @endif
 
                         @if ($isLockedCourse)
                             <div class="teacher-course-card__notice">
-                                {{ __('teacher::dashboard.courses.warnings.lock_reason_package_limit_locked') }}
+                                {{ __('teacher::teacher/course/common.warnings.lock_reason_package_limit_locked') }}
                             </div>
                         @elseif (!(int) $course->status && !$canPublishThisCourse)
                             <div class="teacher-course-card__notice">
-                                {{ __('teacher::dashboard.courses.warnings.course_publish_blocked') }}
+                                {{ __('teacher::teacher/course/common.warnings.course_publish_blocked') }}
                             </div>
                         @endif
 
@@ -244,28 +244,28 @@
                                 <form method="POST" action="{{ route('teacher.dashboard.courses.priority', $course->id) }}">
                                     @csrf
                                     <button type="submit" class="btn btn-outline-warning">
-                                        {{ $course->is_package_priority ? __('teacher::dashboard.courses.actions.unprioritize') : __('teacher::dashboard.courses.actions.prioritize') }}
+                                        {{ $course->is_package_priority ? __('teacher::teacher/course/common.actions.unprioritize') : __('teacher::teacher/course/common.actions.prioritize') }}
                                     </button>
                                 </form>
                             @endif
                             @if (!$isLockedCourse)
                                 <a href="{{ route('teacher.dashboard.lessons.index', $course->id) }}" class="btn btn-primary">
-                                    {{ __('teacher::dashboard.courses.actions.lessons') }}
+                                    {{ __('teacher::teacher/course/common.actions.lessons') }}
                                 </a>
                                 @if ($teacher->packageHasFeature('can_manage_quizzes'))
                                     <a href="{{ route('teacher.dashboard.quizzes.index', $course->id) }}" class="btn btn-outline-info">
-                                        🧩 Quiz
+                                        {{ __('teacher::teacher/course/common.actions.manage_quiz') }}
                                     </a>
                                 @endif
                                 <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-outline-secondary">
-                                    {{ __('teacher::dashboard.courses.actions.edit') }}
+                                    {{ __('teacher::teacher/course/common.actions.edit') }}
                                 </a>
                             @endif
                             @if (!$isLockedCourse && $teacher->packageHasFeature('can_duplicate_courses'))
-                                <form method="POST" action="{{ route('teacher.dashboard.courses.duplicate', $course->id) }}">
+                                <form method="POST" action="{{ route('teacher.dashboard.courses.duplicate', $course->id) }}" onsubmit="return confirm('{{ __('teacher::teacher/course/list.confirm_duplicate') }}')">
                                     @csrf
                                     <button type="submit" class="btn btn-outline-info">
-                                        {{ __('teacher::dashboard.courses.actions.duplicate') }}
+                                        {{ __('teacher::teacher/course/common.actions.duplicate') }}
                                     </button>
                                 </form>
                             @endif
@@ -273,14 +273,14 @@
                                 @csrf
                                 <input type="hidden" name="status" value="{{ $course->status ? 0 : 1 }}">
                                 <button type="submit" class="btn btn-outline-light">
-                                    {{ $course->status ? __('teacher::dashboard.courses.actions.move_to_draft') : __('teacher::dashboard.courses.actions.publish') }}
+                                    {{ $course->status ? __('teacher::teacher/course/common.actions.move_to_draft') : __('teacher::teacher/course/common.actions.publish') }}
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('teacher.dashboard.courses.delete', $course->id) }}" onsubmit="return confirm('{{ __('teacher::dashboard.courses.confirm_delete') }}')">
+                            <form method="POST" action="{{ route('teacher.dashboard.courses.delete', $course->id) }}" onsubmit="return confirm('{{ __('teacher::teacher/course/list.confirm_delete') }}')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-outline-danger">
-                                    Dua vao thung rac
+                                    {{ __('teacher::teacher/course/common.actions.delete') }}
                                 </button>
                             </form>
                         </div>
@@ -290,13 +290,13 @@
                 <div class="col-12">
                     <div class="teacher-courses-empty">
                         <div class="teacher-courses-empty__icon">+</div>
-                        <h4>{{ __('teacher::dashboard.courses.empty') }}</h4>
+                        <h4>{{ __('teacher::teacher/course/list.empty') }}</h4>
                         <p class="mb-0">
-                            Hay bat dau bang viec tao khoa hoc dau tien. Ban co the luu ban nhap truoc, sau do moi quyet dinh khoa nao se duoc publish.
+                            {{ __('teacher::teacher/course/list.empty_description') }}
                         </p>
                         @if ($canCreate)
                             <a href="{{ route('teacher.dashboard.courses.create') }}" class="btn btn-primary mt-3">
-                                Tao khoa hoc dau tien
+                                {{ __('teacher::teacher/course/add.create_title') }}
                             </a>
                         @endif
                     </div>
@@ -601,6 +601,10 @@
             font-size: 1.05rem;
         }
 
+        html[data-theme="light"] .teacher-course-card__stat strong {
+            color: var(--admin-text);
+        }
+
         .teacher-course-card__help {
             padding: 0.9rem 1rem;
             border-radius: 16px;
@@ -614,12 +618,12 @@
             padding: 0.95rem 1rem;
             border-radius: 16px;
             border: 1px solid rgba(96, 165, 250, 0.14);
-            background: rgba(15, 23, 42, 0.58);
+            background: var(--admin-history-bg);
         }
 
         .teacher-course-card__history-title {
             margin-bottom: 0.7rem;
-            color: #dbeafe;
+            color: var(--admin-history-text);
             font-size: 0.9rem;
             font-weight: 800;
         }
@@ -637,14 +641,15 @@
         }
 
         .teacher-course-card__history-item strong {
-            color: #f8fbff;
+            color: var(--admin-history-text);
             font-size: 0.9rem;
             font-weight: 700;
         }
 
         .teacher-course-card__history-item span,
         .teacher-course-card__history-empty {
-            color: #8fb5e9;
+            color: var(--admin-history-text);
+            opacity: 0.8;
             font-size: 0.8rem;
             line-height: 1.5;
         }

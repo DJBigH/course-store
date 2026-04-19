@@ -12,7 +12,7 @@ class TeacherPackageController extends Controller
 {
     public function index()
     {
-        $pageTitle = 'Goi dang ky giang vien';
+        $pageTitle = __('teacher::admin.titles.packages');
         $packages = TeacherPackage::query()->orderBy('sort_order')->get();
 
         return view('teacher::packages.lists', compact('pageTitle', 'packages'));
@@ -20,7 +20,7 @@ class TeacherPackageController extends Controller
 
     public function create()
     {
-        $pageTitle = 'Them goi giang vien';
+        $pageTitle = __('teacher::admin.titles.create_package');
         $nextSortOrder = ((int) TeacherPackage::query()->max('sort_order')) + 1;
 
         return view('teacher::packages.create', compact('pageTitle', 'nextSortOrder'));
@@ -38,12 +38,12 @@ class TeacherPackageController extends Controller
             TeacherPackage::query()->create($payload);
         });
 
-        return redirect()->route('teacher-packages.index')->with('msg', 'Da tao goi giang vien thanh cong.');
+        return redirect()->route('teacher-packages.index')->with('msg', __('teacher::admin.messages.package_create_success'));
     }
 
     public function edit($id)
     {
-        $pageTitle = 'Cap nhat goi giang vien';
+        $pageTitle = __('teacher::admin.titles.edit_package');
         $package = TeacherPackage::query()->findOrFail($id);
 
         return view('teacher::packages.edit', compact('pageTitle', 'package'));
@@ -62,7 +62,7 @@ class TeacherPackageController extends Controller
             $package->update($payload);
         });
 
-        return redirect()->route('teacher-packages.edit', $package->id)->with('msg', 'Da cap nhat goi giang vien.');
+        return redirect()->route('teacher-packages.edit', $package->id)->with('msg', __('teacher::admin.messages.package_update_success'));
     }
 
     public function delete($id)
@@ -77,7 +77,7 @@ class TeacherPackageController extends Controller
                 ->decrement('sort_order');
         });
 
-        return redirect()->route('teacher-packages.index')->with('msg', 'Da xoa goi giang vien.');
+        return redirect()->route('teacher-packages.index')->with('msg', __('teacher::admin.messages.package_delete_success'));
     }
 
     public function reorder(Request $request)
@@ -91,7 +91,7 @@ class TeacherPackageController extends Controller
         if ($ids->isEmpty() || $ids->count() !== $count) {
             return response()->json([
                 'success' => false,
-                'message' => 'Du lieu sap xep khong hop le.',
+                'message' => __('teacher::admin.messages.invalid_reorder_data'),
             ], 422);
         }
 
@@ -105,7 +105,7 @@ class TeacherPackageController extends Controller
         if ($existingIds->count() !== $count || $existingIds->all() !== $ids->sort()->values()->all()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Danh sach goi khong day du de sap xep.',
+                'message' => __('teacher::admin.messages.incomplete_reorder_list'),
             ], 422);
         }
 
@@ -119,7 +119,7 @@ class TeacherPackageController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Da cap nhat thu tu goi.',
+            'message' => __('teacher::admin.messages.reorder_success'),
         ]);
     }
 
@@ -161,16 +161,18 @@ class TeacherPackageController extends Controller
             'can_view_activity_logs' => $request->boolean('can_view_activity_logs'),
             'can_manage_quizzes' => $request->boolean('can_manage_quizzes'),
             'can_use_ai_quiz' => $request->boolean('can_use_ai_quiz'),
+            'can_import_export' => $request->boolean('can_import_export'),
             'ai_quiz_limit' => $request->filled('ai_quiz_limit') ? $request->integer('ai_quiz_limit') : null,
             'coupon_limit' => $request->filled('coupon_limit') ? $request->integer('coupon_limit') : null,
             'can_grant_courses' => $request->boolean('can_grant_courses'),
-            'can_export_orders' => $request->boolean('can_export_orders'),
-            'can_export_students' => $request->boolean('can_export_students'),
-            'can_import_export_lessons' => $request->boolean('can_import_export_lessons'),
+            'can_export_orders' => $request->boolean('can_import_export'),
+            'can_export_students' => $request->boolean('can_import_export'),
+            'can_import_export_lessons' => $request->boolean('can_import_export'),
             'can_sell_bundles' => $request->boolean('can_sell_bundles'),
             'can_schedule_content' => $request->boolean('can_schedule_content'),
             'can_send_promotions' => $request->boolean('can_send_promotions'),
             'can_issue_certificates' => $request->boolean('can_issue_certificates'),
+            'can_verify_certificates' => $request->boolean('can_verify_certificates'),
             'can_customize_teacher_landing' => $request->boolean('can_customize_teacher_landing'),
             'can_use_affiliate_links' => $request->boolean('can_use_affiliate_links'),
             'support_level' => $request->string('support_level')->toString() ?: null,

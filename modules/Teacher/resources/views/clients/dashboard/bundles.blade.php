@@ -4,24 +4,24 @@
     <div class="teacher-panel teacher-bundles-shell">
         <div class="teacher-bundles-hero">
             <div>
-                <span class="teacher-bundles-kicker">{{ __('teacher::dashboard.bundles.hero_kicker') }}</span>
-                <h3 class="teacher-bundles-title">{{ __('teacher::dashboard.bundles.title') }}</h3>
-                <p class="teacher-bundles-desc mb-0">{{ __('teacher::dashboard.bundles.description') }}</p>
+                <span class="teacher-bundles-kicker">{{ __('teacher::teacher/bundle/list.hero_kicker') }}</span>
+                <h3 class="teacher-bundles-title">{{ __('teacher::teacher/bundle/list.title') }}</h3>
+                <p class="teacher-bundles-desc mb-0">{{ __('teacher::teacher/bundle/list.description') }}</p>
                 <div class="teacher-course-subtabs mt-4">
                     <a href="{{ route('teacher.dashboard.courses') }}"
                         class="teacher-course-subtabs__tab {{ request()->routeIs('teacher.dashboard.courses*') || request()->routeIs('teacher.dashboard.lessons.*') ? 'active' : '' }}">
                         <i class="fas fa-book-open"></i>
-                        <span>{{ __('teacher::dashboard.nav.courses') }}</span>
+                        <span>{{ __('teacher::teacher/course/list.title') }}</span>
                     </a>
                     <a href="{{ route('teacher.dashboard.bundles') }}"
                         class="teacher-course-subtabs__tab {{ request()->routeIs('teacher.dashboard.bundles*') ? 'active' : '' }}">
                         <i class="fas fa-layer-group"></i>
-                        <span>{{ __('teacher::dashboard.nav.bundles') }}</span>
+                        <span>{{ __('teacher::teacher/bundle/list.title') }}</span>
                     </a>
                 </div>
             </div>
             <a href="{{ route('teacher.dashboard.bundles.create') }}" class="btn btn-primary btn-lg">
-                {{ __('teacher::dashboard.bundles.actions.create') }}
+                {{ __('teacher::teacher/bundle/add.create_title') }}
             </a>
         </div>
 
@@ -35,7 +35,7 @@
                     <div class="teacher-bundles-card__head">
                         <div>
                             <span class="teacher-bundles-status {{ $bundle->status ? 'is-active' : 'is-draft' }}">
-                                {{ $bundle->status ? __('teacher::dashboard.common.active') : __('teacher::dashboard.courses.status.draft') }}
+                                {{ $bundle->status ? __('teacher::teacher/course/common.status.published') : __('teacher::teacher/course/common.status.draft') }}
                             </span>
                             <h4>{{ $bundle->name }}</h4>
                         </div>
@@ -43,18 +43,18 @@
                     </div>
 
                     <p class="teacher-bundles-card__desc">
-                        {{ $bundle->description ?: __('teacher::dashboard.bundles.empty_description') }}
+                        {{ $bundle->description ?: __('teacher::teacher/bundle/list.empty_description') }}
                     </p>
 
                     <div class="teacher-bundles-card__meta">
-                        <span>{{ __('teacher::dashboard.bundles.labels.course_count', ['count' => $bundle->items_count]) }}</span>
-                        <span>{{ __('teacher::dashboard.bundles.labels.slug', ['slug' => $bundle->slug]) }}</span>
+                        <span>{{ __('teacher::teacher/bundle/common.labels.course_count', ['count' => $bundle->items_count]) }}</span>
+                        <span>{{ __('teacher::teacher/bundle/common.labels.slug', ['slug' => $bundle->slug]) }}</span>
                     </div>
 
                     <div class="teacher-bundles-card__courses">
                         @foreach ($bundle->items->take(4) as $item)
                             <span class="teacher-bundles-course-pill">
-                                {{ $item->course?->name_locale ?: __('teacher::dashboard.common.unknown_course') }}
+                                {{ $item->course?->name_locale ?: __('teacher::teacher/dashboard.common.unknown_course') }}
                             </span>
                         @endforeach
                         @if ($bundle->items_count > 4)
@@ -67,18 +67,18 @@
                     <div class="teacher-bundles-card__actions">
                         <a href="{{ route('teacher.dashboard.bundles.edit', ['bundle' => $bundle->id]) }}"
                             class="btn btn-outline-primary">
-                            {{ __('teacher::dashboard.bundles.actions.edit') }}
+                            {{ __('teacher::teacher/bundle/common.actions.edit') }}
                         </a>
                         <a href="{{ route('courses.bundle.detail', ['locale' => app()->getLocale(), 'slug' => $bundle->slug]) }}"
                             target="_blank" class="btn btn-outline-secondary">
-                            {{ __('teacher::dashboard.bundles.actions.view_public') }}
+                            {{ __('teacher::teacher/bundle/common.actions.view_public') }}
                         </a>
                         <form action="{{ route('teacher.dashboard.bundles.delete', ['bundle' => $bundle->id]) }}" method="POST"
-                            onsubmit="return confirm(@js(__('teacher::dashboard.bundles.confirm_delete')));">
+                            onsubmit="return confirm(@js(__('teacher::teacher/bundle/list.confirm_delete')));">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-outline-danger">
-                                {{ __('teacher::dashboard.bundles.actions.delete') }}
+                                {{ __('teacher::teacher/bundle/common.actions.delete') }}
                             </button>
                         </form>
                     </div>
@@ -86,8 +86,8 @@
             @empty
                 <div class="teacher-bundles-empty">
                     <div class="teacher-bundles-empty__icon"><i class="fas fa-layer-group"></i></div>
-                    <h4>{{ __('teacher::dashboard.bundles.empty') }}</h4>
-                    <p class="mb-0">{{ __('teacher::dashboard.bundles.empty_description') }}</p>
+                    <h4>{{ __('teacher::teacher/bundle/list.empty') }}</h4>
+                    <p class="mb-0">{{ __('teacher::teacher/bundle/list.empty_description') }}</p>
                 </div>
             @endforelse
         </div>

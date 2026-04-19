@@ -5,13 +5,13 @@
         $commission = rtrim(rtrim(number_format((float) ($effectiveCommissionRate ?? $teacher->commission_rate), 2, '.', ''), '0'), '.');
         $currentRangeKey = $dashboardRange['key'] ?? 'today';
         $rangeLabels = [
-            'today' => 'Hôm nay',
-            '7d' => '7 ngày',
-            '14d' => '14 ngày',
-            'month' => '1 tháng',
-            'year' => '1 năm',
+            'today' => __('teacher::teacher/dashboard.overview.ranges.today'),
+            '7d' => __('teacher::teacher/dashboard.overview.ranges.7d'),
+            '14d' => __('teacher::teacher/dashboard.overview.ranges.14d'),
+            'month' => __('teacher::teacher/dashboard.overview.ranges.month'),
+            'year' => __('teacher::teacher/dashboard.overview.ranges.year'),
         ];
-        $currentRangeLabel = $dashboardRange['label'] ?? '30 ngày';
+        $currentRangeLabel = $dashboardRange['label'] ?? __('teacher::teacher/dashboard.overview.ranges.month');
         $currentRangeLabel = $rangeLabels[$currentRangeKey] ?? $currentRangeLabel;
         $maxDailyRevenue = max((float) (($revenueInsights['daily'] ?? collect())->max('teacher_revenue') ?? 0), 1);
     @endphp
@@ -21,37 +21,37 @@
             <div class="teacher-hero__content">
                 <div class="teacher-hero__eyebrow">
                     <i class="fas fa-star"></i>
-                    {{ __('teacher::dashboard.overview.eyebrow') }}
+                    {{ __('teacher::teacher/dashboard.overview.eyebrow') }}
                 </div>
                 <h3 class="teacher-hero__title">
-                    {{ __('teacher::dashboard.overview.title', ['name' => $teacher->name]) }}
+                    {{ __('teacher::teacher/dashboard.overview.title', ['name' => $teacher->name]) }}
                 </h3>
                 <p class="teacher-hero__desc">
-                    {{ __('teacher::dashboard.overview.description') }}
+                    {{ __('teacher::teacher/dashboard.overview.description') }}
                 </p>
 
                 <div class="teacher-chip-list mt-4">
                     <span class="teacher-chip teacher-chip--dark">
                         <i class="fas fa-percent"></i>
-                        {{ __('teacher::dashboard.common.commission', ['rate' => $commission]) }}
+                        {{ __('teacher::teacher/dashboard.common.commission', ['rate' => $commission]) }}
                     </span>
                     <span class="teacher-chip teacher-chip--dark">
                         <i class="fas fa-book"></i>
-                        <span data-overview-stat="courses">{{ $stats['courses'] }}</span> khóa học
+                        <span data-overview-stat="courses">{{ $stats['courses'] }}</span> {{ __('teacher::teacher/dashboard.overview.labels.total_courses_short') }}
                     </span>
                     <span class="teacher-chip teacher-chip--dark">
                         <i class="fas fa-user-graduate"></i>
-                        <span data-overview-stat="students">{{ $stats['students'] }}</span> học viên đã mua
+                        <span data-overview-stat="students">{{ $stats['students'] }}</span> {{ __('teacher::teacher/dashboard.overview.labels.students_short') }}
                     </span>
                 </div>
                 <a href="{{ $teacher->packageHasFeature('can_send_promotions') ? route('teacher.dashboard.promotions') : route('teacher.dashboard.package.upgrade') }}" class="teacher-overview-shortcut mt-4">
                     <span class="teacher-overview-shortcut__icon"><i class="fas fa-bullhorn"></i></span>
                     <div>
-                        <strong>{{ __('teacher::dashboard.promotions.shortcut_title') }}</strong>
+                        <strong>{{ __('teacher::teacher/dashboard.promotions.shortcut_title') }}</strong>
                         <p class="mb-0">
                             {{ $teacher->packageHasFeature('can_send_promotions')
-                                ? __('teacher::dashboard.promotions.shortcut_description')
-                                : __('teacher::dashboard.promotions.shortcut_locked') }}
+                                ? __('teacher::teacher/dashboard.promotions.shortcut_description')
+                                : __('teacher::teacher/dashboard.promotions.shortcut_locked') }}
                         </p>
                     </div>
                 </a>
@@ -60,17 +60,17 @@
             <div class="teacher-hero__rail">
                 @if ($packageSummary)
                     <div class="teacher-hero__mini teacher-hero__mini--package">
-                        <span>{{ __('teacher::dashboard.overview.package.current_label') }}</span>
+                        <span>{{ __('teacher::teacher/dashboard.overview.package.current_label') }}</span>
                         <strong>{{ $packageSummary['name'] }}</strong>
                         <small>
-                            {{ __('teacher::dashboard.overview.package.summary', [
+                            {{ __('teacher::teacher/dashboard.overview.package.summary', [
                                 'commission' => rtrim(rtrim(number_format($packageSummary['commission_rate'], 2, '.', ''), '0'), '.'),
-                                'limit' => $packageSummary['course_limit'] ?: __('teacher::dashboard.courses.unlimited'),
+                                'limit' => $packageSummary['course_limit'] ?: __('teacher::teacher/dashboard.common.unlimited'),
                             ]) }}
                         </small>
                         @if (!empty($packageSummary['expires_at']))
                             <small>
-                                {{ __('teacher::dashboard.overview.package.expires_on', [
+                                {{ __('teacher::teacher/dashboard.overview.package.expires_on', [
                                     'date' => $packageSummary['expires_at']->format('d/m/Y'),
                                     'days' => $packageSummary['days_left'] ?? 0,
                                 ]) }}
@@ -79,19 +79,19 @@
                         @if (!empty($packageSummary['pending_upgrade']) && !empty($packageSummary['pending_upgrade_starts_at']))
                             <small class="teacher-hero__package-note">
                                 @if (!empty($packageSummary['pending_upgrade_is_queued']))
-                                    {{ __('teacher::dashboard.overview.package.pending_starts_on', [
+                                    {{ __('teacher::teacher/dashboard.overview.package.pending_starts_on', [
                                         'name' => $packageSummary['pending_upgrade_name'],
                                         'date' => $packageSummary['pending_upgrade_starts_at']->format('d/m/Y'),
                                     ]) }}
                                     @if (!is_null($packageSummary['pending_upgrade_days_until_activation']))
                                         <span class="d-block">
-                                            {{ __('teacher::dashboard.overview.package.pending_days_left', [
+                                            {{ __('teacher::teacher/dashboard.overview.package.pending_days_left', [
                                                 'days' => $packageSummary['pending_upgrade_days_until_activation'],
                                             ]) }}
                                         </span>
                                     @endif
                                 @else
-                                    {{ __('teacher::dashboard.overview.package.pending_status', [
+                                    {{ __('teacher::teacher/dashboard.overview.package.pending_status', [
                                         'status' => $packageSummary['pending_upgrade_status'],
                                     ]) }}
                                 @endif
@@ -100,28 +100,28 @@
                         @if ($packageSummary['can_upgrade'])
                             <a href="{{ $packageSummary['upgrade_url'] }}" class="btn btn-sm btn-light mt-2 align-self-start">
                                 @if ($packageSummary['has_higher_package'])
-                                    {{ __('teacher::dashboard.overview.package.upgrade_cta', ['name' => $packageSummary['upgrade_name']]) }}
+                                    {{ __('teacher::teacher/dashboard.overview.package.upgrade_cta', ['name' => $packageSummary['upgrade_name']]) }}
                                 @else
-                                    {{ __('teacher::dashboard.overview.package.change_cta') }}
+                                    {{ __('teacher::teacher/dashboard.overview.package.change_cta') }}
                                 @endif
                             </a>
                         @elseif ($packageSummary['pending_upgrade'])
                             <a href="{{ $packageSummary['pending_upgrade_url'] }}" class="btn btn-sm btn-light mt-2 align-self-start">
-                                {{ __('teacher::dashboard.package.status_title') }}
+                                {{ __('teacher::teacher/dashboard.package.status_title') }}
                             </a>
                         @else
-                            <small class="teacher-hero__package-note">{{ __('teacher::dashboard.overview.package.maxed') }}</small>
+                            <small class="teacher-hero__package-note">{{ __('teacher::teacher/dashboard.overview.package.maxed') }}</small>
                         @endif
                     </div>
                 @endif
 
                 <div class="teacher-hero__mini">
-                    <span>{{ __('teacher::dashboard.overview.labels.available_balance') }}</span>
-                    <strong data-overview-stat="available_balance">{{ money($stats['available_balance'], 'đ', '0 đ') }}</strong>
+                    <span>{{ __('teacher::teacher/dashboard.overview.labels.available_balance') }}</span>
+                    <strong data-overview-stat="available_balance">{{ moneyLocale($stats['available_balance'], true) }}</strong>
                 </div>
                 <div class="teacher-hero__mini teacher-hero__mini--glass">
-                    <span>{{ __('teacher::dashboard.overview.labels.estimated_revenue') }}</span>
-                    <strong data-overview-stat="estimated_revenue">{{ money($stats['estimated_revenue'], 'đ', '0 đ') }}</strong>
+                    <span>{{ __('teacher::teacher/dashboard.overview.labels.estimated_revenue') }}</span>
+                    <strong data-overview-stat="estimated_revenue">{{ moneyLocale($stats['estimated_revenue'], true) }}</strong>
                 </div>
             </div>
         </section>
@@ -129,8 +129,8 @@
         <div class="teacher-panel" data-overview-dashboard data-endpoint="{{ route('teacher.dashboard.index') }}">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
                 <div>
-                    <h3 class="fw-bold mb-2">{{ __('teacher::dashboard.overview.section_title') }}</h3>
-                    <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.section_desc') }}</p>
+                    <h3 class="fw-bold mb-2">{{ __('teacher::teacher/dashboard.overview.section_title') }}</h3>
+                    <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.section_desc') }}</p>
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     @foreach ($dashboardRangeOptions as $rangeOption)
@@ -148,59 +148,59 @@
 
             <div class="teacher-range-banner mb-4">
                 <div>
-                    <strong>Dữ liệu đang xem</strong>
-                    <p class="mb-0">Bộ lọc hiện tại: <span data-range-label>{{ $currentRangeLabel }}</span></p>
+                    <strong>{{ __('teacher::teacher/dashboard.overview.ranges.viewing_data') }}</strong>
+                    <p class="mb-0">{{ __('teacher::teacher/dashboard.overview.ranges.current_filter', ['label' => '']) }}<span data-range-label>{{ $currentRangeLabel }}</span></p>
                 </div>
-                <span class="teacher-range-banner__badge" data-loading-label>Sẵn sàng</span>
+                <span class="teacher-range-banner__badge" data-loading-label>{{ __('teacher::teacher/dashboard.overview.ranges.ready') }}</span>
             </div>
 
             <div class="row g-3">
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.labels.total_courses') }}</div>
+                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.total_courses') }}</div>
                         <div class="teacher-stat-card__value" data-overview-stat="courses">{{ $stats['courses'] }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.labels.active_courses') }}</div>
+                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.active_courses') }}</div>
                         <div class="teacher-stat-card__value" data-overview-stat="active_courses">{{ $stats['active_courses'] }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.labels.students') }}</div>
+                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.students') }}</div>
                         <div class="teacher-stat-card__value" data-overview-stat="students">{{ $stats['students'] }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.labels.available_balance') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="available_balance">{{ money($stats['available_balance'], 'đ', '0 đ') }}</div>
+                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.available_balance') }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="available_balance">{{ money($stats['available_balance'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.labels.gross_revenue') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="gross_revenue">{{ money($stats['gross_revenue'], 'đ', '0 đ') }}</div>
+                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.gross_revenue') }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="gross_revenue">{{ money($stats['gross_revenue'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.labels.allocated_discount') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="allocated_discount">{{ money($stats['allocated_discount'], 'đ', '0 đ') }}</div>
+                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.allocated_discount') }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="allocated_discount">{{ money($stats['allocated_discount'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.labels.estimated_revenue') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="estimated_revenue">{{ money($stats['estimated_revenue'], 'đ', '0 đ') }}</div>
+                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.estimated_revenue') }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="estimated_revenue">{{ money($stats['estimated_revenue'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.labels.platform_revenue') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="platform_revenue">{{ money($stats['platform_revenue'], 'đ', '0 đ') }}</div>
+                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.platform_revenue') }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="platform_revenue">{{ money($stats['platform_revenue'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
                     </div>
                 </div>
             </div>
@@ -210,32 +210,32 @@
                     <div class="teacher-subtle-card h-100">
                         <div class="teacher-section-title mb-3">
                             <div>
-                                <h4 class="h5 mb-1">{{ __('teacher::dashboard.overview.conversion.title') }}</h4>
-                                <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.conversion.description') }}</p>
+                                <h4 class="h5 mb-1">{{ __('teacher::teacher/dashboard.overview.conversion.title') }}</h4>
+                                <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.conversion.description') }}</p>
                             </div>
                         </div>
                         <div class="row g-3">
                             <div class="col-6">
                                 <div class="teacher-stat-card">
-                                    <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.conversion.labels.created') }}</div>
+                                    <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.conversion.labels.created') }}</div>
                                     <div class="teacher-stat-card__value" data-overview-conversion="created">{{ number_format((int) ($conversionSummary['orders_this_month'] ?? 0)) }}</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="teacher-stat-card">
-                                    <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.conversion.labels.paid') }}</div>
+                                    <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.conversion.labels.paid') }}</div>
                                     <div class="teacher-stat-card__value" data-overview-conversion="paid">{{ number_format((int) ($conversionSummary['orders_paid_this_month'] ?? 0)) }}</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="teacher-stat-card">
-                                    <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.conversion.labels.rate') }}</div>
+                                    <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.conversion.labels.rate') }}</div>
                                     <div class="teacher-stat-card__value" data-overview-conversion="rate">{{ number_format((float) ($conversionSummary['conversion_rate_created'] ?? 0), 1) }}%</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="teacher-stat-card">
-                                    <div class="teacher-stat-card__label">{{ __('teacher::dashboard.overview.conversion.labels.failed') }}</div>
+                                    <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.conversion.labels.failed') }}</div>
                                     <div class="teacher-stat-card__value" data-overview-conversion="failed">{{ number_format((int) ($conversionSummary['failed_orders'] ?? 0)) }}</div>
                                 </div>
                             </div>
@@ -247,18 +247,18 @@
                     <div class="teacher-subtle-card h-100">
                         <div class="teacher-section-title mb-3">
                             <div>
-                                <h4 class="h5 mb-1">{{ __('teacher::dashboard.overview.revenue_breakdown.title') }}</h4>
-                                <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.revenue_breakdown.description') }}</p>
+                                <h4 class="h5 mb-1">{{ __('teacher::teacher/dashboard.overview.revenue_breakdown.title') }}</h4>
+                                <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.revenue_breakdown.description') }}</p>
                             </div>
                         </div>
                         <div class="table-responsive">
                             <table class="table align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th>{{ __('teacher::dashboard.overview.revenue_breakdown.table.period') }}</th>
-                                        <th>{{ __('teacher::dashboard.overview.revenue_breakdown.table.orders') }}</th>
-                                        <th>{{ __('teacher::dashboard.overview.revenue_breakdown.table.gross') }}</th>
-                                        <th>{{ __('teacher::dashboard.overview.revenue_breakdown.table.revenue') }}</th>
+                                        <th>{{ __('teacher::teacher/dashboard.overview.revenue_breakdown.table.period') }}</th>
+                                        <th>{{ __('teacher::teacher/dashboard.overview.revenue_breakdown.table.orders') }}</th>
+                                        <th>{{ __('teacher::teacher/dashboard.overview.revenue_breakdown.table.gross') }}</th>
+                                        <th>{{ __('teacher::teacher/dashboard.overview.revenue_breakdown.table.revenue') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="teacher-overview-revenue-rows">
@@ -266,12 +266,12 @@
                                         <tr>
                                             <td>{{ \Illuminate\Support\Carbon::parse($row->date)->format('d/m/Y') }}</td>
                                             <td>{{ number_format((int) $row->orders) }}</td>
-                                            <td>{{ money($row->gross_amount, 'đ', '0 đ') }}</td>
-                                            <td>{{ money($row->teacher_revenue, 'đ', '0 đ') }}</td>
+                                            <td>{{ money($row->gross_amount, __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</td>
+                                            <td>{{ money($row->teacher_revenue, __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-muted text-center py-4">{{ __('teacher::dashboard.earnings.empty') }}</td>
+                                            <td colspan="4" class="text-muted text-center py-4">{{ __('teacher::teacher/dashboard.common.empty') }}</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -279,29 +279,31 @@
                         </div>
 
                         <div class="teacher-chart-legend mt-3 mb-2">
-                            <span><i class="teacher-chart-dot teacher-chart-dot--blue"></i> Thực nhận</span>
-                            <span><i class="teacher-chart-dot teacher-chart-dot--amber"></i> Cột nổi bật</span>
+                            <span><i class="teacher-chart-dot teacher-chart-dot--blue"></i> {{ __('teacher::teacher/dashboard.overview.revenue_breakdown.legend.actual') }}</span>
+                            <span><i class="teacher-chart-dot teacher-chart-dot--amber"></i> {{ __('teacher::teacher/dashboard.overview.revenue_breakdown.legend.highlight') }}</span>
                         </div>
-                        <div class="teacher-mini-chart mt-3" id="teacher-overview-chart">
-                            @forelse (($revenueInsights['daily'] ?? collect())->take(7)->reverse()->values() as $index => $row)
-                                @php
-                                    $chartColors = [
-                                        ['#60a5fa', '#2563eb'],
-                                        ['#38bdf8', '#0f766e'],
-                                        ['#f59e0b', '#ea580c'],
-                                    ];
-                                    $activeColors = $chartColors[$index % count($chartColors)];
-                                @endphp
-                                <div class="teacher-mini-chart__item">
-                                    <strong class="teacher-mini-chart__value">{{ money($row->teacher_revenue, 'đ', '0 đ') }}</strong>
-                                    <div class="teacher-mini-chart__bar-wrap">
-                                        <div class="teacher-mini-chart__bar" style="height: {{ max(($row->teacher_revenue / $maxDailyRevenue) * 100, 8) }}%; --bar-start: {{ $activeColors[0] }}; --bar-end: {{ $activeColors[1] }};"></div>
+                        <div class="teacher-mini-chart-scroll mb-0">
+                            <div class="teacher-mini-chart mt-3" id="teacher-overview-chart">
+                                @forelse (($revenueInsights['daily'] ?? collect())->take(7)->reverse()->values() as $index => $row)
+                                    @php
+                                        $chartColors = [
+                                            ['#60a5fa', '#2563eb'],
+                                            ['#38bdf8', '#0f766e'],
+                                            ['#f59e0b', '#ea580c'],
+                                        ];
+                                        $activeColors = $chartColors[$index % count($chartColors)];
+                                    @endphp
+                                    <div class="teacher-mini-chart__item">
+                                        <strong class="teacher-mini-chart__value">{{ moneyLocale($row->teacher_revenue, true) }}</strong>
+                                        <div class="teacher-mini-chart__bar-wrap">
+                                            <div class="teacher-mini-chart__bar" style="height: {{ max(($row->teacher_revenue / $maxDailyRevenue) * 100, 8) }}%; --bar-start: {{ $activeColors[0] }}; --bar-end: {{ $activeColors[1] }};"></div>
+                                        </div>
+                                        <span>{{ \Illuminate\Support\Carbon::parse($row->date)->format('d/m') }}</span>
                                     </div>
-                                    <span>{{ \Illuminate\Support\Carbon::parse($row->date)->format('d/m') }}</span>
-                                </div>
-                            @empty
-                                <div class="text-muted">{{ __('teacher::dashboard.earnings.empty') }}</div>
-                            @endforelse
+                                @empty
+                                    <div class="text-muted">{{ __('teacher::teacher/dashboard.common.empty') }}</div>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -310,19 +312,19 @@
             <div class="teacher-subtle-card mt-4">
                 <div class="teacher-section-title mb-3">
                     <div>
-                        <h4 class="h5 mb-1">View -> Order theo khóa học</h4>
-                        <p class="text-muted mb-0">Đối chiếu lượt xem trong khoảng lọc đang chọn của từng khóa với số đơn phát sinh cùng khoảng để nhìn nhanh conversion.</p>
+                        <h4 class="h5 mb-1">{{ __('teacher::teacher/dashboard.overview.course_performance.title') }}</h4>
+                        <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.course_performance.description') }}</p>
                     </div>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Khóa học</th>
-                                <th>Lượt view</th>
-                                <th>Đơn</th>
-                                <th>Chuyển đổi</th>
-                                <th>Thực nhận</th>
+                                <th>{{ __('teacher::teacher/dashboard.overview.course_performance.table.course') }}</th>
+                                <th>{{ __('teacher::teacher/dashboard.overview.course_performance.table.views') }}</th>
+                                <th>{{ __('teacher::teacher/dashboard.overview.course_performance.table.orders') }}</th>
+                                <th>{{ __('teacher::teacher/dashboard.overview.course_performance.table.conversion') }}</th>
+                                <th>{{ __('teacher::teacher/dashboard.overview.course_performance.table.revenue') }}</th>
                             </tr>
                         </thead>
                         <tbody id="teacher-overview-course-performance">
@@ -332,11 +334,11 @@
                                     <td>{{ number_format((int) $row->views) }}</td>
                                     <td>{{ number_format((int) $row->orders) }}</td>
                                     <td>{{ number_format((float) $row->conversion_rate, 2) }}%</td>
-                                    <td>{{ money($row->teacher_revenue, 'đ', '0 đ') }}</td>
+                                    <td>{{ moneyLocale($row->teacher_revenue, true) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">{{ __('teacher::dashboard.earnings.empty') }}</td>
+                                    <td colspan="5" class="text-center text-muted py-4">{{ __('teacher::teacher/dashboard.common.empty') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -350,11 +352,11 @@
                 <div class="teacher-panel h-100">
                     <div class="teacher-section-title">
                         <div>
-                            <h4 class="h5">{{ __('teacher::dashboard.overview.recent_courses_title') }}</h4>
-                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.recent_courses_desc') }}</p>
+                            <h4 class="h5">{{ __('teacher::teacher/dashboard.overview.recent_courses_title') }}</h4>
+                            <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.recent_courses_desc') }}</p>
                         </div>
                         <a class="teacher-soft-link" href="{{ route('teacher.dashboard.courses') }}">
-                            {{ __('teacher::dashboard.common.view_all') }}
+                            {{ __('teacher::teacher/dashboard.common.view_all') }}
                         </a>
                     </div>
 
@@ -363,13 +365,13 @@
                             <div class="teacher-subtle-card">
                                 <strong class="d-block">{{ $course->name_locale }}</strong>
                                 <small class="text-muted">
-                                    {{ __('teacher::dashboard.overview.labels.course_status', [
-                                        'status' => $course->status ? __('teacher::dashboard.common.status_active') : __('teacher::dashboard.common.course_hidden'),
+                                    {{ __('teacher::teacher/dashboard.overview.labels.course_status', [
+                                        'status' => $course->status ? __('teacher::teacher/dashboard.common.status_active') : __('teacher::teacher/dashboard.common.course_hidden'),
                                     ]) }}
                                 </small>
                             </div>
                         @empty
-                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.no_courses') }}</p>
+                            <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.no_courses') }}</p>
                         @endforelse
                     </div>
                 </div>
@@ -379,11 +381,11 @@
                 <div class="teacher-panel h-100">
                     <div class="teacher-section-title">
                         <div>
-                            <h4 class="h5">{{ __('teacher::dashboard.overview.recent_sales_title') }}</h4>
-                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.recent_sales_desc') }}</p>
+                            <h4 class="h5">{{ __('teacher::teacher/dashboard.overview.recent_sales_title') }}</h4>
+                            <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.recent_sales_desc') }}</p>
                         </div>
                         <a class="teacher-soft-link" href="{{ route('teacher.dashboard.earnings') }}">
-                            {{ __('teacher::dashboard.common.view_earnings') }}
+                            {{ __('teacher::teacher/dashboard.common.view_earnings') }}
                         </a>
                     </div>
 
@@ -391,16 +393,16 @@
                         @forelse ($recentSales as $detail)
                             <div class="teacher-subtle-card">
                                 <strong class="d-block">
-                                    {{ $detail->courses?->name_locale ?: __('teacher::dashboard.common.unknown_course') }}
+                                    {{ $detail->courses?->name_locale ?: __('teacher::teacher/dashboard.common.unknown_course') }}
                                 </strong>
                                 <small class="d-block text-muted">
-                                    {{ __('teacher::dashboard.overview.labels.order_code', ['code' => $detail->order?->code]) }}
+                                    {{ __('teacher::teacher/dashboard.overview.labels.order_code', ['code' => $detail->order?->code]) }}
                                     - {{ optional($detail->created_at)->format('d/m/Y H:i') }}
                                 </small>
-                                <span class="text-primary fw-semibold">{{ money($detail->finance_breakdown['teacher_revenue'], 'đ', '0 đ') }}</span>
+                                <span class="text-primary fw-semibold">{{ moneyLocale($detail->finance_breakdown['teacher_revenue'], true) }}</span>
                             </div>
                         @empty
-                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.no_sales') }}</p>
+                            <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.no_sales') }}</p>
                         @endforelse
                     </div>
                 </div>
@@ -410,11 +412,11 @@
                 <div class="teacher-panel h-100">
                     <div class="teacher-section-title">
                         <div>
-                            <h4 class="h5">{{ __('teacher::dashboard.overview.top_bundles_title') }}</h4>
-                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.top_bundles_desc') }}</p>
+                            <h4 class="h5">{{ __('teacher::teacher/dashboard.overview.top_bundles_title') }}</h4>
+                            <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.top_bundles_desc') }}</p>
                         </div>
                         <a class="teacher-soft-link" href="{{ route('teacher.dashboard.bundles') }}">
-                            {{ __('teacher::dashboard.common.view_all') }}
+                            {{ __('teacher::teacher/dashboard.common.view_all') }}
                         </a>
                     </div>
 
@@ -422,15 +424,15 @@
                         @forelse ($topBundles as $bundleStat)
                             <div class="teacher-subtle-card">
                                 <strong class="d-block">
-                                    {{ $bundleStat->bundle?->name ?: __('teacher::dashboard.common.unknown_course') }}
+                                    {{ $bundleStat->bundle?->name ?: __('teacher::teacher/dashboard.common.unknown_course') }}
                                 </strong>
                                 <small class="d-block text-muted">
-                                    {{ __('teacher::dashboard.overview.top_bundles_sales', ['count' => $bundleStat->sales_count]) }}
+                                    {{ __('teacher::teacher/dashboard.overview.top_bundles_sales', ['count' => $bundleStat->sales_count]) }}
                                 </small>
-                                <span class="text-primary fw-semibold">{{ money($bundleStat->net_revenue, 'đ', '0 đ') }}</span>
+                                <span class="text-primary fw-semibold">{{ moneyLocale($bundleStat->net_revenue, true) }}</span>
                             </div>
                         @empty
-                            <p class="text-muted mb-0">{{ __('teacher::dashboard.overview.top_bundles_empty') }}</p>
+                            <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.top_bundles_empty') }}</p>
                         @endforelse
                     </div>
                 </div>
@@ -440,41 +442,41 @@
         <div class="teacher-panel mt-4">
             <div class="teacher-section-title mb-3">
                 <div>
-                    <h4 class="h5 mb-1">Tiện ích nhanh</h4>
-                    <p class="text-muted mb-0">Các lối tắt quản trị được đặt xuống dưới để phần trên cùng tập trung vào doanh thu và hiệu suất.</p>
+                    <h4 class="h5 mb-1">{{ __('teacher::teacher/dashboard.overview.shortcuts.title') }}</h4>
+                    <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.shortcuts.description') }}</p>
                 </div>
             </div>
-
+    
             <div class="teacher-overview-shortcuts mb-0">
                 <a href="{{ route('teacher.dashboard.courses') }}" class="teacher-overview-shortcut">
                     <span class="teacher-overview-shortcut__icon"><i class="fas fa-book-open"></i></span>
                     <div>
-                        <strong>Khóa học của tôi</strong>
-                        <p class="mb-0">Tạo khóa học mới, sửa nội dung và quản lý bài học trong cùng một nơi.</p>
+                        <strong>{{ __('teacher::teacher/dashboard.overview.shortcuts.my_courses.title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/dashboard.overview.shortcuts.my_courses.description') }}</p>
                     </div>
                 </a>
-
+    
                 <a href="{{ route('teacher.dashboard.earnings') }}" class="teacher-overview-shortcut">
                     <span class="teacher-overview-shortcut__icon"><i class="fas fa-chart-line"></i></span>
                     <div>
-                        <strong>Doanh thu</strong>
-                        <p class="mb-0">Xem breakdown doanh thu, giao dịch gần đây và hiệu suất theo khóa học.</p>
+                        <strong>{{ __('teacher::teacher/dashboard.overview.shortcuts.earnings.title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/dashboard.overview.shortcuts.earnings.description') }}</p>
                     </div>
                 </a>
-
+    
                 <a href="{{ route('teacher.dashboard.payouts') }}" class="teacher-overview-shortcut">
                     <span class="teacher-overview-shortcut__icon"><i class="fas fa-wallet"></i></span>
                     <div>
-                        <strong>Rút tiền</strong>
-                        <p class="mb-0">Gửi yêu cầu rút tiền và theo dõi trạng thái xử lý của từng lần payout.</p>
+                        <strong>{{ __('teacher::teacher/dashboard.overview.shortcuts.payouts.title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/dashboard.overview.shortcuts.payouts.description') }}</p>
                     </div>
                 </a>
-
+    
                 <a href="{{ route('teacher.dashboard.profile') }}" class="teacher-overview-shortcut">
                     <span class="teacher-overview-shortcut__icon"><i class="fas fa-id-card"></i></span>
                     <div>
-                        <strong>Hồ sơ giảng viên</strong>
-                        <p class="mb-0">Cập nhật thông tin công khai, bảo mật và các dữ liệu hồ sơ quan trọng.</p>
+                        <strong>{{ __('teacher::teacher/dashboard.overview.shortcuts.profile.title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/dashboard.overview.shortcuts.profile.description') }}</p>
                     </div>
                 </a>
             </div>
@@ -499,28 +501,64 @@
             justify-content: center;
             padding: 0.6rem 1rem;
             border-radius: 999px;
-            border: 1px solid rgba(96, 165, 250, 0.16);
-            background: rgba(18, 28, 50, 0.72);
-            color: #e8f1ff;
+            border: 1px solid var(--admin-border);
+            background: var(--admin-surface-3);
+            color: var(--admin-text);
             cursor: pointer;
-            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            font-size: 0.88rem;
         }
 
         .teacher-filter-chip:hover {
             transform: translateY(-1px);
-            border-color: rgba(125, 211, 252, 0.34);
+            border-color: var(--admin-primary);
+            background: var(--admin-hover-bg);
         }
 
         .teacher-filter-chip--active {
-            background: rgba(37, 99, 235, 0.18);
-            border-color: rgba(125, 211, 252, 0.34);
-            color: #bfdbfe;
-            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+            background: var(--admin-primary) !important;
+            border-color: var(--admin-primary) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        html[data-theme="dark"] .teacher-filter-chip {
+            background: rgba(18, 28, 50, 0.72);
+            border: 1px solid rgba(96, 165, 250, 0.16);
+            color: #e8f1ff;
+        }
+
+        html[data-theme="dark"] .teacher-filter-chip--active {
+            background: rgba(37, 99, 235, 0.45) !important;
+            border-color: rgba(125, 211, 252, 0.34) !important;
+            color: #ffffff !important;
         }
 
         .teacher-filter-chip[disabled] {
             opacity: 0.65;
             cursor: wait;
+        }
+
+        /* Package Feature Notice Custom Styling */
+        .teacher-panel .alert-warning {
+            background: color-mix(in srgb, var(--admin-primary) 8%, var(--admin-subtle-bg, #f8fafc));
+            border: 1px solid color-mix(in srgb, var(--admin-primary) 15%, transparent);
+            border-radius: 20px;
+        }
+
+        html[data-theme="dark"] .teacher-panel .alert-warning {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .teacher-panel .alert-warning strong {
+            color: var(--admin-primary);
+        }
+
+        .teacher-panel .alert-warning .text-muted {
+            color: var(--admin-text) !important;
+            opacity: 0.8;
         }
 
         .teacher-range-banner {
@@ -547,12 +585,29 @@
             font-weight: 600;
         }
 
+        .teacher-mini-chart-scroll {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            scrollbar-width: thin;
+        }
+
+        .teacher-mini-chart-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .teacher-mini-chart-scroll::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+        }
+
         .teacher-mini-chart {
             display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
+            grid-template-columns: repeat(7, minmax(80px, 1fr));
             gap: 0.65rem;
             align-items: end;
             min-height: 210px;
+            min-width: 560px;
         }
 
         .teacher-mini-chart__item {
@@ -565,8 +620,9 @@
         .teacher-mini-chart__value {
             font-size: 0.72rem;
             line-height: 1.35;
-            color: #dbeafe;
+            color: var(--admin-text);
             text-align: center;
+            opacity: 0.9;
         }
 
         .teacher-mini-chart__bar-wrap {
@@ -639,6 +695,11 @@
             align-items: center;
             justify-content: center;
             border-radius: 14px;
+            background: rgba(37, 99, 235, 0.08);
+            color: var(--admin-primary);
+        }
+
+        html[data-theme="dark"] .teacher-overview-shortcut__icon {
             background: rgba(37, 99, 235, 0.18);
             color: #8fc3ff;
         }
@@ -668,105 +729,87 @@
 
         html[data-theme="light"] .teacher-hero {
             background:
-                radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 24%),
-                radial-gradient(circle at left center, rgba(59, 130, 246, 0.1), transparent 28%),
-                linear-gradient(135deg, #f8fafc 0%, #e2e8f0 60%, #dbeafe 100%);
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 28%),
+                radial-gradient(circle at left center, rgba(59, 130, 246, 0.08), transparent 32%),
+                linear-gradient(135deg, #ffffff 0%, #f1f5f9 60%, #e0f2fe 100%);
             color: #0f172a;
+            border: 1px solid var(--admin-border);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
         }
 
         html[data-theme="light"] .teacher-hero__eyebrow {
-            background: rgba(37, 99, 235, 0.12);
-            color: #1d4ed8;
+            background: rgba(37, 99, 235, 0.08);
+            color: #2563eb;
+            border: 1px solid rgba(37, 99, 235, 0.12);
         }
 
         html[data-theme="light"] .teacher-hero__title {
-            color: #0f172a;
+            color: #0f172a !important;
         }
 
         html[data-theme="light"] .teacher-hero__desc {
-            color: #475569;
+            color: #334155 !important;
         }
 
         html[data-theme="light"] .teacher-chip--dark {
-            background: var(--admin-surface);
+            background: rgba(30, 41, 59, 0.05) !important;
+            border-color: rgba(30, 41, 59, 0.1) !important;
+            color: #0f172a !important;
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut {
+            background: var(--admin-subtle-bg);
             border-color: var(--admin-border);
-            color: var(--admin-text);
+            color: #0f172a !important;
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut strong {
+            color: #0f172a !important;
+        }
+
+        html[data-theme="light"] .teacher-overview-shortcut p {
+            color: #475569 !important;
         }
 
         html[data-theme="light"] .teacher-hero__mini {
-            background: var(--admin-surface);
+            background: #ffffff;
             border: 1px solid var(--admin-border);
-            box-shadow: var(--admin-card-shadow);
-            color: var(--admin-text);
+            backdrop-filter: none;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.04);
+            color: #0f172a !important;
         }
 
-        html[data-theme="light"] .teacher-hero__mini span {
-            color: var(--admin-muted);
+        html[data-theme="light"] .teacher-hero__mini span,
+        html[data-theme="light"] .teacher-hero__mini small {
+            color: #475569 !important;
         }
 
         html[data-theme="light"] .teacher-hero__mini strong {
-            color: var(--admin-text);
+            color: #0f172a !important;
         }
 
-        html[data-theme="light"] .teacher-hero__mini small {
-            color: var(--admin-muted);
-        }
-
-        html[data-theme="light"] .teacher-hero__mini--glass {
+        html[data-theme="light"] .teacher-range-banner {
             background: var(--admin-subtle-bg);
             border-color: var(--admin-border);
         }
 
-        html[data-theme="light"] .teacher-hero__package-note {
-            color: #2563eb;
-        }
-
-        html[data-theme="light"] .teacher-overview-shortcut {
-            background: var(--admin-surface);
-            border-color: var(--admin-border);
-            color: var(--admin-text);
-            box-shadow: var(--admin-card-shadow);
-        }
-
-        html[data-theme="light"] .teacher-overview-shortcut:hover {
-            color: var(--admin-text);
-        }
-
-        html[data-theme="light"] .teacher-overview-shortcut__icon {
-            background: rgba(37, 99, 235, 0.12);
-            color: #1d4ed8;
-        }
-
-        html[data-theme="light"] .teacher-overview-shortcut strong {
-            color: var(--admin-text);
-        }
-
-        html[data-theme="light"] .teacher-overview-shortcut p {
-            color: var(--admin-muted);
-        }
-
-        html[data-theme="light"] .teacher-filter-chip {
-            background: var(--admin-surface);
-            color: var(--admin-text);
-            border-color: var(--admin-border);
-        }
-
-        html[data-theme="light"] .teacher-range-banner {
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            border-color: var(--admin-border);
-        }
-
         html[data-theme="light"] .teacher-range-banner__badge {
-            background: rgba(34, 197, 94, 0.12);
-            color: #15803d;
+            background: rgba(34, 197, 94, 0.08);
+            color: #166534;
         }
 
-        html[data-theme="light"] .teacher-chart-legend {
-            color: var(--admin-muted);
+        html[data-theme="light"] .teacher-mini-chart__bar-wrap {
+            background: rgba(148, 163, 184, 0.04);
+            border-color: rgba(148, 163, 184, 0.1);
         }
 
-        html[data-theme="light"] .teacher-mini-chart__value {
-            color: var(--admin-text);
+        html[data-theme="light"] .teacher-stat-card__label {
+            color: #64748b !important;
+        }
+
+        html[data-theme="light"] .teacher-stat-card__value {
+            color: #0f172a !important;
+            text-shadow: none !important;
         }
 
         @media (max-width: 991.98px) {
@@ -788,13 +831,13 @@
             }
 
             const endpoint = root.dataset.endpoint;
-            const emptyText = @json(__('teacher::dashboard.earnings.empty'));
+            const emptyText = @json(__('teacher::teacher/dashboard.common.empty'));
             const rangeLabels = {
-                today: 'Hôm nay',
-                '7d': '7 ngày',
-                '14d': '14 ngày',
-                month: '1 tháng',
-                year: '1 năm'
+                today: @json(__('teacher::teacher/dashboard.overview.ranges.today')),
+                '7d': @json(__('teacher::teacher/dashboard.overview.ranges.7d')),
+                '14d': @json(__('teacher::teacher/dashboard.overview.ranges.14d')),
+                month: @json(__('teacher::teacher/dashboard.overview.ranges.month')),
+                year: @json(__('teacher::teacher/dashboard.overview.ranges.year'))
             };
             const chips = Array.from(root.querySelectorAll('[data-range-chip]'));
             const loadingLabel = root.querySelector('[data-loading-label]');
@@ -889,7 +932,7 @@
                 });
 
                 if (loadingLabel) {
-                    loadingLabel.textContent = value ? 'Đang cập nhật...' : 'Sẵn sàng';
+                    loadingLabel.textContent = value ? @json(__('teacher::teacher/dashboard.common.loading')) : @json(__('teacher::teacher/dashboard.overview.ranges.ready'));
                 }
             };
 
@@ -952,7 +995,7 @@
                     } catch (error) {
                         console.error(error);
                         if (loadingLabel) {
-                            loadingLabel.textContent = 'Không tải được dữ liệu';
+                            loadingLabel.textContent = @json(__('teacher::teacher/dashboard.common.failed_to_load'));
                         }
                     } finally {
                         setLoading(false);

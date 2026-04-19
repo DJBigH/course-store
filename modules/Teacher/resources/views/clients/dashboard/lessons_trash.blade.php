@@ -4,12 +4,12 @@
     <div class="teacher-panel">
         <div class="teacher-section-title mb-4">
             <div>
-                <h3 class="fw-bold mb-2">{{ __('teacher::dashboard.lessons.trash_title', ['course' => $course->name_locale]) }}</h3>
-                <p class="text-muted mb-0">{{ __('teacher::dashboard.lessons.trash_description') }}</p>
+                <h3 class="fw-bold mb-2">{{ __('teacher::teacher/lesson/list.trash_title', ['course' => $course->name_locale]) }}</h3>
+                <p class="text-muted mb-0">{{ __('teacher::teacher/lesson/list.trash_description') }}</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a href="{{ route('teacher.dashboard.lessons.index', $course->id) }}" class="btn btn-outline-secondary">
-                    {{ __('teacher::dashboard.common.back') }}
+                    {{ __('teacher::teacher/course/common.actions.back') }}
                 </a>
             </div>
         </div>
@@ -22,12 +22,12 @@
             <table class="table align-middle">
                 <thead>
                     <tr>
-                        <th>{{ __('teacher::dashboard.lessons.table.name') }}</th>
-                        <th>{{ __('teacher::dashboard.lessons.table.trial') }}</th>
-                        <th>{{ __('teacher::dashboard.lessons.table.document') }}</th>
-                        <th>{{ __('teacher::dashboard.lessons.table.status') }}</th>
-                        <th>{{ __('teacher::dashboard.lessons.table.deleted_at') }}</th>
-                        <th class="text-end">{{ __('teacher::dashboard.lessons.table.actions') }}</th>
+                        <th>{{ __('teacher::teacher/lesson/common.form.name') }}</th>
+                        <th>{{ __('teacher::teacher/lesson/add.form.is_trial') }}</th>
+                        <th>{{ __('teacher::teacher/lesson/add.form.document') }}</th>
+                        <th>{{ __('teacher::teacher/course/common.form.status') }}</th>
+                        <th>{{ __('teacher::teacher/course/list.table.deleted_at') }}</th>
+                        <th class="text-end">{{ __('teacher::teacher/course/list.table.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,14 +43,14 @@
                                     <form method="POST" action="{{ route('teacher.dashboard.lessons.restore', [$course->id, $row['id']]) }}">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-primary">
-                                            {{ __('teacher::dashboard.lessons.actions.restore') }}
+                                            {{ __('teacher::teacher/lesson/common.actions.restore') }}
                                         </button>
                                     </form>
-                                    <form method="POST" action="{{ route('teacher.dashboard.lessons.force-delete', [$course->id, $row['id']]) }}" onsubmit="return confirm('{{ __('teacher::dashboard.lessons.confirm_force_delete') }}')">
+                                    <form method="POST" action="{{ route('teacher.dashboard.lessons.force-delete', [$course->id, $row['id']]) }}" onsubmit="return confirm('{{ __('teacher::teacher/lesson/list.confirm_force_delete') }}')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            {{ __('teacher::dashboard.lessons.actions.force_delete') }}
+                                            {{ __('teacher::teacher/lesson/common.actions.force_delete') }}
                                         </button>
                                     </form>
                                 </div>
@@ -58,7 +58,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-muted">{{ __('teacher::dashboard.lessons.trash_empty') }}</td>
+                            <td colspan="6" class="text-muted">{{ __('teacher::teacher/lesson/list.trash_empty') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

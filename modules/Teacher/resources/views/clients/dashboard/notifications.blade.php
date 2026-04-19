@@ -5,13 +5,13 @@
         <div class="teacher-panel teacher-notification-shell">
             <div class="teacher-notification-hero">
                 <div>
-                    <span class="teacher-notification-kicker">{{ __('teacher::dashboard.notifications.hero_kicker') }}</span>
-                    <h3 class="teacher-notification-title">{{ __('teacher::dashboard.notifications.title') }}</h3>
-                    <p class="teacher-notification-desc mb-0">{{ __('teacher::dashboard.notifications.description') }}</p>
+                    <span class="teacher-notification-kicker">{{ __('courses::teacher/messages.notifications.hero_kicker') }}</span>
+                    <h3 class="teacher-notification-title">{{ __('courses::teacher/messages.notifications.title') }}</h3>
+                    <p class="teacher-notification-desc mb-0">{{ __('courses::teacher/messages.notifications.description') }}</p>
                 </div>
                 <div class="teacher-notification-count">
                     <strong>{{ $notificationSummary['count'] ?? $notifications->count() }}</strong>
-                    <span>{{ __('teacher::dashboard.notifications.active_count') }}</span>
+                    <span>{{ __('courses::teacher/messages.notifications.active_count') }}</span>
                 </div>
             </div>
 
@@ -33,24 +33,24 @@
                         </div>
                         <div class="teacher-notification-card__body">
                             <div class="teacher-notification-card__meta">
-                                <span class="teacher-notification-pill">{{ $notification['type_label'] ?? __('teacher::dashboard.notifications.types.system') }}</span>
+                                <span class="teacher-notification-pill">{{ $notification['type_label'] ?? __('courses::teacher/messages.notifications.types.system') }}</span>
                                 @if (!empty($notification['is_unread']))
-                                    <span class="teacher-notification-unread">{{ __('teacher::dashboard.notifications.unread') }}</span>
+                                    <span class="teacher-notification-unread">{{ __('courses::teacher/messages.notifications.unread') }}</span>
                                 @endif
                             </div>
-                            <h4>{{ $notification['title'] ?? __('teacher::dashboard.notifications.types.system') }}</h4>
+                            <h4>{{ $notification['title'] ?? __('courses::teacher/messages.notifications.types.system') }}</h4>
                             <p class="mb-0">{{ $notification['message'] ?? '' }}</p>
                         </div>
                         <div class="teacher-notification-card__time">
                             <span>{{ optional($notification['created_at'] ?? null)->diffForHumans() }}</span>
-                            <strong>{{ __('teacher::dashboard.notifications.open_cta') }}</strong>
+                            <strong>{{ __('courses::teacher/messages.notifications.open_cta') }}</strong>
                         </div>
                     </a>
                 @empty
                     <div class="teacher-notification-empty">
                         <div class="teacher-notification-empty__icon"><i class="fas fa-bell-slash"></i></div>
-                        <h4>{{ __('teacher::dashboard.notifications.empty') }}</h4>
-                        <p class="mb-0">{{ __('teacher::dashboard.notifications.empty_description') }}</p>
+                        <h4>{{ __('courses::teacher/messages.notifications.empty') }}</h4>
+                        <p class="mb-0">{{ __('courses::teacher/messages.notifications.empty_description') }}</p>
                     </div>
                 @endforelse
             </div>

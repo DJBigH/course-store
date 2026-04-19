@@ -4,16 +4,15 @@
     <div class="teacher-panel teacher-students-shell">
         <div class="teacher-students-hero">
             <div>
-                <span class="teacher-students-kicker">Khu vuc hoc vien</span>
-                <h3 class="teacher-students-title">Hoc vien cua toi</h3>
+                <span class="teacher-students-kicker">{{ __('students::teacher/messages.hero_kicker') }}</span>
+                <h3 class="teacher-students-title">{{ __('students::teacher/messages.title') }}</h3>
                 <p class="teacher-students-desc mb-0">
-                    Chi nhung hoc vien da mua khoa hoc cua ban moi xuat hien o day. Ban co the xem thong tin,
-                    ghi chu noi bo va tim nhanh nhung hoc vien can cham soc nhieu hon.
+                    {{ __('students::teacher/messages.description') }}
                 </p>
             </div>
 
             <form method="GET" action="{{ route('teacher.dashboard.students') }}" class="teacher-students-search">
-                <label for="teacher-students-search" class="form-label mb-2">Tim theo ten, email hoac so dien thoai</label>
+                <label for="teacher-students-search" class="form-label mb-2">{{ __('students::teacher/messages.search_label') }}</label>
                 <div class="teacher-students-search__row">
                     <input
                         id="teacher-students-search"
@@ -21,10 +20,10 @@
                         name="q"
                         class="form-control"
                         value="{{ $directory['search'] }}"
-                        placeholder="Vi du: BigK hoac gmail.com">
+                        placeholder="{{ __('students::teacher/messages.search_placeholder') }}">
 
                     <select name="course_id" class="form-select">
-                        <option value="0">Tat ca khoa hoc</option>
+                        <option value="0">{{ __('students::teacher/messages.all_courses') }}</option>
                         @foreach ($directory['courseOptions'] as $courseOption)
                             <option value="{{ $courseOption->id }}" @selected($directory['selectedCourse'] === (int) $courseOption->id)>
                                 {{ $courseOption->name_locale ?: $courseOption->name }}
@@ -33,70 +32,72 @@
                     </select>
 
                     <select name="tag" class="form-select">
-                        <option value="">Tat ca tag noi bo</option>
-                        <option value="potential" @selected($directory['tag'] === 'potential')>Tiem nang</option>
-                        <option value="support_needed" @selected($directory['tag'] === 'support_needed')>Can ho tro</option>
-                        <option value="vip" @selected($directory['tag'] === 'vip')>VIP</option>
+                        <option value="">{{ __('students::teacher/messages.all_tags') }}</option>
+                        <option value="potential" @selected($directory['tag'] === 'potential')>{{ __('students::teacher/messages.tags.potential') }}</option>
+                        <option value="support_needed" @selected($directory['tag'] === 'support_needed')>{{ __('students::teacher/messages.tags.support_needed') }}</option>
+                        <option value="vip" @selected($directory['tag'] === 'vip')>{{ __('students::teacher/messages.tags.vip') }}</option>
                     </select>
 
                     <select name="access_type" class="form-select">
-                        <option value="all" @selected(($directory['access_type'] ?? 'all') === 'all')>Da mua / duoc tang / tat ca</option>
-                        <option value="paid" @selected(($directory['access_type'] ?? 'all') === 'paid')>Chi da mua</option>
-                        <option value="granted" @selected(($directory['access_type'] ?? 'all') === 'granted')>Chi duoc tang</option>
-                        <option value="both" @selected(($directory['access_type'] ?? 'all') === 'both')>Co ca hai</option>
+                        <option value="all" @selected(($directory['access_type'] ?? 'all') === 'all')>{{ __('students::teacher/messages.access_types.all') }}</option>
+                        <option value="paid" @selected(($directory['access_type'] ?? 'all') === 'paid')>{{ __('students::teacher/messages.access_types.paid') }}</option>
+                        <option value="granted" @selected(($directory['access_type'] ?? 'all') === 'granted')>{{ __('students::teacher/messages.access_types.granted') }}</option>
+                        <option value="both" @selected(($directory['access_type'] ?? 'all') === 'both')>{{ __('students::teacher/messages.access_types.both') }}</option>
                     </select>
 
                     <select name="sort" class="form-select">
-                        <option value="recent_purchase" @selected($directory['sort'] === 'recent_purchase')>Moi mua gan day</option>
-                        <option value="highest_spent" @selected($directory['sort'] === 'highest_spent')>Chi tieu cao nhat</option>
-                        <option value="recent_learning" @selected($directory['sort'] === 'recent_learning')>Hoc gan nhat</option>
+                        <option value="recent_purchase" @selected($directory['sort'] === 'recent_purchase')>{{ __('students::teacher/messages.sort_options.recent_purchase') }}</option>
+                        <option value="highest_spent" @selected($directory['sort'] === 'highest_spent')>{{ __('students::teacher/messages.sort_options.highest_spent') }}</option>
+                        <option value="recent_learning" @selected($directory['sort'] === 'recent_learning')>{{ __('students::teacher/messages.sort_options.recent_learning') }}</option>
                     </select>
                 </div>
 
                 <div class="teacher-students-search__actions">
-                    <button type="submit" class="btn btn-primary">Loc danh sach</button>
-                    @if ($studentFeatureState['can_grant_courses'])
+                    <button type="submit" class="btn btn-primary">{{ __('students::teacher/messages.filter_submit') }}</button>
+                    @if ($studentFeatureState['can_grant_courses'] ?? false)
                         <a href="{{ route('teacher.dashboard.students.grants.create') }}" class="btn btn-outline-secondary">
-                            Cap quyen hoc
+                            {{ __('students::teacher/messages.grant_button') }}
                         </a>
                     @endif
-                    @if ($studentFeatureState['can_export_students'])
+                    @if ($teacher->packageHasFeature('can_import_export'))
                         <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'excel'], request()->query())) }}"
                             class="btn btn-outline-secondary">
-                            Export Excel
+                            {{ __('students::teacher/messages.export_excel') }}
                         </a>
                         <a href="{{ route('teacher.dashboard.students.export', array_merge(['format' => 'csv'], request()->query())) }}"
                             class="btn btn-outline-secondary">
-                            Export CSV
+                            {{ __('students::teacher/messages.export_csv') }}
                         </a>
                     @endif
                 </div>
             </form>
         </div>
 
-        @if ($studentFeatureState['is_feature_locked'])
+        @if (!$teacher->packageHasFeature('can_import_export'))
             @include('teacher::clients.dashboard.partials.package_feature_notice', [
-                'message' => !$studentFeatureState['can_view_progress']
-                    ? __('teacher::dashboard.package_features.students_locked_progress')
-                    : (!$studentFeatureState['can_grant_courses'] && !$studentFeatureState['can_export_students']
-                        ? __('teacher::dashboard.package_features.students_locked_both')
-                        : (!$studentFeatureState['can_grant_courses']
-                            ? __('teacher::dashboard.package_features.students_locked_grants')
-                            : __('teacher::dashboard.package_features.students_locked_export'))),
+                'message' => __('courses::teacher/messages.package_features.import_export_locked'),
+            ])
+        @endif
+
+        @if (($studentFeatureState['is_feature_locked'] ?? false) && ($teacher->packageHasFeature('can_import_export')))
+            @include('teacher::clients.dashboard.partials.package_feature_notice', [
+                'message' => !($studentFeatureState['can_view_progress'] ?? false)
+                    ? __('courses::teacher/messages.package_features.students_locked_progress')
+                    : __('courses::teacher/messages.package_features.students_locked_grants'),
             ])
         @endif
 
         <div class="teacher-students-summary">
             <div class="teacher-students-summary__item">
-                <span>Tong hoc vien</span>
+                <span>{{ __('students::teacher/messages.summary.total') }}</span>
                 <strong>{{ $directory['summary']['total_students'] }}</strong>
             </div>
             <div class="teacher-students-summary__item">
-                <span>Don da thanh toan</span>
+                <span>{{ __('students::teacher/messages.summary.orders') }}</span>
                 <strong>{{ $directory['summary']['total_orders'] }}</strong>
             </div>
             <div class="teacher-students-summary__item">
-                <span>Khoa hoc da ban</span>
+                <span>{{ __('students::teacher/messages.summary.courses') }}</span>
                 <strong>{{ $directory['summary']['total_courses'] }}</strong>
             </div>
         </div>
@@ -110,92 +111,94 @@
                                 <div class="teacher-student-card__name-row">
                                     <h4 class="teacher-student-card__name mb-0">{{ $student->name }}</h4>
                                     @if ($student->deleted_at)
-                                        <span class="teacher-student-card__badge is-muted">Tai khoan da xoa mem</span>
+                                        <span class="teacher-student-card__badge is-muted">{{ __('students::teacher/messages.card.status_deleted') }}</span>
                                     @elseif (!$student->email_verified_at)
-                                        <span class="teacher-student-card__badge is-warning">Chua xac minh email</span>
+                                        <span class="teacher-student-card__badge is-warning">{{ __('students::teacher/messages.card.status_unverified') }}</span>
                                     @else
-                                        <span class="teacher-student-card__badge is-success">Co the lien he</span>
+                                        <span class="teacher-student-card__badge is-success">{{ __('students::teacher/messages.card.status_verified') }}</span>
                                     @endif
                                 </div>
                                 <p class="teacher-student-card__meta mb-0">
-                                    Mua {{ $student->teacher_course_count }} khoa hoc cua ban qua
-                                    {{ $student->teacher_order_count }} don thanh toan.
+                                    {{ __('students::teacher/messages.card.meta', [
+                                        'courses' => $student->teacher_course_count,
+                                        'orders' => $student->teacher_order_count,
+                                    ]) }}
                                 </p>
                             </div>
                             <div class="teacher-student-card__contact">
-                                <a href="mailto:{{ $student->email }}" class="btn btn-outline-secondary btn-sm">Email</a>
+                                <a href="mailto:{{ $student->email }}" class="btn btn-outline-secondary btn-sm">{{ __('students::teacher/messages.card.contact_email') }}</a>
                                 @if ($student->phone)
-                                    <a href="tel:{{ $student->phone }}" class="btn btn-outline-secondary btn-sm">Goi</a>
+                                    <a href="tel:{{ $student->phone }}" class="btn btn-outline-secondary btn-sm">{{ __('students::teacher/messages.card.contact_call') }}</a>
                                 @endif
                             </div>
                         </div>
 
                         <div class="teacher-student-card__grid">
                             <div class="teacher-student-card__info">
-                                <span>Email</span>
+                                <span>{{ __('students::teacher/messages.card.email_label') }}</span>
                                 <strong>{{ $student->email }}</strong>
                             </div>
                             <div class="teacher-student-card__info">
-                                <span>So dien thoai</span>
-                                <strong>{{ $student->phone ?: 'Chua cap nhat' }}</strong>
+                                <span>{{ __('students::teacher/messages.card.phone_label') }}</span>
+                                <strong>{{ $student->phone ?: __('students::teacher/messages.card.not_updated') }}</strong>
                             </div>
                             <div class="teacher-student-card__info">
-                                <span>Chi tieu cho khoa hoc cua ban</span>
+                                <span>{{ __('students::teacher/messages.card.total_spent') }}</span>
                                 <strong>{{ money($student->teacher_total_spent) }}</strong>
                             </div>
                             <div class="teacher-student-card__info">
-                                <span>Lan mua gan nhat</span>
-                                <strong>{{ optional($student->teacher_last_purchase_at)->format('d/m/Y H:i') ?: 'Chua co du lieu' }}</strong>
+                                <span>{{ __('students::teacher/messages.card.last_purchase') }}</span>
+                                <strong>{{ optional($student->teacher_last_purchase_at)->format('d/m/Y H:i') ?: __('students::teacher/messages.card.no_data') }}</strong>
                             </div>
                         </div>
 
                         <div class="teacher-student-card__grid teacher-student-card__grid--secondary">
                             <div class="teacher-student-card__info">
-                                <span>Hoc gan nhat</span>
-                                <strong>{{ optional($student->teacher_last_learning_at)->format('d/m/Y H:i') ?: 'Chua hoc bai nao' }}</strong>
+                                <span>{{ __('students::teacher/messages.card.last_learning') }}</span>
+                                <strong>{{ optional($student->teacher_last_learning_at)->format('d/m/Y H:i') ?: __('students::teacher/messages.card.no_learning') }}</strong>
                             </div>
-                            @if ($studentFeatureState['can_view_progress'])
+                            @if ($studentFeatureState['can_view_progress'] ?? false)
                                 <div class="teacher-student-card__info">
-                                    <span>Tien do hoc tong quan</span>
+                                    <span>{{ __('students::teacher/messages.card.progress') }}</span>
                                     <strong>{{ $student->teacher_progress_percent ?? 0 }}%</strong>
-                                    <small>{{ $student->teacher_progress_completed_lessons ?? 0 }} / {{ $student->teacher_progress_total_lessons ?? 0 }} bai</small>
+                                    <small>{{ $student->teacher_progress_completed_lessons ?? 0 }} / {{ $student->teacher_progress_total_lessons ?? 0 }} {{ __('students::teacher/messages.card.unit_lesson') }}</small>
                                 </div>
                             @endif
                             <div class="teacher-student-card__info">
-                                <span>Tag noi bo</span>
+                                <span>{{ __('students::teacher/messages.card.internal_tag') }}</span>
                                 <strong>
                                     {{ match ($student->teacher_tag) {
-                                        'potential' => 'Tiem nang',
-                                        'support_needed' => 'Can ho tro',
-                                        'vip' => 'VIP',
-                                        default => 'Chua phan loai',
+                                        'potential' => __('students::teacher/messages.tags.potential'),
+                                        'support_needed' => __('students::teacher/messages.tags.support_needed'),
+                                        'vip' => __('students::teacher/messages.tags.vip'),
+                                        default => __('students::teacher/messages.tags.unclassified'),
                                     } }}
                                 </strong>
                             </div>
                             <div class="teacher-student-card__info">
-                                <span>Suat cap quyen hoc</span>
+                                <span>{{ __('students::teacher/messages.card.grant_count') }}</span>
                                 <strong>{{ $student->teacher_grant_count ?? 0 }}</strong>
                             </div>
                             <div class="teacher-student-card__info">
-                                <span>Loai truy cap</span>
+                                <span>{{ __('students::teacher/messages.card.access_type') }}</span>
                                 <strong>
                                     @if ($student->teacher_order_count > 0 && ($student->teacher_grant_count ?? 0) > 0)
-                                        Da mua + duoc tang
+                                        {{ __('students::teacher/messages.card.access_types.both') }}
                                     @elseif ($student->teacher_order_count > 0)
-                                        Da mua
+                                        {{ __('students::teacher/messages.card.access_types.paid') }}
                                     @elseif (($student->teacher_grant_count ?? 0) > 0)
-                                        Duoc tang
+                                        {{ __('students::teacher/messages.card.access_types.granted') }}
                                     @else
-                                        Chua xac dinh
+                                        {{ __('students::teacher/messages.card.access_types.unknown') }}
                                     @endif
                                 </strong>
                             </div>
                         </div>
 
-                        @if ($studentFeatureState['can_view_progress'])
+                        @if ($studentFeatureState['can_view_progress'] ?? false)
                             <div class="teacher-student-card__progress">
                                 <div class="teacher-student-card__progress-head">
-                                    <span>Muc do hoan thanh khoa hoc da co quyen</span>
+                                    <span>{{ __('students::teacher/messages.card.progress_label') }}</span>
                                     <strong>{{ $student->teacher_progress_percent ?? 0 }}%</strong>
                                 </div>
                                 <div class="teacher-student-card__progress-bar">
@@ -205,16 +208,16 @@
                         @endif
 
                         <div class="teacher-student-card__courses">
-                            <div class="teacher-student-card__section-title">Khoa hoc hoc vien da mua cua ban</div>
+                            <div class="teacher-student-card__section-title">{{ __('students::teacher/messages.card.courses_title') }}</div>
                             <div class="teacher-student-card__course-list">
                                 @forelse ($student->teacher_courses_preview as $course)
                                     <span class="teacher-student-card__course-chip">{{ $course->name_locale ?: $course->name }}</span>
                                 @empty
-                                    <span class="teacher-student-card__empty">Chua co khoa hoc nao.</span>
+                                    <span class="teacher-student-card__empty">{{ __('students::teacher/messages.card.no_courses') }}</span>
                                 @endforelse
                                 @if ($student->teacher_courses_remaining > 0)
                                     <span class="teacher-student-card__course-chip is-more">
-                                        +{{ $student->teacher_courses_remaining }} khoa hoc khac
+                                        {{ __('students::teacher/messages.card.remaining_courses', ['count' => $student->teacher_courses_remaining]) }}
                                     </span>
                                 @endif
                             </div>
@@ -222,29 +225,29 @@
 
                         <div class="teacher-student-card__footer">
                             <div>
-                                <span>Dia chi</span>
-                                <strong>{{ $student->address ?: 'Chua cap nhat dia chi' }}</strong>
+                                <span>{{ __('students::teacher/messages.card.address_label') }}</span>
+                                <strong>{{ $student->address ?: __('students::teacher/messages.card.no_address') }}</strong>
                             </div>
                             <div class="teacher-student-card__footer-actions">
                                 @if (!empty($student->teacher_note_preview))
-                                    <span class="teacher-student-card__note-badge">Da co ghi chu noi bo</span>
+                                    <span class="teacher-student-card__note-badge">{{ __('students::teacher/messages.card.has_note') }}</span>
                                 @endif
                                 @if (!empty($student->teacher_tag))
                                     <span class="teacher-student-card__tag-badge {{ 'is-' . $student->teacher_tag }}">
                                         {{ match ($student->teacher_tag) {
-                                            'potential' => 'Tiem nang',
-                                            'support_needed' => 'Can ho tro',
-                                            'vip' => 'VIP',
+                                            'potential' => __('students::teacher/messages.tags.potential'),
+                                            'support_needed' => __('students::teacher/messages.tags.support_needed'),
+                                            'vip' => __('students::teacher/messages.tags.vip'),
                                             default => $student->teacher_tag,
                                         } }}
                                     </span>
                                 @endif
                                 <a href="{{ route('teacher.dashboard.students.show', $student->id) }}" class="btn btn-primary btn-sm">
-                                    Xem chi tiet
+                                    {{ __('students::teacher/messages.card.view_detail') }}
                                 </a>
-                                @if ($studentFeatureState['can_grant_courses'])
+                                @if ($studentFeatureState['can_grant_courses'] ?? false)
                                     <a href="{{ route('teacher.dashboard.students.grants.create', ['student_id' => $student->id]) }}" class="btn btn-outline-secondary btn-sm">
-                                        Cap quyen hoc
+                                        {{ __('students::teacher/messages.card.grant_action') }}
                                     </a>
                                 @endif
                             </div>
@@ -255,9 +258,9 @@
                 <div class="col-12">
                     <div class="teacher-students-empty">
                         <div class="teacher-students-empty__icon"><i class="fas fa-user-graduate"></i></div>
-                        <h4>Chua co hoc vien nao thuoc kenh cua ban</h4>
+                        <h4>{{ __('students::teacher/messages.empty') }}</h4>
                         <p class="mb-0">
-                            Khi hoc vien mua khoa hoc cua ban va don duoc thanh toan thanh cong, thong tin hoc vien se hien o day.
+                            {{ __('students::teacher/messages.empty_description') }}
                         </p>
                     </div>
                 </div>
@@ -516,8 +519,8 @@
             margin-bottom: 1rem;
             padding: 0.95rem 1rem;
             border-radius: 18px;
-            background: rgba(11, 19, 36, 0.72);
-            border: 1px solid rgba(96, 165, 250, 0.12);
+            background: var(--admin-subtle-bg);
+            border: 1px solid var(--admin-border);
         }
 
         .teacher-student-card__progress-head {
@@ -534,7 +537,7 @@
         }
 
         .teacher-student-card__progress-head strong {
-            color: #f8fbff;
+            color: var(--admin-text);
             font-size: 1rem;
             font-weight: 900;
         }

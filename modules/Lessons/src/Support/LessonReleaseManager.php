@@ -123,41 +123,41 @@ class LessonReleaseManager
             $previousLessonName = trim((string) ($context['previous_lesson_name'] ?? ''));
 
             return $previousLessonName !== ''
-                ? 'Bài học này sẽ mở sau khi bạn hoàn thành "' . $previousLessonName . '".'
-                : 'Bài học này sẽ mở sau khi bạn học xong bài trước.';
+                ? __('courses::teacher/messages.lessons.scheduling.locked_messages.after_previous', ['lesson' => $previousLessonName])
+                : __('courses::teacher/messages.lessons.scheduling.locked_messages.after_previous_generic');
         }
 
         $availableAt = $this->resolveAvailableAt($lesson, $enrolledAt, $hasCourse);
         if ($availableAt) {
-            return 'Bài học này sẽ mở vào ' . $availableAt->format('d/m/Y H:i') . '.';
+            return __('courses::teacher/messages.lessons.scheduling.locked_messages.datetime', ['date' => $availableAt->format('d/m/Y H:i')]);
         }
 
         if ($lesson->release_mode === self::MODE_DAYS_AFTER_ENROLLMENT && $lesson->release_after_days) {
-            return 'Bài học này sẽ mở sau ' . (int) $lesson->release_after_days . ' ngày kể từ lúc bạn đăng ký khóa học.';
+            return __('courses::teacher/messages.lessons.scheduling.locked_messages.days_after', ['days' => (int) $lesson->release_after_days]);
         }
 
-        return 'Bài học này chưa tới lịch mở.';
+        return __('courses::teacher/messages.lessons.scheduling.locked_messages.not_yet');
     }
 
     public function describeForTeacher(?Lesson $lesson): string
     {
         if (!$lesson || $lesson->release_mode === self::MODE_IMMEDIATE) {
-            return 'Mở ngay';
+            return __('courses::teacher/messages.lessons.scheduling.labels.immediate');
         }
 
         if ($lesson->release_mode === self::MODE_DATETIME && $lesson->release_at) {
-            return 'Mở vào ' . Carbon::parse($lesson->release_at)->format('d/m/Y H:i');
+            return __('courses::teacher/messages.lessons.scheduling.labels.datetime', ['date' => Carbon::parse($lesson->release_at)->format('d/m/Y H:i')]);
         }
 
         if ($lesson->release_mode === self::MODE_DAYS_AFTER_ENROLLMENT && $lesson->release_after_days) {
-            return 'Mở sau ' . (int) $lesson->release_after_days . ' ngày';
+            return __('courses::teacher/messages.lessons.scheduling.labels.days_after', ['count' => (int) $lesson->release_after_days]);
         }
 
         if ($lesson->release_mode === self::MODE_AFTER_PREVIOUS_COMPLETED) {
-            return 'Mở sau khi học xong bài trước';
+            return __('courses::teacher/messages.lessons.scheduling.labels.after_previous');
         }
 
-        return 'Mở ngay';
+        return __('courses::teacher/messages.lessons.scheduling.labels.immediate');
     }
 
     public function hasPendingRelease(?Lesson $lesson): bool

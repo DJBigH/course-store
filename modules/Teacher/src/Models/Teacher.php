@@ -110,6 +110,16 @@ class Teacher extends Model
         return $this->hasMany(TeacherPayoutAccountChangeRequest::class, 'teacher_id', 'id');
     }
 
+    public function cancellationRequests()
+    {
+        return $this->hasMany(TeacherCancellationRequest::class, 'teacher_id', 'id');
+    }
+
+    public function latestCancellationRequest()
+    {
+        return $this->hasOne(TeacherCancellationRequest::class, 'teacher_id', 'id')->latest();
+    }
+
     public function studentNotes()
     {
         return $this->hasMany(TeacherStudentNote::class, 'teacher_id', 'id');

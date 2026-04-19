@@ -175,6 +175,11 @@
                         <div class="sb-nav-link-icon"><i class="fas fa-money-check-dollar"></i></div>
                         Xu ly rut tien
                     </a>
+                    <a class="nav-link {{ request()->is('admin/teacher-finance/cancellations*') ? 'active' : '' }}"
+                        href="{{ route('teacher-finance.cancellations.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-user-slash"></i></div>
+                        Yêu cầu hủy hợp tác
+                    </a>
                 @endif
 
                 @if (auth()->user()

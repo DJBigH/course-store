@@ -41,6 +41,8 @@ use Modules\Settings\src\Repositories\SettingsRepository;
 use Modules\Settings\src\Repositories\SettingsRepositoryInterface;
 use Modules\Students\src\Repositories\CouponsRepository;
 use Modules\Students\src\Repositories\CouponsRepositoryInterface;
+use Modules\Finances\src\Repositories\FinancesRepository;
+use Modules\Finances\src\Repositories\FinancesRepositoryInterface;
 
 class ModuleServiceProvider extends ServiceProvider
 {
@@ -137,6 +139,12 @@ class ModuleServiceProvider extends ServiceProvider
         $this->app->singleton(
             ActiveLogsRepositoryInterface::class,
             ActiveLogsRepository::class
+        );
+
+        //Finances Repository
+        $this->app->singleton(
+            FinancesRepositoryInterface::class,
+            FinancesRepository::class
         );
     }
 

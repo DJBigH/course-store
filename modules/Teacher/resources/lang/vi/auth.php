@@ -6,8 +6,8 @@ return [
         'not_teacher_help' => 'Bạn vẫn có thể dùng tài khoản này để học. Nếu muốn dạy học, hãy gửi hồ sơ giảng viên và chờ admin duyệt.',
     ],
     'messages' => [
-        'reset_link_sent' => 'Neu email nay thuoc tai khoan giang vien dang hoat dong, he thong da gui link dat lai mat khau.',
-        'password_reset_success' => 'Da cap nhat mat khau giang vien. Vui long dang nhap lai.',
+        'reset_link_sent' => 'Nếu email này thuộc tài khoản giảng viên đang hoạt động, hệ thống đã gửi link đặt lại mật khẩu.',
+        'password_reset_success' => 'Đã cập nhật mật khẩu giảng viên. Vui lòng đăng nhập lại.',
     ],
     'login' => [
         'page_title' => 'Đăng nhập giảng viên',

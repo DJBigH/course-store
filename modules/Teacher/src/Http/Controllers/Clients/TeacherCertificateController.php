@@ -45,29 +45,12 @@ class TeacherCertificateController extends Controller
         $selectedCourse = (int) $request->query('course_id', 0);
         $search = trim((string) $request->query('q', ''));
         $status = trim((string) $request->query('status', ''));
+        $canExport = $teacher->packageHasFeature('can_import_export');
 
-        $rows = $this->buildCertificateDirectory($teacher)
-            ->when($selectedCourse > 0, fn (Collection $items) => $items->where('course_id', $selectedCourse))
-            ->when($search !== '', function (Collection $items) use ($search) {
-                return $items->filter(function ($item) use ($search) {
-                    return str_contains(mb_strtolower($item->student_name), mb_strtolower($search))
-                        || str_contains(mb_strtolower($item->course_name), mb_strtolower($search))
-                        || str_contains(mb_strtolower($item->student_email), mb_strtolower($search));
-                });
-            })
-            ->when($status === 'issued', fn (Collection $items) => $items->where('is_issued', true))
-            ->when($status === 'missing', fn (Collection $items) => $items->where('is_issued', false))
-            ->sortByDesc(function ($item) {
-                return sprintf(
-                    '%015d-%015d-%010d',
-                    optional($item->certificate?->issued_at)->timestamp ?? 0,
-                    optional($item->last_learning_at)->timestamp ?? 0,
-                    (int) $item->student_id
-                );
-            })
-            ->values();
+        $query = $this->getCertificateDataQuery($teacher, $request);
+        $rows = $query->paginate(20)->withQueryString();
 
-        $pageTitle = 'Chung chi hoan thanh';
+        $pageTitle = __('courses::teacher/messages.certificates.title');
         $pageName = $pageTitle;
 
         return view('teacher::clients.dashboard.certificates.index', compact(
@@ -78,8 +61,78 @@ class TeacherCertificateController extends Controller
             'courseOptions',
             'selectedCourse',
             'search',
-            'status'
+            'status',
+            'canExport'
         ));
+    }
+
+    public function export(Request $request)
+    {
+        $teacher = $this->resolveTeacher();
+        if (!$teacher) {
+            abort(401);
+        }
+
+        if (!$teacher->packageHasFeature('can_issue_certificates')) {
+            return redirect()->route('teacher.dashboard.package.upgrade')->with('msg_danger', __('courses::teacher/messages.package_features.feature_locked'));
+        }
+
+        if (!$teacher->packageHasFeature('can_import_export')) {
+            return redirect()->back()->with('msg_danger', __('courses::teacher/messages.package_features.import_export_locked'));
+        }
+
+        $selectedCourse = (int) $request->query('course_id', 0);
+        $search = trim((string) $request->query('q', ''));
+        $status = trim((string) $request->query('status', ''));
+
+        $rows = $this->getCertificateDataQuery($teacher, $request)->get();
+
+        $fileName = 'danh-sach-chung-chi-' . now()->format('YmdHis') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"$fileName\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $columns = [
+            'STT',
+            __('courses::teacher/messages.certificates.mail.student_label'),
+            'Email',
+            __('courses::teacher/messages.certificates.mail.course_label'),
+            'Tiến độ (%)',
+            'Số bài hoàn thành',
+            'Trạng thái',
+            __('courses::teacher/messages.certificates.mail.code_label'),
+            'Ngày cấp',
+            'Ngày thu hồi',
+        ];
+
+        $callback = function () use ($rows, $columns) {
+            $file = fopen('php://output', 'w');
+            fputs($file, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF))); // Add BOM for Excel UTF-8
+            fputcsv($file, $columns);
+
+            foreach ($rows as $index => $row) {
+                fputcsv($file, [
+                    $index + 1,
+                    $row->student_name,
+                    $row->student_email,
+                    $row->course_name,
+                    $row->progress_percent . '%',
+                    $row->completed_lessons . '/' . $row->total_lessons,
+                    $row->is_revoked ? 'Đã thu hồi' : ($row->is_issued ? 'Đã cấp' : 'Chưa cấp'),
+                    $row->certificate_code ?? '',
+                    $row->issued_at ? Carbon::parse($row->issued_at)->format('d/m/Y H:i') : '',
+                    $row->revoked_at ? Carbon::parse($row->revoked_at)->format('d/m/Y H:i') : '',
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function issue(Request $request)
@@ -136,12 +189,12 @@ class TeacherCertificateController extends Controller
         );
 
         if (!$certificate) {
-            return back()->with('msg_danger', 'Chua the cap chung chi cho hoc vien nay.');
+            return back()->with('msg_danger', __('courses::teacher/messages.certificates.issue_failed'));
         }
 
         return redirect()
             ->route('teacher.dashboard.certificates.show', $certificate->id)
-            ->with('msg_success', 'Da cap chung chi thanh cong.');
+            ->with('msg_success', __('courses::teacher/messages.certificates.issue_success'));
     }
 
     public function show(int $id)
@@ -164,7 +217,7 @@ class TeacherCertificateController extends Controller
             'certificate' => $certificate,
             'viewerMode' => 'teacher',
             'backUrl' => route('teacher.dashboard.certificates.index'),
-            'backLabel' => 'Quay lai danh sach chung chi',
+            'backLabel' => __('courses::teacher/messages.certificates.back_to_list'),
             'autoPrint' => request()->boolean('print'),
         ]);
     }
@@ -232,109 +285,85 @@ class TeacherCertificateController extends Controller
                 'is_revoked' => true,
             ],
             'teacher_student_management',
-            'Da thu hoi chung chi cua hoc vien.'
+            __('courses::teacher/messages.certificates.revoke_log_desc')
         );
 
         return redirect()
             ->route('teacher.dashboard.certificates.index')
-            ->with('msg_success', 'Da thu hoi chung chi.');
+            ->with('msg_success', __('courses::teacher/messages.certificates.revoke_success'));
     }
 
-    private function buildCertificateDirectory(Teacher $teacher): Collection
+    private function getCertificateDataQuery(Teacher $teacher, Request $request)
     {
-        $rows = collect();
-        $paidDetails = $this->paidOrderDetailsQuery($teacher)->get();
-        $grants = $this->teacherCourseGrantsQuery($teacher)->with(['course', 'student'])->get();
+        $selectedCourse = (int) $request->query('course_id', 0);
+        $search = trim((string) $request->query('q', ''));
+        $status = trim((string) $request->query('status', ''));
 
-        foreach ($paidDetails as $detail) {
-            $course = $detail->courses;
-            $student = $detail->order?->students;
+        // 1. Get Access Pairs (Paid + Granted) using UNION for performance
+        $paidAccess = $this->paidOrderDetailsQuery($teacher)
+            ->selectRaw('orders_detail.course_id, orders.student_id, "paid" as access_type, orders_detail.id as source_id')
+            ->join('orders', 'orders.id', '=', 'orders_detail.order_id');
 
-            if (!$course || !$student) {
-                continue;
-            }
+        $grantedAccess = $this->teacherCourseGrantsQuery($teacher)
+            ->selectRaw('course_id, student_id, "grant" as access_type, id as source_id');
 
-            $key = $student->id . ':' . $course->id;
-            if ($rows->has($key)) {
-                continue;
-            }
+        $accessUnion = $paidAccess->union($grantedAccess);
 
-            $rows->put($key, (object) [
-                'student_id' => (int) $student->id,
-                'student_name' => (string) $student->name,
-                'student_email' => (string) $student->email,
-                'course_id' => (int) $course->id,
-                'course_name' => (string) ($course->name_locale ?: $course->name),
-                'access_type' => 'paid',
-            ]);
-        }
-
-        foreach ($grants as $grant) {
-            $course = $grant->course;
-            $student = $grant->student;
-
-            if (!$course || !$student) {
-                continue;
-            }
-
-            $key = $student->id . ':' . $course->id;
-            if ($rows->has($key)) {
-                continue;
-            }
-
-            $rows->put($key, (object) [
-                'student_id' => (int) $student->id,
-                'student_name' => (string) $student->name,
-                'student_email' => (string) $student->email,
-                'course_id' => (int) $course->id,
-                'course_name' => (string) ($course->name_locale ?: $course->name),
-                'access_type' => 'grant',
-            ]);
-        }
-
-        $studentIds = $rows->pluck('student_id')->unique()->values()->all();
-        $courseIds = $rows->pluck('course_id')->unique()->values()->all();
-
+        // 2. Subqueries for progress and total lessons
         $lessonTotals = Lesson::query()
-            ->whereIn('course_id', $courseIds ?: [0])
             ->whereNotNull('parent_id')
             ->where('status', 1)
-            ->selectRaw('course_id, COUNT(*) as total_lessons')
-            ->groupBy('course_id')
-            ->pluck('total_lessons', 'course_id');
+            ->selectRaw('course_id, COUNT(*) as total_count')
+            ->groupBy('course_id');
 
-        $progressRows = StudentLessonProgress::query()
-            ->whereIn('student_id', $studentIds ?: [0])
-            ->whereIn('course_id', $courseIds ?: [0])
-            ->selectRaw('student_id, course_id, COUNT(DISTINCT lesson_id) as completed_lessons, MAX(completed_at) as last_learning_at')
-            ->groupBy('student_id', 'course_id')
-            ->get()
-            ->keyBy(fn ($item) => $item->student_id . ':' . $item->course_id);
+        $studentProgress = StudentLessonProgress::query()
+            ->selectRaw('student_id, course_id, COUNT(DISTINCT lesson_id) as completed_count')
+            ->groupBy('student_id', 'course_id');
 
-        $certificateMap = TeacherCourseCertificate::query()
-            ->where('teacher_id', $teacher->id)
-            ->whereIn('student_id', $studentIds ?: [0])
-            ->whereIn('course_id', $courseIds ?: [0])
-            ->get()
-            ->keyBy(fn ($item) => $item->student_id . ':' . $item->course_id);
-
-        return $rows->map(function ($row) use ($lessonTotals, $progressRows, $certificateMap) {
-            $key = $row->student_id . ':' . $row->course_id;
-            $progress = $progressRows->get($key);
-            $totalLessons = (int) ($lessonTotals[$row->course_id] ?? 0);
-            $completedLessons = min((int) ($progress->completed_lessons ?? 0), $totalLessons);
-            $progressPercent = $totalLessons > 0 ? min((int) round(($completedLessons * 100) / $totalLessons), 100) : 0;
-
-            $row->total_lessons = $totalLessons;
-            $row->completed_lessons = $completedLessons;
-            $row->progress_percent = $progressPercent;
-            $row->last_learning_at = $progress?->last_learning_at;
-            $row->certificate = $certificateMap->get($key);
-            $row->is_issued = (bool) $row->certificate;
-            $row->is_revoked = (bool) $row->certificate?->revoked_at;
-
-            return $row;
-        });
+        // 3. Main query with joins
+        return \Illuminate\Support\Facades\DB::query()
+            ->fromSub($accessUnion, 'access')
+            ->join('students', 'students.id', '=', 'access.student_id')
+            ->join('courses', 'courses.id', '=', 'access.course_id')
+            ->whereNull('students.deleted_at')
+            ->leftJoin('teacher_course_certificates as certs', function ($join) use ($teacher) {
+                $join->on('certs.student_id', '=', 'access.student_id')
+                    ->on('certs.course_id', '=', 'access.course_id')
+                    ->where('certs.teacher_id', '=', $teacher->id);
+            })
+            ->leftJoinSub($lessonTotals, 'lt', 'lt.course_id', '=', 'access.course_id')
+            ->leftJoinSub($studentProgress, 'sp', function ($join) {
+                $join->on('sp.student_id', '=', 'access.student_id')
+                    ->on('sp.course_id', '=', 'access.course_id');
+            })
+            ->select([
+                'access.student_id',
+                'access.course_id',
+                'access.access_type',
+                'students.name as student_name',
+                'students.email as student_email',
+                'courses.name as course_name',
+                'certs.id as certificate_id',
+                'certs.code as certificate_code',
+                'certs.issued_at',
+                'certs.revoked_at',
+                'certs.note',
+                \Illuminate\Support\Facades\DB::raw('COALESCE(lt.total_count, 0) as total_lessons'),
+                \Illuminate\Support\Facades\DB::raw('COALESCE(sp.completed_count, 0) as completed_lessons'),
+                \Illuminate\Support\Facades\DB::raw('certs.id is not null as is_issued'),
+                \Illuminate\Support\Facades\DB::raw('certs.revoked_at is not null as is_revoked'),
+            ])
+            ->when($selectedCourse > 0, fn ($q) => $q->where('access.course_id', $selectedCourse))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sq) use ($search) {
+                    $sq->where('students.name', 'like', "%$search%")
+                        ->orWhere('students.email', 'like', "%$search%")
+                        ->orWhere('courses.name', 'like', "%$search%");
+                });
+            })
+            ->when($status === 'issued', fn ($q) => $q->whereNotNull('certs.id'))
+            ->when($status === 'missing', fn ($q) => $q->whereNull('certs.id'))
+            ->orderByRaw('certs.issued_at DESC, students.id DESC');
     }
 
     private function resolveTeacher(): ?Teacher
@@ -357,7 +386,7 @@ class TeacherCertificateController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.package.upgrade')
-            ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
+            ->with('msg_danger', __('courses::teacher/messages.package_features.feature_locked'));
     }
 
     private function paidOrderDetailsQuery(Teacher $teacher)
@@ -370,14 +399,13 @@ class TeacherCertificateController extends Controller
             ->whereHas('order', function ($query) {
                 $query->where('status_id', 2);
             })
-            ->latest('id');
+            ->latest('orders_detail.id');
     }
 
     private function teacherCourseGrantsQuery(Teacher $teacher)
     {
         return TeacherCourseGrant::query()
             ->where('teacher_id', $teacher->id)
-            ->whereNull('revoked_at')
-            ->whereIn('status', ['accepted']);
+            ->whereNull('revoked_at');
     }
 }

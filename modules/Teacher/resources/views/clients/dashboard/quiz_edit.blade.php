@@ -4,11 +4,17 @@
     <div class="teacher-panel">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
             <div>
-                <h3 class="fw-bold mb-2">Chỉnh sửa quiz</h3>
+                <h3 class="fw-bold mb-2">{{ __('quizzes::teacher/messages.edit.title') }}</h3>
                 <p class="text-muted mb-0">{{ $quiz->title }}</p>
             </div>
-            <a href="{{ route('teacher.dashboard.quizzes.index', $course->id) }}" class="btn btn-outline-secondary">Quay lại</a>
+            <a href="{{ route('teacher.dashboard.quizzes.index', $course->id) }}" class="btn btn-outline-secondary">{{ __('quizzes::teacher/messages.edit.back') }}</a>
         </div>
+
+        @if (!$teacher->packageHasFeature('can_import_export'))
+            @include('teacher::clients.dashboard.partials.package_feature_notice', [
+                'message' => __('courses::teacher/messages.package_features.import_export_locked'),
+            ])
+        @endif
 
         @if (session('msg_success'))
             <div class="alert alert-success">{{ session('msg_success') }}</div>
@@ -20,52 +26,52 @@
             <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
-        {{-- Cài đặt quiz --}}
+        {{-- {{ __('quizzes::teacher/messages.edit.settings_title') }} --}}
         <form method="POST" action="{{ route('teacher.dashboard.quizzes.update', [$course->id, $quiz->id]) }}">
             @csrf
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Tiêu đề</label>
+                    <label class="form-label">{{ __('quizzes::teacher/messages.fields.title') }}</label>
                     <input name="title" class="form-control" value="{{ $quiz->title }}">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Lesson liên kết</label>
+                    <label class="form-label">{{ __('quizzes::teacher/messages.fields.lesson') }}</label>
                     <select name="lesson_id" class="form-select">
-                        <option value="">Không gắn lesson</option>
+                        <option value="">{{ __('quizzes::teacher/messages.fields.no_lesson') }}</option>
                         @foreach ($lessons as $lesson)
                             <option value="{{ $lesson->id }}" @selected($quiz->lesson_id == $lesson->id)>{{ $lesson->name_locale }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Điểm đạt (%)</label>
+                    <label class="form-label">{{ __('quizzes::teacher/messages.fields.passing_score') }}</label>
                     <input name="passing_score" type="number" class="form-control" value="{{ $quiz->passing_score }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Số lần làm</label>
-                    <input name="max_attempts" type="number" class="form-control" value="{{ $quiz->max_attempts }}" placeholder="Không giới hạn">
+                    <label class="form-label">{{ __('quizzes::teacher/messages.fields.max_attempts') }}</label>
+                    <input name="max_attempts" type="number" class="form-control" value="{{ $quiz->max_attempts }}" placeholder="{{ __('quizzes::teacher/messages.fields.unlimited') }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Thời gian (phút)</label>
-                    <input name="time_limit_minutes" type="number" class="form-control" value="{{ $quiz->time_limit_minutes }}" placeholder="Vô thời hạn">
+                    <label class="form-label">{{ __('quizzes::teacher/messages.fields.time_limit') }}</label>
+                    <input name="time_limit_minutes" type="number" class="form-control" value="{{ $quiz->time_limit_minutes }}" placeholder="{{ __('quizzes::teacher/messages.fields.unlimited') }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Hạn nộp</label>
+                    <label class="form-label">{{ __('quizzes::teacher/messages.fields.deadline') }}</label>
                     <input name="deadline_at" type="datetime-local" class="form-control" value="{{ optional($quiz->deadline_at)->format('Y-m-d\TH:i') }}">
                 </div>
                 <div class="col-12">
-                    <label class="form-label">Mô tả</label>
+                    <label class="form-label">{{ __('quizzes::teacher/messages.fields.description') }}</label>
                     <textarea name="description" class="form-control" rows="2">{{ $quiz->description }}</textarea>
                 </div>
                 <div class="col-12">
                     <div class="form-check form-switch p-0 d-flex align-items-center gap-4">
-                        <label class="form-check-label fw-bold mb-0">Hiển thị đáp án đúng cho học viên sau khi nộp bài</label>
+                        <label class="form-check-label fw-bold mb-0">{{ __('quizzes::teacher/messages.edit.show_answers_label') }}</label>
                         <input name="show_answers_after" type="checkbox" class="form-check-input ms-0" value="1" style="width: 50px; height: 24px;" @checked($quiz->show_answers_after)>
                     </div>
-                    <div class="form-text mt-1 text-info"><i class="fas fa-info-circle me-1"></i> Nếu bật, học viên sẽ thấy đáp án đúng và giải thích (nếu có) ngay sau khi bấm nộp.</div>
+                    <div class="form-text mt-1 text-info"><i class="fas fa-info-circle me-1"></i> {{ __('quizzes::teacher/messages.edit.show_answers_help') }}</div>
                 </div>
                 <div class="col-12 d-flex gap-2">
-                    <button class="btn btn-primary">Lưu thay đổi</button>
+                    <button class="btn btn-primary">{{ __('quizzes::teacher/messages.edit.save_changes') }}</button>
                 </div>
             </div>
         </form>
@@ -75,25 +81,27 @@
         {{-- Danh sách câu hỏi --}}
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <div>
-                <h5 class="mb-0">Câu hỏi ({{ $quiz->questions->count() }} câu)</h5>
+                <h5 class="mb-0">{{ __('quizzes::teacher/messages.edit.questions_list_title', ['count' => $quiz->questions->count()]) }}</h5>
             </div>
             <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ route('teacher.dashboard.quizzes.import.template', [$course->id, $quiz->id]) }}" class="btn btn-outline-secondary btn-sm" title="Tải file CSV mẫu">
-                    📥 Tải template CSV
-                </a>
-                <a href="{{ route('teacher.dashboard.quizzes.export', [$course->id, $quiz->id]) }}" class="btn btn-outline-success btn-sm">
-                    📤 Export câu hỏi
-                </a>
-                <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#importForm">
-                    📁 Import CSV
-                </button>
+                @if ($teacher->packageHasFeature('can_import_export'))
+                    <a href="{{ route('teacher.dashboard.quizzes.import.template', [$course->id, $quiz->id]) }}" class="btn btn-outline-secondary btn-sm" title="Tải file CSV mẫu">
+                        📥 {{ __('quizzes::teacher/messages.edit.import_template') }}
+                    </a>
+                    <a href="{{ route('teacher.dashboard.quizzes.export', [$course->id, $quiz->id]) }}" class="btn btn-outline-success btn-sm">
+                        📤 {{ __('quizzes::teacher/messages.edit.export_questions') }}
+                    </a>
+                    <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#importForm">
+                        📁 {{ __('quizzes::teacher/messages.edit.import_csv') }}
+                    </button>
+                @endif
                 @if(\Modules\Settings\src\Models\Setting::getValue('ai_quiz_enabled') !== '0')
                 <button class="btn btn-outline-info btn-sm text-info fw-bold" type="button" data-bs-toggle="modal" data-bs-target="#aiGenerateModal">
-                    ✨ Tạo bằng AI
+                    ✨ {{ __('quizzes::teacher/messages.edit.ai_generate') }}
                 </button>
                 @endif
                 <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#addQuestionForm">
-                    + Thêm câu hỏi
+                    + {{ __('quizzes::teacher/messages.edit.add_question') }}
                 </button>
             </div>
         </div>
@@ -101,16 +109,16 @@
         {{-- Import form --}}
         <div class="collapse mb-3" id="importForm">
             <div class="border rounded p-3">
-                <h6 class="mb-3">Import câu hỏi từ file CSV</h6>
+                <h6 class="mb-3">{{ __('quizzes::teacher/messages.edit.import_form_title') }}</h6>
                 <form method="POST" action="{{ route('teacher.dashboard.quizzes.import', [$course->id, $quiz->id]) }}" enctype="multipart/form-data">
                     @csrf
                     <div class="d-flex gap-3 align-items-end flex-wrap">
                         <div class="flex-grow-1">
-                            <label class="form-label form-label-sm">File CSV</label>
+                            <label class="form-label form-label-sm">{{ __('quizzes::teacher/messages.edit.import_file_label') }}</label>
                             <input type="file" name="file" class="form-control form-control-sm" accept=".csv,.txt" required>
-                            <div class="form-text">Định dạng: question, question_type, points, choice_a, choice_b, choice_c, choice_d, correct_choices (A/B/C/D hoặc A,B,D)</div>
+                            <div class="form-text">{{ __('quizzes::teacher/messages.edit.import_format_help') }}</div>
                         </div>
-                        <button class="btn btn-sm btn-primary">Import</button>
+                        <button class="btn btn-sm btn-primary">{{ __('quizzes::teacher/messages.edit.import_csv') }}</button>
                     </div>
                 </form>
             </div>
@@ -119,36 +127,36 @@
         {{-- Form thêm câu hỏi --}}
         <div class="collapse mb-3" id="addQuestionForm">
             <div class="border rounded p-3">
-                <h6 class="mb-3">Thêm câu hỏi mới</h6>
+                <h6 class="mb-3">{{ __('quizzes::teacher/messages.edit.add_form_title') }}</h6>
                 <form method="POST" action="{{ route('teacher.dashboard.quizzes.question.store', [$course->id, $quiz->id]) }}" id="addQuestionFormEl">
                     @csrf
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label">Nội dung câu hỏi <span class="text-danger">*</span></label>
+                            <label class="form-label">{{ __('quizzes::teacher/messages.edit.question_content') }} <span class="text-danger">*</span></label>
                             <textarea name="question" class="form-control" rows="2" required></textarea>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Loại câu hỏi</label>
+                            <label class="form-label">{{ __('quizzes::teacher/messages.edit.question_type') }}</label>
                             <select name="question_type" class="form-select" id="questionTypeSelect">
-                                <option value="single_choice">Trắc nghiệm 1 đáp án</option>
-                                <option value="multiple_choice">Trắc nghiệm nhiều đáp án</option>
-                                <option value="true_false">Đúng / Sai</option>
+                                <option value="single_choice">{{ __('quizzes::teacher/messages.edit.types.single') }}</option>
+                                <option value="multiple_choice">{{ __('quizzes::teacher/messages.edit.types.multiple') }}</option>
+                                <option value="true_false">{{ __('quizzes::teacher/messages.edit.types.true_false') }}</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Điểm</label>
+                            <label class="form-label">{{ __('quizzes::teacher/messages.edit.points') }}</label>
                             <input name="points" type="number" class="form-control" value="1" min="1">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Các lựa chọn</label>
+                            <label class="form-label">{{ __('quizzes::teacher/messages.edit.choices_label') }}</label>
                             <div id="choicesList" class="d-grid gap-2">
                                 @foreach (['A','B','C','D'] as $idx => $letter)
                                     <div class="input-group">
                                         <span class="input-group-text fw-bold" style="width:40px">{{ $letter }}</span>
-                                        <input type="text" name="choices[{{ $idx }}][text]" class="form-control" placeholder="Nhập lựa chọn {{ $letter }}">
+                                        <input type="text" name="choices[{{ $idx }}][text]" class="form-control" placeholder="{{ __('quizzes::teacher/messages.edit.choice_placeholder', ['letter' => $letter]) }}">
                                         <div class="input-group-text">
                                             <label class="mb-0 d-flex align-items-center gap-1">
-                                                <input type="checkbox" name="choices[{{ $idx }}][is_correct]" value="1"> Đúng
+                                                <input type="checkbox" name="choices[{{ $idx }}][is_correct]" value="1"> {{ __('quizzes::teacher/messages.edit.correct_label') }}
                                             </label>
                                         </div>
                                     </div>
@@ -156,7 +164,7 @@
                             </div>
                         </div>
                         <div class="col-12">
-                            <button class="btn btn-primary">Thêm câu hỏi</button>
+                            <button class="btn btn-primary">{{ __('quizzes::teacher/messages.edit.add_question') }}</button>
                         </div>
                     </div>
                 </form>
@@ -168,43 +176,43 @@
             <div class="modal-dialog">
                 <div class="modal-content text-light" style="background: #1e293b; border-color: #334155;">
                     <div class="modal-header border-bottom-0">
-                        <h5 class="modal-title"><i class="fas fa-magic text-info me-2"></i>Tạo câu hỏi tự động (AI)</h5>
+                        <h5 class="modal-title"><i class="fas fa-magic text-info me-2"></i>{{ __('quizzes::teacher/messages.edit.ai_modal.title') }}</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div id="aiAlertBox" class="alert d-none"></div>
                         <div class="mb-3">
-                            <label class="form-label text-info">Chủ đề của bộ câu hỏi</label>
-                            <input type="text" id="aiTopic" class="form-control" placeholder="VD: Khái niệm về Interface trong PHP" style="background: rgba(15, 23, 42, 0.5); color: #fff; border-color: #475569;">
+                            <label class="form-label text-info">{{ __('quizzes::teacher/messages.edit.ai_modal.topic_label') }}</label>
+                            <input type="text" id="aiTopic" class="form-control" placeholder="{{ __('quizzes::teacher/messages.edit.ai_modal.topic_placeholder') }}" style="background: rgba(15, 23, 42, 0.5); color: #fff; border-color: #475569;">
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-6">
-                                <label class="form-label text-muted small">Số câu (Tối đa 10)</label>
+                                <label class="form-label text-muted small">{{ __('quizzes::teacher/messages.edit.ai_modal.amount_label') }}</label>
                                 <select id="aiAmount" class="form-select" style="background: rgba(15, 23, 42, 0.5); color: #fff; border-color: #475569;">
-                                    <option value="3">3 câu</option>
-                                    <option value="5" selected>5 câu</option>
-                                    <option value="10">10 câu</option>
+                                    <option value="3">{{ __('quizzes::teacher/messages.edit.ai_modal.amount_unit', ['count' => 3]) }}</option>
+                                    <option value="5" selected>{{ __('quizzes::teacher/messages.edit.ai_modal.amount_unit', ['count' => 5]) }}</option>
+                                    <option value="10">{{ __('quizzes::teacher/messages.edit.ai_modal.amount_unit', ['count' => 10]) }}</option>
                                 </select>
                             </div>
                             <div class="col-6">
-                                <label class="form-label text-muted small">Độ khó</label>
+                                <label class="form-label text-muted small">{{ __('quizzes::teacher/messages.edit.ai_modal.difficulty_label') }}</label>
                                 <select id="aiDifficulty" class="form-select" style="background: rgba(15, 23, 42, 0.5); color: #fff; border-color: #475569;">
-                                    <option value="Dễ">Mức Cơ Bản</option>
-                                    <option value="Trung bình" selected>Trung Bình</option>
-                                    <option value="Khó">Nâng cao</option>
+                                    <option value="Dễ">{{ __('quizzes::teacher/messages.edit.ai_modal.difficulty_easy') }}</option>
+                                    <option value="Trung bình" selected>{{ __('quizzes::teacher/messages.edit.ai_modal.difficulty_medium') }}</option>
+                                    <option value="Khó">{{ __('quizzes::teacher/messages.edit.ai_modal.difficulty_hard') }}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="alert alert-warning py-2 mb-3 border-warning border-opacity-50" style="background: rgba(245, 158, 11, 0.1);">
-                            <div class="small fw-semibold text-warning"><i class="fas fa-bolt text-warning me-1"></i> Tính năng Beta - Dùng ngay kẻo lỡ!</div>
-                            <div class="small text-warning opacity-75">Hệ thống AI miễn phí có thể quá tải vào giờ cao điểm, mỗi ngày bạn chỉ có ngân sách tạo vài Quiz theo gói. Hãy là người nhanh tay sử dụng ngay bây giờ trước khi hạn mức chung cạn kiệt!</div>
+                            <div class="small fw-semibold text-warning"><i class="fas fa-bolt text-warning me-1"></i> {{ __('quizzes::teacher/messages.edit.ai_modal.beta_title') }}</div>
+                            <div class="small text-warning opacity-75">{{ __('quizzes::teacher/messages.edit.ai_modal.beta_desc') }}</div>
                         </div>
-                        <p class="small text-muted mb-0"><i class="fas fa-info-circle me-1"></i> Quá trình kết nối AI có thể mất 15-30 giây. Xin vui lòng không tắt trang trong lúc thực hiện.</p>
+                        <p class="small text-muted mb-0"><i class="fas fa-info-circle me-1"></i> {{ __('quizzes::teacher/messages.edit.ai_modal.wait_msg') }}</p>
                     </div>
                     <div class="modal-footer border-top-0">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('quizzes::teacher/messages.edit.ai_modal.cancel') }}</button>
                         <button type="button" class="btn btn-info px-4 fw-bold" id="btnAiGenerate" onclick="generateAi()">
-                            Bắt đầu tạo <i class="fas fa-arrow-right ms-1"></i>
+                            {{ __('quizzes::teacher/messages.edit.ai_modal.generate_btn') }} <i class="fas fa-arrow-right ms-1"></i>
                         </button>
                     </div>
                 </div>
@@ -220,7 +228,7 @@
                         <div class="flex-grow-1">
                             <div class="fw-semibold">{{ $loop->iteration }}. {{ $q->question }}</div>
                             <div class="small text-muted mt-1">
-                                Loại: <span class="badge bg-secondary">{{ $q->question_type }}</span> • Điểm: <span class="badge bg-primary">{{ $q->points }}</span>
+                                {{ __('quizzes::teacher/messages.edit.list.type_label') }} <span class="badge bg-secondary">{{ $q->question_type }}</span> • {{ __('quizzes::teacher/messages.edit.list.points_label') }} <span class="badge bg-primary">{{ $q->points }}</span>
                             </div>
                             @if ($q->choices->count())
                                 <ul class="mt-2 mb-0 small list-unstyled d-grid gap-1">
@@ -236,10 +244,10 @@
                             @endif
                         </div>
                         <div class="d-flex gap-2 align-items-start">
-                            <button class="btn btn-outline-primary btn-sm" onclick="toggleEdit({{ $q->id }})">Sửa</button>
-                            <form method="POST" action="{{ route('teacher.dashboard.quizzes.question.delete', [$course->id, $quiz->id, $q->id]) }}" onsubmit="return confirm('Xóa câu hỏi này?')">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleEdit({{ $q->id }})">{{ __('quizzes::teacher/messages.edit.edit_short') }}</button>
+                            <form method="POST" action="{{ route('teacher.dashboard.quizzes.question.delete', [$course->id, $quiz->id, $q->id]) }}" onsubmit="return confirm('{{ __('quizzes::teacher/messages.edit.list.confirm_delete') }}')">
                                 @csrf @method('DELETE')
-                                <button class="btn btn-outline-danger btn-sm">Xóa</button>
+                                <button class="btn btn-outline-danger btn-sm">{{ __('quizzes::teacher/messages.delete') }}</button>
                             </form>
                         </div>
                     </div>
@@ -250,37 +258,37 @@
                             @csrf
                             <div class="row g-3">
                                 <div class="col-12">
-                                    <label class="form-label small fw-bold">Nội dung câu hỏi</label>
+                                    <label class="form-label small fw-bold">{{ __('quizzes::teacher/messages.edit.list.edit_form_title') }}</label>
                                     <textarea name="question" class="form-control form-control-sm" rows="2" required>{{ $q->question }}</textarea>
                                 </div>
                                 <div class="col-md-5">
-                                    <label class="form-label small fw-bold">Loại</label>
+                                    <label class="form-label small fw-bold">{{ __('quizzes::teacher/messages.edit.question_type') }}</label>
                                     <select name="question_type" class="form-select form-select-sm" onchange="handleTypeChange(this, {{ $q->id }})">
-                                        <option value="single_choice" @selected($q->question_type == 'single_choice')>Trắc nghiệm 1 đáp án</option>
-                                        <option value="multiple_choice" @selected($q->question_type == 'multiple_choice')>Trắc nghiệm nhiều đáp án</option>
-                                        <option value="true_false" @selected($q->question_type == 'true_false')>Đúng / Sai</option>
-                                        <option value="short_answer" @selected($q->question_type == 'short_answer')>Tự luận (ngắn)</option>
+                                        <option value="single_choice" @selected($q->question_type == 'single_choice')>{{ __('quizzes::teacher/messages.edit.types.single') }}</option>
+                                        <option value="multiple_choice" @selected($q->question_type == 'multiple_choice')>{{ __('quizzes::teacher/messages.edit.types.multiple') }}</option>
+                                        <option value="true_false" @selected($q->question_type == 'true_false')>{{ __('quizzes::teacher/messages.edit.types.true_false') }}</option>
+                                        <option value="short_answer" @selected($q->question_type == 'short_answer')>{{ __('quizzes::teacher/messages.edit.types.essay') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label small fw-bold">Điểm</label>
+                                    <label class="form-label small fw-bold">{{ __('quizzes::teacher/messages.edit.points') }}</label>
                                     <input name="points" type="number" class="form-control form-control-sm" value="{{ $q->points }}" min="1">
                                 </div>
                                 <div class="col-12 choices-container" id="choices-{{ $q->id }}" @if($q->question_type == 'short_answer') style="display:none" @endif>
-                                    <label class="form-label small fw-bold">Lựa chọn giải pháp</label>
+                                    <label class="form-label small fw-bold">{{ __('quizzes::teacher/messages.edit.list.choices_container_label') }}</label>
                                     <div class="d-grid gap-2">
                                         @php($choices = $q->choices->sortBy('position'))
                                         @for ($i = 0; $i < 4; $i++)
                                             @php($c = $choices->values()[$i] ?? null)
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text fw-bold" style="width:35px">{{ chr(65 + $i) }}</span>
-                                                <input type="text" name="choices[{{ $i }}][text]" class="form-control" value="{{ $c?->choice_text }}" placeholder="Lựa chọn {{ chr(65 + $i) }}">
+                                                <input type="text" name="choices[{{ $i }}][text]" class="form-control" value="{{ $c?->choice_text }}" placeholder="{{ __('quizzes::teacher/messages.edit.choice_placeholder', ['letter' => chr(65 + $i)]) }}">
                                                 <div class="input-group-text">
                                                     <input type="{{ $q->question_type == 'multiple_choice' ? 'checkbox' : 'radio' }}" 
                                                            name="{{ $q->question_type == 'multiple_choice' ? "choices[$i][is_correct]" : "correct_choice_$q->id" }}" 
                                                            value="{{ $q->question_type == 'multiple_choice' ? '1' : $i }}"
                                                            @if($q->question_type == 'multiple_choice') @checked($c?->is_correct) @else @checked($c?->is_correct) @endif>
-                                                    <span class="ms-1 small">Đúng</span>
+                                                    <span class="ms-1 small">{{ __('quizzes::teacher/messages.edit.correct_label') }}</span>
                                                 </div>
                                                 {{-- Trick for radio: if it's single choice, controller needs to know which one is correct --}}
                                                 @if($q->question_type !== 'multiple_choice')
@@ -291,8 +299,8 @@
                                     </div>
                                 </div>
                                 <div class="col-12 d-flex gap-2 mt-2">
-                                    <button class="btn btn-primary btn-sm">Lưu cập nhật</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleEdit({{ $q->id }})">Hủy</button>
+                                    <button class="btn btn-primary btn-sm">{{ __('quizzes::teacher/messages.edit.list.save_update') }}</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleEdit({{ $q->id }})">{{ __('quizzes::teacher/messages.edit.list.cancel_edit') }}</button>
                                 </div>
                             </div>
                         </form>
@@ -300,7 +308,7 @@
                 </div>
             @empty
                 <div class="alert alert-info border-secondary-subtle" style="background: rgba(148, 163, 184, 0.05);">
-                    Chưa có câu hỏi nào. Hãy thêm câu hỏi hoặc import từ CSV để bắt đầu.
+                    {{ __('quizzes::teacher/messages.edit.list.empty') }}
                 </div>
             @endforelse
         </div>
@@ -347,13 +355,13 @@
                 
                 if(!topic) {
                     box.className = 'alert alert-danger';
-                    box.innerText = 'Vui lòng nhập chủ đề.';
+                    box.innerText = "{{ __('quizzes::teacher/messages.edit.js.topic_required') }}";
                     box.classList.remove('d-none');
                     return;
                 }
 
                 btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang tạo...';
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> {{ __('quizzes::teacher/messages.edit.js.generating') }}';
                 box.classList.add('d-none');
 
                 fetch("{{ route('teacher.dashboard.quizzes.ai.generate', [$course->id, $quiz->id]) }}", {
@@ -374,23 +382,23 @@
                 .then(data => {
                     if(data.success) {
                         box.className = 'alert alert-success';
-                        box.innerText = data.message + ' Đang tải lại...';
+                        box.innerText = data.message + ' ' + "{{ __('quizzes::teacher/messages.edit.js.reload_msg') }}";
                         box.classList.remove('d-none');
                         setTimeout(() => window.location.reload(), 1500);
                     } else {
                         box.className = 'alert alert-warning border border-warning';
-                        box.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>' + (data.message || 'Lỗi không xác định từ AI.');
+                        box.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>' + (data.message || "{{ __('quizzes::teacher/messages.edit.js.ai_error') }}");
                         box.classList.remove('d-none');
                         btn.disabled = false;
-                        btn.innerHTML = 'Thử lại <i class="fas fa-redo ms-1"></i>';
+                        btn.innerHTML = "{{ __('quizzes::teacher/messages.edit.js.retry') }} <i class=\"fas fa-redo ms-1\"></i>";
                     }
                 })
                 .catch(err => {
                     box.className = 'alert alert-danger border border-danger';
-                    box.innerHTML = '<i class="fas fa-times-circle me-2"></i>Lỗi kết nối máy chủ.';
+                    box.innerHTML = '<i class="fas fa-times-circle me-2"></i>' + "{{ __('quizzes::teacher/messages.edit.js.conn_error') }}";
                     box.classList.remove('d-none');
                     btn.disabled = false;
-                    btn.innerHTML = 'Thử lại <i class="fas fa-redo ms-1"></i>';
+                    btn.innerHTML = "{{ __('quizzes::teacher/messages.edit.js.retry') }} <i class=\"fas fa-redo ms-1\"></i>";
                 });
             }
         </script>

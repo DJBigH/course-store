@@ -18,7 +18,7 @@
         </div>
         @if ($bannerShowUpgrade && $bannerUpgradeUrl)
             <a href="{{ $bannerUpgradeUrl }}" class="btn btn-sm btn-warning">
-                {{ __('teacher::dashboard.package_features.upgrade_cta') }}
+                {{ __('courses::teacher/messages.package_features.upgrade_cta') }}
             </a>
         @endif
     </div>

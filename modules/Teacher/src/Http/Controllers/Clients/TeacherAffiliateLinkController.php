@@ -120,7 +120,7 @@ class TeacherAffiliateLinkController extends Controller
             'landing' => $this->buildBreakdownRow($allLinksWithStats, 'landing'),
         ]);
 
-        $pageTitle = __('teacher::dashboard.pages.affiliate_links');
+        $pageTitle = __('courses::teacher/messages.pages.affiliate_links');
         $pageName = $pageTitle;
 
         return view('teacher::clients.dashboard.affiliate_links.index', compact(
@@ -198,7 +198,7 @@ class TeacherAffiliateLinkController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.affiliate-links.index')
-            ->with('msg_success', __('teacher::dashboard.affiliate_links.flash.deleted'));
+            ->with('msg_success', __('courses::teacher/messages.affiliate_links.flash.deleted'));
     }
 
     private function formResponse(?int $id = null)
@@ -237,8 +237,8 @@ class TeacherAffiliateLinkController extends Controller
             ->get();
 
         $pageTitle = $link
-            ? __('teacher::dashboard.affiliate_links.edit')
-            : __('teacher::dashboard.affiliate_links.create');
+            ? __('courses::teacher/messages.affiliate_links.edit')
+            : __('courses::teacher/messages.affiliate_links.create');
         $pageName = $pageTitle;
 
         return view('teacher::clients.dashboard.affiliate_links.form', compact(
@@ -293,8 +293,8 @@ class TeacherAffiliateLinkController extends Controller
         return redirect()
             ->route('teacher.dashboard.affiliate-links.index')
             ->with('msg_success', __($id
-                ? 'teacher::dashboard.affiliate_links.flash.updated'
-                : 'teacher::dashboard.affiliate_links.flash.created'));
+                ? 'courses::teacher/messages.affiliate_links.flash.updated'
+                : 'courses::teacher/messages.affiliate_links.flash.created'));
     }
 
     private function resolveValidatedTargetId(Teacher $teacher, string $targetType, mixed $targetId): ?int
@@ -358,6 +358,6 @@ class TeacherAffiliateLinkController extends Controller
 
         return redirect()
             ->route('teacher.dashboard.index')
-            ->with('msg_danger', __('teacher::dashboard.package_features.feature_locked'));
+            ->with('msg_danger', __('courses::teacher/messages.package_features.feature_locked'));
     }
 }

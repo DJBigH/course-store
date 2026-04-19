@@ -62,43 +62,43 @@
     <div class="teacher-panel">
         <div class="teacher-section-title mb-4">
             <div>
-                <h3 class="fw-bold mb-2">{{ __('teacher::dashboard.lessons.title', ['course' => $course->name_locale]) }}</h3>
-                <p class="text-muted mb-0">{{ __('teacher::dashboard.lessons.description') }}</p>
+                <h3 class="fw-bold mb-2">{{ __('teacher::teacher/lesson/list.title', ['course' => $course->name_locale]) }}</h3>
+                <p class="text-muted mb-0">{{ __('teacher::teacher/lesson/list.description') }}</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a href="{{ route('teacher.dashboard.courses') }}" class="btn btn-outline-secondary">
-                    {{ __('teacher::dashboard.common.back') }}
+                    {{ __('teacher::teacher/course/common.actions.back') }}
                 </a>
                 <a href="{{ route('teacher.dashboard.lessons.trash', $course->id) }}" class="btn btn-outline-secondary">
-                    {{ __('teacher::dashboard.lessons.actions.trash') }}
+                    {{ __('teacher::teacher/lesson/common.actions.trash') }}
                 </a>
                 @if ($teacher->packageHasFeature('can_manage_quizzes'))
                     <a href="{{ route('teacher.dashboard.quizzes.index', $course->id) }}" class="btn btn-outline-primary">
-                        Tạo quiz
+                        {{ __('teacher::teacher/lesson/common.actions.create_quiz') }}
                     </a>
                 @else
-                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-outline-warning" title="Nâng cấp để mở quyền quản lý quiz">
-                        Tạo quiz <span class="ms-1 badge bg-warning text-dark">Khóa</span>
+                    <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-outline-warning" title="{{ __('teacher::teacher/common.feature_locked') }}">
+                        {{ __('teacher::teacher/lesson/common.actions.create_quiz') }} <span class="ms-1 badge bg-warning text-dark">{{ __('teacher::teacher/lesson/common.labels.locked_badge') }}</span>
                     </a>
                 @endif
                 <a href="{{ route('teacher.dashboard.lessons.create', $course->id) }}" class="btn btn-primary">
-                    {{ __('teacher::dashboard.lessons.actions.create') }}
+                    {{ __('teacher::teacher/lesson/common.actions.create') }}
                 </a>
             </div>
         </div>
 
         @if (!$teacher->packageHasFeature('can_manage_quizzes'))
             @include('teacher::clients.dashboard.partials.package_feature_notice', [
-                'title' => 'Gói hiện tại chưa có quyền quản lý quiz',
-                'message' => 'Nâng cấp gói để mở quyền tạo, sửa, giao và xem kết quả quiz cho học viên. Bạn sẽ có đầy đủ công cụ quản lý quiz trong dashboard sau khi nâng cấp.',
+                'title' => __('teacher::teacher/common.feature_locked'),
+                'message' => __('teacher::teacher/common.feature_locked'),
                 'upgradeUrl' => route('teacher.dashboard.package.upgrade'),
                 'showUpgrade' => true,
             ])
         @endif
 
-        @if (!$canImportExportLessons)
+        @if (!$teacher->packageHasFeature('can_import_export'))
             @include('teacher::clients.dashboard.partials.package_feature_notice', [
-                'message' => __('teacher::dashboard.package_features.lessons_locked_import_export'),
+                'message' => __('teacher::teacher/course/common.warnings.import_export_locked'),
             ])
         @endif
 
@@ -109,22 +109,22 @@
             <div class="alert alert-danger">{{ session('msg_danger') }}</div>
         @endif
 
-        @if ($canImportExportLessons)
+        @if ($teacher->packageHasFeature('can_import_export'))
             <div class="teacher-panel mb-4">
                 <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                     <div>
-                        <h4 class="h5 mb-1">{{ __('teacher::dashboard.lessons.import.title') }}</h4>
-                        <p class="text-muted mb-0">{{ __('teacher::dashboard.lessons.import.description') }}</p>
+                        <h4 class="h5 mb-1">{{ __('teacher::teacher/lesson/common.import.title') }}</h4>
+                        <p class="text-muted mb-0">{{ __('teacher::teacher/lesson/common.import.description') }}</p>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
                         <a href="{{ route('teacher.dashboard.lessons.export', [$course->id, 'format' => 'csv']) }}" class="btn btn-outline-secondary">
-                            {{ __('teacher::dashboard.lessons.actions.export_csv') }}
+                            {{ __('teacher::teacher/lesson/common.actions.export_csv') }}
                         </a>
                         <a href="{{ route('teacher.dashboard.lessons.import.example', [$course->id, 'format' => 'csv']) }}" class="btn btn-outline-secondary">
-                            {{ __('teacher::dashboard.lessons.actions.download_example_csv') }}
+                            {{ __('teacher::teacher/lesson/common.actions.download_example_csv') }}
                         </a>
                         <a href="{{ route('teacher.dashboard.lessons.import.example', [$course->id, 'format' => 'xlsx']) }}" class="btn btn-outline-secondary">
-                            {{ __('teacher::dashboard.lessons.actions.download_example_xlsx') }}
+                            {{ __('teacher::teacher/lesson/common.actions.download_example_xlsx') }}
                         </a>
                     </div>
                 </div>
@@ -136,19 +136,19 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <div class="teacher-import-stat">
-                                <span>{{ __('teacher::dashboard.lessons.import.summary_total') }}</span>
+                                <span>{{ __('teacher::teacher/lesson/common.import.summary_total') }}</span>
                                 <strong>{{ $importSummary['total_rows'] ?? 0 }}</strong>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="teacher-import-stat">
-                                <span>{{ __('teacher::dashboard.lessons.import.summary_modules') }}</span>
+                                <span>{{ __('teacher::teacher/lesson/common.import.summary_modules') }}</span>
                                 <strong>{{ $importSummary['imported_modules'] ?? 0 }}</strong>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="teacher-import-stat">
-                                <span>{{ __('teacher::dashboard.lessons.import.summary_lessons') }}</span>
+                                <span>{{ __('teacher::teacher/lesson/common.import.summary_lessons') }}</span>
                                 <strong>{{ $importSummary['imported_lessons'] ?? 0 }}</strong>
                             </div>
                         </div>
@@ -157,7 +157,7 @@
 
                 @if (session('lesson_import_errors'))
                     <div class="alert alert-danger mb-3">
-                        <div class="fw-semibold mb-2">{{ __('teacher::dashboard.lessons.import.errors_title') }}</div>
+                        <div class="fw-semibold mb-2">{{ __('teacher::teacher/lesson/common.import.errors_title') }}</div>
                         <ul class="mb-0 ps-3">
                             @foreach (session('lesson_import_errors', []) as $errorMessage)
                                 <li>{{ $errorMessage }}</li>
@@ -169,7 +169,7 @@
                 <div class="row g-4">
                     <div class="col-xl-6">
                         <div class="teacher-import-card h-100">
-                            <div class="teacher-import-card__label">{{ __('teacher::dashboard.lessons.import.selectors_title') }}</div>
+                            <div class="teacher-import-card__label">{{ __('teacher::teacher/lesson/common.import.selectors_title') }}</div>
                             @if (!empty($existingModuleSelectors))
                                 <select class="form-select" size="{{ min(max(count($existingModuleSelectors), 3), 8) }}" disabled>
                                     @foreach ($existingModuleSelectors as $selector)
@@ -177,25 +177,25 @@
                                     @endforeach
                                 </select>
                             @else
-                                <p class="text-muted mb-0">{{ __('teacher::dashboard.lessons.import.selectors_empty') }}</p>
+                                <p class="text-muted mb-0">{{ __('teacher::teacher/lesson/common.import.selectors_empty') }}</p>
                             @endif
                         </div>
                     </div>
                     <div class="col-xl-6">
                         <div class="teacher-import-card h-100">
-                            <div class="teacher-import-card__label">{{ __('teacher::dashboard.lessons.import.quick_guide_title') }}</div>
+                            <div class="teacher-import-card__label">{{ __('teacher::teacher/lesson/common.import.quick_guide_title') }}</div>
                             <div class="teacher-import-guide">
                                 <div class="teacher-import-guide__item">
                                     <strong>1.</strong>
-                                    <span>{{ __('teacher::dashboard.lessons.import.quick_guide_example') }}</span>
+                                    <span>{{ __('teacher::teacher/lesson/common.import.quick_guide_example') }}</span>
                                 </div>
                                 <div class="teacher-import-guide__item">
                                     <strong>2.</strong>
-                                    <span>{{ __('teacher::dashboard.lessons.import.quick_guide_parent') }}</span>
+                                    <span>{{ __('teacher::teacher/lesson/common.import.quick_guide_parent') }}</span>
                                 </div>
                                 <div class="teacher-import-guide__item">
                                     <strong>3.</strong>
-                                    <span>{{ __('teacher::dashboard.lessons.import.quick_guide_limit') }}</span>
+                                    <span>{{ __('teacher::teacher/lesson/common.import.quick_guide_limit') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -205,19 +205,19 @@
                 <form method="POST" action="{{ route('teacher.dashboard.lessons.import.preview', $course->id) }}" enctype="multipart/form-data" class="mt-3">
                     @csrf
                     <div class="mb-2">
-                        <label class="form-label fw-bold">{{ __('teacher::dashboard.lessons.import.file_label') }}</label>
+                        <label class="form-label fw-bold">{{ __('teacher::teacher/lesson/common.import.file_label') }}</label>
                     </div>
                     <div class="row g-3 align-items-start">
                         <div class="col-lg-8">
                             <input type="file" name="lesson_import_file" accept=".csv,.txt,.xlsx" class="form-control @error('lesson_import_file') is-invalid @enderror">
-                            <div class="form-text mt-1 text-muted">{{ __('teacher::dashboard.lessons.import.file_help') }}</div>
+                            <div class="form-text mt-1 text-muted">{{ __('teacher::teacher/lesson/common.import.file_help') }}</div>
                             @error('lesson_import_file')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-lg-4">
                             <button type="submit" class="btn btn-primary w-100">
-                                {{ __('teacher::dashboard.lessons.actions.import_submit') }}
+                                {{ __('teacher::teacher/lesson/common.actions.import_submit') }}
                             </button>
                         </div>
                     </div>
@@ -227,20 +227,20 @@
                     <div class="teacher-import-card mt-4">
                         <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                             <div>
-                                <div class="teacher-import-card__label mb-1">{{ __('teacher::dashboard.lessons.import.preview_title') }}</div>
-                                <p class="text-muted mb-0">{{ __('teacher::dashboard.lessons.import.preview_description') }}</p>
+                                <div class="teacher-import-card__label mb-1">{{ __('teacher::teacher/lesson/common.import.preview_title') }}</div>
+                                <p class="text-muted mb-0">{{ __('teacher::teacher/lesson/common.import.preview_description') }}</p>
                             </div>
                             <div class="d-flex flex-wrap gap-2">
                                 <form method="POST" action="{{ route('teacher.dashboard.lessons.import.confirm', $course->id) }}">
                                     @csrf
                                     <button type="submit" class="btn btn-primary">
-                                        {{ __('teacher::dashboard.lessons.actions.confirm_submit') }}
+                                        {{ __('teacher::teacher/lesson/common.actions.confirm_submit') }}
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('teacher.dashboard.lessons.import.clear', $course->id) }}">
                                     @csrf
                                     <button type="submit" class="btn btn-outline-secondary">
-                                        {{ __('teacher::dashboard.lessons.actions.clear_preview') }}
+                                        {{ __('teacher::teacher/lesson/common.actions.clear_preview') }}
                                     </button>
                                 </form>
                             </div>
@@ -249,19 +249,19 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
                                 <div class="teacher-import-stat">
-                                    <span>{{ __('teacher::dashboard.lessons.import.file_name') }}</span>
+                                    <span>{{ __('teacher::teacher/lesson/common.import.file_name') }}</span>
                                     <strong class="fs-6">{{ $lessonImportPreview['file_name'] ?? 'n/a' }}</strong>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="teacher-import-stat">
-                                    <span>{{ __('teacher::dashboard.lessons.import.format') }}</span>
+                                    <span>{{ __('teacher::teacher/lesson/common.import.format') }}</span>
                                     <strong class="text-uppercase fs-6">{{ $lessonImportPreview['detected_format'] ?? 'n/a' }}</strong>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="teacher-import-stat">
-                                    <span>{{ __('teacher::dashboard.lessons.import.generated_at') }}</span>
+                                    <span>{{ __('teacher::teacher/lesson/common.import.generated_at') }}</span>
                                     <strong class="fs-6">{{ $lessonImportPreview['generated_at'] ?? 'n/a' }}</strong>
                                 </div>
                             </div>
@@ -272,12 +272,12 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>{{ __('teacher::dashboard.lessons.table.name') }}</th>
-                                        <th>{{ __('teacher::dashboard.lessons.import.preview_type') }}</th>
-                                        <th>{{ __('teacher::dashboard.lessons.import.preview_parent') }}</th>
-                                        <th>{{ __('teacher::dashboard.lessons.import.preview_release') }}</th>
-                                        <th>{{ __('teacher::dashboard.lessons.form.position') }}</th>
-                                        <th>{{ __('teacher::dashboard.lessons.form.status') }}</th>
+                                        <th>{{ __('teacher::teacher/lesson/common.form.name') }}</th>
+                                        <th>{{ __('teacher::teacher/lesson/common.import.preview_type') }}</th>
+                                        <th>{{ __('teacher::teacher/lesson/common.import.preview_parent') }}</th>
+                                        <th>{{ __('teacher::teacher/lesson/common.import.preview_release') }}</th>
+                                        <th>{{ __('teacher::teacher/course/common.form.position') }}</th>
+                                        <th>{{ __('teacher::teacher/course/common.form.status') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -286,10 +286,10 @@
                                             $isModule = ($previewRow['type'] ?? '') === 'module';
                                             $releaseMode = $previewRow['release_mode'] ?? 'immediate';
                                             $releaseLabel = match ($releaseMode) {
-                                                'datetime' => 'Mo vao: ' . ($previewRow['release_at'] ?? '-'),
-                                                'days_after_enrollment' => 'Mo sau ' . ($previewRow['release_after_days'] ?? 0) . ' ngay',
-                                                'after_previous_completed' => 'Mo sau khi hoc xong bai truoc',
-                                                default => 'Mo ngay lap tuc',
+                                                'datetime' => __('teacher::teacher/lesson/common.import.release_labels.datetime', ['date' => $previewRow['release_at'] ?? '-']),
+                                                'days_after_enrollment' => __('teacher::teacher/lesson/common.import.release_labels.days_after_enrollment', ['days' => $previewRow['release_after_days'] ?? 0]),
+                                                'after_previous_completed' => __('teacher::teacher/lesson/common.import.release_labels.after_previous_completed'),
+                                                default => __('teacher::teacher/lesson/common.import.release_labels.immediate'),
                                             };
                                             $rowClass = $isModule
                                                 ? 'teacher-import-row teacher-import-row--module'
@@ -298,11 +298,11 @@
                                                 ? 'teacher-import-type--module'
                                                 : 'teacher-import-type--lesson';
                                             $typeLabel = $isModule
-                                                ? __('teacher::dashboard.lessons.module_label')
-                                                : __('teacher::dashboard.lessons.lesson_label');
+                                                ? __('teacher::teacher/lesson/common.labels.module')
+                                                : __('teacher::teacher/lesson/common.labels.lesson');
                                             $statusLabel = (string) ($previewRow['status'] ?? 1) === '1'
-                                                ? __('teacher::dashboard.common.active')
-                                                : __('teacher::dashboard.common.no');
+                                                ? __('teacher::teacher/course/common.status.published')
+                                                : __('teacher::teacher/course/common.status.draft');
                                         @endphp
                                         <tr class="{{ $rowClass }}">
                                             <td>{{ $previewRow['line'] ?? '-' }}</td>
@@ -338,22 +338,22 @@
             <section class="teacher-panel mb-4">
                 <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                     <div>
-                        <div class="text-uppercase small text-muted mb-1">{{ __('teacher::dashboard.lessons.module_label') }}</div>
+                        <div class="text-uppercase small text-muted mb-1">{{ __('lessons::teacher/messages.module_label') }}</div>
                         <h4 class="h5 mb-1">{{ $module->name_locale }}</h4>
-                        <p class="text-muted mb-0">{{ __('teacher::dashboard.lessons.labels.position', ['position' => $module->position]) }}</p>
+                        <p class="text-muted mb-0">{{ __('lessons::teacher/messages.labels.position', ['position' => $module->position]) }}</p>
                     </div>
                     <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ route('teacher.dashboard.lessons.edit', [$course->id, $module->id]) }}" class="btn btn-sm btn-outline-primary">
-                            {{ __('teacher::dashboard.lessons.actions.edit') }}
+                         <a href="{{ route('teacher.dashboard.lessons.edit', [$course->id, $module->id]) }}" class="btn btn-sm btn-outline-primary">
+                            {{ __('teacher::teacher/lesson/common.actions.edit') }}
                         </a>
                         <a href="{{ route('teacher.dashboard.lessons.create', [$course->id, 'module' => $module->id]) }}" class="btn btn-sm btn-outline-secondary">
-                            {{ __('teacher::dashboard.lessons.actions.add_child') }}
+                            {{ __('teacher::teacher/lesson/common.actions.add_child') }}
                         </a>
-                        <form method="POST" action="{{ route('teacher.dashboard.lessons.delete', [$course->id, $module->id]) }}" onsubmit="return confirm('{{ __('teacher::dashboard.lessons.confirm_delete') }}')">
+                        <form method="POST" action="{{ route('teacher.dashboard.lessons.delete', [$course->id, $module->id]) }}" onsubmit="return confirm('{{ __('teacher::teacher/lesson/list.confirm_delete') }}')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger">
-                                {{ __('teacher::dashboard.lessons.actions.delete') }}
+                                {{ __('teacher::teacher/lesson/common.actions.delete') }}
                             </button>
                         </form>
                     </div>
@@ -372,12 +372,12 @@
                         @endforeach
                     </div>
                 @else
-                    <p class="text-muted mb-0">{{ __('teacher::dashboard.lessons.empty_module') }}</p>
+                    <p class="text-muted mb-0">{{ __('lessons::teacher/messages.empty_module') }}</p>
                 @endif
             </section>
         @empty
             <div class="teacher-panel">
-                <p class="text-muted mb-0">{{ __('teacher::dashboard.lessons.empty') }}</p>
+                <p class="text-muted mb-0">{{ __('lessons::teacher/messages.empty') }}</p>
             </div>
         @endforelse
     </div>
@@ -386,6 +386,12 @@
         .teacher-import-card {
             padding: 1rem;
             border-radius: 18px;
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="dark"] .teacher-import-card {
             background: rgba(148, 163, 184, 0.08);
             border: 1px solid rgba(148, 163, 184, 0.14);
         }
@@ -416,7 +422,14 @@
             height: 100%;
             padding: 0.95rem 1rem;
             border-radius: 18px;
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="dark"] .teacher-import-stat {
             background: rgba(148, 163, 184, 0.08);
+            border: 0;
         }
 
         .teacher-import-stat span {
@@ -428,6 +441,7 @@
 
         .teacher-import-stat strong {
             font-size: 1.4rem;
+            color: var(--admin-text);
         }
 
         .teacher-import-guide {
@@ -465,11 +479,19 @@
 
         .teacher-import-type--module {
             background: rgba(37, 99, 235, 0.14);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="dark"] .teacher-import-type--module {
             color: #93c5fd;
         }
 
         .teacher-import-type--lesson {
             background: rgba(16, 185, 129, 0.14);
+            color: #047857;
+        }
+
+        html[data-theme="dark"] .teacher-import-type--lesson {
             color: #86efac;
         }
 
@@ -505,14 +527,14 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="lessonPreviewModalLabel">Xem trước bài học</h5>
+                    <h5 class="modal-title" id="lessonPreviewModalLabel">{{ __('lessons::teacher/messages.modal.preview_title') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-0">
                     <div class="video-container" id="previewVideoContainer">
                         <div class="preview-loading d-none">
                             <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden">{{ __('lessons::teacher/messages.modal.loading') }}</span>
                             </div>
                         </div>
                         <div id="previewPlayerArea"></div>
@@ -534,7 +556,7 @@
 
             $('.js-lesson-preview-btn').on('click', function() {
                 const url = $(this).data('url');
-                const title = $(this).attr('title') || 'Xem trước bài học';
+                const title = $(this).attr('title') || "{{ __('lessons::teacher/messages.modal.preview_title') }}";
 
                 $modal.find('.modal-title').text(title);
                 $modal.modal('show');
@@ -568,14 +590,14 @@
                     } else {
                         $playerArea.html(`<div class="p-5 text-center text-white">
                             <i class="fa-solid fa-circle-exclamation fs-1 mb-3 text-warning"></i>
-                            <p>${response.message || 'Không thể tải dữ liệu video.'}</p>
+                            <p>${response.message || "{{ __('teacher::teacher/lesson/common.modal.error_video') }}"}</p>
                         </div>`);
                     }
                 }).fail(function() {
                     $loading.addClass('d-none');
                     $playerArea.html(`<div class="p-5 text-center text-white">
                         <i class="fa-solid fa-triangle-exclamation fs-1 mb-3 text-danger"></i>
-                        <p>Đã xảy ra lỗi khi kết nối đến máy chủ.</p>
+                        <p>{{ __('teacher::teacher/lesson/common.modal.error_server') }}</p>
                     </div>`);
                 });
             });

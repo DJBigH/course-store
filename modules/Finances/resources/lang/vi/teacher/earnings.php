@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'overview' => [
+        'ranges' => [
+            'today' => 'Hôm nay',
+            '7d' => '7 ngày qua',
+            '14d' => '14 ngày qua',
+            'month' => 'Tháng này',
+            'year' => 'Năm nay',
+            'viewing_data' => 'Đang xem dữ liệu',
+            'current_filter_prefix' => 'Bộ lọc hiện tại: :prefix',
+            'ready' => 'Sẵn sàng',
+        ],
+    ],
+    'common' => [
+        'currency_symbol' => 'đ',
+        'loading' => 'Đang tải...',
+        'failed_to_load' => 'Lỗi khi tải dữ liệu',
+    ],
+    'title' => 'Doanh thu giảng viên',
+    'description' => 'Xem chi tiết thu nhập của bạn từ các khóa học và lượt mua.',
+    'gross_revenue' => 'Doanh thu gộp',
+    'teacher_revenue' => 'Thu nhập thực nhận (:rate%)',
+    'empty' => 'Không có dữ liệu trong khoảng thời gian này.',
+    'breakdown' => [
+        'daily_title' => 'Theo ngày',
+        'daily_description' => 'Thu nhập chi tiết từng ngày.',
+        'monthly_title' => 'Theo tháng',
+        'monthly_description' => 'Thu nhập chi tiết từng tháng.',
+        'course_title' => 'Theo khóa học',
+        'course_description' => 'Thu nhập chi tiết từng khóa học.',
+        'table' => [
+            'period' => 'Giai đoạn',
+            'orders' => 'Đơn hàng',
+            'revenue' => 'Thu nhập',
+        ],
+    ],
+    'charts' => [
+        'daily_revenue_title' => 'Biểu đồ doanh thu',
+        'daily_revenue_desc' => 'Xu hướng thu nhập trong thời gian gần đây.',
+        'highlights' => 'Điểm nhấn',
+        'conversion_title' => 'Hiệu suất khóa học',
+        'conversion_desc' => 'Tỷ lệ chuyển đổi và doanh thu theo khóa học.',
+        'bar_legend' => 'Hiệu suất',
+        'view_metric' => ':count lượt xem',
+        'order_metric' => ':count đơn hàng',
+    ],
+    'recent_transactions_title' => 'Giao dịch gần đây',
+    'recent_transactions_desc' => 'Danh sách các đơn học viên đã mua thành công.',
+    'recent_transactions_note' => 'Lưu ý: Chỉ hiển thị các giao dịch đã được xác nhận thanh toán thành công.',
+    'table' => [
+        'order' => 'Mã đơn',
+        'course' => 'Khóa học',
+        'student' => 'Học viên',
+        'gross' => 'Giá gốc',
+        'discount' => 'Giảm giá',
+        'net' => 'Thực thu',
+        'revenue' => 'Bạn nhận',
+    ],
+];

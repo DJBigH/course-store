@@ -47,7 +47,7 @@ return [
     'stats' => [
         ['value' => '2 khóa', 'label' => 'Gói miễn phí vẫn đủ để bạn thử nghiệm nội dung và cách dạy thực tế.'],
         ['value' => '70%', 'label' => 'Mức chia doanh thu cao nhất hiện có ở gói Pro.'],
-        ['value' => '1 portal', 'label' => 'Một không gian riêng để quản lý hồ sơ, doanh thu và yêu cầu rút tiền.'],
+        ['value' => '1 bảng điều khiển', 'label' => 'Một không gian riêng để quản lý hồ sơ, doanh thu và yêu cầu rút tiền.'],
     ],
     'highlights' => [
         ['title' => 'Bắt đầu gọn, không cần all-in ngay', 'description' => 'Gói Free cho phép đăng 2 khóa học để bạn kiểm tra chủ đề, cách dạy và phản hồi từ học viên trước khi đầu tư lớn hơn.'],

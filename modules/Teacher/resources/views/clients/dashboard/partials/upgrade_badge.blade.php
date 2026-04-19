@@ -1,5 +1,5 @@
 @php
-    $badgeLabel = $label ?? __('teacher::dashboard.package_features.upgrade_badge');
+    $badgeLabel = $label ?? __('courses::teacher/messages.package_features.upgrade_badge');
     $badgeClass = $class ?? '';
 @endphp
 

@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'overview' => [
+        'ranges' => [
+            'today' => '오늘',
+            '7d' => '최근 7일',
+            '14d' => '최근 14일',
+            'month' => '이번 달',
+            'year' => '이번 해',
+            'viewing_data' => '데이터 조회 중',
+            'current_filter_prefix' => '현재 필터: :prefix',
+            'ready' => '준비 완료',
+        ],
+    ],
+    'common' => [
+        'currency_symbol' => '₩',
+        'loading' => '로딩 중...',
+        'failed_to_load' => '데이터 정렬 오류',
+    ],
+    'title' => '강사 수익',
+    'description' => '코스 수익 및 구매에 대한 상세 정보를 확인합니다.',
+    'gross_revenue' => '총 매출',
+    'teacher_revenue' => '강사 수익 (:rate%)',
+    'empty' => '이 기간 동안의 데이터가 없습니다.',
+    'breakdown' => [
+        'daily_title' => '일별',
+        'daily_description' => '일별 상세 수익.',
+        'monthly_title' => '월별',
+        'monthly_description' => '월별 상세 수익.',
+        'course_title' => '코스별',
+        'course_description' => '코스당 수익.',
+        'table' => [
+            'period' => '기간',
+            'orders' => '주문수',
+            'revenue' => '수익',
+        ],
+    ],
+    'charts' => [
+        'daily_revenue_title' => '매출 차트',
+        'daily_revenue_desc' => '최근 수익 동향.',
+        'highlights' => '하이라이트',
+        'conversion_title' => '코스 성과',
+        'conversion_desc' => '코스별 전환율 및 수익.',
+        'bar_legend' => '성과',
+        'view_metric' => ':count 조회',
+        'order_metric' => ':count 주문',
+    ],
+    'recent_transactions_title' => '최근 거래',
+    'recent_transactions_desc' => '구매가 완료된 주문 내역입니다.',
+    'recent_transactions_note' => '참고: 결제 완료가 확인된 거래만 표시됩니다.',
+    'table' => [
+        'order' => '주문 ID',
+        'course' => '코스',
+        'student' => '수강생',
+        'gross' => '판매가',
+        'discount' => '할인',
+        'net' => '순매출',
+        'revenue' => '강사 몫',
+    ],
+];

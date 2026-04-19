@@ -16,3 +16,13 @@ Route::prefix('admin')->group(function () {
       Route::delete('/delete/{orderId}', 'OrderController@delete')->middleware('permission:orders.delete,orders.soft_delete')->name('delete');
    });
 });
+
+Route::group([
+    'prefix'     => 'teacher',
+    'as'         => 'teacher.dashboard.',
+    'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active', 'teacher.activity'],
+], function () {
+    Route::get('/don-hang', [\Modules\Orders\src\Http\Controllers\Teacher\OrderController::class, 'index'])->name('orders');
+    Route::get('/don-hang/export/{format}', [\Modules\Orders\src\Http\Controllers\Teacher\OrderController::class, 'export'])->name('orders.export');
+    Route::get('/don-hang/{order}', [\Modules\Orders\src\Http\Controllers\Teacher\OrderController::class, 'show'])->name('orders.show');
+});

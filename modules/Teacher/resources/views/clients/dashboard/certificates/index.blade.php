@@ -4,21 +4,33 @@
     <div class="teacher-panel teacher-certificates-shell">
         <div class="teacher-certificates-hero">
             <div>
-                <h3 class="fw-bold mb-2">Chung chi hoan thanh</h3>
-                <p class="text-muted mb-0">Cap chung chi thu cong cho hoc vien da mua hoac duoc cap quyen vao khoa hoc cua ban.</p>
+                <h3 class="fw-bold mb-2">{{ __('courses::teacher/messages.certificates.title') }}</h3>
+                <p class="text-muted mb-0">{{ __('courses::teacher/messages.certificates.description') }}</p>
             </div>
+            @if ($canExport)
+                <a href="{{ route('teacher.dashboard.certificates.export', request()->query()) }}" class="btn btn-outline-success">
+                    <i class="fas fa-file-export me-2"></i> {{ __('courses::teacher/messages.certificates.export_btn') }}
+                </a>
+            @endif
         </div>
+
+        @if (!$canExport)
+            <div class="alert alert-warning mb-4">
+                <i class="fas fa-lock me-2"></i> {{ __('courses::teacher/messages.package_features.import_export_locked') }}
+                <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="fw-bold text-decoration-underline ms-1">{{ __('courses::teacher/messages.package_upgrade.upgrade_now') }}</a>
+            </div>
+        @endif
 
         <form method="GET" class="teacher-certificates-filter">
             <div class="row g-3">
                 <div class="col-lg-4">
-                    <label class="form-label">Tim hoc vien hoac khoa hoc</label>
-                    <input type="text" name="q" value="{{ $search }}" class="form-control" placeholder="Nhap ten hoc vien, email, khoa hoc...">
+                    <label class="form-label">{{ __('courses::teacher/messages.certificates.filter.q_label') }}</label>
+                    <input type="text" name="q" value="{{ $search }}" class="form-control" placeholder="{{ __('courses::teacher/messages.certificates.filter.q_placeholder') }}">
                 </div>
                 <div class="col-lg-4">
-                    <label class="form-label">Loc theo khoa hoc</label>
+                    <label class="form-label">{{ __('courses::teacher/messages.certificates.filter.course_label') }}</label>
                     <select name="course_id" class="form-select">
-                        <option value="0">Tat ca khoa hoc</option>
+                        <option value="0">{{ __('courses::teacher/messages.certificates.filter.all_courses') }}</option>
                         @foreach ($courseOptions as $course)
                             <option value="{{ $course->id }}" @selected($selectedCourse === (int) $course->id)>
                                 {{ $course->name_locale ?: $course->name }}
@@ -27,33 +39,34 @@
                     </select>
                 </div>
                 <div class="col-lg-2">
-                    <label class="form-label">Trang thai</label>
+                    <label class="form-label">{{ __('courses::teacher/messages.certificates.filter.status_label') }}</label>
                     <select name="status" class="form-select">
-                        <option value="">Tat ca</option>
-                        <option value="issued" @selected($status === 'issued')>Da cap</option>
-                        <option value="missing" @selected($status === 'missing')>Chua cap</option>
+                        <option value="">{{ __('courses::teacher/messages.certificates.filter.status_all') }}</option>
+                        <option value="issued" @selected($status === 'issued')>{{ __('courses::teacher/messages.certificates.filter.status_issued') }}</option>
+                        <option value="missing" @selected($status === 'missing')>{{ __('courses::teacher/messages.certificates.filter.status_missing') }}</option>
                     </select>
                 </div>
                 <div class="col-lg-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Loc danh sach</button>
+                    <button type="submit" class="btn btn-primary w-100">{{ __('courses::teacher/messages.certificates.filter.submit') }}</button>
                 </div>
             </div>
         </form>
 
         <div class="teacher-certificates-summary">
-            <span><strong>{{ $rows->count() }}</strong> hoc vien / khoa hoc co the cap chung chi</span>
-            <span><strong>{{ $rows->where('is_issued', true)->count() }}</strong> da cap</span>
-            <span><strong>{{ $rows->where('is_issued', false)->count() }}</strong> chua cap</span>
+            <span><strong>{{ $rows->total() }}</strong> {{ __('courses::teacher/messages.certificates.summary.total') }}</span>
         </div>
 
         @if ($rows->isEmpty())
             <div class="teacher-certificates-empty">
-                <h4>Chua co du lieu chung chi</h4>
-                <p class="mb-0">Khi hoc vien mua khoa hoc hoac duoc cap quyen hoc, danh sach cap chung chi se hien tai day.</p>
+                <h4>{{ __('courses::teacher/messages.certificates.empty_title') }}</h4>
+                <p class="mb-0">{{ __('courses::teacher/messages.certificates.empty_description') }}</p>
             </div>
         @else
             <div class="teacher-certificates-grid">
                 @foreach ($rows as $row)
+                    @php
+                        $progressPercent = $row->total_lessons > 0 ? min((int) round(($row->completed_lessons * 100) / $row->total_lessons), 100) : 0;
+                    @endphp
                     <article class="teacher-certificate-card">
                         <div class="teacher-certificate-card__head">
                             <div>
@@ -61,36 +74,36 @@
                                 <p class="mb-0">{{ $row->student_email }}</p>
                             </div>
                             <span class="teacher-certificate-card__status {{ $row->is_revoked ? 'is-revoked' : ($row->is_issued ? 'is-issued' : 'is-missing') }}">
-                                {{ $row->is_revoked ? 'Da thu hoi' : ($row->is_issued ? 'Da cap' : 'Chua cap') }}
+                                {{ $row->is_revoked ? __('courses::teacher/messages.certificates.status_revoked') : ($row->is_issued ? __('courses::teacher/messages.certificates.status_issued') : __('courses::teacher/messages.certificates.status_missing')) }}
                             </span>
                         </div>
 
                         <div class="teacher-certificate-card__body">
                             <div class="teacher-certificate-card__meta">
-                                <span>Khoa hoc</span>
+                                <span>{{ __('courses::teacher/messages.certificates.mail.course_label') }}</span>
                                 <strong>{{ $row->course_name }}</strong>
                             </div>
                             <div class="teacher-certificate-card__meta">
-                                <span>Tien do</span>
-                                <strong>{{ $row->progress_percent }}% - {{ $row->completed_lessons }}/{{ $row->total_lessons }} bai</strong>
+                                <span>{{ __('courses::teacher/messages.certificates.progress_label') }}</span>
+                                <strong>{{ $progressPercent }}% - {{ $row->completed_lessons }}/{{ $row->total_lessons }} {{ __('courses::teacher/messages.certificates.lessons_unit') }}</strong>
                             </div>
                             <div class="teacher-certificate-card__meta">
-                                <span>Nguon truy cap</span>
-                                <strong>{{ $row->access_type === 'grant' ? 'Cap quyen thu cong' : 'Don hang thanh toan' }}</strong>
+                                <span>{{ __('courses::teacher/messages.certificates.access_source_label') }}</span>
+                                <strong>{{ $row->access_type === 'grant' ? __('courses::teacher/messages.certificates.access_grant') : __('courses::teacher/messages.certificates.access_paid') }}</strong>
                             </div>
-                            @if ($row->certificate)
+                            @if ($row->is_issued)
                                 <div class="teacher-certificate-card__meta">
-                                    <span>Ma chung chi</span>
-                                    <strong>{{ $row->certificate->code }}</strong>
+                                    <span>{{ __('courses::teacher/messages.certificates.mail.code_label') }}</span>
+                                    <strong>{{ $row->certificate_code }}</strong>
                                 </div>
                                 <div class="teacher-certificate-card__meta">
-                                    <span>Cap luc</span>
-                                    <strong>{{ optional($row->certificate->issued_at)->format('d/m/Y H:i') }}</strong>
+                                    <span>{{ __('courses::teacher/messages.certificates.issued_date_label') }}</span>
+                                    <strong>{{ $row->issued_at ? \Illuminate\Support\Carbon::parse($row->issued_at)->format('d/m/Y H:i') : '' }}</strong>
                                 </div>
-                                @if ($row->certificate->revoked_at)
+                                @if ($row->is_revoked && $row->revoked_at)
                                     <div class="teacher-certificate-card__meta">
-                                        <span>Thu hoi luc</span>
-                                        <strong>{{ optional($row->certificate->revoked_at)->format('d/m/Y H:i') }}</strong>
+                                        <span>{{ __('courses::teacher/messages.certificates.revoked_date_label') }}</span>
+                                        <strong>{{ \Illuminate\Support\Carbon::parse($row->revoked_at)->format('d/m/Y H:i') }}</strong>
                                     </div>
                                 @endif
                             @endif
@@ -107,35 +120,39 @@
                                 data-student-name="{{ $row->student_name }}"
                                 data-course-name="{{ $row->course_name }}"
                                 data-mode="{{ $row->is_issued ? 'reissue' : 'issue' }}"
-                                data-note="{{ $row->certificate->note ?? '' }}">
-                                {{ $row->is_issued ? 'Cap lai chung chi' : 'Cap chung chi' }}
+                                data-note="{{ $row->note ?? '' }}">
+                                {{ $row->is_issued ? __('courses::teacher/messages.certificates.reissue_btn') : __('courses::teacher/messages.certificates.issue_btn') }}
                             </button>
 
-                            @if ($row->certificate)
-                                <a href="{{ route('teacher.dashboard.certificates.show', $row->certificate->id) }}" class="btn btn-outline-secondary">
-                                    Xem chung chi
+                            @if ($row->is_issued)
+                                <a href="{{ route('teacher.dashboard.certificates.show', $row->certificate_id) }}" class="btn btn-outline-secondary">
+                                    {{ __('courses::teacher/messages.certificates.view_btn') }}
                                 </a>
-                                <a href="{{ route('teacher.dashboard.certificates.show', ['id' => $row->certificate->id, 'print' => 1]) }}" class="btn btn-outline-secondary" target="_blank" rel="noopener">
-                                    In / Luu PDF
+                                <a href="{{ route('teacher.dashboard.certificates.show', ['id' => $row->certificate_id, 'print' => 1]) }}" class="btn btn-outline-secondary" target="_blank" rel="noopener">
+                                    {{ __('courses::teacher/messages.certificates.print_btn') }}
                                 </a>
-                                @if (!$row->certificate->revoked_at)
+                                @if (!$row->is_revoked)
                                     <button
                                         type="button"
                                         class="btn btn-outline-danger js-certificate-revoke-trigger"
                                         data-bs-toggle="modal"
                                         data-bs-target="#teacherCertificateRevokeModal"
-                                        data-action="{{ route('teacher.dashboard.certificates.revoke', $row->certificate->id) }}"
+                                        data-action="{{ route('teacher.dashboard.certificates.revoke', $row->certificate_id) }}"
                                         data-student-name="{{ $row->student_name }}"
                                         data-course-name="{{ $row->course_name }}"
-                                        data-certificate-code="{{ $row->certificate->code }}"
-                                        data-revoke-reason="{{ $row->certificate->revoke_reason ?? '' }}">
-                                        Thu hoi
+                                        data-certificate-code="{{ $row->certificate_code }}"
+                                        data-revoke-reason="">
+                                        {{ __('courses::teacher/messages.certificates.revoke_btn') }}
                                     </button>
                                 @endif
                             @endif
                         </div>
                     </article>
                 @endforeach
+            </div>
+
+            <div class="mt-4">
+                {{ $rows->links() }}
             </div>
         @endif
     </div>
@@ -150,7 +167,7 @@
 
                     <div class="modal-header border-0 pb-0">
                         <div>
-                            <h5 class="modal-title fw-bold" id="teacher-certificate-issue-title">Cap chung chi</h5>
+                            <h5 class="modal-title fw-bold" id="teacher-certificate-issue-title">{{ __('courses::teacher/messages.certificates.issue_btn') }}</h5>
                             <p class="text-muted mb-0" id="teacher-certificate-issue-description"></p>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -159,30 +176,30 @@
                     <div class="modal-body pt-3">
                         <div class="teacher-certificate-modal__summary">
                             <div>
-                                <span>Hoc vien</span>
+                                <span>{{ __('courses::teacher/messages.certificates.mail.student_label') }}</span>
                                 <strong id="teacher-certificate-issue-student-name"></strong>
                             </div>
                             <div>
-                                <span>Khoa hoc</span>
+                                <span>{{ __('courses::teacher/messages.certificates.mail.course_label') }}</span>
                                 <strong id="teacher-certificate-issue-course-name"></strong>
                             </div>
                         </div>
 
                         <div class="mt-3">
-                            <label for="teacher-certificate-issue-note" class="form-label fw-semibold">Ghi chu tren chung chi</label>
+                            <label for="teacher-certificate-issue-note" class="form-label fw-semibold">{{ __('courses::teacher/messages.certificates.issue_modal.note_label') }}</label>
                             <textarea
                                 class="form-control"
                                 id="teacher-certificate-issue-note"
                                 name="note"
                                 rows="4"
-                                placeholder="Neu can, ban co the them mot loi nhan ngan hoac ghi chu bo sung cho hoc vien."></textarea>
-                            <small class="text-muted">Phan nay khong bat buoc. Neu de trong, he thong van cap chung chi binh thuong.</small>
+                                placeholder="{{ __('courses::teacher/messages.certificates.issue_modal.note_placeholder') }}"></textarea>
+                            <small class="text-muted">{{ __('courses::teacher/messages.certificates.issue_modal.note_hint') }}</small>
                         </div>
                     </div>
 
                     <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Dong</button>
-                        <button type="submit" class="btn btn-primary" id="teacher-certificate-issue-submit">Cap chung chi</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('courses::teacher/messages.certificates.common.close') }}</button>
+                        <button type="submit" class="btn btn-primary" id="teacher-certificate-issue-submit">{{ __('courses::teacher/messages.certificates.issue_btn') }}</button>
                     </div>
                 </form>
             </div>
@@ -197,7 +214,7 @@
 
                     <div class="modal-header border-0 pb-0">
                         <div>
-                            <h5 class="modal-title fw-bold">Thu hoi chung chi</h5>
+                            <h5 class="modal-title fw-bold">{{ __('courses::teacher/messages.certificates.revoke_btn') }}</h5>
                             <p class="text-muted mb-0" id="teacher-certificate-revoke-description"></p>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -205,43 +222,43 @@
 
                     <div class="modal-body pt-3">
                         <div class="teacher-certificate-modal__warning">
-                            Sau khi thu hoi, hoc vien se khong con xem hoac tai duoc chung chi nay nua.
+                            {{ __('courses::teacher/messages.certificates.revoke_modal.warning') }}
                         </div>
 
                         <div class="teacher-certificate-modal__summary mt-3">
                             <div>
-                                <span>Hoc vien</span>
+                                <span>{{ __('courses::teacher/messages.certificates.mail.student_label') }}</span>
                                 <strong id="teacher-certificate-revoke-student-name"></strong>
                             </div>
                             <div>
-                                <span>Khoa hoc</span>
+                                <span>{{ __('courses::teacher/messages.certificates.mail.course_label') }}</span>
                                 <strong id="teacher-certificate-revoke-course-name"></strong>
                             </div>
                             <div>
-                                <span>Ma chung chi</span>
+                                <span>{{ __('courses::teacher/messages.certificates.mail.code_label') }}</span>
                                 <strong id="teacher-certificate-revoke-code"></strong>
                             </div>
                         </div>
 
                         <div class="mt-3">
-                            <label for="teacher-certificate-revoke-reason" class="form-label fw-semibold">Ly do thu hoi</label>
+                            <label for="teacher-certificate-revoke-reason" class="form-label fw-semibold">{{ __('courses::teacher/messages.certificates.revoke_modal.reason_label') }}</label>
                             <textarea
                                 class="form-control @error('revoke_reason') is-invalid @enderror"
                                 id="teacher-certificate-revoke-reason"
                                 name="revoke_reason"
                                 rows="4"
                                 required
-                                placeholder="Vi du: cap nham hoc vien, cap nham khoa hoc, can cap lai sau khi dieu chinh..."></textarea>
+                                placeholder="{{ __('courses::teacher/messages.certificates.revoke_modal.reason_placeholder') }}"></textarea>
                             @error('revoke_reason')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">Ly do nay se duoc luu vao nhat ky hoat dong de de doi soat ve sau.</small>
+                            <small class="text-muted">{{ __('courses::teacher/messages.certificates.revoke_modal.reason_hint') }}</small>
                         </div>
                     </div>
 
                     <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Dong</button>
-                        <button type="submit" class="btn btn-danger">Xac nhan thu hoi</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('courses::teacher/messages.certificates.common.close') }}</button>
+                        <button type="submit" class="btn btn-danger">{{ __('courses::teacher/messages.certificates.revoke_modal.confirm_btn') }}</button>
                     </div>
                 </form>
             </div>
@@ -266,8 +283,13 @@
             margin-bottom: 1rem;
             padding: 1rem;
             border-radius: 20px;
-            background: color-mix(in srgb, var(--admin-card-bg, #121a2c) 82%, transparent);
+            background: var(--admin-surface);
             border: 1px solid var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="dark"] .teacher-certificates-filter {
+            background: color-mix(in srgb, var(--admin-card-bg, #121a2c) 82%, transparent);
         }
 
         .teacher-certificates-summary {
@@ -288,8 +310,14 @@
         .teacher-certificates-empty {
             padding: 1.15rem;
             border-radius: 20px;
-            background: color-mix(in srgb, var(--admin-card-bg, #121a2c) 84%, transparent);
+            background: var(--admin-surface);
             border: 1px solid var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="dark"] .teacher-certificate-card,
+        html[data-theme="dark"] .teacher-certificates-empty {
+            background: color-mix(in srgb, var(--admin-card-bg, #121a2c) 84%, transparent);
         }
 
         .teacher-certificate-card__head,
@@ -305,6 +333,7 @@
             margin-bottom: 0.2rem;
             font-size: 1.05rem;
             font-weight: 800;
+            color: var(--admin-text);
         }
 
         .teacher-certificate-card__head p,
@@ -352,6 +381,7 @@
 
         .teacher-certificate-card__meta strong {
             font-size: 0.98rem;
+            color: var(--admin-text);
         }
 
         .teacher-certificate-card__actions form {
@@ -465,13 +495,13 @@
                     noteEl.value = note;
 
                     if (mode === 'reissue') {
-                        titleEl.textContent = 'Cap lai chung chi';
-                        descEl.textContent = 'Ban co the cap lai va cap nhat noi dung ghi chu cho chung chi hien tai.';
-                        submitEl.textContent = 'Cap lai chung chi';
+                        titleEl.textContent = "{{ __('courses::teacher/messages.certificates.issue_modal.title_reissue') }}";
+                        descEl.textContent = "{{ __('courses::teacher/messages.certificates.issue_modal.description_reissue') }}";
+                        submitEl.textContent = "{{ __('courses::teacher/messages.certificates.reissue_btn') }}";
                     } else {
-                        titleEl.textContent = 'Cap chung chi';
-                        descEl.textContent = 'Xac nhan cap chung chi thu cong cho hoc vien nay.';
-                        submitEl.textContent = 'Cap chung chi';
+                        titleEl.textContent = "{{ __('courses::teacher/messages.certificates.issue_btn') }}";
+                        descEl.textContent = "{{ __('courses::teacher/messages.certificates.issue_modal.description_issue') }}";
+                        submitEl.textContent = "{{ __('courses::teacher/messages.certificates.issue_btn') }}";
                     }
                 });
             }
@@ -497,8 +527,8 @@
                     codeEl.textContent = code;
                     reasonEl.value = reason;
                     descEl.textContent = studentName
-                        ? `Ban dang thu hoi chung chi cua ${studentName}.`
-                        : 'Xac nhan thu hoi chung chi nay.';
+                        ? "{{ __('courses::teacher/messages.certificates.revoke_modal.desc_with_name', ['name' => ':name']) }}".replace(':name', studentName)
+                        : "{{ __('courses::teacher/messages.certificates.revoke_modal.desc_confirm') }}";
                 };
 
                 revokeModal.addEventListener('show.bs.modal', (event) => {

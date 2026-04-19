@@ -18,7 +18,7 @@ class TeacherProfileController extends Controller
 
     public function show()
     {
-        $pageTitle = __('teacher::dashboard.profile.title');
+        $pageTitle = __('courses::teacher/messages.profile.title');
         $pageName = $pageTitle;
         $student = Auth::guard('students')->user();
         $teacher = $student?->teacher;
@@ -139,11 +139,11 @@ class TeacherProfileController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'status' => 'ok',
-                    'message' => __('teacher::dashboard.profile.flash.updated'),
+                    'message' => __('courses::teacher/messages.profile.flash.updated'),
                 ]);
             }
 
-            return back()->with('msg_success', __('teacher::dashboard.profile.flash.updated'));
+            return back()->with('msg_success', __('courses::teacher/messages.profile.flash.updated'));
         }
 
         $currentPassword = (string) $request->input('current_password');
@@ -178,7 +178,7 @@ class TeacherProfileController extends Controller
 
         return redirect()
             ->route('teacher.auth.login', ['locale' => app()->getLocale()])
-            ->with('msg_success', __('teacher::dashboard.profile.flash.password_changed'));
+            ->with('msg_success', __('courses::teacher/messages.profile.flash.password_changed'));
     }
 
     private function parseSpecialties(mixed $raw): array

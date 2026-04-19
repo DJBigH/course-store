@@ -8,11 +8,11 @@
     $teacherUnreadCount = $teacherNotificationSummary['count'] ?? 0;
     $teacherNotifications = $teacherNotificationSummary['items'] ?? collect();
     $teacherLocaleOptions = [
-        'vi' => ['short' => 'VI', 'label' => __('teacher::dashboard.header.locales.vi'), 'icon' => 'VN'],
-        'en' => ['short' => 'EN', 'label' => __('teacher::dashboard.header.locales.en'), 'icon' => 'EN'],
-        'ko' => ['short' => 'KO', 'label' => __('teacher::dashboard.header.locales.ko'), 'icon' => 'KO'],
-        'ja' => ['short' => 'JA', 'label' => __('teacher::dashboard.header.locales.ja'), 'icon' => 'JA'],
-        'zh' => ['short' => 'ZH', 'label' => __('teacher::dashboard.header.locales.zh'), 'icon' => 'ZH'],
+        'vi' => ['short' => 'VI', 'label' => __('teacher/header.locales.vi'), 'icon' => 'VN'],
+        'en' => ['short' => 'EN', 'label' => __('teacher/header.locales.en'), 'icon' => 'EN'],
+        'ko' => ['short' => 'KO', 'label' => __('teacher/header.locales.ko'), 'icon' => 'KO'],
+        'ja' => ['short' => 'JA', 'label' => __('teacher/header.locales.ja'), 'icon' => 'JA'],
+        'zh' => ['short' => 'ZH', 'label' => __('teacher/header.locales.zh'), 'icon' => 'ZH'],
     ];
     $teacherCurrentUrl = url()->current();
     if (request()->getQueryString()) {
@@ -21,14 +21,14 @@
     $teacherHeaderBadge = $teacherStudent?->teacher?->primary_badge;
 @endphp
 
-<nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+<nav class="sb-topnav navbar navbar-expand">
     <a class="navbar-brand ps-3 d-flex align-items-center gap-3 teacher-topnav-brand" href="{{ route('teacher.dashboard.index') }}">
         <span class="teacher-brand-mark">
             <i class="fas fa-chalkboard-user"></i>
         </span>
         <span class="teacher-brand-copy">
             <strong class="mb-1">{{ setting('site_name', 'BigK Udemy') }}</strong>
-            <small>{{ __('teacher::dashboard.brand.studio') }}</small>
+            <small>{{ __('teacher/header.brand_studio') }}</small>
         </span>
     </a>
 
@@ -72,18 +72,18 @@
         </div>
         <a href="{{ route('home', ['locale' => $teacherLocale]) }}" class="teacher-header-link"
             target="_blank" rel="noopener noreferrer">
-            {{ __('teacher::dashboard.header.view_site') }}
+            {{ __('teacher/header.view_site') }}
         </a>
     </div>
 
     <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 align-items-center">
         <li class="nav-item me-2">
             <button type="button" class="theme-toggle-admin" data-admin-theme-toggle
-                title="{{ __('teacher::dashboard.header.switch_to_dark') }}"
-                aria-label="{{ __('teacher::dashboard.header.switch_to_dark') }}" aria-pressed="false">
+                title="{{ __('teacher/header.switch_to_dark') }}"
+                aria-label="{{ __('teacher/header.switch_to_dark') }}" aria-pressed="false">
                 <i class="fas fa-moon theme-toggle-admin__icon-dark" aria-hidden="true"></i>
                 <i class="fas fa-sun theme-toggle-admin__icon-light" aria-hidden="true"></i>
-                <span data-admin-theme-label>{{ __('teacher::dashboard.header.dark_mode') }}</span>
+                <span data-admin-theme-label>{{ __('teacher/header.dark_mode') }}</span>
             </button>
         </li>
 
@@ -100,8 +100,8 @@
                 </a>
                 <div class="dropdown-menu dropdown-menu-end teacher-notification-menu" aria-labelledby="teacherNotificationDropdown">
                     <div class="teacher-notification-menu__header">
-                        <strong>{{ __('teacher::dashboard.notifications.title') }}</strong>
-                        <a href="{{ route('teacher.dashboard.notifications') }}">{{ __('teacher::dashboard.notifications.view_all_cta') }}</a>
+                        <strong>{{ __('teacher/header.notifications.title') }}</strong>
+                        <a href="{{ route('teacher.dashboard.notifications') }}">{{ __('teacher/header.notifications.view_all_cta') }}</a>
                     </div>
                     <div class="teacher-notification-menu__list">
                         @forelse ($teacherNotifications as $notification)
@@ -120,14 +120,14 @@
                                     <i class="{{ $notification['icon'] ?? 'fas fa-bell' }}"></i>
                                 </span>
                                 <span class="teacher-notification-menu__body">
-                                    <span class="teacher-notification-menu__title">{{ $notification['title'] ?? __('teacher::dashboard.notifications.types.system') }}</span>
+                                    <span class="teacher-notification-menu__title">{{ $notification['title'] ?? __('teacher/header.notifications.types.system') }}</span>
                                     <span class="teacher-notification-menu__message">{{ $notification['message'] ?? '' }}</span>
                                     <span class="teacher-notification-menu__time">{{ optional($notification['created_at'] ?? null)->diffForHumans() }}</span>
                                 </span>
                             </a>
                         @empty
                             <div class="teacher-notification-menu__empty">
-                                {{ __('teacher::dashboard.notifications.empty') }}
+                                {{ __('teacher/header.notifications.empty') }}
                             </div>
                         @endforelse
                     </div>
@@ -143,7 +143,7 @@
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="teacherNavbarDropdown">
                 <li>
                     <a class="dropdown-item" href="{{ route('teacher.dashboard.profile') }}">
-                        {{ __('teacher::dashboard.header.teacher_profile') }}
+                        {{ __('teacher/header.profile') }}
                     </a>
                 </li>
                 <li>
@@ -153,7 +153,7 @@
                     <form action="{{ route('clients-logout', ['locale' => $teacherLocale]) }}" method="POST" class="m-0">
                         @csrf
                         <button type="submit" class="dropdown-item">
-                            {{ __('teacher::dashboard.header.logout') }}
+                            {{ __('teacher/header.logout') }}
                         </button>
                     </form>
                 </li>
@@ -163,6 +163,23 @@
 </nav>
 
 <style>
+    .sb-topnav .nav-link {
+        color: var(--admin-text) !important;
+        transition: 0.18s ease;
+    }
+
+    .sb-topnav .nav-link:hover {
+        color: var(--admin-primary) !important;
+    }
+
+    html[data-theme="dark"] .sb-topnav .nav-link {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    html[data-theme="dark"] .sb-topnav .nav-link:hover {
+        color: #fff !important;
+    }
+
     .teacher-topnav-brand {
         flex: 0 1 auto;
         min-width: 0;
@@ -186,7 +203,7 @@
         display: flex;
         flex-direction: column;
         line-height: 1.05;
-        color: #fff;
+        color: var(--admin-text);
         min-width: 0;
     }
 
@@ -197,7 +214,7 @@
     }
 
     .teacher-brand-copy small {
-        color: rgba(255, 255, 255, 0.66);
+        color: var(--admin-muted);
         font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.1em;
@@ -220,12 +237,19 @@
         white-space: nowrap;
     }
 
-    .teacher-header-badge--blue { background: rgba(59, 130, 246, 0.14); color: #bfdbfe; border-color: rgba(96, 165, 250, 0.24); }
-    .teacher-header-badge--gold { background: rgba(245, 158, 11, 0.16); color: #fde68a; border-color: rgba(251, 191, 36, 0.24); }
-    .teacher-header-badge--emerald { background: rgba(16, 185, 129, 0.16); color: #a7f3d0; border-color: rgba(52, 211, 153, 0.24); }
-    .teacher-header-badge--violet { background: rgba(139, 92, 246, 0.16); color: #ddd6fe; border-color: rgba(167, 139, 250, 0.24); }
-    .teacher-header-badge--rose { background: rgba(244, 63, 94, 0.16); color: #fecdd3; border-color: rgba(251, 113, 133, 0.24); }
-    .teacher-header-badge--slate { background: rgba(148, 163, 184, 0.16); color: #e2e8f0; border-color: rgba(148, 163, 184, 0.24); }
+    .teacher-header-badge--blue { background: rgba(59, 130, 246, 0.1); color: #2563eb; border-color: rgba(59, 130, 246, 0.2); }
+    .teacher-header-badge--gold { background: rgba(245, 158, 11, 0.12); color: #b45309; border-color: rgba(245, 158, 11, 0.2); }
+    .teacher-header-badge--emerald { background: rgba(16, 185, 129, 0.12); color: #059669; border-color: rgba(16, 185, 129, 0.2); }
+    .teacher-header-badge--violet { background: rgba(139, 92, 246, 0.12); color: #7c3aed; border-color: rgba(139, 92, 246, 0.2); }
+    .teacher-header-badge--rose { background: rgba(244, 63, 94, 0.12); color: #e11d48; border-color: rgba(244, 63, 94, 0.2); }
+    .teacher-header-badge--slate { background: rgba(148, 163, 184, 0.12); color: #475569; border-color: rgba(148, 163, 184, 0.2); }
+
+    html[data-theme="dark"] .teacher-header-badge--blue { background: rgba(59, 130, 246, 0.14); color: #bfdbfe; border-color: rgba(96, 165, 250, 0.24); }
+    html[data-theme="dark"] .teacher-header-badge--gold { background: rgba(245, 158, 11, 0.16); color: #fde68a; border-color: rgba(251, 191, 36, 0.24); }
+    html[data-theme="dark"] .teacher-header-badge--emerald { background: rgba(16, 185, 129, 0.16); color: #a7f3d0; border-color: rgba(52, 211, 153, 0.24); }
+    html[data-theme="dark"] .teacher-header-badge--violet { background: rgba(139, 92, 246, 0.16); color: #ddd6fe; border-color: rgba(167, 139, 250, 0.24); }
+    html[data-theme="dark"] .teacher-header-badge--rose { background: rgba(244, 63, 94, 0.16); color: #fecdd3; border-color: rgba(251, 113, 133, 0.24); }
+    html[data-theme="dark"] .teacher-header-badge--slate { background: rgba(148, 163, 184, 0.16); color: #e2e8f0; border-color: rgba(148, 163, 184, 0.24); }
 
     .teacher-sidebar-toggle {
         position: relative;
@@ -237,17 +261,17 @@
         width: 42px;
         height: 42px;
         border-radius: 12px;
-        color: rgba(255, 255, 255, 0.82);
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--admin-text);
+        background: var(--admin-surface-3);
+        border: 1px solid var(--admin-border);
         text-decoration: none;
     }
 
     .teacher-sidebar-toggle:hover,
     .teacher-sidebar-toggle:focus {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.18);
+        color: var(--admin-primary);
+        background: var(--admin-hover-bg);
+        border-color: var(--admin-primary);
         box-shadow: none;
     }
 
@@ -260,16 +284,16 @@
         padding: 0.45rem 0.8rem;
         border-radius: 999px;
         text-decoration: none;
-        color: rgba(255, 255, 255, 0.88);
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--admin-text);
+        background: var(--admin-surface-3);
+        border: 1px solid var(--admin-border);
         transition: 0.18s ease;
     }
 
     .teacher-header-link:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.14);
-        border-color: rgba(255, 255, 255, 0.18);
+        color: var(--admin-primary);
+        background: var(--admin-hover-bg);
+        border-color: var(--admin-primary);
     }
 
     .teacher-header-link--dropdown::after {

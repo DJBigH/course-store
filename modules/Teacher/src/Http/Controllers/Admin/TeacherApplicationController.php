@@ -26,7 +26,7 @@ class TeacherApplicationController extends Controller
 
     public function index(Request $request)
     {
-        $pageTitle = 'Ung tuyen giang vien';
+        $pageTitle = __('teacher::admin.titles.applications');
         $applications = TeacherApplication::query()
             ->with(['student', 'package', 'teacher', 'reviewer'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
@@ -39,7 +39,7 @@ class TeacherApplicationController extends Controller
 
     public function show($id)
     {
-        $pageTitle = 'Chi tiet ung tuyen giang vien';
+        $pageTitle = __('teacher::admin.titles.application_detail');
         $application = TeacherApplication::query()
             ->with(['student', 'package', 'teacher', 'reviewer'])
             ->findOrFail($id);
@@ -53,9 +53,7 @@ class TeacherApplicationController extends Controller
             ->with(['student', 'package', 'teacher.application.package', 'teacher.student'])
             ->findOrFail($id);
 
-        if ($application->status === 'pending_payment') {
-            return back()->with('msg_danger', 'Ho so nay van dang cho thanh toan, chua the duyet.');
-        }
+            return back()->with('msg_danger', __('teacher::admin.messages.pending_payment_error'));
 
         $teacher = $application->teacher;
         $displayName = $application->display_name ?: $application->full_name;
@@ -136,10 +134,10 @@ class TeacherApplicationController extends Controller
                 'package_expires_at' => optional($teacher->package_expires_at)->toDateTimeString(),
                 'activates_at' => optional($application->activates_at)->toDateTimeString(),
             ],
-            logName: 'Duyet giang vien',
+            logName: __('teacher::admin.logs.approve_title'),
             description: $application->admin_note === 'package_upgrade'
-                ? 'Admin phe duyet nang cap goi giang vien'
-                : 'Admin phe duyet ho so giang vien'
+                ? __('teacher::admin.logs.approve_upgrade_desc')
+                : __('teacher::admin.logs.approve_new_desc')
         );
 
         Mail::to($application->email)
@@ -153,7 +151,7 @@ class TeacherApplicationController extends Controller
             ));
 
         return redirect()->route('teacher-applications.show', $application->id)
-            ->with('msg', 'Da phe duyet ho so giang vien thanh cong.');
+            ->with('msg', __('teacher::admin.messages.approve_success'));
     }
 
     public function reject(Request $request, $id)
@@ -164,7 +162,7 @@ class TeacherApplicationController extends Controller
             'status' => 'rejected',
             'reviewed_at' => now(),
             'reviewed_by' => auth()->id(),
-            'admin_note' => trim((string) $request->input('admin_note')) ?: 'Admin can bo sung them thong tin ho so.',
+            'admin_note' => trim((string) $request->input('admin_note')) ?: __('teacher::admin.messages.default_reject_note'),
         ]);
 
         Mail::to($application->email)
@@ -172,7 +170,7 @@ class TeacherApplicationController extends Controller
             ->queue(new TeacherApplicationRejectedMail($application, app()->getLocale()));
 
         return redirect()->route('teacher-applications.show', $application->id)
-            ->with('msg', 'Da tu choi ho so va gui ghi chu cho hoc vien.');
+            ->with('msg', __('teacher::admin.messages.reject_success'));
     }
 
     private function makeUniqueSlug(string $name, ?int $ignoreId = null): string

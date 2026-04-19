@@ -14,10 +14,10 @@
             <div class="row g-4 align-items-start">
                 <div class="col-lg-8">
                     <div class="bundle-detail-card bundle-detail-card--hero">
-                        <span class="bundle-detail-kicker">{{ __('teacher::dashboard.bundles.public.kicker') }}</span>
+                        <span class="bundle-detail-kicker">{{ __('courses::teacher/messages.bundles.public.kicker') }}</span>
                         <h1 class="bundle-detail-title">{{ $bundle->name }}</h1>
                         <p class="bundle-detail-description">
-                            {{ $bundle->description ?: __('teacher::dashboard.bundles.public.default_description') }}
+                            {{ $bundle->description ?: __('courses::teacher/messages.bundles.public.default_description') }}
                         </p>
 
                         <div class="bundle-detail-teacher">
@@ -30,17 +30,17 @@
 
                     <div class="bundle-detail-card">
                         <div class="bundle-detail-section-head">
-                            <h3>{{ __('teacher::dashboard.bundles.public.included_courses') }}</h3>
-                            <span>{{ __('teacher::dashboard.bundles.labels.course_count', ['count' => $courses->count()]) }}</span>
+                            <h3>{{ __('courses::teacher/messages.bundles.public.included_courses') }}</h3>
+                            <span>{{ __('courses::teacher/messages.bundles.labels.course_count', ['count' => $courses->count()]) }}</span>
                         </div>
 
                         @auth('students')
                             @if ($hasOwnedCourses)
                                 <div class="alert alert-info border-0 bundle-detail-adjusted-alert">
                                     @if ($allCoursesOwned)
-                                        {{ __('teacher::dashboard.bundles.flash.all_courses_owned') }}
+                                        {{ __('courses::teacher/messages.bundles.flash.all_courses_owned') }}
                                     @else
-                                        {{ __('teacher::dashboard.bundles.public.adjusted_notice', [
+                                        {{ __('courses::teacher/messages.bundles.public.adjusted_notice', [
                                             'owned' => $ownedCourseIds->count(),
                                             'remaining' => $remainingCourses->count(),
                                         ]) }}
@@ -66,7 +66,7 @@
                                             <span>{{ getTime($course->durations) }}</span>
                                             <span>{{ __('courses::clients/common.students') }}: {{ number_format($course->students_count ?? 0) }}</span>
                                             @if ($ownedCourseIds->contains($course->id))
-                                                <span class="bundle-detail-owned">{{ __('teacher::dashboard.bundles.public.already_owned') }}</span>
+                                                <span class="bundle-detail-owned">{{ __('courses::teacher/messages.bundles.public.already_owned') }}</span>
                                             @endif
                                         </div>
                                         <strong>{{ moneyLocale($coursePrice) }}</strong>
@@ -85,23 +85,23 @@
 
                         <div class="bundle-detail-pricing">
                             <div>
-                                <small>{{ __('teacher::dashboard.bundles.public.bundle_price') }}</small>
+                                <small>{{ __('courses::teacher/messages.bundles.public.bundle_price') }}</small>
                                 <strong>{{ moneyLocale($bundle->price) }}</strong>
                             </div>
                             @auth('students')
                                 <div>
-                                    <small>{{ __('teacher::dashboard.bundles.public.current_price') }}</small>
+                                    <small>{{ __('courses::teacher/messages.bundles.public.current_price') }}</small>
                                     <strong class="bundle-detail-current-price">{{ moneyLocale($payableAmount) }}</strong>
                                 </div>
                             @endauth
                             <div class="bundle-detail-saved">
-                                <small>{{ __('teacher::dashboard.bundles.public.separate_total') }}</small>
+                                <small>{{ __('courses::teacher/messages.bundles.public.separate_total') }}</small>
                                 <span>{{ moneyLocale($sourceTotal) }}</span>
                             </div>
                             @auth('students')
                                 @if ($hasOwnedCourses && !$allCoursesOwned)
                                     <div class="bundle-detail-saved">
-                                        <small>{{ __('teacher::dashboard.bundles.public.owned_value') }}</small>
+                                        <small>{{ __('courses::teacher/messages.bundles.public.owned_value') }}</small>
                                         <span>{{ moneyLocale($ownedValue) }}</span>
                                     </div>
                                 @endif
@@ -111,20 +111,20 @@
                         @auth('students')
                             @if ($allCoursesOwned)
                                 <div class="alert alert-warning border-0 mb-3">
-                                    {{ __('teacher::dashboard.bundles.flash.all_courses_owned') }}
+                                    {{ __('courses::teacher/messages.bundles.flash.all_courses_owned') }}
                                 </div>
                             @else
                                 <form action="{{ route('courses.bundle.create', ['locale' => app()->getLocale()]) }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="bundle_id" value="{{ $bundle->id }}">
                                     <button class="btn btn-primary w-100 bundle-detail-buy-btn">
-                                        {{ $hasOwnedCourses ? __('teacher::dashboard.bundles.public.buy_remaining') : __('teacher::dashboard.bundles.public.buy_now') }}
+                                        {{ $hasOwnedCourses ? __('courses::teacher/messages.bundles.public.buy_remaining') : __('courses::teacher/messages.bundles.public.buy_now') }}
                                     </button>
                                 </form>
                             @endif
                         @else
                             <a href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}" class="btn btn-primary w-100 bundle-detail-buy-btn">
-                                {{ __('teacher::dashboard.bundles.public.login_to_buy') }}
+                                {{ __('courses::teacher/messages.bundles.public.login_to_buy') }}
                             </a>
                         @endauth
                     </div>

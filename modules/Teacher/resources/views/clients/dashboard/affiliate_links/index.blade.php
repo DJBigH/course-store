@@ -22,12 +22,12 @@
     <div class="teacher-panel teacher-affiliate-shell">
         <div class="teacher-affiliate-hero">
             <div>
-                <span class="teacher-affiliate-kicker">{{ __('teacher::dashboard.nav.affiliate_links') }}</span>
-                <h3 class="teacher-affiliate-title">{{ __('teacher::dashboard.affiliate_links.title') }}</h3>
-                <p class="teacher-affiliate-desc mb-0">{{ __('teacher::dashboard.affiliate_links.description') }}</p>
+                <span class="teacher-affiliate-kicker">{{ __('courses::teacher/messages.nav.affiliate_links') }}</span>
+                <h3 class="teacher-affiliate-title">{{ __('courses::teacher/messages.affiliate_links.title') }}</h3>
+                <p class="teacher-affiliate-desc mb-0">{{ __('courses::teacher/messages.affiliate_links.description') }}</p>
             </div>
             <a href="{{ route('teacher.dashboard.affiliate-links.create') }}" class="btn btn-primary btn-lg">
-                {{ __('teacher::dashboard.affiliate_links.create') }}
+                {{ __('courses::teacher/messages.affiliate_links.create') }}
             </a>
         </div>
 
@@ -37,27 +37,27 @@
 
         <div class="teacher-affiliate-stats">
             <article class="teacher-affiliate-stat-card">
-                <span>{{ __('teacher::dashboard.affiliate_links.stats.total_links') }}</span>
+                <span>{{ __('courses::teacher/messages.affiliate_links.stats.total_links') }}</span>
                 <strong>{{ number_format((int) ($stats['total_links'] ?? 0)) }}</strong>
             </article>
             <article class="teacher-affiliate-stat-card">
-                <span>{{ __('teacher::dashboard.affiliate_links.stats.total_clicks') }}</span>
+                <span>{{ __('courses::teacher/messages.affiliate_links.stats.total_clicks') }}</span>
                 <strong>{{ number_format((int) ($stats['total_clicks'] ?? 0)) }}</strong>
             </article>
             <article class="teacher-affiliate-stat-card">
-                <span>{{ __('teacher::dashboard.affiliate_links.stats.landing_links') }}</span>
+                <span>{{ __('courses::teacher/messages.affiliate_links.stats.landing_links') }}</span>
                 <strong>{{ number_format((int) ($stats['landing_links'] ?? 0)) }}</strong>
             </article>
             <article class="teacher-affiliate-stat-card">
-                <span>{{ __('teacher::dashboard.affiliate_links.stats.paid_orders') }}</span>
+                <span>{{ __('courses::teacher/messages.affiliate_links.stats.paid_orders') }}</span>
                 <strong>{{ number_format((int) ($stats['paid_orders'] ?? 0)) }}</strong>
             </article>
             <article class="teacher-affiliate-stat-card">
-                <span>{{ __('teacher::dashboard.affiliate_links.stats.paid_revenue') }}</span>
+                <span>{{ __('courses::teacher/messages.affiliate_links.stats.paid_revenue') }}</span>
                 <strong>{{ $formatTrackedMoney((float) ($stats['paid_revenue'] ?? 0)) }}</strong>
             </article>
             <article class="teacher-affiliate-stat-card">
-                <span>{{ __('teacher::dashboard.affiliate_links.stats.conversion_rate') }}</span>
+                <span>{{ __('courses::teacher/messages.affiliate_links.stats.conversion_rate') }}</span>
                 <strong>{{ number_format((float) ($stats['conversion_rate'] ?? 0), 2) }}%</strong>
             </article>
         </div>
@@ -66,14 +66,14 @@
             <section class="teacher-affiliate-overview-card">
                 <div class="teacher-affiliate-overview-card__head">
                     <div>
-                        <h4>{{ __('teacher::dashboard.affiliate_links.sections.top_links') }}</h4>
-                        <p class="mb-0">{{ __('teacher::dashboard.affiliate_links.sections.top_links_desc') }}</p>
+                        <h4>{{ __('courses::teacher/messages.affiliate_links.sections.top_links') }}</h4>
+                        <p class="mb-0">{{ __('courses::teacher/messages.affiliate_links.sections.top_links_desc') }}</p>
                     </div>
                 </div>
                 <div class="teacher-affiliate-top-list">
                     @forelse ($topLinks as $index => $topLink)
                         @php
-                            $topLabel = __('teacher::dashboard.affiliate_links.target_types.' . $topLink->target_type);
+                            $topLabel = __('courses::teacher/messages.affiliate_links.target_types.' . $topLink->target_type);
                         @endphp
                         <article class="teacher-affiliate-top-item">
                             <div class="teacher-affiliate-top-item__rank">#{{ $index + 1 }}</div>
@@ -83,11 +83,11 @@
                             </div>
                             <div class="teacher-affiliate-top-item__metrics">
                                 <span>{{ $formatTrackedMoney((float) ($topLink->paid_revenue ?? 0)) }}</span>
-                                <small>{{ number_format((int) ($topLink->paid_orders_count ?? 0)) }} {{ __('teacher::dashboard.affiliate_links.labels.paid_orders') }}</small>
+                                <small>{{ number_format((int) ($topLink->paid_orders_count ?? 0)) }} {{ __('courses::teacher/messages.affiliate_links.labels.paid_orders') }}</small>
                             </div>
                         </article>
                     @empty
-                        <div class="teacher-affiliate-top-empty">{{ __('teacher::dashboard.common.empty') }}</div>
+                        <div class="teacher-affiliate-top-empty">{{ __('courses::teacher/messages.common.empty') }}</div>
                     @endforelse
                 </div>
             </section>
@@ -95,20 +95,20 @@
             <section class="teacher-affiliate-overview-card">
                 <div class="teacher-affiliate-overview-card__head">
                     <div>
-                        <h4>{{ __('teacher::dashboard.affiliate_links.sections.breakdown') }}</h4>
-                        <p class="mb-0">{{ __('teacher::dashboard.affiliate_links.sections.breakdown_desc') }}</p>
+                        <h4>{{ __('courses::teacher/messages.affiliate_links.sections.breakdown') }}</h4>
+                        <p class="mb-0">{{ __('courses::teacher/messages.affiliate_links.sections.breakdown_desc') }}</p>
                     </div>
                 </div>
                 <div class="teacher-affiliate-breakdown-list">
                     @foreach ($breakdown as $row)
                         <article class="teacher-affiliate-breakdown-item">
                             <div class="teacher-affiliate-breakdown-item__title">
-                                <strong>{{ __('teacher::dashboard.affiliate_links.target_types.' . $row['target_type']) }}</strong>
-                                <span>{{ number_format((int) $row['links_count']) }} {{ __('teacher::dashboard.affiliate_links.labels.links_count') }}</span>
+                                <strong>{{ __('courses::teacher/messages.affiliate_links.target_types.' . $row['target_type']) }}</strong>
+                                <span>{{ number_format((int) $row['links_count']) }} {{ __('courses::teacher/messages.affiliate_links.labels.links_count') }}</span>
                             </div>
                             <div class="teacher-affiliate-breakdown-item__metrics">
                                 <span>{{ number_format((int) $row['clicks']) }} click</span>
-                                <span>{{ number_format((int) $row['paid_orders']) }} {{ __('teacher::dashboard.affiliate_links.labels.paid_orders') }}</span>
+                                <span>{{ number_format((int) $row['paid_orders']) }} {{ __('courses::teacher/messages.affiliate_links.labels.paid_orders') }}</span>
                                 <span>{{ $formatTrackedMoney((float) $row['paid_revenue']) }}</span>
                                 <span>{{ number_format((float) $row['conversion_rate'], 2) }}%</span>
                             </div>
@@ -121,7 +121,7 @@
         <div class="teacher-affiliate-grid">
             @forelse ($links as $link)
                 @php
-                    $targetLabel = __('teacher::dashboard.affiliate_links.target_types.' . $link->target_type);
+                    $targetLabel = __('courses::teacher/messages.affiliate_links.target_types.' . $link->target_type);
                     $targetName = match ($link->target_type) {
                         'course' => $link->course?->name_locale ?: $link->course?->name,
                         'bundle' => $link->bundle?->name,
@@ -133,48 +133,48 @@
                     <div class="teacher-affiliate-card__head">
                         <div>
                             <span class="teacher-affiliate-card__status {{ $link->status ? 'is-active' : 'is-paused' }}">
-                                {{ $link->status ? __('teacher::dashboard.common.status_active') : __('teacher::dashboard.courses.status.draft') }}
+                                {{ $link->status ? __('courses::teacher/messages.common.status_active') : __('courses::teacher/messages.courses.status.draft') }}
                             </span>
                             <h4>{{ $link->name }}</h4>
                             <p class="mb-0">{{ $targetLabel }} @if ($targetName) • {{ $targetName }} @endif</p>
                         </div>
                         <div class="teacher-affiliate-card__meta">
-                            <span>{{ __('teacher::dashboard.affiliate_links.fields.code') }}</span>
+                            <span>{{ __('courses::teacher/messages.affiliate_links.fields.code') }}</span>
                             <strong>{{ $link->code }}</strong>
                         </div>
                     </div>
 
                     <div class="teacher-affiliate-card__stats">
                         <div class="teacher-affiliate-card__info">
-                            <span>{{ __('teacher::dashboard.affiliate_links.fields.clicks') }}</span>
+                            <span>{{ __('courses::teacher/messages.affiliate_links.fields.clicks') }}</span>
                             <strong>{{ number_format((int) $link->clicks_count) }}</strong>
                         </div>
                         <div class="teacher-affiliate-card__info">
-                            <span>{{ __('teacher::dashboard.affiliate_links.fields.last_clicked_at') }}</span>
-                            <strong>{{ $link->last_clicked_at ? $link->last_clicked_at->format('d/m/Y H:i') : __('teacher::dashboard.common.empty') }}</strong>
+                            <span>{{ __('courses::teacher/messages.affiliate_links.fields.last_clicked_at') }}</span>
+                            <strong>{{ $link->last_clicked_at ? $link->last_clicked_at->format('d/m/Y H:i') : __('courses::teacher/messages.common.empty') }}</strong>
                         </div>
                         <div class="teacher-affiliate-card__info">
-                            <span>{{ __('teacher::dashboard.affiliate_links.labels.paid_orders') }}</span>
+                            <span>{{ __('courses::teacher/messages.affiliate_links.labels.paid_orders') }}</span>
                             <strong>{{ number_format((int) ($link->paid_orders_count ?? 0)) }}</strong>
                         </div>
                         <div class="teacher-affiliate-card__info">
-                            <span>{{ __('teacher::dashboard.affiliate_links.labels.paid_revenue') }}</span>
+                            <span>{{ __('courses::teacher/messages.affiliate_links.labels.paid_revenue') }}</span>
                             <strong>{{ $formatTrackedMoney((float) ($link->paid_revenue ?? 0)) }}</strong>
                         </div>
                         <div class="teacher-affiliate-card__info">
-                            <span>{{ __('teacher::dashboard.affiliate_links.labels.conversion_rate') }}</span>
+                            <span>{{ __('courses::teacher/messages.affiliate_links.labels.conversion_rate') }}</span>
                             <strong>{{ number_format((float) ($link->conversion_rate ?? 0), 2) }}%</strong>
                         </div>
                     </div>
 
                     <div class="teacher-affiliate-card__url">
-                        <label class="form-label">{{ __('teacher::dashboard.affiliate_links.fields.public_url') }}</label>
+                        <label class="form-label">{{ __('courses::teacher/messages.affiliate_links.fields.public_url') }}</label>
                         <div class="teacher-affiliate-card__url-row">
                             <input type="text" class="form-control"
-                                value="{{ $publicUrl ?: __('teacher::dashboard.affiliate_links.unavailable_target') }}" readonly>
+                                value="{{ $publicUrl ?: __('courses::teacher/messages.affiliate_links.unavailable_target') }}" readonly>
                             <button type="button" class="btn btn-outline-primary affiliate-copy-btn"
                                 data-copy-value="{{ $publicUrl }}" {{ $publicUrl ? '' : 'disabled' }}>
-                                {{ __('teacher::dashboard.affiliate_links.actions.copy') }}
+                                {{ __('courses::teacher/messages.affiliate_links.actions.copy') }}
                             </button>
                         </div>
                     </div>
@@ -182,18 +182,18 @@
                     <div class="teacher-affiliate-card__actions">
                         @if ($publicUrl)
                             <a href="{{ $publicUrl }}" target="_blank" class="btn btn-outline-secondary">
-                                {{ __('teacher::dashboard.affiliate_links.actions.open') }}
+                                {{ __('courses::teacher/messages.affiliate_links.actions.open') }}
                             </a>
                         @endif
                         <a href="{{ route('teacher.dashboard.affiliate-links.edit', $link->id) }}" class="btn btn-outline-primary">
-                            {{ __('teacher::dashboard.affiliate_links.actions.edit') }}
+                            {{ __('courses::teacher/messages.affiliate_links.actions.edit') }}
                         </a>
                         <form action="{{ route('teacher.dashboard.affiliate-links.delete', $link->id) }}" method="POST"
-                            onsubmit="return confirm(@js(__('teacher::dashboard.affiliate_links.confirm_delete')));">
+                            onsubmit="return confirm(@js(__('courses::teacher/messages.affiliate_links.confirm_delete')));">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-outline-danger">
-                                {{ __('teacher::dashboard.affiliate_links.actions.delete') }}
+                                {{ __('courses::teacher/messages.affiliate_links.actions.delete') }}
                             </button>
                         </form>
                     </div>
@@ -201,8 +201,8 @@
             @empty
                 <div class="teacher-affiliate-empty">
                     <div class="teacher-affiliate-empty__icon"><i class="fas fa-link"></i></div>
-                    <h4>{{ __('teacher::dashboard.affiliate_links.empty') }}</h4>
-                    <p class="mb-0">{{ __('teacher::dashboard.affiliate_links.empty_description') }}</p>
+                    <h4>{{ __('courses::teacher/messages.affiliate_links.empty') }}</h4>
+                    <p class="mb-0">{{ __('courses::teacher/messages.affiliate_links.empty_description') }}</p>
                 </div>
             @endforelse
         </div>
@@ -297,7 +297,7 @@
             try {
                 await navigator.clipboard.writeText(value);
                 const originalText = button.textContent;
-                button.textContent = '{{ __('teacher::dashboard.profile.actions.copied') }}';
+                button.textContent = '{{ __('courses::teacher/messages.profile.actions.copied') }}';
                 setTimeout(() => {
                     button.textContent = originalText;
                 }, 1400);

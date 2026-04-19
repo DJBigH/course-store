@@ -358,25 +358,11 @@
                         <label class="form-check-label">Cho phep cap quyen hoc thu cong</label>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-12">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="can_export_orders" value="1"
-                            {{ old('can_export_orders', $package->can_export_orders ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep export don hang</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="can_export_students" value="1"
-                            {{ old('can_export_students', $package->can_export_students ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep export hoc vien</label>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="can_import_export_lessons" value="1"
-                            {{ old('can_import_export_lessons', $package->can_import_export_lessons ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep import/export bai hoc</label>
+                        <input class="form-check-input" type="checkbox" name="can_import_export" value="1"
+                            {{ old('can_import_export', $package->can_import_export ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Cho phep Import/Export dữ liệu (Đơn hàng, Học viên, Bài học, Quiz)</label>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -405,6 +391,13 @@
                         <input class="form-check-input" type="checkbox" name="can_issue_certificates" value="1"
                             {{ old('can_issue_certificates', $package->can_issue_certificates ?? false) ? 'checked' : '' }}>
                         <label class="form-check-label">Cho phep cap chung chi hoan thanh</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="can_verify_certificates" value="1"
+                            {{ old('can_verify_certificates', $package->can_verify_certificates ?? false) ? 'checked' : '' }}>
+                        <label class="form-check-label">Xac thuc chung chi cong khai (QR Code)</label>
                     </div>
                 </div>
                 <div class="col-md-4">

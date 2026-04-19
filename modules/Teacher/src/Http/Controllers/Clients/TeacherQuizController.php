@@ -17,10 +17,13 @@ use Modules\Courses\src\Models\CourseQuizQuestion;
 use Modules\Courses\src\Models\CourseQuizSubmission;
 use Modules\Courses\src\Policies\CourseQuizPolicy;
 use Modules\Lessons\src\Models\Lesson;
+use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
 use Modules\Teacher\src\Models\Teacher;
 
 class TeacherQuizController extends Controller
 {
+    use TeacherDashboardHelpers;
+
     public function index(int $courseId)
     {
         $teacher = $this->resolveTeacher();
@@ -78,8 +81,8 @@ class TeacherQuizController extends Controller
             ->limit(50)
             ->get();
 
-        $pageTitle = 'Quản lý Quiz - ' . $course->name;
-        $pageName = 'Quản lý Bài kiểm tra';
+        $pageTitle = __('quizzes::teacher/messages.page_title', ['name' => $course->name]);
+        $pageName = __('quizzes::teacher/messages.page_name');
 
         return view('teacher::clients.dashboard.quizzes', compact(
             'teacher',
@@ -131,7 +134,16 @@ class TeacherQuizController extends Controller
             'created_by' => $teacher->student_id,
         ]);
 
-        return redirect()->route('teacher.dashboard.quizzes.index', $course->id)->with('msg_success', 'Đã tạo quiz mới.');
+        $this->logTeacherQuizActivity(
+            $teacher,
+            $course,
+            $quiz,
+            'quiz_created',
+            'quizzes::teacher/messages.history.quiz_created',
+            ['initial_data' => $data]
+        );
+
+        return redirect()->route('teacher.dashboard.quizzes.index', $course->id)->with('msg_success', __('quizzes::teacher/messages.flash.created'));
     }
 
     public function edit(int $courseId, int $quizId)
@@ -141,8 +153,8 @@ class TeacherQuizController extends Controller
         $quiz = CourseQuiz::query()->with(['lesson', 'questions.choices'])->where('course_id', $course->id)->findOrFail($quizId);
         $this->authorizeQuizAccess($teacher, 'update', $quiz);
 
-        $pageTitle = 'Chỉnh sửa quiz: ' . $quiz->title;
-        $pageName = 'Chỉnh sửa quiz';
+        $pageTitle = __('quizzes::teacher/messages.edit.title', ['title' => $quiz->title]);
+        $pageName = __('quizzes::teacher/messages.edit.breadcrumb');
 
         return view('teacher::clients.dashboard.quiz_edit', [
             'teacher' => $teacher,
@@ -178,7 +190,7 @@ class TeacherQuizController extends Controller
         $studentIds = $selectedIds->isNotEmpty() ? $selectedIds : collect($buyerIds);
 
         if ($studentIds->isEmpty()) {
-            return back()->with('msg_danger', 'Khóa học này chưa có học viên mua, nên không thể gán quiz.');
+            return back()->with('msg_danger', __('quizzes::teacher/messages.flash.no_buyers'));
         }
 
         DB::transaction(function () use ($teacher, $quiz, $studentIds, $data) {
@@ -195,7 +207,16 @@ class TeacherQuizController extends Controller
             }
         });
 
-        return redirect()->route('teacher.dashboard.quizzes.index', $course->id)->with('msg_success', 'Đã giao quiz cho học viên.');
+        $this->logTeacherQuizActivity(
+            $teacher,
+            $course,
+            $quiz,
+            'quiz_assigned',
+            'quizzes::teacher/messages.history.quiz_assigned',
+            ['student_ids' => $studentIds->all()]
+        );
+
+        return redirect()->route('teacher.dashboard.quizzes.index', $course->id)->with('msg_success', __('quizzes::teacher/messages.flash.assigned'));
     }
 
     public function results(Request $request, int $courseId, int $quizId)
@@ -224,8 +245,8 @@ class TeacherQuizController extends Controller
             ->latest('id')
             ->get();
 
-        $pageTitle = 'Kết quả Quiz: ' . $quiz->title;
-        $pageName = 'Kết quả Quiz';
+        $pageTitle = __('quizzes::teacher/messages.results.title', ['title' => $quiz->title]);
+        $pageName = __('quizzes::teacher/messages.results.breadcrumb');
 
         return view('teacher::clients.dashboard.quiz_results', compact('teacher', 'course', 'quiz', 'submissions', 'pageTitle', 'pageName'));
     }
@@ -235,6 +256,13 @@ class TeacherQuizController extends Controller
         $teacher = $this->resolveTeacher();
         $course = $this->resolveOwnedCourse($teacher, $courseId);
         $quiz = CourseQuiz::query()->where('course_id', $course->id)->findOrFail($quizId);
+
+        if (!$teacher->packageHasFeature('can_import_export')) {
+            return redirect()
+                ->route('teacher.dashboard.quizzes.results', [$course->id, $quiz->id])
+                ->with('msg_danger', __('courses::teacher/messages.package_features.import_export_locked'));
+        }
+
         $this->authorizeQuizAccess($teacher, 'view', $quiz);
 
         $submissions = CourseQuizSubmission::query()
@@ -252,14 +280,22 @@ class TeacherQuizController extends Controller
         $callback = function () use ($submissions) {
             $handle = fopen('php://output', 'w');
             fwrite($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, ['Student', 'Attempt', 'Score', 'Passed', 'Submitted At']);
+            fputcsv($handle, [
+                __('quizzes::teacher/messages.results.table.student'),
+                __('quizzes::teacher/messages.results.table.attempt'),
+                __('quizzes::teacher/messages.results.table.score'),
+                __('quizzes::teacher/messages.results.table.result'),
+                __('quizzes::teacher/messages.results.table.date')
+            ]);
 
             foreach ($submissions as $submission) {
                 fputcsv($handle, [
                     $submission->student?->name,
                     $submission->attempt_no,
                     $submission->score,
-                    $submission->passed ? 'Yes' : 'No',
+                    $submission->passed 
+                        ? __('quizzes::teacher/messages.results.item.passed') 
+                        : __('quizzes::teacher/messages.results.item.failed'),
                     optional($submission->submitted_at)->format('Y-m-d H:i:s'),
                 ]);
             }
@@ -301,8 +337,17 @@ class TeacherQuizController extends Controller
 
         $quiz->update($updateData);
 
+        $this->logTeacherQuizActivity(
+            $teacher,
+            $course,
+            $quiz,
+            'quiz_updated',
+            'quizzes::teacher/messages.history.quiz_updated',
+            ['changes' => $updateData]
+        );
+
         return redirect()->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
-            ->with('msg_success', 'Đã cập nhật quiz.');
+            ->with('msg_success', __('quizzes::teacher/messages.flash.updated'));
     }
 
     public function destroy(int $courseId, int $quizId)
@@ -314,8 +359,16 @@ class TeacherQuizController extends Controller
 
         $quiz->delete();
 
+        $this->logTeacherQuizActivity(
+            $teacher,
+            $course,
+            $quiz,
+            'quiz_deleted',
+            'quizzes::teacher/messages.history.quiz_deleted'
+        );
+
         return redirect()->route('teacher.dashboard.quizzes.index', $course->id)
-            ->with('msg_success', 'Đã xóa quiz.');
+            ->with('msg_success', __('quizzes::teacher/messages.flash.deleted'));
     }
 
     // ────────────────── Câu hỏi ──────────────────
@@ -343,12 +396,12 @@ class TeacherQuizController extends Controller
         if ($questionType !== 'short_answer') {
             $nonEmptyChoices = collect($choices)->filter(fn ($c) => trim((string) ($c['text'] ?? '')) !== '');
             if ($nonEmptyChoices->count() < 2) {
-                return back()->withErrors(['choices' => 'Cần ít nhất 2 lựa chọn.'])->withInput();
+                return back()->withErrors(['choices' => __('quizzes::teacher/messages.errors.choices_min')])->withInput();
             }
 
             $hasCorrect = $nonEmptyChoices->contains(fn ($c) => !empty($c['is_correct']));
             if (! $hasCorrect) {
-                return back()->withErrors(['choices' => 'Phải đánh dấu ít nhất 1 câu trả lời đúng.'])->withInput();
+                return back()->withErrors(['choices' => __('quizzes::teacher/messages.errors.choices_correct')])->withInput();
             }
         }
 
@@ -375,8 +428,17 @@ class TeacherQuizController extends Controller
             ]);
         }
 
+        $this->logTeacherQuizActivity(
+            $teacher,
+            $course,
+            $quiz,
+            'question_created',
+            'quizzes::teacher/messages.history.question_created',
+            ['question_id' => $question->id]
+        );
+
         return redirect()->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
-            ->with('msg_success', 'Đã thêm câu hỏi mới.');
+            ->with('msg_success', __('quizzes::teacher/messages.flash.question_created'));
     }
 
     public function updateQuestion(Request $request, int $courseId, int $quizId, int $questionId)
@@ -402,11 +464,11 @@ class TeacherQuizController extends Controller
         if ($questionType !== 'short_answer') {
             $nonEmptyChoices = collect($choices)->filter(fn ($c) => trim((string) ($c['text'] ?? '')) !== '');
             if ($nonEmptyChoices->count() < 2) {
-                return back()->withErrors(['choices' => 'Cần ít nhất 2 lựa chọn.'])->withInput();
+                return back()->withErrors(['choices' => __('quizzes::teacher/messages.errors.choices_min')])->withInput();
             }
             $hasCorrect = $nonEmptyChoices->contains(fn ($c) => !empty($c['is_correct']));
             if (! $hasCorrect) {
-                return back()->withErrors(['choices' => 'Phải đánh dấu ít nhất 1 câu trả lời đúng.'])->withInput();
+                return back()->withErrors(['choices' => __('quizzes::teacher/messages.errors.choices_correct')])->withInput();
             }
         }
 
@@ -432,8 +494,17 @@ class TeacherQuizController extends Controller
             ]);
         }
 
+        $this->logTeacherQuizActivity(
+            $teacher,
+            $course,
+            $quiz,
+            'question_updated',
+            'quizzes::teacher/messages.history.question_updated',
+            ['question_id' => $question->id]
+        );
+
         return redirect()->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
-            ->with('msg_success', 'Đã cập nhật câu hỏi.');
+            ->with('msg_success', __('quizzes::teacher/messages.flash.question_updated'));
     }
 
     public function deleteQuestion(int $courseId, int $quizId, int $questionId)
@@ -448,8 +519,17 @@ class TeacherQuizController extends Controller
             ->findOrFail($questionId)
             ->delete();
 
+        $this->logTeacherQuizActivity(
+            $teacher,
+            $course,
+            $quiz,
+            'question_deleted',
+            'quizzes::teacher/messages.history.question_deleted',
+            ['question_id' => $questionId]
+        );
+
         return redirect()->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
-            ->with('msg_success', 'Đã xóa câu hỏi.');
+            ->with('msg_success', __('quizzes::teacher/messages.flash.question_deleted'));
     }
 
     public function generateAiQuestions(Request $request, int $courseId, int $quizId, \Modules\Teacher\src\Services\GeminiAiService $aiService)
@@ -462,7 +542,7 @@ class TeacherQuizController extends Controller
         if (!$teacher->packageHasFeature('can_use_ai_quiz')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gói đăng ký của bạn không hỗ trợ tính năng tạo Quiz bằng AI. Vui lòng nâng cấp gói!'
+                'message' => __('quizzes::teacher/messages.flash.ai_locked')
             ], 403);
         }
 
@@ -476,23 +556,27 @@ class TeacherQuizController extends Controller
             $seconds = RateLimiter::availableIn($limiterKey);
             return response()->json([
                 'success' => false,
-                'message' => 'Gói đăng ký của bạn giới hạn tối đa ' . $maxAttempts . ' lượt tạo AI/ngày. Hãy thử lại sau 00:00 ngày mai!'
+                'message' => __('quizzes::teacher/messages.flash.ai_limit', ['max' => $maxAttempts])
             ], 429);
         }
 
         $request->validate([
             'topic'      => ['required', 'string', 'max:255'],
             'amount'     => ['required', 'integer', 'min:1', 'max:20'],
-            'difficulty' => ['required', 'string', 'in:Dễ,Trung bình,Khó'],
+            'difficulty' => ['required', 'string', 'in:' . implode(',', [
+                __('quizzes::teacher/messages.edit.ai_modal.difficulties.easy'),
+                __('quizzes::teacher/messages.edit.ai_modal.difficulties.medium'),
+                __('quizzes::teacher/messages.edit.ai_modal.difficulties.hard')
+            ])],
             'language'   => ['required', 'string', 'in:Vietnamese,English'],
         ]);
 
         try {
-            // Map difficulty from Vietnamese to English for the service
+            // Map difficulty from localized labels to English for the service
             $difficultyMap = [
-                'Dễ' => 'Easy',
-                'Trung bình' => 'Medium',
-                'Khó' => 'Hard'
+                __('quizzes::teacher/messages.edit.ai_modal.difficulties.easy') => 'Easy',
+                __('quizzes::teacher/messages.edit.ai_modal.difficulties.medium') => 'Medium',
+                __('quizzes::teacher/messages.edit.ai_modal.difficulties.hard') => 'Hard'
             ];
             $mappedDifficulty = $difficultyMap[$request->input('difficulty')] ?? 'Medium';
 
@@ -533,7 +617,7 @@ class TeacherQuizController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Đã tạo thành công ' . count($questions) . ' câu hỏi bằng AI.'
+                'message' => __('quizzes::teacher/messages.flash.ai_success', ['count' => count($questions)])
             ]);
 
         } catch (\Exception $e) {
@@ -551,6 +635,13 @@ class TeacherQuizController extends Controller
         $teacher = $this->resolveTeacher();
         $course  = $this->resolveOwnedCourse($teacher, $courseId);
         $quiz    = CourseQuiz::query()->where('course_id', $course->id)->findOrFail($quizId);
+
+        if (!$teacher->packageHasFeature('can_import_export')) {
+            return redirect()
+                ->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
+                ->with('msg_danger', __('courses::teacher/messages.package_features.import_export_locked'));
+        }
+
         $this->authorizeQuizAccess($teacher, 'update', $quiz);
 
         $headers = [
@@ -563,17 +654,17 @@ class TeacherQuizController extends Controller
             fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
             fputcsv($handle, ['question', 'question_type', 'points', 'choice_a', 'choice_b', 'choice_c', 'choice_d', 'correct_choices']);
             fputcsv($handle, [
-                'Thủ đô của Việt Nam là gì?',
+                __('quizzes::teacher/messages.samples.question_1'),
                 'single_choice',
                 '1',
-                'Hà Nội',
-                'TP.HCM',
-                'Đà Nẵng',
-                'Huế',
+                __('quizzes::teacher/messages.samples.choice_1a'),
+                __('quizzes::teacher/messages.samples.choice_1b'),
+                __('quizzes::teacher/messages.samples.choice_1c'),
+                __('quizzes::teacher/messages.samples.choice_1d'),
                 'A',
             ]);
             fputcsv($handle, [
-                'Ngôn ngữ nào dùng để lập trình web phía server?',
+                __('quizzes::teacher/messages.samples.question_2'),
                 'multiple_choice',
                 '2',
                 'PHP',
@@ -593,6 +684,13 @@ class TeacherQuizController extends Controller
         $teacher = $this->resolveTeacher();
         $course  = $this->resolveOwnedCourse($teacher, $courseId);
         $quiz    = CourseQuiz::query()->where('course_id', $course->id)->findOrFail($quizId);
+
+        if (!$teacher->packageHasFeature('can_import_export')) {
+            return redirect()
+                ->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
+                ->with('msg_danger', __('courses::teacher/messages.package_features.import_export_locked'));
+        }
+
         $this->authorizeQuizAccess($teacher, 'update', $quiz);
 
         $request->validate([
@@ -660,7 +758,7 @@ class TeacherQuizController extends Controller
         fclose($handle);
 
         return redirect()->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
-            ->with('msg_success', "Đã import {$imported} câu hỏi thành công.");
+            ->with('msg_success', __('quizzes::teacher/messages.flash.import_success', ['count' => $imported]));
     }
 
     public function exportQuestions(int $courseId, int $quizId)
@@ -668,6 +766,13 @@ class TeacherQuizController extends Controller
         $teacher = $this->resolveTeacher();
         $course  = $this->resolveOwnedCourse($teacher, $courseId);
         $quiz    = CourseQuiz::query()->with(['questions.choices'])->where('course_id', $course->id)->findOrFail($quizId);
+
+        if (!$teacher->packageHasFeature('can_import_export')) {
+            return redirect()
+                ->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
+                ->with('msg_danger', __('courses::teacher/messages.package_features.import_export_locked'));
+        }
+
         $this->authorizeQuizAccess($teacher, 'view', $quiz);
 
         $filename = 'quiz-' . $quiz->id . '-questions.csv';

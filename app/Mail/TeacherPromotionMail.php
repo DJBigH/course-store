@@ -40,7 +40,7 @@ class TeacherPromotionMail extends Mailable implements ShouldQueue
      */
     public static function fromModels(
         \Modules\Teacher\src\Models\Teacher $teacher,
-        \Modules\Teacher\src\Models\TeacherPromotion $promotion,
+        \Modules\Promotions\src\Models\Promotion $promotion,
         \Modules\Students\src\Models\Student $student,
         string $mailLocale,
         ?\Modules\Courses\src\Models\Courses $course = null

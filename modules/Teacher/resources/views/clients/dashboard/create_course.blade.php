@@ -5,23 +5,23 @@
         <div class="teacher-panel">
             <div class="teacher-section-title mb-4">
                 <div>
-                    <h3 class="fw-bold mb-2">{{ $course ? __('teacher::dashboard.courses.edit_title') : __('teacher::dashboard.courses.create_title') }}</h3>
-                    <p class="text-muted mb-0">{{ $course ? __('teacher::dashboard.courses.edit_description') : __('teacher::dashboard.courses.create_description') }}</p>
+                    <h3 class="fw-bold mb-2">{{ $course ? __('teacher::teacher/course/edit.edit_title') : __('teacher::teacher/course/add.create_title') }}</h3>
+                    <p class="text-muted mb-0">{{ $course ? __('teacher::teacher/course/edit.edit_description') : __('teacher::teacher/course/add.create_description') }}</p>
                     @if ($course?->package_locked_at)
                         <div class="teacher-limit-lock mt-3">
-                            <span class="teacher-limit-lock__badge">{{ __('teacher::dashboard.courses.labels.limited_actions_only') }}</span>
-                            <div class="teacher-limit-lock__text">{{ __('teacher::dashboard.courses.warnings.locked_manage_only') }}</div>
+                            <span class="teacher-limit-lock__badge">{{ __('teacher::teacher/course/common.labels.limited_actions_only') }}</span>
+                            <div class="teacher-limit-lock__text">{{ __('teacher::teacher/course/common.warnings.locked_manage_only') }}</div>
                         </div>
                     @endif
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     @if ($usage)
                         <span class="teacher-chip">
-                            {{ __('teacher::dashboard.courses.package_usage', ['used' => $usage['used'], 'limit' => $usage['limit_label']]) }}
+                            {{ __('teacher::teacher/course/add.package_usage', ['used' => $usage['used'], 'limit' => $usage['limit_label']]) }}
                         </span>
                     @endif
                     <a href="{{ route('teacher.dashboard.courses') }}" class="btn btn-outline-secondary">
-                        {{ __('teacher::dashboard.common.back') }}
+                        {{ __('teacher::teacher/course/common.actions.back') }}
                     </a>
                 </div>
             </div>
@@ -32,12 +32,12 @@
 
             @if ($usage && ($usage['has_limit'] ?? false) && ($usage['is_over_limit'] ?? false))
                 <div class="alert alert-warning">
-                    {{ __('teacher::dashboard.courses.warnings.publish_limit_over', ['count' => $usage['over_limit_by'] ?? 0]) }}
+                    {{ __('teacher::teacher/course/common.warnings.publish_limit_over', ['count' => $usage['over_limit_by'] ?? 0]) }}
                 </div>
             @endif
 
             @if ($errors->any())
-                <div class="alert alert-danger">{{ __('teacher::dashboard.common.validation_summary') }}</div>
+                <div class="alert alert-danger">{{ __('teacher::teacher/course/common.validation_summary') }}</div>
             @endif
 
             <form method="POST" action="{{ $formAction }}" class="teacher-course-form">
@@ -46,8 +46,8 @@
                 <div class="teacher-panel mb-4">
                     <div class="teacher-section-title mb-3">
                         <div>
-                            <h4 class="h5 mb-1">{{ __('teacher::dashboard.courses.content_title') }}</h4>
-                            <p class="text-muted mb-0">{{ __('teacher::dashboard.courses.content_description') }}</p>
+                            <h4 class="h5 mb-1">{{ __('teacher::teacher/course/add.content_title') }}</h4>
+                            <p class="text-muted mb-0">{{ __('teacher::teacher/course/add.content_description') }}</p>
                         </div>
                         <div class="btn-group" role="group" aria-label="Course language tabs">
                             <input type="radio" class="btn-check" name="content_lang" id="teacher_course_lang_vi" checked>
@@ -79,7 +79,7 @@
                             <div class="row g-3">
                                 <div class="col-lg-6">
                                     <label class="form-label">
-                                        {{ __('teacher::dashboard.courses.form.name_label', ['locale' => strtoupper($locale)]) }}
+                                        {{ __('teacher::teacher/course/common.form.name_label', ['locale' => strtoupper($locale)]) }}
                                     </label>
                                     <input type="text" name="{{ $nameField }}" class="form-control @error($nameField) is-invalid @enderror"
                                         value="{{ old($nameField, data_get($course, $nameField)) }}">
@@ -89,7 +89,7 @@
                                 </div>
                                 <div class="col-lg-6">
                                     <label class="form-label">
-                                        {{ __('teacher::dashboard.courses.form.supports_label', ['locale' => strtoupper($locale)]) }}
+                                        {{ __('teacher::teacher/course/common.form.supports_label', ['locale' => strtoupper($locale)]) }}
                                     </label>
                                     <textarea name="{{ $supportsField }}" class="form-control @error($supportsField) is-invalid @enderror"
                                         rows="4">{{ old($supportsField, data_get($course, $supportsField)) }}</textarea>
@@ -99,7 +99,7 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label">
-                                        {{ __('teacher::dashboard.courses.form.detail_label', ['locale' => strtoupper($locale)]) }}
+                                        {{ __('teacher::teacher/course/common.form.detail_label', ['locale' => strtoupper($locale)]) }}
                                     </label>
                                     <textarea name="{{ $detailField }}" class="form-control @error($detailField) is-invalid @enderror"
                                         rows="7">{{ old($detailField, data_get($course, $detailField)) }}</textarea>
@@ -115,10 +115,10 @@
                 <div class="row g-4">
                     <div class="col-xl-7">
                         <div class="teacher-panel h-100">
-                            <h4 class="h5 mb-3">{{ __('teacher::dashboard.courses.settings_title') }}</h4>
+                            <h4 class="h5 mb-3">{{ __('teacher::teacher/course/common.settings_title') }}</h4>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::dashboard.courses.form.thumbnail') }}</label>
+                                    <label class="form-label">{{ __('teacher::teacher/course/common.form.thumbnail') }}</label>
                                     <input type="text" name="thumbnail" class="form-control @error('thumbnail') is-invalid @enderror"
                                         value="{{ old('thumbnail', $course?->thumbnail) }}" placeholder="https://...">
                                     @error('thumbnail')
@@ -126,7 +126,7 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::dashboard.courses.form.code') }}</label>
+                                    <label class="form-label">{{ __('teacher::teacher/course/common.form.code') }}</label>
                                     <div class="input-group">
                                         <input type="text" name="code" id="teacher_course_code"
                                             class="form-control @error('code') is-invalid @enderror" value="{{ old('code', $course?->code) }}"
@@ -140,7 +140,7 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::dashboard.courses.form.price') }}</label>
+                                    <label class="form-label">{{ __('teacher::teacher/course/common.form.price') }}</label>
                                     <input type="hidden" name="price" id="teacher-course-price" value="{{ old('price', $course?->price ?? 0) }}">
                                     <div class="teacher-money-input">
                                         <input
@@ -153,15 +153,15 @@
                                             data-money-target="teacher-course-price"
                                             placeholder="0"
                                         >
-                                        <span class="teacher-money-input__unit">đ</span>
+                                        <span class="teacher-money-input__unit">{{ __('teacher::teacher/dashboard.common.currency_symbol') }}</span>
                                     </div>
-                                    <small class="text-muted d-block mt-2">Gia toi da 99,999,999d.</small>
+                                    <small class="text-muted d-block mt-2">{{ __('teacher::teacher/course/common.form.price_hint', ['max' => '99,999,999']) }}</small>
                                     @error('price')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::dashboard.courses.form.sale_price') }}</label>
+                                    <label class="form-label">{{ __('teacher::teacher/course/common.form.sale_price') }}</label>
                                     <input type="hidden" name="sale_price" id="teacher-course-sale-price" value="{{ old('sale_price', $course?->sale_price ?? 0) }}">
                                     <div class="teacher-money-input">
                                         <input
@@ -174,44 +174,44 @@
                                             data-money-target="teacher-course-sale-price"
                                             placeholder="0"
                                         >
-                                        <span class="teacher-money-input__unit">đ</span>
+                                        <span class="teacher-money-input__unit">{{ __('teacher::teacher/dashboard.common.currency_symbol') }}</span>
                                     </div>
-                                    <small class="text-muted d-block mt-2">Khong duoc lon hon gia goc.</small>
+                                    <small class="text-muted d-block mt-2">{{ __('teacher::teacher/course/common.form.sale_price_hint') }}</small>
                                     <div class="invalid-feedback d-none" id="teacher-course-sale-price-realtime-error">
-                                        Gia khuyen mai khong duoc lon hon gia goc.
+                                        {{ __('teacher::teacher/course/common.form.sale_price_error') }}
                                     </div>
                                     @error('sale_price')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">{{ __('teacher::dashboard.courses.form.status') }}</label>
+                                    <label class="form-label">{{ __('teacher::teacher/course/common.form.status') }}</label>
                                     <select name="status" class="form-select @error('status') is-invalid @enderror">
-                                        <option value="0" @selected(old('status', $course?->status ?? 0) == 0)>{{ __('teacher::dashboard.courses.status.draft') }}</option>
-                                        <option value="1" @selected(old('status', $course?->status ?? 0) == 1)>{{ __('teacher::dashboard.courses.status.published') }}</option>
+                                        <option value="0" @selected(old('status', $course?->status ?? 0) == 0)>{{ __('teacher::teacher/course/common.status.draft') }}</option>
+                                        <option value="1" @selected(old('status', $course?->status ?? 0) == 1)>{{ __('teacher::teacher/course/common.status.published') }}</option>
                                     </select>
                                     @if ($usage && ($usage['has_limit'] ?? false))
                                         <small class="text-muted d-block mt-2">
-                                            {{ __('teacher::dashboard.courses.warnings.publish_limit_summary', [
+                                            {{ __('teacher::teacher/course/common.warnings.publish_limit_summary', [
                                                 'published' => $usage['published'] ?? $usage['used'] ?? 0,
                                                 'total' => $usage['total'] ?? $usage['used'] ?? 0,
-                                                'limit' => $usage['limit_label'] ?? __('teacher::dashboard.courses.unlimited'),
+                                                'limit' => $usage['limit_label'] ?? __('teacher::teacher/course/list.unlimited'),
                                             ]) }}
                                         </small>
                                     @endif
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">{{ __('teacher::dashboard.courses.form.is_document') }}</label>
+                                    <label class="form-label">{{ __('teacher::teacher/course/common.form.is_document') }}</label>
                                     <select name="is_document" class="form-select @error('is_document') is-invalid @enderror">
-                                        <option value="0" @selected(old('is_document', $course?->is_document ?? 0) == 0)>{{ __('teacher::dashboard.common.no') }}</option>
-                                        <option value="1" @selected(old('is_document', $course?->is_document ?? 0) == 1)>{{ __('teacher::dashboard.common.yes') }}</option>
+                                        <option value="0" @selected(old('is_document', $course?->is_document ?? 0) == 0)>{{ __('teacher::teacher/course/common.actions.no') }}</option>
+                                        <option value="1" @selected(old('is_document', $course?->is_document ?? 0) == 1)>{{ __('teacher::teacher/course/common.actions.yes') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">{{ __('teacher::dashboard.courses.form.is_learning_locked') }}</label>
+                                    <label class="form-label">{{ __('teacher::teacher/course/common.form.is_learning_locked') }}</label>
                                     <select name="is_learning_locked" class="form-select @error('is_learning_locked') is-invalid @enderror">
-                                        <option value="0" @selected(old('is_learning_locked', $course?->is_learning_locked ?? 0) == 0)>{{ __('teacher::dashboard.courses.locking.open') }}</option>
-                                        <option value="1" @selected(old('is_learning_locked', $course?->is_learning_locked ?? 0) == 1)>{{ __('teacher::dashboard.courses.locking.locked') }}</option>
+                                        <option value="0" @selected(old('is_learning_locked', $course?->is_learning_locked ?? 0) == 0)>{{ __('teacher::teacher/course/common.locking.open') }}</option>
+                                        <option value="1" @selected(old('is_learning_locked', $course?->is_learning_locked ?? 0) == 1)>{{ __('teacher::teacher/course/common.locking.locked') }}</option>
                                     </select>
                                 </div>
                             </div>
@@ -220,8 +220,8 @@
 
                     <div class="col-xl-5">
                         <div class="teacher-panel h-100">
-                            <h4 class="h5 mb-3">{{ __('teacher::dashboard.courses.categories_title') }}</h4>
-                            <p class="text-muted">{{ __('teacher::dashboard.courses.categories_description') }}</p>
+                            <h4 class="h5 mb-3">{{ __('teacher::teacher/course/add.categories_title') }}</h4>
+                            <p class="text-muted">{{ __('teacher::teacher/course/add.categories_description') }}</p>
 
                             <div class="teacher-category-list">
                                 @foreach ($categories as $category)
@@ -242,7 +242,7 @@
 
                 <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
                     <a href="{{ route('teacher.dashboard.courses') }}" class="btn btn-outline-secondary">
-                        {{ __('teacher::dashboard.common.cancel') }}
+                        {{ __('teacher::teacher/course/common.actions.cancel') }}
                     </a>
                     <button type="submit" class="btn btn-primary">
                         {{ $submitLabel }}

@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'overview' => [
+        'ranges' => [
+            'today' => 'Today',
+            '7d' => 'Last 7 days',
+            '14d' => 'Last 14 days',
+            'month' => 'This month',
+            'year' => 'This year',
+            'viewing_data' => 'Viewing data',
+            'current_filter_prefix' => 'Current filter: :prefix',
+            'ready' => 'Ready',
+        ],
+    ],
+    'common' => [
+        'currency_symbol' => '$',
+        'loading' => 'Loading...',
+        'failed_to_load' => 'Failed to load data',
+    ],
+    'title' => 'Instructor Earnings',
+    'description' => 'View detailed insights into your courses revenue and purchases.',
+    'gross_revenue' => 'Gross Revenue',
+    'teacher_revenue' => 'Instructor Earnings (:rate%)',
+    'empty' => 'No data found for this period.',
+    'breakdown' => [
+        'daily_title' => 'By Day',
+        'daily_description' => 'Detailed daily earnings.',
+        'monthly_title' => 'By Month',
+        'monthly_description' => 'Detailed monthly earnings.',
+        'course_title' => 'By Course',
+        'course_description' => 'Earnings per course.',
+        'table' => [
+            'period' => 'Period',
+            'orders' => 'Orders',
+            'revenue' => 'Earnings',
+        ],
+    ],
+    'charts' => [
+        'daily_revenue_title' => 'Revenue Chart',
+        'daily_revenue_desc' => 'Recent income trends.',
+        'highlights' => 'Highlights',
+        'conversion_title' => 'Course Performance',
+        'conversion_desc' => 'Conversion rates and revenue per course.',
+        'bar_legend' => 'Performance',
+        'view_metric' => ':count views',
+        'order_metric' => ':count orders',
+    ],
+    'recent_transactions_title' => 'Recent Transactions',
+    'recent_transactions_desc' => 'List of successfully purchased orders.',
+    'recent_transactions_note' => 'Note: Only confirmed successful payments are displayed.',
+    'table' => [
+        'order' => 'Order ID',
+        'course' => 'Course',
+        'student' => 'Student',
+        'gross' => 'Gross Price',
+        'discount' => 'Discount',
+        'net' => 'Net Revenue',
+        'revenue' => 'Your Share',
+    ],
+];
