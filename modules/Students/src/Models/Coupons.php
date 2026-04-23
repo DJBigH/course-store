@@ -61,7 +61,7 @@ class Coupons extends Model
     public function bundles()
     {
         return $this->belongsToMany(
-            \Modules\Teacher\src\Models\TeacherCourseBundle::class,
+            \Modules\Courses\src\Models\CourseBundle::class,
             'coupons_teacher_course_bundles',
             'coupon_id',
             'bundle_id'

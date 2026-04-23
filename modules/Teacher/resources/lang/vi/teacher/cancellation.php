@@ -1,0 +1,60 @@
+<?php
+
+return [
+    'title' => 'Hủy hợp tác giảng viên',
+    'description' => 'Chúng tôi rất tiếc khi bạn quyết định dừng hợp tác. Vui lòng hoàn tất các bước xác nhận bên dưới.',
+    'status' => [
+        'pending' => 'Đang chờ duyệt',
+        'approved' => 'Đã phê duyệt',
+        'rejected' => 'Bị từ chối',
+        'cancelled' => 'Đã hủy',
+    ],
+    'active_request' => [
+        'status_prefix' => 'Yêu cầu hiện tại:',
+        'last_update' => 'Cập nhật cuối: :time',
+        'your_reason' => 'Lý do của bạn:',
+        'admin_note' => 'Phản hồi từ Ban quản trị:',
+        'processed_by' => 'Người xử lý: :name',
+        'resubmit_cta' => 'Gửi lại yêu cầu mới',
+    ],
+    'form' => [
+        'notice_title' => 'Lưu ý quan trọng:',
+        'notice_text' => 'Việc hủy hợp tác sẽ khiến các khóa học của bạn bị tạm ẩn và các khoản thanh toán sẽ được chốt vào kỳ kế toán gần nhất. Hãy chắc chắn bạn đã đọc kỹ chính sách hỗ trợ.',
+        'reason_label' => 'Lý do hủy hợp tác',
+        'reason_hint' => 'Vui lòng chia sẻ lý do để chúng tôi cải thiện dịch vụ tốt hơn',
+        'reason_placeholder' => 'Nhập chi tiết lý do của bạn tại đây...',
+        'security_title' => 'Xác minh bảo mật',
+        'security_help' => 'Để bảo vệ tài khoản, một mã OTP gồm 6 chữ số đã được gửi đến Email của bạn. Vui lòng kiểm tra và nhập mã vào ô bên dưới.',
+        'otp_placeholder' => 'Nhập mã 6 số',
+        'otp_send' => 'Gửi mã xác nhận',
+        'otp_resend' => 'Gửi lại mã',
+        'otp_wait' => 'Gửi lại sau (:time)',
+        'back_cta' => 'Quay lại Dashboard',
+        'submit_cta' => 'Xác nhận gửi yêu cầu',
+        'processing' => 'Đang xử lý...',
+        'sending' => 'Đang gửi mã...',
+    ],
+    'guide' => [
+        'step1' => 'Tất cả bài giảng sẽ bị tạm ẩn khỏi trang học viên.',
+        'step2' => 'Doanh thu hiện tại sẽ được thanh toán vào kỳ đối soát gần nhất.',
+        'step3' => 'Hợp đồng của bạn với hệ thống sẽ chấm dứt ngay sau khi được phê duyệt.',
+        'step4' => 'Sau khi hủy, bạn sẽ không thể truy cập Workspace cho đến khi đăng ký lại.',
+    ],
+    'js' => [
+        'sending' => 'Đang gửi...',
+        'send_otp' => 'Gửi mã xác nhận',
+        'resend_otp' => 'Gửi lại mã',
+        'resend_wait' => 'Gửi lại sau :time',
+        'processing' => 'Đang xử lý...',
+        'connect_error' => 'Lỗi kết nối máy chủ.',
+        'validate_reason' => 'Vui lòng nhập lý do hủy hợp tác.',
+        'validate_otp' => 'Vui lòng nhập mã xác nhận 6 số.',
+    ],
+    'flash' => [
+        'otp_sent' => 'Mã xác nhận đã được gửi đến email của bạn.',
+        'otp_expired' => 'Mã xác nhận đã hết hạn hoặc không tồn tại. Vui lòng gửi lại.',
+        'otp_incorrect' => 'Mã xác nhận không chính xác.',
+        'pending_exists' => 'Bạn đã có một yêu cầu đang chờ xử lý.',
+        'success' => 'Yêu cầu hủy hợp tác của bạn đã được gửi thành công. Admin sẽ xem xét và phản hồi sớm nhất.',
+    ]
+];

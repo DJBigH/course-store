@@ -9,6 +9,8 @@ return array (
   'light_mode' => 'Light Mode',
   'profile' => 'Teacher Profile',
   'logout' => 'Logout',
+  'current_package' => 'Plan:',
+  'upgrade_plan' => 'Upgrade Plan',
   'locales' => 
   array (
     'vi' => 'Vietnamese',

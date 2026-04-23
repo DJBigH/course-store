@@ -22,13 +22,14 @@ use Modules\Students\src\Models\Student;
 use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherApplication;
-use Modules\Teacher\src\Models\TeacherCourseBundle;
-use Modules\Teacher\src\Models\TeacherCourseGrant;
+use Modules\Courses\src\Models\CourseBundle;
+use Modules\Students\src\Models\CourseGrant as TeacherCourseGrant;
 use Modules\Finances\src\Models\PayoutAccount as TeacherPayoutAccount;
 use Modules\Finances\src\Models\PayoutRequest as TeacherPayoutRequest;
-use Modules\Teacher\src\Models\TeacherPackage;
+use Modules\Packages\src\Models\Package;
 use Modules\Teacher\src\Models\TeacherPromotion;
-use Modules\Teacher\src\Models\TeacherStudentNote;
+use Modules\Students\src\Models\StudentNote as TeacherStudentNote;
+use Modules\Teacher\src\Http\Requests\CourseBundleRequest;
 use Modules\Finances\src\Support\FinanceCalculator as TeacherFinanceCalculator;
 
 trait TeacherDashboardHelpers
@@ -79,7 +80,7 @@ trait TeacherDashboardHelpers
     protected function redirectToStatus()
     {
         return redirect()->route('teacher.account.status', ['locale' => session('locale', app()->getLocale())])
-            ->with('msg_danger', __('teacher::teacher/common.flash.inactive_teacher'));
+            ->with('msg_danger', __('packages::teacher.flash.inactive_teacher'));
     }
 
     protected function ensurePackageFeatureAllowed(
@@ -94,7 +95,51 @@ trait TeacherDashboardHelpers
 
         return redirect()
             ->route($fallbackRoute, $routeParameters)
-            ->with('msg_danger', __('teacher::teacher/common.feature_locked'));
+            ->with('msg_danger', __('packages::teacher.package_features.feature_locked'));
+    }
+    protected function resolvePackageSummary(Teacher $teacher): ?array
+    {
+        $currentPackage = $teacher->application?->package;
+        if (!$currentPackage) {
+            return null;
+        }
+
+        $pendingUpgrade = $this->resolveOpenPackageChangeRequest($teacher);
+        $pendingUpgradeStartsAt = $pendingUpgrade?->activates_at;
+        $pendingUpgradeIsQueued = $pendingUpgrade?->status === 'approved'
+            && $pendingUpgradeStartsAt !== null
+            && $pendingUpgrade?->activated_at === null;
+
+        $nextPackage = $this->resolveNextPackage($currentPackage);
+        $availablePackageChanges = $this->resolveAvailablePackageChanges($currentPackage);
+
+        return [
+            'name' => $currentPackage->name_locale ?: $currentPackage->name,
+            'badge' => $currentPackage->badge_text_locale ?: strtoupper((string) $currentPackage->code),
+            'price' => (float) $currentPackage->price,
+            'billing_cycle' => $currentPackage->billing_cycle,
+            'course_limit' => $currentPackage->effective_course_limit,
+            'commission_rate' => (float) $currentPackage->commission_rate,
+            'support' => $currentPackage->support_level_locale ?: '',
+            'started_at' => $teacher->package_started_at,
+            'expires_at' => $teacher->package_expires_at,
+            'days_left' => property_exists($this, 'packageLifecycleManager') 
+                ? $this->packageLifecycleManager->daysLeft($teacher) 
+                : 0,
+            'can_upgrade' => $availablePackageChanges->isNotEmpty() && $pendingUpgrade === null,
+            'has_higher_package' => $nextPackage !== null,
+            'upgrade_name' => $nextPackage?->name_locale ?: $nextPackage?->name,
+            'upgrade_url' => route('teacher.dashboard.package.upgrade'),
+            'pending_upgrade' => $pendingUpgrade !== null,
+            'pending_upgrade_status' => $pendingUpgrade?->display_status,
+            'pending_upgrade_url' => $pendingUpgrade ? route('teacher.dashboard.package.upgrade.status') : null,
+            'pending_upgrade_name' => $pendingUpgrade?->package?->name_locale ?: $pendingUpgrade?->package?->name,
+            'pending_upgrade_starts_at' => $pendingUpgradeStartsAt,
+            'pending_upgrade_days_until_activation' => $pendingUpgradeStartsAt
+                ? max(now()->startOfDay()->diffInDays($pendingUpgradeStartsAt->copy()->startOfDay(), false), 0)
+                : null,
+            'pending_upgrade_is_queued' => $pendingUpgradeIsQueued,
+        ];
     }
 
     protected function resolvePromotionRecipientIds(
@@ -371,7 +416,7 @@ trait TeacherDashboardHelpers
         $index = 2;
 
         while (
-            TeacherCourseBundle::query()
+            CourseBundle::query()
                 ->where('slug', $slug)
                 ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
                 ->exists()
@@ -538,26 +583,26 @@ trait TeacherDashboardHelpers
         ];
     }
 
-    protected function resolveNextPackage(?TeacherPackage $currentPackage): ?TeacherPackage
+    protected function resolveNextPackage(?Package $currentPackage): ?Package
     {
         if (!$currentPackage) {
             return null;
         }
 
-        return TeacherPackage::query()
+        return Package::query()
             ->selectable()
             ->where('sort_order', '>', (int) $currentPackage->sort_order)
             ->orderBy('sort_order')
             ->first();
     }
 
-    protected function resolveAvailablePackageChanges(?TeacherPackage $currentPackage)
+    protected function resolveAvailablePackageChanges(?Package $currentPackage)
     {
         if (!$currentPackage) {
             return collect();
         }
 
-        $query = TeacherPackage::query()
+        $query = Package::query()
             ->selectable()
             ->orderBy('sort_order');
 
@@ -604,9 +649,9 @@ trait TeacherDashboardHelpers
     protected function redirectAfterPackageChange(string $action)
     {
         $flashKey = match ($action) {
-            'extended' => 'courses::teacher/messages.package.flash.auto_extended',
-            'queued' => 'courses::teacher/messages.package.flash.auto_queued',
-            default => 'courses::teacher/messages.package.flash.auto_activated',
+            'extended' => 'packages::teacher.flash.auto_extended',
+            'queued' => 'packages::teacher.flash.auto_queued',
+            default => 'packages::teacher.flash.auto_activated',
         };
 
         $route = $action === 'queued'
@@ -638,7 +683,7 @@ trait TeacherDashboardHelpers
             ->count();
         $targetCourseLimit = $targetPackage->effective_course_limit;
         if ($targetCourseLimit !== null && $courseCount > $targetCourseLimit) {
-            $warnings[] = __('courses::teacher/messages.package.over_limit.course_limit', [
+            $warnings[] = __('packages::teacher.over_limit.course_limit', [
                 'used' => $courseCount,
                 'limit' => $targetCourseLimit,
             ]);
@@ -651,7 +696,7 @@ trait TeacherDashboardHelpers
             ? $targetPackage->effective_coupon_limit
             : 0;
         if ($targetCouponLimit !== null && $couponCount > $targetCouponLimit) {
-            $warnings[] = __('courses::teacher/messages.package.over_limit.coupon_limit', [
+            $warnings[] = __('packages::teacher.over_limit.coupon_limit', [
                 'used' => $couponCount,
                 'limit' => $targetCouponLimit,
             ]);
@@ -662,7 +707,7 @@ trait TeacherDashboardHelpers
             ->count();
         $targetPayoutLimit = $targetPackage->effective_payout_account_limit;
         if ($payoutAccountCount > $targetPayoutLimit) {
-            $warnings[] = __('courses::teacher/messages.package.over_limit.payout_account_limit', [
+            $warnings[] = __('packages::teacher.over_limit.payout_account_limit', [
                 'used' => $payoutAccountCount,
                 'limit' => $targetPayoutLimit,
             ]);
@@ -698,7 +743,7 @@ trait TeacherDashboardHelpers
         $warnings = [];
         foreach ($featureKeys as $featureKey) {
             if ($currentPackage->hasFeature($featureKey) && !$targetPackage->hasFeature($featureKey)) {
-                $warnings[] = __('courses::teacher/messages.package_features.labels.' . $featureKey);
+                $warnings[] = __('packages::teacher.package_features.labels.' . $featureKey);
             }
         }
 
@@ -723,23 +768,8 @@ trait TeacherDashboardHelpers
     protected function attachCourseHistoryPreview(LengthAwarePaginator $courses, Teacher $teacher): void
     {
         $courseIds = collect($courses->items())->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $historyMap = ActiveLog::query()
-            ->where('log_name', 'teacher_course_management')
-            ->where(function ($query) use ($courseIds) {
-                $query->where(function ($subjectQuery) use ($courseIds) {
-                    $subjectQuery->where('subject_type', Courses::class)
-                        ->whereIn('subject_id', $courseIds ?: [0]);
-                })->orWhere(function ($propertyQuery) use ($courseIds) {
-                    $propertyQuery->whereNull('subject_id')
-                        ->whereIn('properties->course_id', $courseIds ?: [0]);
-                });
-            })
-            ->where('properties->teacher_id', $teacher->id)
-            ->latest('id')
-            ->get()
-            ->groupBy(function ($log) {
-                return (int) ($log->subject_id ?: data_get($log->properties, 'course_id', 0));
-            });
+        $historyMap = app(\Modules\ActiveLogs\src\Repositories\ActiveLogsRepositoryInterface::class)
+            ->getTeacherActivityPreview($teacher, $courseIds);
 
         foreach ($courses->items() as $course) {
             $course->teacher_activity_preview = ($historyMap->get((int) $course->id, collect()) ?? collect())
@@ -856,6 +886,66 @@ trait TeacherDashboardHelpers
                 'student_name' => $student->name,
             ]),
             'teacher_student_management',
+            $description
+        );
+    }
+
+    protected function logTeacherBundleActivity(
+        Teacher $teacher,
+        $bundle,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $bundle,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'bundle_id' => $bundle->id,
+                'bundle_name' => $bundle->name,
+            ]),
+            'teacher_bundle_management',
+            $description
+        );
+    }
+
+    protected function logTeacherSupportActivity(
+        Teacher $teacher,
+        $contact,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $contact,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'contact_id' => $contact->id,
+                'subject' => $contact->subject,
+            ]),
+            'teacher_support_management',
+            $description
+        );
+    }
+
+    protected function logTeacherCancellationActivity(
+        Teacher $teacher,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $teacher,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+            ]),
+            'teacher_cancellation_management',
             $description
         );
     }
@@ -3243,7 +3333,7 @@ trait TeacherDashboardHelpers
 
         $bundle = null;
         if ($bundleId) {
-            $bundle = TeacherCourseBundle::query()
+            $bundle = CourseBundle::query()
                 ->with('items')
                 ->where('teacher_id', $teacher->id)
                 ->findOrFail($bundleId);
@@ -3271,7 +3361,7 @@ trait TeacherDashboardHelpers
         ));
     }
 
-    protected function persistBundle(TeacherCourseBundleRequest $request, ?int $bundleId = null)
+    protected function persistBundle(CourseBundleRequest $request, ?int $bundleId = null)
     {
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
@@ -3304,7 +3394,7 @@ trait TeacherDashboardHelpers
         }
 
         $existingBundle = $bundleId
-            ? TeacherCourseBundle::query()->where('teacher_id', $teacher->id)->findOrFail($bundleId)
+            ? CourseBundle::query()->where('teacher_id', $teacher->id)->findOrFail($bundleId)
             : null;
 
         $baseSlug = Str::slug((string) $data['name']);
@@ -3325,8 +3415,8 @@ trait TeacherDashboardHelpers
             if ($bundle) {
                 $bundle->update($payload);
             } else {
-                $payload['position'] = ((int) TeacherCourseBundle::query()->where('teacher_id', $teacher->id)->max('position')) + 1;
-                $bundle = TeacherCourseBundle::query()->create($payload);
+                $payload['position'] = ((int) CourseBundle::query()->where('teacher_id', $teacher->id)->max('position')) + 1;
+                $bundle = CourseBundle::query()->create($payload);
             }
 
             $bundle->items()->delete();
@@ -3340,6 +3430,16 @@ trait TeacherDashboardHelpers
 
             return $bundle;
         });
+
+        $this->logTeacherBundleActivity(
+            $teacher,
+            $bundle,
+            $bundleId ? 'bundle_updated' : 'bundle_created',
+            $bundleId
+                ? "Cập nhật combo khóa học: {$bundle->name}"
+                : "Tạo combo khóa học mới: {$bundle->name}",
+            ['course_count' => $courseIds->count()]
+        );
 
         return redirect()
             ->route('teacher.dashboard.bundles.edit', ['bundle' => $bundle->id])

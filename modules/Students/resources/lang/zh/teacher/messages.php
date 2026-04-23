@@ -66,11 +66,22 @@ return [
         'grant_action' => '赠送课程',
         'not_updated' => '未更新',
         'no_data' => '暂无数据',
+        'access_types' => [
+            'paid' => '已支付',
+            'granted' => '已赠送',
+            'both' => '两者皆有',
+            'unknown' => '未知',
+        ],
     ],
     'show' => [
         'title' => '学员详情: :name',
         'breadcrumb' => '学员详情',
+        'hero_kicker' => '学员主页',
+        'hero_description' => '查看学习进度、购买历史，并直接管理该学生的访问权限。',
         'back_to_list' => '返回列表',
+        'back_cta' => '返回',
+        'grant_cta' => '赠送课程',
+        'email_cta' => '发送邮件',
         'tabs' => [
             'overview' => '概览',
             'courses' => '拥有课程',

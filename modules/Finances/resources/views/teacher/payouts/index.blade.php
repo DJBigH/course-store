@@ -8,6 +8,10 @@
         };
     @endphp
 
+    @php
+        $maintPackage = $teacher->application?->package;
+        $maintPayout = $maintPackage?->isFeatureInMaintenance('can_request_payouts') ?? false;
+    @endphp
     <div class="teacher-panel" id="payout-main-container">
         <div class="teacher-section-title mb-4">
             <div>
@@ -183,8 +187,9 @@
                     </div>
 
                     <div class="mt-4 pt-3 border-top">
-                        <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm" id="payout-submit-btn" {{ (old('payout_account_id') || $payoutAccounts->isEmpty()) ? '' : 'disabled' }}>
+                        <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm" id="payout-submit-btn" {{ (old('payout_account_id') || $payoutAccounts->isEmpty()) ? '' : 'disabled' }} @disabled($maintPayout)>
                             <i class="fa-solid fa-paper-plane me-2"></i>{{ __('finances::teacher/payouts.form.submit') }}
+                            @if($maintPayout) ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }}) @endif
                         </button>
                     </div>
                 </form>

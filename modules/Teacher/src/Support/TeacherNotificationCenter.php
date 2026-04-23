@@ -11,7 +11,7 @@ use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherAnnouncement;
 use Modules\Teacher\src\Models\TeacherNotificationRead;
-use Modules\Teacher\src\Models\TeacherPackage;
+use Modules\Packages\src\Models\Package;
 
 class TeacherNotificationCenter
 {
@@ -346,16 +346,16 @@ class TeacherNotificationCenter
         })->values();
     }
 
-    private function packageFeatureHighlights(TeacherPackage $package): Collection
+    private function packageFeatureHighlights(Package $package): Collection
     {
         $features = collect();
 
         if ($package->effective_course_limit) {
-            $features->push(__('courses::teacher/messages.package_features.labels.course_limit') . ': ' . $package->effective_course_limit);
+            $features->push(__('packages::teacher.package_features.labels.course_limit') . ': ' . $package->effective_course_limit);
         }
 
         if ($package->effective_coupon_limit) {
-            $features->push(__('courses::teacher/messages.package_features.labels.coupon_limit') . ': ' . $package->effective_coupon_limit);
+            $features->push(__('packages::teacher.package_features.labels.coupon_limit') . ': ' . $package->effective_coupon_limit);
         }
 
         foreach ([
@@ -376,7 +376,7 @@ class TeacherNotificationCenter
             'can_use_affiliate_links',
         ] as $featureKey) {
             if ($package->hasFeature($featureKey)) {
-                $features->push(__('courses::teacher/messages.package_features.labels.' . $featureKey));
+                $features->push(__('packages::teacher.package_features.labels.' . $featureKey));
             }
         }
 

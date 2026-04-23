@@ -15,8 +15,8 @@ use Modules\Courses\src\Models\CourseViewTracking;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
-use Modules\Teacher\src\Support\TeacherAffiliateLinkManager;
-use Modules\Teacher\src\Models\TeacherCourseBundle;
+use Modules\Finances\src\Support\AffiliateLinkManager;
+use Modules\Courses\src\Models\CourseBundle;
 
 class CoursesController extends Controller
 {
@@ -28,7 +28,7 @@ class CoursesController extends Controller
         CoursesRepositoryInterface $courseRepository,
         LessonsRepositoryInterface $lessonRepository,
         OrdersRepositoryInterface $orderRepository,
-        protected TeacherAffiliateLinkManager $affiliateLinkManager
+        protected AffiliateLinkManager $affiliateLinkManager
     ) {
         $this->courseRepository = $courseRepository;
         $this->lessonRepository = $lessonRepository;
@@ -171,7 +171,7 @@ class CoursesController extends Controller
     public function bundleDetail($locale, $slug)
     {
         $student = Auth::guard('students')->user();
-        $bundle = TeacherCourseBundle::query()
+        $bundle = CourseBundle::query()
             ->with([
                 'teacher',
                 'items.course' => function ($query) {
@@ -368,7 +368,7 @@ class CoursesController extends Controller
     public function createBundleOrder(Request $request)
     {
         $student = Auth::guard('students')->user();
-        $bundle = TeacherCourseBundle::query()
+        $bundle = CourseBundle::query()
             ->with([
                 'items.course' => function ($query) {
                     $query->withoutGlobalScope(ActiveScope::class);

@@ -26,6 +26,8 @@ return [
     'status' => [
         'draft' => 'Draft',
         'published' => 'Published',
+        'active' => 'Active',
+        'not_active' => 'Inactive',
     ],
     'locking' => [
         'open' => 'Unlocked',
@@ -40,6 +42,7 @@ return [
         'price' => 'Original Price',
         'sale_price' => 'Sale Price',
         'status' => 'Status',
+        'position' => 'Position',
         'is_document' => 'Attachments',
         'is_learning_locked' => 'Lock Learning',
         'price_hint' => 'Max price :max.',

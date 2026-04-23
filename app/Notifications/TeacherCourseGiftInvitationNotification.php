@@ -6,7 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Modules\Teacher\src\Models\TeacherCourseGrant;
+use Modules\Students\src\Models\CourseGrant;
 
 class TeacherCourseGiftInvitationNotification extends Notification implements ShouldQueue
 {
@@ -15,7 +15,7 @@ class TeacherCourseGiftInvitationNotification extends Notification implements Sh
     protected string $localeCode;
 
     public function __construct(
-        protected TeacherCourseGrant $grant,
+        protected CourseGrant $grant,
         string $locale
     ) {
         $this->localeCode = $locale;
@@ -65,7 +65,7 @@ class TeacherCourseGiftInvitationNotification extends Notification implements Sh
             'url' => $this->giftUrl(),
             'severity' => 'info',
             'icon' => 'fas fa-gift',
-            'entity_type' => TeacherCourseGrant::class,
+            'entity_type' => CourseGrant::class,
             'entity_id' => $this->grant->id,
             'meta' => [
                 'grant_id' => $this->grant->id,

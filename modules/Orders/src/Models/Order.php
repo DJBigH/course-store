@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\Student;
-use Modules\Teacher\src\Models\TeacherAffiliateLink;
-use Modules\Teacher\src\Models\TeacherCourseBundle;
+use Modules\Courses\src\Models\CourseBundle;
+use Modules\Finances\src\Models\AffiliateLink;
 
 class Order extends Model
 {
@@ -64,12 +64,12 @@ class Order extends Model
 
     public function bundle()
     {
-        return $this->belongsTo(TeacherCourseBundle::class, 'bundle_id', 'id');
+        return $this->belongsTo(CourseBundle::class, 'bundle_id', 'id');
     }
 
     public function affiliateLink()
     {
-        return $this->belongsTo(TeacherAffiliateLink::class, 'affiliate_link_id', 'id');
+        return $this->belongsTo(AffiliateLink::class, 'affiliate_link_id', 'id');
     }
 
     public function getCustomerNameDisplayAttribute(): string

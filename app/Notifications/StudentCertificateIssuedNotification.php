@@ -5,14 +5,14 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use Modules\Teacher\src\Models\TeacherCourseCertificate;
+use Modules\Certificates\src\Models\Certificate;
 
 class StudentCertificateIssuedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
-        protected TeacherCourseCertificate $certificate,
+        protected Certificate $certificate,
         protected string $locale = 'vi'
     ) {
     }

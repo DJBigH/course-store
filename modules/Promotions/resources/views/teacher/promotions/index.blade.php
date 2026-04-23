@@ -33,6 +33,10 @@
 @endphp
 
 @section('content')
+    @php
+        $maintPackage = $teacher->application?->package;
+        $maintPromotion = $maintPackage?->isFeatureInMaintenance('can_send_promotions') ?? false;
+    @endphp
     <div class="teacher-panel teacher-promotions-shell">
         <div class="teacher-promotions-hero">
             <div>
@@ -315,11 +319,15 @@
                             </div>
                             <div class="teacher-promotions-actions">
                                 <button type="submit" class="btn btn-outline-light"
-                                    formaction="{{ route('teacher.dashboard.promotions.test') }}">
+                                    formaction="{{ route('teacher.dashboard.promotions.test') }}" @disabled($maintPromotion)>
                                     {{ __('promotions::teacher/promotions.form.test_send') }}
+                                    @if($maintPromotion) ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }}) @endif
                                 </button>
                                 <button type="submit"
-                                    class="btn btn-primary">{{ __('promotions::teacher/promotions.form.submit') }}</button>
+                                    class="btn btn-primary" @disabled($maintPromotion)>
+                                    {{ __('promotions::teacher/promotions.form.submit') }}
+                                    @if($maintPromotion) ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }}) @endif
+                                </button>
                             </div>
                         </div>
                     </form>

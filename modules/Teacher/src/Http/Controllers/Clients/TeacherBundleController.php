@@ -4,16 +4,16 @@ namespace Modules\Teacher\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Courses\src\Models\CourseBundle;
 use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
 use Modules\Teacher\src\Models\Teacher;
-use Modules\Teacher\src\Models\TeacherCourseBundle;
 use Modules\Courses\src\Models\Courses;
 use App\Models\Scopes\ActiveScope;
 use Modules\Teacher\src\Http\Requests\TeacherCourseBundleRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
-use Modules\Teacher\src\Support\TeacherPackageUsageResolver;
+use Modules\Packages\src\Support\PackageLifecycleManager;
+use Modules\Packages\src\Support\PackageUsageResolver;
 use Modules\Teacher\src\Support\TeacherNotificationCenter;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
@@ -31,9 +31,9 @@ class TeacherBundleController extends Controller
         protected DocumentRepositoryInterface $documentRepository,
         protected LessonsRepositoryInterface $lessonRepository,
         protected LessonReleaseManager $lessonReleaseManager,
-        protected TeacherPackageLifecycleManager $packageLifecycleManager,
+        protected PackageLifecycleManager $packageLifecycleManager,
+        protected PackageUsageResolver $packageUsageResolver,
         protected TeacherNotificationCenter $notificationCenter,
-        protected TeacherPackageUsageResolver $packageUsageResolver,
     ) {}
 
     public function bundles(Request $request)
@@ -47,7 +47,7 @@ class TeacherBundleController extends Controller
             return $featureRedirect;
         }
 
-        $bundles = TeacherCourseBundle::query()
+        $bundles = CourseBundle::query()
             ->withCount('items')
             ->where('teacher_id', $teacher->id)
             ->orderBy('position')
@@ -69,7 +69,7 @@ class TeacherBundleController extends Controller
         return $this->bundleFormResponse();
     }
 
-    public function storeBundle(TeacherCourseBundleRequest $request)
+    public function storeBundle(CourseBundleRequest $request)
     {
         return $this->persistBundle($request);
     }
@@ -79,7 +79,7 @@ class TeacherBundleController extends Controller
         return $this->bundleFormResponse($bundleId);
     }
 
-    public function updateBundle(TeacherCourseBundleRequest $request, int $bundleId)
+    public function updateBundle(CourseBundleRequest $request, int $bundleId)
     {
         return $this->persistBundle($request, $bundleId);
     }
@@ -95,9 +95,16 @@ class TeacherBundleController extends Controller
             return $featureRedirect;
         }
 
-        $bundle = TeacherCourseBundle::query()
+        $bundle = CourseBundle::query()
             ->where('teacher_id', $teacher->id)
             ->findOrFail($bundleId);
+
+        $this->logTeacherBundleActivity(
+            $teacher,
+            $bundle,
+            'bundle_deleted',
+            "Xóa combo khóa học: {$bundle->name}"
+        );
 
         $bundle->delete();
 

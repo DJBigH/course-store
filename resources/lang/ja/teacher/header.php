@@ -9,6 +9,8 @@ return array (
   'light_mode' => 'ライトモード',
   'profile' => '講師プロフィール',
   'logout' => 'ログアウト',
+  'current_package' => 'プラン:',
+  'upgrade_plan' => 'プランをアップグレード',
   'locales' => 
   array (
     'vi' => 'ベトナム語',

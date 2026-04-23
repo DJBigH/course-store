@@ -126,4 +126,85 @@ class ActiveLogsRepository extends BaseRepository implements ActiveLogsRepositor
 
         return compact('logs', 'logNames', 'actions', 'subjectTypes');
     }
+
+    public function getTeacherLogs($teacher, Request $request)
+    {
+        $type = trim((string) $request->query('type', 'all'));
+        $search = trim((string) $request->query('q', ''));
+        $typeMap = [
+            'students' => 'teacher_student_management',
+            'courses' => 'teacher_course_management',
+            'coupons' => 'teacher_coupon_management',
+            'bundles' => 'teacher_bundle_management',
+            'support' => 'teacher_support_management',
+            'cancellation' => 'teacher_cancellation_management',
+        ];
+
+        $selectedType = array_key_exists($type, $typeMap) ? $type : 'all';
+
+        $query = $this->model->query()
+            ->where('properties->teacher_id', $teacher->id)
+            ->whereIn('log_name', array_values($typeMap));
+
+        if ($selectedType !== 'all') {
+            $query->where('log_name', $typeMap[$selectedType]);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($nested) use ($search) {
+                $nested->where('action', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%')
+                    ->orWhere('properties->student_name', 'like', '%' . $search . '%')
+                    ->orWhere('properties->course_name', 'like', '%' . $search . '%')
+                    ->orWhere('properties->coupon_code', 'like', '%' . $search . '%')
+                    ->orWhere('properties->certificate_code', 'like', '%' . $search . '%')
+                    ->orWhere('properties->teacher_name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $summary = [
+            'total' => (clone $query)->count(),
+            'students' => (clone $query)->where('log_name', $typeMap['students'])->count(),
+            'courses' => (clone $query)->where('log_name', $typeMap['courses'])->count(),
+            'coupons' => (clone $query)->where('log_name', $typeMap['coupons'])->count(),
+            'bundles' => (clone $query)->where('log_name', $typeMap['bundles'])->count(),
+        ];
+
+        $logs = $query->latest('id')->paginate(20)->withQueryString();
+
+        return compact('logs', 'summary', 'search', 'selectedType');
+    }
+
+    public function getTeacherActivityPreview($teacher, array $courseIds)
+    {
+        return $this->model->query()
+            ->where('log_name', 'teacher_course_management')
+            ->where(function ($query) use ($courseIds) {
+                $query->where(function ($subjectQuery) use ($courseIds) {
+                    $subjectQuery->where('subject_type', 'Modules\Courses\src\Models\Courses')
+                        ->whereIn('subject_id', $courseIds ?: [0]);
+                })->orWhere(function ($propertyQuery) use ($courseIds) {
+                    $propertyQuery->whereNull('subject_id')
+                        ->whereIn('properties->course_id', $courseIds ?: [0]);
+                });
+            })
+            ->where('properties->teacher_id', $teacher->id)
+            ->latest('id')
+            ->get()
+            ->groupBy(function ($log) {
+                return (int) ($log->subject_id ?: data_get($log->properties, 'course_id', 0));
+            });
+    }
+
+    public function getStudentActivityHistory($teacher, $student)
+    {
+        return $this->model->query()
+            ->where('log_name', 'teacher_student_management')
+            ->where('subject_type', get_class($student))
+            ->where('subject_id', $student->id)
+            ->where('properties->teacher_id', $teacher->id)
+            ->latest('id')
+            ->take(12)
+            ->get();
+    }
 }

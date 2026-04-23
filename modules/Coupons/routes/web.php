@@ -36,3 +36,23 @@ Route::group([
 ], function () {
    Route::get('/ma-giam-gia', 'CouponController@CouponClient')->name('home');
 });
+
+Route::group([
+   'prefix' => 'teacher',
+   'as' => 'teacher.dashboard.',
+   'middleware' => ['web', 'setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active', 'teacher.activity'],
+], function () {
+   Route::prefix('ma-giam-gia')->as('coupons.')->group(function () {
+      Route::get('/', 'Teacher\CouponController@index')->name('index');
+      Route::get('/tao-moi', 'Teacher\CouponController@create')->name('create');
+      Route::post('/tao-moi', 'Teacher\CouponController@store')->name('store');
+      Route::get('/{id}/chinh-sua', 'Teacher\CouponController@edit')->name('edit');
+      Route::post('/{id}/chinh-sua', 'Teacher\CouponController@update')->name('update');
+      Route::post('/{id}/uu-tien', 'Teacher\CouponController@togglePriority')->name('priority');
+      Route::delete('/{id}', 'Teacher\CouponController@delete')->name('delete');
+      Route::get('/{id}/hoc-vien', 'Teacher\CouponController@students')->name('students');
+      Route::post('/{id}/hoc-vien', 'Teacher\CouponController@updateStudents')->name('students.update');
+      Route::get('/{id}/khoa-hoc', 'Teacher\CouponController@courses')->name('courses');
+      Route::post('/{id}/khoa-hoc', 'Teacher\CouponController@updateCourses')->name('courses.update');
+   });
+});

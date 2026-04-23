@@ -11,7 +11,7 @@
 
         @if (!$teacher->packageHasFeature('can_import_export'))
             @include('teacher::clients.dashboard.partials.package_feature_notice', [
-                'message' => __('courses::teacher/messages.package_features.import_export_locked'),
+                'message' => __('packages::teacher.package_features.import_export_locked'),
             ])
         @endif
 

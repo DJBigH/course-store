@@ -5,7 +5,9 @@ return [
     'create_title' => 'Thêm mã giảm giá mới',
     'edit_title' => 'Chỉnh sửa mã giảm giá',
     'assign_students_title' => 'Gán mã giảm giá cho học viên',
+    'assign_students_desc' => 'Chọn những học viên được phép sử dụng mã :code.',
     'assign_courses_title' => 'Gán mã giảm giá cho khóa học',
+    'assign_courses_desc' => 'Chọn những khóa học được áp dụng mã :code.',
     'hero' => [
         'kicker' => 'Chiến dịch ưu đãi',
         'title' => 'Mã giảm giá',
@@ -22,6 +24,7 @@ return [
         'assign_students' => 'Gán học viên',
         'prioritize' => 'Ưu tiên hiển thị',
         'unprioritize' => 'Bỏ ưu tiên',
+        'save_assignment' => 'Lưu thay đổi',
     ],
     'form' => [
         'description' => 'Thiết lập các điều kiện áp dụng cho mã giảm giá của bạn.',

@@ -13,5 +13,7 @@ return [
     'common' => [
         'view_all' => '查看全部',
         'view_earnings' => '查看收益',
+        'maintenance_badge' => '维护',
+        'maintenance_message' => '此功能目前正在维护中。请稍后再试。',
     ],
 ];

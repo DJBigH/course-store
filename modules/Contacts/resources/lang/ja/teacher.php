@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'support' => [
+        'page_title' => 'フィードバックと報告',
+        'description' => 'システム向上のため、ご意見や技術的な問題の報告をお送りください。',
+        'flash' => [
+            'sent' => 'ありがとうございます！サポートリクエストが正常に送信されました。できるだけ早く返信いたします。',
+            'error_empty' => '情報は空にできません。',
+            'error_system' => 'エラーが発生しました。後でもう一度お試しください。',
+            'warning_incomplete' => '送信前にすべての項目を入力してください。',
+        ],
+        'form' => [
+            'title' => '新規リクエスト作成',
+            'type_label' => 'リクエストタイプ',
+            'type_hint' => 'サポートが必要なリクエストのタイプを選択してください',
+            'category_label' => 'サポートカテゴリ',
+            'category_hint' => '迅速な対応のため、具体的なカテゴリを選択してください',
+            'category_select_default' => '-- カテゴリを選択してください --',
+            'subject_label' => '件名',
+            'subject_hint' => '問題を簡潔にまとめてください',
+            'subject_placeholder' => '問題の簡単な説明...',
+            'message_label' => '詳細内容',
+            'message_hint' => '問題や意見を詳しく記述してください',
+            'message_placeholder' => '問題やフィードバックの詳細を入力してください...',
+            'submit' => 'リクエストを送信',
+            'sending' => '送信中...',
+        ],
+        'types' => [
+            'feedback' => '機能へのフィードバック',
+            'report' => 'バグ・問題の報告',
+        ],
+        'categories' => [
+            'feature_request' => '新機能のリクエスト',
+            'ui_ux' => 'インターフェースと体験 (UI/UX)',
+            'teacher_portal' => '講師用ワークスペース機能',
+            'student_portal' => '受講生用ページ機能',
+            'payment_package' => '支払いとメンバーシップ',
+            'system_bug' => 'システムバグ・表示の問題',
+            'course_lesson' => 'コース・レッスン管理',
+            'comment_rating' => 'コメントと評価',
+            'content_violation' => 'コンテンツ違反の報告',
+            'account' => 'アカウントとセキュリティ',
+            'other' => 'その他の問題',
+        ],
+        'status' => [
+            'new' => '送信済み',
+            'in_progress' => '処理中',
+            'need_info' => '詳細情報が必要',
+            'resolved' => '解決済み',
+            'rejected' => '却下',
+        ],
+        'history' => [
+            'title' => 'リクエスト履歴',
+            'empty' => 'サポートリクエストはまだありません。',
+            'label_status' => 'ステータス',
+            'label_id' => 'ID',
+            'label_submitted' => '送信日',
+        ],
+    ],
+];

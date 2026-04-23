@@ -66,11 +66,22 @@ return [
         'grant_action' => '講座を付与',
         'not_updated' => '未更新',
         'no_data' => 'データなし',
+        'access_types' => [
+            'paid' => '支払い済み',
+            'granted' => '付与済み',
+            'both' => '両方',
+            'unknown' => '不明',
+        ],
     ],
     'show' => [
         'title' => '受講生詳細: :name',
         'breadcrumb' => '受講生詳細',
+        'hero_kicker' => '学生プロフィール',
+        'hero_description' => '学習状況、購入履歴を確認し、この学生のアクセス権限を直接管理します。',
         'back_to_list' => '一覧に戻る',
+        'back_cta' => '戻る',
+        'grant_cta' => 'コースを贈る',
+        'email_cta' => 'メールを送信',
         'tabs' => [
             'overview' => '概要',
             'courses' => '所有講座',

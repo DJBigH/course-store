@@ -5,7 +5,7 @@ namespace Modules\Students\src\Http\Controllers\Clients;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Students\src\Models\StudentsCourses;
-use Modules\Teacher\src\Models\TeacherCourseGrant;
+use Modules\Students\src\Models\CourseGrant;
 
 class GiftCourseController extends Controller
 {
@@ -65,7 +65,7 @@ class GiftCourseController extends Controller
 
     protected function pendingGiftsQuery(int $studentId)
     {
-        return TeacherCourseGrant::query()
+        return CourseGrant::query()
             ->with(['teacher', 'course'])
             ->where('student_id', $studentId)
             ->whereNull('revoked_at')

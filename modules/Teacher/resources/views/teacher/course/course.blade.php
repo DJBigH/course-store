@@ -1,0 +1,861 @@
+@extends('layouts.teacher')
+
+@section('content')
+@php
+    $stateCourseLimit = $teacher->getFeatureState('course_limit');
+    $stateQuizzes = $teacher->getFeatureState('can_manage_quizzes');
+    $stateDuplicate = $teacher->getFeatureState('can_duplicate_courses');
+@endphp
+    <div class="teacher-panel teacher-courses-shell">
+        @php
+            $usedCourses = (int) ($usage['used'] ?? 0);
+            $publishedCourses = (int) ($usage['published'] ?? $usedCourses);
+            $totalCourses = (int) ($usage['total'] ?? $usedCourses);
+            $limitLabel = $usage['limit_label'] ?? __('teacher::teacher/course/list.unlimited');
+            $canCreate = (bool) ($usage['can_create'] ?? false);
+            $canPublishMore = (bool) ($usage['can_publish_more'] ?? true);
+            $isOverLimit = (bool) ($usage['is_over_limit'] ?? false);
+            $overLimitBy = (int) ($usage['over_limit_by'] ?? 0);
+            $hasLimit = (bool) ($usage['has_limit'] ?? false);
+        @endphp
+
+        <div class="teacher-courses-hero">
+            <div>
+                <span class="teacher-courses-kicker">{{ __('teacher::teacher/course/list.hero_kicker') }}</span>
+                <h3 class="teacher-courses-title">{{ __('teacher::teacher/course/list.title') }}</h3>
+                <p class="teacher-courses-desc mb-0">
+                    {{ __('teacher::teacher/course/list.description') }}
+                </p>
+                <div class="teacher-course-subtabs mt-4">
+                    <a href="{{ route('teacher.dashboard.courses') }}"
+                        class="teacher-course-subtabs__tab {{ request()->routeIs('teacher.dashboard.courses*') || request()->routeIs('teacher.dashboard.lessons.*') ? 'active' : '' }}">
+                        <i class="fas fa-book-open"></i>
+                        <span>{{ __('teacher::teacher/course/list.title') }}</span>
+                    </a>
+                    @if ($teacher->packageHasFeature('can_sell_bundles'))
+                        <a href="{{ route('teacher.dashboard.bundles') }}"
+                            class="teacher-course-subtabs__tab {{ request()->routeIs('teacher.dashboard.bundles*') ? 'active' : '' }}">
+                            <i class="fas fa-layer-group"></i>
+                            <span>{{ __('teacher::teacher/bundle/list.title') }}</span>
+                        </a>
+                    @else
+                        <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="teacher-course-subtabs__tab is-locked">
+                            <i class="fas fa-layer-group"></i>
+                            <span>{{ __('teacher::teacher/bundle/list.title') }}</span>
+                            @include('packages::partials.upgrade_badge')
+                        </a>
+                    @endif
+                </div>
+            </div>
+            <div class="teacher-courses-hero__actions">
+                @if (!empty($usage))
+                    <div class="teacher-courses-usage">
+                        <span>{{ __('teacher::teacher/course/list.labels.published_count') }}</span>
+                        <strong>{{ $publishedCourses }}</strong>
+                        <span>/</span>
+                        <strong>{{ $limitLabel }}</strong>
+                        <span>{{ __('teacher::teacher/course/list.labels.published_courses') }}</span>
+                    </div>
+                @endif
+                @if ($stateCourseLimit['is_maintenance'])
+                    <button class="btn btn-secondary btn-lg" disabled>
+                        {{ __('teacher::teacher/course/add.create_title') }} ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }})
+                    </button>
+                @elseif ($canCreate)
+                    <a href="{{ route('teacher.dashboard.courses.create') }}" class="btn btn-primary btn-lg">
+                        {{ __('teacher::teacher/course/add.create_title') }}
+                    </a>
+                @else
+                    <div class="teacher-disabled-action-wrap">
+                        <span class="teacher-disabled-action" title="{{ __('teacher::teacher/course/common.flash.publish_limit_reached', ['limit' => $usage['limit']]) }}">
+                            <button type="button" class="btn btn-primary btn-lg" disabled>
+                                {{ __('teacher::teacher/course/add.create_title') }}
+                            </button>
+                        </span>
+                        <div class="teacher-disabled-action__note">
+                            {{ __('teacher::teacher/course/common.flash.publish_limit_reached', ['limit' => $usage['limit']]) }}
+                        </div>
+                    </div>
+                @endif
+                <a href="{{ route('teacher.dashboard.courses.trash') }}" class="btn btn-outline-secondary">
+                    {{ __('teacher::teacher/course/common.actions.trash') }}
+                </a>
+            </div>
+        </div>
+
+        @if (!$stateDuplicate['can_use'])
+            @include('teacher::teacher.partials.package_feature_notice', [
+                'featureState' => $stateDuplicate,
+                'message' => __('teacher::teacher/course/common.warnings.courses_locked_duplicate'),
+            ])
+        @endif
+
+        @if (session('msg_success'))
+            <div class="alert alert-success">{{ session('msg_success') }}</div>
+        @endif
+        @if (session('msg_danger'))
+            <div class="alert alert-danger">{{ session('msg_danger') }}</div>
+        @endif
+
+        @if (!empty($usage) && $hasLimit)
+            @include('teacher::clients.dashboard.partials.package_usage_banner', [
+                'variant' => $isOverLimit ? 'warning' : 'info',
+                'title' => __('teacher::teacher/course/common.warnings.publish_limit_title'),
+                'lines' => [
+                    __('teacher::teacher/course/common.warnings.publish_limit_summary', [
+                        'published' => $publishedCourses,
+                        'total' => $totalCourses,
+                        'limit' => $limitLabel,
+                    ]),
+                    $isOverLimit ? __('teacher::teacher/course/common.warnings.publish_limit_over', ['count' => $overLimitBy]) : null,
+                ],
+                'showUpgrade' => $isOverLimit,
+                'upgradeUrl' => route('teacher.dashboard.package.upgrade'),
+            ])
+        @endif
+
+        @if ($hasLimit)
+            <div class="teacher-courses-guide">
+                <article class="teacher-courses-guide__item">
+                    <span class="teacher-courses-guide__step">1</span>
+                    <div>
+                        <strong>{{ __('teacher::teacher/course/list.guide.step_1_title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/course/list.guide.step_1_desc') }}</p>
+                    </div>
+                </article>
+                <article class="teacher-courses-guide__item">
+                    <span class="teacher-courses-guide__step">2</span>
+                    <div>
+                        <strong>{{ __('teacher::teacher/course/list.guide.step_2_title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/course/list.guide.step_2_desc') }}</p>
+                    </div>
+                </article>
+                <article class="teacher-courses-guide__item">
+                    <span class="teacher-courses-guide__step">3</span>
+                    <div>
+                        <strong>{{ __('teacher::teacher/course/list.guide.step_3_title') }}</strong>
+                        <p class="mb-0">{{ __('teacher::teacher/course/list.guide.step_3_desc') }}</p>
+                    </div>
+                </article>
+            </div>
+        @endif
+
+        <div class="row g-3">
+            @forelse ($courses as $course)
+                @php
+                    $isLockedCourse = (bool) $course->package_locked_at;
+                    $canPublishThisCourse = (int) $course->status === 1 || $canPublishMore || $isLockedCourse;
+                @endphp
+                <div class="col-md-6">
+                    <article class="teacher-course-card teacher-course-card--friendly">
+                        <div class="teacher-course-card__head">
+                            <div>
+                                <strong class="d-block mb-2 teacher-course-card__title">{{ $course->name_locale }}</strong>
+                                <div class="teacher-course-card__status {{ $course->status ? 'is-active' : 'is-hidden' }}">
+                                    {{ $course->status ? __('teacher::teacher/course/common.status.published') : __('teacher::teacher/course/common.status.draft') }}
+                                </div>
+                                @if ($isLockedCourse)
+                                    <div class="teacher-course-card__limit-badge">
+                                        {{ __('teacher::teacher/course/common.labels.limited_actions_only') }}
+                                    </div>
+                                @endif
+                                @if ($hasLimit && $course->is_package_priority)
+                                    <div class="teacher-course-card__priority">
+                                        {{ __('teacher::teacher/course/common.labels.priority_active') }}
+                                    </div>
+                                @endif
+                            </div>
+                            @if (!$isLockedCourse)
+                                @if($stateCourseLimit['is_maintenance'])
+                                    <button class="btn btn-sm btn-secondary" disabled>
+                                        {{ __('teacher::teacher/course/common.actions.edit') }} ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }})
+                                    </button>
+                                @else
+                                    <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-sm btn-outline-primary">
+                                        {{ __('teacher::teacher/course/common.actions.edit') }}
+                                    </a>
+                                @endif
+                            @endif
+                        </div>
+
+                        <div class="teacher-course-card__stats">
+                            <div class="teacher-course-card__stat">
+                                <span>{{ __('teacher::teacher/course/list.card.lessons') }}</span>
+                                <strong>{{ $course->lessons_count }}</strong>
+                            </div>
+                            <div class="teacher-course-card__stat">
+                                <span>{{ __('teacher::teacher/course/list.card.students') }}</span>
+                                <strong>{{ $course->students_count }}</strong>
+                            </div>
+                            <div class="teacher-course-card__stat">
+                                <span>{{ __('teacher::teacher/course/list.card.price') }}</span>
+                                <strong>{{ moneyLocale($course->sale_price ?: $course->price) }}</strong>
+                            </div>
+                            <div class="teacher-course-card__stat">
+                                <span>{{ __('teacher::teacher/course/list.card.ratings') }}</span>
+                                <strong>{{ $course->ratings_count > 0 ? number_format((float) $course->ratings_avg_rating, 1) . ' / 5' : '0.0 / 5' }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="teacher-course-card__help">
+                            @if ($isLockedCourse)
+                                {{ __('teacher::teacher/course/common.warnings.locked_manage_only') }}
+                            @else
+                                {{ __('teacher::teacher/course/list.card.edit_help') }}
+                            @endif
+                        </div>
+
+                        @if ($teacher->packageHasFeature('can_view_activity_logs'))
+                            <div class="teacher-course-card__history">
+                                <div class="teacher-course-card__history-title">{{ __('teacher::teacher/course/list.card.history_title') }}</div>
+                                <div class="teacher-course-card__history-list">
+                                    @forelse ($course->teacher_activity_preview ?? collect() as $activity)
+                                        <article class="teacher-course-card__history-item">
+                                            <strong>
+                                                {{ match ($activity->action) {
+                                                    'course_created' => __('teacher::teacher/course/common.history.course_created'),
+                                                    'course_updated' => __('teacher::teacher/course/common.history.course_updated'),
+                                                    'course_duplicated' => __('teacher::teacher/course/common.history.course_duplicated'),
+                                                    'course_published' => __('teacher::teacher/course/common.history.course_published'),
+                                                    'course_moved_to_draft' => __('teacher::teacher/course/common.history.course_moved_to_draft'),
+                                                    'course_priority_enabled' => __('teacher::teacher/course/common.history.course_priority_enabled'),
+                                                    'course_priority_disabled' => __('teacher::teacher/course/common.history.course_priority_disabled'),
+                                                    'course_deleted' => __('teacher::teacher/course/common.history.course_deleted'),
+                                                    'course_restored' => __('teacher::teacher/course/common.history.course_restored'),
+                                                    'course_force_deleted' => __('teacher::teacher/course/common.history.course_force_deleted'),
+                                                    default => $activity->description ?: $activity->action,
+                                                } }}
+                                            </strong>
+                                            <span>{{ optional($activity->created_at)->format('d/m/Y H:i') }}</span>
+                                        </article>
+                                    @empty
+                                        <div class="teacher-course-card__history-empty">{{ __('teacher::teacher/course/list.card.history_empty') }}</div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        @else
+                            <div class="teacher-course-card__history teacher-course-card__history--locked">
+                                <div class="teacher-course-card__history-title">{{ __('teacher::teacher/course/list.card.history_title') }}</div>
+                                <div class="teacher-course-card__history-empty">
+                                    {{ __('packages::teacher.feature_locked') }}
+                                </div>
+                                <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="btn btn-sm btn-outline-warning mt-3">
+                                    {{ __('packages::teacher.upgrade.upgrade_cta_simple') }}
+                                </a>
+                            </div>
+                        @endif
+
+                        @if ($isLockedCourse)
+                            <div class="teacher-course-card__notice">
+                                {{ __('teacher::teacher/course/common.warnings.lock_reason_package_limit_locked') }}
+                            </div>
+                        @elseif (!(int) $course->status && !$canPublishThisCourse)
+                            <div class="teacher-course-card__notice">
+                                {{ __('teacher::teacher/course/common.warnings.course_publish_blocked') }}
+                            </div>
+                        @endif
+
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            @if ($hasLimit)
+                                <form method="POST" action="{{ route('teacher.dashboard.courses.priority', $course->id) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-warning" {{ $stateCourseLimit['is_maintenance'] ? 'disabled' : '' }}>
+                                        {{ $course->is_package_priority ? __('teacher::teacher/course/common.actions.unprioritize') : __('teacher::teacher/course/common.actions.prioritize') }}
+                                        {{ $stateCourseLimit['is_maintenance'] ? '('.(__('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI').')' : '' }}
+                                    </button>
+                                </form>
+                            @endif
+                            @if (!$isLockedCourse)
+                                <a href="{{ route('teacher.dashboard.lessons.index', $course->id) }}" class="btn btn-primary">
+                                    {{ __('teacher::teacher/course/common.actions.lessons') }}
+                                </a>
+                                @if ($teacher->packageHasFeature('can_manage_quizzes'))
+                                    @if($stateQuizzes['is_maintenance'])
+                                        <button class="btn btn-outline-info" disabled>
+                                            {{ __('teacher::teacher/course/common.actions.manage_quiz') }} ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }})
+                                        </button>
+                                    @else
+                                        <a href="{{ route('teacher.dashboard.quizzes.index', $course->id) }}" class="btn btn-outline-info">
+                                            {{ __('teacher::teacher/course/common.actions.manage_quiz') }}
+                                        </a>
+                                    @endif
+                                @endif
+                                @if($stateCourseLimit['is_maintenance'])
+                                    <button class="btn btn-outline-secondary" disabled>
+                                        {{ __('teacher::teacher/course/common.actions.edit') }} ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }})
+                                    </button>
+                                @else
+                                    <a href="{{ route('teacher.dashboard.courses.edit', $course->id) }}" class="btn btn-outline-secondary">
+                                        {{ __('teacher::teacher/course/common.actions.edit') }}
+                                    </a>
+                                @endif
+                            @endif
+                            @if (!$isLockedCourse && $teacher->packageHasFeature('can_duplicate_courses'))
+                                @if($stateCourseLimit['is_maintenance'])
+                                    <button class="btn btn-outline-info" disabled>
+                                        {{ __('teacher::teacher/course/common.actions.duplicate') }} ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }})
+                                    </button>
+                                @else
+                                    <form method="POST" action="{{ route('teacher.dashboard.courses.duplicate', $course->id) }}" onsubmit="return confirm('{{ __('teacher::teacher/course/list.confirm_duplicate') }}')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-info">
+                                            {{ __('teacher::teacher/course/common.actions.duplicate') }}
+                                        </button>
+                                    </form>
+                                @endif
+                            @endif
+                            <form method="POST" action="{{ route('teacher.dashboard.courses.visibility', $course->id) }}">
+                                @csrf
+                                <input type="hidden" name="status" value="{{ $course->status ? 0 : 1 }}">
+                                <button type="submit" class="btn btn-outline-light" {{ $stateCourseLimit['is_maintenance'] ? 'disabled' : '' }}>
+                                    {{ $course->status ? __('teacher::teacher/course/common.actions.move_to_draft') : __('teacher::teacher/course/common.actions.publish') }}
+                                    {{ $stateCourseLimit['is_maintenance'] ? '('.(__('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI').')' : '' }}
+                                </button>
+                            </form>
+                            @if($stateCourseLimit['is_maintenance'])
+                                <button class="btn btn-outline-danger" disabled>
+                                    {{ __('teacher::teacher/course/common.actions.delete') }} ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }})
+                                </button>
+                            @else
+                                <form method="POST" action="{{ route('teacher.dashboard.courses.delete', $course->id) }}" onsubmit="return confirm('{{ __('teacher::teacher/course/list.confirm_delete') }}')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        {{ __('teacher::teacher/course/common.actions.delete') }}
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </article>
+                </div>
+            @empty
+                <div class="col-12">
+                    <div class="teacher-courses-empty">
+                        <div class="teacher-courses-empty__icon">+</div>
+                        <h4>{{ __('teacher::teacher/course/list.empty') }}</h4>
+                        <p class="mb-0">
+                            {{ __('teacher::teacher/course/list.empty_description') }}
+                        </p>
+                        @if ($canCreate)
+                            <a href="{{ route('teacher.dashboard.courses.create') }}" class="btn btn-primary mt-3">
+                                {{ __('teacher::teacher/course/add.create_title') }}
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            @endforelse
+        </div>
+
+        <div class="mt-4">
+            {{ $courses->links() }}
+        </div>
+    </div>
+@endsection
+
+@section('stylesheets')
+    @parent
+    <style>
+        .teacher-course-subtabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.85rem;
+        }
+
+        .teacher-course-subtabs__tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.8rem 1rem;
+            border-radius: 999px;
+            border: 1px solid var(--admin-border);
+            background: color-mix(in srgb, var(--admin-surface-2) 88%, transparent);
+            color: var(--admin-text);
+            text-decoration: none;
+            font-weight: 700;
+            transition: 0.18s ease;
+        }
+
+        .teacher-course-subtabs__tab i {
+            color: var(--admin-primary);
+        }
+
+        .teacher-course-subtabs__tab small {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.18rem 0.45rem;
+            border-radius: 999px;
+            background: rgba(251, 191, 36, 0.14);
+            color: #fcd34d;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .teacher-course-subtabs__tab:hover,
+        .teacher-course-subtabs__tab.active {
+            transform: translateY(-1px);
+            border-color: color-mix(in srgb, var(--admin-primary) 42%, var(--admin-border));
+            background: color-mix(in srgb, var(--admin-primary) 16%, var(--admin-surface));
+            color: var(--admin-text);
+        }
+
+        .teacher-course-subtabs__tab.is-locked {
+            justify-content: space-between;
+        }
+
+        @media (max-width: 767.98px) {
+            .teacher-course-subtabs__tab {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+@endsection
+
+@section('stylesheets')
+    <style>
+        .teacher-courses-shell {
+            background:
+                radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 28%),
+                linear-gradient(180deg, rgba(17, 24, 39, 0.94) 0%, rgba(15, 23, 42, 0.98) 100%);
+        }
+
+        .teacher-courses-hero {
+            display: flex;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .teacher-courses-kicker {
+            display: inline-flex;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.14);
+            color: #8fc3ff;
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .teacher-courses-title {
+            margin-top: 1rem;
+            margin-bottom: 0.55rem;
+            font-size: clamp(2rem, 3vw, 2.8rem);
+            font-weight: 900;
+            color: #f8fbff;
+        }
+
+        .teacher-courses-desc {
+            max-width: 760px;
+            color: #a9bbd5;
+            line-height: 1.75;
+        }
+
+        .teacher-courses-hero__actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            justify-content: flex-end;
+            gap: 0.9rem;
+            min-width: 340px;
+        }
+
+        .teacher-courses-usage {
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            min-height: 48px;
+            gap: 0.35rem;
+            padding: 0.75rem 1.1rem;
+            border: 1px solid rgba(96, 165, 250, 0.18);
+            border-radius: 16px;
+            background: rgba(18, 28, 50, 0.75);
+            color: #dce9ff;
+            font-weight: 600;
+            line-height: 1.45;
+        }
+
+        .teacher-courses-usage strong {
+            color: #fff;
+            font-weight: 800;
+        }
+
+        .teacher-disabled-action {
+            display: inline-flex;
+            cursor: not-allowed;
+        }
+
+        .teacher-disabled-action-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.45rem;
+        }
+
+        .teacher-disabled-action .btn[disabled] {
+            pointer-events: none;
+            opacity: 0.55;
+        }
+
+        .teacher-disabled-action__note {
+            display: none;
+            max-width: 320px;
+            color: #fbbf24;
+            font-size: 0.82rem;
+            line-height: 1.45;
+        }
+
+        .teacher-courses-guide {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .teacher-courses-guide__item,
+        .teacher-courses-empty {
+            border: 1px solid rgba(96, 165, 250, 0.16);
+            border-radius: 22px;
+            background: rgba(18, 28, 50, 0.72);
+            box-shadow: 0 18px 42px rgba(2, 6, 23, 0.18);
+        }
+
+        .teacher-courses-guide__item {
+            display: flex;
+            gap: 1rem;
+            padding: 1.15rem 1.2rem;
+        }
+
+        .teacher-courses-guide__step {
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+            color: #fff;
+            font-weight: 900;
+        }
+
+        .teacher-courses-guide__item strong,
+        .teacher-courses-empty h4 {
+            color: #f8fbff;
+        }
+
+        .teacher-courses-guide__item p,
+        .teacher-courses-empty p {
+            color: #a9bbd5;
+            line-height: 1.65;
+        }
+
+        .teacher-course-card--friendly {
+            height: 100%;
+            padding: 1.4rem;
+            border: 1px solid rgba(96, 165, 250, 0.18);
+            border-radius: 24px;
+            background: rgba(18, 28, 50, 0.72);
+            box-shadow: 0 18px 42px rgba(2, 6, 23, 0.18);
+        }
+
+        .teacher-course-card__head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .teacher-course-card__title {
+            font-size: 1.35rem;
+            color: #f8fbff;
+        }
+
+        .teacher-course-card__status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.48rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .teacher-course-card__status.is-active {
+            background: rgba(34, 197, 94, 0.15);
+            color: #9ef0b3;
+        }
+
+        .teacher-course-card__status.is-hidden {
+            background: rgba(148, 163, 184, 0.14);
+            color: #c9d7ea;
+        }
+
+        .teacher-course-card__priority {
+            display: inline-flex;
+            margin-top: 0.55rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(250, 204, 21, 0.18);
+            color: #fde68a;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .teacher-course-card__limit-badge {
+            display: inline-flex;
+            margin-top: 0.55rem;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(248, 113, 113, 0.18);
+            color: #fecaca;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+        }
+
+        .teacher-course-card__stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .teacher-course-card__stat {
+            padding: 0.95rem 1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(96, 165, 250, 0.14);
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .teacher-course-card__stat span {
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #8fb5e9;
+            font-size: 0.85rem;
+        }
+
+        .teacher-course-card__stat strong {
+            color: #fff;
+            font-size: 1.05rem;
+        }
+
+        html[data-theme="light"] .teacher-course-card__stat strong {
+            color: var(--admin-text);
+        }
+
+        .teacher-course-card__help {
+            padding: 0.9rem 1rem;
+            border-radius: 16px;
+            background: rgba(37, 99, 235, 0.12);
+            color: #cfe4ff;
+            line-height: 1.6;
+        }
+
+        .teacher-course-card__history {
+            margin-top: 0.9rem;
+            padding: 0.95rem 1rem;
+            border-radius: 16px;
+            border: 1px solid rgba(96, 165, 250, 0.14);
+            background: var(--admin-history-bg);
+        }
+
+        .teacher-course-card__history-title {
+            margin-bottom: 0.7rem;
+            color: var(--admin-history-text);
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .teacher-course-card__history-list {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .teacher-course-card__history-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.9rem;
+            align-items: flex-start;
+        }
+
+        .teacher-course-card__history-item strong {
+            color: var(--admin-history-text);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .teacher-course-card__history-item span,
+        .teacher-course-card__history-empty {
+            color: var(--admin-history-text);
+            opacity: 0.8;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .teacher-course-card__history--locked {
+            border-style: dashed;
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        .teacher-course-card__notice {
+            margin-top: 0.9rem;
+            padding: 0.85rem 1rem;
+            border-radius: 16px;
+            background: rgba(245, 158, 11, 0.14);
+            color: #fde68a;
+            line-height: 1.6;
+        }
+
+        .teacher-courses-empty {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .teacher-courses-empty__icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+            color: #fff;
+            font-size: 2rem;
+            font-weight: 300;
+        }
+
+        html[data-theme="light"] .teacher-courses-shell {
+            background:
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 28%),
+                linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(241, 245, 249, 0.98) 100%);
+        }
+
+        html[data-theme="light"] .teacher-courses-kicker {
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-courses-title {
+            color: #0f172a;
+        }
+
+        html[data-theme="light"] .teacher-courses-desc {
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-courses-usage {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            color: var(--admin-text);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-courses-usage strong {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-disabled-action__note {
+            color: #b45309;
+        }
+
+        html[data-theme="light"] .teacher-courses-guide__item,
+        html[data-theme="light"] .teacher-course-card--friendly,
+        html[data-theme="light"] .teacher-courses-empty {
+            background: var(--admin-surface);
+            border-color: var(--admin-border);
+            box-shadow: var(--admin-card-shadow);
+        }
+
+        html[data-theme="light"] .teacher-courses-guide__item strong,
+        html[data-theme="light"] .teacher-course-card__title,
+        html[data-theme="light"] .teacher-courses-empty h4 {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-courses-guide__item p,
+        html[data-theme="light"] .teacher-courses-empty p {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-course-card__stat {
+            background: var(--admin-subtle-bg);
+            border-color: var(--admin-border);
+        }
+
+        html[data-theme="light"] .teacher-course-card__stat span {
+            color: var(--admin-muted);
+        }
+
+        html[data-theme="light"] .teacher-course-card__stat strong {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="light"] .teacher-course-card__help {
+            background: rgba(37, 99, 235, 0.08);
+            color: #1d4ed8;
+        }
+
+        html[data-theme="light"] .teacher-course-card__notice {
+            background: rgba(245, 158, 11, 0.12);
+            color: #92400e;
+        }
+
+        html[data-theme="light"] .teacher-course-card__status.is-active {
+            background: rgba(34, 197, 94, 0.16);
+            color: #166534;
+        }
+
+        html[data-theme="light"] .teacher-course-card__status.is-hidden {
+            background: rgba(148, 163, 184, 0.2);
+            color: #475569;
+        }
+
+        html[data-theme="light"] .teacher-course-card__priority {
+            background: rgba(250, 204, 21, 0.2);
+            color: #92400e;
+        }
+
+        html[data-theme="light"] .teacher-course-card__limit-badge {
+            background: rgba(248, 113, 113, 0.14);
+            color: #b91c1c;
+        }
+
+        html[data-theme="light"] .teacher-courses-empty__icon {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(59, 130, 246, 0.18));
+            color: #1d4ed8;
+        }
+
+        @media (max-width: 991.98px) {
+            .teacher-courses-hero,
+            .teacher-course-card__head {
+                flex-direction: column;
+            }
+
+            .teacher-courses-hero__actions {
+                justify-content: flex-start;
+                min-width: 0;
+            }
+
+            .teacher-courses-usage {
+                width: 100%;
+            }
+
+            .teacher-courses-guide {
+                grid-template-columns: 1fr;
+            }
+
+            .teacher-course-card__stats {
+                grid-template-columns: 1fr;
+            }
+
+            .teacher-disabled-action__note {
+                display: block;
+            }
+        }
+    </style>
+@endsection

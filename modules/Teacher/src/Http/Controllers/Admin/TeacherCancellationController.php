@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Modules\Teacher\src\Models\TeacherCancellationRequest;
 use App\Mail\TeacherCancellationStatusMail;
-use Modules\Teacher\src\Models\TeacherAffiliateLink;
+use Modules\Finances\src\Models\AffiliateLink;
 use Modules\Students\src\Models\Coupons;
 use Modules\Courses\src\Models\Courses;
 
@@ -58,7 +58,7 @@ class TeacherCancellationController extends Controller
                 ->update(['status' => 2]);
 
             // 3. Deactivate Marketing Tools
-            TeacherAffiliateLink::where('teacher_id', $teacher->id)
+            AffiliateLink::where('teacher_id', $teacher->id)
                 ->update(['status' => 0]);
             
             Coupons::where('teacher_id', $teacher->id)

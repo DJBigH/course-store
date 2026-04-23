@@ -16,6 +16,7 @@ return [
         'trash' => 'Xem thùng rác',
         'lessons' => 'Quản lý bài học',
         'manage_quiz' => 'Quản lý Quiz',
+        'lesson_update' => 'Cập nhật bài học',
         'back' => 'Quay lại',
         'cancel' => 'Hủy bỏ',
         'yes' => 'Có',
@@ -26,6 +27,8 @@ return [
     'status' => [
         'draft' => 'Bản nháp',
         'published' => 'Đã xuất bản',
+        'active' => 'Đang hoạt động',
+        'not_active' => 'Ngừng hoạt động',
     ],
     'locking' => [
         'open' => 'Không khóa, học viên đã mua vẫn học bình thường',
@@ -40,6 +43,7 @@ return [
         'price' => 'Giá gốc',
         'sale_price' => 'Giá khuyến mãi',
         'status' => 'Trạng thái',
+        'position' => 'Vị trí',
         'is_document' => 'Tài liệu đính kèm',
         'is_learning_locked' => 'Khóa quyền học',
         'price_hint' => 'Giá tối đa :maxđ.',
@@ -73,6 +77,7 @@ return [
         'lock_reason_package_limit_locked' => 'Khóa học này đã bị hệ thống đưa về bản nháp theo mức ưu tiên khi vượt limit gói hiện tại.',
         'locked_manage_only' => 'Khóa đang bị khóa thao tác. Bạn chỉ có thể ưu tiên giữ active, kích hoạt lại hoặc xóa khóa này.',
         'courses_locked_duplicate' => 'Tính năng nhân bản khóa học đang bị khóa do giới hạn gói hiện tại.',
+        'import_export_locked' => 'Tính năng Nhập/Xuất CSV đang bị khóa do giới hạn gói hiện tại.',
     ],
     'history' => [
         'course_created' => 'Tạo khóa học mới',

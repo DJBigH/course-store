@@ -6,14 +6,14 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Modules\Teacher\src\Models\TeacherCourseCertificate;
+use Modules\Certificates\src\Models\Certificate;
 
 class StudentCertificateIssuedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public function __construct(
-        public TeacherCourseCertificate $certificate,
+        public Certificate $certificate,
         protected string $mailLocale
     ) {
     }

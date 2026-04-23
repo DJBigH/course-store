@@ -18,6 +18,8 @@ return [
         'import_submit' => 'Upload & Preview',
         'confirm_submit' => 'Confirm Import',
         'clear_preview' => 'Cancel Preview',
+        'import' => 'Import Data',
+        'update' => 'Update Content',
     ],
     'labels' => [
         'module' => 'Module',

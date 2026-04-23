@@ -160,6 +160,11 @@
                         <div class="sb-nav-link-icon"><i class="fas fa-layer-group"></i></div>
                         Goi giang vien
                     </a>
+                    <a class="nav-link {{ request()->is('admin/teacher-package-features*') ? 'active' : '' }}"
+                        href="{{ route('teacher-package-features.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-list-check"></i></div>
+                        Tinh nang goi (Moi)
+                    </a>
                     <a class="nav-link {{ request()->is('admin/teacher-announcements*') ? 'active' : '' }}"
                         href="{{ route('teacher-announcements.index') }}">
                         <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>

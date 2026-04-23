@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Finances\src\Repositories\FinancesRepositoryInterface;
 use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
-use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
+use Modules\Packages\src\Support\PackageLifecycleManager;
 
 class PayoutController extends Controller
 {
@@ -14,7 +14,7 @@ class PayoutController extends Controller
 
     public function __construct(
         protected FinancesRepositoryInterface $financesRepo,
-        protected TeacherPackageLifecycleManager $packageLifecycleManager
+        protected PackageLifecycleManager $packageLifecycleManager
     ) {}
 
     public function index(Request $request)

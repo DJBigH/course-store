@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'support' => [
+        'page_title' => '피드백 및 신고',
+        'description' => '시스템 개선을 위해 의견을 보내주시거나 기술적인 문제를 신고해 주세요.',
+        'flash' => [
+            'sent' => '감사합니다! 지원 요청이 성공적으로 전송되었습니다. 가능한 한 빨리 답변해 드리겠습니다.',
+            'error_empty' => '정보는 비워둘 수 없습니다.',
+            'error_system' => '오류가 발생했습니다. 나중에 다시 시도해 주세요.',
+            'warning_incomplete' => '전송하기 전에 모든 항목을 입력해 주세요.',
+        ],
+        'form' => [
+            'title' => '새 요청 제출',
+            'type_label' => '요청 유형',
+            'type_hint' => '도움이 필요한 요청 유형을 선택하세요',
+            'category_label' => '지원 카테고리',
+            'category_hint' => '빠른 처리를 위해 구체적인 카테고리를 선택하세요',
+            'category_select_default' => '-- 카테고리를 선택하세요 --',
+            'subject_label' => '제목',
+            'subject_hint' => '문제를 간략하게 요약해 주세요',
+            'subject_placeholder' => '문제에 대한 간략한 설명...',
+            'message_label' => '상세 내용',
+            'message_hint' => '문제나 의견을 자세히 기술해 주세요',
+            'message_placeholder' => '문제나 피드백을 자세히 설명해 주세요...',
+            'submit' => '요청 제출',
+            'sending' => '전송 중...',
+        ],
+        'types' => [
+            'feedback' => '기능 피드백',
+            'report' => '버그 / 문제 신고',
+        ],
+        'categories' => [
+            'feature_request' => '새 기능 요청',
+            'ui_ux' => '인터페이스 및 경험 (UI/UX)',
+            'teacher_portal' => '강사 워크스페이스 기능',
+            'student_portal' => '학생 페이지 기능',
+            'payment_package' => '결제 및 멤버십',
+            'system_bug' => '시스템 버그 / 표시 문제',
+            'course_lesson' => '강의 및 레슨 관리',
+            'comment_rating' => '댓글 및 평점',
+            'content_violation' => '콘텐츠 위반 신고',
+            'account' => '계정 및 보안',
+            'other' => '기타 문제',
+        ],
+        'status' => [
+            'new' => '제출됨',
+            'in_progress' => '처리 중',
+            'need_info' => '추가 정보 필요',
+            'resolved' => '해결됨',
+            'rejected' => '거절됨',
+        ],
+        'history' => [
+            'title' => '요청 내역',
+            'empty' => '제출된 지원 요청이 없습니다.',
+            'label_status' => '상태',
+            'label_id' => 'ID',
+            'label_submitted' => '제출일',
+        ],
+    ],
+];

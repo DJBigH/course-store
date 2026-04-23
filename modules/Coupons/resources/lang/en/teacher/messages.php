@@ -5,7 +5,9 @@ return [
     'create_title' => 'Add New Coupon',
     'edit_title' => 'Edit Coupon',
     'assign_students_title' => 'Assign Coupon to Students',
+    'assign_students_desc' => 'Select students who are allowed to use code :code.',
     'assign_courses_title' => 'Assign Coupon to Courses',
+    'assign_courses_desc' => 'Select courses where code :code is applicable.',
     'hero' => [
         'kicker' => 'Promotion Campaign',
         'title' => 'Discount Coupons',
@@ -22,6 +24,7 @@ return [
         'assign_students' => 'Assign Students',
         'prioritize' => 'Prioritize Display',
         'unprioritize' => 'Remove Priority',
+        'save_assignment' => 'Save Changes',
     ],
     'form' => [
         'description' => 'Set up the conditions for your discount coupon.',
