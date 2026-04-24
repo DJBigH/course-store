@@ -34,6 +34,10 @@ class Order extends Model
         'payment_date',
         'payment_complete_date',
         'payment_method',
+        'currency',
+        'exchange_rate',
+        'conversion_fee_pct',
+        'base_total',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -42,6 +46,9 @@ class Order extends Model
     protected $casts = [
         'total' => 'float',
         'discount' => 'float',
+        'exchange_rate' => 'float',
+        'conversion_fee_pct' => 'float',
+        'base_total' => 'float',
         'payment_date' => 'datetime',
         'payment_complete_date' => 'datetime',
     ];

@@ -273,30 +273,7 @@ class TeacherLessonController extends Controller
             ->with('msg_success', __('teacher::teacher/lesson/common.flash.restored'));
     }
 
-    public function forceDeleteLesson(int $courseId, int $lessonId)
-    {
-        $teacher = $this->resolveTeacher();
-        if (!$teacher) {
-            return $this->redirectToStatus();
-        }
 
-        $course = $this->resolveOwnedCourse($teacher, $courseId, true);
-        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
-            return $lockedRedirect;
-        }
-        $lesson = $this->resolveOwnedLesson($course, $lessonId, true);
-        if (!$lesson->trashed()) {
-            abort(404);
-        }
-
-        $branchIds = $this->collectLessonBranchIds($lesson->id);
-        Lesson::query()->onlyTrashed()->whereIn('id', $branchIds)->forceDelete();
-        $this->updateCourseDurations($course->id);
-
-        return redirect()
-            ->route('teacher.dashboard.lessons.trash', $course->id)
-            ->with('msg_success', __('teacher::teacher/lesson/common.flash.force_deleted'));
-    }
 
     public function exportLessons(Request $request, int $courseId, string $format = 'csv')
     {

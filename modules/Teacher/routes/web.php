@@ -132,7 +132,6 @@ Route::group([
    Route::post('/khoa-hoc/{course}/nhan-ban', [TeacherCourseController::class, 'duplicateCourse'])->name('courses.duplicate');
    Route::delete('/khoa-hoc/{course}', [TeacherCourseController::class, 'deleteCourse'])->name('courses.delete');
    Route::post('/khoa-hoc/{course}/khoi-phuc', [TeacherCourseController::class, 'restoreCourse'])->name('courses.restore');
-   Route::delete('/khoa-hoc/{course}/xoa-vinh-vien', [TeacherCourseController::class, 'forceDeleteCourse'])->name('courses.force-delete');
    Route::get('/khoa-hoc/{course}/bai-hoc', [TeacherLessonController::class, 'lessons'])->name('lessons.index');
    Route::get('/khoa-hoc/{course}/bai-hoc/{lesson}/preview-data', [TeacherLessonController::class, 'getLessonPreviewData'])->name('lessons.preview_data');
    Route::get('/khoa-hoc/{course}/quiz', [TeacherQuizController::class, 'index'])->name('quizzes.index');
@@ -164,7 +163,6 @@ Route::group([
    Route::post('/khoa-hoc/{course}/bai-hoc/{lesson}/chinh-sua', [TeacherLessonController::class, 'updateLesson'])->name('lessons.update');
    Route::delete('/khoa-hoc/{course}/bai-hoc/{lesson}', [TeacherLessonController::class, 'deleteLesson'])->name('lessons.delete');
    Route::post('/khoa-hoc/{course}/bai-hoc/{lesson}/khoi-phuc', [TeacherLessonController::class, 'restoreLesson'])->name('lessons.restore');
-   Route::delete('/khoa-hoc/{course}/bai-hoc/{lesson}/xoa-vinh-vien', [TeacherLessonController::class, 'forceDeleteLesson'])->name('lessons.force-delete');
    Route::get('/huy-hop-tac', [TeacherCancellationController::class, 'index'])->name('cancellation');
    Route::post('/huy-hop-tac/otp', [TeacherCancellationController::class, 'sendOtp'])->name('cancellation.otp');
    Route::post('/huy-hop-tac', [TeacherCancellationController::class, 'store'])->name('cancellation.store');

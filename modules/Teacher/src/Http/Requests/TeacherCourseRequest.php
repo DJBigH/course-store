@@ -24,9 +24,25 @@ class TeacherCourseRequest extends FormRequest
             return (int) preg_replace('/[^\d]/', '', (string) $value);
         };
 
+        $normalizeFloat = static function ($value) {
+            if ($value === null || $value === '') {
+                return 0;
+            }
+
+            return (float) preg_replace('/[^-0-9.]/', '', (string) $value);
+        };
+
         $this->merge([
             'price' => $normalizeInteger($this->input('price')),
             'sale_price' => $normalizeInteger($this->input('sale_price')),
+            'price_en' => $normalizeFloat($this->input('price_en')),
+            'sale_price_en' => $normalizeFloat($this->input('sale_price_en')),
+            'price_ko' => $normalizeFloat($this->input('price_ko')),
+            'sale_price_ko' => $normalizeFloat($this->input('sale_price_ko')),
+            'price_ja' => $normalizeFloat($this->input('price_ja')),
+            'sale_price_ja' => $normalizeFloat($this->input('sale_price_ja')),
+            'price_zh' => $normalizeFloat($this->input('price_zh')),
+            'sale_price_zh' => $normalizeFloat($this->input('sale_price_zh')),
         ]);
     }
 
@@ -52,8 +68,16 @@ class TeacherCourseRequest extends FormRequest
             'supports_zh' => ['nullable', 'string'],
             'thumbnail' => ['required', 'string', 'max:225'],
             'code' => ['nullable', 'string', 'max:225', Rule::unique('courses', 'code')->ignore($courseId)],
-            'price' => ['required', 'integer', 'min:0', 'max:' . self::MAX_COURSE_PRICE],
-            'sale_price' => ['nullable', 'integer', 'min:0', 'max:' . self::MAX_COURSE_PRICE, 'lte:price'],
+            'price' => ['required', 'numeric', 'min:0', 'max:' . self::MAX_COURSE_PRICE],
+            'sale_price' => ['nullable', 'numeric', 'min:0', 'max:' . self::MAX_COURSE_PRICE, 'lte:price'],
+            'price_en' => ['nullable', 'numeric', 'min:0'],
+            'sale_price_en' => ['nullable', 'numeric', 'min:0', 'lte:price_en'],
+            'price_ko' => ['nullable', 'numeric', 'min:0'],
+            'sale_price_ko' => ['nullable', 'numeric', 'min:0', 'lte:price_ko'],
+            'price_ja' => ['nullable', 'numeric', 'min:0'],
+            'sale_price_ja' => ['nullable', 'numeric', 'min:0', 'lte:price_ja'],
+            'price_zh' => ['nullable', 'numeric', 'min:0'],
+            'sale_price_zh' => ['nullable', 'numeric', 'min:0', 'lte:price_zh'],
             'status' => ['required', 'integer', 'in:0,1'],
             'is_document' => ['required', 'integer', 'in:0,1'],
             'is_learning_locked' => ['required', 'integer', 'in:0,1'],

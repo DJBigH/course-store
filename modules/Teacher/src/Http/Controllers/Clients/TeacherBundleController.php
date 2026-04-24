@@ -103,7 +103,7 @@ class TeacherBundleController extends Controller
             $teacher,
             $bundle,
             'bundle_deleted',
-            "Xóa combo khóa học: {$bundle->name}"
+            __('teacher::teacher/bundle/common.history.bundle_deleted', ['name' => $bundle->name])
         );
 
         $bundle->delete();

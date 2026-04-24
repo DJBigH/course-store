@@ -2032,6 +2032,38 @@ trait TeacherDashboardHelpers
         };
     }
 
+    protected function resolveTeacherDashboardPreviousRange(array $currentRange): array
+    {
+        $key = $currentRange['key'];
+
+        return match ($key) {
+            'today' => [
+                'start' => now()->subDay()->startOfDay(),
+                'end' => now()->subDay()->endOfDay(),
+            ],
+            '7d' => [
+                'start' => now()->subDays(13)->startOfDay(),
+                'end' => now()->subDays(7)->endOfDay(),
+            ],
+            '14d' => [
+                'start' => now()->subDays(27)->startOfDay(),
+                'end' => now()->subDays(14)->endOfDay(),
+            ],
+            'month', '30d' => [
+                'start' => now()->subDays(59)->startOfDay(),
+                'end' => now()->subDays(30)->endOfDay(),
+            ],
+            'year', '90d' => [
+                'start' => now()->subDays(729)->startOfDay(),
+                'end' => now()->subDays(365)->endOfDay(),
+            ],
+            default => [
+                'start' => now()->subDays(59)->startOfDay(),
+                'end' => now()->subDays(30)->endOfDay(),
+            ],
+        };
+    }
+
     protected function resolveTeacherDashboardRangeOptions(): array
     {
         return array_map(
@@ -2065,8 +2097,8 @@ trait TeacherDashboardHelpers
                 'period' => Carbon::parse($row->date)->format('d/m/Y'),
                 'short_period' => Carbon::parse($row->date)->format('d/m'),
                 'orders' => number_format((int) $row->orders),
-                'gross' => moneyLocale((float) $row->gross_amount, true),
-                'revenue' => moneyLocale((float) $row->teacher_revenue, true),
+                'gross' => moneyLocale((float) $row->gross_amount, null, true),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
             ];
         })->values()->all();
     }
@@ -2077,7 +2109,7 @@ trait TeacherDashboardHelpers
             return [
                 'period' => Carbon::createFromFormat('Y-m', $row->month)->format('m/Y'),
                 'orders' => number_format((int) $row->orders),
-                'revenue' => moneyLocale((float) $row->teacher_revenue, true),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
             ];
         })->values()->all();
     }
@@ -2088,7 +2120,7 @@ trait TeacherDashboardHelpers
             return [
                 'course_name' => $row->course_name,
                 'orders' => number_format((int) $row->orders),
-                'revenue' => moneyLocale((float) $row->teacher_revenue, true),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
             ];
         })->values()->all();
     }
@@ -2116,7 +2148,7 @@ trait TeacherDashboardHelpers
 
             return [
                 'label' => Carbon::parse($row->date)->format('d/m'),
-                'value' => moneyLocale((float) $row->teacher_revenue, true),
+                'value' => moneyLocale((float) $row->teacher_revenue, null, true),
                 'height' => round(max((((float) $row->teacher_revenue) / $maxRevenue) * 100, 8), 2),
                 'start_color' => $colors[0],
                 'end_color' => $colors[1],
@@ -2132,7 +2164,7 @@ trait TeacherDashboardHelpers
                 'views' => number_format((int) $row->views),
                 'orders' => number_format((int) $row->orders),
                 'conversion_rate' => number_format((float) $row->conversion_rate, 2) . '%',
-                'revenue' => moneyLocale((float) $row->teacher_revenue, true),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
             ];
         })->values()->all();
     }
@@ -2145,7 +2177,7 @@ trait TeacherDashboardHelpers
         return $items->map(function ($row) use ($maxRevenue) {
             return [
                 'course_name' => $row->course_name,
-                'revenue' => moneyLocale((float) $row->teacher_revenue),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
                 'width' => round(max((((float) $row->teacher_revenue) / $maxRevenue) * 100, 4), 2),
                 'meta' => number_format((int) $row->views) . ' view • ' . number_format((int) $row->orders) . ' đơn • ' . number_format((float) $row->conversion_rate, 2) . '%',
             ];
@@ -2159,10 +2191,11 @@ trait TeacherDashboardHelpers
                 'order_code' => '#' . ($item->order?->code ?: '-'),
                 'course_name' => $item->courses?->name_locale ?: '-',
                 'student_name' => $item->order?->students?->name ?: '-',
-                'gross' => moneyLocale((float) data_get($item, 'finance_breakdown.gross_amount', 0)),
-                'discount' => '-' . moneyLocale((float) data_get($item, 'finance_breakdown.allocated_discount', 0)),
-                'net' => moneyLocale((float) data_get($item, 'finance_breakdown.net_revenue', 0)),
-                'revenue' => moneyLocale((float) data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+                'gross' => moneyLocale((float) data_get($item, 'finance_breakdown.gross_amount', 0), null, true),
+                'discount' => '-' . moneyLocale((float) data_get($item, 'finance_breakdown.allocated_discount', 0), null, true),
+                'net' => moneyLocale((float) data_get($item, 'finance_breakdown.net_revenue', 0), null, true),
+                'split' => number_format((float) data_get($item, 'finance_breakdown.commission_rate', 0), 0) . '% / ' . (100 - (float) data_get($item, 'finance_breakdown.commission_rate', 0)) . '%',
+                'revenue' => moneyLocale((float) data_get($item, 'finance_breakdown.teacher_revenue', 0), null, true),
             ];
         })->values()->all();
     }
@@ -2352,6 +2385,14 @@ trait TeacherDashboardHelpers
             'thumbnail' => $data['thumbnail'],
             'price' => (float) ($data['price'] ?? 0),
             'sale_price' => (float) ($data['sale_price'] ?? 0),
+            'price_en' => (float) ($data['price_en'] ?? 0),
+            'sale_price_en' => (float) ($data['sale_price_en'] ?? 0),
+            'price_ko' => (float) ($data['price_ko'] ?? 0),
+            'sale_price_ko' => (float) ($data['sale_price_ko'] ?? 0),
+            'price_ja' => (float) ($data['price_ja'] ?? 0),
+            'sale_price_ja' => (float) ($data['sale_price_ja'] ?? 0),
+            'price_zh' => (float) ($data['price_zh'] ?? 0),
+            'sale_price_zh' => (float) ($data['sale_price_zh'] ?? 0),
             'code' => $this->generateCourseCode($data['code'] ?? null, $course?->id),
             'is_document' => (int) $data['is_document'],
             'status' => $normalizedStatus,
@@ -2863,11 +2904,12 @@ trait TeacherDashboardHelpers
                 'courses' => number_format((int) ($stats['courses'] ?? 0)),
                 'active_courses' => number_format((int) ($stats['active_courses'] ?? 0)),
                 'students' => number_format((int) ($stats['students'] ?? 0)),
-                'available_balance' => moneyLocale((float) ($stats['available_balance'] ?? 0)),
-                'gross_revenue' => moneyLocale((float) ($stats['gross_revenue'] ?? 0)),
-                'allocated_discount' => moneyLocale((float) ($stats['allocated_discount'] ?? 0)),
-                'estimated_revenue' => moneyLocale((float) ($stats['estimated_revenue'] ?? 0)),
-                'platform_revenue' => moneyLocale((float) ($stats['platform_revenue'] ?? 0)),
+                'available_balance' => moneyLocale((float) ($stats['available_balance'] ?? 0), null, true),
+                'gross_revenue' => moneyLocale((float) ($stats['gross_revenue'] ?? 0), null, true),
+                'allocated_discount' => moneyLocale((float) ($stats['allocated_discount'] ?? 0), null, true),
+                'estimated_revenue' => moneyLocale((float) ($stats['estimated_revenue'] ?? 0), null, true),
+                'platform_revenue' => moneyLocale((float) ($stats['platform_revenue'] ?? 0), null, true),
+                'trends' => $stats['trends'] ?? [],
             ],
             'conversion' => [
                 'created' => number_format((int) ($conversionSummary['orders_this_month'] ?? 0)),
@@ -2906,8 +2948,8 @@ trait TeacherDashboardHelpers
                 'end' => $range['end']->toDateString(),
             ],
             'summary' => [
-                'gross_revenue' => moneyLocale((float) ($summary['gross_amount'] ?? 0), true),
-                'teacher_revenue' => moneyLocale((float) ($summary['teacher_revenue'] ?? 0), true),
+                'gross_revenue' => moneyLocale((float) ($summary['gross_amount'] ?? 0), null, true),
+                'teacher_revenue' => moneyLocale((float) ($summary['teacher_revenue'] ?? 0), null, true),
             ],
             'daily_rows' => $this->serializeTeacherRevenueDailyRows($revenueInsights['daily'] ?? collect()),
             'monthly_rows' => $this->serializeTeacherRevenueMonthlyRows($revenueInsights['monthly'] ?? collect()),
@@ -3436,8 +3478,8 @@ trait TeacherDashboardHelpers
             $bundle,
             $bundleId ? 'bundle_updated' : 'bundle_created',
             $bundleId
-                ? "Cập nhật combo khóa học: {$bundle->name}"
-                : "Tạo combo khóa học mới: {$bundle->name}",
+                ? __('teacher::teacher/bundle/common.history.bundle_updated', ['name' => $bundle->name])
+                : __('teacher::teacher/bundle/common.history.bundle_created', ['name' => $bundle->name]),
             ['course_count' => $courseIds->count()]
         );
 

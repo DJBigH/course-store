@@ -127,16 +127,16 @@
                             @unless ($hasCourse)
                                 <div class="course-price mb-3">
                                     <i class="fa-solid fa-tag text-primary me-1"></i>
-                                    @if ($course->sale_price)
+                                    @if ($course->sale_price_locale)
                                         <span class="text-muted text-decoration-line-through me-2">
-                                            {{ moneyLocale($course->price) }}
+                                            {{ moneyLocale($course->price_locale) }}
                                         </span>
                                         <span class="fw-bold text-danger fs-5">
-                                            {{ moneyLocale($course->sale_price) }}
+                                            {{ moneyLocale($course->sale_price_locale) }}
                                         </span>
                                     @else
                                         <span class="fw-bold fs-5 text-danger">
-                                            {{ moneyLocale($course->price) }}
+                                            {{ moneyLocale($course->price_locale) }}
                                         </span>
                                     @endif
                                 </div>

@@ -28,15 +28,34 @@ class PackageController extends Controller
 
     public function store(PackageRequest $request)
     {
-        DB::transaction(function () use ($request) {
+        $created = null;
+        DB::transaction(function () use ($request, &$created) {
             $payload = $this->payload($request);
             $sortOrder = $this->resolveRequestedSortOrder($request);
 
             $this->shiftPackagesForInsert($sortOrder);
             $payload['sort_order'] = $sortOrder;
 
-            Package::query()->create($payload);
+            $created = Package::query()->create($payload);
         });
+
+        if ($created) {
+            activity_log(
+                action: 'create',
+                subject: $created,
+                properties: [
+                    'data' => [
+                        'name'           => $created->name,
+                        'code'           => $created->code,
+                        'price'          => $created->price,
+                        'billing_cycle'  => $created->billing_cycle,
+                        'commission_rate'=> $created->commission_rate,
+                        'status'         => $created->status,
+                    ],
+                ],
+                logName: 'admin_package_management',
+            );
+        }
 
         return redirect()->route('teacher-packages.index')->with('msg', __('packages::admin.messages.create_success'));
     }
@@ -52,6 +71,7 @@ class PackageController extends Controller
     public function update(PackageRequest $request, $id)
     {
         $package = Package::query()->findOrFail($id);
+        $old = $package->only(['name', 'code', 'price', 'billing_cycle', 'commission_rate', 'status']);
         DB::transaction(function () use ($request, $package) {
             $payload = $this->payload($request);
             $requestedSortOrder = $this->resolveRequestedSortOrder($request);
@@ -61,6 +81,17 @@ class PackageController extends Controller
 
             $package->update($payload);
         });
+        $package->refresh();
+
+        activity_log(
+            action: 'update',
+            subject: $package,
+            properties: [
+                'old' => $old,
+                'new' => $package->only(['name', 'code', 'price', 'billing_cycle', 'commission_rate', 'status']),
+            ],
+            logName: 'admin_package_management',
+        );
 
         return redirect()->route('teacher-packages.edit', $package->id)->with('msg', __('packages::admin.messages.update_success'));
     }
@@ -68,6 +99,8 @@ class PackageController extends Controller
     public function delete($id)
     {
         $package = Package::query()->findOrFail($id);
+        $packageName = $package->name;
+        $packageId = $package->id;
         DB::transaction(function () use ($package) {
             $deletedOrder = (int) $package->sort_order;
             $package->delete();
@@ -76,6 +109,19 @@ class PackageController extends Controller
                 ->where('sort_order', '>', $deletedOrder)
                 ->decrement('sort_order');
         });
+
+        activity_log(
+            action: 'delete',
+            subject: null,
+            properties: [
+                'data' => [
+                    'id'   => $packageId,
+                    'name' => $packageName,
+                ],
+            ],
+            logName: 'admin_package_management',
+            description: 'Xóa gói giảng viên: ' . $packageName,
+        );
 
         return redirect()->route('teacher-packages.index')->with('msg', __('packages::admin.messages.delete_success'));
     }

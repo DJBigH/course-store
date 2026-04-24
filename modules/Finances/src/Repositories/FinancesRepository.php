@@ -25,7 +25,7 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
                 $q->whereHas('status', fn($sq) => $sq->where('is_success', true));
             })
             ->whereHas('courses', function ($q) use ($teacherId) {
-                $q->where('teacher_id', $teacherId);
+                $q->withTrashed()->where('teacher_id', $teacherId);
             });
 
         if ($fromDate) {
@@ -38,7 +38,7 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
         $details = $query->with(['order', 'courses.teacher'])->get();
 
         return FinanceCalculator::summarize($details, function ($detail) {
-            return $detail->courses?->teacher?->commission ?? 0;
+            return $detail->courses?->teacher?->commission_rate ?? 0;
         });
     }
 
@@ -49,7 +49,7 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
                 $q->whereHas('status', fn($sq) => $sq->where('is_success', true));
             })
             ->whereHas('courses', function ($q) use ($teacherId) {
-                $q->where('teacher_id', $teacherId);
+                $q->withTrashed()->where('teacher_id', $teacherId);
             });
 
         if ($fromDate) {
@@ -61,7 +61,7 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
 
         $details = $query->with(['order', 'courses.teacher'])->get();
         $details = FinanceCalculator::decorate($details, function ($detail) {
-            return $detail->courses?->teacher?->commission ?? 0;
+            return $detail->courses?->teacher?->commission_rate ?? 0;
         });
 
         $courseGroups = $details->groupBy('courses_id');
@@ -88,7 +88,7 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
                 $q->whereHas('status', fn($sq) => $sq->where('is_success', true));
             })
             ->whereHas('courses', function ($q) use ($teacherId) {
-                $q->where('teacher_id', $teacherId);
+                $q->withTrashed()->where('teacher_id', $teacherId);
             })
             ->with(['order', 'courses.teacher', 'order.students'])
             ->latest()
@@ -96,7 +96,7 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             ->get();
 
         return FinanceCalculator::decorate($details, function ($detail) {
-            return $detail->courses?->teacher?->commission ?? 0;
+            return $detail->courses?->teacher?->commission_rate ?? 0;
         });
     }
 
@@ -161,26 +161,44 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             return false;
         }
 
-        DB::transaction(function () use ($teacherId, $data) {
+        $created = null;
+        DB::transaction(function () use ($teacherId, $data, &$created) {
             if (($data['account_mode'] ?? '') === 'new') {
                 PayoutAccount::create([
-                    'teacher_id' => $teacherId,
-                    'bank_name' => $data['bank_name'],
-                    'bank_account_name' => $data['bank_account_name'],
+                    'teacher_id'          => $teacherId,
+                    'bank_name'           => $data['bank_name'],
+                    'bank_account_name'   => $data['bank_account_name'],
                     'bank_account_number' => $data['bank_account_number'],
                 ]);
             }
 
-            PayoutRequest::create([
-                'teacher_id' => $teacherId,
-                'amount' => $data['amount'],
-                'bank_name' => $data['bank_name'],
-                'bank_account_name' => $data['bank_account_name'],
+            $created = PayoutRequest::create([
+                'teacher_id'          => $teacherId,
+                'amount'              => $data['amount'],
+                'bank_name'           => $data['bank_name'],
+                'bank_account_name'   => $data['bank_account_name'],
                 'bank_account_number' => $data['bank_account_number'],
-                'note' => $data['note'] ?? null,
-                'status' => 'requested',
+                'note'                => $data['note'] ?? null,
+                'status'              => 'requested',
             ]);
         });
+
+        if ($created) {
+            activity_log(
+                action: 'create_payout',
+                subject: $created,
+                properties: [
+                    'data' => [
+                        'amount'              => $created->amount,
+                        'bank_name'           => $created->bank_name,
+                        'bank_account_name'   => $created->bank_account_name,
+                        'bank_account_number' => $created->bank_account_number,
+                        'status'              => 'requested',
+                    ],
+                ],
+                logName: 'teacher_payout_management',
+            );
+        }
 
         return true;
     }
@@ -225,7 +243,7 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
 
         if (!empty($filters['teacher_id'])) {
             $query->whereHas('courses', function ($q) use ($filters) {
-                $q->where('teacher_id', $filters['teacher_id']);
+                $q->withTrashed()->where('teacher_id', $filters['teacher_id']);
             });
         }
         if (!empty($filters['from_date'])) {
@@ -239,7 +257,7 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
 
         // Decorate paginated items
         $items->getCollection()->transform(function ($item) {
-            $item->finance_breakdown = FinanceCalculator::breakdown($item, $item->courses?->teacher?->commission ?? 0);
+            $item->finance_breakdown = FinanceCalculator::breakdown($item, $item->courses?->teacher?->commission_rate ?? 0);
             return $item;
         });
 
@@ -270,8 +288,9 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
     public function updatePayoutStatus(int $payoutId, array $data): bool
     {
         $payout = PayoutRequest::findOrFail($payoutId);
+        $oldStatus = $payout->status;
         $updateData = [
-            'status' => $data['status'],
+            'status'     => $data['status'],
             'admin_note' => $data['admin_note'] ?? null,
         ];
 
@@ -280,7 +299,21 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             $updateData['processed_by'] = auth()->id();
         }
 
-        return $payout->update($updateData);
+        $result = $payout->update($updateData);
+
+        if ($result) {
+            activity_log(
+                action: 'payout_status_update',
+                subject: $payout,
+                properties: [
+                    'old' => ['status' => $oldStatus],
+                    'new' => ['status' => $data['status'], 'admin_note' => $data['admin_note'] ?? null],
+                ],
+                logName: 'admin_payout_management',
+            );
+        }
+
+        return $result;
     }
 
     public function updateAccountChangeRequest(int $requestId, array $data): bool
@@ -292,8 +325,8 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
 
         DB::transaction(function () use ($request, $data) {
             $request->update([
-                'status' => $data['status'],
-                'admin_note' => $data['admin_note'] ?? null,
+                'status'       => $data['status'],
+                'admin_note'   => $data['admin_note'] ?? null,
                 'processed_at' => now(),
             ]);
 
@@ -301,13 +334,23 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
                 $savedAccount = PayoutAccount::find($request->replace_payout_account_id);
                 if ($savedAccount) {
                     $savedAccount->update([
-                        'bank_name' => $request->bank_name,
-                        'bank_account_name' => $request->bank_account_name,
+                        'bank_name'           => $request->bank_name,
+                        'bank_account_name'   => $request->bank_account_name,
                         'bank_account_number' => $request->bank_account_number,
                     ]);
                 }
             }
         });
+
+        activity_log(
+            action: 'account_change_update',
+            subject: $request,
+            properties: [
+                'old' => ['status' => 'pending'],
+                'new' => ['status' => $data['status'], 'admin_note' => $data['admin_note'] ?? null],
+            ],
+            logName: 'admin_payout_management',
+        );
 
         return true;
     }

@@ -41,19 +41,19 @@
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.teacher_revenue') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($summary['teacher_revenue'], true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($summary['teacher_revenue'], null, true) }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.requested') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($requestedAmount, true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($requestedAmount, null, true) }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.available') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($availableBalance, true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($availableBalance, null, true) }}</div>
                 </div>
             </div>
         </div>

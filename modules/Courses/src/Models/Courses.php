@@ -41,6 +41,14 @@ class Courses extends Model
         'thumbnail',
         'price',
         'sale_price',
+        'price_en',
+        'sale_price_en',
+        'price_ko',
+        'sale_price_ko',
+        'price_ja',
+        'sale_price_ja',
+        'price_zh',
+        'sale_price_zh',
         'code',
         'durations',
         'is_document',
@@ -221,5 +229,43 @@ class Courses extends Model
             ->where('status', 1)
             ->get()
             ->sum('durations');
+    }
+
+    public function getPriceLocaleAttribute(): float
+    {
+        $locale = app()->getLocale();
+        $field = $locale === 'vi' ? 'price' : 'price_' . $locale;
+        return (float) ($this->{$field} ?? $this->price ?? 0);
+    }
+
+    public function getSalePriceLocaleAttribute(): float
+    {
+        $locale = app()->getLocale();
+        $field = $locale === 'vi' ? 'sale_price' : 'sale_price_' . $locale;
+        return (float) ($this->{$field} ?? $this->sale_price ?? 0);
+    }
+
+    public function getCurrencySymbolAttribute(): string
+    {
+        $locale = app()->getLocale();
+        return match ($locale) {
+            'en' => '$',
+            'ko' => '₩',
+            'ja' => '¥',
+            'zh' => '元',
+            default => '₫',
+        };
+    }
+
+    public function getCurrencyCodeAttribute(): string
+    {
+        $locale = app()->getLocale();
+        return match ($locale) {
+            'en' => 'USD',
+            'ko' => 'KRW',
+            'ja' => 'JPY',
+            'zh' => 'CNY',
+            default => 'VND',
+        };
     }
 }

@@ -40,13 +40,7 @@
                                     {{ __('teacher::teacher/course/common.actions.restore') }}
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('teacher.dashboard.courses.force-delete', $course->id) }}" onsubmit="return confirm('{{ __('teacher::teacher/course/list.confirm_force_delete') }}')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    {{ __('teacher::teacher/course/common.actions.force_delete') }}
-                                </button>
-                            </form>
+
                         </div>
                     </article>
                 </div>

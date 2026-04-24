@@ -58,8 +58,35 @@ class TeacherDashboardController extends Controller
         );
         $payoutRequested = $this->resolveCommittedPayoutAmount($teacher);
 
+        $previousRange = $this->resolveTeacherDashboardPreviousRange($dashboardRange);
+        $previousOrderDetails = $this->applyTeacherDashboardRangeToPaidQuery(
+            $this->paidOrderDetailsQuery($teacher),
+            $previousRange
+        )->get();
+        $previousSummary = TeacherFinanceCalculator::summarize(
+            $previousOrderDetails,
+            fn () => $effectiveCommissionRate
+        );
+
+        $calcTrend = function ($current, $previous) {
+            if ($previous == 0) return $current > 0 ? 100 : 0;
+            return round((($current - $previous) / $previous) * 100, 1);
+        };
+
+        $trendStats = [
+            'students' => $calcTrend($orderDetails->pluck('order.student_id')->filter()->unique()->count(), $previousOrderDetails->pluck('order.student_id')->filter()->unique()->count()),
+            'gross_revenue' => $calcTrend($summary['gross_amount'], $previousSummary['gross_amount']),
+            'estimated_revenue' => $calcTrend($summary['teacher_revenue'], $previousSummary['teacher_revenue']),
+        ];
+
         $pageTitle = __('teacher::teacher/dashboard.pages.overview');
         $pageName = __('teacher::teacher/dashboard.pages.overview');
+        $allTimeOrderDetails = $this->paidOrderDetailsQuery($teacher)->get();
+        $allTimeSummary = TeacherFinanceCalculator::summarize(
+            $allTimeOrderDetails,
+            fn () => $effectiveCommissionRate
+        );
+
         $stats = [
             'courses' => (clone $coursesQuery)->count(),
             'active_courses' => (clone $coursesQuery)->where('status', 1)->count(),
@@ -68,7 +95,8 @@ class TeacherDashboardController extends Controller
             'allocated_discount' => $summary['allocated_discount'],
             'estimated_revenue' => $summary['teacher_revenue'],
             'platform_revenue' => $summary['platform_revenue'],
-            'available_balance' => max($summary['teacher_revenue'] - $payoutRequested, 0),
+            'available_balance' => max($allTimeSummary['teacher_revenue'] - $payoutRequested, 0),
+            'trends' => $trendStats,
         ];
         $conversionSummary = $this->buildTeacherConversionSummary($teacher, $dashboardRange);
         $revenueInsights = $this->buildTeacherRevenueInsights($teacher, $effectiveCommissionRate, $dashboardRange);

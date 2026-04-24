@@ -26,7 +26,7 @@
         $maintProfile = false;
     @endphp
 
-    <div class="teacher-page-shell">
+    <div class="teacher-page-shell" data-overview-dashboard data-endpoint="{{ route('teacher.dashboard.index') }}">
         <section class="teacher-hero teacher-hero--dashboard">
             <div class="teacher-hero__content">
                 <div class="teacher-hero__eyebrow">
@@ -133,16 +133,16 @@
 
                 <div class="teacher-hero__mini">
                     <span>{{ __('teacher::teacher/dashboard.overview.labels.available_balance') }}</span>
-                    <strong data-overview-stat="available_balance">{{ moneyLocale($stats['available_balance'], true) }}</strong>
+                    <strong data-overview-stat="available_balance">{{ moneyLocale($stats['available_balance'], null, true) }}</strong>
                 </div>
                 <div class="teacher-hero__mini teacher-hero__mini--glass">
                     <span>{{ __('teacher::teacher/dashboard.overview.labels.estimated_revenue') }}</span>
-                    <strong data-overview-stat="estimated_revenue">{{ moneyLocale($stats['estimated_revenue'], true) }}</strong>
+                    <strong data-overview-stat="estimated_revenue">{{ moneyLocale($stats['estimated_revenue'], null, true) }}</strong>
                 </div>
             </div>
         </section>
 
-        <div class="teacher-panel" data-overview-dashboard data-endpoint="{{ route('teacher.dashboard.index') }}">
+        <div class="teacher-panel">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
                 <div>
                     <h3 class="fw-bold mb-2">{{ __('teacher::teacher/dashboard.overview.section_title') }}</h3>
@@ -185,38 +185,77 @@
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.students') }}</div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="teacher-stat-card__label mb-0">{{ __('teacher::teacher/dashboard.overview.labels.students') }}</div>
+                            <div data-trend-stat="students">
+                                @if(isset($stats['trends']['students']))
+                                    @if($stats['trends']['students'] > 0)
+                                        <span class="text-success bg-success-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;"><i class="fa-solid fa-arrow-trend-up me-1"></i>+{{ $stats['trends']['students'] }}%</span>
+                                    @elseif($stats['trends']['students'] < 0)
+                                        <span class="text-danger bg-danger-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;"><i class="fa-solid fa-arrow-trend-down me-1"></i>{{ $stats['trends']['students'] }}%</span>
+                                    @else
+                                        <span class="text-muted px-2 py-1 rounded-pill fw-semibold" style="background: rgba(148, 163, 184, 0.1); font-size: 0.75rem;"><i class="fa-solid fa-minus me-1"></i>0%</span>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
                         <div class="teacher-stat-card__value" data-overview-stat="students">{{ $stats['students'] }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
                         <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.available_balance') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="available_balance">{{ money($stats['available_balance'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="available_balance">{{ moneyLocale($stats['available_balance'], null, true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.gross_revenue') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="gross_revenue">{{ money($stats['gross_revenue'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="teacher-stat-card__label mb-0">{{ __('teacher::teacher/dashboard.overview.labels.gross_revenue') }}</div>
+                            <div data-trend-stat="gross_revenue">
+                                @if(isset($stats['trends']['gross_revenue']))
+                                    @if($stats['trends']['gross_revenue'] > 0)
+                                        <span class="text-success bg-success-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;"><i class="fa-solid fa-arrow-trend-up me-1"></i>+{{ $stats['trends']['gross_revenue'] }}%</span>
+                                    @elseif($stats['trends']['gross_revenue'] < 0)
+                                        <span class="text-danger bg-danger-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;"><i class="fa-solid fa-arrow-trend-down me-1"></i>{{ $stats['trends']['gross_revenue'] }}%</span>
+                                    @else
+                                        <span class="text-muted px-2 py-1 rounded-pill fw-semibold" style="background: rgba(148, 163, 184, 0.1); font-size: 0.75rem;"><i class="fa-solid fa-minus me-1"></i>0%</span>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                        <div class="teacher-stat-card__value" data-overview-stat="gross_revenue">{{ moneyLocale($stats['gross_revenue'], null, true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
                         <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.allocated_discount') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="allocated_discount">{{ money($stats['allocated_discount'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="allocated_discount">{{ moneyLocale($stats['allocated_discount'], null, true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
-                        <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.estimated_revenue') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="estimated_revenue">{{ money($stats['estimated_revenue'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="teacher-stat-card__label mb-0">{{ __('teacher::teacher/dashboard.overview.labels.estimated_revenue') }}</div>
+                            <div data-trend-stat="estimated_revenue">
+                                @if(isset($stats['trends']['estimated_revenue']))
+                                    @if($stats['trends']['estimated_revenue'] > 0)
+                                        <span class="text-success bg-success-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;"><i class="fa-solid fa-arrow-trend-up me-1"></i>+{{ $stats['trends']['estimated_revenue'] }}%</span>
+                                    @elseif($stats['trends']['estimated_revenue'] < 0)
+                                        <span class="text-danger bg-danger-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;"><i class="fa-solid fa-arrow-trend-down me-1"></i>{{ $stats['trends']['estimated_revenue'] }}%</span>
+                                    @else
+                                        <span class="text-muted px-2 py-1 rounded-pill fw-semibold" style="background: rgba(148, 163, 184, 0.1); font-size: 0.75rem;"><i class="fa-solid fa-minus me-1"></i>0%</span>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                        <div class="teacher-stat-card__value" data-overview-stat="estimated_revenue">{{ moneyLocale($stats['estimated_revenue'], null, true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
                         <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.platform_revenue') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="platform_revenue">{{ money($stats['platform_revenue'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="platform_revenue">{{ moneyLocale($stats['platform_revenue'], null, true) }}</div>
                     </div>
                 </div>
             </div>
@@ -991,6 +1030,18 @@
                 });
             };
 
+            const renderTrend = (value, node) => {
+                if (!node) return;
+                const num = parseFloat(value || 0);
+                if (num > 0) {
+                    node.innerHTML = `<span class="text-success bg-success-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;"><i class="fa-solid fa-arrow-trend-up me-1"></i>+${num}%</span>`;
+                } else if (num < 0) {
+                    node.innerHTML = `<span class="text-danger bg-danger-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;"><i class="fa-solid fa-arrow-trend-down me-1"></i>${num}%</span>`;
+                } else {
+                    node.innerHTML = `<span class="text-muted px-2 py-1 rounded-pill fw-semibold" style="background: rgba(148, 163, 184, 0.1); font-size: 0.75rem;"><i class="fa-solid fa-minus me-1"></i>0%</span>`;
+                }
+            };
+
             const applyPayload = (payload) => {
                 currentPayload = payload;
                 activeRange = payload.range?.key || activeRange;
@@ -1000,9 +1051,17 @@
                 }
 
                 Object.entries(payload.stats || {}).forEach(([key, value]) => {
+                    if (key === 'trends') return;
                     (statNodes[key] || []).forEach((node) => {
                         node.textContent = value;
                     });
+                });
+
+                Object.entries(payload.stats?.trends || {}).forEach(([key, value]) => {
+                    const node = root.querySelector(`[data-trend-stat="${key}"]`);
+                    if (node) {
+                        renderTrend(value, node);
+                    }
                 });
 
                 Object.entries(payload.conversion || {}).forEach(([key, value]) => {

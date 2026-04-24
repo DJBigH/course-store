@@ -142,9 +142,23 @@ class CommentController extends Controller
             })
             ->findOrFail($commentId);
 
+        $oldVisibility = $comment->is_visible;
+
         $comment->update([
             'is_visible' => !$comment->is_visible,
         ]);
+
+        $comment->refresh();
+
+        activity_log(
+            action: 'toggle_visibility',
+            subject: $comment,
+            properties: [
+                'old' => ['is_visible' => $oldVisibility],
+                'new' => ['is_visible' => $comment->is_visible],
+            ],
+            logName: 'teacher_comment_management',
+        );
 
         return $this->renderTeacherCommentThread($request, $comment->course_id, $teacher);
     }

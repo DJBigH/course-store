@@ -56,6 +56,7 @@ return [
         'gross' => 'Giá gốc',
         'discount' => 'Giảm giá',
         'net' => 'Thực thu',
+        'split' => 'Chia sẻ (Bạn / Web)',
         'revenue' => 'Bạn nhận',
     ],
 ];

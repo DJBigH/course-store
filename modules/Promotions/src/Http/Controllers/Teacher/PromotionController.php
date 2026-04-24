@@ -174,6 +174,22 @@ class PromotionController extends Controller
             ]);
         });
 
+        activity_log(
+            action: 'send_promotion',
+            subject: $promotion,
+            properties: [
+                'data' => [
+                    'title'           => $promotion->title,
+                    'recipient_count' => $promotion->recipient_count,
+                    'audience_type'   => $promotion->audience_type,
+                    'course_id'       => $promotion->course_id,
+                    'send_via_web'    => $sendViaWeb,
+                    'send_via_email'  => $sendViaEmail,
+                ],
+            ],
+            logName: 'teacher_promotion_management',
+        );
+
         $notificationPayload = $this->buildPromotionNotificationPayload($teacher, $promotion, $selectedCourse);
 
         Student::query()

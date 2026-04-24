@@ -49,13 +49,13 @@
             <div class="col-md-6">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/earnings.gross_revenue') }}</div>
-                    <div class="teacher-stat-card__value" data-earnings-summary="gross_revenue">{{ moneyLocale($summary['gross_amount'], true) }}</div>
+                    <div class="teacher-stat-card__value" data-earnings-summary="gross_revenue">{{ moneyLocale($summary['gross_amount'], null, true) }}</div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/earnings.teacher_revenue', ['rate' => $commission]) }}</div>
-                    <div class="teacher-stat-card__value" data-earnings-summary="teacher_revenue">{{ moneyLocale($summary['teacher_revenue'], true) }}</div>
+                    <div class="teacher-stat-card__value" data-earnings-summary="teacher_revenue">{{ moneyLocale($summary['teacher_revenue'], null, true) }}</div>
                 </div>
             </div>
         </div>
@@ -83,7 +83,7 @@
                                     <tr>
                                         <td>{{ \Illuminate\Support\Carbon::parse($row->date)->format('d/m') }}</td>
                                         <td>{{ number_format((int) $row->orders) }}</td>
-                                        <td>{{ moneyLocale($row->teacher_revenue, true) }}</td>
+                                        <td>{{ moneyLocale($row->teacher_revenue, null, true) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -118,7 +118,7 @@
                                     <tr>
                                         <td>{{ \Illuminate\Support\Carbon::createFromFormat('Y-m', $row->month)->format('m/Y') }}</td>
                                         <td>{{ number_format((int) $row->orders) }}</td>
-                                        <td>{{ moneyLocale($row->teacher_revenue, true) }}</td>
+                                        <td>{{ moneyLocale($row->teacher_revenue, null, true) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -153,7 +153,7 @@
                                     <tr>
                                         <td>{{ $row->course_name }}</td>
                                         <td>{{ number_format((int) $row->orders) }}</td>
-                                        <td>{{ moneyLocale($row->teacher_revenue, true) }}</td>
+                                        <td>{{ moneyLocale($row->teacher_revenue, null, true) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -192,7 +192,7 @@
                                     $activeColors = $chartColors[$index % count($chartColors)];
                                 @endphp
                                 <div class="teacher-mini-chart__item">
-                                    <strong class="teacher-mini-chart__value">{{ moneyLocale($row->teacher_revenue, true) }}</strong>
+                                    <strong class="teacher-mini-chart__value">{{ moneyLocale($row->teacher_revenue, null, true) }}</strong>
                                     <div class="teacher-mini-chart__bar-wrap">
                                         <div class="teacher-mini-chart__bar" style="height: {{ max(($row->teacher_revenue / $maxDailyRevenue) * 100, 8) }}%; --bar-start: {{ $activeColors[0] }}; --bar-end: {{ $activeColors[1] }};"></div>
                                     </div>
@@ -222,7 +222,7 @@
                             <div>
                                 <div class="d-flex justify-content-between gap-3 mb-1">
                                     <strong>{{ $row->course_name }}</strong>
-                                    <span>{{ moneyLocale($row->teacher_revenue, true) }}</span>
+                                    <span>{{ moneyLocale($row->teacher_revenue, null, true) }}</span>
                                 </div>
                                 <div class="teacher-course-bar">
                                     <div class="teacher-course-bar__fill" style="width: {{ max(($row->teacher_revenue / $maxCourseRevenue) * 100, 4) }}%"></div>
@@ -256,6 +256,7 @@
                             <th>{{ __('finances::teacher/earnings.table.gross') }}</th>
                             <th>{{ __('finances::teacher/earnings.table.discount') }}</th>
                             <th>{{ __('finances::teacher/earnings.table.net') }}</th>
+                            <th>{{ __('finances::teacher/earnings.table.split') }}</th>
                             <th>{{ __('finances::teacher/earnings.table.revenue') }}</th>
                         </tr>
                     </thead>
@@ -265,14 +266,19 @@
                                 <td>#{{ $item->order?->code }}</td>
                                 <td>{{ $item->courses?->name_locale ?: '-' }}</td>
                                 <td>{{ $item->order?->students?->name ?: '-' }}</td>
-                                <td>{{ moneyLocale($item->finance_breakdown['gross_amount'], true) }}</td>
-                                <td class="text-danger">-{{ moneyLocale($item->finance_breakdown['allocated_discount'], true) }}</td>
-                                <td>{{ moneyLocale($item->finance_breakdown['net_revenue'], true) }}</td>
-                                <td>{{ moneyLocale($item->finance_breakdown['teacher_revenue'], true) }}</td>
+                                <td>{{ moneyLocale($item->finance_breakdown['gross_amount'], null, true) }}</td>
+                                <td class="text-danger">-{{ moneyLocale($item->finance_breakdown['allocated_discount'], null, true) }}</td>
+                                <td>{{ moneyLocale($item->finance_breakdown['net_revenue'], null, true) }}</td>
+                                <td>
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                        {{ number_format((float) $item->finance_breakdown['commission_rate'], 0) }}% / {{ 100 - (float) $item->finance_breakdown['commission_rate'] }}%
+                                    </span>
+                                </td>
+                                <td>{{ moneyLocale($item->finance_breakdown['teacher_revenue'], null, true) }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">{{ __('finances::teacher/earnings.empty') }}</td>
+                                <td colspan="8" class="text-center text-muted py-4">{{ __('finances::teacher/earnings.empty') }}</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -607,7 +613,7 @@
                 }
 
                 if (!rows || !rows.length) {
-                    itemsRoot.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">${emptyText}</td></tr>`;
+                    itemsRoot.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">${emptyText}</td></tr>`;
                     return;
                 }
 
@@ -619,6 +625,11 @@
                         <td>${row.gross}</td>
                         <td class="text-danger">${row.discount}</td>
                         <td>${row.net}</td>
+                        <td>
+                            <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                ${row.split}
+                            </span>
+                        </td>
                         <td>${row.revenue}</td>
                     </tr>
                 `).join('');

@@ -34,4 +34,10 @@ return array (
   array (
     'deleted' => 'Course bundle deleted.',
   ),
+  'history' => 
+  array (
+    'bundle_created' => 'Created new course bundle: :name',
+    'bundle_updated' => 'Updated course bundle: :name',
+    'bundle_deleted' => 'Deleted course bundle: :name',
+  ),
 );

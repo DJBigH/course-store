@@ -11,6 +11,15 @@
     @php
         $maintPackage = $teacher->application?->package;
         $maintPayout = $maintPackage?->isFeatureInMaintenance('can_request_payouts') ?? false;
+        
+        $currencyService = app(\Modules\Courses\src\Support\CurrencyService::class);
+        $currentLocale = app()->getLocale();
+        $userCurrency = $currencyService->getLocaleCurrency($currentLocale);
+        $minPayoutVnd = 5000;
+        $minPayoutLocale = $currencyService->convert($minPayoutVnd, 'VND', $userCurrency, false);
+        $minPayoutFormatted = $userCurrency === 'VND' 
+            ? number_format($minPayoutLocale, 0, ',', '.') . ' đ'
+            : $currencyService->getCurrencySymbol($userCurrency) . number_format($minPayoutLocale, 2, '.', ',');
     @endphp
     <div class="teacher-panel" id="payout-main-container">
         <div class="teacher-section-title mb-4">
@@ -40,22 +49,24 @@
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.teacher_revenue') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($summary['teacher_revenue'], true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($summary['teacher_revenue'], null, true) }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.requested') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($requestedAmount, true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($requestedAmount, null, true) }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.available') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($availableBalance, true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($availableBalance, null, true) }}</div>
                 </div>
             </div>
         </div>
+
+
 
         <!-- Sub-navigation Systems -->
         <div class="teacher-payout-tabs-container mb-4">
@@ -75,7 +86,7 @@
         <!-- Dynamic Content Area -->
         <div id="payout-content-area" class="position-relative">
             <!-- Main Content: Payout Request -->
-            <div class="teacher-panel shadow-sm border-0 mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05) !important;">
+            <div class="teacher-panel shadow-sm border-0 mb-5" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05) !important;">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h3 class="h5 fw-bold mb-1">{{ __('finances::teacher/payouts.form.title') }}</h3>
@@ -153,36 +164,57 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold mb-2">{{ __('finances::teacher/payouts.form.amount_label', ['min' => '5.000']) }}</label>
-                            <input type="hidden" name="amount" id="teacher-payout-amount" value="{{ old('amount') }}">
-                            <div class="teacher-money-input-wrapper">
-                                <div class="teacher-money-input">
-                                    <input
-                                        type="text"
-                                        inputmode="numeric"
-                                        class="form-control form-control-lg"
-                                        id="teacher-payout-amount-display"
-                                        value="{{ old('amount') }}"
-                                        data-money-input
-                                        data-money-target="teacher-payout-amount"
-                                        placeholder="{{ __('finances::teacher/payouts.form.amount_placeholder') }}"
-                                        {{ (old('payout_account_id') || $payoutAccounts->isEmpty()) ? '' : 'disabled' }}>
-                                    <span class="teacher-money-input__unit">{{ __('finances::teacher/payouts.common.currency_symbol') }}</span>
+                        <div class="col-md-12">
+                            <div class="row g-4 align-items-start">
+                                <div class="col-md-7">
+                                    <label class="form-label fw-semibold mb-2">{{ __('finances::teacher/payouts.form.amount_label', ['min' => $minPayoutFormatted]) }}</label>
+                                    <input type="hidden" name="amount" id="teacher-payout-amount" value="{{ old('amount') }}">
+                                    <div class="teacher-money-input-wrapper">
+                                        <div class="teacher-money-input mb-2">
+                                            <input
+                                                type="text"
+                                                inputmode="numeric"
+                                                class="form-control form-control-lg"
+                                                id="teacher-payout-amount-display"
+                                                value="{{ old('amount') }}"
+                                                data-money-input
+                                                data-money-target="teacher-payout-amount"
+                                                placeholder="{{ __('finances::teacher/payouts.form.amount_placeholder') }}"
+                                                {{ (old('payout_account_id') || $payoutAccounts->isEmpty()) ? '' : 'disabled' }}>
+                                            <span class="teacher-money-input__unit">{{ __('finances::teacher/payouts.common.currency_symbol') }}</span>
+                                        </div>
+                                        
+                                        <!-- Real-time Conversion Preview -->
+                                        <div id="payout-conversion-preview" class="p-3 rounded-3 mb-3 d-none" style="background: rgba(var(--admin-primary-rgb), 0.08); border: 1px solid rgba(var(--admin-primary-rgb), 0.2);">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <div class="small text-muted">{{ __('finances::teacher/payouts.calculator.fee_label', ['fee' => $conversionFee]) }}</div>
+                                                <div class="text-end fw-bold text-danger small" id="preview-fee-amount">- 0 ₫</div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="small text-muted">
+                                                    <i class="fa-solid fa-calculator me-1"></i> {{ __('finances::teacher/payouts.calculator.expected_amount') }}
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="fw-bold text-primary fs-5" id="preview-final-amount">0 ₫</div>
+                                                    <div class="small text-muted" id="preview-conversion-info" style="font-size: 0.7rem; opacity: 0.8;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-2 small text-muted" id="amount-validation-hint">
+                                            @if(!old('payout_account_id') && $payoutAccounts->isNotEmpty())
+                                                <span class="text-warning"><i class="fa-solid fa-lock me-1"></i>{{ __('finances::teacher/payouts.form.amount_lock_hint') }}</span>
+                                            @else
+                                                <span>{{ __('finances::teacher/payouts.form.amount_min_hint', ['min' => $minPayoutFormatted]) }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="mt-2 small text-muted" id="amount-validation-hint">
-                                    @if(!old('payout_account_id') && $payoutAccounts->isNotEmpty())
-                                        <span class="text-warning"><i class="fa-solid fa-lock me-1"></i>{{ __('finances::teacher/payouts.form.amount_lock_hint') }}</span>
-                                    @else
-                                        <span>{{ __('finances::teacher/payouts.form.amount_min_hint', ['min' => '5.000']) }}</span>
-                                    @endif
+                                <div class="col-md-5">
+                                    <label class="form-label fw-semibold mb-2">{{ __('finances::teacher/payouts.form.note') }}</label>
+                                    <textarea class="form-control" name="note" rows="3" style="height: 80px;" placeholder="{{ __('finances::teacher/payouts.form.note_placeholder') }}">{{ old('note') }}</textarea>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold mb-2">{{ __('finances::teacher/payouts.form.note') }}</label>
-                            <textarea class="form-control" name="note" rows="2" placeholder="{{ __('finances::teacher/payouts.form.note_placeholder') }}">{{ old('note') }}</textarea>
                         </div>
                     </div>
 
@@ -193,6 +225,97 @@
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <div class="divider mb-5" style="height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);"></div>
+
+            <!-- Exchange Rates & Conversion Calculator -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-7">
+                    <div class="teacher-payout-rates-card p-4 rounded-4 h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-primary text-white me-3 shadow-sm">
+                                <i class="fa-solid fa-chart-line fs-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="h6 fw-bold mb-1 text-primary">{{ __('finances::teacher/payouts.calculator.rates_title') }}</h4>
+                                <p class="text-muted small mb-0">{{ __('finances::teacher/payouts.calculator.rates_subtitle') }}</p>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            @php
+                                $displayCurrencies = ['USD', 'KRW', 'JPY', 'CNY'];
+                                $hasRates = false;
+                            @endphp
+                            @foreach ($displayCurrencies as $currencyCode)
+                                @if (isset($exchangeRates[$currencyCode]))
+                                    @php $hasRates = true; @endphp
+                                    <div class="col-sm-6">
+                                        <div class="currency-rate-item d-flex align-items-center justify-content-between rounded-3 p-3 shadow-sm border">
+                                            <div class="d-flex align-items-center">
+                                                <span class="currency-flag-{{ strtolower($currencyCode) }} me-2"></span>
+                                                <span class="fw-bold currency-label">1 {{ $currencyCode }}</span>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="fw-bold text-primary">{{ number_format($exchangeRates[$currencyCode], 0, ',', '.') }} ₫</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+
+                            @if (!$hasRates)
+                                <div class="col-12">
+                                    <div class="alert alert-warning border-0 shadow-none mb-0">
+                                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                                        {{ __('finances::teacher/payouts.calculator.no_rates') }}
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="teacher-payout-calculator-card p-4 rounded-4 h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="p-2 rounded-3 bg-success text-white me-3 shadow-sm">
+                                <i class="fa-solid fa-calculator fs-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="h6 fw-bold mb-1 text-success">{{ __('finances::teacher/payouts.calculator.calc_title') }}</h4>
+                                <p class="text-muted small mb-0">{{ __('finances::teacher/payouts.calculator.calc_subtitle') }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">{{ __('finances::teacher/payouts.calculator.target_currency') }}</label>
+                            <select class="form-select border-0 shadow-sm custom-payout-select" id="calc-target-currency">
+                                <option value="VND" selected>{{ __('finances::teacher/payouts.calculator.default_vnd') }}</option>
+                                <option value="USD">{{ __('finances::teacher/payouts.calculator.currencies.USD') }}</option>
+                                <option value="JPY">{{ __('finances::teacher/payouts.calculator.currencies.JPY') }}</option>
+                                <option value="KRW">{{ __('finances::teacher/payouts.calculator.currencies.KRW') }}</option>
+                                <option value="CNY">{{ __('finances::teacher/payouts.calculator.currencies.CNY') }}</option>
+                            </select>
+                        </div>
+
+                        <div class="teacher-calc-result-box p-3 rounded-3 shadow-sm">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">{{ __('finances::teacher/payouts.calculator.fee_label', ['fee' => $conversionFee]) }}</span>
+                                <span class="fw-bold text-danger" id="calc-fee-display">- 0 ₫</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <span class="text-muted small">{{ __('finances::teacher/payouts.calculator.estimate_label') }}</span>
+                                <div class="text-end">
+                                    <h4 class="mb-0 fw-bold text-success" id="calc-result-display">0 ₫</h4>
+                                    <small class="text-muted" id="calc-rate-hint"></small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 small text-muted">
+                            <i class="fa-solid fa-circle-info me-1"></i> {{ __('finances::teacher/payouts.calculator.calculator_info') }}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -221,7 +344,7 @@
                     if (selectedRadio) {
                         if (amountInput) amountInput.disabled = false;
                         if (submitBtn) submitBtn.disabled = false;
-                        if (validationHint) validationHint.innerHTML = `<span class="text-success"><i class="fa-solid fa-unlock me-1"></i>${@json(__('finances::teacher/payouts.form.amount_unlock_hint', ['min' => '5.000']))}</span>`;
+                        if (validationHint) validationHint.innerHTML = `<span class="text-success"><i class="fa-solid fa-unlock me-1"></i>${@json(__('finances::teacher/payouts.form.amount_unlock_hint', ['min' => $minPayoutFormatted]))}</span>`;
                         
                         const isNew = selectedRadio.value === 'new';
                         if (modeHidden) modeHidden.value = isNew ? 'new' : 'saved';
@@ -264,6 +387,105 @@
 
                 // Re-init global money inputs if any
                 if (window.initMoneyInputs) window.initMoneyInputs();
+
+                // Currency Conversion Logic
+                const currentCurrency = @json($userCurrency);
+                const exchangeRates = @json($exchangeRates);
+                const conversionFee = @json($conversionFee);
+                const targetCurrencySelect = document.getElementById('calc-target-currency');
+                const resultDisplay = document.getElementById('calc-result-display');
+                const feeDisplay = document.getElementById('calc-fee-display');
+                const rateHint = document.getElementById('calc-rate-hint');
+                const amountHidden = document.getElementById('teacher-payout-amount');
+
+                const formatResult = (value, currency) => {
+                    if (currency === 'VND' || currency === 'JPY' || currency === 'KRW') {
+                        return new Intl.NumberFormat('vi-VN').format(Math.round(value)) + ' ' + getSymbol(currency);
+                    }
+                    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + ' ' + getSymbol(currency);
+                };
+
+                const getSymbol = (currency) => {
+                    const symbols = { 'VND': '₫', 'USD': '$', 'JPY': '¥', 'KRW': '₩', 'CNY': '元' };
+                    return symbols[currency] || currency;
+                };
+
+                const previewBox = document.getElementById('payout-conversion-preview');
+                const previewFinal = document.getElementById('preview-final-amount');
+                const previewFee = document.getElementById('preview-fee-amount');
+                const previewInfo = document.getElementById('preview-conversion-info');
+                
+                const labels = {
+                    feeDeducted: @json(__('finances::teacher/payouts.calculator.system_fee_deducted')),
+                    rateHint: @json(__('finances::teacher/payouts.calculator.rate_hint'))
+                };
+
+                const updateConversion = () => {
+                    if (!resultDisplay) return;
+                    
+                    const enteredAmount = parseFloat(amountHidden.value) || 0;
+                    const feePct = conversionFee / 100;
+
+                    // Convert entered amount to VND for calculation
+                    let amountInVnd = enteredAmount;
+                    if (currentCurrency !== 'VND' && exchangeRates[currentCurrency]) {
+                        amountInVnd = enteredAmount * exchangeRates[currentCurrency];
+                    }
+                    
+                    const amountInVndAfterFee = amountInVnd * (1 - feePct);
+                    const feeAmountVnd = amountInVnd * feePct;
+                    const feeTextVnd = '- ' + formatResult(feeAmountVnd, 'VND');
+
+                    const target = targetCurrencySelect.value;
+                    let finalResultText = '';
+                    let infoText = '';
+
+                    if (target === 'VND') {
+                        finalResultText = formatResult(amountInVndAfterFee, 'VND');
+                        feeDisplay.innerText = feeTextVnd;
+                        resultDisplay.innerText = finalResultText;
+                        rateHint.innerText = '';
+                        infoText = labels.feeDeducted;
+                    } else if (exchangeRates[target]) {
+                        const rate = exchangeRates[target]; 
+                        const finalTargetAmount = amountInVndAfterFee / rate;
+                        finalResultText = formatResult(finalTargetAmount, target);
+                        
+                        resultDisplay.innerText = finalResultText;
+                        feeDisplay.innerText = feeTextVnd;
+                        
+                        const formattedRate = new Intl.NumberFormat('vi-VN').format(rate);
+                        rateHint.innerText = labels.rateHint.replace(':target', target).replace(':rate', formattedRate);
+                        infoText = labels.rateHint.replace(':target', target).replace(':rate', formattedRate);
+                    }
+
+                    // Update Preview Box
+                    if (previewBox) {
+                        if (enteredAmount > 0) {
+                            previewBox.classList.remove('d-none');
+                            if (previewFinal) previewFinal.innerText = finalResultText;
+                            if (previewFee) previewFee.innerText = feeTextVnd;
+                            if (previewInfo) previewInfo.innerText = infoText;
+                        } else {
+                            previewBox.classList.add('d-none');
+                        }
+                    }
+                };
+
+                if (targetCurrencySelect && amountHidden) {
+                    targetCurrencySelect.addEventListener('change', updateConversion);
+                    
+                    const observer = new MutationObserver(updateConversion);
+                    observer.observe(amountHidden, { attributes: true });
+                    
+                    if (amountInput) {
+                        amountInput.addEventListener('input', () => {
+                            setTimeout(updateConversion, 10);
+                        });
+                    }
+
+                    updateConversion();
+                }
             };
 
             // AJAX Tab Switch Logic
@@ -325,6 +547,51 @@
 
 @section('stylesheets')
     <style>
+        /* Modern Payout Design System */
+        .teacher-payout-rates-card {
+            background: var(--admin-glass-bg);
+            border: 1px solid rgba(37, 99, 235, 0.15);
+            backdrop-filter: blur(10px);
+        }
+        .teacher-payout-calculator-card {
+            background: var(--admin-glass-bg);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            backdrop-filter: blur(10px);
+        }
+        
+        .currency-rate-item {
+            background: rgba(var(--admin-primary-rgb), 0.03);
+            border-color: rgba(148, 163, 184, 0.1) !important;
+        }
+        .currency-label {
+            color: var(--admin-text-main);
+        }
+        
+        .custom-payout-select {
+            background-color: var(--admin-glass-bg) !important;
+            color: var(--admin-text-main) !important;
+            border: 1px solid rgba(148, 163, 184, 0.2) !important;
+        }
+        .custom-payout-select option {
+            background-color: var(--admin-bg-body) !important;
+            color: var(--admin-text-main) !important;
+        }
+        
+        .teacher-calc-result-box {
+            background: rgba(var(--admin-primary-rgb), 0.05);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(148, 163, 184, 0.1), transparent);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .teacher-payout-account-label { padding: 12px; }
+        }
+
         .teacher-payout-tabs-container {
             width: 100%;
             overflow-x: auto;
@@ -391,6 +658,28 @@
             font-weight: 700;
             color: var(--admin-text-soft);
         }
+
+        /* Currency Flags & Calculator Styles */
+        .currency-flag-usd::before { content: "🇺🇸"; }
+        .currency-flag-vnd::before { content: "🇻🇳"; }
+        .currency-flag-jpy::before { content: "🇯🇵"; }
+        .currency-flag-krw::before { content: "🇰🇷"; }
+        .currency-flag-cny::before { content: "🇨🇳"; }
+        
+        .teacher-payout-calculator .form-select {
+            background-color: #fff;
+            border: 1px solid rgba(16, 185, 129, 0.2) !important;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .teacher-calc-result {
+            transition: all 0.3s ease;
+        }
+        
+        .bg-primary-soft { background: rgba(59, 130, 246, 0.1); }
+        .divider { height: 1px; background: rgba(148, 163, 184, 0.1); width: 100%; border-top: 1px solid rgba(148,163,184,0.1); }
+        
         #payout-content-area { transition: opacity 0.2s ease; }
     </style>
 @endsection

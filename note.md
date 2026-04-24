@@ -538,8 +538,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá ( Chưa xong bên clients )
 - Ở trang chủ thêm cái ô button lựa chọn theo nổi bật, nhiều view, giáo viên nổi bật.
 - Thêm cái thông báo khi vào màn teacher và popup khi vào màn teacher 
+
  Teacher:
-- Làm cái hồ sơ giáo viên
+- Làm cái hồ sơ giáo viên ( Done )
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
 - Làm quản lý bình luận những khóa học của giáo viên đó ( Done )
 - Làm quản lý mã giảm giá ( Done )
@@ -590,10 +591,13 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Đa ngôn ngữ (VI/EN/JA/KO/ZH) module gớp ý/ báo cáo ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
 - Đa ngôn ngữ (VI/EN/JA/KO/ZH) module hủy hợp tác ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
 - Đa ngôn ngữ (VI/EN/JA/KO/ZH) module log ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
-- Giá tiền khóa học sẽ đúng với ngôn ngữ của nó và khi tính giá thì theo tiền tệ của ngôn ngữ đó và cho biết là tiền đổi sang tiền nào là bao nhiêu ( và thêm 1 cái là học viên mua = tiền ngôn ngữ nào thì + theo tiền ngôn ngữ đó, thêm % phí chuyển đổi bên admin và cho giảng viên biết là bao nhiêu, bên admin dùng api nào free và update theo ngày để biết tỉ giá tiền quốc tế để dựa vào đó tính toán) (VD: giáo viên nhập giá khóa học 10k thì tự tính toán với tỉ giá mà admin đã set để tính các tiền quốc tế)
 - 2 nút chuông và tài khoản ở header bị lỗi trong dark mode ( Done )
 - Tự làm cái sidebar đa ngôn ngữ ( Done )
-- Check xem file log có chỗ nào thiếu không
+- Giá tiền khóa học sẽ đúng với ngôn ngữ của nó và khi tính giá thì theo tiền tệ của ngôn ngữ đó và cho biết là tiền đổi sang tiền nào là bao nhiêu ( và thêm 1 cái là học viên mua = tiền ngôn ngữ nào thì + theo tiền ngôn ngữ đó, thêm % phí chuyển đổi bên admin và cho giảng viên biết là bao nhiêu, bên admin dùng api nào free và update theo ngày để biết tỉ giá tiền quốc tế để dựa vào đó tính toán) (VD: giáo viên nhập giá khóa học 10k thì tự tính toán với tỉ giá mà admin đã set để tính các tiền quốc tế và nếu tôi nhập ở bên tiếng Anh là 100 (bên tiếng anh sẽ là 100$) thì nó tự tính các tiền khác là bao nhiêu) ( Done )
+- Check lại chức năng log có chỗ nào thiếu không ( Done )
+- Có nên cho giáo viên xóa vĩnh viễn các dữ liệu không nhỉ hay chỉ cho xóa mềm vào thùng rác và khôi phục ( Done )
+- Check lại toàn bộ validate xem có chỗ nào thiếu không ( Done )
+- Làm trang 403,404 riêng dành cho màn teacher ( Note )
 Tổng kết
 - Tìm tất cả file .bak ( Done )
 - check lại lần cuối trước khi đẩy lên production

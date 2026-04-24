@@ -56,6 +56,7 @@ return [
         'gross' => 'Gross Price',
         'discount' => 'Discount',
         'net' => 'Net Revenue',
+        'split' => 'Split (You / Web)',
         'revenue' => 'Your Share',
     ],
 ];

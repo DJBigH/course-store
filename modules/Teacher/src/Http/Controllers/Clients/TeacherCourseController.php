@@ -105,6 +105,8 @@ class TeacherCourseController extends Controller
             'selectedCategories' => [],
             'formAction' => route('teacher.dashboard.courses.store'),
             'submitLabel' => __('teacher::teacher/course/common.actions.create'),
+            'exchangeRates' => \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray(),
+            'conversionFee' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee', 0),
         ]);
     }
 
@@ -174,6 +176,8 @@ class TeacherCourseController extends Controller
             'selectedCategories' => $course->categories()->pluck('categories.id')->all(),
             'formAction' => route('teacher.dashboard.courses.update', $course->id),
             'submitLabel' => __('teacher::teacher/course/common.actions.update'),
+            'exchangeRates' => \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray(),
+            'conversionFee' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee', 0),
         ]);
     }
 
@@ -372,30 +376,5 @@ class TeacherCourseController extends Controller
             ->with('msg_success', __('teacher::teacher/course/common.flash.restored'));
     }
 
-    public function forceDeleteCourse(int $courseId)
-    {
-        $teacher = $this->resolveTeacher();
-        if (!$teacher) {
-            return $this->redirectToStatus();
-        }
 
-        $course = $this->resolveOwnedCourse($teacher, $courseId, true);
-        if (!$course->trashed()) {
-            abort(404);
-        }
-
-        $course->forceDelete();
-        $this->syncCourseLocks($teacher);
-
-        $this->logTeacherCourseActivity(
-            $teacher,
-            $course,
-            'course_force_deleted',
-            __('teacher::teacher/course/common.history.course_force_deleted')
-        );
-
-        return redirect()
-            ->route('teacher.dashboard.courses.trash')
-            ->with('msg_success', __('teacher::teacher/course/common.flash.force_deleted'));
-    }
 }

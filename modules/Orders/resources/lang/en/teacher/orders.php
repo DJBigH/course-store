@@ -75,7 +75,8 @@ return [
         'title' => 'Order Detail #:code',
         'student_info' => 'Student Information',
         'payment_info' => 'Payment',
-        'summary_title' => 'Order Overview (Your Portion)',
+        'summary_label' => 'Total',
+        'summary_title' => 'Your Portion',
         'item_list' => 'Item Details',
         'labels' => [
             'name' => 'Full Name',

@@ -75,7 +75,8 @@ return [
         'title' => '订单详情 #:code',
         'student_info' => '学员信息',
         'payment_info' => '支付信息',
-        'summary_title' => '订单概览 (您的份额)',
+        'summary_label' => '总计',
+        'summary_title' => '您的份额',
         'item_list' => '商品详情',
         'labels' => [
             'name' => '姓名',

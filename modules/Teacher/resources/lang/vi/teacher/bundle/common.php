@@ -31,4 +31,10 @@ return array (
     'course_count' => ':count khóa học',
     'slug' => 'Đường dẫn: :slug',
   ),
+  'history' => 
+  array (
+    'bundle_created' => 'Tạo combo khóa học mới: :name',
+    'bundle_updated' => 'Cập nhật combo khóa học: :name',
+    'bundle_deleted' => 'Xóa combo khóa học: :name',
+  ),
 );

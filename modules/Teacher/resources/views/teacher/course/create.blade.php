@@ -107,6 +107,74 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+                                <div class="col-lg-6">
+                                    <label class="form-label">
+                                        {{ __('teacher::teacher/course/common.form.price_label', ['locale' => strtoupper($locale)]) }}
+                                    </label>
+                                    @php
+                                        $priceField = 'price' . $suffix;
+                                        $currency = match($locale) {
+                                            'en' => 'USD',
+                                            'ko' => 'KRW',
+                                            'ja' => 'JPY',
+                                            'zh' => 'CNY',
+                                            default => 'VND'
+                                        };
+                                        $symbol = match($locale) {
+                                            'en' => '$',
+                                            'ko' => '₩',
+                                            'ja' => '¥',
+                                            'zh' => '元',
+                                            default => '₫'
+                                        };
+                                    @endphp
+                                    <div class="teacher-money-input">
+                                        <input type="hidden" name="{{ $priceField }}" id="teacher-course-{{ $priceField }}" 
+                                            value="{{ old($priceField, data_get($course, $priceField, 0)) }}">
+                                        <input
+                                            type="text"
+                                            inputmode="numeric"
+                                            class="form-control @error($priceField) is-invalid @enderror"
+                                            id="teacher-course-{{ $priceField }}-display"
+                                            value="{{ old($priceField, data_get($course, $priceField, 0)) }}"
+                                            data-money-input
+                                            data-money-target="teacher-course-{{ $priceField }}"
+                                            data-currency="{{ $currency }}"
+                                            placeholder="0"
+                                        >
+                                        <span class="teacher-money-input__unit">{{ $symbol }}</span>
+                                    </div>
+                                    @error($priceField)
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-lg-6">
+                                    <label class="form-label">
+                                        {{ __('teacher::teacher/course/common.form.sale_price_label', ['locale' => strtoupper($locale)]) }}
+                                    </label>
+                                    @php
+                                        $salePriceField = 'sale_price' . $suffix;
+                                    @endphp
+                                    <div class="teacher-money-input">
+                                        <input type="hidden" name="{{ $salePriceField }}" id="teacher-course-{{ $salePriceField }}" 
+                                            value="{{ old($salePriceField, data_get($course, $salePriceField, 0)) }}">
+                                        <input
+                                            type="text"
+                                            inputmode="numeric"
+                                            class="form-control @error($salePriceField) is-invalid @enderror"
+                                            id="teacher-course-{{ $salePriceField }}-display"
+                                            value="{{ old($salePriceField, data_get($course, $salePriceField, 0)) }}"
+                                            data-money-input
+                                            data-money-target="teacher-course-{{ $salePriceField }}"
+                                            data-currency="{{ $currency }}"
+                                            placeholder="0"
+                                        >
+                                        <span class="teacher-money-input__unit">{{ $symbol }}</span>
+                                    </div>
+                                    @error($salePriceField)
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -140,51 +208,6 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::teacher/course/common.form.price') }}</label>
-                                    <input type="hidden" name="price" id="teacher-course-price" value="{{ old('price', $course?->price ?? 0) }}">
-                                    <div class="teacher-money-input">
-                                        <input
-                                            type="text"
-                                            inputmode="numeric"
-                                            class="form-control @error('price') is-invalid @enderror"
-                                            id="teacher-course-price-display"
-                                            value="{{ old('price', $course?->price ?? 0) }}"
-                                            data-money-input
-                                            data-money-target="teacher-course-price"
-                                            placeholder="0"
-                                        >
-                                        <span class="teacher-money-input__unit">{{ __('teacher::teacher/dashboard.common.currency_symbol') }}</span>
-                                    </div>
-                                    <small class="text-muted d-block mt-2">{{ __('teacher::teacher/course/common.form.price_hint', ['max' => '99,999,999']) }}</small>
-                                    @error('price')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">{{ __('teacher::teacher/course/common.form.sale_price') }}</label>
-                                    <input type="hidden" name="sale_price" id="teacher-course-sale-price" value="{{ old('sale_price', $course?->sale_price ?? 0) }}">
-                                    <div class="teacher-money-input">
-                                        <input
-                                            type="text"
-                                            inputmode="numeric"
-                                            class="form-control @error('sale_price') is-invalid @enderror"
-                                            id="teacher-course-sale-price-display"
-                                            value="{{ old('sale_price', $course?->sale_price ?? 0) }}"
-                                            data-money-input
-                                            data-money-target="teacher-course-sale-price"
-                                            placeholder="0"
-                                        >
-                                        <span class="teacher-money-input__unit">{{ __('teacher::teacher/dashboard.common.currency_symbol') }}</span>
-                                    </div>
-                                    <small class="text-muted d-block mt-2">{{ __('teacher::teacher/course/common.form.sale_price_hint') }}</small>
-                                    <div class="invalid-feedback d-none" id="teacher-course-sale-price-realtime-error">
-                                        {{ __('teacher::teacher/course/common.form.sale_price_error') }}
-                                    </div>
-                                    @error('sale_price')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-4">
                                     <label class="form-label">{{ __('teacher::teacher/course/common.form.status') }}</label>
                                     <select name="status" class="form-select @error('status') is-invalid @enderror">
                                         <option value="0" @selected(old('status', $course?->status ?? 0) == 0)>{{ __('teacher::teacher/course/common.status.draft') }}</option>
@@ -333,9 +356,14 @@
     <script>
         (() => {
             const supported = ['vi', 'en', 'ko', 'ja', 'zh'];
+            const exchangeRates = @json($exchangeRates);
+            const conversionFee = {{ $conversionFee }};
+            let currentLocale = 'vi';
+
             const getLangInput = (locale) => document.getElementById(`teacher_course_lang_${locale}`);
 
             const showLang = (locale) => {
+                currentLocale = locale;
                 document.querySelectorAll('[data-lang-block]').forEach((block) => {
                     block.classList.toggle('d-none', block.dataset.langBlock !== locale);
                 });
@@ -367,36 +395,103 @@
                 });
             }
 
-            const form = document.querySelector('.teacher-course-form');
-            const submitButton = form?.querySelector('button[type="submit"]');
-            const priceHidden = document.getElementById('teacher-course-price');
-            const salePriceHidden = document.getElementById('teacher-course-sale-price');
-            const salePriceDisplay = document.getElementById('teacher-course-sale-price-display');
-            const realtimeError = document.getElementById('teacher-course-sale-price-realtime-error');
-
-            const validateSalePrice = () => {
-                if (!priceHidden || !salePriceHidden || !salePriceDisplay || !realtimeError) {
-                    return true;
-                }
-
-                const price = Number(priceHidden.value || 0);
-                const salePrice = Number(salePriceHidden.value || 0);
-                const invalid = salePrice > price;
-
-                salePriceDisplay.classList.toggle('is-invalid', invalid);
-                realtimeError.classList.toggle('d-none', !invalid);
-
-                if (submitButton) {
-                    submitButton.disabled = invalid;
-                }
-
-                return !invalid;
+            const getCurrencyByLocale = (locale) => {
+                return {
+                    'en': 'USD',
+                    'ko': 'KRW',
+                    'ja': 'JPY',
+                    'zh': 'CNY',
+                    'vi': 'VND'
+                }[locale];
             };
 
-            document.addEventListener('teacher:money-input-sync', validateSalePrice);
-            window.TeacherMoneyInput?.initAll(form || document);
+            const convertPrice = (amount, fromCurrency, toCurrency) => {
+                if (fromCurrency === toCurrency) return amount;
+                if (!exchangeRates[fromCurrency] || !exchangeRates[toCurrency]) return amount;
 
-            validateSalePrice();
+                // Convert to USD base first
+                const usdAmount = amount / exchangeRates[fromCurrency];
+                let targetAmount = usdAmount * exchangeRates[toCurrency];
+
+                // Apply fee if converting AWAY from the active base
+                if (conversionFee > 0) {
+                    targetAmount *= (1 + (conversionFee / 100));
+                }
+
+                if (['VND', 'KRW', 'JPY'].includes(toCurrency)) {
+                    return Math.round(targetAmount);
+                }
+                return Math.round(targetAmount * 100) / 100;
+            };
+
+            const syncPrices = (sourceLocale, isSale = false) => {
+                const prefix = isSale ? 'sale_price' : 'price';
+                const sourceField = sourceLocale === 'vi' ? prefix : `${prefix}_${sourceLocale}`;
+                const sourceValue = Number(document.getElementById(`teacher-course-${sourceField}`).value || 0);
+                const fromCurrency = getCurrencyByLocale(sourceLocale);
+
+                supported.forEach(targetLocale => {
+                    if (targetLocale === sourceLocale) return;
+
+                    const targetField = targetLocale === 'vi' ? prefix : `${prefix}_${targetLocale}`;
+                    const toCurrency = getCurrencyByLocale(targetLocale);
+                    const convertedValue = convertPrice(sourceValue, fromCurrency, toCurrency);
+
+                    const targetInput = document.getElementById(`teacher-course-${targetField}`);
+                    const targetDisplay = document.getElementById(`teacher-course-${targetField}-display`);
+
+                    if (targetInput && targetDisplay) {
+                        targetInput.value = convertedValue;
+                        targetDisplay.value = convertedValue;
+                        // Trigger money input formatting if available
+                        window.TeacherMoneyInput?.formatElement(targetDisplay);
+                    }
+                });
+            };
+
+            const form = document.querySelector('.teacher-course-form');
+            
+            // Listen for changes in price fields
+            supported.forEach(locale => {
+                const suffix = locale === 'vi' ? '' : `_${locale}`;
+                
+                const priceDisplay = document.getElementById(`teacher-course-price${suffix}-display`);
+                const salePriceDisplay = document.getElementById(`teacher-course-sale_price${suffix}-display`);
+
+                if (priceDisplay) {
+                    priceDisplay.addEventListener('change', () => {
+                        if (currentLocale === locale) {
+                            syncPrices(locale, false);
+                        }
+                    });
+                }
+
+                if (salePriceDisplay) {
+                    salePriceDisplay.addEventListener('change', () => {
+                        if (currentLocale === locale) {
+                            syncPrices(locale, true);
+                        }
+                    });
+                }
+            });
+
+            document.addEventListener('teacher:money-input-sync', (e) => {
+                // If the synced element is the current active locale's price, sync others
+                const targetId = e.detail?.targetId;
+                if (!targetId) return;
+
+                supported.forEach(locale => {
+                    if (currentLocale !== locale) return;
+                    const suffix = locale === 'vi' ? '' : `_${locale}`;
+                    if (targetId === `teacher-course-price${suffix}`) {
+                        syncPrices(locale, false);
+                    } else if (targetId === `teacher-course-sale_price${suffix}`) {
+                        syncPrices(locale, true);
+                    }
+                });
+            });
+
+            window.TeacherMoneyInput?.initAll(form || document);
         })();
     </script>
 @endsection
