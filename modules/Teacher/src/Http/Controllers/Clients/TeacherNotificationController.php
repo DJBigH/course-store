@@ -10,8 +10,8 @@ use Modules\Teacher\src\Models\TeacherAnnouncement;
 use Modules\Teacher\src\Models\TeacherAnnouncementRead;
 use Modules\Teacher\src\Models\TeacherNotificationRead;
 use Modules\Teacher\src\Support\TeacherNotificationCenter;
-use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
-use Modules\Teacher\src\Support\TeacherPackageUsageResolver;
+use Modules\Packages\src\Support\PackageLifecycleManager;
+use Modules\Packages\src\Support\PackageUsageResolver;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Lessons\src\Support\LessonReleaseManager;
@@ -28,9 +28,9 @@ class TeacherNotificationController extends Controller
         protected DocumentRepositoryInterface $documentRepository,
         protected LessonsRepositoryInterface $lessonRepository,
         protected LessonReleaseManager $lessonReleaseManager,
-        protected TeacherPackageLifecycleManager $packageLifecycleManager,
+        protected PackageLifecycleManager $packageLifecycleManager,
+        protected PackageUsageResolver $packageUsageResolver,
         protected TeacherNotificationCenter $notificationCenter,
-        protected TeacherPackageUsageResolver $packageUsageResolver,
     ) {}
 
     public function notifications()
@@ -47,7 +47,7 @@ class TeacherNotificationController extends Controller
         $pageTitle = __('courses::teacher/messages.pages.notifications');
         $pageName = $pageTitle;
 
-        return view('teacher::clients.dashboard.notifications', compact('pageTitle', 'pageName', 'teacher', 'notifications'));
+        return view('teacher::teacher.notification.notification', compact('pageTitle', 'pageName', 'teacher', 'notifications'));
     }
 
     public function readAnnouncement(int $announcementId)

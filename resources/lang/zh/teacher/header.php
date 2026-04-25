@@ -9,6 +9,8 @@ return array (
   'light_mode' => '浅色模式',
   'profile' => '讲师资料',
   'logout' => '登出',
+  'current_package' => '套餐:',
+  'upgrade_plan' => '升级套餐',
   'locales' => 
   array (
     'vi' => '越南语',

@@ -13,8 +13,8 @@ use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Lessons\src\Support\LessonReleaseManager;
 use Modules\Students\src\Models\StudentsCourses;
 use Modules\Students\src\Models\StudentLessonProgress;
-use Modules\Teacher\src\Models\TeacherCourseCertificate;
-use Modules\Teacher\src\Support\TeacherCertificateIssuer;
+use Modules\Certificates\src\Models\Certificate;
+use Modules\Certificates\src\Support\CertificateIssuer;
 
 class LessonController extends Controller
 {
@@ -113,7 +113,7 @@ class LessonController extends Controller
 
         $isCurrentLessonCompleted = !empty($completedLessonIds[$lesson->id]);
         $studentCertificate = $student && $hasCourse
-            ? TeacherCourseCertificate::query()
+            ? Certificate::query()
                 ->where('student_id', $student->id)
                 ->where('course_id', $course->id)
                 ->whereNull('revoked_at')
@@ -208,7 +208,7 @@ class LessonController extends Controller
 
         $issuedCertificate = null;
         if ($isCompleted) {
-            $issuedCertificate = app(TeacherCertificateIssuer::class)->issueIfEligible(
+            $issuedCertificate = app(CertificateIssuer::class)->issueIfEligible(
                 $student,
                 $course,
                 $courseProgress,

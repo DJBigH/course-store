@@ -84,7 +84,7 @@ class TeacherQuizController extends Controller
         $pageTitle = __('quizzes::teacher/messages.page_title', ['name' => $course->name]);
         $pageName = __('quizzes::teacher/messages.page_name');
 
-        return view('teacher::clients.dashboard.quizzes', compact(
+        return view('teacher::teacher.quiz.quiz', compact(
             'teacher',
             'course',
             'quizzes',
@@ -156,7 +156,7 @@ class TeacherQuizController extends Controller
         $pageTitle = __('quizzes::teacher/messages.edit.title', ['title' => $quiz->title]);
         $pageName = __('quizzes::teacher/messages.edit.breadcrumb');
 
-        return view('teacher::clients.dashboard.quiz_edit', [
+        return view('teacher::teacher.quiz.edit', [
             'teacher' => $teacher,
             'course' => $course,
             'quiz' => $quiz,
@@ -248,7 +248,7 @@ class TeacherQuizController extends Controller
         $pageTitle = __('quizzes::teacher/messages.results.title', ['title' => $quiz->title]);
         $pageName = __('quizzes::teacher/messages.results.breadcrumb');
 
-        return view('teacher::clients.dashboard.quiz_results', compact('teacher', 'course', 'quiz', 'submissions', 'pageTitle', 'pageName'));
+        return view('teacher::teacher.quiz.results', compact('teacher', 'course', 'quiz', 'submissions', 'pageTitle', 'pageName'));
     }
 
     public function exportResults(Request $request, int $courseId, int $quizId)
@@ -260,7 +260,7 @@ class TeacherQuizController extends Controller
         if (!$teacher->packageHasFeature('can_import_export')) {
             return redirect()
                 ->route('teacher.dashboard.quizzes.results', [$course->id, $quiz->id])
-                ->with('msg_danger', __('courses::teacher/messages.package_features.import_export_locked'));
+                ->with('msg_danger', __('packages::teacher.package_features.import_export_locked'));
         }
 
         $this->authorizeQuizAccess($teacher, 'view', $quiz);
@@ -639,7 +639,7 @@ class TeacherQuizController extends Controller
         if (!$teacher->packageHasFeature('can_import_export')) {
             return redirect()
                 ->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
-                ->with('msg_danger', __('courses::teacher/messages.package_features.import_export_locked'));
+                ->with('msg_danger', __('packages::teacher.package_features.import_export_locked'));
         }
 
         $this->authorizeQuizAccess($teacher, 'update', $quiz);
@@ -688,7 +688,7 @@ class TeacherQuizController extends Controller
         if (!$teacher->packageHasFeature('can_import_export')) {
             return redirect()
                 ->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
-                ->with('msg_danger', __('courses::teacher/messages.package_features.import_export_locked'));
+                ->with('msg_danger', __('packages::teacher.package_features.import_export_locked'));
         }
 
         $this->authorizeQuizAccess($teacher, 'update', $quiz);
@@ -770,7 +770,7 @@ class TeacherQuizController extends Controller
         if (!$teacher->packageHasFeature('can_import_export')) {
             return redirect()
                 ->route('teacher.dashboard.quizzes.edit', [$course->id, $quiz->id])
-                ->with('msg_danger', __('courses::teacher/messages.package_features.import_export_locked'));
+                ->with('msg_danger', __('packages::teacher.package_features.import_export_locked'));
         }
 
         $this->authorizeQuizAccess($teacher, 'view', $quiz);

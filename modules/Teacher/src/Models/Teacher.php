@@ -83,7 +83,7 @@ class Teacher extends Model
         return $this->belongsTo(TeacherApplication::class, 'application_id', 'id');
     }
 
-    public function currentPackage(): ?TeacherPackage
+    public function currentPackage(): ?\Modules\Packages\src\Models\Package
     {
         $this->loadMissing('application.package');
 
@@ -93,6 +93,20 @@ class Teacher extends Model
     public function packageHasFeature(string $feature): bool
     {
         return (bool) $this->currentPackage()?->hasFeature($feature);
+    }
+
+    public function getFeatureState(string $feature): array
+    {
+        $package = $this->currentPackage();
+
+        $isMaintenance = $package ? $package->isFeatureInMaintenance($feature) : false;
+        $hasFeature = $package ? $package->hasFeature($feature) : false;
+
+        return [
+            'is_maintenance' => $isMaintenance,
+            'is_locked' => ! $hasFeature && ! $isMaintenance,
+            'can_use' => $hasFeature && ! $isMaintenance,
+        ];
     }
 
     public function payoutRequests()
@@ -122,7 +136,7 @@ class Teacher extends Model
 
     public function studentNotes()
     {
-        return $this->hasMany(TeacherStudentNote::class, 'teacher_id', 'id');
+        return $this->hasMany(\Modules\Students\src\Models\StudentNote::class, 'teacher_id', 'id');
     }
 
     public function courses()
@@ -132,17 +146,17 @@ class Teacher extends Model
 
     public function bundles()
     {
-        return $this->hasMany(TeacherCourseBundle::class, 'teacher_id', 'id');
+        return $this->hasMany(\Modules\Courses\src\Models\CourseBundle::class, 'teacher_id', 'id');
     }
 
     public function affiliateLinks()
     {
-        return $this->hasMany(TeacherAffiliateLink::class, 'teacher_id', 'id');
+        return $this->hasMany(\Modules\Finances\src\Models\AffiliateLink::class, 'teacher_id', 'id');
     }
 
     public function ratings()
     {
-        return $this->hasMany(TeacherRating::class, 'teacher_id', 'id');
+        return $this->hasMany(\Modules\Students\src\Models\TeacherRating::class, 'teacher_id', 'id');
     }
 
     public function getDescriptionLocaleAttribute(): string

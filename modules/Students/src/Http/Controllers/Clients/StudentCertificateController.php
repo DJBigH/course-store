@@ -4,7 +4,7 @@ namespace Modules\Students\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Modules\Teacher\src\Models\TeacherCourseCertificate;
+use Modules\Certificates\src\Models\Certificate;
 
 class StudentCertificateController extends Controller
 {
@@ -14,7 +14,7 @@ class StudentCertificateController extends Controller
         $pageTitle = 'Chung chi cua toi';
         $pageName = $pageTitle;
 
-        $certificates = TeacherCourseCertificate::query()
+        $certificates = Certificate::query()
             ->with(['teacher', 'course'])
             ->where('student_id', $student->id)
             ->whereNull('revoked_at')
@@ -37,13 +37,13 @@ class StudentCertificateController extends Controller
             abort(404);
         }
 
-        $certificate = TeacherCourseCertificate::query()
+        $certificate = Certificate::query()
             ->with(['teacher', 'student', 'course'])
             ->where('student_id', $student->id)
             ->whereNull('revoked_at')
             ->findOrFail($certificateId);
 
-        return view('certificates.course_completion', [
+        return view('certificates::pdf.completion', [
             'certificate' => $certificate,
             'viewerMode' => 'student',
             'backUrl' => route('students.account.certificates.index', ['locale' => app()->getLocale()]),

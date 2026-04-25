@@ -468,11 +468,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check cái notify thì cần thêm cái j nx ko ( Done )
 - Thêm cái lịch sử đăng nhập, lịch sử thao tác ở bên admin và thêm 1 cái nữa check đăng nhập khác thiếp bị hoặc khác ip sẽ báo lên notify ( không dùng email để gửi, gửi lên log là được) ( Done )
 - Check lại responsive ( Done)
-- Viết seed quyền cho giáo viên
-- Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó))
+- Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó)) ( Done )
 - Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
-- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên 
-- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý )
+- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên ( Done )
+- Thêm cái ai tạo mã giảm giá ( Done )
+- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý  gói đặc quyền riêng họ)
 - Check lại logic của module giáo viên
 - Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại
 - Chưa làm config ngân hàng
@@ -482,6 +482,13 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm chức năng quản lý huy hiệu ( CURD, xóa mềm có thùng rác để khôi phục và cho tự thêm màu với từng huy hiệu và cho thêm icon và cung cấp nơi xem mã màu và icon để admin dễ dang dung và thay thế )
 - Sắp xếp lại nội dung trong dashboard của admin
 - Thêm chức năng viết được mô tả các chức năng trong gói đấy kiểu ( AI quiz: mổ tả là gì...)
+- Thêm chức năng khóa giảng viên ( Nếu giảng viên vi phạm j đó )
+- Cái góp ý / báo cáo đang trả dữ liệu sai
+- Sắp xếp lại cái sidebar
+- Ở quản lý học viên thêm cái học viên đó đang học khóa học nào của giảng viên nào để dễ kiểm soát
+- Hỏi AI ở 2 màn kia tôi đều đa ngôn ngữ nên số tiền của nó lúc sẽ khác nên bên admin có cần phải làm j để biết đúng số tiền không có cần đa ngôn ngữ không
+- Cần thêm tính năng hay lượt bỏ tính năng j không
+- Chức năng log có thiếu hay không
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -538,8 +545,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá ( Chưa xong bên clients )
 - Ở trang chủ thêm cái ô button lựa chọn theo nổi bật, nhiều view, giáo viên nổi bật.
 - Thêm cái thông báo khi vào màn teacher và popup khi vào màn teacher 
+
  Teacher:
-- Làm cái hồ sơ giáo viên
+- Làm cái hồ sơ giáo viên ( Done )
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
 - Làm quản lý bình luận những khóa học của giáo viên đó ( Done )
 - Làm quản lý mã giảm giá ( Done )
@@ -571,30 +579,32 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Gộp tất cả các import/execport vào 1 quyền ở trong gói ( Done )
 - Check lại toàn bộ màn giáo viên xem cần thêm,sửa,xóa j không và xem có bug hay j không thì sửa luôn (tạo file plan từ logic -> layout -> code) ( Done )
 - Check lại tất cả đa ngôn ngữ ( lang ) của màn teacher ( Đặc biệt là vi phải có dấu những j liên quan thì phải tự điều chỉnh lại)
+- Khi nhân bản thêm cái xác nhận ( Done )
 - Đa ngôn ngữ (VI/EN/JA/KO/ZH) module dashboard ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module khóa học của tôi ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module bài giảng ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module doanh thu (http://127.0.0.1:8000/teacher/doanh-thu) ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module yêu cầu rút tiền ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module mã giảm giá ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module khuyến mãi ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module hồ sơ ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module thông báo ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module link giới thiệu ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module học viên ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module bình luận ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module chứng chỉ ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module nhật ký hoạt động ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module gói giảng viên ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module gớp ý/ báo cáo ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module hủy hợp tác ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module log ( những chỗ nào bị Mojibake hãy sửa ngay)
-- Rà lại toàn bộ màn teacher check lại tất cả chỗ nào thiếu đa ngôn ngữ (VI/EN/JA/KO/ZH) ( những chỗ nào bị Mojibake hãy sửa ngay) (những chỗ nào bị lỗi UI hãy sửa ngay) (Đặc biệt là module nào thì viết file lang module đó không đóng hết vào 1 file có thể tách nhiều thứ trong file lang VD: list, edit, create, detail, modal, button, title, ... ) ( Viêt plan-> code-> test )
-- Giá tiền khóa học sẽ đúng với ngôn ngữ của nó và khi tính giá thì theo tiền tệ của ngôn ngữ đó và cho biết là tiền đổi sang tiền nào là bao nhiêu ( và thêm 1 cái là học viên mua = tiền ngôn ngữ nào thì + theo tiền ngôn ngữ đó, thêm % phí chuyển đổi bên admin và cho giảng viên biết là bao nhiêu, bên admin dùng api nào free và update theo ngày để biết tỉ giá tiền quốc tế để dựa vào đó tính toán) (VD: giáo viên nhập giá khóa học 10k thì tự tính toán với tỉ giá mà admin đã set để tính các tiền quốc tế)
-- 2 nút chuông và tài khoản ở header bị lỗi trong dark mode
-- Tự làm cái sidebar đa ngôn ngữ
-- Check xem file log có chỗ nào thiếu không
-- Khi nhân bản thêm cái xác nhận
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module khóa học của tôi ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module bài giảng ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module doanh thu (http://127.0.0.1:8000/teacher/doanh-thu) ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module yêu cầu rút tiền ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module mã giảm giá ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module khuyến mãi ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module hồ sơ ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module thông báo ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module link giới thiệu ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module học viên ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module bình luận ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module chứng chỉ ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module nhật ký hoạt động ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module gói giảng viên ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module gớp ý/ báo cáo ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module hủy hợp tác ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- Đa ngôn ngữ (VI/EN/JA/KO/ZH) module log ( những chỗ nào bị Mojibake hãy sửa ngay) ( Done )
+- 2 nút chuông và tài khoản ở header bị lỗi trong dark mode ( Done )
+- Tự làm cái sidebar đa ngôn ngữ ( Done )
+- Giá tiền khóa học sẽ đúng với ngôn ngữ của nó và khi tính giá thì theo tiền tệ của ngôn ngữ đó và cho biết là tiền đổi sang tiền nào là bao nhiêu ( và thêm 1 cái là học viên mua = tiền ngôn ngữ nào thì + theo tiền ngôn ngữ đó, thêm % phí chuyển đổi bên admin và cho giảng viên biết là bao nhiêu, bên admin dùng api nào free và update theo ngày để biết tỉ giá tiền quốc tế để dựa vào đó tính toán) (VD: giáo viên nhập giá khóa học 10k thì tự tính toán với tỉ giá mà admin đã set để tính các tiền quốc tế và nếu tôi nhập ở bên tiếng Anh là 100 (bên tiếng anh sẽ là 100$) thì nó tự tính các tiền khác là bao nhiêu) ( Done )
+- Check lại chức năng log có chỗ nào thiếu không ( Done )
+- Có nên cho giáo viên xóa vĩnh viễn các dữ liệu không nhỉ hay chỉ cho xóa mềm vào thùng rác và khôi phục ( Done )
+- Check lại toàn bộ validate xem có chỗ nào thiếu không ( Done )
+- Làm trang 403,404 riêng dành cho màn teacher ( Note )
 Tổng kết
 - Tìm tất cả file .bak ( Done )
 - check lại lần cuối trước khi đẩy lên production

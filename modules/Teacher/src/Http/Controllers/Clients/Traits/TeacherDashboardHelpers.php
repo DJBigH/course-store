@@ -22,13 +22,14 @@ use Modules\Students\src\Models\Student;
 use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherApplication;
-use Modules\Teacher\src\Models\TeacherCourseBundle;
-use Modules\Teacher\src\Models\TeacherCourseGrant;
+use Modules\Courses\src\Models\CourseBundle;
+use Modules\Students\src\Models\CourseGrant as TeacherCourseGrant;
 use Modules\Finances\src\Models\PayoutAccount as TeacherPayoutAccount;
 use Modules\Finances\src\Models\PayoutRequest as TeacherPayoutRequest;
-use Modules\Teacher\src\Models\TeacherPackage;
+use Modules\Packages\src\Models\Package;
 use Modules\Teacher\src\Models\TeacherPromotion;
-use Modules\Teacher\src\Models\TeacherStudentNote;
+use Modules\Students\src\Models\StudentNote as TeacherStudentNote;
+use Modules\Teacher\src\Http\Requests\CourseBundleRequest;
 use Modules\Finances\src\Support\FinanceCalculator as TeacherFinanceCalculator;
 
 trait TeacherDashboardHelpers
@@ -79,7 +80,7 @@ trait TeacherDashboardHelpers
     protected function redirectToStatus()
     {
         return redirect()->route('teacher.account.status', ['locale' => session('locale', app()->getLocale())])
-            ->with('msg_danger', __('teacher::teacher/common.flash.inactive_teacher'));
+            ->with('msg_danger', __('packages::teacher.flash.inactive_teacher'));
     }
 
     protected function ensurePackageFeatureAllowed(
@@ -94,7 +95,51 @@ trait TeacherDashboardHelpers
 
         return redirect()
             ->route($fallbackRoute, $routeParameters)
-            ->with('msg_danger', __('teacher::teacher/common.feature_locked'));
+            ->with('msg_danger', __('packages::teacher.package_features.feature_locked'));
+    }
+    protected function resolvePackageSummary(Teacher $teacher): ?array
+    {
+        $currentPackage = $teacher->application?->package;
+        if (!$currentPackage) {
+            return null;
+        }
+
+        $pendingUpgrade = $this->resolveOpenPackageChangeRequest($teacher);
+        $pendingUpgradeStartsAt = $pendingUpgrade?->activates_at;
+        $pendingUpgradeIsQueued = $pendingUpgrade?->status === 'approved'
+            && $pendingUpgradeStartsAt !== null
+            && $pendingUpgrade?->activated_at === null;
+
+        $nextPackage = $this->resolveNextPackage($currentPackage);
+        $availablePackageChanges = $this->resolveAvailablePackageChanges($currentPackage);
+
+        return [
+            'name' => $currentPackage->name_locale ?: $currentPackage->name,
+            'badge' => $currentPackage->badge_text_locale ?: strtoupper((string) $currentPackage->code),
+            'price' => (float) $currentPackage->price,
+            'billing_cycle' => $currentPackage->billing_cycle,
+            'course_limit' => $currentPackage->effective_course_limit,
+            'commission_rate' => (float) $currentPackage->commission_rate,
+            'support' => $currentPackage->support_level_locale ?: '',
+            'started_at' => $teacher->package_started_at,
+            'expires_at' => $teacher->package_expires_at,
+            'days_left' => property_exists($this, 'packageLifecycleManager') 
+                ? $this->packageLifecycleManager->daysLeft($teacher) 
+                : 0,
+            'can_upgrade' => $availablePackageChanges->isNotEmpty() && $pendingUpgrade === null,
+            'has_higher_package' => $nextPackage !== null,
+            'upgrade_name' => $nextPackage?->name_locale ?: $nextPackage?->name,
+            'upgrade_url' => route('teacher.dashboard.package.upgrade'),
+            'pending_upgrade' => $pendingUpgrade !== null,
+            'pending_upgrade_status' => $pendingUpgrade?->display_status,
+            'pending_upgrade_url' => $pendingUpgrade ? route('teacher.dashboard.package.upgrade.status') : null,
+            'pending_upgrade_name' => $pendingUpgrade?->package?->name_locale ?: $pendingUpgrade?->package?->name,
+            'pending_upgrade_starts_at' => $pendingUpgradeStartsAt,
+            'pending_upgrade_days_until_activation' => $pendingUpgradeStartsAt
+                ? max(now()->startOfDay()->diffInDays($pendingUpgradeStartsAt->copy()->startOfDay(), false), 0)
+                : null,
+            'pending_upgrade_is_queued' => $pendingUpgradeIsQueued,
+        ];
     }
 
     protected function resolvePromotionRecipientIds(
@@ -371,7 +416,7 @@ trait TeacherDashboardHelpers
         $index = 2;
 
         while (
-            TeacherCourseBundle::query()
+            CourseBundle::query()
                 ->where('slug', $slug)
                 ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
                 ->exists()
@@ -538,26 +583,26 @@ trait TeacherDashboardHelpers
         ];
     }
 
-    protected function resolveNextPackage(?TeacherPackage $currentPackage): ?TeacherPackage
+    protected function resolveNextPackage(?Package $currentPackage): ?Package
     {
         if (!$currentPackage) {
             return null;
         }
 
-        return TeacherPackage::query()
+        return Package::query()
             ->selectable()
             ->where('sort_order', '>', (int) $currentPackage->sort_order)
             ->orderBy('sort_order')
             ->first();
     }
 
-    protected function resolveAvailablePackageChanges(?TeacherPackage $currentPackage)
+    protected function resolveAvailablePackageChanges(?Package $currentPackage)
     {
         if (!$currentPackage) {
             return collect();
         }
 
-        $query = TeacherPackage::query()
+        $query = Package::query()
             ->selectable()
             ->orderBy('sort_order');
 
@@ -604,9 +649,9 @@ trait TeacherDashboardHelpers
     protected function redirectAfterPackageChange(string $action)
     {
         $flashKey = match ($action) {
-            'extended' => 'courses::teacher/messages.package.flash.auto_extended',
-            'queued' => 'courses::teacher/messages.package.flash.auto_queued',
-            default => 'courses::teacher/messages.package.flash.auto_activated',
+            'extended' => 'packages::teacher.flash.auto_extended',
+            'queued' => 'packages::teacher.flash.auto_queued',
+            default => 'packages::teacher.flash.auto_activated',
         };
 
         $route = $action === 'queued'
@@ -638,7 +683,7 @@ trait TeacherDashboardHelpers
             ->count();
         $targetCourseLimit = $targetPackage->effective_course_limit;
         if ($targetCourseLimit !== null && $courseCount > $targetCourseLimit) {
-            $warnings[] = __('courses::teacher/messages.package.over_limit.course_limit', [
+            $warnings[] = __('packages::teacher.over_limit.course_limit', [
                 'used' => $courseCount,
                 'limit' => $targetCourseLimit,
             ]);
@@ -651,7 +696,7 @@ trait TeacherDashboardHelpers
             ? $targetPackage->effective_coupon_limit
             : 0;
         if ($targetCouponLimit !== null && $couponCount > $targetCouponLimit) {
-            $warnings[] = __('courses::teacher/messages.package.over_limit.coupon_limit', [
+            $warnings[] = __('packages::teacher.over_limit.coupon_limit', [
                 'used' => $couponCount,
                 'limit' => $targetCouponLimit,
             ]);
@@ -662,7 +707,7 @@ trait TeacherDashboardHelpers
             ->count();
         $targetPayoutLimit = $targetPackage->effective_payout_account_limit;
         if ($payoutAccountCount > $targetPayoutLimit) {
-            $warnings[] = __('courses::teacher/messages.package.over_limit.payout_account_limit', [
+            $warnings[] = __('packages::teacher.over_limit.payout_account_limit', [
                 'used' => $payoutAccountCount,
                 'limit' => $targetPayoutLimit,
             ]);
@@ -698,7 +743,7 @@ trait TeacherDashboardHelpers
         $warnings = [];
         foreach ($featureKeys as $featureKey) {
             if ($currentPackage->hasFeature($featureKey) && !$targetPackage->hasFeature($featureKey)) {
-                $warnings[] = __('courses::teacher/messages.package_features.labels.' . $featureKey);
+                $warnings[] = __('packages::teacher.package_features.labels.' . $featureKey);
             }
         }
 
@@ -723,23 +768,8 @@ trait TeacherDashboardHelpers
     protected function attachCourseHistoryPreview(LengthAwarePaginator $courses, Teacher $teacher): void
     {
         $courseIds = collect($courses->items())->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $historyMap = ActiveLog::query()
-            ->where('log_name', 'teacher_course_management')
-            ->where(function ($query) use ($courseIds) {
-                $query->where(function ($subjectQuery) use ($courseIds) {
-                    $subjectQuery->where('subject_type', Courses::class)
-                        ->whereIn('subject_id', $courseIds ?: [0]);
-                })->orWhere(function ($propertyQuery) use ($courseIds) {
-                    $propertyQuery->whereNull('subject_id')
-                        ->whereIn('properties->course_id', $courseIds ?: [0]);
-                });
-            })
-            ->where('properties->teacher_id', $teacher->id)
-            ->latest('id')
-            ->get()
-            ->groupBy(function ($log) {
-                return (int) ($log->subject_id ?: data_get($log->properties, 'course_id', 0));
-            });
+        $historyMap = app(\Modules\ActiveLogs\src\Repositories\ActiveLogsRepositoryInterface::class)
+            ->getTeacherActivityPreview($teacher, $courseIds);
 
         foreach ($courses->items() as $course) {
             $course->teacher_activity_preview = ($historyMap->get((int) $course->id, collect()) ?? collect())
@@ -856,6 +886,66 @@ trait TeacherDashboardHelpers
                 'student_name' => $student->name,
             ]),
             'teacher_student_management',
+            $description
+        );
+    }
+
+    protected function logTeacherBundleActivity(
+        Teacher $teacher,
+        $bundle,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $bundle,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'bundle_id' => $bundle->id,
+                'bundle_name' => $bundle->name,
+            ]),
+            'teacher_bundle_management',
+            $description
+        );
+    }
+
+    protected function logTeacherSupportActivity(
+        Teacher $teacher,
+        $contact,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $contact,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'contact_id' => $contact->id,
+                'subject' => $contact->subject,
+            ]),
+            'teacher_support_management',
+            $description
+        );
+    }
+
+    protected function logTeacherCancellationActivity(
+        Teacher $teacher,
+        string $action,
+        string $description,
+        array $properties = []
+    ): void {
+        activity_log(
+            $action,
+            $teacher,
+            array_merge($properties, [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+            ]),
+            'teacher_cancellation_management',
             $description
         );
     }
@@ -1942,6 +2032,38 @@ trait TeacherDashboardHelpers
         };
     }
 
+    protected function resolveTeacherDashboardPreviousRange(array $currentRange): array
+    {
+        $key = $currentRange['key'];
+
+        return match ($key) {
+            'today' => [
+                'start' => now()->subDay()->startOfDay(),
+                'end' => now()->subDay()->endOfDay(),
+            ],
+            '7d' => [
+                'start' => now()->subDays(13)->startOfDay(),
+                'end' => now()->subDays(7)->endOfDay(),
+            ],
+            '14d' => [
+                'start' => now()->subDays(27)->startOfDay(),
+                'end' => now()->subDays(14)->endOfDay(),
+            ],
+            'month', '30d' => [
+                'start' => now()->subDays(59)->startOfDay(),
+                'end' => now()->subDays(30)->endOfDay(),
+            ],
+            'year', '90d' => [
+                'start' => now()->subDays(729)->startOfDay(),
+                'end' => now()->subDays(365)->endOfDay(),
+            ],
+            default => [
+                'start' => now()->subDays(59)->startOfDay(),
+                'end' => now()->subDays(30)->endOfDay(),
+            ],
+        };
+    }
+
     protected function resolveTeacherDashboardRangeOptions(): array
     {
         return array_map(
@@ -1975,8 +2097,8 @@ trait TeacherDashboardHelpers
                 'period' => Carbon::parse($row->date)->format('d/m/Y'),
                 'short_period' => Carbon::parse($row->date)->format('d/m'),
                 'orders' => number_format((int) $row->orders),
-                'gross' => moneyLocale((float) $row->gross_amount, true),
-                'revenue' => moneyLocale((float) $row->teacher_revenue, true),
+                'gross' => moneyLocale((float) $row->gross_amount, null, true),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
             ];
         })->values()->all();
     }
@@ -1987,7 +2109,7 @@ trait TeacherDashboardHelpers
             return [
                 'period' => Carbon::createFromFormat('Y-m', $row->month)->format('m/Y'),
                 'orders' => number_format((int) $row->orders),
-                'revenue' => moneyLocale((float) $row->teacher_revenue, true),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
             ];
         })->values()->all();
     }
@@ -1998,7 +2120,7 @@ trait TeacherDashboardHelpers
             return [
                 'course_name' => $row->course_name,
                 'orders' => number_format((int) $row->orders),
-                'revenue' => moneyLocale((float) $row->teacher_revenue, true),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
             ];
         })->values()->all();
     }
@@ -2026,7 +2148,7 @@ trait TeacherDashboardHelpers
 
             return [
                 'label' => Carbon::parse($row->date)->format('d/m'),
-                'value' => moneyLocale((float) $row->teacher_revenue, true),
+                'value' => moneyLocale((float) $row->teacher_revenue, null, true),
                 'height' => round(max((((float) $row->teacher_revenue) / $maxRevenue) * 100, 8), 2),
                 'start_color' => $colors[0],
                 'end_color' => $colors[1],
@@ -2042,7 +2164,7 @@ trait TeacherDashboardHelpers
                 'views' => number_format((int) $row->views),
                 'orders' => number_format((int) $row->orders),
                 'conversion_rate' => number_format((float) $row->conversion_rate, 2) . '%',
-                'revenue' => moneyLocale((float) $row->teacher_revenue, true),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
             ];
         })->values()->all();
     }
@@ -2055,7 +2177,7 @@ trait TeacherDashboardHelpers
         return $items->map(function ($row) use ($maxRevenue) {
             return [
                 'course_name' => $row->course_name,
-                'revenue' => moneyLocale((float) $row->teacher_revenue),
+                'revenue' => moneyLocale((float) $row->teacher_revenue, null, true),
                 'width' => round(max((((float) $row->teacher_revenue) / $maxRevenue) * 100, 4), 2),
                 'meta' => number_format((int) $row->views) . ' view • ' . number_format((int) $row->orders) . ' đơn • ' . number_format((float) $row->conversion_rate, 2) . '%',
             ];
@@ -2069,10 +2191,11 @@ trait TeacherDashboardHelpers
                 'order_code' => '#' . ($item->order?->code ?: '-'),
                 'course_name' => $item->courses?->name_locale ?: '-',
                 'student_name' => $item->order?->students?->name ?: '-',
-                'gross' => moneyLocale((float) data_get($item, 'finance_breakdown.gross_amount', 0)),
-                'discount' => '-' . moneyLocale((float) data_get($item, 'finance_breakdown.allocated_discount', 0)),
-                'net' => moneyLocale((float) data_get($item, 'finance_breakdown.net_revenue', 0)),
-                'revenue' => moneyLocale((float) data_get($item, 'finance_breakdown.teacher_revenue', 0)),
+                'gross' => moneyLocale((float) data_get($item, 'finance_breakdown.gross_amount', 0), null, true),
+                'discount' => '-' . moneyLocale((float) data_get($item, 'finance_breakdown.allocated_discount', 0), null, true),
+                'net' => moneyLocale((float) data_get($item, 'finance_breakdown.net_revenue', 0), null, true),
+                'split' => number_format((float) data_get($item, 'finance_breakdown.commission_rate', 0), 0) . '% / ' . (100 - (float) data_get($item, 'finance_breakdown.commission_rate', 0)) . '%',
+                'revenue' => moneyLocale((float) data_get($item, 'finance_breakdown.teacher_revenue', 0), null, true),
             ];
         })->values()->all();
     }
@@ -2262,6 +2385,14 @@ trait TeacherDashboardHelpers
             'thumbnail' => $data['thumbnail'],
             'price' => (float) ($data['price'] ?? 0),
             'sale_price' => (float) ($data['sale_price'] ?? 0),
+            'price_en' => (float) ($data['price_en'] ?? 0),
+            'sale_price_en' => (float) ($data['sale_price_en'] ?? 0),
+            'price_ko' => (float) ($data['price_ko'] ?? 0),
+            'sale_price_ko' => (float) ($data['sale_price_ko'] ?? 0),
+            'price_ja' => (float) ($data['price_ja'] ?? 0),
+            'sale_price_ja' => (float) ($data['sale_price_ja'] ?? 0),
+            'price_zh' => (float) ($data['price_zh'] ?? 0),
+            'sale_price_zh' => (float) ($data['sale_price_zh'] ?? 0),
             'code' => $this->generateCourseCode($data['code'] ?? null, $course?->id),
             'is_document' => (int) $data['is_document'],
             'status' => $normalizedStatus,
@@ -2773,11 +2904,12 @@ trait TeacherDashboardHelpers
                 'courses' => number_format((int) ($stats['courses'] ?? 0)),
                 'active_courses' => number_format((int) ($stats['active_courses'] ?? 0)),
                 'students' => number_format((int) ($stats['students'] ?? 0)),
-                'available_balance' => moneyLocale((float) ($stats['available_balance'] ?? 0)),
-                'gross_revenue' => moneyLocale((float) ($stats['gross_revenue'] ?? 0)),
-                'allocated_discount' => moneyLocale((float) ($stats['allocated_discount'] ?? 0)),
-                'estimated_revenue' => moneyLocale((float) ($stats['estimated_revenue'] ?? 0)),
-                'platform_revenue' => moneyLocale((float) ($stats['platform_revenue'] ?? 0)),
+                'available_balance' => moneyLocale((float) ($stats['available_balance'] ?? 0), null, true),
+                'gross_revenue' => moneyLocale((float) ($stats['gross_revenue'] ?? 0), null, true),
+                'allocated_discount' => moneyLocale((float) ($stats['allocated_discount'] ?? 0), null, true),
+                'estimated_revenue' => moneyLocale((float) ($stats['estimated_revenue'] ?? 0), null, true),
+                'platform_revenue' => moneyLocale((float) ($stats['platform_revenue'] ?? 0), null, true),
+                'trends' => $stats['trends'] ?? [],
             ],
             'conversion' => [
                 'created' => number_format((int) ($conversionSummary['orders_this_month'] ?? 0)),
@@ -2816,8 +2948,8 @@ trait TeacherDashboardHelpers
                 'end' => $range['end']->toDateString(),
             ],
             'summary' => [
-                'gross_revenue' => moneyLocale((float) ($summary['gross_amount'] ?? 0), true),
-                'teacher_revenue' => moneyLocale((float) ($summary['teacher_revenue'] ?? 0), true),
+                'gross_revenue' => moneyLocale((float) ($summary['gross_amount'] ?? 0), null, true),
+                'teacher_revenue' => moneyLocale((float) ($summary['teacher_revenue'] ?? 0), null, true),
             ],
             'daily_rows' => $this->serializeTeacherRevenueDailyRows($revenueInsights['daily'] ?? collect()),
             'monthly_rows' => $this->serializeTeacherRevenueMonthlyRows($revenueInsights['monthly'] ?? collect()),
@@ -3243,7 +3375,7 @@ trait TeacherDashboardHelpers
 
         $bundle = null;
         if ($bundleId) {
-            $bundle = TeacherCourseBundle::query()
+            $bundle = CourseBundle::query()
                 ->with('items')
                 ->where('teacher_id', $teacher->id)
                 ->findOrFail($bundleId);
@@ -3271,7 +3403,7 @@ trait TeacherDashboardHelpers
         ));
     }
 
-    protected function persistBundle(TeacherCourseBundleRequest $request, ?int $bundleId = null)
+    protected function persistBundle(CourseBundleRequest $request, ?int $bundleId = null)
     {
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
@@ -3304,7 +3436,7 @@ trait TeacherDashboardHelpers
         }
 
         $existingBundle = $bundleId
-            ? TeacherCourseBundle::query()->where('teacher_id', $teacher->id)->findOrFail($bundleId)
+            ? CourseBundle::query()->where('teacher_id', $teacher->id)->findOrFail($bundleId)
             : null;
 
         $baseSlug = Str::slug((string) $data['name']);
@@ -3325,8 +3457,8 @@ trait TeacherDashboardHelpers
             if ($bundle) {
                 $bundle->update($payload);
             } else {
-                $payload['position'] = ((int) TeacherCourseBundle::query()->where('teacher_id', $teacher->id)->max('position')) + 1;
-                $bundle = TeacherCourseBundle::query()->create($payload);
+                $payload['position'] = ((int) CourseBundle::query()->where('teacher_id', $teacher->id)->max('position')) + 1;
+                $bundle = CourseBundle::query()->create($payload);
             }
 
             $bundle->items()->delete();
@@ -3340,6 +3472,16 @@ trait TeacherDashboardHelpers
 
             return $bundle;
         });
+
+        $this->logTeacherBundleActivity(
+            $teacher,
+            $bundle,
+            $bundleId ? 'bundle_updated' : 'bundle_created',
+            $bundleId
+                ? __('teacher::teacher/bundle/common.history.bundle_updated', ['name' => $bundle->name])
+                : __('teacher::teacher/bundle/common.history.bundle_created', ['name' => $bundle->name]),
+            ['course_count' => $courseIds->count()]
+        );
 
         return redirect()
             ->route('teacher.dashboard.bundles.edit', ['bundle' => $bundle->id])

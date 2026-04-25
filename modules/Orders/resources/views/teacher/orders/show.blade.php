@@ -45,13 +45,19 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                            <tfoot class="table-light">
+                            <tfoot class="border-top border-2" style="background: rgba(var(--admin-primary-rgb), 0.03);">
                                 <tr>
-                                    <th class="py-3">{{ __('orders::teacher/orders.show.summary_title') }}</th>
-                                    <th class="text-end py-3">{{ moneyLocale($summary['gross_amount'], true) }}</th>
-                                    <th class="text-end py-3 text-danger">-{{ moneyLocale($summary['allocated_discount'], true) }}</th>
-                                    <th class="text-end py-3">{{ moneyLocale($summary['net_revenue'], true) }}</th>
-                                    <th class="text-end py-3 text-primary" style="font-size: 1.1rem;">{{ moneyLocale($summary['teacher_revenue'], true) }}</th>
+                                    <th class="py-4 ps-4">
+                                        <div class="text-uppercase small text-muted mb-1">{{ __('orders::teacher/orders.show.summary_label') ?? 'Tổng kết' }}</div>
+                                        <div class="fs-5 fw-bold text-dark">{{ __('orders::teacher/orders.show.summary_title') }}</div>
+                                    </th>
+                                    <th class="text-end py-4 text-muted">{{ moneyLocale($summary['gross_amount'], true) }}</th>
+                                    <th class="text-end py-4 text-danger">-{{ moneyLocale($summary['allocated_discount'], true) }}</th>
+                                    <th class="text-end py-4 text-dark">{{ moneyLocale($summary['net_revenue'], true) }}</th>
+                                    <th class="text-end py-4 pe-4">
+                                        <div class="text-uppercase small text-primary mb-1 fw-bold">{{ __('orders::teacher/orders.table.revenue') }}</div>
+                                        <div class="text-primary fw-800" style="font-size: 1.5rem;">{{ moneyLocale($summary['teacher_revenue'], true) }}</div>
+                                    </th>
                                 </tr>
                             </tfoot>
                         </table>

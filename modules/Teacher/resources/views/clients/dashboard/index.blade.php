@@ -117,11 +117,11 @@
 
                 <div class="teacher-hero__mini">
                     <span>{{ __('teacher::teacher/dashboard.overview.labels.available_balance') }}</span>
-                    <strong data-overview-stat="available_balance">{{ moneyLocale($stats['available_balance'], true) }}</strong>
+                    <strong data-overview-stat="available_balance">{{ moneyLocale($stats['available_balance'], null, true) }}</strong>
                 </div>
                 <div class="teacher-hero__mini teacher-hero__mini--glass">
                     <span>{{ __('teacher::teacher/dashboard.overview.labels.estimated_revenue') }}</span>
-                    <strong data-overview-stat="estimated_revenue">{{ moneyLocale($stats['estimated_revenue'], true) }}</strong>
+                    <strong data-overview-stat="estimated_revenue">{{ moneyLocale($stats['estimated_revenue'], null, true) }}</strong>
                 </div>
             </div>
         </section>
@@ -176,31 +176,31 @@
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
                         <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.available_balance') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="available_balance">{{ money($stats['available_balance'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="available_balance">{{ moneyLocale($stats['available_balance'], null, true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
                         <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.gross_revenue') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="gross_revenue">{{ money($stats['gross_revenue'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="gross_revenue">{{ moneyLocale($stats['gross_revenue'], null, true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
                         <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.allocated_discount') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="allocated_discount">{{ money($stats['allocated_discount'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="allocated_discount">{{ moneyLocale($stats['allocated_discount'], null, true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
                         <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.estimated_revenue') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="estimated_revenue">{{ money($stats['estimated_revenue'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="estimated_revenue">{{ moneyLocale($stats['estimated_revenue'], null, true) }}</div>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3">
                     <div class="teacher-stat-card">
                         <div class="teacher-stat-card__label">{{ __('teacher::teacher/dashboard.overview.labels.platform_revenue') }}</div>
-                        <div class="teacher-stat-card__value" data-overview-stat="platform_revenue">{{ money($stats['platform_revenue'], __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</div>
+                        <div class="teacher-stat-card__value" data-overview-stat="platform_revenue">{{ moneyLocale($stats['platform_revenue'], null, true) }}</div>
                     </div>
                 </div>
             </div>
@@ -266,8 +266,8 @@
                                         <tr>
                                             <td>{{ \Illuminate\Support\Carbon::parse($row->date)->format('d/m/Y') }}</td>
                                             <td>{{ number_format((int) $row->orders) }}</td>
-                                            <td>{{ money($row->gross_amount, __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</td>
-                                            <td>{{ money($row->teacher_revenue, __('teacher::teacher/dashboard.common.currency_symbol'), __('teacher::teacher/dashboard.common.currency_zero'), true) }}</td>
+                                            <td>{{ moneyLocale($row->gross_amount, null, true) }}</td>
+                                            <td>{{ moneyLocale($row->teacher_revenue, null, true) }}</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -294,7 +294,7 @@
                                         $activeColors = $chartColors[$index % count($chartColors)];
                                     @endphp
                                     <div class="teacher-mini-chart__item">
-                                        <strong class="teacher-mini-chart__value">{{ moneyLocale($row->teacher_revenue, true) }}</strong>
+                                        <strong class="teacher-mini-chart__value">{{ moneyLocale($row->teacher_revenue, null, true) }}</strong>
                                         <div class="teacher-mini-chart__bar-wrap">
                                             <div class="teacher-mini-chart__bar" style="height: {{ max(($row->teacher_revenue / $maxDailyRevenue) * 100, 8) }}%; --bar-start: {{ $activeColors[0] }}; --bar-end: {{ $activeColors[1] }};"></div>
                                         </div>
@@ -334,7 +334,7 @@
                                     <td>{{ number_format((int) $row->views) }}</td>
                                     <td>{{ number_format((int) $row->orders) }}</td>
                                     <td>{{ number_format((float) $row->conversion_rate, 2) }}%</td>
-                                    <td>{{ moneyLocale($row->teacher_revenue, true) }}</td>
+                                    <td>{{ moneyLocale($row->teacher_revenue, null, true) }}</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -399,7 +399,7 @@
                                     {{ __('teacher::teacher/dashboard.overview.labels.order_code', ['code' => $detail->order?->code]) }}
                                     - {{ optional($detail->created_at)->format('d/m/Y H:i') }}
                                 </small>
-                                <span class="text-primary fw-semibold">{{ moneyLocale($detail->finance_breakdown['teacher_revenue'], true) }}</span>
+                                <span class="text-primary fw-semibold">{{ moneyLocale($detail->finance_breakdown['teacher_revenue'], null, true) }}</span>
                             </div>
                         @empty
                             <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.no_sales') }}</p>
@@ -429,7 +429,7 @@
                                 <small class="d-block text-muted">
                                     {{ __('teacher::teacher/dashboard.overview.top_bundles_sales', ['count' => $bundleStat->sales_count]) }}
                                 </small>
-                                <span class="text-primary fw-semibold">{{ moneyLocale($bundleStat->net_revenue, true) }}</span>
+                                <span class="text-primary fw-semibold">{{ moneyLocale($bundleStat->net_revenue, null, true) }}</span>
                             </div>
                         @empty
                             <p class="text-muted mb-0">{{ __('teacher::teacher/dashboard.overview.top_bundles_empty') }}</p>

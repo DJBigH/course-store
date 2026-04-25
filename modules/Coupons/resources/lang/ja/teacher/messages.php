@@ -5,7 +5,9 @@ return [
     'create_title' => '新規クーポン追加',
     'edit_title' => 'クーポン編集',
     'assign_students_title' => '受講生にクーポンを割り当てる',
+    'assign_students_desc' => 'コード :code を使用できる受講生を選択してください。',
     'assign_courses_title' => 'コースにクーポンを割り当てる',
+    'assign_courses_desc' => 'コード :code を適用できるコースを選択してください。',
     'hero' => [
         'kicker' => 'プロモーションキャンペーン',
         'title' => '割引クーポン',
@@ -22,6 +24,7 @@ return [
         'assign_students' => '受講生を割り当てる',
         'prioritize' => '優先表示',
         'unprioritize' => '優先解除',
+        'save_assignment' => '変更を保存',
     ],
     'form' => [
         'description' => '割引クーポンの条件を設定してください。',

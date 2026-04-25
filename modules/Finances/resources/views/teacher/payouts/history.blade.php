@@ -31,19 +31,19 @@
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.teacher_revenue') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($summary['teacher_revenue'], true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($summary['teacher_revenue'], null, true) }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.requested') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($requestedAmount, true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($requestedAmount, null, true) }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.available') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($availableBalance, true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($availableBalance, null, true) }}</div>
                 </div>
             </div>
         </div>
@@ -81,7 +81,7 @@
                             @forelse ($payouts as $payout)
                                 <tr>
                                     <td>#{{ $payout->id }}</td>
-                                    <td class="fw-bold text-primary">{{ moneyLocale($payout->amount, true) }}</td>
+                                    <td class="fw-bold text-primary">{{ moneyLocale($payout->amount, null, true) }}</td>
                                     <td>{{ $payout->bank_name }}<br><small class="text-muted">{{ $payout->bank_account_number }}</small></td>
                                     <td>
                                         <span class="teacher-status-badge {{ $resolveStatusClass($payout->status) }}">

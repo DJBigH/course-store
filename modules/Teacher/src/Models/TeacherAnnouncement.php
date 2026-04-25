@@ -3,6 +3,7 @@
 namespace Modules\Teacher\src\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Packages\src\Models\Package;
 
 class TeacherAnnouncement extends Model
 {
@@ -43,7 +44,7 @@ class TeacherAnnouncement extends Model
     public function packages()
     {
         return $this->belongsToMany(
-            TeacherPackage::class,
+            Package::class,
             'teacher_announcement_package',
             'announcement_id',
             'package_id'

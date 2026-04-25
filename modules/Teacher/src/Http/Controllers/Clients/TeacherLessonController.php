@@ -8,8 +8,8 @@ use Modules\Teacher\src\Http\Requests\TeacherLessonRequest;
 use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
-use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
-use Modules\Teacher\src\Support\TeacherPackageUsageResolver;
+use Modules\Packages\src\Support\PackageLifecycleManager;
+use Modules\Packages\src\Support\PackageUsageResolver;
 use Modules\Teacher\src\Support\TeacherNotificationCenter;
 use Modules\Lessons\src\Support\LessonReleaseManager;
 use Modules\Video\src\Repositories\VideoRepositoryInterface;
@@ -29,9 +29,9 @@ class TeacherLessonController extends Controller
         protected DocumentRepositoryInterface $documentRepository,
         protected LessonsRepositoryInterface $lessonRepository,
         protected LessonReleaseManager $lessonReleaseManager,
-        protected TeacherPackageLifecycleManager $packageLifecycleManager,
+        protected PackageLifecycleManager $packageLifecycleManager,
+        protected PackageUsageResolver $packageUsageResolver,
         protected TeacherNotificationCenter $notificationCenter,
-        protected TeacherPackageUsageResolver $packageUsageResolver,
     ) {}
 
     public function lessons(int $courseId)
@@ -54,7 +54,7 @@ class TeacherLessonController extends Controller
             ->orderBy('position')
             ->get();
 
-        return view('teacher::clients.dashboard.lessons', compact('pageTitle', 'pageName', 'teacher', 'course', 'modules') + [
+        return view('teacher::teacher.lesson.lesson', compact('pageTitle', 'pageName', 'teacher', 'course', 'modules') + [
             'canImportExportLessons' => $teacher->packageHasFeature('can_import_export'),
             'existingModuleSelectors' => $this->buildExistingLessonModuleSelectors($course),
             'lessonImportColumns' => $this->lessonImportColumns(),
@@ -83,7 +83,7 @@ class TeacherLessonController extends Controller
             ->get();
         $trashedLessonRows = $this->flattenTrashedLessons($lessons);
 
-        return view('teacher::clients.dashboard.lessons_trash', compact('pageTitle', 'pageName', 'teacher', 'course', 'trashedLessonRows'));
+        return view('teacher::teacher.lesson.trash', compact('pageTitle', 'pageName', 'teacher', 'course', 'trashedLessonRows'));
     }
 
     public function createLesson(int $courseId)
@@ -103,7 +103,7 @@ class TeacherLessonController extends Controller
         $defaultParentId = (int) request()->query('parent_id', 0);
         $lastPosition = Lesson::query()->where('course_id', $course->id)->max('position') ?: 0;
 
-        return view('teacher::clients.dashboard.create_lesson', [
+        return view('teacher::teacher.lesson.create', [
             'pageTitle' => $pageTitle,
             'pageName' => $pageName,
             'teacher' => $teacher,
@@ -172,7 +172,7 @@ class TeacherLessonController extends Controller
         $pageTitle = __('teacher::teacher/lesson/edit.edit_title', ['lesson' => $lesson->name_locale]);
         $pageName = __('teacher::teacher/lesson/edit.edit_title', ['lesson' => $lesson->name_locale]);
 
-        return view('teacher::clients.dashboard.create_lesson', [
+        return view('teacher::teacher.lesson.create', [
             'pageTitle' => $pageTitle,
             'pageName' => $pageName,
             'teacher' => $teacher,
@@ -273,30 +273,7 @@ class TeacherLessonController extends Controller
             ->with('msg_success', __('teacher::teacher/lesson/common.flash.restored'));
     }
 
-    public function forceDeleteLesson(int $courseId, int $lessonId)
-    {
-        $teacher = $this->resolveTeacher();
-        if (!$teacher) {
-            return $this->redirectToStatus();
-        }
 
-        $course = $this->resolveOwnedCourse($teacher, $courseId, true);
-        if ($lockedRedirect = $this->ensureCourseManageable($course)) {
-            return $lockedRedirect;
-        }
-        $lesson = $this->resolveOwnedLesson($course, $lessonId, true);
-        if (!$lesson->trashed()) {
-            abort(404);
-        }
-
-        $branchIds = $this->collectLessonBranchIds($lesson->id);
-        Lesson::query()->onlyTrashed()->whereIn('id', $branchIds)->forceDelete();
-        $this->updateCourseDurations($course->id);
-
-        return redirect()
-            ->route('teacher.dashboard.lessons.trash', $course->id)
-            ->with('msg_success', __('teacher::teacher/lesson/common.flash.force_deleted'));
-    }
 
     public function exportLessons(Request $request, int $courseId, string $format = 'csv')
     {

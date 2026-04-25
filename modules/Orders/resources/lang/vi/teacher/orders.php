@@ -75,7 +75,8 @@ return [
         'title' => 'Chi tiết đơn hàng #:code',
         'student_info' => 'Thông tin học viên',
         'payment_info' => 'Thanh toán',
-        'summary_title' => 'Tổng quan đơn hàng (Phần của bạn)',
+        'summary_label' => 'Tổng cộng',
+        'summary_title' => 'Phần của bạn',
         'item_list' => 'Chi tiết sản phẩm',
         'labels' => [
             'name' => 'Họ và tên',

@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'support' => [
+        'page_title' => 'Góp ý & Báo cáo',
+        'description' => 'Gửi ý kiến đóng góp hoặc báo cáo các vấn đề kỹ thuật để chúng tôi hoàn thiện hệ thống tốt hơn.',
+        'flash' => [
+            'sent' => 'Cảm ơn bạn! Yêu cầu hỗ trợ đã được gửi thành công. Chúng tôi sẽ phản hồi sớm nhất có thể.',
+            'error_empty' => 'Thông tin không được để trống.',
+            'error_system' => 'Có lỗi xảy ra, vui lòng thử lại sau.',
+            'warning_incomplete' => 'Vui lòng nhập đầy đủ yêu cầu trước khi gửi.',
+        ],
+        'form' => [
+            'title' => 'Gửi yêu cầu mới',
+            'type_label' => 'Loại yêu cầu',
+            'type_hint' => 'Chọn loại yêu cầu bạn cần hỗ trợ',
+            'category_label' => 'Danh mục hỗ trợ',
+            'category_hint' => 'Chọn danh mục cụ thể giúp chúng tôi xử lý nhanh hơn',
+            'category_select_default' => '-- Vui lòng chọn danh mục --',
+            'subject_label' => 'Tiêu đề',
+            'subject_hint' => 'Tóm tắt ngắn gọn vấn đề của bạn',
+            'subject_placeholder' => 'Mô tả ngắn gọn vấn đề...',
+            'message_label' => 'Nội dung chi tiết',
+            'message_hint' => 'Mô tả chi tiết vấn đề hoặc ý kiến đóng góp của bạn',
+            'message_placeholder' => 'Vui lòng mô tả chi tiết vấn đề hoặc ý kiến đóng góp của bạn...',
+            'submit' => 'Gửi yêu cầu',
+            'sending' => 'Đang gửi...',
+        ],
+        'types' => [
+            'feedback' => 'Góp ý tính năng',
+            'report' => 'Báo cáo lỗi / vấn đề',
+        ],
+        'categories' => [
+            'feature_request' => 'Yêu cầu tính năng mới',
+            'ui_ux' => 'Giao diện & Trải nghiệm (UI/UX)',
+            'teacher_portal' => 'Chức năng Workspace giảng viên',
+            'student_portal' => 'Chức năng trang học viên',
+            'payment_package' => 'Thanh toán & Gói hội viên',
+            'system_bug' => 'Lỗi hệ thống / Hiển thị',
+            'course_lesson' => 'Quản lý khóa học & Bài giảng',
+            'comment_rating' => 'Bình luận & Đánh giá',
+            'content_violation' => 'Báo cáo vi phạm nội dung',
+            'account' => 'Tài khoản & Bảo mật',
+            'other' => 'Vấn đề khác',
+        ],
+        'status' => [
+            'new' => 'Đã gửi',
+            'in_progress' => 'Đang xử lý',
+            'need_info' => 'Cần thêm thông tin',
+            'resolved' => 'Đã giải quyết',
+            'rejected' => 'Bị từ chối',
+        ],
+        'history' => [
+            'title' => 'Lịch sử yêu cầu',
+            'empty' => 'Bạn chưa gửi yêu cầu hỗ trợ nào.',
+            'label_status' => 'Trạng thái xử lý',
+            'label_id' => 'ID',
+            'label_submitted' => 'Gửi ngày',
+        ],
+    ],
+];

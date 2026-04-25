@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Modules\Teacher\src\Http\Requests\TeacherAnnouncementRequest;
 use Modules\Teacher\src\Models\TeacherAnnouncement;
-use Modules\Teacher\src\Models\TeacherPackage;
+use Modules\Packages\src\Models\Package;
 
 class TeacherAnnouncementController extends Controller
 {
@@ -30,7 +30,7 @@ class TeacherAnnouncementController extends Controller
             'is_pinned' => false,
             'icon' => 'fas fa-bullhorn',
         ]);
-        $packages = TeacherPackage::query()->orderBy('sort_order')->get();
+        $packages = Package::query()->orderBy('sort_order')->get();
         $selectedPackageIds = [];
 
         return view('teacher::announcements.create', compact('pageTitle', 'announcement', 'packages', 'selectedPackageIds'));
@@ -53,7 +53,7 @@ class TeacherAnnouncementController extends Controller
     {
         $pageTitle = __('teacher::admin.titles.edit_announcement');
         $announcement = TeacherAnnouncement::query()->with('packages')->findOrFail($id);
-        $packages = TeacherPackage::query()->orderBy('sort_order')->get();
+        $packages = Package::query()->orderBy('sort_order')->get();
         $selectedPackageIds = $announcement->packages->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         return view('teacher::announcements.edit', compact('pageTitle', 'announcement', 'packages', 'selectedPackageIds'));

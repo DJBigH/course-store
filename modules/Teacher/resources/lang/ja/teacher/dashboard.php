@@ -13,5 +13,7 @@ return [
     'common' => [
         'view_all' => 'すべて表示',
         'view_earnings' => '収益を表示',
+        'maintenance_badge' => 'メンテナンス',
+        'maintenance_message' => 'この機能は現在メンテナンス中です。後でもう一度お試しください。',
     ],
 ];

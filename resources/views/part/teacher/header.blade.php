@@ -19,6 +19,7 @@
         $teacherCurrentUrl .= '?' . request()->getQueryString();
     }
     $teacherHeaderBadge = $teacherStudent?->teacher?->primary_badge;
+    $teacherCurrentPackage = $teacherStudent?->teacher?->currentPackage()->first();
 @endphp
 
 <nav class="sb-topnav navbar navbar-expand">
@@ -70,6 +71,8 @@
                 @endforeach
             </ul>
         </div>
+
+
         <a href="{{ route('home', ['locale' => $teacherLocale]) }}" class="teacher-header-link"
             target="_blank" rel="noopener noreferrer">
             {{ __('teacher/header.view_site') }}
@@ -100,8 +103,8 @@
                 </a>
                 <div class="dropdown-menu dropdown-menu-end teacher-notification-menu" aria-labelledby="teacherNotificationDropdown">
                     <div class="teacher-notification-menu__header">
-                        <strong>{{ __('teacher/header.notifications.title') }}</strong>
-                        <a href="{{ route('teacher.dashboard.notifications') }}">{{ __('teacher/header.notifications.view_all_cta') }}</a>
+                        <strong>{{ __('courses::teacher/messages.notifications.title') }}</strong>
+                        <a href="{{ route('teacher.dashboard.notifications') }}">{{ __('courses::teacher/messages.notifications.view_all_cta') }}</a>
                     </div>
                     <div class="teacher-notification-menu__list">
                         @forelse ($teacherNotifications as $notification)
@@ -120,14 +123,14 @@
                                     <i class="{{ $notification['icon'] ?? 'fas fa-bell' }}"></i>
                                 </span>
                                 <span class="teacher-notification-menu__body">
-                                    <span class="teacher-notification-menu__title">{{ $notification['title'] ?? __('teacher/header.notifications.types.system') }}</span>
+                                    <span class="teacher-notification-menu__title">{{ $notification['title'] ?? __('courses::teacher/messages.notifications.types.system') }}</span>
                                     <span class="teacher-notification-menu__message">{{ $notification['message'] ?? '' }}</span>
                                     <span class="teacher-notification-menu__time">{{ optional($notification['created_at'] ?? null)->diffForHumans() }}</span>
                                 </span>
                             </a>
                         @empty
                             <div class="teacher-notification-menu__empty">
-                                {{ __('teacher/header.notifications.empty') }}
+                                {{ __('courses::teacher/messages.notifications.empty') }}
                             </div>
                         @endforelse
                     </div>

@@ -10,8 +10,8 @@ use Modules\Courses\src\Models\Courses;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Finances\src\Support\FinanceCalculator as TeacherFinanceCalculator;
 use Modules\Teacher\src\Support\TeacherNotificationCenter;
-use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
-use Modules\Teacher\src\Support\TeacherPackageUsageResolver;
+use Modules\Packages\src\Support\PackageLifecycleManager;
+use Modules\Packages\src\Support\PackageUsageResolver;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Lessons\src\Support\LessonReleaseManager;
@@ -29,9 +29,9 @@ class TeacherDashboardController extends Controller
         protected DocumentRepositoryInterface $documentRepository,
         protected LessonsRepositoryInterface $lessonRepository,
         protected LessonReleaseManager $lessonReleaseManager,
-        protected TeacherPackageLifecycleManager $packageLifecycleManager,
+        protected PackageLifecycleManager $packageLifecycleManager,
+        protected PackageUsageResolver $packageUsageResolver,
         protected TeacherNotificationCenter $notificationCenter,
-        protected TeacherPackageUsageResolver $packageUsageResolver,
     ) {}
 
     public function index(Request $request)
@@ -58,8 +58,35 @@ class TeacherDashboardController extends Controller
         );
         $payoutRequested = $this->resolveCommittedPayoutAmount($teacher);
 
+        $previousRange = $this->resolveTeacherDashboardPreviousRange($dashboardRange);
+        $previousOrderDetails = $this->applyTeacherDashboardRangeToPaidQuery(
+            $this->paidOrderDetailsQuery($teacher),
+            $previousRange
+        )->get();
+        $previousSummary = TeacherFinanceCalculator::summarize(
+            $previousOrderDetails,
+            fn () => $effectiveCommissionRate
+        );
+
+        $calcTrend = function ($current, $previous) {
+            if ($previous == 0) return $current > 0 ? 100 : 0;
+            return round((($current - $previous) / $previous) * 100, 1);
+        };
+
+        $trendStats = [
+            'students' => $calcTrend($orderDetails->pluck('order.student_id')->filter()->unique()->count(), $previousOrderDetails->pluck('order.student_id')->filter()->unique()->count()),
+            'gross_revenue' => $calcTrend($summary['gross_amount'], $previousSummary['gross_amount']),
+            'estimated_revenue' => $calcTrend($summary['teacher_revenue'], $previousSummary['teacher_revenue']),
+        ];
+
         $pageTitle = __('teacher::teacher/dashboard.pages.overview');
         $pageName = __('teacher::teacher/dashboard.pages.overview');
+        $allTimeOrderDetails = $this->paidOrderDetailsQuery($teacher)->get();
+        $allTimeSummary = TeacherFinanceCalculator::summarize(
+            $allTimeOrderDetails,
+            fn () => $effectiveCommissionRate
+        );
+
         $stats = [
             'courses' => (clone $coursesQuery)->count(),
             'active_courses' => (clone $coursesQuery)->where('status', 1)->count(),
@@ -68,7 +95,8 @@ class TeacherDashboardController extends Controller
             'allocated_discount' => $summary['allocated_discount'],
             'estimated_revenue' => $summary['teacher_revenue'],
             'platform_revenue' => $summary['platform_revenue'],
-            'available_balance' => max($summary['teacher_revenue'] - $payoutRequested, 0),
+            'available_balance' => max($allTimeSummary['teacher_revenue'] - $payoutRequested, 0),
+            'trends' => $trendStats,
         ];
         $conversionSummary = $this->buildTeacherConversionSummary($teacher, $dashboardRange);
         $revenueInsights = $this->buildTeacherRevenueInsights($teacher, $effectiveCommissionRate, $dashboardRange);
@@ -76,39 +104,7 @@ class TeacherDashboardController extends Controller
         $recentCourses = $coursesQuery->latest('id')->take(4)->get();
         $recentSales = TeacherFinanceCalculator::decorate($orderDetails->sortByDesc('created_at')->take(6)->values(), fn () => $effectiveCommissionRate);
         $topBundles = $this->resolveTopBundles($teacher);
-        $currentPackage = $teacher->application?->package;
-        $pendingUpgrade = $this->resolveOpenPackageChangeRequest($teacher);
-        $pendingUpgradeStartsAt = $pendingUpgrade?->activates_at;
-        $pendingUpgradeIsQueued = $pendingUpgrade?->status === 'approved'
-            && $pendingUpgradeStartsAt !== null
-            && $pendingUpgrade?->activated_at === null;
-        $nextPackage = $this->resolveNextPackage($currentPackage);
-        $availablePackageChanges = $this->resolveAvailablePackageChanges($currentPackage);
-        $packageSummary = $currentPackage ? [
-            'name' => $currentPackage->name_locale ?: $currentPackage->name,
-            'badge' => $currentPackage->badge_text_locale ?: strtoupper((string) $currentPackage->code),
-            'price' => (float) $currentPackage->price,
-            'billing_cycle' => $currentPackage->billing_cycle,
-            'course_limit' => $currentPackage->effective_course_limit,
-            'commission_rate' => (float) $currentPackage->commission_rate,
-            'support' => $currentPackage->support_level_locale ?: '',
-            'started_at' => $teacher->package_started_at,
-            'expires_at' => $teacher->package_expires_at,
-            'days_left' => $this->packageLifecycleManager->daysLeft($teacher),
-            'can_upgrade' => $availablePackageChanges->isNotEmpty() && $pendingUpgrade === null,
-            'has_higher_package' => $nextPackage !== null,
-            'upgrade_name' => $nextPackage?->name_locale ?: $nextPackage?->name,
-            'upgrade_url' => route('teacher.dashboard.package.upgrade'),
-            'pending_upgrade' => $pendingUpgrade !== null,
-            'pending_upgrade_status' => $pendingUpgrade?->display_status,
-            'pending_upgrade_url' => $pendingUpgrade ? route('teacher.dashboard.package.upgrade.status') : null,
-            'pending_upgrade_name' => $pendingUpgrade?->package?->name_locale ?: $pendingUpgrade?->package?->name,
-            'pending_upgrade_starts_at' => $pendingUpgradeStartsAt,
-            'pending_upgrade_days_until_activation' => $pendingUpgradeStartsAt
-                ? max(now()->startOfDay()->diffInDays($pendingUpgradeStartsAt->copy()->startOfDay(), false), 0)
-                : null,
-            'pending_upgrade_is_queued' => $pendingUpgradeIsQueued,
-        ] : null;
+        $packageSummary = $this->resolvePackageSummary($teacher);
 
         $overviewPayload = $this->buildTeacherOverviewDashboardPayload(
             $teacher,
@@ -124,6 +120,6 @@ class TeacherDashboardController extends Controller
             return response()->json($overviewPayload);
         }
 
-        return view('teacher::clients.dashboard.index', compact('pageTitle', 'pageName', 'teacher', 'stats', 'dashboardRange', 'dashboardRangeOptions', 'conversionSummary', 'revenueInsights', 'coursePerformance', 'recentCourses', 'recentSales', 'topBundles', 'packageSummary', 'effectiveCommissionRate', 'overviewPayload'));
+        return view('teacher::teacher.dashboard.dashboard', compact('pageTitle', 'pageName', 'teacher', 'stats', 'dashboardRange', 'dashboardRangeOptions', 'conversionSummary', 'revenueInsights', 'coursePerformance', 'recentCourses', 'recentSales', 'topBundles', 'packageSummary', 'effectiveCommissionRate', 'overviewPayload'));
     }
 }

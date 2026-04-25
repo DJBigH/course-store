@@ -13,5 +13,7 @@ return [
     'common' => [
         'view_all' => '모두 보기',
         'view_earnings' => '수익 보기',
+        'maintenance_badge' => '유지보수',
+        'maintenance_message' => '이 기능은 현재 유지보수 중입니다. 나중에 다시 시도해 주세요.',
     ],
 ];

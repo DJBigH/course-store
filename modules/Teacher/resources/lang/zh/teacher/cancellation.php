@@ -1,0 +1,60 @@
+<?php
+
+return [
+    'title' => '取消讲师合作',
+    'description' => '得知您决定停止合作，我们感到非常遗憾。请完成以下确认步骤以提交取消请求。',
+    'status' => [
+        'pending' => '待审批',
+        'approved' => '已批准',
+        'rejected' => '已拒绝',
+        'cancelled' => '已取消',
+    ],
+    'active_request' => [
+        'status_prefix' => '当前请求:',
+        'last_update' => '最后更新: :time',
+        'your_reason' => '您的理由:',
+        'admin_note' => '管理员回复:',
+        'processed_by' => '处理人: :name',
+        'resubmit_cta' => '提交新请求',
+    ],
+    'form' => [
+        'notice_title' => '重要提示:',
+        'notice_text' => '取消合作将导致您的课程被隐藏，且款项将在最近的会计期间结算。请确保您已仔细阅读支持政策。',
+        'reason_label' => '取消合作的理由',
+        'reason_hint' => '请分享您的理由，以帮助我们改进服务',
+        'reason_placeholder' => '在此输入您的详细理由...',
+        'security_title' => '安全验证',
+        'security_help' => '为了保护您的账户，一个 6 位数的验证码（OTP）已发送到您的邮箱。请查收并输入下方。',
+        'otp_placeholder' => '输入 6 位验证码',
+        'otp_send' => '发送验证码',
+        'otp_resend' => '重新发送',
+        'otp_wait' => '等待重新发送 (:time)',
+        'back_cta' => '返回控制面板',
+        'submit_cta' => '确认提交请求',
+        'processing' => '处理中...',
+        'sending' => '正在发送...',
+    ],
+    'guide' => [
+        'step1' => '所有课程将从学生页面隐藏。',
+        'step2' => '当前收入将在最近的审核期内支付。',
+        'step3' => '批准后，您与系统的合同将立即终止。',
+        'step4' => '取消后，在重新注册前您将无法访问 Workspace。',
+    ],
+    'js' => [
+        'sending' => '正在发送...',
+        'send_otp' => '发送验证码',
+        'resend_otp' => '重新发送',
+        'resend_wait' => ':time 后可重发',
+        'processing' => '正在处理...',
+        'connect_error' => '服务器连接错误。',
+        'validate_reason' => '请输入取消理由。',
+        'validate_otp' => '请输入 6 位验证码。',
+    ],
+    'flash' => [
+        'otp_sent' => '验证码已发送到您的邮箱。',
+        'otp_expired' => '验证码已过期或不存在。请重新发送。',
+        'otp_incorrect' => '验证码不正确。',
+        'pending_exists' => '您已经有一个待审批的请求。',
+        'success' => '您的取消合作请求已成功发送。管理员将尽快审核并回复。',
+    ]
+];

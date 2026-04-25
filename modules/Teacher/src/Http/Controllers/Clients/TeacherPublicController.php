@@ -7,13 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\Courses\src\Models\Courses;
 use Modules\Teacher\src\Models\Teacher;
-use Modules\Teacher\src\Models\TeacherRating;
-use Modules\Teacher\src\Support\TeacherAffiliateLinkManager;
+use Modules\Students\src\Models\TeacherRating;
+use Modules\Finances\src\Support\AffiliateLinkManager;
 
 class TeacherPublicController extends Controller
 {
     public function __construct(
-        protected TeacherAffiliateLinkManager $affiliateLinkManager,
+        protected AffiliateLinkManager $affiliateLinkManager,
     ) {}
 
     public function show($locale, string $slug)

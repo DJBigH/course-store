@@ -41,17 +41,43 @@ class Handler extends ExceptionHandler
         }
 
         if ($e instanceof NotFoundHttpException) {
-            if ($request->is('admin/*')) {
+            if ($request->is('admin') || $request->is('admin/*')) {
                 return response()->view('errors.admin.404', [], 404);
+            }
+            if (($request->is('teacher') || $request->is('teacher/*') || $request->is('*/teacher/*')) && !$request->expectsJson()) {
+                return response()->view('errors.teacher.404', [], 404);
             }
             return response()->view('errors.clients.404', [], 404);
         }
 
         if ($e instanceof BadRequestHttpException) {
-            if ($request->is('admin/*')) {
+            if ($request->is('admin') || $request->is('admin/*')) {
                 return response()->view('errors.admin.400', [], 400);
             }
+            if (($request->is('teacher') || $request->is('teacher/*') || $request->is('*/teacher/*')) && !$request->expectsJson()) {
+                return response()->view('errors.teacher.400', [], 400);
+            }
             return response()->view('errors.clients.400', [], 400);
+        }
+
+        // Handle Teacher specific errors
+        if (($request->is('teacher') || $request->is('teacher/*') || $request->is('*/teacher/*')) && !$request->expectsJson()) {
+            if ($e instanceof \Illuminate\Session\TokenMismatchException) {
+                return response()->view('errors.teacher.419', [], 419);
+            }
+            if ($e instanceof HttpExceptionInterface) {
+                $status = $e->getStatusCode();
+                if (view()->exists("errors.teacher.{$status}")) {
+                    return response()->view("errors.teacher.{$status}", [
+                        'exception' => $e,
+                        'message' => $e->getMessage()
+                    ], $status);
+                }
+            }
+            // For 500 errors in production
+            if (!config('app.debug')) {
+                return response()->view('errors.teacher.500', [], 500);
+            }
         }
 
         if ($e instanceof TooManyRequestsHttpException) {

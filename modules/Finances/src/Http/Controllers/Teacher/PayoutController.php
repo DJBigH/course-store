@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Finances\src\Repositories\FinancesRepositoryInterface;
 use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
-use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
+use Modules\Packages\src\Support\PackageLifecycleManager;
 
 class PayoutController extends Controller
 {
@@ -14,7 +14,7 @@ class PayoutController extends Controller
 
     public function __construct(
         protected FinancesRepositoryInterface $financesRepo,
-        protected TeacherPackageLifecycleManager $packageLifecycleManager
+        protected PackageLifecycleManager $packageLifecycleManager
     ) {}
 
     public function index(Request $request)
@@ -33,6 +33,16 @@ class PayoutController extends Controller
         $bankOptions = $this->getBankOptions();
         $pageTitle = __('finances::teacher/payouts.title');
 
+        $exchangeRates = [
+            'USD' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_rate_usd') ?: 1,
+            'KRW' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_rate_krw') ?: 1,
+            'JPY' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_rate_jpy') ?: 1,
+            'CNY' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_rate_cny') ?: 1,
+        ];
+
+        $conversionFee = (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee') ?: 0;
+        $baseCurrency = 'VND'; // System base
+
         return view('finances::teacher.payouts.index', compact(
             'pageTitle',
             'teacher',
@@ -41,7 +51,10 @@ class PayoutController extends Controller
             'requestedAmount',
             'payoutAccounts',
             'payoutAccountUsage',
-            'bankOptions'
+            'bankOptions',
+            'exchangeRates',
+            'conversionFee',
+            'baseCurrency'
         ));
     }
 
@@ -62,6 +75,9 @@ class PayoutController extends Controller
         $bankOptions = $this->getBankOptions();
         $pageTitle = __('finances::teacher/payouts.tabs.bank_accounts');
 
+        $exchangeRates = \Illuminate\Support\Facades\Cache::get('exchange_rates', []);
+        $conversionFee = (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee') ?: 0;
+
         return view('finances::teacher.payouts.accounts', compact(
             'pageTitle',
             'teacher',
@@ -71,7 +87,9 @@ class PayoutController extends Controller
             'payoutAccounts',
             'payoutAccountUsage',
             'pendingAccountChangeRequests',
-            'bankOptions'
+            'bankOptions',
+            'exchangeRates',
+            'conversionFee'
         ));
     }
 
@@ -88,13 +106,18 @@ class PayoutController extends Controller
         $payouts = $this->financesRepo->getPayoutHistory($teacher->id);
         $pageTitle = __('finances::teacher/payouts.tabs.history');
 
+        $exchangeRates = \Illuminate\Support\Facades\Cache::get('exchange_rates', []);
+        $conversionFee = (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee') ?: 0;
+
         return view('finances::teacher.payouts.history', compact(
             'pageTitle',
             'teacher',
             'summary',
             'availableBalance',
             'requestedAmount',
-            'payouts'
+            'payouts',
+            'exchangeRates',
+            'conversionFee'
         ));
     }
 
@@ -103,6 +126,18 @@ class PayoutController extends Controller
         $teacher = $this->resolveTeacher();
         if (!$teacher) {
             return $this->redirectToStatus();
+        }
+
+        // Chuyển đổi số tiền ngược về VND nếu đang dùng locale ngoại tệ
+        $currencyService = app(\Modules\Courses\src\Support\CurrencyService::class);
+        $locale = app()->getLocale();
+        $targetCode = $currencyService->getLocaleCurrency($locale);
+
+        if ($targetCode !== 'VND') {
+            $amountLocale = (float) $request->input('amount');
+            // Quy đổi ngược từ ngoại tệ về VND (không tính phí vì amount này là số tiền danh nghĩa muốn trừ từ balance)
+            $amountVnd = $currencyService->convert($amountLocale, $targetCode, 'VND', false);
+            $request->merge(['amount' => $amountVnd]);
         }
 
         $request->validate([

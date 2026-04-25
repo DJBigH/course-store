@@ -8,8 +8,8 @@ use Modules\Teacher\src\Http\Requests\TeacherCourseRequest;
 use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
-use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
-use Modules\Teacher\src\Support\TeacherPackageUsageResolver;
+use Modules\Packages\src\Support\PackageLifecycleManager;
+use Modules\Packages\src\Support\PackageUsageResolver;
 use Modules\Teacher\src\Support\TeacherNotificationCenter;
 use Modules\Lessons\src\Support\LessonReleaseManager;
 use Modules\Video\src\Repositories\VideoRepositoryInterface;
@@ -28,9 +28,9 @@ class TeacherCourseController extends Controller
         protected DocumentRepositoryInterface $documentRepository,
         protected LessonsRepositoryInterface $lessonRepository,
         protected LessonReleaseManager $lessonReleaseManager,
-        protected TeacherPackageLifecycleManager $packageLifecycleManager,
+        protected PackageLifecycleManager $packageLifecycleManager,
+        protected PackageUsageResolver $packageUsageResolver,
         protected TeacherNotificationCenter $notificationCenter,
-        protected TeacherPackageUsageResolver $packageUsageResolver,
     ) {}
 
     public function courses(Request $request)
@@ -51,7 +51,7 @@ class TeacherCourseController extends Controller
             ->withQueryString();
 
         $usage = $this->resolvePublishedCourseUsage($teacher);
-        return view('teacher::clients.dashboard.courses', compact('pageTitle', 'pageName', 'teacher', 'courses', 'usage'));
+        return view('teacher::teacher.course.course', compact('pageTitle', 'pageName', 'teacher', 'courses', 'usage'));
     }
 
     public function coursesTrash()
@@ -71,7 +71,7 @@ class TeacherCourseController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('teacher::clients.dashboard.courses_trash', compact('pageTitle', 'pageName', 'teacher', 'courses'));
+        return view('teacher::teacher.course.trash', compact('pageTitle', 'pageName', 'teacher', 'courses'));
     }
 
     public function createCourse()
@@ -92,10 +92,10 @@ class TeacherCourseController extends Controller
         if (!($usage['can_create_draft'] ?? true)) {
             return redirect()
                 ->route('teacher.dashboard.courses')
-                ->with('msg_danger', __('teacher::teacher/common.feature_locked'));
+                ->with('msg_danger', __('packages::teacher.feature_locked'));
         }
 
-        return view('teacher::clients.dashboard.create_course', [
+        return view('teacher::teacher.course.create', [
             'pageTitle' => $pageTitle,
             'pageName' => $pageName,
             'teacher' => $teacher,
@@ -105,6 +105,8 @@ class TeacherCourseController extends Controller
             'selectedCategories' => [],
             'formAction' => route('teacher.dashboard.courses.store'),
             'submitLabel' => __('teacher::teacher/course/common.actions.create'),
+            'exchangeRates' => \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray(),
+            'conversionFee' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee', 0),
         ]);
     }
 
@@ -119,7 +121,7 @@ class TeacherCourseController extends Controller
         if (!($usage['can_create_draft'] ?? true)) {
             return redirect()
                 ->route('teacher.dashboard.courses')
-                ->with('msg_danger', __('teacher::teacher/common.feature_locked'));
+                ->with('msg_danger', __('packages::teacher.feature_locked'));
         }
 
         $data = $request->validated();
@@ -164,7 +166,7 @@ class TeacherCourseController extends Controller
         $pageTitle = __('teacher::teacher/course/edit.edit_title');
         $pageName = __('teacher::teacher/course/edit.edit_title');
 
-        return view('teacher::clients.dashboard.create_course', [
+        return view('teacher::teacher.course.create', [
             'pageTitle' => $pageTitle,
             'pageName' => $pageName,
             'teacher' => $teacher,
@@ -174,6 +176,8 @@ class TeacherCourseController extends Controller
             'selectedCategories' => $course->categories()->pluck('categories.id')->all(),
             'formAction' => route('teacher.dashboard.courses.update', $course->id),
             'submitLabel' => __('teacher::teacher/course/common.actions.update'),
+            'exchangeRates' => \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray(),
+            'conversionFee' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee', 0),
         ]);
     }
 
@@ -224,7 +228,7 @@ class TeacherCourseController extends Controller
 
         $usage = $this->resolvePublishedCourseUsage($teacher);
         if (!($usage['can_create_draft'] ?? true)) {
-            return back()->with('msg_danger', __('teacher::teacher/common.feature_locked'));
+            return back()->with('msg_danger', __('packages::teacher.feature_locked'));
         }
 
         $course = $this->resolveOwnedCourse($teacher, $courseId);
@@ -372,30 +376,5 @@ class TeacherCourseController extends Controller
             ->with('msg_success', __('teacher::teacher/course/common.flash.restored'));
     }
 
-    public function forceDeleteCourse(int $courseId)
-    {
-        $teacher = $this->resolveTeacher();
-        if (!$teacher) {
-            return $this->redirectToStatus();
-        }
 
-        $course = $this->resolveOwnedCourse($teacher, $courseId, true);
-        if (!$course->trashed()) {
-            abort(404);
-        }
-
-        $course->forceDelete();
-        $this->syncCourseLocks($teacher);
-
-        $this->logTeacherCourseActivity(
-            $teacher,
-            $course,
-            'course_force_deleted',
-            __('teacher::teacher/course/common.history.course_force_deleted')
-        );
-
-        return redirect()
-            ->route('teacher.dashboard.courses.trash')
-            ->with('msg_success', __('teacher::teacher/course/common.flash.force_deleted'));
-    }
 }

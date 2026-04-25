@@ -1,0 +1,60 @@
+<?php
+
+return [
+    'title' => 'Teacher Resignation',
+    'description' => 'We are sorry to see you go. Please complete the confirmation steps below to cancel our cooperation.',
+    'status' => [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'rejected' => 'Rejected',
+        'cancelled' => 'Cancelled',
+    ],
+    'active_request' => [
+        'status_prefix' => 'Current Request:',
+        'last_update' => 'Last update: :time',
+        'your_reason' => 'Your Reason:',
+        'admin_note' => 'Admin Response:',
+        'processed_by' => 'Processed by: :name',
+        'resubmit_cta' => 'Submit a new request',
+    ],
+    'form' => [
+        'notice_title' => 'Important Notice:',
+        'notice_text' => 'Canceling the cooperation will hidden your courses and payments will be finalized in the nearest accounting period. Please ensure you have read the support policy carefully.',
+        'reason_label' => 'Reason for Resignation',
+        'reason_hint' => 'Please share your reason to help us improve our service',
+        'reason_placeholder' => 'Enter your reason details here...',
+        'security_title' => 'Security Verification',
+        'security_help' => 'To protect your account, a 6-digit OTP has been sent to your Email. Please check and enter the code below.',
+        'otp_placeholder' => 'Enter 6-digit code',
+        'otp_send' => 'Send Verification Code',
+        'otp_resend' => 'Resend Code',
+        'otp_wait' => 'Resend in (:time)',
+        'back_cta' => 'Back to Dashboard',
+        'submit_cta' => 'Confirm Request',
+        'processing' => 'Processing...',
+        'sending' => 'Sending code...',
+    ],
+    'guide' => [
+        'step1' => 'All lectures will be hidden from the student page.',
+        'step2' => 'Current revenue will be paid in the nearest audit period.',
+        'step3' => 'Your contract with the system will end immediately after approval.',
+        'step4' => 'After cancellation, you cannot access the Workspace until you re-register.',
+    ],
+    'js' => [
+        'sending' => 'Sending...',
+        'send_otp' => 'Send OTP',
+        'resend_otp' => 'Resend Code',
+        'resend_wait' => 'Resend in :time',
+        'processing' => 'Processing...',
+        'connect_error' => 'Server connection error.',
+        'validate_reason' => 'Please enter your reason.',
+        'validate_otp' => 'Please enter the 6-digit verification code.',
+    ],
+    'flash' => [
+        'otp_sent' => 'Verification code has been sent to your email.',
+        'otp_expired' => 'Verification code has expired or does not exist. Please resend.',
+        'otp_incorrect' => 'Incorrect verification code.',
+        'pending_exists' => 'You already have a pending request.',
+        'success' => 'Your resignation request has been sent successfully. Admin will review and respond soon.',
+    ]
+];

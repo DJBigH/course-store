@@ -80,6 +80,10 @@
             --admin-sidebar-icon: #475569;
             --admin-history-bg: #f8fafc;
             --admin-history-text: #1e293b;
+            --premium-glow: 0 0 20px rgba(14, 165, 233, 0.15);
+            --premium-gradient: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            --premium-glass: rgba(255, 255, 255, 0.05);
+            --premium-glass-border: rgba(255, 255, 255, 0.1);
         }
 
         html[data-theme="dark"] {
@@ -669,6 +673,70 @@
 
             .teacher-hero--dashboard {
                 grid-template-columns: 1fr;
+            }
+        }
+        .teacher-package-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.45rem 1rem 0.45rem 0.5rem;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(244, 63, 94, 0.08));
+            border: 1px solid rgba(245, 158, 11, 0.28);
+            border-radius: 999px;
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 0 0.5rem;
+        }
+
+        .teacher-package-badge:hover {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(244, 63, 94, 0.14));
+            border-color: rgba(245, 158, 11, 0.45);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
+        }
+
+        .teacher-package-badge__icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #f59e0b, #ec4899);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+        }
+
+        .teacher-package-badge__content {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .teacher-package-badge__content small {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #fbd38d;
+            margin-bottom: 2px;
+        }
+
+        .teacher-package-badge__name {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        @media (max-width: 767.98px) {
+            .teacher-package-badge__content {
+                display: none;
+            }
+            .teacher-package-badge {
+                padding: 0.45rem;
+                margin: 0 0.25rem;
             }
         }
     </style>

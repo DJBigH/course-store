@@ -221,6 +221,22 @@ if (!function_exists('logFieldLabels')) {
             'order_id' => 'Đơn hàng',
             'document_id' => 'Tài liệu',
             'video_id' => 'Video',
+            // Finances
+            'amount' => 'Số tiền',
+            'bank_name' => 'Ngân hàng',
+            'bank_account_name' => 'Chủ tài khoản',
+            'bank_account_number' => 'Số tài khoản',
+            'admin_note' => 'Ghi chú admin',
+            // Promotions
+            'recipient_count' => 'Số người nhận',
+            'audience_type' => 'Loại đối tượng',
+            'title' => 'Tiêu đề',
+            // Comments
+            'is_visible' => 'Hiển thị',
+            // Packages
+            'commission_rate' => 'Tỷ lệ hoa hồng (%)',
+            'billing_cycle' => 'Chu kỳ thanh toán',
+            'price' => 'Giá gói',
         ];
     }
 }
@@ -247,6 +263,11 @@ if (!function_exists('logActionLabel')) {
             'assigned_coupon' => 'Được gán mã',
             'revoked_coupon' => 'Bị hủy mã',
             'update_settings' => 'Cập nhật cấu hình',
+            'send_promotion' => 'Gửi khuyến mãi',
+            'toggle_visibility' => 'Ẩn/hiện bình luận',
+            'payout_status_update' => 'Cập nhật trạng thái rút tiền',
+            'create_payout' => 'Tạo yêu cầu rút tiền',
+            'account_change_update' => 'Cập nhật yêu cầu đổi tài khoản',
         ];
 
         return $labels[$action] ?? ($action ?: 'Khác');
@@ -257,10 +278,11 @@ if (!function_exists('logActionBadgeClass')) {
     function logActionBadgeClass(?string $action): string
     {
         return match ($action) {
-            'create', 'assign_students', 'assigned_coupon', 'accept' => 'success',
-            'update', 'update_settings', 'sync_students' => 'primary',
+            'create', 'assign_students', 'assigned_coupon', 'accept', 'send_promotion', 'create_payout' => 'success',
+            'update', 'update_settings', 'sync_students', 'payout_status_update', 'account_change_update' => 'primary',
             'delete', 'revoke_students', 'revoked_coupon' => 'danger',
             'view' => 'secondary',
+            'toggle_visibility' => 'warning',
             default => 'dark',
         };
     }
@@ -627,14 +649,14 @@ if (!function_exists('formatLogFileValue')) {
     function formatLogFileValue($value): string
     {
         if (is_null($value)) {
-            return 'â€”';
+            return '—';
         }
 
         if (is_string($value)) {
             $trimmed = trim($value);
 
             if ($trimmed === '') {
-                return 'â€”';
+                return '—';
             }
 
             $decoded = json_decode($trimmed, true);
@@ -661,7 +683,7 @@ if (!function_exists('formatLogFileValue')) {
                 ->values()
                 ->all();
 
-            return empty($files) ? 'â€”' : implode(', ', $files);
+            return empty($files) ? '—' : implode(', ', $files);
         }
 
         return (string) $value;

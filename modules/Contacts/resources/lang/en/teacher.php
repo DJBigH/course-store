@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'support' => [
+        'page_title' => 'Feedback & Reports',
+        'description' => 'Send suggestions or report technical issues to help us improve the system.',
+        'flash' => [
+            'sent' => 'Thank you! Your support request has been sent successfully. We will respond as soon as possible.',
+            'error_empty' => 'Information cannot be empty.',
+            'error_system' => 'An error occurred, please try again later.',
+            'warning_incomplete' => 'Please fill in all requirements before sending.',
+        ],
+        'form' => [
+            'title' => 'Submit New Request',
+            'type_label' => 'Request Type',
+            'type_hint' => 'Select the type of request you need help with',
+            'category_label' => 'Support Category',
+            'category_hint' => 'Choose a specific category to help us process faster',
+            'category_select_default' => '-- Please select a category --',
+            'subject_label' => 'Subject',
+            'subject_hint' => 'Briefly summarize your issue',
+            'subject_placeholder' => 'Brief description of the problem...',
+            'message_label' => 'Detailed Content',
+            'message_hint' => 'Describe your issue or suggestion in detail',
+            'message_placeholder' => 'Please describe your problem or feedback in detail...',
+            'submit' => 'Submit Request',
+            'sending' => 'Sending...',
+        ],
+        'types' => [
+            'feedback' => 'Feature Feedback',
+            'report' => 'Bug / Issue Report',
+        ],
+        'categories' => [
+            'feature_request' => 'New Feature Request',
+            'ui_ux' => 'Interface & Experience (UI/UX)',
+            'teacher_portal' => 'Teacher Workspace Functions',
+            'student_portal' => 'Student Page Functions',
+            'payment_package' => 'Payment & Memberships',
+            'system_bug' => 'System Bug / Display Issue',
+            'course_lesson' => 'Course & Lesson Management',
+            'comment_rating' => 'Comments & Ratings',
+            'content_violation' => 'Content Violation Report',
+            'account' => 'Account & Security',
+            'other' => 'Other Issues',
+        ],
+        'status' => [
+            'new' => 'Submitted',
+            'in_progress' => 'In Progress',
+            'need_info' => 'Need More Info',
+            'resolved' => 'Resolved',
+            'rejected' => 'Rejected',
+        ],
+        'history' => [
+            'title' => 'Request History',
+            'empty' => 'You have not submitted any support requests.',
+            'label_status' => 'Status',
+            'label_id' => 'ID',
+            'label_submitted' => 'Submitted on',
+        ],
+    ],
+];

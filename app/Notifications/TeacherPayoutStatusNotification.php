@@ -36,7 +36,7 @@ class TeacherPayoutStatusNotification extends Notification
                 'vi' => 'Yeu cau rut tien #' . $this->payout->id . ' da chuyen sang trang thai ' . $status . ' voi so tien ' . $amount . '.',
                 'en' => 'Your payout request #' . $this->payout->id . ' is now ' . $status . ' for ' . $amount . '.',
             ],
-            'url' => route('teacher.dashboard.payouts', ['locale' => app()->getLocale()]),
+            'url' => route('teacher.dashboard.payouts.index', ['locale' => app()->getLocale()]),
             'severity' => in_array($status, ['paid'], true) ? 'success' : (in_array($status, ['rejected'], true) ? 'warning' : 'info'),
             'icon' => 'fas fa-money-check-dollar',
             'entity_type' => 'teacher_payout',

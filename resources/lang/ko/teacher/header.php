@@ -9,6 +9,8 @@ return array (
   'light_mode' => '라이트 모드',
   'profile' => '강사 프로필',
   'logout' => '로그아웃',
+  'current_package' => '요금제:',
+  'upgrade_plan' => '요금제 업그레이드',
   'locales' => 
   array (
     'vi' => '베트남어',

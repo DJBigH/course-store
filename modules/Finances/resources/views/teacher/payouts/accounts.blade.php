@@ -17,6 +17,10 @@
         };
     @endphp
 
+    @php
+        $maintPackage = $teacher->application?->package;
+        $maintPayout = $maintPackage?->isFeatureInMaintenance('can_request_payouts') ?? false;
+    @endphp
     <div class="teacher-panel" id="payout-main-container">
         <div class="teacher-section-title mb-4">
             <div>
@@ -37,19 +41,19 @@
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.teacher_revenue') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($summary['teacher_revenue'], true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($summary['teacher_revenue'], null, true) }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.requested') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($requestedAmount, true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($requestedAmount, null, true) }}</div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="teacher-stat-card">
                     <div class="teacher-stat-card__label">{{ __('finances::teacher/payouts.summary.available') }}</div>
-                    <div class="teacher-stat-card__value">{{ moneyLocale($availableBalance, true) }}</div>
+                    <div class="teacher-stat-card__value">{{ moneyLocale($availableBalance, null, true) }}</div>
                 </div>
             </div>
         </div>
@@ -139,8 +143,9 @@
                                     <input type="text" class="form-control" name="bank_account_number" value="{{ old('bank_account_number') }}" placeholder="{{ __('finances::teacher/payouts.form.bank_account_number') }}">
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-success mt-4 py-2 px-4 shadow-sm">
+                            <button type="submit" class="btn btn-success mt-4 py-2 px-4 shadow-sm" @disabled($maintPayout)>
                                 <i class="fa-solid fa-save me-2"></i>{{ __('finances::teacher/payouts.saved_accounts.save_button') }}
+                                @if($maintPayout) ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }}) @endif
                             </button>
                         </form>
                     </div>
@@ -186,8 +191,9 @@
                                     <input type="text" class="form-control" name="bank_account_number" value="{{ old('bank_account_number') }}" placeholder="{{ __('finances::teacher/payouts.form.bank_account_number') }}">
                                 </div>
                             </div>
-                            <button class="btn btn-primary mt-4 py-2 px-4 shadow-sm">
+                            <button class="btn btn-primary mt-4 py-2 px-4 shadow-sm" @disabled($maintPayout)>
                                 <i class="fa-solid fa-paper-plane me-2"></i>{{ __('finances::teacher/payouts.change_requests.submit') }}
+                                @if($maintPayout) ({{ __('teacher::teacher/dashboard.common.maintenance_badge') ?? 'BAO TRI' }}) @endif
                             </button>
                         </form>
                     </div>

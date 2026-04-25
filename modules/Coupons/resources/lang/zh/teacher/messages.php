@@ -5,7 +5,9 @@ return [
     'create_title' => '添加新优惠券',
     'edit_title' => '编辑优惠券',
     'assign_students_title' => '分配优惠券给学员',
+    'assign_students_desc' => '选择允许使用代码 :code 的学员。',
     'assign_courses_title' => '分配优惠券给课程',
+    'assign_courses_desc' => '选择适用代码 :code 的课程。',
     'hero' => [
         'kicker' => '促销活动',
         'title' => '折扣优惠券',
@@ -22,6 +24,7 @@ return [
         'assign_students' => '分配学员',
         'prioritize' => '优先显示',
         'unprioritize' => '取消优先',
+        'save_assignment' => '保存更改',
     ],
     'form' => [
         'description' => '设置您的折扣优惠券的应用条件。',

@@ -74,7 +74,7 @@ class TeacherApplication extends Model
 
     public function package()
     {
-        return $this->belongsTo(TeacherPackage::class, 'package_id', 'id');
+        return $this->belongsTo(\Modules\Packages\src\Models\Package::class, 'package_id', 'id');
     }
 
     public function reviewer()

@@ -221,3 +221,27 @@ Route::group([
       return redirect($redirectUrl);
    })->name('read');
 });
+
+
+Route::group(['as' => 'teacher.dashboard.'], function () {
+    Route::group(['prefix' => 'teacher', 'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active', 'teacher.activity']], function () {
+
+        Route::prefix('hoc-vien')->group(function () {
+            Route::get('/', 'Teacher\StudentController@students')->name('students');
+            
+            Route::name('students.')->group(function () {
+                Route::get('/show/{student}', 'Teacher\StudentController@showStudent')->name('show');
+                Route::post('/save-note/{student}', 'Teacher\StudentController@saveStudentNote')->name('note');
+                Route::get('/export/{format}', 'Teacher\StudentController@exportStudents')->name('export');
+
+                Route::prefix('cap-quyen')->name('grants.')->group(function () {
+                    Route::get('/', 'Teacher\StudentController@createStudentGrant')->name('create');
+                    Route::post('/', 'Teacher\StudentController@storeStudentGrant')->name('store');
+                    Route::post('/revoke/{student}/{grant}', 'Teacher\StudentController@revokeStudentGrant')->name('revoke');
+                });
+            });
+        });
+
+
+    });
+});

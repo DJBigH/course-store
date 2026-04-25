@@ -31,4 +31,10 @@ return array (
     'course_count' => ':count 강의',
     'slug' => '경로: :slug',
   ),
+  'history' => 
+  array (
+    'bundle_created' => '새로운 강의 번들 생성: :name',
+    'bundle_updated' => '강의 번들 업데이트: :name',
+    'bundle_deleted' => '강의 번들 삭제: :name',
+  ),
 );

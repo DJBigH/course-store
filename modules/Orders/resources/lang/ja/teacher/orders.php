@@ -75,7 +75,8 @@ return [
         'title' => '注文詳細 #:code',
         'student_info' => '受講生情報',
         'payment_info' => '支払い情報',
-        'summary_title' => '注文概要 (あなたの取り分)',
+        'summary_label' => '合計',
+        'summary_title' => 'あなたの取り分',
         'item_list' => '商品詳細',
         'labels' => [
             'name' => '氏名',

@@ -4,7 +4,7 @@ namespace Modules\Teacher\src\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
-use Modules\Teacher\src\Models\TeacherPackage;
+use Modules\Packages\src\Models\Package;
 
 class ClientTeacherApplicationRequest extends FormRequest
 {
@@ -65,7 +65,7 @@ class ClientTeacherApplicationRequest extends FormRequest
                 return;
             }
 
-            $package = TeacherPackage::query()->selectable()->find($packageId);
+            $package = Package::query()->selectable()->find($packageId);
             if (!$package) {
                 $validator->errors()->add('package_id', 'Gói đăng ký này hiện không khả dụng.');
                 return;

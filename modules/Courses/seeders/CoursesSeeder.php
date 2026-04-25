@@ -14,6 +14,7 @@ class CoursesSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(ExchangeRateSeeder::class);
         $faker = Factory::create();
         for ($index = 1; $index <=5; $index++){
             $courses = new Courses();

@@ -18,6 +18,8 @@ return [
         'import_submit' => 'Tải lên & Xem trước',
         'confirm_submit' => 'Xác nhận nhập dữ liệu',
         'clear_preview' => 'Hủy bỏ xem trước',
+        'import' => 'Nhập dữ liệu',
+        'update' => 'Cập nhật nội dung',
     ],
     'labels' => [
         'module' => 'Chương mục',

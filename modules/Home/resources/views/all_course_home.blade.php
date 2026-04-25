@@ -62,8 +62,8 @@
 
                             <div class="course-bottom">
                                 <div class="course-price">
-                                    <span class="price-old">{{ moneyLocale($item->price) }}</span>
-                                    <span class="price-new">{{ moneyLocale($item->sale_price) }}</span>
+                                    <span class="price-old">{{ moneyLocale($item->price_locale) }}</span>
+                                    <span class="price-new">{{ moneyLocale($item->sale_price_locale) }}</span>
                                 </div>
 
                                 <a href="{{ route('courses.detail', [

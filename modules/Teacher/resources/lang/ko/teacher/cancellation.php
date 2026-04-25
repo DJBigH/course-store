@@ -1,0 +1,60 @@
+<?php
+
+return [
+    'title' => '강사 협력 해지',
+    'description' => '강사님께서 협력을 중단하시기로 결정하셨다니 매우 아쉽습니다. 아래의 확인 절차를 완료하여 해지 요청을 제출해 주세요.',
+    'status' => [
+        'pending' => '대기 중',
+        'approved' => '승인됨',
+        'rejected' => '거절됨',
+        'cancelled' => '취소됨',
+    ],
+    'active_request' => [
+        'status_prefix' => '현재 요청:',
+        'last_update' => '최근 업데이트: :time',
+        'your_reason' => '해지 사유:',
+        'admin_note' => '관리자 답변:',
+        'processed_by' => '처리자: :name',
+        'resubmit_cta' => '새 요청 다시 보내기',
+    ],
+    'form' => [
+        'notice_title' => '중요 공지:',
+        'notice_text' => '협력을 해지하면 귀하의 강의는 비공개로 전환되며, 미지급금은 가장 가까운 회계 기간에 정산됩니다. 지원 정책을 자세히 읽어보시기 바랍니다.',
+        'reason_label' => '해지 사유',
+        'reason_hint' => '서비스 개선을 위해 사유를 공유해 주세요',
+        'reason_placeholder' => '해지 사유를 여기에 입력해 주세요...',
+        'security_title' => '보안 인증',
+        'security_help' => '계정 보호를 위해 6자리 인증 코드(OTP)가 귀하의 이메일로 전송되었습니다. 아래에 코드를 입력해 주세요.',
+        'otp_placeholder' => '6자리 코드 입력',
+        'otp_send' => '인증 코드 전송',
+        'otp_resend' => '코드 재전송',
+        'otp_wait' => '재전송까지 (:time)',
+        'back_cta' => '대시보드로 돌아가기',
+        'submit_cta' => '해지 요청 확정',
+        'processing' => '처리 중...',
+        'sending' => '코드 전송 중...',
+    ],
+    'guide' => [
+        'step1' => '모든 강의는 학생 페이지에서 비공개로 전환됩니다.',
+        'step2' => '현재 수익은 가장 가까운 감사 기간에 지급됩니다.',
+        'step3' => '승인 직후 시스템과의 계약이 종료됩니다.',
+        'step4' => '해지 후에는 다시 등록할 때까지 워크스페이스에 액세스할 수 없습니다.',
+    ],
+    'js' => [
+        'sending' => '전송 중...',
+        'send_otp' => '코드 전송',
+        'resend_otp' => '코드 재전송',
+        'resend_wait' => ':time 후 재전송 가능',
+        'processing' => '처리 중...',
+        'connect_error' => '서버 연결 오류가 발생했습니다.',
+        'validate_reason' => '해지 사유를 입력해 주세요.',
+        'validate_otp' => '6자리 인증 코드를 입력해 주세요.',
+    ],
+    'flash' => [
+        'otp_sent' => '인증 코드가 이메일로 전송되었습니다.',
+        'otp_expired' => '인증 코드가 만료되었거나 존재하지 않습니다. 다시 전송해 주세요.',
+        'otp_incorrect' => '인증 코드가 올바르지 않습니다.',
+        'pending_exists' => '이미 대기 중인 요청이 있습니다.',
+        'success' => '해지 요청이 성공적으로 전송되었습니다. 관리자가 검토 후 곧 답변해 드립니다.',
+    ]
+];

@@ -31,4 +31,10 @@ return array (
     'course_count' => ':count コース',
     'slug' => 'パス: :slug',
   ),
+  'history' => 
+  array (
+    'bundle_created' => '新しいコースバンドルを作成しました: :name',
+    'bundle_updated' => 'コースバンドルを更新しました: :name',
+    'bundle_deleted' => 'コースバンドルを削除しました: :name',
+  ),
 );

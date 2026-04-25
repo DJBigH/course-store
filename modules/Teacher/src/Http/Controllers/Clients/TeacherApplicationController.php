@@ -11,7 +11,7 @@ use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Http\Requests\ClientTeacherApplicationRequest;
 use Modules\Teacher\src\Models\TeacherApplication;
-use Modules\Teacher\src\Models\TeacherPackage;
+use Modules\Packages\src\Models\Package;
 
 class TeacherApplicationController extends Controller
 {
@@ -47,7 +47,7 @@ class TeacherApplicationController extends Controller
                 ->with('msg_danger', __('teacher::portal.flash.email_exists'));
         }
 
-        $package = TeacherPackage::query()->selectable()->findOrFail($request->integer('package_id'));
+        $package = Package::query()->selectable()->findOrFail($request->integer('package_id'));
         $application = $this->resolveWritableApplication($request, $student);
 
         if ($application->exists && $application->status === 'approved') {
@@ -146,7 +146,7 @@ class TeacherApplicationController extends Controller
 
     public function previewCoupon(Request $request)
     {
-        $package = TeacherPackage::query()->selectable()->find($request->integer('package_id'));
+        $package = Package::query()->selectable()->find($request->integer('package_id'));
 
         if (!$package) {
             return response()->json([
@@ -284,10 +284,10 @@ class TeacherApplicationController extends Controller
 
     private function resolvePublicPackages(?int $selectedPackageId = null)
     {
-        $packages = TeacherPackage::query()->visibleForListing()->get();
+        $packages = Package::query()->visibleForListing()->get();
 
         if ($selectedPackageId && !$packages->contains('id', $selectedPackageId)) {
-            $selectedPackage = TeacherPackage::query()
+            $selectedPackage = Package::query()
                 ->selectable()
                 ->find($selectedPackageId);
 
@@ -321,7 +321,7 @@ class TeacherApplicationController extends Controller
             ->all();
     }
 
-    private function resolveCouponData(?string $couponCode, TeacherPackage $package, ?int $studentId): array
+    private function resolveCouponData(?string $couponCode, Package $package, ?int $studentId): array
     {
         $couponCode = strtoupper(trim((string) $couponCode));
         if ($couponCode === '' || (float) $package->price <= 0) {

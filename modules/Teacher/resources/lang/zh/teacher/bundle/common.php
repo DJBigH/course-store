@@ -31,4 +31,10 @@ return array (
     'course_count' => ':count 门课程',
     'slug' => '路径: :slug',
   ),
+  'history' => 
+  array (
+    'bundle_created' => '创建了新的课程套餐: :name',
+    'bundle_updated' => '更新了课程套餐: :name',
+    'bundle_deleted' => '删除了课程套餐: :name',
+  ),
 );

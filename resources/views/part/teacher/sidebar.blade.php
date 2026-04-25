@@ -11,6 +11,19 @@
     $teacherCanUseAffiliateLinks = $teacherProfile?->packageHasFeature('can_use_affiliate_links') ?? false;
     $teacherCanIssueCertificates = $teacherProfile?->packageHasFeature('can_issue_certificates') ?? false;
     $teacherCanViewActivityLogs = $teacherProfile?->packageHasFeature('can_view_activity_logs') ?? false;
+
+    // Kiem tra Bao tri he thong (Global)
+    $teacherMaintCourse = $teacherCurrentPackage?->isFeatureInMaintenance('course_limit') ?? false;
+    $teacherMaintComments = $teacherCurrentPackage?->isFeatureInMaintenance('can_manage_comments') ?? false;
+    $teacherMaintCoupons = $teacherCurrentPackage?->isFeatureInMaintenance('can_manage_coupons') ?? false;
+    $teacherMaintPromotions = $teacherCurrentPackage?->isFeatureInMaintenance('can_send_promotions') ?? false;
+    $teacherMaintBundles = $teacherCurrentPackage?->isFeatureInMaintenance('can_sell_bundles') ?? false;
+    $teacherMaintAffiliate = $teacherCurrentPackage?->isFeatureInMaintenance('can_use_affiliate_links') ?? false;
+    $teacherMaintCertificates = $teacherCurrentPackage?->isFeatureInMaintenance('can_issue_certificates') ?? false;
+    $teacherMaintActivityLogs = $teacherCurrentPackage?->isFeatureInMaintenance('can_view_activity_logs') ?? false;
+    $teacherMaintStudents = $teacherCurrentPackage?->isFeatureInMaintenance('can_manage_students') ?? false;
+    $teacherMaintQuizzes = $teacherCurrentPackage?->isFeatureInMaintenance('can_manage_quizzes') ?? false;
+
     $teacherIsActive = $teacherProfile && $teacherProfile->status === 'active';
     $teacherPendingUpgrade = $teacherStudent?->teacherApplications()
         ->where(function ($query) {
@@ -44,8 +57,31 @@
     $teacherSidebarAccountActive = request()->routeIs('teacher.dashboard.package.upgrade')
         || request()->routeIs('teacher.dashboard.package.upgrade.*')
         || request()->routeIs('teacher.dashboard.support*');
+    
+    $teacherUsedCoursesCount = $teacherProfile?->courses()->count() ?? 0;
+    $teacherCourseLimit = $teacherCurrentPackage?->effective_course_limit;
+    $teacherCourseProgress = $teacherCourseLimit ? min(100, ($teacherUsedCoursesCount / $teacherCourseLimit) * 100) : 0;
 @endphp
 
+@php
+    if (!function_exists('hexToRgb')) {
+        function hexToRgb($hex) {
+            $hex = str_replace('#', '', $hex);
+            if (strlen($hex) == 3) {
+                $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+                $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+                $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+            } else {
+                $r = hexdec(substr($hex, 0, 2));
+                $g = hexdec(substr($hex, 2, 2));
+                $b = hexdec(substr($hex, 4, 2));
+            }
+            return "$r, $g, $b";
+        }
+    }
+    $packageTone = $teacherCurrentPackage->badge_tone ?? '#2563eb';
+    $packageToneRgb = hexToRgb($packageTone);
+@endphp
 <style>
     #layoutSidenav_nav {
         overflow: hidden;
@@ -177,6 +213,143 @@
         margin-right: 0.45rem;
     }
 
+    .sidebar-package-card {
+        margin: 0.85rem;
+        padding: 1.15rem;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(var(--package-tone-rgb, 37, 99, 235), 0.12), rgba(var(--package-tone-rgb, 37, 99, 235), 0.06));
+        border: 1px solid rgba(var(--package-tone-rgb, 37, 99, 235), 0.15);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    html[data-theme="dark"] .sidebar-package-card {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .sidebar-package-card::before {
+        content: "";
+        position: absolute;
+        inset: -100%;
+        background: radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.1), transparent 40%);
+        pointer-events: none;
+    }
+
+    .sidebar-package-card__profile {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .sidebar-package-card__avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        object-fit: cover;
+        border: 2px solid #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    html[data-theme="dark"] .sidebar-package-card__avatar {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-package-card__user {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .sidebar-package-card__user-name {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: var(--admin-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.2;
+    }
+
+    .sidebar-package-card__plan-badge {
+        display: inline-flex;
+        width: fit-content;
+        margin-top: 0.25rem;
+        padding: 0.18rem 0.6rem;
+        border-radius: 999px;
+        background: var(--package-tone, var(--teacher-accent));
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .sidebar-package-card__stats {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .sidebar-package-card__stats-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--admin-muted);
+    }
+
+    .sidebar-package-card__progress {
+        height: 5px;
+        background: rgba(0, 0, 0, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    html[data-theme="dark"] .sidebar-package-card__progress {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .sidebar-package-card__progress-bar {
+        height: 100%;
+        background: var(--premium-gradient);
+        border-radius: 999px;
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar-package-card__actions {
+        margin-top: 0.25rem;
+    }
+
+    .sidebar-package-card__upgrade {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1rem;
+        border-radius: 12px;
+        background: var(--admin-text);
+        color: var(--admin-surface) !important;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .sidebar-package-card__upgrade:hover {
+        transform: translateY(-1px);
+        opacity: 0.9;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
     #layoutSidenav_nav .sb-sidenav .nav-link.has-badge,
     #layoutSidenav_nav .sb-sidenav .nav-link.is-locked {
         display: flex;
@@ -228,6 +401,20 @@
         text-transform: uppercase;
         flex-shrink: 0;
         white-space: nowrap;
+    }
+
+    .nav-link.is-maintenance {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+        filter: grayscale(0.5);
+    }
+
+    .nav-link-lock.is-maintenance {
+        background: rgba(245, 158, 11, 0.25) !important;
+        color: #f59e0b !important;
+        border: 1px solid rgba(245, 158, 11, 0.4);
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
     }
 
     #layoutSidenav_nav .sb-sidenav .sidebar-group {
@@ -294,6 +481,40 @@
 <div id="layoutSidenav_nav">
     <nav class="sb-sidenav accordion sb-sidenav-dark" id="teacherSidenav">
         <div class="sb-sidenav-menu">
+            @if ($teacherCurrentPackage)
+                <div class="sidebar-package-card" style="--package-tone: {{ $packageTone }}; --package-tone-rgb: {{ $packageToneRgb }};">
+                    <div class="sidebar-package-card__profile">
+                        <img src="{{ $teacherProfile->image ? asset($teacherProfile->image) : asset('clients/assets/LOGO-DSCONS-FAVICON.png') }}" 
+                            alt="{{ $teacherProfile->getNameLocaleAttribute() }}" class="sidebar-package-card__avatar">
+                        <div class="sidebar-package-card__user">
+                            <span class="sidebar-package-card__user-name">{{ $teacherProfile->getNameLocaleAttribute() }}</span>
+                            <span class="sidebar-package-card__plan-badge">
+                                {{ $teacherCurrentPackage->badge_text_locale ?: $teacherCurrentPackage->name_locale }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- <div class="sidebar-package-card__stats">
+                        <div class="sidebar-package-card__stats-label">
+                            <span>{{ __('courses::teacher/messages.courses.title') }}</span>
+                            <span>{{ $teacherUsedCoursesCount }}{{ $teacherCourseLimit ? '/' . $teacherCourseLimit : '' }}</span>
+                        </div>
+                        <div class="sidebar-package-card__progress">
+                            <div class="sidebar-package-card__progress-bar" style="width: {{ $teacherCourseProgress }}%"></div>
+                        </div>
+                    </div> --}}
+
+                    @if ($teacherIsActive && !$teacherPendingUpgrade)
+                        <div class="sidebar-package-card__actions">
+                            <a href="{{ route('teacher.dashboard.package.upgrade') }}" class="sidebar-package-card__upgrade">
+                                <i class="fas fa-arrow-trend-up me-2"></i>
+                                <span>{{ __('packages::teacher.upgrade.upgrade_cta_short') ?? 'Nâng cấp' }}</span>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             <div class="nav">
                 <div class="sidebar-group {{ $teacherSidebarOperationsActive ? 'is-open' : '' }}" data-sidebar-group>
                     <button type="button" class="sidebar-group__toggle" data-sidebar-toggle aria-expanded="{{ $teacherSidebarOperationsActive ? 'true' : 'false' }}">
@@ -308,10 +529,15 @@
                                 {{ __('teacher/sidebar.nav.overview') }}
                             </a>
 
-                            <a class="nav-link {{ request()->routeIs('teacher.dashboard.courses*') || request()->routeIs('teacher.dashboard.lessons.*') ? 'active' : '' }}"
+                            <a class="nav-link {{ request()->routeIs('teacher.dashboard.courses*') || request()->routeIs('teacher.dashboard.lessons.*') ? 'active' : '' }} {{ $teacherMaintCourse ? 'is-maintenance' : '' }}"
                                 href="{{ route('teacher.dashboard.courses') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-book-open"></i></div>
-                                {{ __('teacher/sidebar.nav.courses') }}
+                                <span class="nav-link-main">
+                                    <span class="sb-nav-link-icon"><i class="fas fa-book-open"></i></span>
+                                    <span class="nav-link-text">{{ __('teacher/sidebar.nav.courses') }}</span>
+                                </span>
+                                @if($teacherMaintCourse)
+                                    <span class="nav-link-lock is-maintenance">BAO TRI</span>
+                                @endif
                             </a>
 
                             <a class="nav-link {{ request()->routeIs('teacher.dashboard.earnings') ? 'active' : '' }}"
@@ -342,11 +568,17 @@
                     </button>
                     <div class="sidebar-group__content">
                         <div class="sidebar-group__inner">
-                            @if ($teacherCanSendPromotions)
-                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.promotions*') ? 'active' : '' }}"
+                            {{-- Promotions --}}
+                            @if ($teacherCanSendPromotions || $teacherMaintPromotions)
+                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.promotions*') ? 'active' : '' }} {{ $teacherMaintPromotions ? 'is-maintenance' : '' }}"
                                     href="{{ route('teacher.dashboard.promotions') }}">
-                                    <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
-                                    {{ __('teacher/sidebar.nav.promotions') }}
+                                    <span class="nav-link-main">
+                                        <span class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></span>
+                                        <span class="nav-link-text">{{ __('teacher/sidebar.nav.promotions') }}</span>
+                                    </span>
+                                    @if ($teacherMaintPromotions)
+                                        <span class="nav-link-lock is-maintenance">BAO TRI</span>
+                                    @endif
                                 </a>
                             @elseif ($teacherIsActive)
                                 <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
@@ -354,15 +586,24 @@
                                         <span class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></span>
                                         <span class="nav-link-text">{{ __('teacher/sidebar.nav.promotions') }}</span>
                                     </span>
-                                    @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
+                                    @include('packages::partials.upgrade_badge', [
+                                        'class' => 'nav-link-lock',
+                                        'label' => '<i class="fas fa-lock me-1"></i> PRO'
+                                    ])
                                 </a>
                             @endif
 
-                            @if ($teacherCanManageCoupons)
-                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.coupons*') ? 'active' : '' }}"
+                            {{-- Coupons --}}
+                            @if ($teacherCanManageCoupons || $teacherMaintCoupons)
+                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.coupons*') ? 'active' : '' }} {{ $teacherMaintCoupons ? 'is-maintenance' : '' }}"
                                     href="{{ route('teacher.dashboard.coupons.index') }}">
-                                    <div class="sb-nav-link-icon"><i class="fas fa-ticket"></i></div>
-                                    {{ __('teacher/sidebar.nav.coupons') }}
+                                    <span class="nav-link-main">
+                                        <span class="sb-nav-link-icon"><i class="fas fa-ticket"></i></span>
+                                        <span class="nav-link-text">{{ __('teacher/sidebar.nav.coupons') }}</span>
+                                    </span>
+                                    @if ($teacherMaintCoupons)
+                                        <span class="nav-link-lock is-maintenance">BAO TRI</span>
+                                    @endif
                                 </a>
                             @elseif ($teacherIsActive)
                                 <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
@@ -370,23 +611,35 @@
                                         <span class="sb-nav-link-icon"><i class="fas fa-lock"></i></span>
                                         <span class="nav-link-text">{{ __('teacher/sidebar.nav.coupons') }}</span>
                                     </span>
-                                    @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
+                                    @include('packages::partials.upgrade_badge', [
+                                        'class' => 'nav-link-lock',
+                                        'label' => '<i class="fas fa-lock me-1"></i> PRO'
+                                    ])
                                 </a>
                             @endif
 
-                            @if ($teacherCanUseAffiliateLinks)
-                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.affiliate-links*') ? 'active' : '' }}"
+                            {{-- Affiliate --}}
+                            @if ($teacherCanUseAffiliateLinks || $teacherMaintAffiliate)
+                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.affiliate-links*') ? 'active' : '' }} {{ $teacherMaintAffiliate ? 'is-maintenance' : '' }}"
                                     href="{{ route('teacher.dashboard.affiliate-links.index') }}">
-                                    <div class="sb-nav-link-icon"><i class="fas fa-link"></i></div>
-                                    {{ __('teacher/sidebar.nav.affiliate_links') }}
+                                    <span class="nav-link-main">
+                                        <span class="sb-nav-link-icon"><i class="fas fa-link"></i></span>
+                                        <span class="nav-link-text">{{ __('finances::teacher/affiliate_links.nav.affiliate_links') }}</span>
+                                    </span>
+                                    @if ($teacherMaintAffiliate)
+                                        <span class="nav-link-lock is-maintenance">BAO TRI</span>
+                                    @endif
                                 </a>
                             @elseif ($teacherIsActive)
                                 <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
                                     <span class="nav-link-main">
                                         <span class="sb-nav-link-icon"><i class="fas fa-link"></i></span>
-                                        <span class="nav-link-text">{{ __('teacher/sidebar.nav.affiliate_links') }}</span>
+                                        <span class="nav-link-text">{{ __('finances::teacher/affiliate_links.nav.affiliate_links') }}</span>
                                     </span>
-                                    @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
+                                    @include('packages::partials.upgrade_badge', [
+                                        'class' => 'nav-link-lock',
+                                        'label' => '<i class="fas fa-lock me-1"></i> PRO'
+                                    ])
                                 </a>
                             @endif
                         </div>
@@ -400,30 +653,51 @@
                     </button>
                     <div class="sidebar-group__content">
                         <div class="sidebar-group__inner">
-                            <a class="nav-link {{ request()->routeIs('teacher.dashboard.students*') ? 'active' : '' }}"
+                            <a class="nav-link {{ request()->routeIs('teacher.dashboard.students*') ? 'active' : '' }} {{ $teacherMaintStudents ? 'is-maintenance' : '' }}"
                                 href="{{ route('teacher.dashboard.students') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-user-graduate"></i></div>
-                                {{ __('teacher/sidebar.nav.students') }}
+                                <span class="nav-link-main">
+                                    <span class="sb-nav-link-icon"><i class="fas fa-user-graduate"></i></span>
+                                    <span class="nav-link-text">{{ __('teacher/sidebar.nav.students') }}</span>
+                                </span>
+                                @if($teacherMaintStudents)
+                                    <span class="nav-link-lock is-maintenance">BAO TRI</span>
+                                @endif
                             </a>
 
-                            @if ($teacherIsActive)
-                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.comments*') ? 'active' : '' }} {{ !$teacherCanManageComments ? 'has-badge' : '' }}"
+                            @if ($teacherCanManageComments || $teacherMaintComments)
+                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.comments*') ? 'active' : '' }} {{ $teacherMaintComments ? 'is-maintenance' : '' }}"
                                     href="{{ route('teacher.dashboard.comments') }}">
                                     <span class="nav-link-main">
                                         <span class="sb-nav-link-icon"><i class="fas fa-comments"></i></span>
                                         <span class="nav-link-text">{{ __('teacher/sidebar.nav.comments') }}</span>
                                     </span>
-                                    @if (!$teacherCanManageComments)
-                                        @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
+                                    @if ($teacherMaintComments)
+                                        <span class="nav-link-lock is-maintenance">BAO TRI</span>
                                     @endif
+                                </a>
+                            @elseif ($teacherIsActive)
+                                <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
+                                    <span class="nav-link-main">
+                                        <span class="sb-nav-link-icon"><i class="fas fa-comments"></i></span>
+                                        <span class="nav-link-text">{{ __('teacher/sidebar.nav.comments') }}</span>
+                                    </span>
+                                    @include('packages::partials.upgrade_badge', [
+                                        'class' => 'nav-link-lock',
+                                        'label' => '<i class="fas fa-lock me-1"></i> PRO'
+                                    ])
                                 </a>
                             @endif
 
-                            @if ($teacherCanIssueCertificates)
-                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.certificates*') ? 'active' : '' }}"
+                            @if ($teacherCanIssueCertificates || $teacherMaintCertificates)
+                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.certificates*') ? 'active' : '' }} {{ $teacherMaintCertificates ? 'is-maintenance' : '' }}"
                                     href="{{ route('teacher.dashboard.certificates.index') }}">
-                                    <div class="sb-nav-link-icon"><i class="fas fa-award"></i></div>
-                                    {{ __('teacher/sidebar.nav.certificates') }}
+                                    <span class="nav-link-main">
+                                        <span class="sb-nav-link-icon"><i class="fas fa-award"></i></span>
+                                        <span class="nav-link-text">{{ __('teacher/sidebar.nav.certificates') }}</span>
+                                    </span>
+                                    @if ($teacherMaintCertificates)
+                                        <span class="nav-link-lock is-maintenance">BAO TRI</span>
+                                    @endif
                                 </a>
                             @elseif ($teacherIsActive)
                                 <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
@@ -431,15 +705,23 @@
                                         <span class="sb-nav-link-icon"><i class="fas fa-award"></i></span>
                                         <span class="nav-link-text">{{ __('teacher/sidebar.nav.certificates') }}</span>
                                     </span>
-                                    @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
+                                    @include('packages::partials.upgrade_badge', [
+                                        'class' => 'nav-link-lock',
+                                        'label' => '<i class="fas fa-lock me-1"></i> PRO'
+                                    ])
                                 </a>
                             @endif
 
-                            @if ($teacherCanViewActivityLogs)
-                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.activity-logs') ? 'active' : '' }}"
+                            @if ($teacherCanViewActivityLogs || $teacherMaintActivityLogs)
+                                <a class="nav-link {{ request()->routeIs('teacher.dashboard.activity-logs') ? 'active' : '' }} {{ $teacherMaintActivityLogs ? 'is-maintenance' : '' }}"
                                     href="{{ route('teacher.dashboard.activity-logs') }}">
-                                    <div class="sb-nav-link-icon"><i class="fas fa-clock-rotate-left"></i></div>
-                                    {{ __('teacher/sidebar.nav.activity_logs') }}
+                                    <span class="nav-link-main">
+                                        <span class="sb-nav-link-icon"><i class="fas fa-clock-rotate-left"></i></span>
+                                        <span class="nav-link-text">{{ __('teacher/sidebar.nav.activity_logs') }}</span>
+                                    </span>
+                                    @if ($teacherMaintActivityLogs)
+                                        <span class="nav-link-lock is-maintenance">BAO TRI</span>
+                                    @endif
                                 </a>
                             @elseif ($teacherIsActive)
                                 <a class="nav-link is-locked" href="{{ $teacherUpgradeUrl }}">
@@ -447,7 +729,10 @@
                                         <span class="sb-nav-link-icon"><i class="fas fa-clock-rotate-left"></i></span>
                                         <span class="nav-link-text">{{ __('teacher/sidebar.nav.activity_logs') }}</span>
                                     </span>
-                                    @include('teacher::clients.dashboard.partials.upgrade_badge', ['class' => 'nav-link-lock'])
+                                    @include('packages::partials.upgrade_badge', [
+                                        'class' => 'nav-link-lock',
+                                        'label' => '<i class="fas fa-lock me-1"></i> PRO'
+                                    ])
                                 </a>
                             @endif
                         </div>
@@ -487,27 +772,10 @@
         </div>
 
         <div class="sb-sidenav-footer">
-        <div class="small">{{ __('teacher/sidebar.brand.logged_in_as') }}</div>
-        <div class="sidebar-user-name">{{ $teacherStudent?->name ?? __('teacher/sidebar.brand.student_fallback') }}</div>
-        {{-- @if ($teacherSidebarBadge)
-            <span class="sidebar-user-badge sidebar-user-badge--{{ $teacherSidebarBadge['tone'] }}">{{ $teacherSidebarBadge['label'] }}</span>
-        @endif --}}
-        @if ($teacherCurrentPackage)
-            <div class="sidebar-package-row">
-                    <span class="sidebar-package-badge">
-                        {{ $teacherCurrentPackage->badge_text_locale ?: strtoupper((string) $teacherCurrentPackage->code) }}
-                    </span>
-                    <span class="sidebar-package-name">
-                        {{ $teacherCurrentPackage->name_locale ?: $teacherCurrentPackage->name }}
-                    </span>
-                </div>
-            @endif
+            <div class="small">{{ __('teacher/sidebar.brand.logged_in_as') }}</div>
+            <div class="sidebar-user-name">{{ $teacherStudent?->name ?? __('teacher/sidebar.brand.student_fallback') }}</div>
             <div class="sidebar-link-label">
-                @if ($teacherIsActive)
-                    <span class="teacher-status-dot"></span>{{ __('teacher/sidebar.brand.active_channel') }}
-                @else
-                    {{ $teacherStatusText }}
-                @endif
+                {{ $teacherStudent?->email }}
             </div>
         </div>
     </nav>

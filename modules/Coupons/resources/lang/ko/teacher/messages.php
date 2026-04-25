@@ -5,7 +5,9 @@ return [
     'create_title' => '새 쿠폰 추가',
     'edit_title' => '쿠폰 수정',
     'assign_students_title' => '수강생에게 쿠폰 할당',
+    'assign_students_desc' => '코드 :code를 사용할 수 있는 수강생을 선택하세요.',
     'assign_courses_title' => '강의에 쿠폰 할당',
+    'assign_courses_desc' => '코드 :code를 적용할 수 있는 강의를 선택하세요.',
     'hero' => [
         'kicker' => '프로모션 캠페인',
         'title' => '할인 쿠폰',
@@ -22,6 +24,7 @@ return [
         'assign_students' => '수강생 할당',
         'prioritize' => '우선순위 표시',
         'unprioritize' => '우선순위 해제',
+        'save_assignment' => '변경 사항 저장',
     ],
     'form' => [
         'description' => '할인 쿠폰의 조건을 설정하세요.',

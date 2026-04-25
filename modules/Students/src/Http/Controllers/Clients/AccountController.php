@@ -25,7 +25,7 @@ use Modules\Students\src\Http\Requests\Clients\StudentsRequest;
 use Modules\Students\src\Models\Student;
 use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
-use Modules\Teacher\src\Models\TeacherCourseCertificate;
+use Modules\Certificates\src\Models\Certificate;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 
 class AccountController extends Controller
@@ -221,7 +221,7 @@ class AccountController extends Controller
                 ->pluck('completed_lessons', 'course_id')
                 ->all();
 
-            $certificateMap = TeacherCourseCertificate::query()
+            $certificateMap = Certificate::query()
                 ->where('student_id', $student->id)
                 ->whereIn('course_id', $courseIds)
                 ->whereNull('revoked_at')

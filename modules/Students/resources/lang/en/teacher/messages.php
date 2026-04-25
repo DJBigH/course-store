@@ -66,11 +66,22 @@ return [
         'grant_action' => 'Grant Access',
         'not_updated' => 'Not updated',
         'no_data' => 'No data',
+        'access_types' => [
+            'paid' => 'Paid',
+            'granted' => 'Granted',
+            'both' => 'Both',
+            'unknown' => 'Unknown',
+        ],
     ],
     'show' => [
         'title' => 'Student Detail: :name',
         'breadcrumb' => 'Student Detail',
+        'hero_kicker' => 'STUDENT PROFILE',
+        'hero_description' => 'View learning progress, purchase history, and manage access rights directly for this student.',
         'back_to_list' => 'Back to List',
+        'back_cta' => 'Back',
+        'grant_cta' => 'Grant Course',
+        'email_cta' => 'Send Email',
         'tabs' => [
             'overview' => 'Overview',
             'courses' => 'Owned Courses',

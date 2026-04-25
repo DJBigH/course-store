@@ -66,11 +66,22 @@ return [
         'grant_action' => '강의 증정',
         'not_updated' => '업데이트 안 됨',
         'no_data' => '데이터 없음',
+        'access_types' => [
+            'paid' => '결제 완료',
+            'granted' => '증정됨',
+            'both' => '둘 다',
+            'unknown' => '알 수 없음',
+        ],
     ],
     'show' => [
         'title' => '수강생 상세: :name',
         'breadcrumb' => '수강생 상세',
+        'hero_kicker' => '학생 프로필',
+        'hero_description' => '학습 현황, 구매 이력을 확인하고 이 학생의 액세스 권한을 직접 관리합니다.',
         'back_to_list' => '목록으로 돌아가기',
+        'back_cta' => '뒤로 가기',
+        'grant_cta' => '강좌 선물',
+        'email_cta' => '이메일 보내기',
         'tabs' => [
             'overview' => '개요',
             'courses' => '소유 강의',

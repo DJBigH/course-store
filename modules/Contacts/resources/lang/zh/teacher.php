@@ -1,0 +1,61 @@
+<?php
+
+return [
+    'support' => [
+        'page_title' => '建议与报告',
+        'description' => '请发送您的建议或报告技术问题，以帮助我们改进系统。',
+        'flash' => [
+            'sent' => '谢谢！您的支持请求已成功发送。我们将尽快回复。',
+            'error_empty' => '信息不能为空。',
+            'error_system' => '发生错误，请稍后再试。',
+            'warning_incomplete' => '发送前请填写所有要求。',
+        ],
+        'form' => [
+            'title' => '提交新请求',
+            'type_label' => '请求类型',
+            'type_hint' => '选择您需要帮助的请求类型',
+            'category_label' => '支持类别',
+            'category_hint' => '选择特定类别以帮助我们更快处理',
+            'category_select_default' => '-- 请选择类别 --',
+            'subject_label' => '标题',
+            'subject_hint' => '简要总结您的问题',
+            'subject_placeholder' => '问题的简要描述...',
+            'message_label' => '详细内容',
+            'message_hint' => '详细描述您的问题或建议',
+            'message_placeholder' => '请详细描述您的问题或反馈...',
+            'submit' => '提交请求',
+            'sending' => '发送中...',
+        ],
+        'types' => [
+            'feedback' => '功能建议',
+            'report' => '错误 / 问题报告',
+        ],
+        'categories' => [
+            'feature_request' => '新功能请求',
+            'ui_ux' => '界面与体验 (UI/UX)',
+            'teacher_portal' => '讲师工作区功能',
+            'student_portal' => '学员页面功能',
+            'payment_package' => '支付与会员',
+            'system_bug' => '系统错误 / 显示问题',
+            'course_lesson' => '课程与课时管理',
+            'comment_rating' => '评论与评分',
+            'content_violation' => '内容违规报告',
+            'account' => '账户与安全',
+            'other' => '其他问题',
+        ],
+        'status' => [
+            'new' => '已提交',
+            'in_progress' => '处理中',
+            'need_info' => '需要更多信息',
+            'resolved' => '已解决',
+            'rejected' => '已拒绝',
+        ],
+        'history' => [
+            'title' => '请求历史',
+            'empty' => '您尚未提交任何支持请求。',
+            'label_status' => '状态',
+            'label_id' => 'ID',
+            'label_submitted' => '提交日期',
+        ],
+    ],
+];

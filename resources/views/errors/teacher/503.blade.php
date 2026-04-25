@@ -1,0 +1,44 @@
+@extends('layouts.teacher')
+
+@php $pageTitle = __('teacher::teacher/errors.503.title'); @endphp
+
+@section('stylesheets')
+<style>
+    /* Hide default layout page title and breadcrumbs for error pages */
+    #layoutSidenav_content main .container-fluid > h2,
+    #layoutSidenav_content main .container-fluid > ol.breadcrumb {
+        display: none !important;
+    }
+    
+    .display-1 { line-height: 1; }
+    .teacher-panel {
+        background: var(--admin-surface);
+        background-image: radial-gradient(circle at top right, rgba(14, 165, 233, 0.05), transparent 40%);
+    }
+</style>
+@endsection
+
+@section('content')
+<div class="d-flex align-items-center justify-content-center" style="min-height: 70vh;">
+    <div class="text-center p-5 teacher-panel shadow-lg" style="max-width: 600px; border: 1px solid var(--admin-border);">
+        <div class="mb-4 position-relative">
+            <h1 class="display-1 fw-bold text-info opacity-10" style="font-size: 8rem; letter-spacing: -5px;">503</h1>
+            <div class="position-absolute top-50 start-50 translate-middle w-100">
+                <i class="fa-solid fa-gears text-info display-4 mb-3"></i>
+                <h2 class="fw-800 mb-0">{{ __('teacher::teacher/errors.503.title') }}</h2>
+            </div>
+        </div>
+        
+        <p class="text-muted fs-5 mb-4">
+            {{ __('teacher::teacher/errors.503.message') }}<br>
+            <span class="small opacity-75">{{ __('teacher::teacher/errors.503.description') }}</span>
+        </p>
+
+        <div class="d-flex gap-3 justify-content-center mt-5">
+            <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-info btn-lg px-4 py-3 shadow-sm text-white" style="border-radius: 16px;">
+                <i class="fa-solid fa-house me-2"></i> {{ __('teacher::teacher/errors.503.button') }}
+            </a>
+        </div>
+    </div>
+</div>
+@endsection

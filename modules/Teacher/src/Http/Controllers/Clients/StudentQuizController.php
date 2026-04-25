@@ -42,7 +42,7 @@ class StudentQuizController extends Controller
             ->latest('id')
             ->first();
 
-        return view('teacher::clients.dashboard.student_quiz', compact(
+        return view('teacher::teacher.quiz.student_quiz', compact(
             'student',
             'course',
             'quiz',
@@ -245,7 +245,7 @@ class StudentQuizController extends Controller
             ->where('student_id', $student->id)
             ->findOrFail($submissionId);
 
-        return view('teacher::clients.dashboard.student_quiz_result', compact('course', 'quiz', 'submission'));
+        return view('teacher::teacher.quiz.student_quiz_result', compact('course', 'quiz', 'submission'));
     }
 
     // ─── Private helpers ─────────────────────────────────────

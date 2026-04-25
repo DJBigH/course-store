@@ -54,14 +54,14 @@
                                     </tr>
                                     <tr>
                                         <th class="bg-light">{{ __('students::clients/checkout.checkout.subtotal') }}</th>
-                                        <td class="fw-semibold">{{ moneyLocale($order->total) }}</td>
+                                        <td class="fw-semibold">{{ moneyLocale($order->total, $order->currency) }}</td>
                                     </tr>
                                     <tr>
                                         <th class="bg-light text-success">
                                             {{ __('students::clients/checkout.checkout.discount') }}
                                         </th>
                                         <td class="text-success fw-medium discount-value">
-                                            - {{ moneyLocale($order->discount ?? 0) }}
+                                            - {{ moneyLocale($order->discount ?? 0, $order->currency) }}
                                         </td>
                                     </tr>
                                     <tr>
@@ -87,7 +87,7 @@
                                     <tr class="table-secondary">
                                         <th class="fw-bold">{{ __('students::clients/checkout.checkout.total_payment') }}</th>
                                         <td class="fw-bold text-danger fs-4 total_value">
-                                            {{ moneyLocale($payableAmount) }}
+                                            {{ moneyLocale($payableAmount, $order->currency) }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -119,7 +119,7 @@
                                                     {{ $item?->courses?->name_locale }}
                                                 </td>
                                                 <td class="text-end text-danger fw-semibold">
-                                                    {{ moneyLocale($item?->price) }}
+                                                    {{ moneyLocale($item?->price, $order->currency) }}
                                                 </td>
                                                 <td data-label="{{ __('students::clients/checkout.checkout.instructor') }}">
                                                     {{ $item?->courses?->teacher?->name_locale }}
@@ -238,7 +238,7 @@
                                             {{ $bankTransferAccountName }}
                                         </li>
                                         <li>💰 <strong>{{ __('students::clients/checkout.checkout.amount') }}:</strong>
-                                            <span class="text-danger fw-bold total_value">{{ moneyLocale($payableAmount) }}</span>
+                                            <span class="text-danger fw-bold total_value">{{ moneyLocale($payableAmount, $order->currency) }}</span>
                                         </li>
                                         <li>
                                             📝

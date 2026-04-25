@@ -57,11 +57,11 @@ if (!function_exists('usd_to_vnd')) {
 if (!function_exists('vnd_to_currency')) {
     function vnd_to_currency(int|float $vnd, string $currency, int $precision = 2): float|int
     {
-        $settingKey = 'currency_rate_' . strtolower($currency);
-        $configRate = config("currency.rates.{$currency}", 0);
-        $rate = function_exists('setting')
-            ? (float) setting($settingKey, $configRate)
-            : (float) $configRate;
+        $rates = \Illuminate\Support\Facades\Cache::remember('exchange_rates', 3600, function () {
+            return \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray();
+        });
+
+        $rate = (float) ($rates[strtoupper($currency)] ?? 0);
 
         if ($rate <= 0) {
             $rate = 1;
@@ -82,28 +82,31 @@ if (!function_exists('format_money_value')) {
     }
 }
 
-function moneyLocale($number, $showZero = false)
+function moneyLocale($number, $currency = null, $showZero = false)
 {
     $locale = app()->getLocale();
 
-    if ($locale === 'en') {
-        return moneyUS($number, '$', __('common.free'), $showZero);
+    if (is_bool($currency)) {
+        $showZero = $currency;
+        $currency = null;
     }
 
-    if ($locale === 'ko') {
-        return moneyKR($number, '₩', __('common.free'), $showZero);
+    $currencyService = app(\Modules\Courses\src\Support\CurrencyService::class);
+    $targetCode = $currency ? strtoupper($currency) : $currencyService->getLocaleCurrency($locale);
+
+    // Nếu không truyền currency cụ thể, thực hiện convert từ VND sang currency của locale
+    // Mặc định không bao gồm phí chuyển đổi để hiển thị giá trị danh nghĩa
+    if (!$currency) {
+        $number = $currencyService->convert((float)$number, 'VND', $targetCode, false);
     }
 
-    if ($locale === 'ja') {
-        return moneyJP($number, '¥', __('common.free'), $showZero);
-    }
-
-    if ($locale === 'zh') {
-        return moneyCN($number, 'CN¥', __('common.free'), $showZero);
-    }
-
-    // mặc định VI
-    return money($number, 'đ', __('common.free'), $showZero);
+    return match ($targetCode) {
+        'USD' => moneyUS($number, '$', __('common.free'), $showZero),
+        'KRW' => moneyKR($number, '₩', __('common.free'), $showZero),
+        'JPY' => moneyJP($number, '¥', __('common.free'), $showZero),
+        'CNY' => moneyCN($number, 'CN¥', __('common.free'), $showZero),
+        default => money($number, 'đ', __('common.free'), $showZero),
+    };
 }
 
 
@@ -120,7 +123,8 @@ function moneyUS($number, $currency = '$', $freeText = 'Free', $showZero = false
     if ($showZero && (string)$number === '0') {
         return $currency . '0.00';
     }
-    return !empty($number) ? $currency . format_money_value(vnd_to_usd($number), 2) : $freeText;
+    // Không tự động convert nữa, vì $number truyền vào đã là giá trị USD (price_en)
+    return !empty($number) ? $currency . format_money_value($number, 2) : $freeText;
 }
 
 function moneyKR($number, $currency = '₩', $freeText = '무료', $showZero = false)
@@ -128,7 +132,7 @@ function moneyKR($number, $currency = '₩', $freeText = '무료', $showZero = f
     if ($showZero && (string)$number === '0') {
         return $currency . '0';
     }
-    return !empty($number) ? $currency . format_money_value(vnd_to_currency($number, 'krw', 0)) : $freeText;
+    return !empty($number) ? $currency . format_money_value($number, 0) : $freeText;
 }
 
 function moneyJP($number, $currency = '¥', $freeText = '無料', $showZero = false)
@@ -136,7 +140,7 @@ function moneyJP($number, $currency = '¥', $freeText = '無料', $showZero = fa
     if ($showZero && (string)$number === '0') {
         return $currency . '0';
     }
-    return !empty($number) ? $currency . format_money_value(vnd_to_currency($number, 'jpy', 0)) : $freeText;
+    return !empty($number) ? $currency . format_money_value($number, 0) : $freeText;
 }
 
 function moneyCN($number, $currency = 'CN¥', $freeText = '免费', $showZero = false)
@@ -144,7 +148,7 @@ function moneyCN($number, $currency = 'CN¥', $freeText = '免费', $showZero = 
     if ($showZero && (string)$number === '0') {
         return $currency . '0.00';
     }
-    return !empty($number) ? $currency . format_money_value(vnd_to_currency($number, 'cny', 2), 2) : $freeText;
+    return !empty($number) ? $currency . format_money_value($number, 2) : $freeText;
 }
 
 function getHour($secounds)

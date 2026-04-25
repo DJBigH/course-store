@@ -56,6 +56,7 @@ return [
         'gross' => '판매가',
         'discount' => '할인',
         'net' => '순매출',
+        'split' => '수익 배분 (귀하 / 웹)',
         'revenue' => '강사 몫',
     ],
 ];

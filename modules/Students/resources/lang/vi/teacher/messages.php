@@ -66,11 +66,22 @@ return [
         'grant_action' => 'Tặng khóa',
         'not_updated' => 'Chưa cập nhật',
         'no_data' => 'Chưa có dữ liệu',
+        'access_types' => [
+            'paid' => 'Đã thanh toán',
+            'granted' => 'Được tặng',
+            'both' => 'Cả hai',
+            'unknown' => 'Không rõ',
+        ],
     ],
     'show' => [
         'title' => 'Chi tiết học viên: :name',
         'breadcrumb' => 'Chi tiết học viên',
+        'hero_kicker' => 'HỒ SƠ HỌC VIÊN',
+        'hero_description' => 'Xem chi tiết quá trình học tập, lịch sử mua hàng và quản lý quyền truy cập trực tiếp cho học viên này.',
         'back_to_list' => 'Quay lại danh sách',
+        'back_cta' => 'Quay lại',
+        'grant_cta' => 'Tặng khóa học',
+        'email_cta' => 'Gửi Email',
         'tabs' => [
             'overview' => 'Tổng quan',
             'courses' => 'Khóa học sở hữu',

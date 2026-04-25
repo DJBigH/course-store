@@ -12,8 +12,11 @@ use Illuminate\Support\Str;
 use App\Mail\StudentTwoFactorCodeMail;
 use Modules\Teacher\src\Models\TeacherCancellationRequest;
 
+use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
+
 class TeacherCancellationController extends Controller
 {
+    use TeacherDashboardHelpers;
     public function index(Request $request)
     {
         $teacher = Auth::guard('students')->user()->teacher;
@@ -25,10 +28,11 @@ class TeacherCancellationController extends Controller
             $activeRequest = $teacher->latestCancellationRequest;
         }
 
-        $pageTitle = 'Hủy hợp tác';
+        $pageTitle = __('teacher::teacher/cancellation.title');
         $pageName = $pageTitle;
 
-        return view('teacher::clients.dashboard.cancellation', compact('pageTitle', 'pageName', 'teacher', 'activeRequest'));
+        // Structured as folder/file: teacher/cancellation/cancellation.blade.php
+        return view('teacher::teacher.cancellation.cancellation', compact('pageTitle', 'pageName', 'teacher', 'activeRequest'));
     }
 
     public function sendOtp(Request $request)
@@ -37,9 +41,10 @@ class TeacherCancellationController extends Controller
         
         // Cooldown check (60 seconds)
         if (session()->has('cancellation_otp_sent_at') && now()->diffInSeconds(session('cancellation_otp_sent_at')) < 60) {
+            $remaining = 60 - now()->diffInSeconds(session('cancellation_otp_sent_at'));
             return response()->json([
                 'success' => false,
-                'message' => 'Vui lòng đợi ' . (60 - now()->diffInSeconds(session('cancellation_otp_sent_at'))) . 's để gửi lại mã.',
+                'message' => __('teacher::teacher/cancellation.js.resend_wait', ['time' => $remaining . 's']),
             ]);
         }
 
@@ -53,13 +58,19 @@ class TeacherCancellationController extends Controller
         Mail::to($teacher->student->email)->queue(new StudentTwoFactorCodeMail(
             $teacher->student,
             $otp,
-            'Xác nhận hủy hợp tác giảng viên',
+            __('teacher::teacher/cancellation.title'),
             app()->getLocale()
         ));
 
+        $this->logTeacherCancellationActivity(
+            $teacher,
+            'cancellation_otp_requested',
+            'Yêu cầu mã OTP xác nhận hủy hợp tác'
+        );
+
         return response()->json([
             'success' => true,
-            'message' => 'Mã xác nhận đã được gửi đến email của bạn.',
+            'message' => __('teacher::teacher/cancellation.flash.otp_sent'),
         ]);
     }
 
@@ -69,9 +80,9 @@ class TeacherCancellationController extends Controller
             'reason' => 'required|string',
             'otp' => 'required|digits:6',
         ], [
-            'reason.required' => 'Vui lòng nhập lý do hủy hợp tác.',
-            'otp.required' => 'Vui lòng nhập mã xác nhận.',
-            'otp.digits' => 'Mã xác nhận phải gồm 6 chữ số.',
+            'reason.required' => __('teacher::teacher/cancellation.js.validate_reason'),
+            'otp.required' => __('teacher::teacher/cancellation.js.validate_otp'),
+            'otp.digits' => __('teacher::teacher/cancellation.js.validate_otp'),
         ]);
 
         $teacher = Auth::guard('students')->user()->teacher;
@@ -81,11 +92,11 @@ class TeacherCancellationController extends Controller
         $expiresAt = session('cancellation_otp_expires_at');
 
         if (!$hashedOtp || !$expiresAt || now()->isAfter($expiresAt)) {
-            return back()->with('msg_danger', 'Mã xác nhận đã hết hạn hoặc không tồn tại. Vui lòng gửi lại.');
+            return back()->with('msg_danger', __('teacher::teacher/cancellation.flash.otp_expired'));
         }
 
         if (!Hash::check($request->otp, $hashedOtp)) {
-            return back()->with('msg_danger', 'Mã xác nhận không chính xác.');
+            return back()->with('msg_danger', __('teacher::teacher/cancellation.flash.otp_incorrect'));
         }
 
         // Clean up OTP session
@@ -97,7 +108,7 @@ class TeacherCancellationController extends Controller
             ->first();
 
         if ($existing) {
-            return back()->with('msg_danger', 'Bạn đã có một yêu cầu đang chờ xử lý.');
+            return back()->with('msg_danger', __('teacher::teacher/cancellation.flash.pending_exists'));
         }
 
         TeacherCancellationRequest::create([
@@ -106,6 +117,13 @@ class TeacherCancellationController extends Controller
             'status' => 'pending',
         ]);
 
-        return redirect()->route('teacher.dashboard.cancellation')->with('msg_success', 'Yêu cầu hủy hợp tác của bạn đã được gửi thành công. Admin sẽ xem xét và phản hồi sớm nhất.');
+        $this->logTeacherCancellationActivity(
+            $teacher,
+            'cancellation_request_submitted',
+            'Gửi đơn yêu cầu hủy hợp tác',
+            ['reason' => $request->reason]
+        );
+
+        return redirect()->route('teacher.dashboard.cancellation')->with('msg_success', __('teacher::teacher/cancellation.flash.success'));
     }
 }

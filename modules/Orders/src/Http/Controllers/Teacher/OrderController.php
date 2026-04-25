@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
 use Modules\Finances\src\Support\FinanceCalculator as TeacherFinanceCalculator;
-use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
-use Modules\Teacher\src\Support\TeacherPackageUsageResolver;
+use Modules\Packages\src\Support\PackageLifecycleManager;
+use Modules\Packages\src\Support\PackageUsageResolver;
 use Modules\Teacher\src\Support\TeacherNotificationCenter;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
@@ -26,9 +26,9 @@ class OrderController extends Controller
         protected DocumentRepositoryInterface $documentRepository,
         protected LessonsRepositoryInterface $lessonRepository,
         protected LessonReleaseManager $lessonReleaseManager,
-        protected TeacherPackageLifecycleManager $packageLifecycleManager,
+        protected PackageLifecycleManager $packageLifecycleManager,
         protected TeacherNotificationCenter $notificationCenter,
-        protected TeacherPackageUsageResolver $packageUsageResolver,
+        protected PackageUsageResolver $packageUsageResolver,
     ) {}
 
     public function index(Request $request)

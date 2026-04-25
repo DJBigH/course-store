@@ -75,7 +75,8 @@ return [
         'title' => '주문 상세 #:code',
         'student_info' => '수강생 정보',
         'payment_info' => '결제 정보',
-        'summary_title' => '주문 요약 (귀하의 몫)',
+        'summary_label' => '합계',
+        'summary_title' => '귀하의 몫',
         'item_list' => '상품 상세',
         'labels' => [
             'name' => '성함',

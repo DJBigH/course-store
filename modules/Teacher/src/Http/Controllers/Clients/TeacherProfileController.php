@@ -24,7 +24,7 @@ class TeacherProfileController extends Controller
         $teacher = $student?->teacher;
         $application = $teacher?->application;
 
-        return view('teacher::clients.dashboard.profile', compact('pageTitle', 'pageName', 'student', 'teacher', 'application'));
+        return view('teacher::teacher.profile.profile', compact('pageTitle', 'pageName', 'student', 'teacher', 'application'));
     }
 
     public function update(TeacherProfileUpdateRequest $request)

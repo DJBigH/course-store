@@ -83,6 +83,7 @@ class SettingController extends Controller
             'currency_rate_krw',
             'currency_rate_jpy',
             'currency_rate_cny',
+            'currency_conversion_fee',
             'mail_enabled',
             'chatbot_widget_enabled',
             'checkout_countdown_minutes',
@@ -190,6 +191,8 @@ class SettingController extends Controller
             Setting::updateOrCreate(['key' => $key], ['value' => $value]);
         }
 
+        \Illuminate\Support\Facades\Cache::forget('currency_rates_base_vnd');
+
         if (!empty($keysToDelete)) {
             Setting::whereIn('key', $keysToDelete)->delete();
         }
@@ -252,6 +255,19 @@ class SettingController extends Controller
         }
 
         return back()->with('msg', 'Cập nhập cấu hình thành công')->with('msgType', 'success');
+    }
+
+    public function syncExchangeRates(\Modules\Courses\src\Support\CurrencyService $currencyService)
+    {
+        abort_unless(auth()->user()?->hasPermission('settings.update'), 403);
+
+        $success = $currencyService->updateRates();
+
+        if ($success) {
+            return back()->with('msg', 'Cập nhật tỷ giá quốc tế thành công')->with('msgType', 'success');
+        }
+
+        return back()->with('msg', 'Cập nhật tỷ giá thất bại. Vui lòng thử lại sau hoặc kiểm tra Log hệ thống.')->with('msgType', 'danger');
     }
 
     public function testMail(Request $request)

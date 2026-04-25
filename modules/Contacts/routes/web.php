@@ -31,3 +31,12 @@ Route::group([
    Route::get('/lien-he', 'Clients\ContactController@index')->name('home');
    Route::post('/lien-he', 'Clients\ContactController@store')->name('post-contacts');
 });
+
+Route::group([
+    'prefix' => 'teacher',
+    'as' => 'teacher.dashboard.',
+    'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active', 'teacher.activity'],
+], function () {
+    Route::get('/gop-y-bao-cao', 'Teacher\TeacherSupportController@support')->name('support');
+    Route::post('/gop-y-bao-cao', 'Teacher\TeacherSupportController@storeSupport')->name('support.store');
+});

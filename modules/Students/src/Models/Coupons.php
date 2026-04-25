@@ -18,6 +18,7 @@ class Coupons extends Model
 
     protected $fillable = [
         'teacher_id',
+        'created_by',
         'code',
         'discount_type',
         'discount_value',
@@ -53,6 +54,11 @@ class Coupons extends Model
         return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
     }
 
+    public function creatorAdmin()
+    {
+        return $this->belongsTo(\Modules\User\src\Models\User::class, 'created_by', 'id');
+    }
+
     public function courses()
     {
         return $this->belongsToMany(Courses::class, 'coupons_courses', 'coupon_id', 'course_id')->withoutGlobalScopes();
@@ -61,7 +67,7 @@ class Coupons extends Model
     public function bundles()
     {
         return $this->belongsToMany(
-            \Modules\Teacher\src\Models\TeacherCourseBundle::class,
+            \Modules\Courses\src\Models\CourseBundle::class,
             'coupons_teacher_course_bundles',
             'coupon_id',
             'bundle_id'

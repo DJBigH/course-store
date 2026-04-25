@@ -9,6 +9,8 @@ return array (
   'light_mode' => 'Chế độ sáng',
   'profile' => 'Hồ sơ giảng viên',
   'logout' => 'Đăng xuất',
+  'current_package' => 'Gói:',
+  'upgrade_plan' => 'Nâng cấp gói',
   'locales' => 
   array (
     'vi' => 'Tiếng Việt',

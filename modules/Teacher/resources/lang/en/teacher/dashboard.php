@@ -22,6 +22,8 @@ return [
         'view_earnings' => 'View earnings',
         'status_active' => 'Active',
         'course_hidden' => 'Hidden',
+        'maintenance_badge' => 'MAINTENANCE',
+        'maintenance_message' => 'This feature is currently under maintenance. Please try again later.',
     ],
     'pages' => [
         'overview' => 'Teacher Overview',

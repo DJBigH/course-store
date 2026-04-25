@@ -74,6 +74,7 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
     public function createOrder($data = [])
     {
         $data = $this->enrichCustomerSnapshot($data);
+        $data = $this->enrichCurrencyInfo($data);
 
         return $this->model->create($data);
     }
@@ -82,6 +83,7 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
     {
         return DB::transaction(function () use ($orderData, $detailData) {
             $orderData = $this->enrichCustomerSnapshot($orderData);
+            $orderData = $this->enrichCurrencyInfo($orderData);
             $detailPrice = $this->normalizeMoneyAmount($detailData['price'] ?? 0);
 
             $orderData['total'] = 0;
@@ -96,7 +98,8 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
             $total = $this->normalizeMoneyAmount($detail->price);
 
             $order->update([
-                'total' => $total
+                'total' => $total,
+                'base_total' => $this->calculateBaseTotal($total, $orderData['currency'] ?? 'VND', $orderData['exchange_rate'] ?? 1),
             ]);
 
             return $order;
@@ -107,6 +110,7 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
     {
         return DB::transaction(function () use ($orderData, $detailRows) {
             $orderData = $this->enrichCustomerSnapshot($orderData);
+            $orderData = $this->enrichCurrencyInfo($orderData);
             $orderData['total'] = 0;
 
             $order = Order::create($orderData);
@@ -126,6 +130,7 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
 
             $order->update([
                 'total' => $this->normalizeMoneyAmount($total),
+                'base_total' => $this->calculateBaseTotal($total, $orderData['currency'] ?? 'VND', $orderData['exchange_rate'] ?? 1),
             ]);
 
             return $order;
@@ -245,6 +250,31 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
             && Schema::hasColumn('orders', 'customer_email_snapshot')
             && Schema::hasColumn('orders', 'customer_phone_snapshot')
             && Schema::hasColumn('orders', 'customer_address_snapshot');
+    }
+
+    protected function enrichCurrencyInfo(array $data): array
+    {
+        $currencyService = app(\Modules\Courses\src\Support\CurrencyService::class);
+        $locale = app()->getLocale();
+        $currency = $currencyService->getLocaleCurrency($locale);
+        
+        $rates = \Illuminate\Support\Facades\Cache::get('exchange_rates', []);
+        if (empty($rates)) {
+            $rates = \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray();
+        }
+
+        $data['currency'] = $data['currency'] ?? $currency;
+        $data['exchange_rate'] = $data['exchange_rate'] ?? ($rates[$data['currency']] ?? 1);
+        $data['conversion_fee_pct'] = $data['conversion_fee_pct'] ?? (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee', 0);
+
+        return $data;
+    }
+
+    protected function calculateBaseTotal(float $total, string $currency, float $rate): float
+    {
+        if ($rate <= 0) return $total;
+        // base_total is stored as USD for international audit
+        return round($total / $rate, 2);
     }
 
     protected function normalizeMoneyAmount($amount): float

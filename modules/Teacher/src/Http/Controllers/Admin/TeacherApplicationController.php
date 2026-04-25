@@ -14,14 +14,14 @@ use Illuminate\Support\Str;
 use Modules\Students\src\Models\Student;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherApplication;
-use Modules\Teacher\src\Support\TeacherPackageLifecycleManager;
+use Modules\Packages\src\Support\PackageLifecycleManager;
 
 class TeacherApplicationController extends Controller
 {
     private const DEFAULT_TEACHER_AVATAR = 'resources/assets/teacher.png';
 
     public function __construct(
-        private readonly TeacherPackageLifecycleManager $packageLifecycleManager
+        private readonly PackageLifecycleManager $packageLifecycleManager
     ) {}
 
     public function index(Request $request)

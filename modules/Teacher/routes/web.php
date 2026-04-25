@@ -4,27 +4,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherApplicationController as AdminTeacherApplicationController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherAnnouncementController as AdminTeacherAnnouncementController;
-use Modules\Teacher\src\Http\Controllers\Admin\TeacherPackageController as AdminTeacherPackageController;
 use Modules\Teacher\src\Http\Controllers\Clients\StudentQuizController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherApplicationController as ClientTeacherApplicationController;
-use Modules\Teacher\src\Http\Controllers\Clients\TeacherAffiliateLinkController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherCancellationController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherAuthController;
-use Modules\Teacher\src\Http\Controllers\Clients\TeacherCouponController;
-use Modules\Teacher\src\Http\Controllers\Clients\TeacherCertificateController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherDashboardController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherLandingController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherPublicController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherProfileController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherQuizController;
-use Modules\Teacher\src\Http\Controllers\Clients\TeacherCancellationController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherCourseController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherLessonController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherOrderController;
-use Modules\Teacher\src\Http\Controllers\Clients\TeacherStudentController;
-use Modules\Teacher\src\Http\Controllers\Clients\TeacherReviewController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherBundleController;
-use Modules\Teacher\src\Http\Controllers\Clients\TeacherSupportController;
-use Modules\Teacher\src\Http\Controllers\Clients\TeacherPackageController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherNotificationController;
 
 Route::prefix('admin')->group(function () {
@@ -52,15 +44,6 @@ Route::prefix('admin')->group(function () {
       Route::post('/{id}/reject', [AdminTeacherApplicationController::class, 'reject'])->middleware('permission:teachers.edit')->name('reject');
    });
 
-   Route::prefix('teacher-packages')->name('teacher-packages.')->group(function () {
-      Route::get('/', [AdminTeacherPackageController::class, 'index'])->middleware('permission:teachers.view')->name('index');
-      Route::get('/create', [AdminTeacherPackageController::class, 'create'])->middleware('permission:teachers.create')->name('add');
-      Route::post('/create', [AdminTeacherPackageController::class, 'store'])->middleware('permission:teachers.create')->name('post-add');
-      Route::get('/edit/{id}', [AdminTeacherPackageController::class, 'edit'])->middleware('permission:teachers.edit')->name('edit');
-      Route::post('/edit/{id}', [AdminTeacherPackageController::class, 'update'])->middleware('permission:teachers.edit')->name('post-edit');
-      Route::post('/reorder', [AdminTeacherPackageController::class, 'reorder'])->middleware('permission:teachers.edit')->name('reorder');
-      Route::delete('/delete/{id}', [AdminTeacherPackageController::class, 'delete'])->middleware('permission:teachers.delete')->name('delete');
-   });
 
    Route::prefix('teacher-announcements')->name('teacher-announcements.')->group(function () {
       Route::get('/', [AdminTeacherAnnouncementController::class, 'index'])->middleware('permission:teachers.view')->name('index');
@@ -101,7 +84,6 @@ Route::group([
    Route::post('/tro-thanh-giang-vien/xac-nhan-da-thanh-toan', [ClientTeacherApplicationController::class, 'markPaid'])->name('teacher.account.mark-paid');
    Route::get('/giang-vien/{slug}', [TeacherPublicController::class, 'show'])->name('teacher.public.show');
    Route::post('/giang-vien/{slug}/rating', [TeacherPublicController::class, 'rate'])->middleware(['auth:students', 'verified', 'user.block'])->name('teacher.public.rate');
-   Route::get('/xac-thuc-chung-chi/{code}', [\Modules\Teacher\src\Http\Controllers\Clients\PublicCertificateController::class, 'verify'])->name('teacher.certificates.verify');
 });
 
 Route::group([
@@ -130,20 +112,9 @@ Route::group([
    Route::get('/', [TeacherDashboardController::class, 'index'])->name('index');
    Route::get('/ho-so', [TeacherProfileController::class, 'show'])->name('profile');
    Route::post('/ho-so', [TeacherProfileController::class, 'update'])->name('profile.update');
-   Route::get('/goi/nang-cap', [TeacherPackageController::class, 'upgradePackage'])->name('package.upgrade');
-   Route::post('/goi/nang-cap', [TeacherPackageController::class, 'storeUpgradePackage'])->name('package.upgrade.store');
-   Route::get('/goi/nang-cap/trang-thai', [TeacherPackageController::class, 'upgradePackageStatus'])->name('package.upgrade.status');
-   Route::post('/goi/nang-cap/xac-nhan-da-thanh-toan', [TeacherPackageController::class, 'markUpgradePaid'])->name('package.upgrade.mark-paid');
-   Route::post('/goi/nang-cap/huy', [TeacherPackageController::class, 'cancelUpgradePackage'])->name('package.upgrade.cancel');
    Route::get('/thong-bao', [TeacherNotificationController::class, 'notifications'])->name('notifications');
    Route::get('/thong-bao/doc', [TeacherNotificationController::class, 'readNotification'])->name('notifications.read');
    Route::get('/thong-bao/announcement/{announcement}/doc', [TeacherNotificationController::class, 'readAnnouncement'])->name('notifications.announcements.read');
-   Route::get('/link-gioi-thieu', [TeacherAffiliateLinkController::class, 'index'])->name('affiliate-links.index');
-   Route::get('/link-gioi-thieu/tao-moi', [TeacherAffiliateLinkController::class, 'create'])->name('affiliate-links.create');
-   Route::post('/link-gioi-thieu/tao-moi', [TeacherAffiliateLinkController::class, 'store'])->name('affiliate-links.store');
-   Route::get('/link-gioi-thieu/{id}/chinh-sua', [TeacherAffiliateLinkController::class, 'edit'])->name('affiliate-links.edit');
-   Route::post('/link-gioi-thieu/{id}/chinh-sua', [TeacherAffiliateLinkController::class, 'update'])->name('affiliate-links.update');
-   Route::delete('/link-gioi-thieu/{id}', [TeacherAffiliateLinkController::class, 'delete'])->name('affiliate-links.delete');
    Route::get('/combo-khoa-hoc', [TeacherBundleController::class, 'bundles'])->name('bundles');
    Route::get('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'createBundle'])->name('bundles.create');
    Route::post('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'storeBundle'])->name('bundles.store');
@@ -151,33 +122,6 @@ Route::group([
    Route::post('/combo-khoa-hoc/{bundle}/chinh-sua', [TeacherBundleController::class, 'updateBundle'])->name('bundles.update');
    Route::delete('/combo-khoa-hoc/{bundle}', [TeacherBundleController::class, 'deleteBundle'])->name('bundles.delete');
    Route::get('/khoa-hoc', [TeacherCourseController::class, 'courses'])->name('courses');
-   Route::get('/ma-giam-gia', [TeacherCouponController::class, 'index'])->name('coupons.index');
-   Route::get('/ma-giam-gia/tao-moi', [TeacherCouponController::class, 'create'])->name('coupons.create');
-   Route::post('/ma-giam-gia/tao-moi', [TeacherCouponController::class, 'store'])->name('coupons.store');
-   Route::get('/ma-giam-gia/{id}/chinh-sua', [TeacherCouponController::class, 'edit'])->name('coupons.edit');
-   Route::post('/ma-giam-gia/{id}/chinh-sua', [TeacherCouponController::class, 'update'])->name('coupons.update');
-   Route::post('/ma-giam-gia/{id}/uu-tien', [TeacherCouponController::class, 'togglePriority'])->name('coupons.priority');
-   Route::delete('/ma-giam-gia/{id}', [TeacherCouponController::class, 'delete'])->name('coupons.delete');
-   Route::get('/ma-giam-gia/{id}/hoc-vien', [TeacherCouponController::class, 'students'])->name('coupons.students');
-   Route::post('/ma-giam-gia/{id}/hoc-vien', [TeacherCouponController::class, 'updateStudents'])->name('coupons.students.update');
-   Route::get('/ma-giam-gia/{id}/khoa-hoc', [TeacherCouponController::class, 'courses'])->name('coupons.courses');
-   Route::post('/ma-giam-gia/{id}/khoa-hoc', [TeacherCouponController::class, 'updateCourses'])->name('coupons.courses.update');
-   Route::get('/binh-luan', [TeacherReviewController::class, 'comments'])->name('comments');
-   Route::post('/binh-luan/{comment}/reply', [TeacherReviewController::class, 'replyComment'])->name('comments.reply');
-   Route::post('/binh-luan/{comment}/toggle', [TeacherReviewController::class, 'toggleCommentVisibility'])->name('comments.toggle');
-   Route::get('/hoc-vien', [TeacherStudentController::class, 'students'])->name('students');
-   Route::get('/chung-chi', [TeacherCertificateController::class, 'index'])->name('certificates.index');
-   Route::get('/chung-chi/export', [TeacherCertificateController::class, 'export'])->name('certificates.export');
-   Route::post('/chung-chi/cap', [TeacherCertificateController::class, 'issue'])->name('certificates.issue');
-   Route::get('/chung-chi/{id}', [TeacherCertificateController::class, 'show'])->name('certificates.show');
-   Route::post('/chung-chi/{id}/thu-hoi', [TeacherCertificateController::class, 'revoke'])->name('certificates.revoke');
-   Route::get('/nhat-ky-hoat-dong', [TeacherStudentController::class, 'activityLogs'])->name('activity-logs');
-   Route::get('/hoc-vien/cap-quyen', [TeacherStudentController::class, 'createStudentGrant'])->name('students.grants.create');
-   Route::post('/hoc-vien/cap-quyen', [TeacherStudentController::class, 'storeStudentGrant'])->name('students.grants.store');
-   Route::get('/hoc-vien/export/{format}', [TeacherStudentController::class, 'exportStudents'])->name('students.export');
-   Route::post('/hoc-vien/{student}/grant/{grant}/thu-hoi', [TeacherStudentController::class, 'revokeStudentGrant'])->name('students.grants.revoke');
-   Route::get('/hoc-vien/{student}', [TeacherStudentController::class, 'showStudent'])->name('students.show');
-   Route::post('/hoc-vien/{student}/ghi-chu', [TeacherStudentController::class, 'saveStudentNote'])->name('students.note');
    Route::get('/khoa-hoc/thung-rac', [TeacherCourseController::class, 'coursesTrash'])->name('courses.trash');
    Route::get('/khoa-hoc/tao-moi', [TeacherCourseController::class, 'createCourse'])->name('courses.create');
    Route::post('/khoa-hoc/tao-moi', [TeacherCourseController::class, 'storeCourse'])->name('courses.store');
@@ -188,7 +132,6 @@ Route::group([
    Route::post('/khoa-hoc/{course}/nhan-ban', [TeacherCourseController::class, 'duplicateCourse'])->name('courses.duplicate');
    Route::delete('/khoa-hoc/{course}', [TeacherCourseController::class, 'deleteCourse'])->name('courses.delete');
    Route::post('/khoa-hoc/{course}/khoi-phuc', [TeacherCourseController::class, 'restoreCourse'])->name('courses.restore');
-   Route::delete('/khoa-hoc/{course}/xoa-vinh-vien', [TeacherCourseController::class, 'forceDeleteCourse'])->name('courses.force-delete');
    Route::get('/khoa-hoc/{course}/bai-hoc', [TeacherLessonController::class, 'lessons'])->name('lessons.index');
    Route::get('/khoa-hoc/{course}/bai-hoc/{lesson}/preview-data', [TeacherLessonController::class, 'getLessonPreviewData'])->name('lessons.preview_data');
    Route::get('/khoa-hoc/{course}/quiz', [TeacherQuizController::class, 'index'])->name('quizzes.index');
@@ -220,9 +163,6 @@ Route::group([
    Route::post('/khoa-hoc/{course}/bai-hoc/{lesson}/chinh-sua', [TeacherLessonController::class, 'updateLesson'])->name('lessons.update');
    Route::delete('/khoa-hoc/{course}/bai-hoc/{lesson}', [TeacherLessonController::class, 'deleteLesson'])->name('lessons.delete');
    Route::post('/khoa-hoc/{course}/bai-hoc/{lesson}/khoi-phuc', [TeacherLessonController::class, 'restoreLesson'])->name('lessons.restore');
-   Route::delete('/khoa-hoc/{course}/bai-hoc/{lesson}/xoa-vinh-vien', [TeacherLessonController::class, 'forceDeleteLesson'])->name('lessons.force-delete');
-   Route::get('/gop-y-bao-cao', [TeacherSupportController::class, 'support'])->name('support');
-   Route::post('/gop-y-bao-cao', [TeacherSupportController::class, 'storeSupport'])->name('support.store');
    Route::get('/huy-hop-tac', [TeacherCancellationController::class, 'index'])->name('cancellation');
    Route::post('/huy-hop-tac/otp', [TeacherCancellationController::class, 'sendOtp'])->name('cancellation.otp');
    Route::post('/huy-hop-tac', [TeacherCancellationController::class, 'store'])->name('cancellation.store');

@@ -56,6 +56,7 @@ return [
         'gross' => '原价',
         'discount' => '折扣',
         'net' => '净收入',
+        'split' => '分成 (您 / 网页)',
         'revenue' => '您的分成',
     ],
 ];

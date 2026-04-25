@@ -20,4 +20,5 @@ return [
     ],
     'feature_locked' => '你当前的套餐不包含此功能。请升级套餐。',
     'upgrade_cta' => '升级套餐',
+    'back' => '返回',
 ];
