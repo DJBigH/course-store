@@ -112,68 +112,107 @@ class TeacherController extends Controller
         $canLogs = $user?->hasPermission('teachers.logs');
         $canEdit = $user?->hasPermission('teachers.edit');
         $canDelete = $user?->canAnyPermission(['teachers.soft_delete', 'teachers.delete']);
+        $teacher = $teacher->latest();
 
         return DataTables::of($teacher)
-            ->addColumn('select', function ($teachers) {
-                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teachers->id . '"></div>';
+            ->editColumn('name', function ($teacher) {
+                return '<div>' . e($teacher->name_locale) . '</div>';
             })
-            ->addColumn('logs', function ($teachers) use ($canLogs) {
-                return $canLogs ? '<a href="' . route('teacher.logs', $teachers->id) . '" class="btn btn-light border">' . __('teacher::admin.actions.logs') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
-            })
-            ->addColumn('edit', function ($teachers) use ($canEdit) {
-                return $canEdit ? '<a href="' . route('teacher.edit', $teachers->id) . '" class="btn btn-warning">' . __('teacher::admin.actions.edit') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
-            })
-            ->addColumn('delete', function ($teachers) use ($canDelete) {
-                return $canDelete ? '<a href="' . route('teacher.delete', $teachers->id) . '" class="btn btn-outline-danger delete-action">' . __('teacher::admin.actions.delete') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
-            })
-            ->editColumn('created_at', function ($teachers) {
-                return Carbon::parse($teachers->created_at)->format('d/m/Y H:i:s');
-            })
-            ->addColumn('last_active_at', function ($teachers) {
-                if ($teachers->last_active_at) {
-                    return Carbon::parse($teachers->last_active_at)->format('d/m/Y H:i:s');
+            ->addColumn('teacher_status', function ($teacher) {
+                if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) {
+                    return '<span class="badge bg-secondary">
+                                <i class="fa-solid fa-user-slash me-1"></i> ' . 'Đã huỷ hợp tác' . '
+                            </span>';
                 }
 
+                $isLocked = intval($teacher->is_locked);
+                if ($isLocked === 1) {
+                    $reason = e($teacher->lock_reason);
+                    $admin = e($teacher->lockedByAdmin?->name ?? __('teacher::admin.table.system_fallback'));
+                    $time = $teacher->locked_at ? $teacher->locked_at->format('d/m/Y H:i') : '';
+                    $tooltip = "Lý do: {$reason}\nNgười khóa: {$admin}\nThời gian: {$time}";
+                    
+                    return '<span class="badge bg-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="' . $tooltip . '">
+                                <i class="fa-solid fa-user-lock me-1"></i> ' . __('teacher::admin.table.status_locked') . '
+                            </span>';
+                }
+
+                return '<span class="badge bg-success">
+                            <i class="fa-solid fa-check-circle me-1"></i> ' . __('teacher::admin.table.status_active') . '
+                        </span>';
+            })
+            ->addColumn('rating', function ($teacher) {
+                $avg = round((float) ($teacher->ratings_avg_rating ?? 0), 1);
+                $count = (int) ($teacher->ratings_count ?? 0);
+                
+                return '<div class="teacher-rating-cell text-center">
+                            <div class="rating-text fw-bold text-warning">
+                                <i class="fa-solid fa-star me-1"></i>' . $avg . ' / 5
+                            </div>
+                            <div class="small text-muted">' . $count . ' đánh giá</div>
+                        </div>';
+            })
+            ->addColumn('select', function ($teacher) {
+                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teacher->id . '"></div>';
+            })
+            ->addColumn('logs', function ($teacher) use ($canLogs) {
+                return $canLogs ? '<a href="' . route('teacher.logs', $teacher->id) . '" class="btn btn-light border">' . __('teacher::admin.actions.logs') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
+            })
+            ->addColumn('edit', function ($teacher) {
+                $btn = '';
+                if (auth()->user()?->hasPermission('teachers.edit')) {
+                    $btn .= '<a href="' . route('teacher-packages.grant', ['teacher_id' => $teacher->id]) . '" class="btn btn-warning btn-sm me-1" title="Tặng gói đặc quyền"><i class="fa-solid fa-gift"></i></a>';
+
+                    if ($teacher->is_locked) {
+                        $btn .= '<form action="' . route('teacher.toggle-lock', $teacher->id) . '" method="POST" class="d-inline-block me-1">' . csrf_field() . '<button type="submit" class="btn btn-success btn-sm" title="Mở khóa tài khoản" onclick="return confirm(\'Xác nhận mở khóa cho giáo viên này?\')"><i class="fa-solid fa-lock-open"></i></button></form>';
+                    } else {
+                        $btn .= '<button type="button" class="btn btn-danger btn-sm me-1 btn-lock-teacher" data-id="' . $teacher->id . '" data-name="' . e($teacher->name) . '" data-url="' . route('teacher.toggle-lock', $teacher->id) . '" title="Khóa tài khoản"><i class="fa-solid fa-lock"></i></button>';
+                    }
+
+                    if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) {
+                        $btn .= '<form action="' . route('teacher.toggle-ceased', $teacher->id) . '" method="POST" class="d-inline-block me-1">' . csrf_field() . '<button type="submit" class="btn btn-outline-success btn-sm" title="Khôi phục hợp tác" onclick="return confirm(\'Khôi phục hợp tác với giảng viên này?\')"><i class="fa-solid fa-handshake-angle"></i></button></form>';
+                    } else {
+                        $btn .= '<form action="' . route('teacher.toggle-ceased', $teacher->id) . '" method="POST" class="d-inline-block me-1">' . csrf_field() . '<button type="submit" class="btn btn-outline-danger btn-sm" title="Huỷ hợp tác" onclick="return confirm(\'Bạn có chắc muốn huỷ hợp tác với giảng viên này?\')"><i class="fa-solid fa-user-slash"></i></button></form>';
+                    }
+
+                    $btn .= '<a href="' . route('teacher.edit', $teacher->id) . '" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen-to-square"></i></a>';
+                }
+                return $btn ?: '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
+            })
+            ->addColumn('delete', function ($teacher) use ($canDelete) {
+                return $canDelete ? '<a href="' . route('teacher.delete', $teacher->id) . '" class="btn btn-outline-danger delete-action">' . __('teacher::admin.actions.delete') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
+            })
+            ->editColumn('created_at', function ($teacher) {
+                return Carbon::parse($teacher->created_at)->format('d/m/Y H:i:s');
+            })
+            ->addColumn('last_active_at', function ($teacher) {
+                if ($teacher->last_active_at) {
+                    return Carbon::parse($teacher->last_active_at)->format('d/m/Y H:i:s');
+                }
                 return '<span class="text-warning small">' . __('teacher::admin.table.not_active_yet') . '</span>';
             })
-            ->addColumn('inactive_days', function ($teachers) {
-                $reference = $teachers->last_active_at ?: $teachers->created_at;
+            ->addColumn('inactive_days', function ($teacher) {
+                $reference = $teacher->last_active_at ?: $teacher->created_at;
                 $days = Carbon::parse($reference)->diffInDays(now());
                 $tone = 'activity-age--fresh';
+                if ($days >= 90) $tone = 'activity-age--danger';
+                elseif ($days >= 60) $tone = 'activity-age--warning';
+                elseif ($days >= 30) $tone = 'activity-age--notice';
 
-                if ($days >= 90) {
-                    $tone = 'activity-age--danger';
-                } elseif ($days >= 60) {
-                    $tone = 'activity-age--warning';
-                } elseif ($days >= 30) {
-                    $tone = 'activity-age--notice';
-                }
-
-                if (!$teachers->last_active_at) {
+                if (!$teacher->last_active_at) {
                     return '<span class="activity-age ' . $tone . '">' . $days . ' ' . __('teacher::admin.table.days_unit') . '</span><div class="small text-muted">' . __('teacher::admin.table.never_active') . '</div>';
                 }
-
-                if ($days === 0) {
-                    return '<span class="activity-age activity-age--fresh">' . __('teacher::admin.table.today') . '</span>';
-                }
-
-                return '<span class="activity-age ' . $tone . '">' . $days . ' ' . __('teacher::admin.table.days_unit') . '</span>';
+                return '<span class="activity-age ' . $tone . '">' . ($days === 0 ? __('teacher::admin.table.today') : $days . ' ' . __('teacher::admin.table.days_unit')) . '</span>';
             })
-            ->editColumn('image', function ($teachers) {
-                return $teachers->image
-                    ? '<img src="' . $teachers->image . '" style="width: 80px; border-radius: 12px;">'
-                    : __('teacher::admin.table.no_image');
+            ->editColumn('image', function ($teacher) {
+                return $teacher->image ? '<img src="' . $teacher->image . '" style="width: 80px; border-radius: 12px;">' : __('teacher::admin.table.no_image');
             })
-            ->addColumn('badge', function ($teachers) {
-                $badge = $teachers->primary_badge;
-
-                if (!$badge) {
-                    return '<span class="text-muted small">' . __('teacher::admin.table.no_badge') . '</span>';
-                }
-
+            ->addColumn('badge', function ($teacher) {
+                $badge = $teacher->primary_badge;
+                if (!$badge) return '<span class="text-muted small">' . __('teacher::admin.table.no_badge') . '</span>';
                 return '<span class="teacher-admin-badge teacher-admin-badge--' . e($badge['tone']) . '">' . e($badge['label']) . '</span>';
             })
-            ->rawColumns(['select', 'edit', 'delete', 'image', 'logs', 'last_active_at', 'inactive_days', 'badge'])
+            ->rawColumns(['select', 'edit', 'delete', 'image', 'logs', 'last_active_at', 'inactive_days', 'badge', 'name', 'teacher_status', 'rating'])
             ->toJson();
     }
 
@@ -185,12 +224,20 @@ class TeacherController extends Controller
 
         return DataTables::of($teachers)
             ->addColumn('select', fn($teacher) => '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teacher->id . '"></div>')
+            ->editColumn('name', function ($teachers) {
+                return '<div>' . e($teachers->name_locale) . '</div>';
+            })
+            ->addColumn('lock_status', function ($teachers) {
+                if ($teachers->is_locked) {
+                    return '<span class="badge bg-danger">Bị khóa</span>';
+                }
+                return '<span class="badge bg-success">Hoạt động</span>';
+            })
             ->addColumn('image', function ($teacher) {
                 return $teacher->image
                     ? '<img src="' . $teacher->image . '" style="width: 80px; border-radius: 12px;">'
                     : __('teacher::admin.table.no_image');
             })
-            ->addColumn('name', fn($teacher) => e($teacher->name_locale))
             ->addColumn('deleted_at', fn($teacher) => Carbon::parse($teacher->deleted_at)->format('d/m/Y H:i:s'))
             ->addColumn('restore', function ($teacher) use ($canRestore) {
                 if (!$canRestore) {
@@ -213,7 +260,7 @@ class TeacherController extends Controller
                     . '<button type="submit" class="btn btn-outline-danger">' . __('teacher::admin.actions.force_delete') . '</button>'
                     . '</form>';
             })
-            ->rawColumns(['select', 'image', 'restore', 'force_delete'])
+            ->rawColumns(['select', 'image', 'restore', 'force_delete', 'name', 'lock_status'])
             ->toJson();
     }
 
@@ -398,6 +445,78 @@ class TeacherController extends Controller
         $payload['badge_key'] = $badgeKey;
 
         return $payload;
+    }
+
+    /**
+     * Khóa hoặc mở khóa tài khoản giáo viên
+     */
+    public function toggleLock(Request $request, $id)
+    {
+        $teacher = $this->teacherRepository->find($id);
+        if (!$teacher) {
+            abort(404);
+        }
+
+        $isLocking = !$teacher->is_locked;
+
+        if ($isLocking) {
+            $request->validate([
+                'lock_reason' => 'required|string|max:1000',
+            ], [
+                'lock_reason.required' => 'Vui lòng nhập lý do khóa tài khoản.',
+            ]);
+        }
+
+        $teacher->update([
+            'is_locked'   => $isLocking,
+            'lock_reason' => $isLocking ? $request->lock_reason : null,
+            'locked_at'   => $isLocking ? now() : null,
+            'locked_by'   => $isLocking ? auth()->id() : null,
+        ]);
+
+        activity_log(
+            action: $isLocking ? 'teacher_locked' : 'teacher_unlocked',
+            subject: $teacher,
+            properties: [
+                'reason' => $teacher->lock_reason,
+                'admin'  => auth()->user()?->name,
+            ],
+            logName: 'teacher_access',
+            description: $isLocking 
+                ? "Đã khóa quyền giáo viên của [{$teacher->name}] với lý do: {$teacher->lock_reason}"
+                : "Đã mở khóa quyền giáo viên cho [{$teacher->name}]"
+        );
+
+        return back()->with('msg', $isLocking ? 'Đã khóa tài khoản giáo viên thành công.' : 'Đã mở khóa tài khoản giáo viên thành công.');
+    }
+
+    public function toggleCeased(Request $request, $id)
+    {
+        $teacher = $this->teacherRepository->find($id);
+        if (!$teacher) {
+            abort(404);
+        }
+
+        $isCeased = $teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED;
+        $newStatus = $isCeased ? \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE : \Modules\Teacher\src\Models\Teacher::STATUS_CEASED;
+
+        $teacher->update([
+            'status' => $newStatus,
+        ]);
+
+        activity_log(
+            action: $newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED ? 'teacher_ceased' : 'teacher_restored',
+            subject: $teacher,
+            properties: [
+                'admin'  => auth()->user()?->name,
+            ],
+            logName: 'teacher_partnership',
+            description: $newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED 
+                ? "Đã huỷ hợp tác với giảng viên [{$teacher->name}]"
+                : "Đã khôi phục hợp tác với giảng viên [{$teacher->name}]"
+        );
+
+        return back()->with('msg', $newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED ? 'Đã huỷ hợp tác với giảng viên thành công.' : 'Đã khôi phục hợp tác với giảng viên thành công.');
     }
 
     public function delete($id)

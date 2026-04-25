@@ -13,6 +13,7 @@ class TeacherRating extends Model
         'teacher_id',
         'student_id',
         'rating',
+        'status',
     ];
 
     protected $casts = [

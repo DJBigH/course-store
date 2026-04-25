@@ -45,6 +45,10 @@ class TeacherApplication extends Model
         'account_created_at',
         'account_credentials_sent_at',
         'reviewed_by',
+        'granted_by',
+        'claim_token',
+        'claim_expires_at',
+        'claimed_at',
         'admin_note',
     ];
 
@@ -60,6 +64,8 @@ class TeacherApplication extends Model
         'activated_at' => 'datetime',
         'account_created_at' => 'datetime',
         'account_credentials_sent_at' => 'datetime',
+        'claim_expires_at' => 'datetime',
+        'claimed_at' => 'datetime',
     ];
 
     public function student()
@@ -80,6 +86,11 @@ class TeacherApplication extends Model
     public function reviewer()
     {
         return $this->belongsTo(User::class, 'reviewed_by', 'id');
+    }
+
+    public function grantedByAdmin()
+    {
+        return $this->belongsTo(User::class, 'granted_by', 'id');
     }
 
     public function getDisplayStatusAttribute(): string

@@ -170,6 +170,7 @@
                             <th>Giá bán</th>
                             <th>Trạng thái</th>
                             <th>Học tập</th>
+                            <th>Đánh giá</th>
                             <th>Ngày tạo</th>
                             <th>Publish nhanh</th>
                             <th>Nhân bản</th>
@@ -279,6 +280,15 @@
             font-size: 0.88rem;
             font-weight: 700;
             white-space: nowrap;
+        }
+
+        .course-rating-cell .rating-text {
+            font-size: 1.1rem;
+            margin-bottom: 0.1rem;
+        }
+
+        .course-rating-cell .text-muted {
+            font-size: 0.75rem;
         }
 
         .admin-data-table td {
@@ -394,7 +404,7 @@
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
                 order: [
-                    [5, 'desc']
+                    [6, 'desc']
                 ],
                 columns: [{
                         data: 'select',
@@ -416,6 +426,11 @@
                     {
                         data: 'learning',
                         orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'rating',
+                        name: 'ratings_avg_rating',
                         searchable: false
                     },
                     {

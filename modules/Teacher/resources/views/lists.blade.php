@@ -5,8 +5,8 @@
         <div class="card-body p-4">
             <div class="admin-page-actions">
                 <div>
-                    <h5 class="mb-1">Danh sÃƒÂ¡ch giÃ¡ÂºÂ£ng viÃƒÂªn</h5>
-                    <p class="text-muted mb-0">QuÃ¡ÂºÂ£n lÃƒÂ½ hÃ¡Â»â€œ sÃ†Â¡ giÃ¡ÂºÂ£ng viÃƒÂªn, kinh nghiÃ¡Â»â€¡m vÃƒÂ  Ã¡ÂºÂ£nh Ã„â€˜Ã¡ÂºÂ¡i diÃ¡Â»â€¡n theo layout admin mÃ¡Â»â€ºi.
+                    <h5 class="mb-1">Danh sách giảng viên</h5>
+                    <p class="text-muted mb-0">Quản lý hồ sơ giảng viên, kinh nghiệm và ảnh đại diện theo layout admin mới.
                     </p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
@@ -14,13 +14,13 @@
                             ?->canAnyPermission(['teachers.soft_delete', 'teachers.delete', 'teachers.force_delete']))
                         <a href="{{ route('teacher.trash') }}" class="btn btn-light border">
                             <i class="fa-solid fa-trash-can me-2"></i>
-                            ThÃƒÂ¹ng rÃƒÂ¡c
+                            Thùng rác
                         </a>
                     @endif
                     @if (auth()->user()?->hasPermission('teachers.create'))
                         <a href="{{ route('teacher.add') }}" class="btn btn-primary">
                             <i class="fa-solid fa-plus me-2"></i>
-                            ThÃƒÂªm giÃ¡ÂºÂ£ng viÃƒÂªn
+                            Thêm giảng viên
                         </a>
                     @endif
                 </div>
@@ -39,42 +39,42 @@
             <form id="teacher-filter-form" class="admin-filter-panel mb-4">
                 <div class="row g-3">
                     <div class="col-lg-4 col-md-6">
-                        <label class="form-label">TÃ¡Â»Â« khÃƒÂ³a</label>
+                        <label class="form-label">Từ khóa</label>
                         <input type="text" class="form-control" name="q" id="filter-q"
-                            placeholder="TÃƒÂªn, slug, kinh nghiÃ¡Â»â€¡m...">
+                            placeholder="Tên, slug, kinh nghiệm...">
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <label class="form-label">TrÃ¡ÂºÂ¡ng thÃƒÂ¡i hÃ¡Â»â€œ sÃ†Â¡</label>
+                        <label class="form-label">Trạng thái hồ sơ</label>
                         <select class="form-select" name="profile_status" id="filter-profile-status">
-                            <option value="">TÃ¡ÂºÂ¥t cÃ¡ÂºÂ£</option>
-                            <option value="has_image">Ã„ÂÃƒÂ£ cÃƒÂ³ Ã¡ÂºÂ£nh Ã„â€˜Ã¡ÂºÂ¡i diÃ¡Â»â€¡n</option>
-                            <option value="missing_image">ChÃ†Â°a cÃƒÂ³ Ã¡ÂºÂ£nh Ã„â€˜Ã¡ÂºÂ¡i diÃ¡Â»â€¡n</option>
+                            <option value="">Tất cả</option>
+                            <option value="has_image">Đã có ảnh đại diện</option>
+                            <option value="missing_image">Chưa có ảnh đại diện</option>
                         </select>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <label class="form-label">Hoáº¡t Ä‘á»™ng gáº§n nháº¥t</label>
+                        <label class="form-label">Hoạt động gần nhất</label>
                         <select class="form-select" name="activity_status" id="filter-activity-status">
-                            <option value="">Táº¥t cáº£</option>
-                            <option value="active_30">CÃ³ hoáº¡t Ä‘á»™ng trong 30 ngÃ y</option>
-                            <option value="inactive_30">KhÃ´ng hoáº¡t Ä‘á»™ng tá»« 30 ngÃ y</option>
-                            <option value="inactive_60">KhÃ´ng hoáº¡t Ä‘á»™ng tá»« 60 ngÃ y</option>
-                            <option value="never_active">ChÆ°a cÃ³ hoáº¡t Ä‘á»™ng nÃ o</option>
+                            <option value="">Tất cả</option>
+                            <option value="active_30">Có hoạt động trong 30 ngày</option>
+                            <option value="inactive_30">Không hoạt động từ 30 ngày</option>
+                            <option value="inactive_60">Không hoạt động từ 60 ngày</option>
+                            <option value="never_active">Chưa có hoạt động nào</option>
                         </select>
                     </div>
                     <div class="col-lg-2 col-md-6">
-                        <label class="form-label">TÃ¡Â»Â« ngÃƒÂ y</label>
+                        <label class="form-label">Từ ngày</label>
                         <input type="date" class="form-control" name="from_date" id="filter-from-date">
                     </div>
                     <div class="col-lg-2 col-md-6">
-                        <label class="form-label">Ã„ÂÃ¡ÂºÂ¿n ngÃƒÂ y</label>
+                        <label class="form-label">Đến ngày</label>
                         <input type="date" class="form-control" name="to_date" id="filter-to-date">
                     </div>
                     <div class="col-lg-1 col-md-12 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">LÃ¡Â»Âc</button>
+                        <button type="submit" class="btn btn-primary w-100">Lọc</button>
                     </div>
                 </div>
                 <div class="mt-3">
-                    <button type="button" class="btn btn-light border" id="reset-filters">XÃƒÂ³a lÃ¡Â»Âc</button>
+                    <button type="button" class="btn btn-light border" id="reset-filters">Xóa lọc</button>
                 </div>
             </form>
 
@@ -87,10 +87,10 @@
 
                     <div class="bulk-toolbar">
                         <div class="bulk-toolbar__summary">
-                            <span id="selected-count">0</span> giÃ¡ÂºÂ£ng viÃƒÂªn Ã„â€˜Ã†Â°Ã¡Â»Â£c chÃ¡Â»Ân
+                            <span id="selected-count">0</span> giảng viên được chọn
                         </div>
                         <button type="button" class="btn btn-outline-danger bulk-action-trigger"
-                            data-action="delete">XÃƒÂ³a</button>
+                            data-action="delete">Xóa</button>
                     </div>
                 </form>
             @endif
@@ -102,16 +102,18 @@
                             <th class="text-center" style="width: 48px;">
                                 <input type="checkbox" id="select-all-records" class="form-check-input">
                             </th>
-                            <th>Huy hiá»‡u</th>
-                            <th>Ã¡ÂºÂ¢nh</th>
-                            <th>TÃƒÂªn</th>
-                            <th>Kinh nghiÃ¡Â»â€¡m</th>
-                            <th>NgÃƒÂ y tÃ¡ÂºÂ¡o</th>
-                            <th>Hoáº¡t Ä‘á»™ng gáº§n nháº¥t</th>
-                            <th>KhÃ´ng hoáº¡t Ä‘á»™ng</th>
-                            <th>LÃ¡Â»â€¹ch sÃ¡Â»Â­</th>
-                            <th>SÃ¡Â»Â­a</th>
-                            <th>XÃƒÂ³a</th>
+                            <th>Huy hiệu</th>
+                            <th>Ảnh</th>
+                            <th>Tên</th>
+                            <th>Trạng thái</th>
+                            <th>Đánh giá</th>
+                            <th>Kinh nghiệm</th>
+                            <th>Ngày tạo</th>
+                            <th>Hoạt động gần nhất</th>
+                            <th>Không hoạt động</th>
+                            <th>Lịch sử</th>
+                            <th>Sửa</th>
+                            <th>Xóa</th>
                         </tr>
                     </thead>
                 </table>
@@ -120,129 +122,160 @@
     </div>
 
     @include('part.backend.delete')
+
+    {{-- Modal Khóa tài khoản --}}
+    <div class="modal fade" id="lockTeacherModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="lockTeacherForm" method="POST">
+                @csrf
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title"><i class="fa-solid fa-user-lock me-1"></i> Khóa quyền giáo viên</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn đang thực hiện khóa quyền giáo viên đối với: <strong id="lock-teacher-name"></strong></p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="lock_reason">Lý do khóa <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="lock_reason" id="lock_reason" rows="4" required 
+                                      placeholder="Nhập lý do cụ thể để giáo viên biết..."></textarea>
+                        </div>
+                        <div class="alert alert-warning border-0 small">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i> 
+                            Hành động này sẽ ngăn giáo viên truy cập vào Dashboard nhưng <strong>không khóa</strong> quyền học viên của họ.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Xác nhận khóa</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
 
 @section('stylesheets')
     <style>
+        .admin-page-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
         .admin-filter-panel {
-            padding: 1.1rem;
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 16px;
             border: 1px solid #e2e8f0;
-            border-radius: 18px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
         }
 
         .bulk-toolbar {
             display: flex;
-            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 0.75rem;
-            padding: 1rem 1.1rem;
-            border-radius: 16px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            padding: 1rem 1.25rem;
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            border-radius: 12px;
+            margin-bottom: 1rem;
         }
 
         .bulk-toolbar__summary {
             font-weight: 600;
-            color: #334155;
-        }
-
-        .activity-age {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.3rem 0.7rem;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            line-height: 1;
-            border: 1px solid transparent;
-        }
-
-        .activity-age--fresh {
-            background: #dcfce7;
-            border-color: #86efac;
-            color: #166534;
-        }
-
-        .activity-age--notice {
-            background: #fef3c7;
-            border-color: #fcd34d;
-            color: #92400e;
-        }
-
-        .activity-age--warning {
-            background: #ffedd5;
-            border-color: #fdba74;
-            color: #9a3412;
-        }
-
-        .activity-age--danger {
-            background: #fee2e2;
-            border-color: #fca5a5;
-            color: #991b1b;
+            color: #c53030;
         }
 
         .teacher-admin-badge {
             display: inline-flex;
             align-items: center;
-            padding: 0.3rem 0.65rem;
-            border-radius: 999px;
-            font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.03em;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
             text-transform: uppercase;
-            border: 1px solid transparent;
+            letter-spacing: 0.025em;
         }
 
-        .teacher-admin-badge--blue { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; border-color: rgba(59, 130, 246, 0.18); }
-        .teacher-admin-badge--gold { background: rgba(245, 158, 11, 0.14); color: #b45309; border-color: rgba(245, 158, 11, 0.18); }
-        .teacher-admin-badge--emerald { background: rgba(16, 185, 129, 0.14); color: #047857; border-color: rgba(16, 185, 129, 0.18); }
-        .teacher-admin-badge--violet { background: rgba(139, 92, 246, 0.14); color: #7c3aed; border-color: rgba(139, 92, 246, 0.18); }
-        .teacher-admin-badge--rose { background: rgba(244, 63, 94, 0.14); color: #e11d48; border-color: rgba(244, 63, 94, 0.18); }
-        .teacher-admin-badge--slate { background: rgba(100, 116, 139, 0.14); color: #334155; border-color: rgba(100, 116, 139, 0.18); }
+        .teacher-admin-badge--blue {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
 
+        .teacher-admin-badge--gold {
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+        .teacher-admin-badge--emerald {
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .teacher-admin-badge--violet {
+            background: #f5f3ff;
+            color: #6d28d9;
+        }
+
+        .teacher-admin-badge--rose {
+            background: #fff1f2;
+            color: #be123c;
+        }
+
+        .teacher-admin-badge--slate {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .activity-age {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .activity-age--fresh {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .teacher-rating-cell .rating-text {
+            font-size: 1.1rem;
+            margin-bottom: 0.1rem;
+        }
+
+        .teacher-rating-cell .text-muted {
+            font-size: 0.75rem;
+        }
+
+        .activity-age--notice {
+            background: #fef9c3;
+            color: #a16207;
+        }
+
+        .activity-age--warning {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .activity-age--danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        /* Dark Mode support */
         html[data-theme="dark"] .admin-filter-panel {
-            background: linear-gradient(180deg, #162033 0%, #111827 100%);
-            border-color: #2b3b53;
+            background: #1e293b;
+            border-color: #334155;
         }
 
         html[data-theme="dark"] .bulk-toolbar {
-            background: #162033;
-            border-color: #2b3b53;
-        }
-
-        html[data-theme="dark"] .bulk-toolbar__summary {
-            color: #cbd5e1;
-        }
-
-        html[data-theme="dark"] .activity-age--fresh {
-            background: rgba(34, 197, 94, 0.16);
-            border-color: rgba(74, 222, 128, 0.4);
-            color: #bbf7d0;
-        }
-
-        html[data-theme="dark"] .activity-age--notice {
-            background: rgba(245, 158, 11, 0.16);
-            border-color: rgba(251, 191, 36, 0.4);
-            color: #fde68a;
-        }
-
-        html[data-theme="dark"] .activity-age--warning {
-            background: rgba(249, 115, 22, 0.16);
-            border-color: rgba(251, 146, 60, 0.4);
-            color: #fdba74;
-        }
-
-        html[data-theme="dark"] .activity-age--danger {
-            background: rgba(239, 68, 68, 0.16);
-            border-color: rgba(248, 113, 113, 0.45);
-            color: #fca5a5;
-        }
-
-        html[data-theme="dark"] #datatable tbody td,
-        html[data-theme="dark"] #datatable tbody a {
-            color: #e2e8f0;
+            background: #2d1a1a;
+            border-color: #4a1a1a;
         }
     </style>
 @endsection
@@ -258,6 +291,9 @@
                 serverSide: true,
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
+                order: [
+                    [5, 'desc']
+                ],
                 ajax: {
                     url: "{{ route('teacher.data') }}",
                     data: function(d) {
@@ -285,6 +321,16 @@
                         data: 'name'
                     },
                     {
+                        data: 'teacher_status',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'rating',
+                        name: 'ratings_avg_rating',
+                        searchable: false
+                    },
+                    {
                         data: 'exp'
                     },
                     {
@@ -309,22 +355,22 @@
                     }
                 ],
                 language: {
-                    processing: 'Äang xá»­ lÃ½...',
-                    search: 'TÃ¬m kiáº¿m:',
-                    lengthMenu: 'Hiá»ƒn thá»‹ _MENU_ báº£n ghi',
-                    info: 'Hiá»ƒn thá»‹ tá»« _START_ Ä‘áº¿n _END_ cá»§a _TOTAL_ báº£n ghi',
-                    infoEmpty: 'Hiá»ƒn thá»‹ 0 Ä‘áº¿n 0 cá»§a 0 báº£n ghi',
-                    infoFiltered: '(lá»c tá»« _MAX_ báº£n ghi)',
-                    loadingRecords: 'Äang táº£i...',
-                    zeroRecords: 'KhÃ´ng tÃ¬m tháº¥y báº£n ghi nÃ o',
-                    emptyTable: 'KhÃ´ng cÃ³ dá»¯ liá»‡u trong báº£ng',
+                    processing: 'Đang xử lý...',
+                    search: 'Tìm kiếm:',
+                    lengthMenu: 'Hiển thị _MENU_ bản ghi',
+                    info: 'Hiển thị từ _START_ đến _END_ của _TOTAL_ bản ghi',
+                    infoEmpty: 'Hiển thị 0 đến 0 của 0 bản ghi',
+                    infoFiltered: '(lọc từ _MAX_ bản ghi)',
+                    loadingRecords: 'Đang tải...',
+                    zeroRecords: 'Không tìm thấy bản ghi nào',
+                    emptyTable: 'Không có dữ liệu trong bảng',
                     paginate: {
-                        previous: 'TrÆ°á»›c',
-                        next: 'Tiáº¿p'
+                        previous: 'Trước',
+                        next: 'Tiếp'
                     },
                     aria: {
-                        sortAscending: ': sáº¯p xáº¿p tÄƒng dáº§n',
-                        sortDescending: ': sáº¯p xáº¿p giáº£m dáº§n'
+                        sortAscending: ': sắp xếp tăng dần',
+                        sortDescending: ': sắp xếp giảm dần'
                     }
                 },
                 drawCallback: function() {
@@ -383,17 +429,28 @@
 
             $('.bulk-action-trigger').on('click', function() {
                 if (selectedIds.size === 0) {
-                    alert('Vui lÃ²ng chá»n Ã­t nháº¥t má»™t giáº£ng viÃªn.');
+                    alert('Vui lòng chọn ít nhất một giảng viên.');
                     return;
                 }
 
-                if ($(this).data('action') === 'delete' && !confirm('XÃ³a cÃ¡c giáº£ng viÃªn Ä‘Ã£ chá»n?')) {
+                if ($(this).data('action') === 'delete' && !confirm('Xóa các giảng viên đã chọn?')) {
                     return;
                 }
 
                 $('#selected-ids').val(Array.from(selectedIds).join(','));
                 $('#bulk-action-input').val($(this).data('action'));
                 $('#bulk-action-form').trigger('submit');
+            });
+
+            // Xử lý nút khóa giáo viên
+            $('#datatable').on('click', '.btn-lock-teacher', function() {
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+                var url = $(this).data('url');
+
+                $('#lock-teacher-name').text(name);
+                $('#lockTeacherForm').attr('action', url);
+                $('#lockTeacherModal').modal('show');
             });
         });
     </script>

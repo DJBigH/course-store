@@ -472,9 +472,12 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
 - Làm cái mã giảm giá dành riêng cho đăng ký giáo viên ( Done )
 - Thêm cái ai tạo mã giảm giá ( Done )
-- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý  gói đặc quyền riêng họ)
-- Check lại logic của module giáo viên
-- Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại
+- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý  gói đặc quyền riêng họ) (Done)
+- Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại (Done)
+- Sắp xếp lại cái sidebar ( Done )
+- Quản lý combo khoá học ( Done thêm cả chức năng Hot để đẩy khoá học đó lên)
+- Khi giảng viên huỷ hợp tác thì trang profile của giảng viên đó sẽ không được thấy nữa mà sẽ chuyển thành 404 hoặc tôi cần bạn đưa thêm ý tưởng là nếu họ dừng hợp tác thì tất cả mọi thứ của họ sẽ làm sao ( Đưa ra ý tưởng tốt hơn) (chó thành 404 và chỉ học viên đã mua mới học được) ( Done )
+- Vi tài khoản học viên sẽ là tài khoản dùng chung để tạo tài khoản giáo viên nên giờ làm cách nào để vào khi admin dùng quản trị sẽ biết rõ tk nào giáo viên tk nào học viên và cho phép admin có thể vào xem tài khoản học viên hay tài khoản giáo viên và có thể đăng nhập vào tài khoản đó để xem kiểm tra cho dễ
 - Chưa làm config ngân hàng
 - Thêm cái dùng hợp tác hủy tư cách giáo viên ẩn tất cả những thứ liên quan đến giáo viên đó, tài khoản giáo viên sẽ được hạ xuống tài khoản học viên không vô được màn giáo viên, tất cả các khóa học được cấp hay của bản thân sẽ ẩn đi và chỉ có học viên nào mua thì vẫn dùng được
 - Tỷ lệ chuyển đổi: xem bao nhiêu người xem trang, xem bao nhiêu người vào trang j nhiều nhất
@@ -484,11 +487,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm chức năng viết được mô tả các chức năng trong gói đấy kiểu ( AI quiz: mổ tả là gì...)
 - Thêm chức năng khóa giảng viên ( Nếu giảng viên vi phạm j đó )
 - Cái góp ý / báo cáo đang trả dữ liệu sai
-- Sắp xếp lại cái sidebar
 - Ở quản lý học viên thêm cái học viên đó đang học khóa học nào của giảng viên nào để dễ kiểm soát
 - Hỏi AI ở 2 màn kia tôi đều đa ngôn ngữ nên số tiền của nó lúc sẽ khác nên bên admin có cần phải làm j để biết đúng số tiền không có cần đa ngôn ngữ không
 - Cần thêm tính năng hay lượt bỏ tính năng j không
 - Chức năng log có thiếu hay không
+- Chức năng phần quyền check xem có thiếu j không
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )

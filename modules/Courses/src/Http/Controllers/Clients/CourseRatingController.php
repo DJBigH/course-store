@@ -70,8 +70,12 @@ class CourseRatingController extends Controller
 
     protected function renderRatingResponse(Request $request, Courses $course, int $studentId, bool $canRate)
     {
-        $course->loadCount('ratings');
-        $course->loadAvg('ratings', 'rating');
+        $course->loadCount(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }]);
+        $course->loadAvg(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }], 'rating');
 
         $html = view('courses::clients.partials.rating_panel', [
             'course' => $course,

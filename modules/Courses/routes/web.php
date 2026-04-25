@@ -24,6 +24,26 @@ Route::prefix('admin')->group(function () {
       Route::post('/edit/{courses}', 'CoursesController@update')->middleware('permission:courses.edit')->name('post-edit');
       Route::delete('/delete/{courses}', 'CoursesController@delete')->middleware('permission:courses.soft_delete')->name('delete');
       Route::get('logs/{courses}', 'CoursesController@logs')->middleware('permission:courses.view')->name('logs');
+
+      // Combo quản lý
+      Route::prefix('bundles')->name('bundles.')->group(function () {
+          Route::get('/', 'Admin\CourseBundleController@index')->middleware('permission:courses.view')->name('index');
+          Route::get('/data', 'Admin\CourseBundleController@data')->middleware('permission:courses.view')->name('data');
+          Route::post('/toggle-status/{id}', 'Admin\CourseBundleController@toggleStatus')->middleware('permission:courses.edit')->name('toggle-status');
+          Route::post('/toggle-hot/{id}', 'Admin\CourseBundleController@toggleHot')->middleware('permission:courses.edit')->name('toggle-hot');
+          Route::post('/update-position', 'Admin\CourseBundleController@updatePosition')->middleware('permission:courses.edit')->name('update-position');
+          Route::delete('/delete/{id}', 'Admin\CourseBundleController@delete')->middleware('permission:courses.delete')->name('delete');
+          Route::post('/bulk', 'Admin\CourseBundleController@bulkAction')->middleware('permission:courses.edit')->name('bulk');
+      });
+
+      // Ratings
+      Route::prefix('ratings')->name('ratings.')->group(function () {
+          Route::get('/', 'Admin\RatingController@index')->middleware('permission:courses.view')->name('index');
+          Route::get('/course-data', 'Admin\RatingController@courseData')->middleware('permission:courses.view')->name('course-data');
+          Route::get('/teacher-data', 'Admin\RatingController@teacherData')->middleware('permission:courses.view')->name('teacher-data');
+          Route::post('/toggle-visibility', 'Admin\RatingController@toggleVisibility')->middleware('permission:courses.edit')->name('toggle-visibility');
+          Route::delete('/delete', 'Admin\RatingController@delete')->middleware('permission:courses.edit')->name('delete');
+      });
    });
 });
 

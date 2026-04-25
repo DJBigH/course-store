@@ -61,6 +61,7 @@
     $teacherUsedCoursesCount = $teacherProfile?->courses()->count() ?? 0;
     $teacherCourseLimit = $teacherCurrentPackage?->effective_course_limit;
     $teacherCourseProgress = $teacherCourseLimit ? min(100, ($teacherUsedCoursesCount / $teacherCourseLimit) * 100) : 0;
+    $teacherIsLocked = $teacherProfile?->is_locked ?? false;
 @endphp
 
 @php
@@ -481,7 +482,7 @@
 <div id="layoutSidenav_nav">
     <nav class="sb-sidenav accordion sb-sidenav-dark" id="teacherSidenav">
         <div class="sb-sidenav-menu">
-            @if ($teacherCurrentPackage)
+            @if ($teacherCurrentPackage && !$teacherIsLocked)
                 <div class="sidebar-package-card" style="--package-tone: {{ $packageTone }}; --package-tone-rgb: {{ $packageToneRgb }};">
                     <div class="sidebar-package-card__profile">
                         <img src="{{ $teacherProfile->image ? asset($teacherProfile->image) : asset('clients/assets/LOGO-DSCONS-FAVICON.png') }}" 
@@ -493,16 +494,6 @@
                             </span>
                         </div>
                     </div>
-
-                    {{-- <div class="sidebar-package-card__stats">
-                        <div class="sidebar-package-card__stats-label">
-                            <span>{{ __('courses::teacher/messages.courses.title') }}</span>
-                            <span>{{ $teacherUsedCoursesCount }}{{ $teacherCourseLimit ? '/' . $teacherCourseLimit : '' }}</span>
-                        </div>
-                        <div class="sidebar-package-card__progress">
-                            <div class="sidebar-package-card__progress-bar" style="width: {{ $teacherCourseProgress }}%"></div>
-                        </div>
-                    </div> --}}
 
                     @if ($teacherIsActive && !$teacherPendingUpgrade)
                         <div class="sidebar-package-card__actions">
@@ -523,6 +514,7 @@
                     </button>
                     <div class="sidebar-group__content">
                         <div class="sidebar-group__inner">
+                            @if (!$teacherIsLocked)
                             <a class="nav-link {{ request()->routeIs('teacher.dashboard.index') ? 'active' : '' }}"
                                 href="{{ route('teacher.dashboard.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-gauge-high"></i></div>
@@ -539,6 +531,7 @@
                                     <span class="nav-link-lock is-maintenance">BAO TRI</span>
                                 @endif
                             </a>
+                            @endif
 
                             <a class="nav-link {{ request()->routeIs('teacher.dashboard.earnings') ? 'active' : '' }}"
                                 href="{{ route('teacher.dashboard.earnings') }}">
@@ -552,11 +545,13 @@
                                 {{ __('teacher/sidebar.nav.payouts') }}
                             </a>
 
+                            @if (!$teacherIsLocked)
                             <a class="nav-link {{ request()->routeIs('teacher.dashboard.orders*') ? 'active' : '' }}"
                                 href="{{ route('teacher.dashboard.orders') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-receipt"></i></div>
                                 {{ __('teacher/sidebar.nav.orders') }}
                             </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -567,6 +562,7 @@
                         <i class="fas fa-chevron-down sidebar-group__icon"></i>
                     </button>
                     <div class="sidebar-group__content">
+                        @if (!$teacherIsLocked)
                         <div class="sidebar-group__inner">
                             {{-- Promotions --}}
                             @if ($teacherCanSendPromotions || $teacherMaintPromotions)
@@ -643,6 +639,13 @@
                                 </a>
                             @endif
                         </div>
+                        @else
+                        <div class="sidebar-group__inner p-3">
+                            <div class="small text-warning bg-warning-subtle p-2 rounded-3 border border-warning-subtle" style="font-size: 0.7rem;">
+                                <i class="fas fa-lock me-1"></i> {{ __('teacher::public.locked_growth_msg') ?? 'Tính năng tăng trưởng bị khóa' }}
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -652,6 +655,7 @@
                         <i class="fas fa-chevron-down sidebar-group__icon"></i>
                     </button>
                     <div class="sidebar-group__content">
+                        @if (!$teacherIsLocked)
                         <div class="sidebar-group__inner">
                             <a class="nav-link {{ request()->routeIs('teacher.dashboard.students*') ? 'active' : '' }} {{ $teacherMaintStudents ? 'is-maintenance' : '' }}"
                                 href="{{ route('teacher.dashboard.students') }}">
@@ -736,6 +740,13 @@
                                 </a>
                             @endif
                         </div>
+                        @else
+                        <div class="sidebar-group__inner p-3">
+                            <div class="small text-warning bg-warning-subtle p-2 rounded-3 border border-warning-subtle" style="font-size: 0.7rem;">
+                                <i class="fas fa-lock me-1"></i> {{ __('teacher::public.locked_interaction_msg') ?? 'Tính năng tương tác bị khóa' }}
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -746,7 +757,7 @@
                     </button>
                     <div class="sidebar-group__content">
                         <div class="sidebar-group__inner">
-                            @if ($teacherIsActive)
+                            @if ($teacherIsActive && !$teacherIsLocked)
                                 <a class="nav-link {{ request()->routeIs('teacher.dashboard.package.upgrade') || request()->routeIs('teacher.dashboard.package.upgrade.*') ? 'active' : '' }}"
                                     href="{{ $teacherPendingUpgrade ? route('teacher.dashboard.package.upgrade.status') : route('teacher.dashboard.package.upgrade') }}">
                                     <div class="sb-nav-link-icon"><i class="fas fa-arrow-trend-up"></i></div>

@@ -19,8 +19,17 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
         return $this->model
             ->withoutGlobalScope(ActiveScope::class)
             ->with(['teacher:id,name'])
-            ->select(['id', 'name', 'price', 'status', 'sale_price', 'created_at', 'teacher_id', 'view'])
-            ->withCount(['lessons', 'students'])
+            ->select(['id', 'name', 'price', 'status', 'sale_price', 'created_at', 'teacher_id', 'view', 'slug', 'slug_en', 'slug_ko', 'slug_ja', 'slug_zh'])
+            ->withCount([
+                'lessons', 
+                'students', 
+                'ratings' => function ($query) {
+                    $query->where('status', 1);
+                }
+            ])
+            ->withAvg(['ratings' => function ($query) {
+                $query->where('status', 1);
+            }], 'rating')
             ->latest();
     }
 
@@ -52,6 +61,9 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
                     ->orWhere('slug_ko', $slug)
                     ->orWhere('slug_ja', $slug)
                     ->orWhere('slug_zh', $slug);
+            })
+            ->whereHas('teacher', function ($query) {
+                $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
             })
             ->first();
     }
@@ -145,6 +157,9 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->where('price', 0)
             ->where('sale_price', 0)
             ->where('status', 1)
+            ->whereHas('teacher', function ($query) {
+                $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+            })
             ->limit(5)
             ->get();
     }
@@ -156,6 +171,9 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->withAvg('ratings', 'rating')
             ->orderBy('view', 'DESC')
             ->where('status', 1)
+            ->whereHas('teacher', function ($query) {
+                $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+            })
             ->limit(5)
             ->get();
     }
@@ -168,6 +186,9 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->orderBy('created_at', 'DESC')
             ->orderBy('updated_at', 'DESC')
             ->where('status', 1)
+            ->whereHas('teacher', function ($query) {
+                $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+            })
             ->limit(5)
             ->get();
     }
@@ -178,6 +199,9 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->withCount('ratings')
             ->withAvg('ratings', 'rating')
             ->where('status', 1)
+            ->whereHas('teacher', function ($query) {
+                $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+            })
             ->get();
     }
 
@@ -187,6 +211,9 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->withCount('ratings')
             ->withAvg('ratings', 'rating')
             ->where('status', 1)
+            ->whereHas('teacher', function ($query) {
+                $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+            })
             ->when($studentId, function ($query) use ($studentId) {
                 $query->whereDoesntHave('students', function ($q) use ($studentId) {
                     $q->where('student_id', $studentId);

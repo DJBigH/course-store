@@ -35,6 +35,8 @@ Route::prefix('admin')->group(function () {
       Route::post('/edit/{teacher}', 'TeacherController@update')->middleware('permission:teachers.edit')->name('post-edit');
       Route::delete('/delete/{teacher}', 'TeacherController@delete')->middleware('permission:teachers.delete,teachers.soft_delete')->name('delete');
       Route::get('logs/{teacher}', 'TeacherController@logs')->middleware('permission:teachers.logs')->name('logs');
+      Route::post('/toggle-lock/{teacher}', 'TeacherController@toggleLock')->middleware('permission:teachers.edit')->name('toggle-lock');
+      Route::post('/toggle-ceased/{teacher}', 'TeacherController@toggleCeased')->middleware('permission:teachers.edit')->name('toggle-ceased');
    });
 
    Route::prefix('teacher-applications')->name('teacher-applications.')->group(function () {
@@ -88,8 +90,8 @@ Route::group([
 
 Route::group([
    'prefix' => 'teacher',
-   'as' => 'teacher.dashboard.',
-   'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active', 'teacher.activity'],
+    'as' => 'teacher.dashboard.',
+    'middleware' => ['setLocale', 'auth:students', 'verified', 'user.block', 'teacher.active', 'teacher.locked', 'teacher.activity'],
 ], function () {
    Route::get('/locale/{locale}', function (Request $request, string $locale) {
       if (!in_array($locale, ['vi', 'en', 'ko', 'ja', 'zh'], true)) {
@@ -109,7 +111,8 @@ Route::group([
       return redirect()->to($redirect);
    })->name('locale');
 
-   Route::get('/', [TeacherDashboardController::class, 'index'])->name('index');
+    Route::get('/locked', [TeacherDashboardController::class, 'locked'])->name('locked');
+    Route::get('/', [TeacherDashboardController::class, 'index'])->name('index');
    Route::get('/ho-so', [TeacherProfileController::class, 'show'])->name('profile');
    Route::post('/ho-so', [TeacherProfileController::class, 'update'])->name('profile.update');
    Route::get('/thong-bao', [TeacherNotificationController::class, 'notifications'])->name('notifications');

@@ -111,18 +111,18 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <select class="form-select" id="badge_key" name="badge_key">
-                                <option value="none" @selected(old('badge_key', 'none') === 'none')>KhÃ´ng hiá»ƒn thá»‹ huy hiá»‡u</option>
+                                <option value="none" @selected(old('badge_key', 'none') === 'none')>Không hiển thị huy hiệu</option>
                                 <option value="verified" @selected(old('badge_key') === 'verified')>Verified Teacher</option>
                                 <option value="premium" @selected(old('badge_key') === 'premium')>Premium Teacher</option>
                                 <option value="top_seller" @selected(old('badge_key') === 'top_seller')>Top Seller</option>
                                 <option value="expert" @selected(old('badge_key') === 'expert')>Expert Mentor</option>
                                 <option value="featured" @selected(old('badge_key') === 'featured')>Featured Teacher</option>
-                                <option value="custom" @selected(old('badge_key') === 'custom')>Tá»± táº¡o huy hiá»‡u</option>
+                                <option value="custom" @selected(old('badge_key') === 'custom')>Tự tạo huy hiệu</option>
                             </select>
                         </div>
                         <div class="col-md-4" data-custom-badge-wrap @if (old('badge_key') !== 'custom') style="display:none;" @endif>
                             <input type="text" class="form-control" name="badge_label" maxlength="100"
-                                value="{{ old('badge_label') }}" placeholder="VÃ­ dá»¥: Best Mentor 2026">
+                                value="{{ old('badge_label') }}" placeholder="Ví dụ: Best Mentor 2026">
                         </div>
                         <div class="col-md-2" data-custom-badge-wrap @if (old('badge_key') !== 'custom') style="display:none;" @endif>
                             <select class="form-select" name="badge_tone">

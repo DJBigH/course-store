@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Packages\src\Http\Controllers\Admin\PackageController as AdminPackageController;
 use Modules\Packages\src\Http\Controllers\Admin\PackageFeatureController;
+use Modules\Packages\src\Http\Controllers\Admin\PackageGrantController;
 use Modules\Packages\src\Http\Controllers\Teacher\UpgradeController;
 
 Route::prefix('admin')->group(function () {
@@ -14,6 +15,10 @@ Route::prefix('admin')->group(function () {
         Route::post('/edit/{id}', [AdminPackageController::class, 'update'])->middleware('permission:teachers.edit')->name('post-edit');
         Route::post('/reorder', [AdminPackageController::class, 'reorder'])->middleware('permission:teachers.edit')->name('reorder');
         Route::delete('/delete/{id}', [AdminPackageController::class, 'delete'])->middleware('permission:teachers.delete')->name('delete');
+        // ─── Grant Package ───────────────────────────────────────────────────────
+        Route::get('/grant', [PackageGrantController::class, 'index'])->middleware('permission:teachers.edit')->name('grant');
+        Route::get('/grant/search-teachers', [PackageGrantController::class, 'searchTeachers'])->middleware('permission:teachers.edit')->name('grant.search-teachers');
+        Route::post('/grant', [PackageGrantController::class, 'grant'])->middleware('permission:teachers.edit')->name('grant.store');
     });
 
     Route::prefix('teacher-package-features')->name('teacher-package-features.')->group(function () {
@@ -35,4 +40,8 @@ Route::group([
     Route::get('/goi/nang-cap/trang-thai', [UpgradeController::class, 'upgradePackageStatus'])->name('package.upgrade.status');
     Route::post('/goi/nang-cap/xac-nhan-da-thanh-toan', [UpgradeController::class, 'markUpgradePaid'])->name('package.upgrade.mark-paid');
     Route::post('/goi/nang-cap/huy', [UpgradeController::class, 'cancelUpgradePackage'])->name('package.upgrade.cancel');
+    // ─── Claim granted package ─────────────────────────────────────────────────
+    Route::get('/goi/nhan-qua/{token}', [\Modules\Packages\src\Http\Controllers\Teacher\PackageClaimController::class, 'show'])->name('package.claim');
+    Route::post('/goi/nhan-qua/{token}', [\Modules\Packages\src\Http\Controllers\Teacher\PackageClaimController::class, 'claim'])->name('package.claim.store');
+    Route::post('/goi/tu-choi/{token}', [\Modules\Packages\src\Http\Controllers\Teacher\PackageClaimController::class, 'decline'])->name('package.claim.decline');
 });

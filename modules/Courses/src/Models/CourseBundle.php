@@ -18,6 +18,7 @@ class CourseBundle extends Model
         'description',
         'image',
         'status',
+        'is_hot',
         'position',
         'created_at',
         'updated_at'
@@ -26,6 +27,7 @@ class CourseBundle extends Model
     protected $casts = [
         'price' => 'float',
         'status' => 'boolean',
+        'is_hot' => 'boolean',
         'position' => 'integer',
     ];
 

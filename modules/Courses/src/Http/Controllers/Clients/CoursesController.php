@@ -53,8 +53,15 @@ class CoursesController extends Controller
         $pageTitle = __('courses::clients/common.page_title');
         $pageName = __('courses::clients/common.page_title');
         $courses = Courses::query()
-            ->withCount(['students', 'ratings'])
-            ->withAvg('ratings', 'rating')
+            ->withCount(['students', 'ratings' => function ($query) {
+                $query->where('status', 1);
+            }])
+            ->withAvg(['ratings' => function ($query) {
+                $query->where('status', 1);
+            }], 'rating')
+            ->whereHas('teacher', function ($query) {
+                $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+            })
             ->when($searchKeyword !== '', function ($query) use ($searchKeyword) {
                 $query->where(function ($searchQuery) use ($searchKeyword) {
                     $searchQuery->where('name', 'like', '%' . $searchKeyword . '%')
@@ -143,11 +150,19 @@ class CoursesController extends Controller
         $canComment = $hasCourse;
         $canRate = $hasCourse;
         $viewerIsAdmin = Auth::check();
-        $course->loadCount('ratings');
-        $course->loadAvg('ratings', 'rating');
+        $course->loadCount(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }]);
+        $course->loadAvg(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }], 'rating');
         if ($course->teacher) {
-            $course->teacher->loadCount('ratings');
-            $course->teacher->loadAvg('ratings', 'rating');
+            $course->teacher->loadCount(['ratings' => function ($query) {
+                $query->where('status', 1);
+            }]);
+            $course->teacher->loadAvg(['ratings' => function ($query) {
+                $query->where('status', 1);
+            }], 'rating');
         }
         $threads = courseCommentThreads($course->id, $viewerIsAdmin);
         $viewerCourseRating = $student

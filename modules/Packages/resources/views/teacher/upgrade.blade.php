@@ -206,6 +206,14 @@
                         ]) }}
                     </div>
                 @endif
+                @if ($teacher->application?->granted_by)
+                    <div class="mt-2">
+                        <span style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.75rem;border-radius:999px;font-size:0.77rem;font-weight:700;background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);">
+                            <i class="fa-solid fa-gift" style="font-size:0.72rem;"></i>
+                            Được tặng bởi Admin
+                        </span>
+                    </div>
+                @endif
                 @if ($recommendedPackageId)
                     <div class="teacher-upgrade-current__recommend mt-3">
                         {{ __('packages::teacher.features.recommend_intro') }}

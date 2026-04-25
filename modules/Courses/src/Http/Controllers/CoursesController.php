@@ -156,6 +156,17 @@ class CoursesController extends Controller
                     </div>
                 ';
             })
+            ->addColumn('rating', function ($course) {
+                $avg = round((float) ($course->ratings_avg_rating ?? 0), 1);
+                $count = (int) ($course->ratings_count ?? 0);
+                
+                return '<div class="course-rating-cell text-center">
+                            <div class="rating-text fw-bold text-warning">
+                                <i class="fa-solid fa-star me-1"></i>' . $avg . ' / 5
+                            </div>
+                            <div class="small text-muted">' . $count . ' đánh giá</div>
+                        </div>';
+            })
             ->addColumn('publish', function ($course) use ($canPublish) {
                 if (!$canPublish) {
                     return '<span class="text-muted small">Không có quyền</span>';
@@ -230,7 +241,7 @@ class CoursesController extends Controller
 
                 return '<span class="course-free-badge">Miễn phí</span>';
             })
-            ->rawColumns(['select', 'overview', 'learning', 'publish', 'duplicate', 'logs', 'lessions', 'edit', 'delete', 'status', 'price'])
+            ->rawColumns(['select', 'overview', 'learning', 'rating', 'publish', 'duplicate', 'logs', 'lessions', 'edit', 'delete', 'status', 'price'])
             ->toJson();
     }
     public function trashData()
