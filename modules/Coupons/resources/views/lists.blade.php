@@ -66,6 +66,7 @@
                                 <input type="checkbox" id="select-all-records" class="form-check-input">
                             </th>
                             <th>Mã</th>
+                            <th>Người tạo</th>
                             <th>Loại giảm</th>
                             <th>Giá trị</th>
                             <th>Cách dùng</th>
@@ -135,6 +136,9 @@
                     },
                     {
                         data: 'code'
+                    },
+                    {
+                        data: 'creator'
                     },
                     {
                         data: 'discount_type'

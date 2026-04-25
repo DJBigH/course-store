@@ -468,11 +468,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check cái notify thì cần thêm cái j nx ko ( Done )
 - Thêm cái lịch sử đăng nhập, lịch sử thao tác ở bên admin và thêm 1 cái nữa check đăng nhập khác thiếp bị hoặc khác ip sẽ báo lên notify ( không dùng email để gửi, gửi lên log là được) ( Done )
 - Check lại responsive ( Done)
-- Viết seed quyền cho giáo viên
-- Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó))
+- Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó)) ( Done )
 - Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
-- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên 
-- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý )
+- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên ( Done )
+- Thêm cái ai tạo mã giảm giá ( Done )
+- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý  gói đặc quyền riêng họ)
 - Check lại logic của module giáo viên
 - Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại
 - Chưa làm config ngân hàng
@@ -482,6 +482,13 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm chức năng quản lý huy hiệu ( CURD, xóa mềm có thùng rác để khôi phục và cho tự thêm màu với từng huy hiệu và cho thêm icon và cung cấp nơi xem mã màu và icon để admin dễ dang dung và thay thế )
 - Sắp xếp lại nội dung trong dashboard của admin
 - Thêm chức năng viết được mô tả các chức năng trong gói đấy kiểu ( AI quiz: mổ tả là gì...)
+- Thêm chức năng khóa giảng viên ( Nếu giảng viên vi phạm j đó )
+- Cái góp ý / báo cáo đang trả dữ liệu sai
+- Sắp xếp lại cái sidebar
+- Ở quản lý học viên thêm cái học viên đó đang học khóa học nào của giảng viên nào để dễ kiểm soát
+- Hỏi AI ở 2 màn kia tôi đều đa ngôn ngữ nên số tiền của nó lúc sẽ khác nên bên admin có cần phải làm j để biết đúng số tiền không có cần đa ngôn ngữ không
+- Cần thêm tính năng hay lượt bỏ tính năng j không
+- Chức năng log có thiếu hay không
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )

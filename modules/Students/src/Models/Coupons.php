@@ -18,6 +18,7 @@ class Coupons extends Model
 
     protected $fillable = [
         'teacher_id',
+        'created_by',
         'code',
         'discount_type',
         'discount_value',
@@ -51,6 +52,11 @@ class Coupons extends Model
     public function teacher()
     {
         return $this->belongsTo(Teacher::class, 'teacher_id', 'id');
+    }
+
+    public function creatorAdmin()
+    {
+        return $this->belongsTo(\Modules\User\src\Models\User::class, 'created_by', 'id');
     }
 
     public function courses()

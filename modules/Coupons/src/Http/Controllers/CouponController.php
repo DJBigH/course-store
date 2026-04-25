@@ -113,6 +113,25 @@ class CouponController extends Controller
                     ? '<a href="' . route('coupons.delete', $coupon->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>'
                     : '<span class="text-muted small">Không có quyền</span>';
             })
+            ->addColumn('creator', function ($coupon) {
+                if ($coupon->teacher_id) {
+                    return '
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-2">GV</span>
+                            <span class="text-dark fw-bold">' . ($coupon->teacher?->name_locale ?: $coupon->teacher?->name ?: 'N/A') . '</span>
+                        </div>';
+                }
+
+                if ($coupon->creatorAdmin) {
+                    return '
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-secondary me-2">AD</span>
+                            <span class="text-dark fw-bold">' . $coupon->creatorAdmin->name . '</span>
+                        </div>';
+                }
+
+                return '<span class="text-muted small">N/A</span>';
+            })
             ->addColumn('bindings', function ($coupon) use ($canAssign) {
                 if (!$canAssign) {
                     return '<span class="text-muted small">Không có quyền</span>';
@@ -130,7 +149,7 @@ class CouponController extends Controller
                     </a>
                 ';
             })
-            ->rawColumns(['select', 'edit', 'delete', 'discount_type', 'discount_value', 'usage_mode', 'time', 'bindings', 'count', 'logs'])
+            ->rawColumns(['select', 'edit', 'delete', 'discount_type', 'discount_value', 'usage_mode', 'time', 'bindings', 'count', 'logs', 'creator'])
             ->make(true);
     }
 
@@ -333,6 +352,7 @@ class CouponController extends Controller
     public function store(CouponRequest $request)
     {
         $data = $request->validated();
+        $data['created_by'] = auth()->id();
 
         $coupon = $this->couponRepository->create($data);
         if (!$coupon) {
