@@ -13,6 +13,7 @@ class CourseRating extends Model
         'course_id',
         'student_id',
         'rating',
+        'status',
     ];
 
     protected $casts = [

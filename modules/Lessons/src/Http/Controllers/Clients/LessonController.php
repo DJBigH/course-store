@@ -41,13 +41,9 @@ class LessonController extends Controller
             abort(404);
         }
 
-        $hasCourse = $student
-            ? $student
-                ->courses()
-                ->where('courses.id', $course->id)
-                ->wherePivot('status', 1)
-                ->exists()
-            : false;
+        $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+        $isImpersonating = session()->has('admin_impersonator');
+        $hasCourse = $isAdmin || $isImpersonating || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
 
         if ((int) $course->status !== 1 && !$hasCourse) {
             abort(404);
@@ -160,7 +156,7 @@ class LessonController extends Controller
             ->wherePivot('status', 1)
             ->exists();
 
-        if (!$hasCourse) {
+        if (!$hasCourse && session()->missing('admin_impersonator')) {
             return $this->completionErrorResponse($request, 403, __('courses::clients/common.lesson_purchase_required'));
         }
 
@@ -395,7 +391,7 @@ class LessonController extends Controller
 
         foreach ($lessons as $item) {
             $context = $lessonContexts[(int) $item->id] ?? [];
-            $scheduleLocked = $hasCourse && !$this->lessonReleaseManager->isAvailableForStudent($item, true, $enrolledAt, $context);
+            $scheduleLocked = $hasCourse && !$this->lessonReleaseManager->isAvailableForStudent($item, true, $enrolledAt, $context) && session()->missing('admin_impersonator');
             $canOpenLesson = ($hasCourse || (int) $item->is_trial === 1) && !$scheduleLocked;
 
             $map[(int) $item->id] = [

@@ -32,6 +32,13 @@ return [
 
     // Course state
     'no_lectures' => 'Khóa học chưa có bài giảng',
+    'coming_soon' => 'Sắp ra mắt',
+    'opens_in' => 'Chính thức mở sau',
+    'countdown_days' => 'ngày',
+    'countdown_hours' => 'giờ',
+    'countdown_minutes' => 'phút',
+    'countdown_seconds' => 'giây',
+    'coming_soon_desc' => 'Khóa học đang trong quá trình hoàn thiện cuối cùng và sẽ sớm ra mắt.',
 
     // Lessons
     'lesson'                 => 'bài học',

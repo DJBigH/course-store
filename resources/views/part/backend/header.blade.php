@@ -6,8 +6,28 @@
     </button>
 
     <div class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-        <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" target="_blank" class="text-white">Xem website</a>
+        <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" target="_blank" 
+           class="btn btn-sm btn-outline-light d-flex align-items-center gap-2 view-site-btn">
+            <i class="fas fa-globe"></i>
+            <span>Xem website</span>
+        </a>
     </div>
+    <style>
+        .view-site-btn {
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-color: rgba(255,255,255,0.25);
+            color: #fff !important;
+        }
+        .view-site-btn:hover {
+            background-color: rgba(255,255,255,0.15) !important;
+            border-color: #fff !important;
+            color: #fff !important;
+            transform: translateY(-1px);
+        }
+    </style>
 
     <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4 align-items-center">
         @php
@@ -86,11 +106,22 @@
         </li>
 
         <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button"
+            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" id="navbarDropdown" href="#" role="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="d-none d-lg-block text-end me-1">
+                    <div class="fw-bold lh-1 small text-white">{{ $admin->name }}</div>
+                    <div class="text-white-50 tiny-role mt-1">{{ $admin->group?->name ?? 'Admin' }}</div>
+                </div>
                 <i class="fas fa-user fa-fw"></i>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+            <style>
+                .tiny-role {
+                    font-size: 0.65rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+            </style>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="navbarDropdown">
                 <li>
                     <a class="dropdown-item" href="{{ route('user.show') }}">
                         Thông tin cá nhân

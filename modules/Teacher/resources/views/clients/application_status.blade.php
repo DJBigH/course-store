@@ -16,6 +16,27 @@
             : $copy['labels']['student'];
         $statusMessage = $copy['messages'][$application->status] ?? null;
         $paymentGuide = $copy['payment_guide'][$application->payment_method] ?? $copy['payment_guide']['bank_transfer'];
+
+        $bankEnabled = (int) setting('payment_bank_enabled', '1') === 1;
+        $vnpayEnabled = (int) setting('payment_vnpay_enabled', '1') === 1;
+        $momoEnabled = (int) setting('payment_momo_enabled', '1') === 1;
+
+        $isBank = $application->payment_method === 'bank_transfer' || empty($application->payment_method);
+        $isVnpay = $application->payment_method === 'vnpay';
+        $isMomo = $application->payment_method === 'momo';
+
+        $methodEnabled = match($application->payment_method) {
+            'vnpay' => $vnpayEnabled,
+            'momo' => $momoEnabled,
+            default => $bankEnabled,
+        };
+
+        $bankTransferBankName = setting('bank_transfer_bank_name', 'Techcombank');
+        $bankTransferBankBin = setting('bank_transfer_bank_bin', 'techcombank');
+        $bankTransferAccountNumber = setting('bank_transfer_account_number', '61043040524');
+        $bankTransferAccountName = setting('bank_transfer_account_name', 'Nguyễn Văn A');
+        $bankTransferNotePrefix = trim((string) setting('bank_transfer_note_prefix', 'CK'));
+        $bankTransferNote = trim($bankTransferNotePrefix . ' GV' . $application->id);
     @endphp
 
     <section class="teacher-application-status py-5">
@@ -86,8 +107,51 @@
 
                             @if ($application->status === 'pending_payment')
                                 <div class="teacher-status-payment mt-3">
-                                    <strong>{{ $copy['labels']['quick_guide'] }}</strong>
-                                    <p class="mb-0">{{ $paymentGuide }}</p>
+                                    @if (!$methodEnabled)
+                                        <div class="alert alert-warning mb-0 border-0 rounded-4">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            Phương thức <strong>{{ $application->payment_method_label }}</strong> hiện đang bảo trì. Vui lòng quay lại sau hoặc chỉnh sửa hồ sơ để chọn phương thức khác.
+                                        </div>
+                                    @else
+                                        <div class="payment-instructions">
+                                            @if ($isBank)
+                                                <div class="bank-details mb-3">
+                                                    <h6 class="fw-bold mb-2 small text-uppercase opacity-75">Thông tin chuyển khoản</h6>
+                                                    <ul class="list-unstyled mb-0 small">
+                                                        <li class="mb-1">🏦 <strong>Ngân hàng:</strong> {{ $bankTransferBankName }}</li>
+                                                        <li class="mb-1">🔢 <strong>STK:</strong> <span class="fw-bold text-primary">{{ $bankTransferAccountNumber }}</span></li>
+                                                        <li class="mb-1">👤 <strong>Chủ TK:</strong> {{ $bankTransferAccountName }}</li>
+                                                        <li class="mb-1">💰 <strong>Số tiền:</strong> <span class="fw-bold text-danger">{{ money($application->payable_amount) }}</span></li>
+                                                        <li>📝 <strong>Nội dung:</strong> <span class="fw-bold text-success">{{ $bankTransferNote }}</span></li>
+                                                    </ul>
+                                                </div>
+                                                <div class="text-center bg-white p-2 rounded-4 d-inline-block border mb-3">
+                                                    <img src="https://img.vietqr.io/image/{{ $bankTransferBankBin }}-{{ $bankTransferAccountNumber }}-compact2.jpg?amount={{ $application->payable_amount }}&addInfo={{ rawurlencode($bankTransferNote) }}" 
+                                                         alt="VietQR" class="img-fluid" style="max-height: 200px;">
+                                                    <div class="mt-1 small text-muted">Quét mã để thanh toán</div>
+                                                </div>
+                                            @endif
+
+                                            @if ($isVnpay)
+                                                <div class="alert alert-info border-0 rounded-4 mb-3">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    Hệ thống sẽ xử lý thanh toán qua cổng <strong>VNPAY</strong>. Vui lòng liên hệ Admin nếu bạn đã thanh toán nhưng trạng thái chưa cập nhật.
+                                                </div>
+                                            @endif
+
+                                            @if ($isMomo)
+                                                <div class="alert alert-info border-0 rounded-4 mb-3">
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    Hệ thống sẽ xử lý thanh toán qua ví <strong>MoMo</strong>. Vui lòng liên hệ Admin nếu bạn đã thanh toán nhưng trạng thái chưa cập nhật.
+                                                </div>
+                                            @endif
+
+                                            <div class="quick-guide p-2 rounded-3 bg-white-50 border-start border-4 border-warning small">
+                                                <strong>{{ $copy['labels']['quick_guide'] }}</strong>
+                                                <p class="mb-0 text-muted">{{ $paymentGuide }}</p>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
                         </div>
@@ -253,9 +317,34 @@
         }
 
         .teacher-status-payment {
-            padding: 1rem 1.1rem;
-            border-radius: 18px;
+            padding: 1.25rem;
+            border-radius: 22px;
             background: var(--teacher-status-payment-bg);
+        }
+
+        .payment-instructions ul li {
+            position: relative;
+            padding-left: 0.25rem;
+        }
+
+        .bank-details {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        html[data-theme="dark"] .bank-details {
+            background: rgba(15, 23, 42, 0.3);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .quick-guide {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        html[data-theme="dark"] .quick-guide {
+            background: rgba(15, 23, 42, 0.5);
         }
 
         .teacher-status-payment strong {

@@ -53,8 +53,15 @@ class CoursesController extends Controller
         $pageTitle = __('courses::clients/common.page_title');
         $pageName = __('courses::clients/common.page_title');
         $courses = Courses::query()
-            ->withCount(['students', 'ratings'])
-            ->withAvg('ratings', 'rating')
+            ->withCount(['students', 'ratings' => function ($query) {
+                $query->where('status', 1);
+            }])
+            ->withAvg(['ratings' => function ($query) {
+                $query->where('status', 1);
+            }], 'rating')
+            ->whereHas('teacher', function ($query) {
+                $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+            })
             ->when($searchKeyword !== '', function ($query) use ($searchKeyword) {
                 $query->where(function ($searchQuery) use ($searchKeyword) {
                     $searchQuery->where('name', 'like', '%' . $searchKeyword . '%')
@@ -101,13 +108,9 @@ class CoursesController extends Controller
             abort(404);
         }
 
-        $hasCourse = $student
-            ? $student
-                ->courses()
-                ->where('courses.id', $course->id)
-                ->wherePivot('status', 1)
-                ->exists()
-            : false;
+        $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+        $isImpersonating = session()->has('admin_impersonator');
+        $hasCourse = $isAdmin || $isImpersonating || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
 
         if ((int) $course->status !== 1 && !$hasCourse) {
             abort(404);
@@ -143,11 +146,19 @@ class CoursesController extends Controller
         $canComment = $hasCourse;
         $canRate = $hasCourse;
         $viewerIsAdmin = Auth::check();
-        $course->loadCount('ratings');
-        $course->loadAvg('ratings', 'rating');
+        $course->loadCount(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }]);
+        $course->loadAvg(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }], 'rating');
         if ($course->teacher) {
-            $course->teacher->loadCount('ratings');
-            $course->teacher->loadAvg('ratings', 'rating');
+            $course->teacher->loadCount(['ratings' => function ($query) {
+                $query->where('status', 1);
+            }]);
+            $course->teacher->loadAvg(['ratings' => function ($query) {
+                $query->where('status', 1);
+            }], 'rating');
         }
         $threads = courseCommentThreads($course->id, $viewerIsAdmin);
         $viewerCourseRating = $student
@@ -338,6 +349,13 @@ class CoursesController extends Controller
             abort(403, 'Khóa học này đang tạm thời bị khóa học tập.');
         }
 
+        // Kiểm tra Sắp ra mắt cho khóa học lẻ
+        if ($course->is_coming_soon && $course->coming_soon_start_at && $course->coming_soon_start_at->isFuture()) {
+            return back()
+                ->with('msg', 'Khóa học này chưa mở bán. Vui lòng chờ đến ngày ra mắt!')
+                ->with('msgType', 'warning');
+        }
+
         $price = $course->sale_price && $course->sale_price > 0
             ? $course->sale_price
             : $course->price;
@@ -377,6 +395,25 @@ class CoursesController extends Controller
             ->where('id', (int) $request->input('bundle_id'))
             ->where('status', true)
             ->firstOrFail();
+
+        // Kiểm tra các điều kiện bán hàng cho Combo
+        if ($bundle->is_coming_soon && $bundle->coming_soon_start_at && $bundle->coming_soon_start_at->isFuture()) {
+            return back()
+                ->with('msg', 'Combo này chưa chính thức mở bán. Vui lòng quay lại sau!')
+                ->with('msgType', 'warning');
+        }
+
+        if ($bundle->end_at && $bundle->end_at->isPast()) {
+            return back()
+                ->with('msg', 'Rất tiếc, thời gian đăng ký combo này đã kết thúc!')
+                ->with('msgType', 'danger');
+        }
+
+        if ($bundle->quantity !== null && $bundle->quantity <= 0) {
+            return back()
+                ->with('msg', 'Combo này hiện đã hết lượt đăng ký!')
+                ->with('msgType', 'danger');
+        }
 
         $courses = $bundle->items
             ->pluck('course')

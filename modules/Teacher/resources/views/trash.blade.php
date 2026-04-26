@@ -55,6 +55,7 @@
                             </th>
                             <th>{{ __('courses::teacher/messages.trash.table.image') }}</th>
                             <th>{{ __('courses::teacher/messages.trash.table.name') }}</th>
+                            <th>Trạng thái</th>
                             <th>{{ __('courses::teacher/messages.trash.table.deleted_at') }}</th>
                             <th>{{ __('courses::teacher/messages.trash.table.restore') }}</th>
                             <th>{{ __('courses::teacher/messages.trash.table.force_delete') }}</th>
@@ -126,6 +127,9 @@
                     },
                     {
                         data: 'name'
+                    },
+                    {
+                        data: 'lock_status'
                     },
                     {
                         data: 'deleted_at'

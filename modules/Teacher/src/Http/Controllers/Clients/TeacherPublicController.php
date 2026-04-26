@@ -19,6 +19,16 @@ class TeacherPublicController extends Controller
     public function show($locale, string $slug)
     {
         $teacher = $this->findTeacher($slug);
+
+        if ($teacher->status === Teacher::STATUS_CEASED) {
+            abort(404);
+        }
+
+        if ($teacher->is_locked) {
+            $pageTitle = __('teacher::public.suspended_title', ['name' => $teacher->name_locale]);
+            return view('teacher::clients.suspended', compact('teacher', 'pageTitle'));
+        }
+
         if ($expiredResponse = $this->affiliateLinkManager->ensurePublicAccessAllowed(request(), $teacher, 'landing', null)) {
             return $expiredResponse;
         }
@@ -32,14 +42,29 @@ class TeacherPublicController extends Controller
         $student = Auth::guard('students')->user();
         $canRateTeacher = $student ? $this->studentCanRateTeacher($student->id, $teacher->id) : false;
 
-        $teacher->loadCount('ratings');
-        $teacher->loadAvg('ratings', 'rating');
+        $teacher->loadCount(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }]);
+        $teacher->loadAvg(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }], 'rating');
         $courses = Courses::query()
-            ->withCount('ratings')
-            ->withAvg('ratings', 'rating')
+            ->withCount(['ratings' => function ($query) {
+                $query->where('status', 1);
+            }])
+            ->withAvg(['ratings' => function ($query) {
+                $query->where('status', 1);
+            }], 'rating')
             ->where('teacher_id', $teacher->id)
             ->where('status', 1)
             ->latest('id')
+            ->get();
+
+        $bundles = $teacher->bundles()
+            ->where('status', 1)
+            ->orderBy('position', 'asc')
+            ->orderBy('is_hot', 'desc')
+            ->latest()
             ->get();
 
         $pageTitle = $teacher->name_locale;
@@ -56,6 +81,7 @@ class TeacherPublicController extends Controller
             'pageName',
             'teacher',
             'courses',
+            'bundles',
             'canRateTeacher',
             'viewerTeacherRating'
         ));
@@ -98,8 +124,12 @@ class TeacherPublicController extends Controller
             'rating' => $rating,
         ]);
 
-        $teacher->loadCount('ratings');
-        $teacher->loadAvg('ratings', 'rating');
+        $teacher->loadCount(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }]);
+        $teacher->loadAvg(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }], 'rating');
 
         $html = view('teacher::clients.partials.rating_panel', [
             'teacher' => $teacher,

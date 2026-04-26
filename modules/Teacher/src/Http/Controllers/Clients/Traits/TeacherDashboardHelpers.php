@@ -2397,6 +2397,8 @@ trait TeacherDashboardHelpers
             'is_document' => (int) $data['is_document'],
             'status' => $normalizedStatus,
             'is_learning_locked' => (int) $data['is_learning_locked'],
+            'is_coming_soon' => (bool) ($data['is_coming_soon'] ?? false),
+            'coming_soon_start_at' => $data['coming_soon_start_at'] ?? null,
         ];
     }
 
@@ -3450,7 +3452,12 @@ trait TeacherDashboardHelpers
                 'description' => trim((string) ($data['description'] ?? '')),
                 'thumbnail' => trim((string) ($data['thumbnail'] ?? '')),
                 'price' => (float) $data['price'],
+                'sale_price' => isset($data['sale_price']) && $data['sale_price'] !== '' ? (float) $data['sale_price'] : null,
                 'status' => (bool) ($data['status'] ?? false),
+                'is_coming_soon' => (bool) ($data['is_coming_soon'] ?? false),
+                'coming_soon_start_at' => $data['coming_soon_start_at'] ?? null,
+                'quantity' => isset($data['quantity']) && $data['quantity'] !== '' ? (int) $data['quantity'] : null,
+                'end_at' => $data['end_at'] ?? null,
             ];
 
             $bundle = $existingBundle;

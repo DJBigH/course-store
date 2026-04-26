@@ -66,6 +66,7 @@ class Package extends Model
         'status',
         'hidden_mode',
         'is_featured',
+        'is_exclusive',
         'sort_order',
         'badge_tone',
     ];
@@ -99,6 +100,7 @@ class Package extends Model
         'can_use_affiliate_links' => 'boolean',
         'status' => 'boolean',
         'is_featured' => 'boolean',
+        'is_exclusive' => 'boolean',
     ];
 
     protected static $systemFeatureStatus = null;
@@ -126,7 +128,15 @@ class Package extends Model
 
     public function scopeVisibleForListing($query)
     {
-        return $query->where('status', true)->orderBy('sort_order')->limit(6);
+        return $query->where('status', true)->where('is_exclusive', false)->orderBy('sort_order')->limit(6);
+    }
+
+    /**
+     * Lấy tất cả gói (kể cả gói ẩn và gói exclusive) để Admin dùng khi chọn gói tặng giáo viên.
+     */
+    public function scopeGrantable($query)
+    {
+        return $query->orderBy('sort_order');
     }
 
     public function scopeSelectable($query)

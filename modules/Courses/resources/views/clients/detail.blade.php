@@ -212,7 +212,25 @@
                                 $firstLesson = $course->lessons->whereNotNull('parent_id')->first();
                             @endphp
 
-                            @if ($hasCourse && $firstLesson)
+                            @if ($course->is_coming_soon && $course->coming_soon_start_at && $course->coming_soon_start_at->isFuture())
+                                <div class="coming-soon-wrapper mb-3 text-center p-3 rounded bg-light border border-warning">
+                                    <h6 class="text-warning fw-bold mb-2">
+                                        <i class="fa-solid fa-clock-rotate-left"></i> {{ __('courses::clients/common.coming_soon') }}
+                                    </h6>
+                                    <div class="countdown-timer d-flex justify-content-center gap-2" 
+                                         data-time="{{ $course->coming_soon_start_at->toIso8601String() }}">
+                                        <div class="time-item"><span class="days">00</span><small>{{ __('courses::clients/common.countdown_days') }}</small></div>
+                                        <div class="time-item"><span class="hours">00</span><small>{{ __('courses::clients/common.countdown_hours') }}</small></div>
+                                        <div class="time-item"><span class="minutes">00</span><small>{{ __('courses::clients/common.countdown_minutes') }}</small></div>
+                                        <div class="time-item"><span class="seconds">00</span><small>{{ __('courses::clients/common.countdown_seconds') }}</small></div>
+                                    </div>
+                                    <small class="text-muted mt-2 d-block">{{ __('courses::clients/common.coming_soon_desc') }}</small>
+                                </div>
+                                <button class="btn btn-secondary w-100 fw-semibold" disabled>
+                                    <i class="fa-solid fa-hourglass-start me-1"></i>
+                                    {{ __('courses::clients/common.coming_soon') }}
+                                </button>
+                            @elseif ($hasCourse && $firstLesson)
                                 <a href="{{ route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $firstLesson->slug_locale]) }}"
                                     class="btn btn-success w-100 fw-semibold">
                                     <i class="fa-solid fa-play me-1"></i>
@@ -615,6 +633,29 @@
                 border-radius: 12px;
             }
         }
+        .coming-soon-wrapper {
+            background: linear-gradient(145deg, #fffcf0, #fff9db) !important;
+        }
+        .countdown-timer .time-item {
+            background: #fff;
+            padding: 8px;
+            border-radius: 8px;
+            min-width: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .countdown-timer .time-item span {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #d97706;
+            line-height: 1;
+        }
+        .countdown-timer .time-item small {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #92400e;
+            font-weight: 700;
+        }
     </style>
 @endsection
 
@@ -915,6 +956,36 @@
             });
 
             initCommentEditors();
+            const countdown = () => {
+                const timerEl = document.querySelector('.countdown-timer');
+                if (!timerEl) return;
+
+                const targetDate = new Date(timerEl.dataset.time).getTime();
+                const update = () => {
+                    const now = new Date().getTime();
+                    const diff = targetDate - now;
+
+                    if (diff <= 0) {
+                        window.location.reload();
+                        return;
+                    }
+
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    timerEl.querySelector('.days').innerText = String(days).padStart(2, '0');
+                    timerEl.querySelector('.hours').innerText = String(hours).padStart(2, '0');
+                    timerEl.querySelector('.minutes').innerText = String(minutes).padStart(2, '0');
+                    timerEl.querySelector('.seconds').innerText = String(seconds).padStart(2, '0');
+                };
+
+                update();
+                setInterval(update, 1000);
+            };
+
+            countdown();
         });
     </script>
 @endsection

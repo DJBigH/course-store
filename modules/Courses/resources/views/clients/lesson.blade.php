@@ -1,13 +1,9 @@
 @php
     $modules = getModuleByPosition($course);
     $student = Auth::guard('students')->user();
-    $hasCourseAccess = $student
-        ? $student
-            ->courses()
-            ->where('courses.id', $course->id)
-            ->wherePivot('status', 1)
-            ->exists()
-        : false;
+    $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+    $isImpersonating = session()->has('admin_impersonator');
+    $hasCourseAccess = $isAdmin || $isImpersonating || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
 @endphp
 
 @if ($modules->isEmpty())

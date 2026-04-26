@@ -401,16 +401,56 @@
                             </div>
                         @else
                             <div class="header-auth-actions d-flex align-items-center gap-2">
-                                <a href="{{ route('clients-register', ['locale' => app()->getLocale()]) }}"
-                                    class="btn btn-primary header-auth-btn">
-                                    <i class="fas fa-user"></i>
-                                    <span>{{ __('clients/common.register') }}</span>
-                                </a>
-                                <a href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}"
-                                    class="btn btn-primary header-auth-btn">
-                                    <i class="fas fa-key"></i>
-                                    <span>{{ __('clients/common.login') }}</span>
-                                </a>
+                                @if (auth()->check())
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2"
+                                            type="button" id="adminDropdown" data-bs-toggle="dropdown"
+                                            aria-expanded="false">
+                                            <i class="fas fa-user-shield"></i>
+                                            <div class="text-start">
+                                                <div class="small fw-bold lh-1">{{ auth()->user()->name }}</div>
+                                                <div class="tiny-role-client mt-1 opacity-75">{{ auth()->user()->group?->name ?? 'Admin' }}</div>
+                                            </div>
+                                        </button>
+                                        <style>
+                                            .tiny-role-client {
+                                                font-size: 0.6rem;
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.03em;
+                                            }
+                                        </style>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="adminDropdown">
+                                            @if(auth()->user()->hasPermission('dashboard.view'))
+                                                <li>
+                                                    <a class="dropdown-item d-flex align-items-center gap-2"
+                                                        href="{{ route('admin.index') }}">
+                                                        <i class="fas fa-tachometer-alt"></i> Trang quản trị
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                            @endif
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center gap-2 text-danger"
+                                                    href="#"
+                                                    onclick="event.preventDefault(); document.getElementById('admin-logout-form').submit();">
+                                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <form id="admin-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+                                @else
+                                    <a href="{{ route('clients-register', ['locale' => app()->getLocale()]) }}"
+                                        class="btn btn-primary header-auth-btn">
+                                        <i class="fas fa-user"></i>
+                                        <span>{{ __('clients/common.register') }}</span>
+                                    </a>
+                                    <a href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}"
+                                        class="btn btn-primary header-auth-btn">
+                                        <i class="fas fa-key"></i>
+                                        <span>{{ __('clients/common.login') }}</span>
+                                    </a>
+                                @endif
                             </div>
                         @endif
 

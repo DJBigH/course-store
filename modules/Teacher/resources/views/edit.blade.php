@@ -107,25 +107,25 @@
 
             <div class="col-12">
                 <div class="mb-3">
-                    <label class="form-label">Huy hiá»‡u giáº£ng viÃªn</label>
+                    <label class="form-label">Huy hiệu giảng viên</label>
                     @php
                         $selectedBadgeKey = old('badge_key', $teacher->badge_key ?: ($teacher->is_verified_badge ? 'verified' : ($teacher->is_premium_badge ? 'premium' : 'none')));
                     @endphp
                     <div class="row g-3">
                         <div class="col-md-6">
                             <select class="form-select" id="badge_key" name="badge_key">
-                                <option value="none" @selected($selectedBadgeKey === 'none')>KhÃ´ng hiá»ƒn thá»‹ huy hiá»‡u</option>
+                                <option value="none" @selected($selectedBadgeKey === 'none')>Không hiển thị huy hiệu</option>
                                 <option value="verified" @selected($selectedBadgeKey === 'verified')>Verified Teacher</option>
                                 <option value="premium" @selected($selectedBadgeKey === 'premium')>Premium Teacher</option>
                                 <option value="top_seller" @selected($selectedBadgeKey === 'top_seller')>Top Seller</option>
                                 <option value="expert" @selected($selectedBadgeKey === 'expert')>Expert Mentor</option>
                                 <option value="featured" @selected($selectedBadgeKey === 'featured')>Featured Teacher</option>
-                                <option value="custom" @selected($selectedBadgeKey === 'custom')>Tá»± táº¡o huy hiá»‡u</option>
+                                <option value="custom" @selected($selectedBadgeKey === 'custom')>Tự tạo huy hiệu</option>
                             </select>
                         </div>
                         <div class="col-md-4" data-custom-badge-wrap @if ($selectedBadgeKey !== 'custom') style="display:none;" @endif>
                             <input type="text" class="form-control" name="badge_label" maxlength="100"
-                                value="{{ old('badge_label', $teacher->badge_label) }}" placeholder="VÃ­ dá»¥: Best Mentor 2026">
+                                value="{{ old('badge_label', $teacher->badge_label) }}" placeholder="Ví dụ: Best Mentor 2026">
                         </div>
                         <div class="col-md-2" data-custom-badge-wrap @if ($selectedBadgeKey !== 'custom') style="display:none;" @endif>
                             <select class="form-select" name="badge_tone">
@@ -138,7 +138,7 @@
                             </select>
                         </div>
                     </div>
-                    <small class="text-muted">Báº­t Ä‘á»ƒ tÄƒng Ä‘á»™ uy tÃ­n vÃ  lÃ m ná»•i báº­t há»“ sÆ¡ giáº£ng viÃªn trÃªn giao diá»‡n public.</small>
+                    <small class="text-muted">Bật để tăng độ uy tín và làm nổi bật hồ sơ giảng viên trên giao diện public.</small>
                 </div>
             </div>
 
@@ -191,9 +191,33 @@
 
             <div class="col-12 text-end admin-form__footer">
                 <button type="submit" class="btn btn-success">Lưu</button>
-                <a href="{{ route('teacher.index') }}" class="btn btn-warning">Trở về</a>
+                
+                @if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED)
+                    <button type="button" class="btn btn-outline-success" 
+                            onclick="if(confirm('Khôi phục hợp tác với giảng viên này?')) document.getElementById('toggle-ceased-form').submit();">
+                        <i class="fa-solid fa-handshake-angle me-1"></i> Khôi phục hợp tác
+                    </button>
+                @else
+                    <button type="button" class="btn btn-outline-danger" 
+                            onclick="if(confirm('Bạn có chắc chắn muốn huỷ hợp tác với giảng viên này? Trang cá nhân và khóa học sẽ bị ẩn (404), giảng viên sẽ không thể truy cập Dashboard.')) document.getElementById('toggle-ceased-form').submit();">
+                        <i class="fa-solid fa-user-slash me-1"></i> Huỷ hợp tác
+                    </button>
+                @endif
+
+                @can('teachers.edit')
+                <a href="{{ route('teacher-packages.grant', ['teacher_id' => $teacher->id]) }}"
+                   class="btn btn-warning"
+                   title="Tặng gói đặc quyền cho giáo viên này">
+                    <i class="fa-solid fa-gift me-1"></i> Tặng gói
+                </a>
+                @endcan
+                <a href="{{ route('teacher.index') }}" class="btn btn-secondary">Trở về</a>
             </div>
         </div>
+    </form>
+
+    <form id="toggle-ceased-form" action="{{ route('teacher.toggle-ceased', ['teacher' => $teacher->id]) }}" method="POST" style="display:none;">
+        @csrf
     </form>
 @endsection
 

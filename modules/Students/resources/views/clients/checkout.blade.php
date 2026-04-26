@@ -4,8 +4,15 @@
     @include('part.clients.page_title')
 
     @php
+        $bankEnabled = (int) setting('payment_bank_enabled', '1') === 1;
         $vnpayEnabled = (int) setting('payment_vnpay_enabled', '1') === 1;
-        $momoEnabled = (int) setting('payment_momo_enabled', '0') === 1;
+        $momoEnabled = (int) setting('payment_momo_enabled', '1') === 1;
+        
+        $firstEnabled = 'bank';
+        if (!$bankEnabled) {
+            if ($vnpayEnabled) $firstEnabled = 'vnpay';
+            elseif ($momoEnabled) $firstEnabled = 'momo';
+        }
         $bankTransferBankName = setting('bank_transfer_bank_name', 'Techcombank');
         $bankTransferBankBin = setting('bank_transfer_bank_bin', 'techcombank');
         $bankTransferAccountNumber = setting('bank_transfer_account_number', '61043040524');
@@ -156,17 +163,25 @@
                                     <label
                                         class="form-label fw-semibold">{{ __('students::clients/checkout.checkout.choose_payment_method') }}</label>
 
-                                    <div class="form-check mb-2">
+                                    <div class="form-check mb-2 payment-method-option {{ $bankEnabled ? '' : 'is-maintenance' }}">
                                         <input class="form-check-input payment-method" type="radio" name="payment_method"
-                                            value="bank" checked>
-                                        <label class="form-check-label">
-                                            {{ __('students::clients/checkout.checkout.qr_transfer') }}
+                                            value="bank" {{ $firstEnabled === 'bank' ? 'checked' : '' }}
+                                            data-enabled="{{ $bankEnabled ? 1 : 0 }}"
+                                            data-maintenance-message="{{ __('students::clients/checkout.checkout.payment_under_maintenance', ['gateway' => __('students::clients/checkout.checkout.qr_transfer')]) }}">
+                                        <label class="form-check-label d-inline-flex align-items-center gap-2">
+                                            <span>{{ __('students::clients/checkout.checkout.qr_transfer') }}</span>
+                                            @unless ($bankEnabled)
+                                                <span class="badge bg-warning text-dark">
+                                                    {{ __('students::clients/checkout.checkout.maintenance') }}
+                                                </span>
+                                            @endunless
                                         </label>
                                     </div>
 
                                     <div class="form-check mb-2 payment-method-option {{ $vnpayEnabled ? '' : 'is-maintenance' }}">
                                         <input class="form-check-input payment-method" type="radio" name="payment_method"
-                                            value="vnpay" data-enabled="{{ $vnpayEnabled ? 1 : 0 }}"
+                                            value="vnpay" {{ $firstEnabled === 'vnpay' ? 'checked' : '' }}
+                                            data-enabled="{{ $vnpayEnabled ? 1 : 0 }}"
                                             data-maintenance-message="{{ __('students::clients/checkout.checkout.payment_under_maintenance', ['gateway' => 'VNPay']) }}">
                                         <img src="{{ asset('clients/assets/vnpay.png') }}" alt="VNPay"
                                             style="width: 40px;">
@@ -182,7 +197,8 @@
 
                                     <div class="form-check payment-method-option {{ $momoEnabled ? '' : 'is-maintenance' }}">
                                         <input class="form-check-input payment-method" type="radio" name="payment_method"
-                                            value="momo" data-enabled="{{ $momoEnabled ? 1 : 0 }}"
+                                            value="momo" {{ $firstEnabled === 'momo' ? 'checked' : '' }}
+                                            data-enabled="{{ $momoEnabled ? 1 : 0 }}"
                                             data-maintenance-message="{{ __('students::clients/checkout.checkout.payment_under_maintenance', ['gateway' => 'MoMo']) }}">
                                         <img src="{{ asset('clients/assets/momo.png') }}" alt="MoMo"
                                             style="width: 30px;">
@@ -219,7 +235,7 @@
                                     </button>
                                 </form>
                             @else
-                                <div id="payment-bank">
+                                <div id="payment-bank" class="{{ $firstEnabled === 'bank' ? '' : 'd-none' }}">
                                     <h5 class="fw-bold mb-3">
                                         <i class="bi bi-credit-card me-1 text-success"></i>
                                         {{ __('students::clients/checkout.checkout.bank_transfer') }}
@@ -298,8 +314,8 @@
                                     @endif
                                 </div>
 
-                                @if ($vnpayEnabled)
-                                    <div id="payment-vnpay" class="d-none">
+                                @if ($vnpayEnabled || $firstEnabled === 'vnpay')
+                                    <div id="payment-vnpay" class="{{ $firstEnabled === 'vnpay' ? '' : 'd-none' }}">
                                         @include('students::clients.partials.coupons')
                                         <p class="text-muted small">
                                             {{ __('students::clients/checkout.checkout.vnpay_notice') }}
@@ -315,8 +331,8 @@
                                     </div>
                                 @endif
 
-                                @if ($momoEnabled)
-                                    <div id="payment-momo" class="d-none">
+                                @if ($momoEnabled || $firstEnabled === 'momo')
+                                    <div id="payment-momo" class="{{ $firstEnabled === 'momo' ? '' : 'd-none' }}">
                                         @include('students::clients.partials.coupons')
                                         <p class="text-muted small">
                                             {{ __('students::clients/checkout.checkout.momo_notice') }}
@@ -556,15 +572,35 @@
             el.addEventListener('change', function() {
                 if (this.dataset.enabled === '0') {
                     alert(this.dataset.maintenanceMessage);
-                    if (bankMethod) {
-                        bankMethod.checked = true;
+                    
+                    // Quay lại phương thức khả dụng đầu tiên
+                    const firstValid = document.querySelector('.payment-method[data-enabled="1"]');
+                    if (firstValid) {
+                        firstValid.checked = true;
+                        showPaymentSection(firstValid.value);
+                    } else {
+                        // Nếu không cái nào bật, giữ nguyên nhưng không hiện nội dung
+                        showPaymentSection('none');
                     }
-                    showPaymentSection('bank');
                     return;
                 }
 
                 showPaymentSection(this.value);
             });
         });
+
+        // Khởi tạo hiển thị
+        const currentChecked = document.querySelector('.payment-method:checked');
+        if (currentChecked) {
+             if (currentChecked.dataset.enabled === '0') {
+                 const firstValid = document.querySelector('.payment-method[data-enabled="1"]');
+                 if (firstValid) {
+                     firstValid.checked = true;
+                     showPaymentSection(firstValid.value);
+                 }
+             } else {
+                 showPaymentSection(currentChecked.value);
+             }
+        }
     </script>
 @endsection

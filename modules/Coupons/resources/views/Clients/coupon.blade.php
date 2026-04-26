@@ -7,7 +7,7 @@
         <div class="container">
 
             {{-- ================== 1. MÃ CỦA TÔI ================== --}}
-            @auth('students')
+            @if(auth('students')->check() || session()->has('admin_impersonator'))
                 <div class="mb-5" data-pagination-scroll>
                     <h4 class="mb-3">
                         🎟 {{ __('coupons::clients/common.my_coupon') }}
@@ -26,7 +26,7 @@
                         @endif
                     </div>
                 </div>
-            @endauth
+            @endif
 
 
             {{-- ================== 2. MÃ THEO KHÓA HỌC ================== --}}

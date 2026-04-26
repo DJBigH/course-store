@@ -26,6 +26,8 @@ return [
         'email' => 'Email',
         'image' => 'Ảnh đại diện',
         'status' => 'Trạng thái',
+        'status_active' => 'Hoạt động',
+        'status_locked' => 'Bị khóa',
         'last_active' => 'Hoạt động cuối',
         'created_at' => 'Ngày tạo',
         'deleted_at' => 'Ngày xóa',
@@ -36,6 +38,7 @@ return [
         'never_active' => 'Chưa từng hoạt động',
         'today' => 'Hôm nay',
         'days_unit' => 'ngày',
+        'system_fallback' => 'Hệ thống',
     ],
     'actions' => [
         'edit' => 'Sửa',
@@ -45,6 +48,8 @@ return [
         'logs' => 'Lịch sử',
         'no_permission' => 'Không có quyền',
         'confirm_force_delete' => 'Xóa vĩnh viễn giảng viên này?',
+        'lock' => 'Khóa giảng viên',
+        'unlock' => 'Mở khóa giảng viên',
     ],
     'messages' => [
         'select_at_least_one' => 'Vui lòng chọn ít nhất một giảng viên.',
@@ -74,6 +79,8 @@ return [
         'error_occurred' => 'Có lỗi xảy ra: :message',
         'cancellation_approved' => 'Đã chấp nhận yêu cầu hủy hợp tác thành công.',
         'cancellation_rejected' => 'Đã từ chối yêu cầu hủy hợp tác.',
+        'lock_success' => 'Đã khóa tài khoản giảng viên.',
+        'unlock_success' => 'Đã mở khóa tài khoản giảng viên.',
     ],
     'notifications' => [
         'system_title' => 'Thông báo từ hệ thống',
@@ -91,5 +98,15 @@ return [
         'approve_title' => 'Duyệt giảng viên',
         'approve_new_desc' => 'Admin phê duyệt hồ sơ giảng viên',
         'approve_upgrade_desc' => 'Admin phê duyệt nâng cấp gói giảng viên',
+        'lock' => 'Khóa giảng viên',
+        'lock_desc' => 'Admin khóa tài khoản giảng viên',
+        'unlock' => 'Mở khóa giảng viên',
+        'unlock_desc' => 'Admin mở khóa tài khoản giảng viên',
     ],
+    'fields' => [
+        'lock_reason' => 'Lý do khóa',
+        'lock_reason_placeholder' => 'Nhập lý do khóa giảng viên...',
+        'locked_by' => 'Khóa bởi',
+        'locked_at' => 'Thời điểm khóa',
+    ]
 ];

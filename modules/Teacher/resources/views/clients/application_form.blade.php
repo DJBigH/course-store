@@ -9,6 +9,10 @@
         $selectedPaymentMethod = old('payment_method', $application?->payment_method ?? 'bank_transfer');
         $selectedPackage = $packages->firstWhere('id', (int) $selectedPackageId);
         $selectedPrice = (float) ($selectedPackage?->price ?? 0);
+        
+        $bankEnabled = (int) setting('payment_bank_enabled', '1') === 1;
+        $vnpayEnabled = (int) setting('payment_vnpay_enabled', '1') === 1;
+        $momoEnabled = (int) setting('payment_momo_enabled', '1') === 1;
     @endphp
 
     <section class="teacher-apply-page py-5">
@@ -242,20 +246,41 @@
                         </div>
 
                         <div class="teacher-payment-methods mt-3" data-payment-methods>
-                            <label class="teacher-payment-option">
+                            <label class="teacher-payment-option {{ $bankEnabled ? '' : 'is-maintenance' }}">
                                 <input type="radio" name="payment_method" value="bank_transfer"
+                                    data-enabled="{{ $bankEnabled ? 1 : 0 }}"
+                                    data-name="{{ __('teacher::portal.payment_methods.bank_transfer') }}"
                                     {{ $selectedPaymentMethod === 'bank_transfer' ? 'checked' : '' }}>
-                                <span>{{ __('teacher::portal.payment_methods.bank_transfer') }}</span>
+                                <span class="d-flex align-items-center gap-2">
+                                    {{ __('teacher::portal.payment_methods.bank_transfer') }}
+                                    @unless ($bankEnabled)
+                                        <span class="badge bg-warning text-dark small" style="font-size: 0.7rem;">{{ __('teacher::portal.status.maintenance') }}</span>
+                                    @endunless
+                                </span>
                             </label>
-                            <label class="teacher-payment-option">
+                            <label class="teacher-payment-option {{ $vnpayEnabled ? '' : 'is-maintenance' }}">
                                 <input type="radio" name="payment_method" value="vnpay"
+                                    data-enabled="{{ $vnpayEnabled ? 1 : 0 }}"
+                                    data-name="VNPay"
                                     {{ $selectedPaymentMethod === 'vnpay' ? 'checked' : '' }}>
-                                <span>{{ __('teacher::portal.payment_methods.vnpay') }}</span>
+                                <span class="d-flex align-items-center gap-2">
+                                    {{ __('teacher::portal.payment_methods.vnpay') }}
+                                    @unless ($vnpayEnabled)
+                                        <span class="badge bg-warning text-dark small" style="font-size: 0.7rem;">{{ __('teacher::portal.status.maintenance') }}</span>
+                                    @endunless
+                                </span>
                             </label>
-                            <label class="teacher-payment-option">
+                            <label class="teacher-payment-option {{ $momoEnabled ? '' : 'is-maintenance' }}">
                                 <input type="radio" name="payment_method" value="momo"
+                                    data-enabled="{{ $momoEnabled ? 1 : 0 }}"
+                                    data-name="MoMo"
                                     {{ $selectedPaymentMethod === 'momo' ? 'checked' : '' }}>
-                                <span>{{ __('teacher::portal.payment_methods.momo') }}</span>
+                                <span class="d-flex align-items-center gap-2">
+                                    {{ __('teacher::portal.payment_methods.momo') }}
+                                    @unless ($momoEnabled)
+                                        <span class="badge bg-warning text-dark small" style="font-size: 0.7rem;">{{ __('teacher::portal.status.maintenance') }}</span>
+                                    @endunless
+                                </span>
                             </label>
                             @error('payment_method')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
@@ -449,6 +474,11 @@
             border: 1px solid var(--teacher-card-border);
             border-radius: 18px;
             background: color-mix(in srgb, var(--teacher-card-bg) 84%, transparent);
+            cursor: pointer;
+        }
+
+        .teacher-payment-option.is-maintenance {
+            opacity: 0.7;
         }
 
         .teacher-payment-option + .teacher-payment-option {
@@ -568,6 +598,33 @@
             packageInputs.forEach((input) => {
                 input.addEventListener('change', updateUi);
             });
+
+            const methodInputs = document.querySelectorAll('input[name="payment_method"]');
+            methodInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    if (this.dataset.enabled === '0') {
+                        const name = this.dataset.name;
+                        alert(`Phương thức ${name} hiện đang bảo trì. Vui lòng chọn phương thức khác.`);
+                        
+                        // Tìm phương thức khả dụng đầu tiên
+                        const firstValid = document.querySelector('input[name="payment_method"][data-enabled="1"]');
+                        if (firstValid) {
+                            firstValid.checked = true;
+                        } else {
+                            this.checked = false;
+                        }
+                    }
+                });
+            });
+
+            // Kiểm tra phương thức mặc định lúc load
+            const initialMethod = document.querySelector('input[name="payment_method"]:checked');
+            if (initialMethod && initialMethod.dataset.enabled === '0') {
+                const firstValid = document.querySelector('input[name="payment_method"][data-enabled="1"]');
+                if (firstValid) {
+                    firstValid.checked = true;
+                }
+            }
 
             updateUi();
         })();

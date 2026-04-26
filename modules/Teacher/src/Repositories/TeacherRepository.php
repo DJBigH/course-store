@@ -30,10 +30,23 @@ class TeacherRepository extends BaseRepository implements TeacherRepositoryInter
             'exp',
             'image',
             'status',
+            'is_locked',
+            'lock_reason',
+            'locked_at',
             'last_active_at',
             'package_expires_at',
             'created_at',
-        ])->latest();
+            'badge_key',
+            'badge_label',
+            'badge_tone',
+        ])
+        ->withCount(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }])
+        ->withAvg(['ratings' => function ($query) {
+            $query->where('status', 1);
+        }], 'rating')
+        ->latest();
     }
 
     public function getTeachers(){

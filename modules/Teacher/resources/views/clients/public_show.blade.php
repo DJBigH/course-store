@@ -77,6 +77,46 @@
                         @endforelse
                     </div>
                 </div>
+
+                @if ($bundles->isNotEmpty())
+                    <div class="teacher-public-card mt-4">
+                        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center mb-3">
+                            <div>
+                                <h3 class="mb-1">Combo khóa học tiết kiệm</h3>
+                                <p class="mb-0 text-muted">Mua nhiều khóa học cùng lúc với giá ưu đãi đặc biệt.</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            @foreach ($bundles as $bundle)
+                                <div class="col-md-6">
+                                    <article class="teacher-public-course bundle-card {{ $bundle->is_hot ? 'is-hot' : '' }}">
+                                        @if ($bundle->is_hot)
+                                            <div class="bundle-hot-badge">
+                                                <i class="fa-solid fa-fire me-1"></i> HOT
+                                            </div>
+                                        @endif
+                                        <img src="{{ $bundle->image }}" alt="{{ $bundle->name }}" class="teacher-public-course__thumb">
+                                        <div class="teacher-public-course__body">
+                                            <h4>{{ $bundle->name }}</h4>
+                                            <div class="mb-2">
+                                                <span class="badge bg-light text-dark border">
+                                                    <i class="fa-solid fa-layer-group me-1"></i> {{ $bundle->items()->count() }} khóa học
+                                                </span>
+                                            </div>
+                                            <div class="teacher-public-course__price mb-3">
+                                                <span class="fw-bold text-danger fs-5">{{ number_format($bundle->price, 0) }} đ</span>
+                                            </div>
+                                            <a href="{{ route('courses.bundle.detail', ['locale' => app()->getLocale(), 'slug' => $bundle->slug]) }}" class="btn btn-primary btn-sm">
+                                                Xem chi tiết combo
+                                            </a>
+                                        </div>
+                                    </article>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </section>
@@ -305,6 +345,35 @@
             font-weight: 800;
             color: #0f172a;
             margin-bottom: 0.55rem;
+        }
+        .bundle-card {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .bundle-card.is-hot {
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: linear-gradient(180deg, #fffafa, #fff);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.08);
+        }
+        .bundle-hot-badge {
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+            z-index: 10;
+            animation: pulse-hot 2s infinite;
+        }
+        @keyframes pulse-hot {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         @media (max-width: 991.98px) {
             .teacher-public-hero {

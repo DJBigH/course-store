@@ -172,8 +172,19 @@ function getSize($bytes, $precision = 2)
 
 function queryActive($query)
 {
-    $tableName = $query->getModel()->getTable();
-    return $query->where($tableName . '.status', 1);
+    $model = $query->getModel();
+    $tableName = $model->getTable();
+    $query->where($tableName . '.status', 1);
+
+    // Nếu đang truy vấn bảng courses, ẩn các khóa học của giáo viên bị khóa hoặc huỷ hợp tác
+    if ($tableName === 'courses') {
+        $query->whereHas('teacher', function ($q) {
+            $q->where('is_locked', 0)
+              ->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+        });
+    }
+
+    return $query;
 }
 
 function queryPosition($query)

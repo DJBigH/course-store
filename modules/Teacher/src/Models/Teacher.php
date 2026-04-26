@@ -10,6 +10,10 @@ class Teacher extends Model
 {
     use SoftDeletes;
 
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
+    public const STATUS_CEASED = 'ceased';
+
     public const BADGE_PRESETS = [
         'verified' => ['label' => 'Verified Teacher', 'icon' => 'check', 'tone' => 'blue'],
         'premium' => ['label' => 'Premium Teacher', 'icon' => 'star', 'tone' => 'gold'],
@@ -56,22 +60,32 @@ class Teacher extends Model
         'last_active_at',
         'inactive_teacher_notified_at',
         'inactive_admin_notified_at',
+        'is_locked',
+        'lock_reason',
+        'locked_at',
+        'locked_by',
         'deleted_at',
         'created_at',
         'updated_at',
     ];
 
     protected $casts = [
-        'approved_at' => 'datetime',
-        'is_verified_badge' => 'boolean',
-        'is_premium_badge' => 'boolean',
-        'commission_rate' => 'float',
-        'package_started_at' => 'datetime',
-        'package_expires_at' => 'datetime',
-        'last_active_at' => 'datetime',
+        'is_locked'                  => 'boolean',
+        'is_verified_badge'          => 'boolean',
+        'is_premium_badge'           => 'boolean',
+        'locked_at'                  => 'datetime',
+        'approved_at'                => 'datetime',
+        'package_started_at'         => 'datetime',
+        'package_expires_at'         => 'datetime',
+        'last_active_at'             => 'datetime',
         'inactive_teacher_notified_at' => 'datetime',
         'inactive_admin_notified_at' => 'datetime',
     ];
+
+    public function lockedByAdmin()
+    {
+        return $this->belongsTo(\Modules\User\src\Models\User::class, 'locked_by');
+    }
 
     public function student()
     {

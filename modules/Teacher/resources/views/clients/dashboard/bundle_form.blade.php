@@ -60,10 +60,39 @@
                         <h4>{{ __('teacher::teacher/bundle/common.form.pricing_title') }}</h4>
                         <div class="teacher-bundle-form-grid">
                             <div>
-                                <label class="form-label">{{ __('teacher::teacher/bundle/common.form.price') }}</label>
-                                <input type="number" step="0.01" min="0" name="price" class="form-control"
-                                    value="{{ old('price', $bundle?->price) }}" required>
+                                <label class="form-label">{{ __('teacher::teacher/bundle/common.form.price') }} (VND) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent text-muted border-end-0">₫</span>
+                                    <input type="text" name="price_display" id="price_display" class="form-control currency-format border-start-0"
+                                        value="{{ number_format(old('price', $bundle?->price), 0, ',', '.') }}" required>
+                                    <input type="hidden" name="price" id="price" value="{{ old('price', $bundle?->price) }}">
+                                </div>
                                 <div class="form-text">{{ __('teacher::teacher/bundle/common.form.price_help') }}</div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">{{ __('teacher::teacher/bundle/common.form.sale_price') }} (VND)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent text-muted border-end-0">₫</span>
+                                    <input type="text" name="sale_price_display" id="sale_price_display" class="form-control currency-format border-start-0"
+                                        value="{{ old('sale_price', $bundle?->sale_price) ? number_format(old('sale_price', $bundle->sale_price), 0, ',', '.') : '' }}">
+                                    <input type="hidden" name="sale_price" id="sale_price" value="{{ old('sale_price', $bundle?->sale_price) }}">
+                                </div>
+                                <div class="form-text">{{ __('teacher::teacher/bundle/common.form.sale_price_help') }}</div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">{{ __('teacher::teacher/bundle/common.form.quantity') }}</label>
+                                <input type="number" name="quantity" class="form-control" min="0"
+                                    value="{{ old('quantity', $bundle?->quantity) }}">
+                                <div class="form-text">{{ __('teacher::teacher/bundle/common.form.quantity_help') }}</div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">{{ __('teacher::teacher/bundle/common.form.end_at') }}</label>
+                                <input type="datetime-local" name="end_at" class="form-control"
+                                    value="{{ old('end_at', $bundle?->end_at ? $bundle->end_at->format('Y-m-d\TH:i') : '') }}">
+                                <div class="form-text">{{ __('teacher::teacher/bundle/common.form.end_at_help') }}</div>
                             </div>
                             <div class="form-check teacher-bundle-form-check">
                                 <input type="hidden" name="status" value="0">
@@ -72,6 +101,22 @@
                                 <label class="form-check-label" for="bundle-status">
                                     {{ __('teacher::teacher/bundle/common.form.status') }}
                                 </label>
+                            </div>
+
+                            <div class="form-check teacher-bundle-form-check mt-2">
+                                <input type="hidden" name="is_coming_soon" value="0">
+                                <input class="form-check-input" type="checkbox" name="is_coming_soon" value="1" id="is_coming_soon"
+                                    {{ old('is_coming_soon', $bundle?->is_coming_soon) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_coming_soon">
+                                    {{ __('teacher::teacher/bundle/common.form.is_coming_soon') }}
+                                </label>
+                            </div>
+
+                            <div id="coming_soon_date_wrapper" style="display: none;">
+                                <label class="form-label text-warning">{{ __('teacher::teacher/bundle/common.form.coming_soon_start_at') }}</label>
+                                <input type="datetime-local" name="coming_soon_start_at" class="form-control border-warning"
+                                    value="{{ old('coming_soon_start_at', $bundle?->coming_soon_start_at ? $bundle->coming_soon_start_at->format('Y-m-d\TH:i') : '') }}">
+                                <div class="form-text text-warning-emphasis">{{ __('teacher::teacher/bundle/common.form.is_coming_soon_help') }}</div>
                             </div>
                         </div>
                     </div>
@@ -139,4 +184,47 @@
         html[data-theme="light"] .teacher-bundle-course-item, html[data-theme="light"] .teacher-bundle-form-check { background: #fff; border-color: var(--admin-border); }
         @media (max-width: 991.98px) { .teacher-bundle-form-hero, .teacher-bundle-form-actions { flex-direction: column; align-items: flex-start; } }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const isComingSoonCheck = document.getElementById('is_coming_soon');
+            const comingSoonWrapper = document.getElementById('coming_soon_date_wrapper');
+            const comingSoonInput = comingSoonWrapper ? comingSoonWrapper.querySelector('input') : null;
+
+            function toggleComingSoon() {
+                if (!isComingSoonCheck || !comingSoonWrapper) return;
+                
+                if (isComingSoonCheck.checked) {
+                    comingSoonWrapper.style.display = 'block';
+                } else {
+                    comingSoonWrapper.style.display = 'none';
+                    if (comingSoonInput) comingSoonInput.value = '';
+                }
+            }
+
+            if (isComingSoonCheck) {
+                isComingSoonCheck.addEventListener('change', toggleComingSoon);
+                toggleComingSoon();
+            }
+
+            // Currency Formatting
+            function formatCurrency(value) {
+                value = value.toString().replace(/\D/g, '');
+                return value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+
+            document.querySelectorAll('.currency-format').forEach(input => {
+                input.addEventListener('input', function() {
+                    const rawValue = this.value.replace(/\D/g, '');
+                    this.value = formatCurrency(this.value);
+                    
+                    // Update hidden input
+                    const hiddenInputId = this.id.replace('_display', '');
+                    const hiddenInput = document.getElementById(hiddenInputId);
+                    if (hiddenInput) {
+                        hiddenInput.value = rawValue;
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

@@ -7,4 +7,5 @@ return [
     'empty' => 'Bạn chưa có combo nào.',
     'empty_description' => 'Hãy bắt đầu bằng việc tạo combo đầu tiên. Combo giúp bạn bán được nhiều hơn bằng cách giảm giá khi mua theo bộ.',
     'confirm_delete' => 'Xóa combo khóa học này?',
+    'unlimited' => 'Không giới hạn',
 ];

@@ -60,6 +60,14 @@ class TeacherApplicationController extends Controller
                 ->with('msg_danger', __('teacher::portal.flash.pending_review'));
         }
 
+        $paymentMethod = $request->string('payment_method')->toString();
+        if ((float) $package->price > 0 && !empty($paymentMethod)) {
+            $isEnabled = (int) setting('payment_' . $paymentMethod . '_enabled', '1') === 1;
+            if (!$isEnabled) {
+                return back()->withInput()->with('msg_danger', 'Phương thức thanh toán hiện đang bảo trì. Vui lòng chọn phương thức khác.');
+            }
+        }
+
         $couponData = $this->resolveCouponData(
             trim((string) $request->input('coupon_code')),
             $package,

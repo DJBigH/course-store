@@ -164,6 +164,28 @@
                                         {{ __('teacher::teacher/course/common.labels.priority_active') }}
                                     </div>
                                 @endif
+
+                                @if ($course->is_coming_soon)
+                                    <div class="teacher-course-card__limit-badge" style="background: rgba(139, 92, 246, 0.18); color: #c4b5fd;">
+                                        <i class="fas fa-clock me-1"></i> {{ __('courses::messages.coming_soon') ?? 'Sắp ra mắt' }}
+                                    </div>
+                                @endif
+
+                                @if ($course->quantity !== null && $course->quantity <= 0)
+                                    <div class="teacher-course-card__limit-badge">
+                                        <i class="fas fa-exclamation-triangle me-1"></i> {{ __('courses::messages.out_of_stock') ?? 'Hết chỗ' }}
+                                    </div>
+                                @elseif ($course->quantity !== null)
+                                    <div class="teacher-course-card__limit-badge" style="background: rgba(16, 185, 129, 0.18); color: #6ee7b7;">
+                                        <i class="fas fa-users me-1"></i> {{ $course->quantity }} {{ __('courses::messages.slots_left') ?? 'chỗ trống' }}
+                                    </div>
+                                @endif
+
+                                @if ($course->end_at && $course->end_at->isPast())
+                                    <div class="teacher-course-card__limit-badge" style="background: rgba(239, 68, 68, 0.18); color: #fca5a5;">
+                                        <i class="fas fa-calendar-times me-1"></i> {{ __('courses::messages.expired') ?? 'Hết hạn' }}
+                                    </div>
+                                @endif
                             </div>
                             @if (!$isLockedCourse)
                                 @if($stateCourseLimit['is_maintenance'])

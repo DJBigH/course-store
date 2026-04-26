@@ -81,6 +81,8 @@ class TeacherCourseRequest extends FormRequest
             'status' => ['required', 'integer', 'in:0,1'],
             'is_document' => ['required', 'integer', 'in:0,1'],
             'is_learning_locked' => ['required', 'integer', 'in:0,1'],
+            'is_coming_soon' => ['nullable'],
+            'coming_soon_start_at' => ['nullable', 'date'],
             'categories' => ['required', 'array', 'min:1'],
             'categories.*' => ['integer', 'distinct', 'exists:categories,id'],
         ];
@@ -89,9 +91,11 @@ class TeacherCourseRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'price.max' => 'Gia khoa hoc khong duoc vuot qua 99,999,999d.',
-            'sale_price.max' => 'Gia khuyen mai khong duoc vuot qua 99,999,999d.',
-            'sale_price.lte' => 'Gia khuyen mai phai nho hon hoac bang gia goc.',
+            'price.max' => 'Giá khóa học không được vượt quá 99,999,999đ.',
+            'sale_price.max' => 'Giá khuyến mãi không được vượt quá 99,999,999đ.',
+            'sale_price.lte' => 'Giá khuyến mãi phải nhỏ hơn hoặc bằng giá gốc.',
+            'quantity.integer' => 'Số lượng phải là số nguyên.',
+            'quantity.min' => 'Số lượng không được nhỏ hơn 0.',
         ];
     }
 }

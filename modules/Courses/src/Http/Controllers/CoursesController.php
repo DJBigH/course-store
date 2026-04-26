@@ -138,9 +138,22 @@ class CoursesController extends Controller
                     ]) . '" target="_blank" rel="noopener noreferrer" class="course-cell__link">' . $name . '</a>';
                 }
 
+                $badges = '';
+                if ($course->is_coming_soon) {
+                    $badges .= '<span class="badge bg-purple ms-1" style="background: #8b5cf6; font-size: 10px;">Coming Soon</span>';
+                }
+                if ($course->quantity !== null && $course->quantity <= 0) {
+                    $badges .= '<span class="badge bg-danger ms-1" style="font-size: 10px;">Hết chỗ</span>';
+                } elseif ($course->quantity !== null) {
+                    $badges .= '<span class="badge bg-success ms-1" style="font-size: 10px;">' . $course->quantity . ' chỗ</span>';
+                }
+                if ($course->end_at && $course->end_at->isPast()) {
+                    $badges .= '<span class="badge bg-secondary ms-1" style="font-size: 10px;">Hết hạn</span>';
+                }
+
                 return '
         <div class="course-cell">
-            <div class="course-cell__title">' . $titleHtml . '</div>
+            <div class="course-cell__title">' . $titleHtml . $badges . '</div>
             <div class="course-cell__meta">
                 <span><i class="fa-solid fa-chalkboard-user"></i> ' . $teacher . '</span>
                 <span><i class="fa-solid fa-eye"></i> ' . $views . ' lượt xem</span>
@@ -155,6 +168,17 @@ class CoursesController extends Controller
                         <span class="course-pill"><i class="fa-solid fa-users"></i> ' . number_format((int) ($course->students_count ?? 0)) . ' học viên</span>
                     </div>
                 ';
+            })
+            ->addColumn('rating', function ($course) {
+                $avg = round((float) ($course->ratings_avg_rating ?? 0), 1);
+                $count = (int) ($course->ratings_count ?? 0);
+                
+                return '<div class="course-rating-cell text-center">
+                            <div class="rating-text fw-bold text-warning">
+                                <i class="fa-solid fa-star me-1"></i>' . $avg . ' / 5
+                            </div>
+                            <div class="small text-muted">' . $count . ' đánh giá</div>
+                        </div>';
             })
             ->addColumn('publish', function ($course) use ($canPublish) {
                 if (!$canPublish) {
@@ -230,7 +254,7 @@ class CoursesController extends Controller
 
                 return '<span class="course-free-badge">Miễn phí</span>';
             })
-            ->rawColumns(['select', 'overview', 'learning', 'publish', 'duplicate', 'logs', 'lessions', 'edit', 'delete', 'status', 'price'])
+            ->rawColumns(['select', 'overview', 'learning', 'rating', 'publish', 'duplicate', 'logs', 'lessions', 'edit', 'delete', 'status', 'price'])
             ->toJson();
     }
     public function trashData()

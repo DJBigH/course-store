@@ -238,6 +238,28 @@
                                     </select>
                                 </div>
                             </div>
+
+                            <hr class="my-4 opacity-10">
+
+                            <h4 class="h5 mb-3">{{ __('teacher::teacher/course/common.form.stock_label') }}</h4>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-check form-switch mt-2">
+                                        <input type="hidden" name="is_coming_soon" value="0">
+                                        <input class="form-check-input" type="checkbox" name="is_coming_soon" value="1" id="is_coming_soon"
+                                            {{ old('is_coming_soon', $course?->is_coming_soon) ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold text-warning" for="is_coming_soon">
+                                            {{ __('teacher::teacher/course/common.form.is_coming_soon_label') }}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-12" id="coming_soon_date_wrapper" style="display: none;">
+                                    <label class="form-label text-warning small fw-bold">{{ __('teacher::teacher/course/common.form.coming_soon_start_at') }}</label>
+                                    <input type="datetime-local" name="coming_soon_start_at" class="form-control border-warning"
+                                        value="{{ old('coming_soon_start_at', $course?->coming_soon_start_at ? $course->coming_soon_start_at->format('Y-m-d\TH:i') : '') }}">
+                                    <small class="text-warning-emphasis d-block mt-1">{{ __('teacher::teacher/course/common.form.coming_soon_hint') }}</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -492,6 +514,20 @@
             });
 
             window.TeacherMoneyInput?.initAll(form || document);
+
+            // Coming Soon Toggle
+            const isComingSoonCheck = document.getElementById('is_coming_soon');
+            const comingSoonWrapper = document.getElementById('coming_soon_date_wrapper');
+
+            function toggleComingSoon() {
+                if (!isComingSoonCheck || !comingSoonWrapper) return;
+                comingSoonWrapper.style.display = isComingSoonCheck.checked ? 'block' : 'none';
+            }
+
+            if (isComingSoonCheck) {
+                isComingSoonCheck.addEventListener('change', toggleComingSoon);
+                toggleComingSoon();
+            }
         })();
     </script>
 @endsection

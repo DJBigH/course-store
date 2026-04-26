@@ -122,4 +122,17 @@ class TeacherDashboardController extends Controller
 
         return view('teacher::teacher.dashboard.dashboard', compact('pageTitle', 'pageName', 'teacher', 'stats', 'dashboardRange', 'dashboardRangeOptions', 'conversionSummary', 'revenueInsights', 'coursePerformance', 'recentCourses', 'recentSales', 'topBundles', 'packageSummary', 'effectiveCommissionRate', 'overviewPayload'));
     }
+    public function locked()
+    {
+        $teacher = $this->resolveTeacher();
+        
+        // Nếu không thực sự bị khóa thì redirect về index
+        if (!$teacher || !$teacher->is_locked) {
+            return redirect()->route('teacher.dashboard.index');
+        }
+
+        $pageTitle = 'Tài khoản bị khóa';
+        
+        return view('teacher::teacher.locked', compact('pageTitle', 'teacher'));
+    }
 }
