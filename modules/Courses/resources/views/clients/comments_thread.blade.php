@@ -14,7 +14,7 @@
         ])
     </div>
 
-    @if (auth('students')->check() && $canComment)
+    @if ((auth('students')->check() || auth()->check()) && $canComment)
         <form class="course-comment-form mt-3" data-comment-form
             action="{{ route('courses.comments.store', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}"
             method="POST">
@@ -22,11 +22,17 @@
             <textarea name="content" rows="3" class="form-control ckeditor" data-rich-editor maxlength="2000"
                 placeholder="{{ __('courses::clients/common.comment_placeholder') }}"></textarea>
             <div class="d-flex justify-content-between align-items-center mt-2">
-                <small class="text-muted">{{ __('courses::clients/common.comment_purchase_only') }}</small>
+                <small class="text-muted">
+                    @if(auth()->check())
+                        <i class="fa-solid fa-user-shield me-1"></i> Bạn đang bình luận với quyền <strong>{{ auth()->user()->group?->name ?? 'Admin' }}</strong>
+                    @else
+                        {{ __('courses::clients/common.comment_purchase_only') }}
+                    @endif
+                </small>
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('courses::clients/common.comment_submit') }}</button>
             </div>
         </form>
-    @elseif (auth('students')->check())
+    @elseif (auth('students')->check() || auth()->check())
         <div class="alert alert-warning mt-3 mb-0">{{ __('courses::clients/common.comment_need_purchase') }}</div>
     @else
         <div class="alert alert-info mt-3 mb-0">{{ __('courses::clients/common.comment_login_to_join') }}</div>
@@ -43,7 +49,10 @@
             }
             return 'student';
         };
-        $resolveRoleLabel = function (string $role) {
+        $resolveRoleLabel = function (string $role, $comment = null) {
+            if ($role === 'admin' && $comment && $comment->user_id && $comment->admin) {
+                return $comment->admin->group?->name ?? __('courses::clients/common.comment_role_admin');
+            }
             return match ($role) {
                 'admin' => __('courses::clients/common.comment_role_admin'),
                 'teacher' => __('courses::clients/common.comment_role_teacher'),
@@ -65,7 +74,7 @@
                         <div class="comment-meta">
                             <strong>{{ $comment->author_name }}</strong>
                             <span class="badge {{ $commentRole === 'admin' ? 'bg-primary' : 'bg-success' }}">
-                                {{ $resolveRoleLabel($commentRole) }}
+                                {{ $resolveRoleLabel($commentRole, $comment) }}
                             </span>
                             <span class="comment-time">{{ optional($comment->created_at)->format('d/m/Y H:i:s') }}</span>
                             @if ($comment->is_flagged)
@@ -107,7 +116,7 @@
                                     <div class="comment-meta">
                                         <strong>{{ $reply->author_name }}</strong>
                                         <span class="badge {{ $replyRole === 'admin' ? 'bg-primary' : 'bg-success' }}">
-                                            {{ $resolveRoleLabel($replyRole) }}
+                                            {{ $resolveRoleLabel($replyRole, $reply) }}
                                         </span>
                                         <span
                                             class="comment-time">{{ optional($reply->created_at)->format('d/m/Y H:i:s') }}</span>

@@ -53,13 +53,19 @@ class CourseBundleController extends Controller
                 $itemsCount = $bundle->items_count;
                 
                 $hotBadge = $bundle->is_hot ? '<span class="badge bg-danger ms-2" style="font-size: 10px;">HOT</span>' : '';
+                $comingSoonBadge = $bundle->is_coming_soon ? '<span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">SẮP RA MẮT</span>' : '';
                 
+                $stockInfo = $bundle->quantity !== null ? '<span><i class="fa-solid fa-box"></i> Kho: ' . $bundle->quantity . '</span>' : '<span><i class="fa-solid fa-infinity"></i> Vĩnh viễn</span>';
+                $deadlineInfo = $bundle->end_at ? '<span class="text-danger"><i class="fa-solid fa-calendar-xmark"></i> Hết hạn: ' . $bundle->end_at->format('d/m/Y H:i') . '</span>' : '';
+
                 return '
                     <div class="course-cell">
-                        <div class="course-cell__title d-flex align-items-center">' . $name . $hotBadge . '</div>
+                        <div class="course-cell__title d-flex align-items-center">' . $name . $hotBadge . $comingSoonBadge . '</div>
                         <div class="course-cell__meta">
                             <span><i class="fa-solid fa-chalkboard-user"></i> ' . $teacher . '</span>
                             <span><i class="fa-solid fa-layer-group"></i> ' . $itemsCount . ' khóa học</span>
+                            ' . $stockInfo . '
+                            ' . $deadlineInfo . '
                         </div>
                     </div>
                 ';
@@ -98,19 +104,26 @@ class CourseBundleController extends Controller
                     </form>
                 ';
             })
-            ->addColumn('delete', function ($bundle) use ($canDelete) {
-                if (!$canDelete) return '';
-                return '
-                    <form method="POST" action="' . route('courses.bundles.delete', $bundle->id) . '" onsubmit="return confirm(\'Xác nhận xóa combo này?\')">
-                        ' . csrf_field() . method_field('DELETE') . '
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Xóa</button>
-                    </form>
-                ';
+            ->addColumn('action', function ($bundle) use ($canEdit, $canDelete) {
+                $btns = '';
+                if ($canEdit) {
+                    $btns .= '<a href="' . route('courses.bundles.edit', $bundle->id) . '" class="btn btn-primary btn-sm me-1" title="Sửa"><i class="fa-solid fa-pen-to-square"></i></a>';
+                }
+                if ($canDelete) {
+                    $btns .= '
+                        <form method="POST" action="' . route('courses.bundles.delete', $bundle->id) . '" onsubmit="return confirm(\'Xác nhận xóa combo này?\')" class="d-inline-block">
+                            ' . csrf_field() . '
+                            ' . method_field('DELETE') . '
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    ';
+                }
+                return $btns;
             })
             ->editColumn('created_at', function ($bundle) {
                 return Carbon::parse($bundle->created_at)->format('d/m/Y H:i');
             })
-            ->rawColumns(['select', 'overview', 'price', 'status', 'position', 'toggle_hot', 'toggle_status', 'delete'])
+            ->rawColumns(['select', 'overview', 'price', 'status', 'position', 'toggle_hot', 'toggle_status', 'action'])
             ->toJson();
     }
 
@@ -147,6 +160,120 @@ class CourseBundleController extends Controller
         $bundle->delete();
 
         return back()->with('msg', 'Đã xóa combo thành công.');
+    }
+
+    public function create()
+    {
+        $pageTitle = 'Thêm Combo khóa học';
+        $teachers = $this->teacherRepository->getAllTeacher()->get(['id', 'name']);
+        
+        return view('courses::admin.bundles.create', compact('pageTitle', 'teachers'));
+    }
+
+    public function store(\Modules\Teacher\src\Http\Requests\CourseBundleRequest $request)
+    {
+        $data = $request->validated();
+        
+        // Admin cần teacher_id
+        if (!$request->filled('teacher_id')) {
+            return back()->withInput()->withErrors(['teacher_id' => 'Vui lòng chọn giảng viên.']);
+        }
+
+        $baseSlug = \Illuminate\Support\Str::slug((string) $data['name']);
+        $slug = $this->resolveUniqueBundleSlug((int)$data['teacher_id'], $baseSlug !== '' ? $baseSlug : 'combo-khoa-hoc');
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $slug) {
+            $bundle = CourseBundle::create([
+                'teacher_id' => $data['teacher_id'],
+                'name' => trim((string) $data['name']),
+                'slug' => $slug,
+                'description' => trim((string) ($data['description'] ?? '')),
+                'thumbnail' => trim((string) ($data['thumbnail'] ?? '')),
+                'price' => (float) $data['price'],
+                'sale_price' => isset($data['sale_price']) && $data['sale_price'] !== '' ? (float) $data['sale_price'] : null,
+                'status' => (bool) ($data['status'] ?? false),
+                'quantity' => isset($data['quantity']) && $data['quantity'] !== '' ? (int) $data['quantity'] : null,
+                'is_coming_soon' => (bool) ($data['is_coming_soon'] ?? false),
+                'coming_soon_start_at' => $data['coming_soon_start_at'] ?? null,
+                'end_at' => $data['end_at'] ?? null,
+                'position' => ((int) CourseBundle::query()->where('teacher_id', $data['teacher_id'])->max('position')) + 1,
+            ]);
+
+            if (!empty($data['course_ids'])) {
+                foreach ($data['course_ids'] as $index => $courseId) {
+                    $bundle->items()->create([
+                        'course_id' => $courseId,
+                        'position' => $index + 1,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->route('courses.bundles.index')->with('msg', 'Thêm combo thành công.');
+    }
+
+    public function edit($id)
+    {
+        $bundle = CourseBundle::with('items')->findOrFail($id);
+        $pageTitle = 'Chỉnh sửa Combo khóa học';
+        $teachers = $this->teacherRepository->getAllTeacher()->get(['id', 'name']);
+        
+        return view('courses::admin.bundles.edit', compact('pageTitle', 'teachers', 'bundle'));
+    }
+
+    public function update(\Modules\Teacher\src\Http\Requests\CourseBundleRequest $request, $id)
+    {
+        $bundle = CourseBundle::findOrFail($id);
+        $data = $request->validated();
+
+        $baseSlug = \Illuminate\Support\Str::slug((string) $data['name']);
+        $slug = $this->resolveUniqueBundleSlug((int)$bundle->teacher_id, $baseSlug !== '' ? $baseSlug : 'combo-khoa-hoc', $bundle->id);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($bundle, $data, $slug) {
+            $bundle->update([
+                'name' => trim((string) $data['name']),
+                'slug' => $slug,
+                'description' => trim((string) ($data['description'] ?? '')),
+                'thumbnail' => trim((string) ($data['thumbnail'] ?? '')),
+                'price' => (float) $data['price'],
+                'sale_price' => isset($data['sale_price']) && $data['sale_price'] !== '' ? (float) $data['sale_price'] : null,
+                'status' => (bool) ($data['status'] ?? false),
+                'quantity' => isset($data['quantity']) && $data['quantity'] !== '' ? (int) $data['quantity'] : null,
+                'is_coming_soon' => (bool) ($data['is_coming_soon'] ?? false),
+                'coming_soon_start_at' => $data['coming_soon_start_at'] ?? null,
+                'end_at' => $data['end_at'] ?? null,
+            ]);
+
+            $bundle->items()->delete();
+            if (!empty($data['course_ids'])) {
+                foreach ($data['course_ids'] as $index => $courseId) {
+                    $bundle->items()->create([
+                        'course_id' => $courseId,
+                        'position' => $index + 1,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->route('courses.bundles.index')->with('msg', 'Cập nhật combo thành công.');
+    }
+
+    protected function resolveUniqueBundleSlug(int $teacherId, string $baseSlug, ?int $ignoreId = null): string
+    {
+        $slug = $baseSlug;
+        $index = 2;
+
+        while (
+            CourseBundle::query()
+                ->where('slug', $slug)
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $baseSlug . '-' . $index;
+            $index++;
+        }
+
+        return $slug;
     }
 
     public function bulkAction(Request $request)

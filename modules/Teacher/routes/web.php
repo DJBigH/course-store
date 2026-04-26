@@ -37,6 +37,7 @@ Route::prefix('admin')->group(function () {
       Route::get('logs/{teacher}', 'TeacherController@logs')->middleware('permission:teachers.logs')->name('logs');
       Route::post('/toggle-lock/{teacher}', 'TeacherController@toggleLock')->middleware('permission:teachers.edit')->name('toggle-lock');
       Route::post('/toggle-ceased/{teacher}', 'TeacherController@toggleCeased')->middleware('permission:teachers.edit')->name('toggle-ceased');
+      Route::get('/{id}/courses', 'TeacherController@getCourses')->middleware('permission:teachers.view')->name('courses');
    });
 
    Route::prefix('teacher-applications')->name('teacher-applications.')->group(function () {

@@ -11,4 +11,5 @@ return [
         'title' => 'How bundles work',
         'desc' => 'Courses in a bundle are sold together. Students get access to all courses in the bundle for one price.',
     ],
+    'unlimited' => 'Unlimited',
 ];

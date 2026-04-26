@@ -12,6 +12,7 @@ use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Students\src\Http\Requests\studentRequest;
 use Modules\Students\src\Models\Student;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
+use Modules\Courses\src\Models\Courses;
 use Yajra\DataTables\Facades\DataTables;
 
 class StudentController extends Controller
@@ -88,7 +89,27 @@ class StudentController extends Controller
                     ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>'
                     : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
             })
-            ->rawColumns(['select', 'two_factor', 'edit', 'delete', 'status', 'link', 'courses', 'logs'])
+            ->addColumn('roles', function ($student) {
+                $badges = '<span class="badge bg-info text-white me-1">Học viên</span>';
+                if ($student->teacher) {
+                    $badges .= '<span class="badge bg-success text-white">Giảng viên</span>';
+                }
+                return $badges;
+            })
+            ->addColumn('impersonate', function ($student) use ($canEdit) {
+                if (!$canEdit) return '';
+                
+                $html = '<div class="dropdown">';
+                $html .= '<button class="btn btn-sm btn-dark dropdown-toggle" type="button" data-bs-toggle="dropdown">Đăng nhập</button>';
+                $html .= '<ul class="dropdown-menu shadow border-0">';
+                $html .= '<li><a class="dropdown-item" href="' . route('students.impersonate', [$student->id, 'type' => 'student']) . '"><i class="fa-solid fa-user-graduate me-2"></i>Quyền Học viên</a></li>';
+                if ($student->teacher) {
+                    $html .= '<li><a class="dropdown-item" href="' . route('students.impersonate', [$student->id, 'type' => 'teacher']) . '"><i class="fa-solid fa-chalkboard-user me-2"></i>Quyền Giảng viên</a></li>';
+                }
+                $html .= '</ul></div>';
+                return $html;
+            })
+            ->rawColumns(['select', 'two_factor', 'edit', 'delete', 'status', 'link', 'courses', 'logs', 'roles', 'impersonate'])
             ->toJson();
     }
 
@@ -402,9 +423,113 @@ class StudentController extends Controller
         $pageTitle = 'Khóa học đã mua';
 
         $student = $this->studentRepository->find($id);
+        if (!$student) {
+            abort(404);
+        }
         $courses = $this->studentRepository->getPurchasedCourses($id, config('paginate.limit'));
+        
+        $allCourses = Courses::query()
+            ->withoutGlobalScopes()
+            ->with('teacher:id,name')
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get(['id', 'name', 'code', 'teacher_id']);
 
-        return view('students::course_student', compact('student', 'courses', 'pageTitle'));
+        return view('students::course_student', compact('student', 'courses', 'allCourses', 'pageTitle'));
+    }
+
+    public function searchCourses(Request $request)
+    {
+        $keyword = $request->input('q');
+        $courses = Courses::query()
+            ->withoutGlobalScopes()
+            ->where('status', 1)
+            ->when($keyword, function ($query) use ($keyword) {
+                $query->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('code', 'like', '%' . $keyword . '%');
+            })
+            ->select(['id', 'name', 'code'])
+            ->limit(20)
+            ->get();
+
+        return response()->json($courses);
+    }
+
+    public function grantCourse(Request $request, $id)
+    {
+        $student = $this->studentRepository->find($id);
+        if (!$student) {
+            return response()->json(['success' => false, 'message' => 'Học viên không tồn tại.'], 404);
+        }
+
+        $request->validate([
+            'course_ids' => 'required|array',
+            'course_ids.*' => 'integer|exists:courses,id',
+        ]);
+
+        $courseIds = $request->input('course_ids');
+        $sendEmail = $request->has('send_email');
+        $courses = Courses::query()->whereIn('id', $courseIds)->get();
+
+        foreach ($courses as $course) {
+            // Kiểm tra xem đã có chưa
+            $exists = $student->courses()->where('courses.id', $course->id)->exists();
+            if (!$exists) {
+                $student->courses()->attach($course->id, ['status' => 1, 'created_at' => now(), 'updated_at' => now()]);
+
+                // Gửi thông báo Email & Notify
+                try {
+                    $student->notify(new \App\Notifications\AdminCourseGiftNotification($course, session('locale', 'vi'), $sendEmail));
+                } catch (\Exception $e) {
+                    \Log::error('Gift Notification Error: ' . $e->getMessage());
+                }
+
+                activity_log(
+                    action: 'grant_course',
+                    subject: $student,
+                    properties: [
+                        'course_id' => $course->id,
+                        'course_name' => $course->name,
+                        'admin' => auth()->user()?->name,
+                    ],
+                    logName: 'Tặng khóa học',
+                    description: "Admin đã tặng khóa học [{$course->name}] cho học viên [{$student->name}]"
+                );
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Đã tặng khóa học thành công.']);
+    }
+
+    public function revokeCourse(Request $request, $id)
+    {
+        $student = $this->studentRepository->find($id);
+        if (!$student) {
+            return response()->json(['success' => false, 'message' => 'Học viên không tồn tại.'], 404);
+        }
+
+        $courseId = $request->input('course_id');
+        $course = Courses::query()->find($courseId);
+        
+        if (!$course) {
+            return response()->json(['success' => false, 'message' => 'Khóa học không tồn tại.'], 404);
+        }
+
+        $student->courses()->detach($courseId);
+
+        activity_log(
+            action: 'revoke_course',
+            subject: $student,
+            properties: [
+                'course_id' => $course->id,
+                'course_name' => $course->name,
+                'admin' => auth()->user()?->name,
+            ],
+            logName: 'Thu hồi khóa học',
+            description: "Admin đã thu hồi khóa học [{$course->name}] từ học viên [{$student->name}]"
+        );
+
+        return response()->json(['success' => true, 'message' => 'Đã thu hồi khóa học thành công.']);
     }
 
     public function logs(Request $request, $id)
@@ -459,5 +584,41 @@ class StudentController extends Controller
         DB::table(config('session.table', 'sessions'))
             ->where('user_id', $studentId)
             ->delete();
+    }
+
+    public function impersonate(Request $request, $id)
+    {
+        $student = Student::findOrFail($id);
+        $type = $request->query('type', 'student');
+
+        // Lưu thông tin Admin hiện tại và ID học viên vào session
+        session([
+            'admin_impersonator' => auth()->id(),
+            'impersonated_student_id' => $student->id
+        ]);
+
+        // Đăng nhập vào guard students
+        auth('students')->login($student);
+        
+        // Đảm bảo session được lưu ngay lập tức
+        session()->save();
+
+        if ($type === 'teacher' && $student->teacher) {
+            return redirect()->route('teacher.dashboard.index', ['locale' => app()->getLocale()]);
+        }
+
+        return redirect()->route('students.account.index', ['locale' => app()->getLocale()]);
+    }
+
+    public function stopImpersonating()
+    {
+        if (!session()->has('admin_impersonator')) {
+            return redirect('/');
+        }
+
+        auth('students')->logout();
+        session()->forget('admin_impersonator');
+
+        return redirect()->route('students.index')->with('msg', 'Đã quay lại tài khoản Admin.');
     }
 }

@@ -29,6 +29,10 @@ Route::prefix('admin')->group(function () {
       Route::prefix('bundles')->name('bundles.')->group(function () {
           Route::get('/', 'Admin\CourseBundleController@index')->middleware('permission:courses.view')->name('index');
           Route::get('/data', 'Admin\CourseBundleController@data')->middleware('permission:courses.view')->name('data');
+          Route::get('/create', 'Admin\CourseBundleController@create')->middleware('permission:courses.create')->name('add');
+          Route::post('/create', 'Admin\CourseBundleController@store')->middleware('permission:courses.create')->name('post-add');
+          Route::get('/edit/{id}', 'Admin\CourseBundleController@edit')->middleware('permission:courses.edit')->name('edit');
+          Route::post('/edit/{id}', 'Admin\CourseBundleController@update')->middleware('permission:courses.edit')->name('post-edit');
           Route::post('/toggle-status/{id}', 'Admin\CourseBundleController@toggleStatus')->middleware('permission:courses.edit')->name('toggle-status');
           Route::post('/toggle-hot/{id}', 'Admin\CourseBundleController@toggleHot')->middleware('permission:courses.edit')->name('toggle-hot');
           Route::post('/update-position', 'Admin\CourseBundleController@updatePosition')->middleware('permission:courses.edit')->name('update-position');

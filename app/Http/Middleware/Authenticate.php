@@ -9,6 +9,23 @@ use Illuminate\Http\Request;
 class Authenticate extends Middleware
 {
     /**
+     * Handle an incoming request.
+     */
+    protected function authenticate($request, array $guards)
+    {
+        if (in_array('students', $guards)) {
+            $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+            $isImpersonating = session()->has('admin_impersonator');
+
+            if ($isAdmin || $isImpersonating) {
+                return;
+            }
+        }
+
+        parent::authenticate($request, $guards);
+    }
+
+    /**
      * Get the path the user should be redirected to when they are not authenticated.
      */
 

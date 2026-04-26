@@ -63,6 +63,9 @@ class SettingController extends Controller
                 'student_two_factor_timeout' => (string) ($request->input('student_two_factor_timeout') ?: config('auth.student_two_factor_timeout', '600')),
                 'student_two_factor_code_expire' => (string) ($request->input('student_two_factor_code_expire') ?: config('auth.student_two_factor_code_expire', '600')),
                 'student_two_factor_resend_cooldown' => (string) ($request->input('student_two_factor_resend_cooldown') ?: config('auth.student_two_factor_resend_cooldown', '60')),
+                'payment_bank_enabled' => $request->boolean('payment_bank_enabled') ? '1' : '0',
+                'payment_momo_enabled' => $request->boolean('payment_momo_enabled') ? '1' : '0',
+                'payment_vnpay_enabled' => $request->boolean('payment_vnpay_enabled') ? '1' : '0',
             ]
         );
 
@@ -137,6 +140,14 @@ class SettingController extends Controller
             'popup_notice_link_url_zh',
             'popup_notice_snooze_minutes',
             'ai_quiz_enabled',
+            'payment_bank_enabled',
+            'payment_momo_enabled',
+            'payment_vnpay_enabled',
+            'bank_transfer_bank_bin',
+            'bank_transfer_bank_name',
+            'bank_transfer_account_number',
+            'bank_transfer_account_name',
+            'bank_transfer_note_prefix',
         ];
 
         $allowedSettingKeys = [];
@@ -152,7 +163,6 @@ class SettingController extends Controller
         $sensitiveKeys = [];
 
         $legacyRemovedSettingKeys = [
-            'payment_vnpay_enabled',
             'payment_vnpay_url',
             'payment_vnpay_tmn_code',
             'payment_vnpay_hash_secret',
@@ -162,17 +172,11 @@ class SettingController extends Controller
             'payment_vnpay_command',
             'payment_vnpay_curr_code',
             'payment_vnpay_order_type',
-            'payment_momo_enabled',
             'payment_momo_endpoint',
             'payment_momo_partner_code',
             'payment_momo_access_key',
             'payment_momo_secret_key',
             'payment_momo_request_type',
-            'bank_transfer_bank_name',
-            'bank_transfer_bank_bin',
-            'bank_transfer_account_number',
-            'bank_transfer_account_name',
-            'bank_transfer_note_prefix',
             'captcha_enabled',
             'captcha_site_key',
             'captcha_secret_key',
@@ -401,6 +405,14 @@ class SettingController extends Controller
             'banner_right' => 'Banner ben phai',
             'banner_full' => 'Banner full',
             'logo' => 'Logo',
+            'payment_bank_enabled' => 'Bật chuyển khoản ngân hàng',
+            'payment_momo_enabled' => 'Bật thanh toán Momo',
+            'payment_vnpay_enabled' => 'Bật thanh toán VNPAY',
+            'bank_transfer_bank_bin' => 'Mã BIN ngân hàng',
+            'bank_transfer_bank_name' => 'Tên ngân hàng',
+            'bank_transfer_account_number' => 'Số tài khoản ngân hàng',
+            'bank_transfer_account_name' => 'Tên chủ tài khoản',
+            'bank_transfer_note_prefix' => 'Tiền tố nội dung chuyển khoản',
         ];
 
         if (isset($exactLabels[$key])) {

@@ -744,6 +744,34 @@
 </head>
 
 <body class="sb-nav-fixed">
+    @if(session()->has('admin_impersonator'))
+        <div class="impersonate-banner">
+            <div class="container-fluid d-flex justify-content-between align-items-center py-2">
+                <div>
+                    <i class="fa-solid fa-user-secret me-2"></i>
+                    Bạn đang đăng nhập hộ tài khoản: <strong>{{ auth('students')->user()->name }}</strong> (Giảng viên)
+                </div>
+                <a href="{{ route('students.stop-impersonate') }}" class="btn btn-sm btn-light text-dark fw-bold border-0 shadow-sm">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i> Quay lại Admin
+                </a>
+            </div>
+        </div>
+        <style>
+            .impersonate-banner {
+                background: linear-gradient(90deg, #dc2626, #991b1b);
+                color: #fff;
+                font-size: 0.9rem;
+                position: sticky;
+                top: 0;
+                z-index: 9999;
+                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+            }
+            .impersonate-banner .btn-light:hover {
+                background: #f8fafc;
+                transform: translateY(-1px);
+            }
+        </style>
+    @endif
     @include('part.teacher.header')
     <div id="layoutSidenav">
         @include('part.teacher.sidebar')

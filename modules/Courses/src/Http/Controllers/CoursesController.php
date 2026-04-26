@@ -138,9 +138,22 @@ class CoursesController extends Controller
                     ]) . '" target="_blank" rel="noopener noreferrer" class="course-cell__link">' . $name . '</a>';
                 }
 
+                $badges = '';
+                if ($course->is_coming_soon) {
+                    $badges .= '<span class="badge bg-purple ms-1" style="background: #8b5cf6; font-size: 10px;">Coming Soon</span>';
+                }
+                if ($course->quantity !== null && $course->quantity <= 0) {
+                    $badges .= '<span class="badge bg-danger ms-1" style="font-size: 10px;">Hết chỗ</span>';
+                } elseif ($course->quantity !== null) {
+                    $badges .= '<span class="badge bg-success ms-1" style="font-size: 10px;">' . $course->quantity . ' chỗ</span>';
+                }
+                if ($course->end_at && $course->end_at->isPast()) {
+                    $badges .= '<span class="badge bg-secondary ms-1" style="font-size: 10px;">Hết hạn</span>';
+                }
+
                 return '
         <div class="course-cell">
-            <div class="course-cell__title">' . $titleHtml . '</div>
+            <div class="course-cell__title">' . $titleHtml . $badges . '</div>
             <div class="course-cell__meta">
                 <span><i class="fa-solid fa-chalkboard-user"></i> ' . $teacher . '</span>
                 <span><i class="fa-solid fa-eye"></i> ' . $views . ' lượt xem</span>

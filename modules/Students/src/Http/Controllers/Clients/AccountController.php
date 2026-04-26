@@ -162,7 +162,10 @@ class AccountController extends Controller
             ->sortBy('name_locale')
             ->values();
 
-        $courses = $student->courses()->with('teacher');
+        $isImpersonating = session()->has('admin_impersonator');
+        $courses = $isImpersonating 
+            ? Courses::query()->active()->with('teacher')
+            : $student->courses()->with('teacher');
 
         if ($teacherId) {
             $courses->where('teacher_id', $teacherId);

@@ -201,6 +201,14 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
                 );
             }
 
+            // Giảm số lượng combo nếu có
+            if ($order->bundle_id) {
+                $bundle = \Modules\Courses\src\Models\CourseBundle::find($order->bundle_id);
+                if ($bundle && $bundle->quantity !== null && $bundle->quantity > 0) {
+                    $bundle->decrement('quantity');
+                }
+            }
+
             return true;
         });
     }

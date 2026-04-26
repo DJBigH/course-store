@@ -3,11 +3,16 @@
 @section('content')
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-            <div class="admin-page-actions mb-4">
+            <div class="admin-page-actions mb-4 d-flex justify-content-between align-items-start">
                 <div>
                     <h5 class="mb-1">Quản lý Combo khóa học</h5>
                     <p class="text-muted mb-0">Quản lý các gói combo khóa học từ giảng viên, kiểm soát hiển thị và giá bán.</p>
                 </div>
+                @if (auth()->user()?->hasPermission('courses.create'))
+                    <a href="{{ route('courses.bundles.add') }}" class="btn btn-primary shadow-sm rounded-pill px-4">
+                        <i class="fa-solid fa-plus me-2"></i> Thêm Combo mới
+                    </a>
+                @endif
             </div>
 
             @if (session('msg'))
@@ -84,8 +89,8 @@
                             <th class="text-center">Vị trí</th>
                             <th>Ngày tạo</th>
                             <th class="text-center" style="width: 60px;">HOT</th>
-                            <th class="text-center" style="width: 80px;">Ẩn/Hiện</th>
-                            <th class="text-center" style="width: 80px;">Xóa</th>
+                            <th class="text-center" style="width: 80px;">Trạng thái</th>
+                            <th class="text-center" style="width: 100px;">Hành động</th>
                         </tr>
                     </thead>
                 </table>
@@ -175,7 +180,7 @@
                     { data: 'created_at', name: 'created_at' },
                     { data: 'toggle_hot', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'toggle_status', orderable: false, searchable: false, className: 'text-center' },
-                    { data: 'delete', orderable: false, searchable: false, className: 'text-center' }
+                    { data: 'action', orderable: false, searchable: false, className: 'text-center' }
                 ],
                 order: [[4, 'asc'], [5, 'desc']],
                 language: {

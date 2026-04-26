@@ -66,12 +66,14 @@
                             </th>
                             <th>Tên</th>
                             <th>Email</th>
+                            <th>Vai trò</th>
                             <th>2FA</th>
                             <th>Trạng thái</th>
                             <th>Ngày tạo</th>
                             <th>Khóa học</th>
                             <th>Lịch sử mã</th>
                             <th>Lịch sử</th>
+                            <th>Đăng nhập</th>
                             <th>Sửa</th>
                             <th>Xóa</th>
                         </tr>
@@ -149,6 +151,11 @@
                         data: 'email'
                     },
                     {
+                        data: 'roles',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
                         data: 'two_factor',
                         orderable: false,
                         searchable: false
@@ -167,6 +174,11 @@
                     },
                     {
                         data: 'logs'
+                    },
+                    {
+                        data: 'impersonate',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'edit'

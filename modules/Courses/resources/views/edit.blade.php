@@ -279,18 +279,41 @@
             <div class="col-6">
                 <div class="mb-3">
                     <label for="">Trạng thái</label>
-                    <select name="status" id=""
+                    <select name="status" id="status"
                         class="form-select {{ $errors->has('status') ? 'is-invalid' : '' }}">
                         <option value="0" {{ old('status') == 0 || $courses->status == 0 ? 'selected' : false }}>Chưa
-                            ra mắt</option>
+                            ra mắt (Nháp)</option>
                         <option value="1" {{ old('status') == 1 || $courses->status == 1 ? 'selected' : false }}>Đã
-                            ra
-                            mắt</option>
+                            ra mắt (Công khai)</option>
                     </select>
                     @error('status')
                         <div class="invalid-feedback">
                             {{ $message }}
                         </div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="mb-3">
+                    <label for="">Trạng thái bán hàng</label>
+                    <select name="is_coming_soon" id="is_coming_soon"
+                        class="form-select{{ $errors->has('is_coming_soon') ? ' is-invalid' : '' }}">
+                        <option value="0" {{ old('is_coming_soon', $courses->is_coming_soon) == 0 ? 'selected' : false }}>Đang bán / Sẵn sàng</option>
+                        <option value="1" {{ old('is_coming_soon', $courses->is_coming_soon) == 1 ? 'selected' : false }}>Sắp ra mắt (Coming Soon)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-6" id="coming_soon_date_wrapper" style="display: {{ old('is_coming_soon', $courses->is_coming_soon) == 1 ? 'block' : 'none' }}">
+                <div class="mb-3">
+                    <label for="">Ngày mở bán chính thức</label>
+                    <input type="datetime-local" name="coming_soon_start_at" 
+                        class="form-control{{ $errors->has('coming_soon_start_at') ? ' is-invalid' : '' }}"
+                        value="{{ old('coming_soon_start_at', $courses->coming_soon_start_at ? $courses->coming_soon_start_at->format('Y-m-d\TH:i') : '') }}">
+                    <small class="text-muted">Dùng để đếm ngược Countdown ngoài trang chủ.</small>
+                    @error('coming_soon_start_at')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
@@ -511,5 +534,26 @@
         window.AdminSlug.bindAuto('.title-ko', '.slug-ko', 'ko');
         window.AdminSlug.bindAuto('.title-ja', '.slug-ja', 'ja');
         window.AdminSlug.bindAuto('.title-zh', '.slug-zh', 'zh');
+
+        const isComingSoonSelect = document.getElementById('is_coming_soon');
+        const comingSoonWrapper = document.getElementById('coming_soon_date_wrapper');
+        const comingSoonInput = comingSoonWrapper ? comingSoonWrapper.querySelector('input') : null;
+
+        function toggleComingSoon() {
+            if (!isComingSoonSelect || !comingSoonWrapper) return;
+            
+            if (isComingSoonSelect.value == 1) {
+                comingSoonWrapper.style.display = 'block';
+            } else {
+                comingSoonWrapper.style.display = 'none';
+                if (comingSoonInput) comingSoonInput.value = '';
+            }
+        }
+
+        if (isComingSoonSelect) {
+            isComingSoonSelect.addEventListener('change', toggleComingSoon);
+            // Chạy ngay khi load trang
+            toggleComingSoon();
+        }
     </script>
 @endsection

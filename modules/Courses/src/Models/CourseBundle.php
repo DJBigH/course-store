@@ -15,10 +15,15 @@ class CourseBundle extends Model
         'name',
         'slug',
         'price',
+        'sale_price',
         'description',
-        'image',
+        'thumbnail',
         'status',
         'is_hot',
+        'quantity',
+        'is_coming_soon',
+        'coming_soon_start_at',
+        'end_at',
         'position',
         'created_at',
         'updated_at'
@@ -26,8 +31,13 @@ class CourseBundle extends Model
 
     protected $casts = [
         'price' => 'float',
+        'sale_price' => 'float',
         'status' => 'boolean',
         'is_hot' => 'boolean',
+        'quantity' => 'integer',
+        'is_coming_soon' => 'boolean',
+        'coming_soon_start_at' => 'datetime',
+        'end_at' => 'datetime',
         'position' => 'integer',
     ];
 

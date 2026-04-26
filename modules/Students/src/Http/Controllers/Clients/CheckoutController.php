@@ -66,6 +66,13 @@ class CheckoutController extends Controller
             abort(404);
         }
 
+        if ($this->getPayableAmount($order) > 0) {
+            if (!(int) setting('payment_bank_enabled', '1')) {
+                return back()->with('msg', 'Phương thức chuyển khoản hiện đang bảo trì. Vui lòng chọn phương thức khác.')
+                    ->with('msgType', 'danger');
+            }
+        }
+
         $this->setOrderPaymentMethod($order, $this->getPayableAmount($order) <= 0 ? 'free' : 'bank_transfer');
         $this->markOrderAsPaid($order);
 
@@ -117,7 +124,7 @@ class CheckoutController extends Controller
             return redirect()->route('students.account.checkout', [
                 'locale' => $locale,
                 'id' => $order->id,
-            ])->with('msg', __('students::clients/checkout.checkout.vnpay_not_configured'))
+            ])->with('msg', 'Cổng thanh toán VNPAY hiện đang bảo trì. Vui lòng chọn phương thức khác.')
                 ->with('msgType', 'danger');
         }
 
@@ -245,7 +252,7 @@ class CheckoutController extends Controller
             return redirect()->route('students.account.checkout', [
                 'locale' => $locale,
                 'id' => $order->id,
-            ])->with('msg', __('students::clients/checkout.checkout.momo_not_configured'))
+            ])->with('msg', 'Ví điện tử MoMo hiện đang bảo trì. Vui lòng chọn phương thức khác.')
                 ->with('msgType', 'danger');
         }
 

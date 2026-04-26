@@ -106,27 +106,92 @@
                                     </div>
                                 @endif
                             @endauth
+
+                            @if ($bundle->quantity !== null)
+                                <div class="bundle-detail-stock mt-2">
+                                    <span class="badge {{ $bundle->quantity > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border py-2 px-3 rounded-pill w-100 text-center">
+                                        <i class="fa-solid fa-boxes-stacked me-1"></i>
+                                        @if ($bundle->quantity > 0)
+                                            Còn lại: <strong>{{ $bundle->quantity }}</strong> suất cuối cùng
+                                        @else
+                                            Rất tiếc, đã hết suất đăng ký combo này
+                                        @endif
+                                    </span>
+                                </div>
+                            @endif
+
+                            @if ($bundle->end_at)
+                                <div class="bundle-detail-deadline mt-2">
+                                    <small class="text-danger fw-bold"><i class="fa-solid fa-hourglass-end me-1"></i> Hạn đăng ký:</small>
+                                    <span class="text-danger">{{ $bundle->end_at->format('d/m/Y H:i') }}</span>
+                                    @if ($bundle->end_at->isFuture())
+                                        <div class="sale-countdown-mini mt-1" data-end="{{ $bundle->end_at->toIso8601String() }}">
+                                            <small class="text-muted">Kết thúc sau: <span class="days">0</span>d <span class="hours">0</span>h <span class="minutes">0</span>m</small>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
 
-                        @auth('students')
-                            @if ($allCoursesOwned)
-                                <div class="alert alert-warning border-0 mb-3">
-                                    {{ __('courses::teacher/messages.bundles.flash.all_courses_owned') }}
+                        @php
+                            $isExpired = $bundle->end_at && $bundle->end_at->isPast();
+                            $isSoldOut = $bundle->quantity !== null && $bundle->quantity <= 0;
+                            $isComingSoon = $bundle->is_coming_soon && $bundle->coming_soon_start_at && $bundle->coming_soon_start_at->isFuture();
+                            $canBuy = !$isExpired && !$isSoldOut && !$isComingSoon;
+                        @endphp
+
+                        @if ($isComingSoon)
+                            <div class="coming-soon-wrapper mb-3 text-center p-3 rounded bg-warning-subtle border border-warning">
+                                <h6 class="text-warning-emphasis fw-bold mb-2">
+                                    <i class="fa-solid fa-clock-rotate-left"></i> {{ __('courses::clients/common.coming_soon') }}
+                                </h6>
+                                <div class="countdown-timer d-flex justify-content-center gap-2" 
+                                     data-time="{{ $bundle->coming_soon_start_at->toIso8601String() }}">
+                                    <div class="time-item"><span class="days">00</span><small>D</small></div>
+                                    <div class="time-item"><span class="hours">00</span><small>H</small></div>
+                                    <div class="time-item"><span class="minutes">00</span><small>M</small></div>
+                                    <div class="time-item"><span class="seconds">00</span><small>S</small></div>
                                 </div>
-                            @else
+                            </div>
+                        @endif
+
+                        @if ($allCoursesOwned)
+                            <div class="alert alert-warning border-0 mb-3">
+                                {{ __('courses::teacher/messages.bundles.flash.all_courses_owned') }}
+                            </div>
+                        @elseif ($isExpired)
+                            <div class="alert alert-danger border-0 mb-3 text-center fw-bold">
+                                <i class="fa-solid fa-circle-xmark"></i> Combo này đã hết hạn đăng ký!
+                            </div>
+                        @elseif ($isSoldOut)
+                            <div class="alert alert-danger border-0 mb-3 text-center fw-bold">
+                                <i class="fa-solid fa-ban"></i> Đã hết lượt đăng ký cho combo này!
+                            </div>
+                        @endif
+
+                        @if (!$allCoursesOwned)
+                            @auth('students')
                                 <form action="{{ route('courses.bundle.create', ['locale' => app()->getLocale()]) }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="bundle_id" value="{{ $bundle->id }}">
-                                    <button class="btn btn-primary w-100 bundle-detail-buy-btn">
-                                        {{ $hasOwnedCourses ? __('courses::teacher/messages.bundles.public.buy_remaining') : __('courses::teacher/messages.bundles.public.buy_now') }}
+                                    <button class="btn btn-primary w-100 bundle-detail-buy-btn" {{ !$canBuy ? 'disabled' : '' }}>
+                                        @if ($isComingSoon)
+                                            Chờ ngày ra mắt
+                                        @elseif ($isSoldOut)
+                                            Đã hết lượt bán
+                                        @elseif ($isExpired)
+                                            Đã hết hạn bán
+                                        @else
+                                            {{ $hasOwnedCourses ? __('courses::teacher/messages.bundles.public.buy_remaining') : __('courses::teacher/messages.bundles.public.buy_now') }}
+                                        @endif
                                     </button>
                                 </form>
-                            @endif
-                        @else
-                            <a href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}" class="btn btn-primary w-100 bundle-detail-buy-btn">
-                                {{ __('courses::teacher/messages.bundles.public.login_to_buy') }}
-                            </a>
-                        @endauth
+                            @else
+                                <a href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}" class="btn btn-primary w-100 bundle-detail-buy-btn" {{ !$canBuy ? 'disabled' : '' }}>
+                                    {{ __('courses::teacher/messages.bundles.public.login_to_buy') }}
+                                </a>
+                            @endauth
+                        @endif
                     </div>
                 </div>
             </div>
@@ -171,5 +236,83 @@
             .bundle-detail-course-thumb { width: 100%; height: 180px; }
             .bundle-detail-section-head { flex-direction: column; align-items: flex-start; }
         }
+        .countdown-timer .time-item {
+            background: #fff;
+            padding: 5px;
+            border-radius: 8px;
+            min-width: 45px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .countdown-timer .time-item span {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #d97706;
+            line-height: 1;
+        }
+        .countdown-timer .time-item small {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #92400e;
+            font-weight: 700;
+        }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const countdown = () => {
+                const timerEl = document.querySelector('.countdown-timer');
+                if (!timerEl) return;
+
+                const targetDate = new Date(timerEl.dataset.time).getTime();
+                const update = () => {
+                    const now = new Date().getTime();
+                    const diff = targetDate - now;
+
+                    if (diff <= 0) {
+                        window.location.reload();
+                        return;
+                    }
+
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    timerEl.querySelector('.days').innerText = String(days).padStart(2, '0');
+                    timerEl.querySelector('.hours').innerText = String(hours).padStart(2, '0');
+                    timerEl.querySelector('.minutes').innerText = String(minutes).padStart(2, '0');
+                    timerEl.querySelector('.seconds').innerText = String(seconds).padStart(2, '0');
+                };
+
+                update();
+                setInterval(update, 1000);
+            };
+
+            const saleCountdownMini = () => {
+                const els = document.querySelectorAll('.sale-countdown-mini');
+                els.forEach(el => {
+                    const targetDate = new Date(el.dataset.end).getTime();
+                    const update = () => {
+                        const now = new Date().getTime();
+                        const diff = targetDate - now;
+                        if (diff <= 0) {
+                            window.location.reload();
+                            return;
+                        }
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        el.querySelector('.days').innerText = days;
+                        el.querySelector('.hours').innerText = hours;
+                        el.querySelector('.minutes').innerText = minutes;
+                    };
+                    update();
+                    setInterval(update, 60000);
+                });
+            };
+
+            countdown();
+            saleCountdownMini();
+        });
+    </script>
 @endsection

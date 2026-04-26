@@ -59,6 +59,8 @@ class CoursesRequest extends FormRequest
             'supports_ja' => 'nullable',
             'supports_zh' => 'nullable',
             'status' => 'required|integer',
+            'is_coming_soon' => 'nullable|integer|in:0,1',
+            'coming_soon_start_at' => 'nullable|required_if:is_coming_soon,1|date',
             'is_learning_locked' => 'required|integer|in:0,1',
             'categories' => 'required',
         ];

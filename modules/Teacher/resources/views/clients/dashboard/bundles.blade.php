@@ -37,9 +37,22 @@
                             <span class="teacher-bundles-status {{ $bundle->status ? 'is-active' : 'is-draft' }}">
                                 {{ $bundle->status ? __('teacher::teacher/course/common.status.published') : __('teacher::teacher/course/common.status.draft') }}
                             </span>
+                            @if($bundle->is_coming_soon)
+                                <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">{{ __('teacher::teacher/bundle/common.form.is_coming_soon') }}</span>
+                            @endif
+                            @if($bundle->is_hot)
+                                <span class="badge bg-danger ms-1" style="font-size: 10px;">HOT</span>
+                            @endif
                             <h4>{{ $bundle->name }}</h4>
                         </div>
-                        <strong>{{ moneyLocale($bundle->price) }}</strong>
+                        <div class="text-end">
+                            @if($bundle->sale_price > 0)
+                                <del class="text-muted small d-block">{{ moneyLocale($bundle->price) }}</del>
+                                <strong class="text-danger">{{ moneyLocale($bundle->sale_price) }}</strong>
+                            @else
+                                <strong>{{ moneyLocale($bundle->price) }}</strong>
+                            @endif
+                        </div>
                     </div>
 
                     <p class="teacher-bundles-card__desc">
@@ -47,7 +60,21 @@
                     </p>
 
                     <div class="teacher-bundles-card__meta">
-                        <span>{{ __('teacher::teacher/bundle/common.labels.course_count', ['count' => $bundle->items_count]) }}</span>
+                        <div class="d-flex gap-3">
+                            <span><i class="fas fa-layer-group me-1"></i> {{ __('teacher::teacher/bundle/common.labels.course_count', ['count' => $bundle->items_count]) }}</span>
+                            @if($bundle->quantity !== null)
+                                <span class="{{ $bundle->quantity <= 0 ? 'text-danger' : '' }}">
+                                    <i class="fas fa-box me-1"></i> {{ __('teacher::teacher/bundle/common.form.quantity') }}: {{ $bundle->quantity }}
+                                </span>
+                            @else
+                                <span class="text-success"><i class="fas fa-infinity me-1"></i> {{ __('teacher::teacher/bundle/list.unlimited') }}</span>
+                            @endif
+                            @if($bundle->end_at)
+                                <span class="text-warning">
+                                    <i class="fas fa-calendar-times me-1"></i> {{ __('teacher::teacher/bundle/common.form.end_at') }}: {{ $bundle->end_at->format('d/m/Y H:i') }}
+                                </span>
+                            @endif
+                        </div>
                         <span>{{ __('teacher::teacher/bundle/common.labels.slug', ['slug' => $bundle->slug]) }}</span>
                     </div>
 

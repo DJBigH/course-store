@@ -14,18 +14,22 @@ class CourseCommentController extends Controller
     {
         $course = $this->findCourse($slug);
         $student = Auth::guard('students')->user();
+        $admin = Auth::user();
 
-        if (!$student) {
+        if (!$student && !$admin) {
             return $this->errorResponse($request, __('courses::clients/common.comment_login_required'), 403);
         }
 
-        $hasCourse = $student->courses()
-            ->where('courses.id', $course->id)
-            ->wherePivot('status', 1)
-            ->exists();
+        // Nếu là Admin thì bỏ qua check mua khóa học
+        if (!$admin) {
+            $hasCourse = $student->courses()
+                ->where('courses.id', $course->id)
+                ->wherePivot('status', 1)
+                ->exists();
 
-        if (!$hasCourse) {
-            return $this->errorResponse($request, __('courses::clients/common.comment_need_purchase'), 403);
+            if (!$hasCourse) {
+                return $this->errorResponse($request, __('courses::clients/common.comment_need_purchase'), 403);
+            }
         }
 
         $payload = $request->validate([
@@ -42,7 +46,8 @@ class CourseCommentController extends Controller
 
         CourseComment::create([
             'course_id' => $course->id,
-            'student_id' => $student->id,
+            'student_id' => $student?->id,
+            'user_id' => $admin?->id,
             'content' => $content,
             'is_visible' => true,
             'is_flagged' => $moderation['is_flagged'],
@@ -122,13 +127,19 @@ class CourseCommentController extends Controller
     {
         $student = Auth::guard('students')->user();
         $viewerIsAdmin = Auth::check();
-        $canComment = $student
-            ? $student->courses()
+        
+        $canComment = $viewerIsAdmin; // Admin luôn được comment
+        if (!$canComment && $student) {
+            $canComment = $student->courses()
                 ->where('courses.id', $course->id)
                 ->wherePivot('status', 1)
-                ->exists()
-            : false;
-        $canRate = $canComment;
+                ->exists();
+        }
+        
+        $canRate = $student ? $student->courses()
+                ->where('courses.id', $course->id)
+                ->wherePivot('status', 1)
+                ->exists() : false;
 
         $course->loadCount('ratings');
         $course->loadAvg('ratings', 'rating');

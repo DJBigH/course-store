@@ -62,6 +62,10 @@ class Courses extends Model
         'package_lock_reason',
         'is_package_priority',
         'is_learning_locked',
+        'is_coming_soon',
+        'coming_soon_start_at',
+        'quantity',
+        'end_at',
         'view',
         'created_at',
         'updated_at',
@@ -70,6 +74,9 @@ class Courses extends Model
     protected $casts = [
         'package_locked_at' => 'datetime',
         'is_package_priority' => 'boolean',
+        'is_coming_soon' => 'boolean',
+        'coming_soon_start_at' => 'datetime',
+        'end_at' => 'datetime',
     ];
 
     protected $with = ['teacher'];

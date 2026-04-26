@@ -682,4 +682,19 @@ class TeacherController extends Controller
     {
         return Courses::query()->withTrashed()->where('teacher_id', $teacherId)->exists();
     }
+
+    /**
+     * API: Trả về danh sách khóa học của giảng viên
+     */
+    public function getCourses(int $id)
+    {
+        $courses = Courses::query()
+            ->where('teacher_id', $id)
+            ->where('status', 1)
+            ->where('is_learning_locked', '!=', 1)
+            ->orderBy('name')
+            ->get(['id', 'name', 'price', 'sale_price']);
+
+        return response()->json($courses);
+    }
 }

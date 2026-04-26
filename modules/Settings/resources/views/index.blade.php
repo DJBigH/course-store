@@ -40,6 +40,7 @@
                                     <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="mail">Cấu hình mail</button>
                                 @endif
                                 <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="announcements">Thông báo</button>
+                                <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="payments">Thanh toán</button>
                             </div>
                         </div>
                     </div>
@@ -364,6 +365,131 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Panel: Thanh toán --}}
+                        <div class="settings-panel" data-settings-panel="payments">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header fw-bold bg-white pt-3 border-bottom-0">Cấu hình phương thức thanh toán</div>
+                                <div class="card-body">
+                                    <div class="alert alert-info border-0 rounded-4 mb-4 small">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Khi tắt một phương thức, hệ thống sẽ hiển thị trạng thái <strong>"Bảo trì"</strong> tại trang thanh toán của Học viên và Giảng viên.
+                                    </div>
+
+                                    <div class="row g-4">
+                                        <div class="col-md-4">
+                                            <div class="p-3 border rounded-4 h-100 bg-light d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">Chuyển khoản ngân hàng</h6>
+                                                    <p class="text-muted small mb-3">Thanh toán qua QR Code ngân hàng (VietQR)</p>
+                                                </div>
+                                                <div class="form-check form-switch m-0">
+                                                    <input class="form-check-input" type="checkbox" id="payment_bank_enabled" name="payment_bank_enabled" value="1" @checked(old('payment_bank_enabled', $settings['payment_bank_enabled'] ?? '1') == '1')>
+                                                    <label class="form-check-label fw-bold text-primary" for="payment_bank_enabled">Đang hoạt động</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="p-3 border rounded-4 h-100 bg-light d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">Ví điện tử Momo</h6>
+                                                    <p class="text-muted small mb-3">Cổng thanh toán Momo (Online Payment)</p>
+                                                </div>
+                                                <div class="form-check form-switch m-0">
+                                                    <input class="form-check-input" type="checkbox" id="payment_momo_enabled" name="payment_momo_enabled" value="1" @checked(old('payment_momo_enabled', $settings['payment_momo_enabled'] ?? '1') == '1')>
+                                                    <label class="form-check-label fw-bold text-primary" for="payment_momo_enabled">Đang hoạt động</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="p-3 border rounded-4 h-100 bg-light d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">Cổng VNPAY</h6>
+                                                    <p class="text-muted small mb-3">Thanh toán qua ứng dụng ngân hàng & thẻ</p>
+                                                </div>
+                                                <div class="form-check form-switch m-0">
+                                                    <input class="form-check-input" type="checkbox" id="payment_vnpay_enabled" name="payment_vnpay_enabled" value="1" @checked(old('payment_vnpay_enabled', $settings['payment_vnpay_enabled'] ?? '1') == '1')>
+                                                    <label class="form-check-label fw-bold text-primary" for="payment_vnpay_enabled">Đang hoạt động</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-4 opacity-10">
+
+                                    <div class="settings-toggle-panel" data-settings-toggle-target="payment_bank_enabled">
+                                        <h6 class="fw-bold mb-3"><i class="bi bi-bank me-2"></i>Chi tiết tài khoản nhận tiền (VietQR)</h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Chọn Ngân hàng</label>
+                                                <select name="bank_transfer_bank_bin" class="form-control" id="bank_selector">
+                                                    <option></option>
+                                                    @php
+                                                        $banks = [
+                                                            '970407' => 'Techcombank',
+                                                            '970436' => 'Vietcombank',
+                                                            '970422' => 'MBBank',
+                                                            '970416' => 'ACB',
+                                                            '970415' => 'VietinBank',
+                                                            '970418' => 'BIDV',
+                                                            '970405' => 'Agribank',
+                                                            '970423' => 'TPBank',
+                                                            '970432' => 'VPBank',
+                                                            '970403' => 'Sacombank',
+                                                            '970441' => 'VIB',
+                                                            '970406' => 'DongA Bank',
+                                                            '970437' => 'HDBank',
+                                                            '970449' => 'LienVietPostBank',
+                                                            '970443' => 'SHB',
+                                                            '970440' => 'SeABank',
+                                                        ];
+                                                        $currentBin = old('bank_transfer_bank_bin', $settings['bank_transfer_bank_bin'] ?? '970407');
+                                                    @endphp
+                                                    @foreach($banks as $bin => $name)
+                                                        <option value="{{ $bin }}" data-name="{{ $name }}" @selected($currentBin == $bin)>{{ $name }} ({{ $bin }})</option>
+                                                    @endforeach
+                                                </select>
+                                                <input type="hidden" name="bank_transfer_bank_name" id="bank_name_hidden" value="{{ old('bank_transfer_bank_name', $settings['bank_transfer_bank_name'] ?? 'Techcombank') }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Số tài khoản</label>
+                                                <input type="text" name="bank_transfer_account_number" class="form-control" value="{{ old('bank_transfer_account_number', $settings['bank_transfer_account_number'] ?? '') }}" placeholder="Nhập số tài khoản">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Tên chủ tài khoản</label>
+                                                <input type="text" name="bank_transfer_account_name" class="form-control" value="{{ old('bank_transfer_account_name', $settings['bank_transfer_account_name'] ?? '') }}" placeholder="NGUYEN VAN A">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Tiền tố nội dung chuyển khoản</label>
+                                                <input type="text" name="bank_transfer_note_prefix" class="form-control" value="{{ old('bank_transfer_note_prefix', $settings['bank_transfer_note_prefix'] ?? 'CK') }}" placeholder="VD: CK, THANHTOAN">
+                                                <small class="text-muted">Hệ thống sẽ tự động ghép: [Tiền tố] + [Mã đơn hàng]</small>
+                                            </div>
+                                            <div class="col-12 mt-3">
+                                                <div class="p-3 border rounded-4 bg-white shadow-sm">
+                                                    <label class="form-label d-block fw-bold mb-3 text-primary"><i class="bi bi-qr-code-scan me-2"></i>Xem trước mã QR (VietQR)</label>
+                                                    <div class="d-flex align-items-center gap-4">
+                                                        <div id="qr_preview_container" class="bg-white p-2 border rounded-4 text-center d-flex align-items-center justify-content-center" style="width: 180px; height: 180px;">
+                                                            <img id="qr_preview_img" src="" alt="QR Preview" class="img-fluid" style="max-height: 164px; display: none;">
+                                                            <div id="qr_preview_placeholder" class="text-muted small px-3">
+                                                                Vui lòng nhập số tài khoản và chọn ngân hàng để xem trước
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <div class="alert alert-info border-0 rounded-4 mb-0 py-2 px-3 small">
+                                                                <h6 class="fw-bold mb-1" style="font-size: 0.85rem;">Thông tin hiển thị</h6>
+                                                                <p class="mb-0">Mã QR này được sinh tự động dựa trên cấu hình phía trên. Bạn có thể dùng ứng dụng ngân hàng quét thử để xác thực trước khi lưu.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div> {{-- end settings-panels --}}
                 </div> {{-- end col-xl-9 --}}
             </div> {{-- end row --}}
@@ -427,12 +553,63 @@
             background-color: #1e293b !important;
             color: #f8fafc;
         }
+
+        /* Select2 Customization */
+        .select2-container--default .select2-selection--single {
+            height: 44px !important;
+            border-radius: 12px !important;
+            border-color: var(--admin-border) !important;
+            background-color: var(--admin-input-bg) !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: var(--admin-text) !important;
+            line-height: 44px !important;
+            padding-left: 12px !important;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 42px !important;
+        }
+
+        .select2-dropdown {
+            border-radius: 12px !important;
+            border-color: var(--admin-border) !important;
+            background-color: var(--admin-surface) !important;
+            box-shadow: var(--admin-dropdown-shadow) !important;
+            overflow: hidden;
+            z-index: 1060 !important;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border-radius: 8px !important;
+            background-color: var(--admin-bg) !important;
+            color: var(--admin-text) !important;
+            border-color: var(--admin-border) !important;
+            padding: 6px 12px !important;
+        }
+
+        .select2-results__option {
+            padding: 8px 12px !important;
+            color: var(--admin-text) !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--admin-primary) !important;
+            color: white !important;
+        }
+
+        html[data-theme="dark"] .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            color: #0f172a !important;
+        }
     </style>
 @endsection
 
 @section('scripts')
     <script>
-        (() => {
+        $(document).ready(function() {
             const tabButtons = document.querySelectorAll('[data-settings-tab]');
             const panels = document.querySelectorAll('[data-settings-panel]');
 
@@ -446,7 +623,34 @@
             const initialTab = Array.from(tabButtons).find(btn => btn.dataset.settingsTab === savedTab) ? savedTab : tabButtons[0].dataset.settingsTab;
             activateTab(initialTab);
 
-            tabButtons.forEach(btn => btn.addEventListener('click', () => activateTab(btn.dataset.settingsTab)));
+            const initBankSelect2 = () => {
+                const $bankSelector = $('#bank_selector');
+                const bankNameHidden = document.getElementById('bank_name_hidden');
+                
+                if ($bankSelector.length && typeof $.fn.select2 !== 'undefined') {
+                    // Initialize or Re-initialize
+                    $bankSelector.select2({
+                        width: '100%',
+                        placeholder: 'Tìm kiếm ngân hàng...',
+                        allowClear: false
+                    }).off('select2:select').on('select2:select', function() {
+                        const selectedOption = this.options[this.selectedIndex];
+                        if (selectedOption && bankNameHidden) {
+                            bankNameHidden.value = selectedOption.dataset.name || '';
+                        }
+                        updateQrPreview();
+                    });
+                }
+            };
+
+            tabButtons.forEach(btn => btn.addEventListener('click', () => {
+                const tab = btn.dataset.settingsTab;
+                activateTab(tab);
+                
+                if (tab === 'payments') {
+                    setTimeout(initBankSelect2, 50);
+                }
+            }));
 
             const bindTogglePanel = (toggleId) => {
                 const toggle = document.getElementById(toggleId);
@@ -455,6 +659,9 @@
                 const sync = () => {
                     panel.classList.toggle('is-disabled', !toggle.checked);
                     panel.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = !toggle.checked);
+                    if (toggleId === 'payment_bank_enabled' && toggle.checked) {
+                        setTimeout(initBankSelect2, 100);
+                    }
                 };
                 sync();
                 toggle.addEventListener('change', sync);
@@ -485,10 +692,40 @@
             bindLangSwitcher('global_notice_lang', 'announcement-global-lang', 'admin_global_notice_lang');
             bindLangSwitcher('popup_notice_lang', 'announcement-popup-lang', 'admin_popup_notice_lang');
             bindTogglePanel('mail_enabled');
+            bindTogglePanel('payment_bank_enabled');
             bindVisibilityPanel('global_notice_enabled');
             bindVisibilityPanel('popup_notice_enabled');
 
-            // Chatbot Dependency
+            // Initial call
+            if (initialTab === 'payments') {
+                initBankSelect2();
+            }
+
+            const accountNumberInput = document.querySelector('input[name="bank_transfer_account_number"]');
+            const bankSelectorEl = document.getElementById('bank_selector');
+
+            function updateQrPreview() {
+                const bin = bankSelectorEl?.value;
+                const acc = accountNumberInput?.value;
+                const img = document.getElementById('qr_preview_img');
+                const placeholder = document.getElementById('qr_preview_placeholder');
+
+                if (bin && acc && acc.length >= 6) {
+                    img.src = `https://img.vietqr.io/image/${bin}-${acc}-compact2.jpg?amount=10000&addInfo=ChuyenKhoanTest`;
+                    img.style.display = 'inline-block';
+                    placeholder.style.display = 'none';
+                } else {
+                    img.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                }
+            }
+
+            if (accountNumberInput) {
+                accountNumberInput.addEventListener('input', updateQrPreview);
+            }
+
+            updateQrPreview();
+
             const widgetToggle = document.getElementById('chatbot_widget_enabled');
             const geminiToggle = document.getElementById('chatbot_enabled');
             const note = document.querySelector('[data-chatbot-gemini-note]');
@@ -501,6 +738,6 @@
                 widgetToggle.addEventListener('change', sync);
                 sync();
             }
-        })();
+        });
     </script>
 @endsection

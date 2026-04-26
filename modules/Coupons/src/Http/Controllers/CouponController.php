@@ -730,24 +730,25 @@ class CouponController extends Controller
         $student = Auth::guard('students')->user();
         $studentId = $student?->id;
 
-        $myCoupons = $student
-            ? $student->coupons()
-            ->active()
-            ->visibleForStudent($studentId)
-            ->with('teacher')
-            ->paginate(config('paginate.mycoupon_limit'), ['*'], 'my_page')
+        $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+        $isImpersonating = session()->has('admin_impersonator') || $isAdmin;
+
+        $myCoupons = ($student || $isImpersonating)
+            ? ($isImpersonating 
+                ? Coupons::query()->active()->with('teacher')->paginate(config('paginate.mycoupon_limit'), ['*'], 'my_page')
+                : $student->coupons()->active()->visibleForStudent($studentId)->with('teacher')->paginate(config('paginate.mycoupon_limit'), ['*'], 'my_page'))
             : null;
 
         $courseCoupons = Coupons::query()
             ->active()
-            ->visibleForStudent($studentId)
+            ->when(!$isImpersonating, fn($q) => $q->visibleForStudent($studentId))
             ->whereHas('courses')
             ->with('courses', 'teacher')
             ->paginate(config('paginate.mycoupon_limit'), ['*'], 'course_page');
 
         $publicCoupons = Coupons::query()
             ->active()
-            ->visibleForStudent($studentId)
+            ->when(!$isImpersonating, fn($q) => $q->visibleForStudent($studentId))
             ->whereDoesntHave('students')
             ->whereDoesntHave('courses')
             ->with('teacher')
