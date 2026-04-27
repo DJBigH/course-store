@@ -14,6 +14,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/edit/{id}', [AdminPackageController::class, 'edit'])->middleware('permission:teachers.edit')->name('edit');
         Route::post('/edit/{id}', [AdminPackageController::class, 'update'])->middleware('permission:teachers.edit')->name('post-edit');
         Route::post('/reorder', [AdminPackageController::class, 'reorder'])->middleware('permission:teachers.edit')->name('reorder');
+        Route::post('/copy-features', [AdminPackageController::class, 'copyFeatures'])->middleware('permission:teachers.edit')->name('copy-features');
         Route::delete('/delete/{id}', [AdminPackageController::class, 'delete'])->middleware('permission:teachers.delete')->name('delete');
         // ─── Grant Package ───────────────────────────────────────────────────────
         Route::get('/grant', [PackageGrantController::class, 'index'])->middleware('permission:teachers.edit')->name('grant');

@@ -25,6 +25,7 @@ return array (
     'package' => '講師パッケージ',
     'support' => 'サポート',
     'cancellation' => '登録解除',
+    'inbox' => 'システム受信トレイ',
   ),
   'brand' => 
   array (

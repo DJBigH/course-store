@@ -8,6 +8,9 @@
                     <h5 class="mb-1">{{ $pageTitle }}</h5>
                     <p class="text-muted mb-0">Quản lý nhãn và mô tả chi tiết của từng tính năng hiển thị trong bảng so sánh.</p>
                 </div>
+                <a href="{{ route('teacher-packages.index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-list me-1"></i> Danh sách gói
+                </a>
             </div>
 
             @if (session('msg'))

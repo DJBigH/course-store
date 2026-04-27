@@ -482,9 +482,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm tính năng bán combo theo số lượng va có thời gian ( Done)
 - Thêm cái dùng hợp tác hủy tư cách giáo viên ẩn tất cả những thứ liên quan đến giáo viên đó, tài khoản giáo viên sẽ được hạ xuống tài khoản học viên không vô được màn giáo viên, tất cả các khóa học được cấp hay của bản thân sẽ ẩn đi và chỉ có học viên nào mua thì vẫn dùng được ( Done )
 - Vi tài khoản học viên sẽ là tài khoản dùng chung để tạo tài khoản giáo viên nên giờ làm cách nào để vào khi admin dùng quản trị sẽ biết rõ tk nào giáo viên tk nào học viên và cho phép admin có thể vào xem tài khoản học viên hay tài khoản giáo viên và có thể đăng nhập vào tài khoản đó để xem kiểm tra cho dễ  ( Done )
-- Chưa làm config ngân hàng (bank, momo, vnpay thêm bật/tắt và bên clients và teacher khi tắt cái nào thì hiện bảo trì cái đó)
-- Tỷ lệ chuyển đổi: xem bao nhiêu người xem trang, xem bao nhiêu người vào trang j nhiều nhất
-- Đối với cái thông báo giảng viên đổi thành thông báo thì làm nó như 1 cái email kiểu viết tạo đúng input tiêu đề, nội dung, có j kèm có button không và dùng đúng giao diện chung của email web và chọn thông báo cho ai và trong đó có 1 cái là thông báo cho học viên hay giảng viên
+- Chưa làm config ngân hàng (bank, momo, vnpay thêm bật/tắt và bên clients và teacher khi tắt cái nào thì hiện bảo trì cái đó) ( Done )
+- Tạo thêm chức năng gửi thông báo cho giảng viên và học viên ( Done )
 - Thêm chức năng quản lý huy hiệu ( CURD, xóa mềm có thùng rác để khôi phục và cho tự thêm màu với từng huy hiệu và cho thêm icon và cung cấp nơi xem mã màu và icon để admin dễ dang dung và thay thế )
 - Sắp xếp lại nội dung trong dashboard của admin
 - Thêm chức năng viết được mô tả các chức năng trong gói đấy kiểu ( AI quiz: mổ tả là gì...)
@@ -496,6 +495,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Chức năng log có thiếu hay không
 - Chức năng phần quyền check xem có thiếu j không
 - Làm trang xem chi tiết thông báo
+- Tỷ lệ chuyển đổi: xem bao nhiêu người xem trang, xem bao nhiêu người vào trang j nhiều nhất
     Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -613,6 +613,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check lại toàn bộ validate xem có chỗ nào thiếu không ( Done )
 - Làm trang 403,404 riêng dành cho màn teacher ( Note )
 - Fix lại thanh toán giáo viên
+- Check lại toàn bộ notification mail và web gửi cho học viên và admin
 Tổng kết
 - Tìm tất cả file .bak ( Done )
 - check lại lần cuối trước khi đẩy lên production

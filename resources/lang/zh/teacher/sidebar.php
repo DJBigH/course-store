@@ -25,6 +25,7 @@ return array (
     'package' => '讲师套餐',
     'support' => '支持',
     'cancellation' => '注销讲师',
+    'inbox' => '系统收件箱',
   ),
   'brand' => 
   array (

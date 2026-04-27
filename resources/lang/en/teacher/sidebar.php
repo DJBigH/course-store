@@ -25,6 +25,7 @@ return array (
     'package' => 'Teacher Package',
     'support' => 'Support',
     'cancellation' => 'Cancellation',
+    'inbox' => 'System Inbox',
   ),
   'brand' => 
   array (

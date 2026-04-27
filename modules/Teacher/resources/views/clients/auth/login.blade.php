@@ -1,82 +1,89 @@
-@extends('layouts.client')
+@extends('layouts.auth_teacher')
+
+@section('title', __('teacher::auth.login.page_title'))
 
 @section('content')
-    <div class="container py-5">
-        <div class="teacher-auth-shell">
-            <div class="teacher-auth-panel">
-                <span class="teacher-auth-badge">{{ __('teacher::auth.login.badge') }}</span>
-                <h1>{{ __('teacher::auth.login.title') }}</h1>
-                <p class="teacher-auth-desc">{{ __('teacher::auth.login.description') }}</p>
+    <div class="auth-header">
+        <span class="auth-badge">
+            <i class="fa-solid fa-chalkboard-user me-2"></i>
+            {{ __('teacher::auth.login.badge') }}
+        </span>
+        <h1 class="auth-title">{{ __('teacher::auth.login.title') }}</h1>
+        <p class="auth-subtitle">{{ __('teacher::auth.login.description') }}</p>
+    </div>
 
-                @if ($errors->any())
-                    <div class="alert alert-danger">{{ __('teacher::auth.login.error_message') }}</div>
-                @endif
+    <form action="{{ route('teacher.auth.post-login', ['locale' => app()->getLocale()]) }}" method="POST">
+        @csrf
+        <div class="form-group">
+            <label class="form-label">{{ __('teacher::auth.login.email_label') }}</label>
+            <input type="email" name="email" 
+                   class="form-control-custom @error('email') is-invalid-custom @enderror" 
+                   placeholder="{{ __('teacher::auth.login.email_placeholder') }}" 
+                   value="{{ old('email') }}" required autofocus>
+            @error('email')
+                <span class="invalid-feedback-custom">{{ $message }}</span>
+            @enderror
+        </div>
 
-                @if (session('msg'))
-                    <div class="alert alert-success">{{ session('msg') }}</div>
-                @endif
+        <div class="form-group">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label mb-0">{{ __('teacher::auth.login.password_label') }}</label>
+                <a href="{{ route('teacher.auth.forgot', ['locale' => app()->getLocale()]) }}" class="auth-link small">
+                    {{ __('teacher::auth.login.forgot_password') }}
+                </a>
+            </div>
+            <input type="password" name="password" 
+                   class="form-control-custom @error('password') is-invalid-custom @enderror" 
+                   placeholder="{{ __('teacher::auth.login.password_placeholder') }}" required>
+            @error('password')
+                <span class="invalid-feedback-custom">{{ $message }}</span>
+            @enderror
+        </div>
 
-                @if (session('msg_danger'))
-                    <div class="alert alert-danger teacher-auth-alert">
-                        <div class="fw-semibold mb-1">{{ session('msg_danger') }}</div>
-                        <div class="small">{{ __('teacher::auth.access.not_teacher_help') }}</div>
-                    </div>
-                @endif
-
-                <form action="{{ route('teacher.auth.post-login', ['locale' => app()->getLocale()]) }}" method="POST" class="teacher-auth-form">
-                    @csrf
-                    <label>{{ __('teacher::auth.login.email_label') }}</label>
-                    <input type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('teacher::auth.login.email_placeholder') }}" required>
-                    @error('email')
-                        <span class="text-danger small">{{ $message }}</span>
-                    @enderror
-
-                    <label>{{ __('teacher::auth.login.password_label') }}</label>
-                    <input type="password" name="password" placeholder="{{ __('teacher::auth.login.password_placeholder') }}" required>
-                    @error('password')
-                        <span class="text-danger small">{{ $message }}</span>
-                    @enderror
-
-                    <label class="teacher-auth-check">
-                        <input type="checkbox" name="remember" value="1" @checked(old('remember') == 1)>
-                        <span>{{ __('teacher::auth.login.remember_me') }}</span>
-                    </label>
-
-                    <div class="teacher-auth-links">
-                        <a href="{{ route('teacher.auth.forgot', ['locale' => app()->getLocale()]) }}">{{ __('teacher::auth.login.forgot_password') }}</a>
-                        <a href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}">{{ __('teacher::auth.login.student_login') }}</a>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100">{{ __('teacher::auth.login.submit') }}</button>
-                </form>
-
-                <div class="teacher-auth-switcher">
-                    <div class="teacher-auth-switcher__card">
-                        <h2>{{ __('teacher::auth.switcher.student_title') }}</h2>
-                        <p>{{ __('teacher::auth.login.student_login_hint') }}</p>
-                        <a class="btn btn-outline-primary w-100" href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}">
-                            {{ __('teacher::auth.login.student_login_cta') }}
-                        </a>
-                    </div>
-                    <div class="teacher-auth-switcher__card">
-                        <h2>{{ __('teacher::auth.switcher.teacher_title') }}</h2>
-                        <p>{{ __('teacher::auth.switcher.teacher_desc') }}</p>
-                        <a class="btn btn-outline-secondary w-100" href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}">
-                            {{ __('teacher::auth.login.apply_cta') }}
-                        </a>
-                    </div>
-                </div>
-
-                <p class="teacher-auth-footnote mb-0">
-                    {{ __('teacher::auth.login.hint_prefix') }}
-                    <a href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}">{{ __('teacher::auth.login.hint_link') }}</a>
-                    {{ __('teacher::auth.login.hint_suffix') }}
-                </p>
+        <div class="form-group mb-4">
+            <div class="form-check custom-check">
+                <input class="form-check-input" type="checkbox" name="remember" id="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
+                <label class="form-check-label text-muted small" for="remember">
+                    {{ __('teacher::auth.login.remember_me') }}
+                </label>
             </div>
         </div>
+
+        <button type="submit" class="btn-auth-primary">
+            {{ __('teacher::auth.login.submit') }}
+            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+        </button>
+    </form>
+
+    <div class="auth-footer mt-5">
+        <p class="mb-2">
+            {{ __('teacher::auth.login.student_login_hint') }}
+        </p>
+        <a href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}" class="auth-link">
+            <i class="fa-solid fa-user-graduate me-1"></i>
+            {{ __('teacher::auth.login.student_login_cta') }}
+        </a>
+        
+        <div class="mt-4 pt-4 border-top border-secondary opacity-25"></div>
+        
+        <p class="mb-0">
+            {{ __('teacher::auth.login.hint_prefix') }}
+            <a href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}" class="auth-link">
+                {{ __('teacher::auth.login.hint_link') }}
+            </a>
+        </p>
     </div>
 @endsection
 
 @section('stylesheets')
-    @include('teacher::clients.auth.styles')
+<style>
+    .custom-check .form-check-input {
+        background-color: var(--auth-input-bg);
+        border-color: var(--auth-input-border);
+    }
+    .custom-check .form-check-input:checked {
+        background-color: var(--auth-accent);
+        border-color: var(--auth-accent);
+    }
+</style>
 @endsection

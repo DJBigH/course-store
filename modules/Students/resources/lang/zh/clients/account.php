@@ -9,6 +9,7 @@ return [
         'order' => '订单',
         'change_password' => '修改密码',
         'activity_history' => '活动记录',
+        'inbox' => '系统收件箱',
         'logout' => '退出登录',
     ],
     'core' => [

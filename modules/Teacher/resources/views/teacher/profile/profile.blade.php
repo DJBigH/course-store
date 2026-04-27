@@ -2,6 +2,21 @@
 
 @section('content')
     @php
+        if (!function_exists('hexToRgba')) {
+            function hexToRgba($hex, $opacity = 1) {
+                $hex = str_replace('#', '', $hex);
+                if (strlen($hex) == 3) {
+                    $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+                    $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+                    $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+                } else {
+                    $r = hexdec(substr($hex, 0, 2));
+                    $g = hexdec(substr($hex, 2, 2));
+                    $b = hexdec(substr($hex, 4, 2));
+                }
+                return "rgba($r, $g, $b, $opacity)";
+            }
+        }
         $teacherLocale = session('locale', app()->getLocale());
         $teacherCanCustomizeLanding = $teacher?->packageHasFeature('can_customize_teacher_landing') ?? false;
         $teacherLandingUrl = $teacher
@@ -55,16 +70,7 @@
         $fieldLabel = static function (string $key): string {
             return __("courses::teacher/messages.profile.fields.$key");
         };
-        $teacherBadge = $teacher?->primary_badge;
-        $badgeIcon = match($teacherBadge['tone'] ?? 'slate') {
-            'blue' => 'fa-circle-check',
-            'gold' => 'fa-star',
-            'emerald' => 'fa-arrow-trend-up',
-            'violet' => 'fa-magic-wand-sparkles',
-            'rose' => 'fa-gem',
-            'slate' => 'fa-certificate',
-            default => 'fa-certificate',
-        };
+        $teacherBadges = $teacher?->badge_labels ?? [];
         $profileErrorKeys = [
             'name', 'phone', 'address', 'image',
             'display_name', 'headline', 'experience_years', 'specialties', 'bio',
@@ -88,11 +94,16 @@
                 <div>
                     <h3 class="fw-bold mb-2">{{ __('courses::teacher/messages.profile.title') }}</h3>
                     <p class="text-muted mb-0">{{ __('courses::teacher/messages.profile.description') }}</p>
-                    {{-- @if ($teacherBadge)
-                        <div class="teacher-profile-current-badge teacher-profile-current-badge--{{ $teacherBadge['tone'] }}">
-                            {{ $teacherBadge['label'] }}
+                    @if (!empty($teacherBadges))
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            @foreach ($teacherBadges as $badge)
+                                <span class="badge" style="background-color: {{ $badge['color_bg'] ?? '#e2e8f0' }}; color: {{ $badge['color_text'] ?? '#475569' }}; font-size: 0.68rem; padding: 0.45rem 1rem; border-radius: 999px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    <i class="{{ $badge['icon'] }} me-1"></i>
+                                    {{ $badge['label'] }}
+                                </span>
+                            @endforeach
                         </div>
-                    @endif --}}
+                    @endif
                 </div>
                 <span class="teacher-status-badge">
                     {{ $student->two_factor_email_enabled ? __('courses::teacher/messages.profile.two_factor.enabled') : __('courses::teacher/messages.profile.two_factor.disabled') }}
@@ -150,13 +161,21 @@
                             <h4>{{ __('courses::teacher/messages.profile.basic.title') }}</h4>
                             <p class="text-muted mb-4">{{ __('courses::teacher/messages.profile.basic.description') }}</p>
 
-                            @if ($teacherBadge)
-                                <div class="teacher-profile-badge-banner teacher-profile-badge-banner--{{ $teacherBadge['tone'] }}">
-                                    <div class="teacher-profile-badge-banner__icon">
-                                        <i class="fas {{ $badgeIcon }}"></i>
-                                    </div>
-                                    <strong>{{ __('courses::teacher/messages.profile.basic.badge_label') }}</strong>
-                                    <span class="">{{ $teacherBadge['label'] }}</span>
+                            @if (!empty($teacherBadges))
+                                <div class="teacher-profile-badge-list d-flex flex-wrap gap-3 mb-4 mt-2">
+                                    @foreach ($teacherBadges as $badge)
+                                        <div class="teacher-profile-badge-banner" style="background-color: {{ hexToRgba($badge['color_bg'] ?? '#f1f5f9', 0.1) }}; color: {{ $badge['color_text'] ?? '#0f172a' }}; border-color: {{ hexToRgba($badge['color_bg'] ?? '#f1f5f9', 0.15) }}; width: fit-content; min-width: 180px;">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="teacher-profile-badge-banner__icon-wrap" style="background: {{ hexToRgba($badge['color_bg'] ?? '#f1f5f9', 0.18) }}; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: {{ $badge['color_bg'] ?? '#f1f5f9' }};">
+                                                    <i class="{{ $badge['icon'] }}" style="font-size: 1.1rem;"></i>
+                                                </div>
+                                                <div style="line-height: 1.2;">
+                                                    <strong style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; display: block; margin-bottom: 2px;">{{ __('courses::teacher/messages.profile.basic.badge_label') }}</strong>
+                                                    <span style="font-size: 0.9rem; font-weight: 900; display: block;">{{ $badge['label'] }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             @endif
 
@@ -714,16 +733,13 @@
 
         .teacher-profile-badge-banner {
             position: relative;
-            display: inline-grid;
-            grid-template-columns: 48px minmax(0, 1fr);
-            align-items: center;
-            column-gap: 0.9rem;
-            row-gap: 0.12rem;
-            width: min(100%, 360px);
-            margin: 0 0 1.25rem;
-            padding: 0.9rem 1rem;
-            border-radius: 18px;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            display: inline-block;
+            width: auto;
+            margin: 0.5rem 0 1.25rem;
+            padding: 0.75rem 1.15rem;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            transition: 0.2s ease;
         }
 
         .teacher-profile-badge-banner__icon {

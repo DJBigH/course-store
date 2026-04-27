@@ -17,7 +17,13 @@
                             @if (!empty($teacher->badge_labels))
                                 <div class="teacher-public-badges">
                                     @foreach ($teacher->badge_labels as $badge)
-                                        <span class="teacher-public-badge teacher-public-badge--{{ $badge['key'] }}">{{ $badge['label'] }}</span>
+                                        <span class="teacher-public-badge teacher-public-badge--{{ $badge['key'] }}" 
+                                              style="@if($badge['tone'] === 'custom') background-color: {{ $badge['color_bg'] }}; color: {{ $badge['color_text'] }}; border-color: rgba(0,0,0,0.05); @endif">
+                                            @if($badge['tone'] === 'custom')
+                                                <i class="{{ $badge['icon'] }} me-1"></i>
+                                            @endif
+                                            {{ $badge['label'] }}
+                                        </span>
                                     @endforeach
                                 </div>
                             @endif

@@ -9,6 +9,7 @@ return [
         'order' => 'Orders',
         'change_password' => 'Change Password',
         'activity_history' => 'Activity History',
+        'inbox' => 'System Inbox',
         'logout' => 'Log Out',
     ],
 

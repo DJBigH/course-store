@@ -99,6 +99,8 @@ return [
         'back' => '戻る',
         'notice_bank_transfer_title' => '銀行振込待ち',
         'notice_bank_transfer_description' => '以下の情報を元に振込を行ってください。管理者確認のため、振込後に「支払い済みとしてマーク」をクリックしてください。',
+        'notice_thank_you_title' => 'お支払いありがとうございます！',
+        'notice_thank_you_description' => 'リクエストを受け付けました。管理者による承認をお待ちください。このプロセスは通常15〜30分かかります。',
         'notice_downgrade_title' => 'プランのダウングレード（予約済み）',
         'notice_downgrade_description' => '新しいプランが承認されました。現在のプランの期限が切れた後の :date に有効になります。',
         'notice_activation_title' => 'プランの有効化（予約済み）',
@@ -117,6 +119,16 @@ return [
         'label_payable' => '金額',
         'label_submitted_at' => '送信日時',
         'request_note' => 'ダッシュボードからのプランアップグレードリクエスト',
+        'confirm' => [
+            'upgrade_title' => 'プラン変更の確認',
+            'upgrade_desc' => '<strong>:current</strong>から<strong>:target</strong>への変更を行います。',
+            'downgrade_warning' => '警告：新しいプランは現在のデータよりも制限が低くなっています。一部の機能がロックされたり、超過データが非表示になる可能性があります。',
+            'permanent_to_recurring_warning' => '警告：永久プランから定期購入プランに切り替えます。新しいプランには特定の有効期限が設定されます。',
+            'feature_loss_warning' => '新しいプランには以下の機能が含まれていません：',
+            'preview_expiry' => '有効期限の予定：<strong>:date</strong>',
+            'confirm_btn' => '確認してお支払い',
+            'cancel_btn' => '戻る',
+        ],
     ],
     'common' => [
         'billing_cycle' => [
@@ -136,6 +148,19 @@ return [
         'pending_payment_description' => 'アップグレードを完了するために支払い方法を選択してください。',
         'cancel' => 'キャンセル',
         'submit_upgrade' => 'アップグレードを確認',
+        'payment_maintenance' => 'メンテナンス中',
+        'payment_under_maintenance' => ':gateway は現在メンテナンス中です。他の方法を選択してください。',
+        'bank_transfer_info' => [
+            'title' => '振込情報',
+            'bank_name' => '銀行名',
+            'bank_account' => '口座番号',
+            'bank_account_name' => '口座名義',
+            'amount' => '金額',
+            'transfer_content' => '振込内容',
+            'download_qr' => 'QRコードを保存',
+            'copy' => 'コピー',
+            'copied' => 'コピーしました！',
+        ],
     ],
     'features' => [
         'labels' => [

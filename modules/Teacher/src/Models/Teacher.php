@@ -163,6 +163,11 @@ class Teacher extends Model
         return $this->hasMany(\Modules\Courses\src\Models\CourseBundle::class, 'teacher_id', 'id');
     }
 
+    public function badges()
+    {
+        return $this->belongsToMany(TeacherBadge::class, 'teacher_has_badges', 'teacher_id', 'badge_id');
+    }
+
     public function affiliateLinks()
     {
         return $this->hasMany(\Modules\Finances\src\Models\AffiliateLink::class, 'teacher_id', 'id');
@@ -238,7 +243,24 @@ class Teacher extends Model
 
     public function getBadgeLabelsAttribute(): array
     {
-        return $this->primary_badge ? [$this->primary_badge] : [];
+        $dbBadges = $this->badges->filter->is_active->map(function ($badge) {
+            return [
+                'key' => $badge->code,
+                'label' => $badge->name_locale,
+                'icon' => $badge->icon,
+                'tone' => 'custom', // We will use inline styles for these
+                'color_bg' => $badge->color_bg,
+                'color_text' => $badge->color_text,
+            ];
+        })->toArray();
+
+        $primary = $this->primary_badge;
+        
+        if ($primary) {
+            return array_merge([$primary], $dbBadges);
+        }
+
+        return $dbBadges;
     }
 
     public static function badgeOptions(): array

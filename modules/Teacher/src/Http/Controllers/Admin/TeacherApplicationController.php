@@ -53,7 +53,9 @@ class TeacherApplicationController extends Controller
             ->with(['student', 'package', 'teacher.application.package', 'teacher.student'])
             ->findOrFail($id);
 
+        if ($application->status === 'pending_payment') {
             return back()->with('msg_danger', __('teacher::admin.messages.pending_payment_error'));
+        }
 
         $teacher = $application->teacher;
         $displayName = $application->display_name ?: $application->full_name;

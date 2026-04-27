@@ -53,6 +53,23 @@ class LoginController extends Controller
         }
 
         $student = Auth::guard('students')->user();
+
+        // Prevent active teachers from logging in via the student portal
+        if ($student && $student->teacher && $student->teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE) {
+            Auth::guard('students')->logout();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('auth::messages.login.failure'),
+                    'errors' => [
+                        'email' => [__('auth::messages.login.failure')],
+                    ],
+                ], 422);
+            }
+
+            return back()->with('msg_danger', __('auth::messages.login.failure'));
+        }
+
         $studentId = $student?->id;
         $maxDevices = (int) setting('max_devices', config('auth.max_devices', 1));
 

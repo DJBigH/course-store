@@ -123,6 +123,10 @@
                         <div class="sb-nav-link-icon"><i class="fas fa-bell"></i></div>
                         Thông báo hệ thống
                     </a>
+                    <a class="nav-link {{ request()->is('admin/announcements*') ? 'active' : '' }}" href="{{ route('admin.announcements.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
+                        Gửi thông báo (Broadcast)
+                    </a>
                 @endif
 
                 <!-- NHÓM 2: NỘI DUNG & TIẾP THỊ -->
@@ -175,7 +179,7 @@
                 
                 {{-- Giảng viên --}}
                 @if (auth()->user()?->hasPermission('teachers.view'))
-                    @php $isTeacherGroupOpen = request()->is('admin/teacher*') && !request()->is('admin/teacher-finance*'); @endphp
+                    @php $isTeacherGroupOpen = (request()->is('admin/teacher*') || request()->is('admin/teacher-applications*') || request()->is('admin/teacher-packages*') || request()->is('admin/teacher-announcements*')) && !request()->is('admin/teacher-finance*'); @endphp
                     <div class="sidebar-group {{ $isTeacherGroupOpen ? 'is-open' : '' }}" data-sidebar-group="teachers">
                         <a class="nav-link collapsed {{ $isTeacherGroupOpen ? 'is-active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseTeachers" aria-expanded="false" data-sidebar-toggle>
                             <div class="sb-nav-link-icon"><i class="fas fa-chalkboard-teacher"></i></div>
@@ -185,6 +189,10 @@
                         <div class="collapse {{ $isTeacherGroupOpen ? 'show' : '' }}" id="collapseTeachers" data-bs-parent="#sidenavAccordion" data-sidebar-content>
                             <nav class="sb-sidenav-menu-nested nav">
                                 <a class="nav-link {{ (request()->is('admin/teacher') || request()->is('admin/teacher/edit*')) ? 'active' : '' }}" href="{{ route('teacher.index') }}">Danh sách GV</a>
+                                <a class="nav-link {{ request()->is('admin/teacher/badges*') ? 'active' : '' }}" href="{{ route('teacher.badges.index') }}">
+                                    <div class="sb-nav-link-icon"><i class="fas fa-award"></i></div>
+                                    Quản lý Huy hiệu
+                                </a>
                                 <a class="nav-link {{ request()->is('admin/teacher-applications*') ? 'active' : '' }}" href="{{ route('teacher-applications.index') }}">Đơn ứng tuyển</a>
                                 <a class="nav-link {{ (request()->is('admin/teacher-packages') || request()->is('admin/teacher-package-features*')) ? 'active' : '' }}" href="{{ route('teacher-packages.index') }}">Gói cước & Tính năng</a>
                                 <a class="nav-link {{ request()->is('admin/teacher-packages/grant*') ? 'active' : '' }}" href="{{ route('teacher-packages.grant') }}">Cấp gói đặc quyền</a>

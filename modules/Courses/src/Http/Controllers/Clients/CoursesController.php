@@ -108,9 +108,18 @@ class CoursesController extends Controller
             abort(404);
         }
 
-        $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+        $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view') && !auth('students')->check();
         $isImpersonating = session()->has('admin_impersonator');
-        $hasCourse = $isAdmin || $isImpersonating || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
+        $isCourseOwner = false;
+        
+        if ($student && $student->teacher && $course->teacher_id !== null) {
+            $teacher = $student->teacher;
+            if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE && (int) $teacher->id === (int) $course->teacher_id) {
+                $isCourseOwner = true;
+            }
+        }
+
+        $hasCourse = $isAdmin || $isImpersonating || $isCourseOwner || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
 
         if ((int) $course->status !== 1 && !$hasCourse) {
             abort(404);
@@ -349,6 +358,13 @@ class CoursesController extends Controller
             abort(403, 'Khóa học này đang tạm thời bị khóa học tập.');
         }
 
+        $student = Auth::guard('students')->user();
+        if ($student && $student->teacher && (int) $student->teacher->id === (int) $course->teacher_id) {
+            return back()
+                ->with('msg', 'Bạn không thể mua khóa học của chính mình.')
+                ->with('msgType', 'warning');
+        }
+
         // Kiểm tra Sắp ra mắt cho khóa học lẻ
         if ($course->is_coming_soon && $course->coming_soon_start_at && $course->coming_soon_start_at->isFuture()) {
             return back()
@@ -395,6 +411,12 @@ class CoursesController extends Controller
             ->where('id', (int) $request->input('bundle_id'))
             ->where('status', true)
             ->firstOrFail();
+
+        if ($student && $student->teacher && (int) $student->teacher->id === (int) $bundle->teacher_id) {
+            return back()
+                ->with('msg', 'Bạn không thể mua combo khóa học của chính mình.')
+                ->with('msgType', 'warning');
+        }
 
         // Kiểm tra các điều kiện bán hàng cho Combo
         if ($bundle->is_coming_soon && $bundle->coming_soon_start_at && $bundle->coming_soon_start_at->isFuture()) {

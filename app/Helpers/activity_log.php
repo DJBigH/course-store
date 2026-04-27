@@ -28,7 +28,7 @@ function activity_log(
     } elseif ($admin) {
         $causerLabel = buildLogCauserLabel($admin, 'admin');
     } else {
-        $causerLabel = buildLogCauserLabel();
+        $causerLabel = buildLogCauserLabel(null);
     }
 
     ActiveLog::create([
@@ -49,11 +49,13 @@ if (!function_exists('buildLogCauserLabel')) {
     function buildLogCauserLabel($user = null, ?string $type = null): string
     {
         if (!$user) {
-            return 'System';
+            return 'Hệ thống';
         }
 
         if ($type === 'student' || $user instanceof Student) {
-            return trim(($user->name ?? 'Unknown') . '(hoc-vien)');
+            $isTeacher = $user->teacher && $user->teacher->status === 'active';
+            $roleSuffix = $isTeacher ? '(giang-vien)' : '(hoc-vien)';
+            return trim(($user->name ?? 'Không rõ') . $roleSuffix);
         }
 
         if ($type === 'admin' || $user instanceof User) {
@@ -64,10 +66,10 @@ if (!function_exists('buildLogCauserLabel')) {
             $role = $user->group->slug ?? $user->group->name ?? 'admin';
             $role = str_replace('_', '-', trim((string) $role));
 
-            return trim(($user->name ?? 'Unknown') . '(' . $role . ')');
+            return trim(($user->name ?? 'Không rõ') . '(' . $role . ')');
         }
 
-        return (string) ($user->name ?? 'System');
+        return (string) ($user->name ?? 'Hệ thống');
     }
 }
 
@@ -75,11 +77,11 @@ if (!function_exists('logCauserDisplay')) {
     function logCauserDisplay($log): string
     {
         if (!$log) {
-            return 'System';
+            return 'Hệ thống';
         }
 
         if (!$log->causer_id) {
-            return $log->causer_type ?: 'System';
+            return $log->causer_type ?: 'Hệ thống';
         }
 
         $storedLabel = (string) ($log->causer_type ?? '');
@@ -87,8 +89,11 @@ if (!function_exists('logCauserDisplay')) {
 
         if (
             str_contains($normalizedLabel, 'hoc-vien') ||
+            str_contains($normalizedLabel, 'giang-vien') ||
             str_contains($normalizedLabel, '(student)') ||
-            str_contains($normalizedLabel, '(hoc-vien)')
+            str_contains($normalizedLabel, '(teacher)') ||
+            str_contains($normalizedLabel, '(hoc-vien)') ||
+            str_contains($normalizedLabel, '(giang-vien)')
         ) {
             $student = Student::query()->find($log->causer_id);
 
@@ -103,7 +108,7 @@ if (!function_exists('logCauserDisplay')) {
             return buildLogCauserLabel($admin, 'admin');
         }
 
-        return $log->causer_type ?: 'System';
+        return $log->causer_type ?: 'Hệ thống';
     }
 }
 

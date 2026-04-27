@@ -2,6 +2,21 @@
 
 @section('content')
     @php
+        if (!function_exists('hexToRgba')) {
+            function hexToRgba($hex, $opacity = 1) {
+                $hex = str_replace('#', '', $hex);
+                if (strlen($hex) == 3) {
+                    $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+                    $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+                    $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+                } else {
+                    $r = hexdec(substr($hex, 0, 2));
+                    $g = hexdec(substr($hex, 2, 2));
+                    $b = hexdec(substr($hex, 4, 2));
+                }
+                return "rgba($r, $g, $b, $opacity)";
+            }
+        }
         $teacherLocale = session('locale', app()->getLocale());
         $teacherCanCustomizeLanding = $teacher?->packageHasFeature('can_customize_teacher_landing') ?? false;
         $teacherLandingUrl = $teacher
@@ -55,7 +70,7 @@
         $fieldLabel = static function (string $key): string {
             return __("courses::teacher/messages.profile.fields.$key");
         };
-        $teacherBadge = $teacher?->primary_badge;
+        $teacherBadges = $teacher?->badge_labels ?? [];
         $profileErrorKeys = [
             'name', 'phone', 'address', 'image',
             'display_name', 'headline', 'experience_years', 'specialties', 'bio',
@@ -79,11 +94,16 @@
                 <div>
                     <h3 class="fw-bold mb-2">{{ __('courses::teacher/messages.profile.title') }}</h3>
                     <p class="text-muted mb-0">{{ __('courses::teacher/messages.profile.description') }}</p>
-                    {{-- @if ($teacherBadge)
-                        <div class="teacher-profile-current-badge teacher-profile-current-badge--{{ $teacherBadge['tone'] }}">
-                            {{ $teacherBadge['label'] }}
+                    @if (!empty($teacherBadges))
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            @foreach ($teacherBadges as $badge)
+                                <div class="badge" style="background-color: {{ $badge['color_bg'] ?? '#e2e8f0' }}; color: {{ $badge['color_text'] ?? '#475569' }}; font-size: 0.72rem; padding: 0.4rem 0.9rem; border-radius: 999px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(0,0,0,0.05);">
+                                    <i class="{{ $badge['icon'] }} me-1"></i>
+                                    {{ $badge['label'] }}
+                                </div>
+                            @endforeach
                         </div>
-                    @endif --}}
+                    @endif
                 </div>
                 <span class="teacher-status-badge">
                     {{ $student->two_factor_email_enabled ? __('courses::teacher/messages.profile.two_factor.enabled') : __('courses::teacher/messages.profile.two_factor.disabled') }}
@@ -141,10 +161,24 @@
                             <h4>{{ __('courses::teacher/messages.profile.basic.title') }}</h4>
                             <p class="text-muted mb-4">{{ __('courses::teacher/messages.profile.basic.description') }}</p>
 
-                            @if ($teacherBadge)
-                                <div class="teacher-profile-badge-banner teacher-profile-badge-banner--{{ $teacherBadge['tone'] }}">
-                                    <strong>{{ __('courses::teacher/messages.profile.basic.badge_label') }}</strong>
-                                    <span class="">{{ $teacherBadge['label'] }}</span>
+                            @if (!empty($teacherBadges))
+                                <div class="teacher-profile-badge-list d-flex flex-wrap gap-3 mb-4">
+                                    @foreach ($teacherBadges as $badge)
+                                        <div class="teacher-profile-badge-banner" style="background-color: {{ hexToRgba($badge['color_bg'] ?? '#f1f5f9', 0.14) }}; color: {{ $badge['color_text'] ?? '#0f172a' }}; border-color: {{ hexToRgba($badge['color_bg'] ?? '#f1f5f9', 0.24) }}; width: fit-content; min-width: 200px;">
+                                            <style>
+                                                .badge-icon-{{ $badge['key'] }}::before { content: ""; }
+                                            </style>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="teacher-profile-badge-banner__icon-wrap" style="background: {{ hexToRgba($badge['color_bg'] ?? '#f1f5f9', 0.2) }}; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="{{ $badge['icon'] }}" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                                <div>
+                                                    <strong style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8; display: block;">{{ __('courses::teacher/messages.profile.basic.badge_label') }}</strong>
+                                                    <span style="font-size: 0.95rem; font-weight: 900; display: block;">{{ $badge['label'] }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             @endif
 

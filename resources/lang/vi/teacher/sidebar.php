@@ -25,6 +25,7 @@ return array (
     'package' => 'Gói giảng viên',
     'support' => 'Hỗ trợ',
     'cancellation' => 'Hủy tư cách',
+    'inbox' => 'Hộp thư',
   ),
   'brand' => 
   array (

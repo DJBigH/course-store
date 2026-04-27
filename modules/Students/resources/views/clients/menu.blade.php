@@ -91,6 +91,14 @@
         </li>
     @endif
     <li class="nav-item">
+        <a href="{{ route('students.notifications.index', ['locale' => app()->getLocale()]) }}"
+            class="nav-link {{ activeMenu('students.notifications.index') || activeMenu('clients.inbox.index') ? 'active' : '' }}"
+            data-account-nav>
+            <i class="fa-solid fa-envelope"></i>
+            {{ __('students::clients/account.menu.inbox') }}
+        </a>
+    </li>
+    <li class="nav-item">
         <form action="{{ route('clients-logout', ['locale' => app()->getLocale()]) }}" method="POST" class="d-inline">
             @csrf
             <a href="#" class="nav-link text-danger js-logout"

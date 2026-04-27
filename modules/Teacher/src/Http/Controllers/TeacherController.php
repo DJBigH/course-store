@@ -10,6 +10,7 @@ use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Courses\src\Models\Courses;
 use Modules\Teacher\src\Http\Requests\TeacherRequest;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
+use Modules\Teacher\src\Models\TeacherBadge;
 use Yajra\DataTables\Facades\DataTables;
 
 class TeacherController extends Controller
@@ -169,6 +170,8 @@ class TeacherController extends Controller
                         $btn .= '<button type="button" class="btn btn-danger btn-sm me-1 btn-lock-teacher" data-id="' . $teacher->id . '" data-name="' . e($teacher->name) . '" data-url="' . route('teacher.toggle-lock', $teacher->id) . '" title="Khóa tài khoản"><i class="fa-solid fa-lock"></i></button>';
                     }
 
+                    $btn .= '<a href="' . route('teacher.edit', $teacher->id) . '#badges-assignment-section" class="btn btn-info btn-sm me-1" title="Cấp huy hiệu"><i class="fa-solid fa-award"></i></a>';
+
                     if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) {
                         $btn .= '<form action="' . route('teacher.toggle-ceased', $teacher->id) . '" method="POST" class="d-inline-block me-1">' . csrf_field() . '<button type="submit" class="btn btn-outline-success btn-sm" title="Khôi phục hợp tác" onclick="return confirm(\'Khôi phục hợp tác với giảng viên này?\')"><i class="fa-solid fa-handshake-angle"></i></button></form>';
                     } else {
@@ -267,8 +270,9 @@ class TeacherController extends Controller
     public function create()
     {
         $pageTitle = __('teacher::admin.titles.create');
+        $badges = TeacherBadge::where('is_active', true)->get();
 
-        return view('teacher::create', compact('pageTitle'));
+        return view('teacher::create', compact('pageTitle', 'badges'));
     }
 
     public function bulkAction(Request $request)
@@ -336,6 +340,10 @@ class TeacherController extends Controller
             description: __('teacher::admin.logs.create_desc')
         );
 
+        if ($request->has('badges')) {
+            $teacher->badges()->sync($request->badges);
+        }
+
         return redirect()->route('teacher.index')->with('msg', __('teacher::admin.messages.create_success'));
     }
 
@@ -348,7 +356,9 @@ class TeacherController extends Controller
             abort(404);
         }
 
-        return view('teacher::edit', compact('teacher', 'pageTitle'));
+        $badges = TeacherBadge::where('is_active', true)->get();
+
+        return view('teacher::edit', compact('teacher', 'pageTitle', 'badges'));
     }
 
     public function update(TeacherRequest $request, $id)
@@ -395,6 +405,30 @@ class TeacherController extends Controller
                 logName: __('teacher::admin.logs.update'),
                 description: __('teacher::admin.logs.update_desc')
             );
+
+            if ($request->has('badges')) {
+                try {
+                    $oldBadgeIds = $teacherModel->badges->pluck('id')->toArray();
+                    $newBadgeIds = array_map('intval', $request->badges);
+                    $addedBadgeIds = array_diff($newBadgeIds, $oldBadgeIds);
+
+                    $teacherModel->badges()->sync($newBadgeIds);
+
+                    if (!empty($addedBadgeIds)) {
+                        $addedBadges = TeacherBadge::whereIn('id', $addedBadgeIds)->get();
+                        if ($teacherModel->student) {
+                            $teacherModel->student->notify(new \App\Notifications\BadgeAssignmentNotification($teacherModel, $addedBadges, 'success'));
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Badge update error: ' . $e->getMessage());
+                    if ($teacherModel->student) {
+                        $teacherModel->student->notify(new \App\Notifications\BadgeAssignmentNotification($teacherModel, [], 'failure', $e->getMessage()));
+                    }
+                }
+            } else {
+                $teacherModel->badges()->sync([]);
+            }
 
             return back()->with('msg', __('teacher::admin.messages.update_success'));
         }

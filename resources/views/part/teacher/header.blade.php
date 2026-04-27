@@ -18,7 +18,7 @@
     if (request()->getQueryString()) {
         $teacherCurrentUrl .= '?' . request()->getQueryString();
     }
-    $teacherHeaderBadge = $teacherStudent?->teacher?->primary_badge;
+    $teacherHeaderBadges = $teacherStudent?->teacher?->badge_labels ?? [];
     $teacherCurrentPackage = $teacherStudent?->teacher?->currentPackage()->first();
 @endphp
 
@@ -39,10 +39,15 @@
     </button>
 
     <div class="d-none d-md-flex align-items-center ms-auto me-0 me-md-3 my-2 my-md-0 teacher-header-meta">
-        @if ($teacherHeaderBadge)
-            <span class="teacher-header-badge teacher-header-badge--{{ $teacherHeaderBadge['tone'] }}">
-                {{ $teacherHeaderBadge['label'] }}
-            </span>
+        @if (!empty($teacherHeaderBadges))
+            <div class="d-flex align-items-center gap-1 me-2">
+                @foreach ($teacherHeaderBadges as $badge)
+                    <span class="teacher-header-badge" style="background-color: {{ $badge['color_bg'] ?? '#e2e8f0' }} !important; color: {{ $badge['color_text'] ?? '#475569' }} !important; border-color: rgba(0,0,0,0.05) !important; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; padding: 0.4rem 0.85rem; border-radius: 999px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <i class="{{ $badge['icon'] }} me-1" style="font-size: 0.85em;"></i>
+                        {{ $badge['label'] }}
+                    </span>
+                @endforeach
+            </div>
         @endif
         <div class="dropdown">
             <button class="teacher-header-link dropdown-toggle teacher-header-link--dropdown" type="button"

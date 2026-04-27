@@ -613,6 +613,16 @@ trait TeacherDashboardHelpers
         return $query->get();
     }
 
+    protected function canChangePackage(?Package $currentPackage, Package $targetPackage): bool
+    {
+        if (!$currentPackage) {
+            return false;
+        }
+
+        return $this->resolveAvailablePackageChanges($currentPackage)
+            ->contains('id', $targetPackage->id);
+    }
+
     protected function resolveOpenPackageChangeRequest(Teacher $teacher): ?TeacherApplication
     {
         return TeacherApplication::query()

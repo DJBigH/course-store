@@ -99,6 +99,8 @@ return [
         'back' => 'Quay lại',
         'notice_bank_transfer_title' => 'Chờ thanh toán chuyển khoản',
         'notice_bank_transfer_description' => 'Vui lòng thực hiện chuyển khoản theo thông tin bên dưới và nhấn "Xác nhận đã thanh toán" để Admin kiểm tra.',
+        'notice_thank_you_title' => 'Cảm ơn bạn đã thanh toán!',
+        'notice_thank_you_description' => 'Yêu cầu của bạn đã được tiếp nhận và đang chờ Admin phê duyệt. Quá trình này thường mất từ 15-30 phút.',
         'notice_downgrade_title' => 'Hạ cấp gói (Đã lên lịch)',
         'notice_downgrade_description' => 'Gói mới của bạn đã được phê duyệt và sẽ có hiệu lực vào ngày :date sau khi gói hiện tại hết hạn.',
         'notice_activation_title' => 'Kích hoạt gói (Đã lên lịch)',
@@ -117,6 +119,16 @@ return [
         'label_payable' => 'Số tiền',
         'label_submitted_at' => 'Ngày gửi',
         'request_note' => 'Yêu cầu nâng cấp gói từ Dashboard',
+        'confirm' => [
+            'upgrade_title' => 'Xác nhận thay đổi gói',
+            'upgrade_desc' => 'Bạn đang thực hiện thay đổi từ gói <strong>:current</strong> sang gói <strong>:target</strong>.',
+            'downgrade_warning' => 'Cảnh báo: Gói mới có giới hạn thấp hơn gói hiện tại. Một số tính năng có thể bị khóa hoặc dữ liệu vượt mức sẽ bị tạm ẩn.',
+            'permanent_to_recurring_warning' => 'Cảnh báo: Bạn đang chuyển từ gói Vĩnh viễn sang gói Định kỳ. Gói mới sẽ có ngày hết hạn cụ thể.',
+            'feature_loss_warning' => 'Gói mới không bao gồm các tính năng sau:',
+            'preview_expiry' => 'Dự kiến hết hạn vào: <strong>:date</strong>',
+            'confirm_btn' => 'Xác nhận & Thanh toán',
+            'cancel_btn' => 'Quay lại',
+        ],
     ],
     'common' => [
         'billing_cycle' => [
@@ -136,6 +148,19 @@ return [
         'pending_payment_description' => 'Vui lòng chọn phương thức thanh toán để hoàn tất nâng cấp.',
         'cancel' => 'Hủy bỏ',
         'submit_upgrade' => 'Xác nhận nâng cấp',
+        'payment_maintenance' => 'Bảo trì',
+        'payment_under_maintenance' => 'Phương thức :gateway hiện đang bảo trì. Vui lòng chọn phương thức khác.',
+        'bank_transfer_info' => [
+            'title' => 'Thông tin chuyển khoản',
+            'bank_name' => 'Ngân hàng',
+            'bank_account' => 'Số tài khoản',
+            'bank_account_name' => 'Chủ tài khoản',
+            'amount' => 'Số tiền',
+            'transfer_content' => 'Nội dung chuyển khoản',
+            'download_qr' => 'Tải QR',
+            'copy' => 'Sao chép',
+            'copied' => 'Đã sao chép!',
+        ],
     ],
     'features' => [
         'labels' => [

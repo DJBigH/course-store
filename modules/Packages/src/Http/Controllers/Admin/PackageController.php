@@ -126,6 +126,69 @@ class PackageController extends Controller
         return redirect()->route('teacher-packages.index')->with('msg', __('packages::admin.messages.delete_success'));
     }
 
+    public function copyFeatures(Request $request)
+    {
+        $request->validate([
+            'source_id' => 'required|exists:teacher_packages,id',
+            'target_id' => 'required|exists:teacher_packages,id|different:source_id',
+        ]);
+
+        $source = Package::findOrFail($request->source_id);
+        $target = Package::findOrFail($request->target_id);
+
+        $featureFlags = [
+            'priority_review',
+            'can_duplicate_courses',
+            'can_manage_comments',
+            'can_manage_coupons',
+            'can_manage_students',
+            'can_view_student_progress',
+            'can_view_activity_logs',
+            'can_manage_quizzes',
+            'can_use_ai_quiz',
+            'can_import_export',
+            'can_grant_courses',
+            'can_sell_bundles',
+            'can_schedule_content',
+            'can_send_promotions',
+            'can_issue_certificates',
+            'can_verify_certificates',
+            'can_customize_teacher_landing',
+            'can_use_affiliate_links',
+            'ai_quiz_limit',
+            'coupon_limit',
+            'course_limit',
+            'payout_account_limit',
+            'support_level',
+            'support_level_en',
+            'support_level_ko',
+            'support_level_ja',
+            'support_level_zh',
+        ];
+
+        $payload = $source->only($featureFlags);
+        $target->update($payload);
+
+        activity_log(
+            action: 'update',
+            subject: $target,
+            properties: [
+                'action' => 'copy_features',
+                'source' => [
+                    'id' => $source->id,
+                    'name' => $source->name,
+                ],
+            ],
+            logName: 'admin_package_management',
+            description: "Sao chép tính năng từ gói '{$source->name}' sang gói '{$target->name}'",
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "Đã sao chép tính năng từ gói '{$source->name}' thành công.",
+        ]);
+    }
+
     public function reorder(Request $request)
     {
         $ids = collect($request->input('ids', []))

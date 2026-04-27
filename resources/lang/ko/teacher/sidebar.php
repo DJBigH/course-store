@@ -25,6 +25,7 @@ return array (
     'package' => '강사 패키지',
     'support' => '지원',
     'cancellation' => '강사 취소',
+    'inbox' => '시스템 보관함',
   ),
   'brand' => 
   array (

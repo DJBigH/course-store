@@ -65,7 +65,9 @@ class UpgradeController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        return view('packages::teacher.upgrade', compact('pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradePackages', 'features'));
+        $selectedPackageId = (int) request('package_id', $upgradePackages->first()?->id);
+
+        return view('packages::teacher.upgrade', compact('pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradePackages', 'features', 'selectedPackageId'));
     }
 
     public function storeUpgradePackage(Request $request)
@@ -82,6 +84,7 @@ class UpgradeController extends Controller
 
         $data = $request->validate([
             'package_id' => ['required', 'integer'],
+            'payment_method' => ['nullable', 'string', 'in:bank_transfer,vnpay,momo'],
         ]);
 
         $currentPackage = $teacher->application?->package;
@@ -91,15 +94,55 @@ class UpgradeController extends Controller
             return back()->with('msg_danger', __('packages::teacher.flash.invalid_upgrade'));
         }
 
-        $changeRequest = DB::transaction(function () use ($teacher, $targetPackage) {
-            return TeacherApplication::query()->create([
+        // Nếu là gói có phí thì bắt buộc chọn phương thức thanh toán
+        if ($targetPackage->price > 0 && empty($data['payment_method'])) {
+            return back()->withErrors(['payment_method' => __('packages::teacher.form.package.payment_required')]);
+        }
+
+        $changeRequest = DB::transaction(function () use ($teacher, $targetPackage, $data) {
+            $isFree = $targetPackage->price <= 0;
+            
+            $application = TeacherApplication::query()->create([
                 'teacher_id' => $teacher->id,
+                'student_id' => $teacher->student_id,
+                'full_name' => $teacher->name,
+                'display_name' => $teacher->name,
+                'email' => $teacher->student?->email,
+                'phone' => $teacher->student?->phone,
                 'package_id' => $targetPackage->id,
-                'status' => 'pending_payment',
+                'payment_method' => $isFree ? 'free' : $data['payment_method'],
+                'status' => $isFree ? 'approved' : 'pending_payment',
                 'type' => 'upgrade',
+                'submitted_at' => now(),
+                'reviewed_at' => $isFree ? now() : null,
+                'reviewed_by' => $isFree ? null : null, // System auto-approved
                 'note' => __('packages::teacher.upgrade.request_note'),
             ]);
+
+            if ($isFree) {
+                $packageAction = $this->packageLifecycleManager->applyApprovedChange($teacher, $application->fresh(['package']));
+                
+                activity_log(
+                    action: 'teacher_package_upgraded_auto',
+                    subject: $teacher,
+                    properties: [
+                        'application_id' => $application->id,
+                        'package' => $targetPackage->name,
+                        'action' => $packageAction,
+                        'is_free' => true
+                    ],
+                    logName: __('teacher::admin.logs.approve_title'),
+                    description: __('teacher::admin.logs.approve_upgrade_desc')
+                );
+            }
+
+            return $application;
         });
+
+        if ($targetPackage->price <= 0) {
+            return redirect()->route('teacher.dashboard.index')
+                ->with('msg_success', __('packages::teacher.flash.auto_activated'));
+        }
 
         return redirect()->route('teacher.dashboard.package.upgrade.status');
     }
@@ -119,7 +162,8 @@ class UpgradeController extends Controller
         $pageTitle = __('packages::teacher.upgrade.status_title');
         $pageName = $pageTitle;
 
-        return view('packages::teacher.upgrade_status', compact('pageTitle', 'pageName', 'teacher', 'upgradeRequest'));
+        $currentPackage = $teacher->application?->package;
+        return view('packages::teacher.upgrade_status', compact('pageTitle', 'pageName', 'teacher', 'upgradeRequest', 'currentPackage'));
     }
 
     public function markUpgradePaid()
@@ -139,11 +183,27 @@ class UpgradeController extends Controller
         }
 
         $upgradeRequest->update([
-            'status' => 'pending_review',
+            'status' => 'approved',
+            'reviewed_at' => now(),
         ]);
 
-        return redirect()->route('teacher.dashboard.package.upgrade.status')
-            ->with('msg_success', __('packages::teacher.flash.marked_paid'));
+        $packageAction = $this->packageLifecycleManager->applyApprovedChange($teacher, $upgradeRequest->fresh(['package']));
+        
+        activity_log(
+            action: 'teacher_package_upgraded_auto_test',
+            subject: $teacher,
+            properties: [
+                'application_id' => $upgradeRequest->id,
+                'package' => $upgradeRequest->package?->name,
+                'action' => $packageAction,
+                'is_test_auto' => true
+            ],
+            logName: __('teacher::admin.logs.approve_title'),
+            description: __('teacher::admin.logs.approve_upgrade_desc')
+        );
+
+        return redirect()->route('teacher.dashboard.index')
+            ->with('msg_success', __('packages::teacher.flash.auto_activated'));
     }
 
     public function cancelUpgradePackage()

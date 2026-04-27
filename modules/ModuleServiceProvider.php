@@ -15,6 +15,7 @@ use Modules\Courses\src\Repositories\CoursesRepository;
 use Modules\Lessons\src\Repositories\LessonsRepository;
 use Modules\Students\src\Repositories\CouponRepository;
 use Modules\Teacher\src\Repositories\TeacherRepository;
+use Modules\Teacher\src\Repositories\TeacherBadgeRepository;
 use Modules\Document\src\Repositories\DocumentRepository;
 use Modules\Students\src\Repositories\StudentsRepository;
 use Modules\Auth\src\Http\Middlewares\BlockUserMiddleware;
@@ -29,6 +30,7 @@ use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
 use Modules\Students\src\Repositories\CouponRepositoryInterface;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
+use Modules\Teacher\src\Repositories\TeacherBadgeRepositoryInterface;
 use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersStatusRepositoryInterface;
@@ -75,10 +77,15 @@ class ModuleServiceProvider extends ServiceProvider
             CoursesRepository::class
         );
 
-        //Teacher Repository
         $this->app->singleton(
             TeacherRepositoryInterface::class,
             TeacherRepository::class
+        );
+
+        //Teacher Badge Repository
+        $this->app->singleton(
+            TeacherBadgeRepositoryInterface::class,
+            TeacherBadgeRepository::class
         );
 
         //Video Repository

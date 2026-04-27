@@ -40,5 +40,6 @@ return [
         'coupon_remove_failed' => 'Xóa mã giảm giá không thành công',
         'coupon_required' => 'Mã giảm giá bắt buộc phải nhập',
         'coupon_exp' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn',
+        'own_coupon' => 'Bạn không thể sử dụng mã giảm giá do chính mình tạo ra.',
     ],
 ];

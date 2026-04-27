@@ -1,9 +1,18 @@
 @php
     $modules = getModuleByPosition($course);
     $student = Auth::guard('students')->user();
-    $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+    $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view') && !auth('students')->check();
     $isImpersonating = session()->has('admin_impersonator');
-    $hasCourseAccess = $isAdmin || $isImpersonating || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
+    
+    $isCourseOwner = false;
+    if ($student && $student->teacher && $course->teacher_id !== null) {
+        $teacher = $student->teacher;
+        if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE && (int) $teacher->id === (int) $course->teacher_id) {
+            $isCourseOwner = true;
+        }
+    }
+
+    $hasCourseAccess = $isAdmin || $isImpersonating || $isCourseOwner || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
 @endphp
 
 @if ($modules->isEmpty())

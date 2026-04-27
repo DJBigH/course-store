@@ -35,8 +35,8 @@
                         $noticeDescription = null;
 
                         if ($upgradeRequest->status === 'pending_review' && $upgradeRequest->payment_method === 'bank_transfer') {
-                            $noticeTitle = __('packages::teacher.upgrade.notice_bank_transfer_title');
-                            $noticeDescription = __('packages::teacher.upgrade.notice_bank_transfer_description');
+                            $noticeTitle = __('packages::teacher.upgrade.notice_thank_you_title');
+                            $noticeDescription = __('packages::teacher.upgrade.notice_thank_you_description');
                         } elseif ($isQueuedActivation && $isDowngrade) {
                             $noticeTitle = __('packages::teacher.upgrade.notice_downgrade_title');
                             $noticeDescription = __('packages::teacher.upgrade.notice_downgrade_description', [

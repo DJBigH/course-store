@@ -364,6 +364,19 @@
                                     </div>
                                 </div>
                             </div>
+                            {{-- Teacher Badge Notification --}}
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header fw-bold bg-white pt-3 border-bottom-0">Thông báo Giảng viên</div>
+                                <div class="card-body">
+                                    <div class="border rounded-4 p-3 bg-light">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" id="teacher_badge_notification_email_enabled" name="teacher_badge_notification_email_enabled" value="1" @checked(old('teacher_badge_notification_email_enabled', $settings['teacher_badge_notification_email_enabled'] ?? '0') == '1')>
+                                            <label class="form-check-label fw-bold" for="teacher_badge_notification_email_enabled">Gửi email cho giảng viên khi được cấp huy hiệu mới</label>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">Thông báo nội bộ (Noti) luôn được gửi mặc định khi có thay đổi huy hiệu.</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Panel: Thanh toán --}}

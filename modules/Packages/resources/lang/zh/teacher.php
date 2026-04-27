@@ -101,6 +101,8 @@ return [
         'back' => '返回',
         'notice_bank_transfer_title' => '等待银行转账',
         'notice_bank_transfer_description' => '请根据以下信息进行转账。转账后点击“标记为已付款”以便管理员核实。',
+        'notice_thank_you_title' => '感谢您的支付！',
+        'notice_thank_you_description' => '您的请求已收到，正在等待管理员审核。此过程通常需要15-30分钟。',
         'notice_downgrade_title' => '方案降级（已预约）',
         'notice_downgrade_description' => '您的新方案已获批准，将于当前方案到期后的 :date 生效。',
         'notice_activation_title' => '方案激活（已预约）',
@@ -119,6 +121,16 @@ return [
         'label_payable' => '金额',
         'label_submitted_at' => '提交时间',
         'request_note' => '来自控制面板的方案升级请求',
+        'confirm' => [
+            'upgrade_title' => '确认更改方案',
+            'upgrade_desc' => '您正在从 <strong>:current</strong> 更改为 <strong>:target</strong>。',
+            'downgrade_warning' => '警告：新方案的限制低于当前方案。某些功能可能会被锁定，或超出部分的数据将被隐藏。',
+            'permanent_to_recurring_warning' => '警告：您正在从永久方案切换为定期方案。新方案将会有特定的到期日期。',
+            'feature_loss_warning' => '新方案不包含以下功能：',
+            'preview_expiry' => '预计到期日期：<strong>:date</strong>',
+            'confirm_btn' => '确认并支付',
+            'cancel_btn' => '返回',
+        ],
     ],
     'common' => [
         'billing_cycle' => [
@@ -138,6 +150,19 @@ return [
         'pending_payment_description' => '请选择付款方式以完成升级。',
         'cancel' => '取消',
         'submit_upgrade' => '确认升级',
+        'payment_maintenance' => '维护中',
+        'payment_under_maintenance' => ':gateway 支付方式目前正在维护中。请选择其他方式。',
+        'bank_transfer_info' => [
+            'title' => '银行转账信息',
+            'bank_name' => '银行名称',
+            'bank_account' => '银行账号',
+            'bank_account_name' => '账户姓名',
+            'amount' => '金额',
+            'transfer_content' => '转账内容',
+            'download_qr' => '下载二维码',
+            'copy' => '复制',
+            'copied' => '已复制！',
+        ],
     ],
     'features' => [
         'labels' => [

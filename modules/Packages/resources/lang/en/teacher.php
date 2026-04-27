@@ -91,6 +91,8 @@ return [
         'back' => 'Back',
         'notice_bank_transfer_title' => 'Pending Bank Transfer',
         'notice_bank_transfer_description' => 'Please perform the transfer using the information below and click "Mark as Paid" for Admin verification.',
+        'notice_thank_you_title' => 'Thank you for your payment!',
+        'notice_thank_you_description' => 'Your request has been received and is awaiting Admin approval. This process usually takes 15-30 minutes.',
         'notice_downgrade_title' => 'Package Downgrade (Scheduled)',
         'notice_downgrade_description' => 'Your new package has been approved and will take effect on :date after the current package expires.',
         'notice_activation_title' => 'Package Activation (Scheduled)',
@@ -109,6 +111,16 @@ return [
         'label_payable' => 'Amount',
         'label_submitted_at' => 'Submitted At',
         'request_note' => 'Package upgrade request from Dashboard',
+        'confirm' => [
+            'upgrade_title' => 'Confirm Plan Change',
+            'upgrade_desc' => 'You are changing from <strong>:current</strong> to <strong>:target</strong>.',
+            'downgrade_warning' => 'Warning: The new plan has lower limits. Some features may be locked or excess data may be hidden.',
+            'permanent_to_recurring_warning' => 'Warning: You are switching from a Permanent plan to a Recurring plan. The new plan will have a specific expiry date.',
+            'feature_loss_warning' => 'The new plan does not include the following features:',
+            'preview_expiry' => 'Expected to expire on: <strong>:date</strong>',
+            'confirm_btn' => 'Confirm & Pay',
+            'cancel_btn' => 'Go Back',
+        ],
     ],
     'common' => [
         'billing_cycle' => [
@@ -128,6 +140,19 @@ return [
         'pending_payment_description' => 'Please select a payment method to complete the upgrade.',
         'cancel' => 'Cancel',
         'submit_upgrade' => 'Confirm Upgrade',
+        'payment_maintenance' => 'Maintenance',
+        'payment_under_maintenance' => 'The :gateway method is currently under maintenance. Please choose another method.',
+        'bank_transfer_info' => [
+            'title' => 'Bank Transfer Information',
+            'bank_name' => 'Bank',
+            'bank_account' => 'Account Number',
+            'bank_account_name' => 'Account Holder',
+            'amount' => 'Amount',
+            'transfer_content' => 'Transfer Content',
+            'download_qr' => 'Download QR',
+            'copy' => 'Copy',
+            'copied' => 'Copied!',
+        ],
     ],
     'features' => [
         'labels' => [

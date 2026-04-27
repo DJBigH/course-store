@@ -267,6 +267,11 @@
             border-color: var(--admin-border);
         }
 
+        html[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+            --bs-table-accent-bg: var(--admin-hover-bg);
+            color: var(--admin-text) !important;
+        }
+
         html[data-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd)>* {
             --bs-table-accent-bg: rgba(255, 255, 255, 0.02);
             color: var(--admin-text);

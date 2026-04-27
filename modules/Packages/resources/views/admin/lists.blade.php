@@ -8,7 +8,12 @@
                     <h5 class="mb-1">Goi giang vien</h5>
                     <p class="text-muted mb-0">Quan ly bang gia va commission cho flow onboarding giang vien.</p>
                 </div>
-                <a href="{{ route('teacher-packages.add') }}" class="btn btn-primary">Them goi</a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('teacher-package-features.index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-tags me-1"></i> Quản lý nhãn tính năng
+                    </a>
+                    <a href="{{ route('teacher-packages.add') }}" class="btn btn-primary">Them goi</a>
+                </div>
             </div>
 
             @if (session('msg'))
@@ -108,6 +113,13 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#copyFeaturesModal" 
+                                            data-package-id="{{ $package->id }}"
+                                            data-package-name="{{ $package->name }}">
+                                        Sao chép
+                                    </button>
                                     <a href="{{ route('teacher-packages.edit', $package->id) }}" class="btn btn-sm btn-warning">Sua</a>
                                     <form action="{{ route('teacher-packages.delete', $package->id) }}" method="POST" class="d-inline">
                                         @csrf
@@ -123,6 +135,44 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sao chép tính năng -->
+    <div class="modal fade" id="copyFeaturesModal" tabindex="-1" aria-labelledby="copyFeaturesModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="copyFeaturesForm" action="{{ route('teacher-packages.copy-features') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="target_id" id="target_package_id">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="copyFeaturesModalLabel">Sao chép tính năng</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn đang sao chép tính năng cho gói: <strong id="target_package_name_display"></strong></p>
+                        <div class="mb-3">
+                            <label for="source_id" class="form-label">Chọn gói nguồn (Gói muốn lấy tính năng)</label>
+                            <select name="source_id" id="source_id" class="form-select" required>
+                                <option value="">-- Chọn gói nguồn --</option>
+                                @foreach ($packages as $pkg)
+                                    <option value="{{ $pkg->id }}">{{ $pkg->name }} ({{ strtoupper($pkg->code) }})</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text text-danger mt-2">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                Lưu ý: Mọi thiết lập tính năng hiện tại của gói đích sẽ bị ghi đè.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-info text-white" id="btnConfirmCopy">
+                            Xác nhận sao chép
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -316,5 +366,66 @@
                 });
             });
         })();
+
+        // Handle Copy Features Modal
+        $(document).ready(function() {
+            const modal = document.getElementById('copyFeaturesModal');
+            if (modal) {
+                modal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const packageId = button.getAttribute('data-package-id');
+                    const packageName = button.getAttribute('data-package-name');
+
+                    document.getElementById('target_package_id').value = packageId;
+                    document.getElementById('target_package_name_display').textContent = packageName;
+
+                    // Hide the target package from source options
+                    const select = document.getElementById('source_id');
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === packageId) {
+                            select.options[i].style.display = 'none';
+                        } else {
+                            select.options[i].style.display = '';
+                        }
+                    }
+                });
+
+                $('#copyFeaturesForm').on('submit', function(e) {
+                    e.preventDefault();
+                    const form = $(this);
+                    const btn = $('#btnConfirmCopy');
+                    
+                    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...');
+
+                    $.ajax({
+                        url: form.attr('action'),
+                        method: 'POST',
+                        data: form.serialize(),
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Thành công',
+                                    text: response.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            const msg = xhr.responseJSON?.message || 'Có lỗi xảy ra.';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi',
+                                text: msg
+                            });
+                            btn.prop('disabled', false).text('Xác nhận sao chép');
+                        }
+                    });
+                });
+            }
+        });
     </script>
 @endsection

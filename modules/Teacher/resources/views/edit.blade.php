@@ -107,7 +107,7 @@
 
             <div class="col-12">
                 <div class="mb-3">
-                    <label class="form-label">Huy hiệu giảng viên</label>
+                    <label class="form-label">Huy hiệu giảng viên (Cũ)</label>
                     @php
                         $selectedBadgeKey = old('badge_key', $teacher->badge_key ?: ($teacher->is_verified_badge ? 'verified' : ($teacher->is_premium_badge ? 'premium' : 'none')));
                     @endphp
@@ -138,7 +138,35 @@
                             </select>
                         </div>
                     </div>
-                    <small class="text-muted">Bật để tăng độ uy tín và làm nổi bật hồ sơ giảng viên trên giao diện public.</small>
+                </div>
+            </div>
+
+            <div class="col-12" id="badges-assignment-section">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Gán huy hiệu hệ thống mới</label>
+                    <div class="row g-3">
+                        @php
+                            $currentBadges = $teacher->badges->pluck('id')->toArray();
+                        @endphp
+                        @foreach ($badges as $badge)
+                            <div class="col-md-3">
+                                <div class="form-check badge-selection-card p-3 rounded-4 border">
+                                    <input class="form-check-input" type="checkbox" name="badges[]" value="{{ $badge->id }}" id="badge_{{ $badge->id }}" @checked(in_array($badge->id, old('badges', $currentBadges)))>
+                                    <label class="form-check-label d-block ms-2 cursor-pointer" for="badge_{{ $badge->id }}">
+                                        <div class="badge mb-2" style="background-color: {{ $badge->color_bg }}; color: {{ $badge->color_text }};">
+                                            <i class="{{ $badge->icon }} me-1"></i> {{ $badge->name_locale }}
+                                        </div>
+                                        <div class="small text-muted text-truncate">{{ $badge->description_locale }}</div>
+                                    </label>
+                                </div>
+                            </div>
+                        @endforeach
+                        @if ($badges->isEmpty())
+                            <div class="col-12">
+                                <div class="alert alert-light border small text-muted">Chưa có huy hiệu hệ thống nào. <a href="{{ route('teacher.badges.create') }}" target="_blank">Tạo ngay</a></div>
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -230,6 +258,47 @@
 
         #holder img {
             width: 100% !important;
+        }
+
+        .badge-selection-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .badge-selection-card:hover {
+            border-color: #3b82f6 !important;
+            background-color: #f8fafc;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Dark Mode Support */
+        html[data-theme="dark"] .badge-selection-card {
+            background-color: #1e293b;
+            border-color: #334155 !important;
+        }
+
+        html[data-theme="dark"] .badge-selection-card:hover {
+            background-color: #334155;
+            border-color: #3b82f6 !important;
+        }
+
+        html[data-theme="dark"] .alert-light {
+            background-color: #1e293b;
+            border-color: #334155;
+            color: #94a3b8 !important;
         }
     </style>
 @endsection

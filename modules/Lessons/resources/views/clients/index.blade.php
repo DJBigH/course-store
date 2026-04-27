@@ -90,15 +90,15 @@
 
                         <div class="lesson-certificate-card mb-3 {{ $studentCertificate ? '' : 'd-none' }}" data-certificate-card>
                             <div class="lesson-certificate-card__head">
-                                <strong>Chung chi hoan thanh</strong>
-                                <span class="lesson-certificate-card__badge">Da cap</span>
+                                <strong>Chứng chỉ hoàn thành</strong>
+                                <span class="lesson-certificate-card__badge">Đã cấp</span>
                             </div>
-                            <p class="mb-3">Khoa hoc nay da co chung chi. Ban co the mo ngay de xem va luu PDF.</p>
+                            <p class="mb-3">Khóa học này đã có chứng chỉ. Bạn có thể mở ngay để xem và lưu PDF.</p>
                             <a href="{{ $studentCertificate ? route('students.account.certificates.show', ['locale' => app()->getLocale(), 'id' => $studentCertificate->id]) : '#' }}"
                                 class="btn btn-primary w-100"
                                 data-certificate-link
                                 @if (!$studentCertificate) aria-hidden="true" tabindex="-1" @endif>
-                                Xem chung chi
+                                Xem chứng chỉ
                             </a>
                         </div>
                     @endif

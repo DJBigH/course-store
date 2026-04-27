@@ -30,8 +30,23 @@ class HomeController extends Controller
         $myCourse = collect();
 
         if ($studentId) {
-            $myCourse = $this->studentRepository
-                ->getPurchasedCourses($studentId, config('paginate.home_mycourse_limit'));
+            $student = Auth::guard('students')->user();
+            $ownTeacherId = $student->teacher ? $student->teacher->id : null;
+            
+            $myCourse = \Modules\Courses\src\Models\Courses::query()
+                ->with('teacher')
+                ->where(function($query) use ($studentId, $ownTeacherId) {
+                    $query->whereHas('students', function($q) use ($studentId) {
+                        $q->where('students.id', $studentId)->where('students_courses.status', 1);
+                    });
+                    
+                    if ($ownTeacherId) {
+                        $query->orWhere('teacher_id', $ownTeacherId);
+                    }
+                })
+                ->latest('created_at')
+                ->paginate(config('paginate.home_mycourse_limit'))
+                ->withQueryString();
         }
 
         if ($request->ajax()) {

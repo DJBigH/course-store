@@ -38,6 +38,21 @@ Route::prefix('admin')->group(function () {
       Route::post('/toggle-lock/{teacher}', 'TeacherController@toggleLock')->middleware('permission:teachers.edit')->name('toggle-lock');
       Route::post('/toggle-ceased/{teacher}', 'TeacherController@toggleCeased')->middleware('permission:teachers.edit')->name('toggle-ceased');
       Route::get('/{id}/courses', 'TeacherController@getCourses')->middleware('permission:teachers.view')->name('courses');
+
+      // Teacher Badges
+      Route::prefix('badges')->name('badges.')->group(function () {
+          Route::get('/', 'Admin\TeacherBadgeController@index')->middleware('permission:teachers.view')->name('index');
+          Route::get('/data', 'Admin\TeacherBadgeController@data')->middleware('permission:teachers.view')->name('data');
+          Route::get('/trash', 'Admin\TeacherBadgeController@trash')->middleware('permission:teachers.view')->name('trash');
+          Route::get('/trash/data', 'Admin\TeacherBadgeController@trashData')->middleware('permission:teachers.view')->name('trash.data');
+          Route::get('/create', 'Admin\TeacherBadgeController@create')->middleware('permission:teachers.create')->name('create');
+          Route::post('/create', 'Admin\TeacherBadgeController@store')->middleware('permission:teachers.create')->name('store');
+          Route::get('/edit/{id}', 'Admin\TeacherBadgeController@edit')->middleware('permission:teachers.edit')->name('edit');
+          Route::post('/edit/{id}', 'Admin\TeacherBadgeController@update')->middleware('permission:teachers.edit')->name('update');
+          Route::delete('/delete/{id}', 'Admin\TeacherBadgeController@delete')->middleware('permission:teachers.delete')->name('delete');
+          Route::post('/restore/{id}', 'Admin\TeacherBadgeController@restore')->middleware('permission:teachers.edit')->name('restore');
+          Route::delete('/force-delete/{id}', 'Admin\TeacherBadgeController@forceDelete')->middleware('permission:teachers.delete')->name('force-delete');
+      });
    });
 
    Route::prefix('teacher-applications')->name('teacher-applications.')->group(function () {
@@ -76,6 +91,7 @@ Route::group([
    Route::post('/teacher/forgot-password', [TeacherAuthController::class, 'sendResetLink'])->name('teacher.auth.post-forgot');
    Route::get('/teacher/reset-password/{token}', [TeacherAuthController::class, 'showResetForm'])->name('teacher.password.reset');
    Route::post('/teacher/reset-password', [TeacherAuthController::class, 'updatePassword'])->name('teacher.auth.password.update');
+   Route::get('/teacher/logout', [TeacherAuthController::class, 'logout'])->name('teacher.auth.logout');
    Route::get('/tro-thanh-giang-vien/bat-dau', [ClientTeacherApplicationController::class, 'begin'])->name('teacher.account.begin');
    Route::get('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'create'])->name('teacher.account.apply');
    Route::post('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'store'])->name('teacher.account.submit');

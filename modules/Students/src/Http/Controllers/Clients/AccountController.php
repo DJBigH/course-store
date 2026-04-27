@@ -56,15 +56,35 @@ class AccountController extends Controller
         $pageName = $pageTitle;
         $student = Auth::guard('students')->user();
 
-        $totalCourses = $student->courses()->count();
+        // Get owned courses if teacher
+        $ownedCourseIds = $student->teacher ? $student->teacher->courses()->pluck('id')->toArray() : [];
+
+        $totalPurchased = $student->courses()->count();
+        $totalOwned = count($ownedCourseIds);
+        $totalCourses = $totalPurchased + $totalOwned;
+
         $totalCoupons = $student->coupons()->count();
         $totalOrders = $student->orders()->count();
 
-        $recentCourses = $student->courses()
+        // Combined recent courses
+        $recentPurchased = $student->courses()
             ->with('teacher')
-            ->latest('created_at')
+            ->latest('students_courses.created_at')
             ->take(3)
             ->get();
+
+        $recentOwned = collect();
+        if ($student->teacher) {
+            $recentOwned = $student->teacher->courses()
+                ->with('teacher')
+                ->latest('created_at')
+                ->take(3)
+                ->get();
+        }
+
+        $recentCourses = $recentPurchased->merge($recentOwned)->sortByDesc(function ($item) {
+            return $item->pivot ? $item->pivot->created_at : $item->created_at;
+        })->take(3);
 
         $recentOrders = $student->orders()
             ->with(['status', 'detail.courses'])
@@ -153,22 +173,37 @@ class AccountController extends Controller
         $keyword = trim((string) $request->query('keyword'));
         $teacherId = $request->query('teacher_id');
 
-        $teachers = $student->courses()
-            ->with('teacher')
-            ->get()
+        $isImpersonating = session()->has('admin_impersonator');
+        
+        if ($isImpersonating) {
+            $coursesQuery = \Modules\Courses\src\Models\Courses::query()->active()->with('teacher');
+        } else {
+            // Get courses purchased OR owned by the student (if they are a teacher)
+            $ownTeacherId = $student->teacher ? $student->teacher->id : null;
+            
+            $coursesQuery = \Modules\Courses\src\Models\Courses::query()
+                ->with('teacher')
+                ->where(function($query) use ($student, $ownTeacherId) {
+                    $query->whereHas('students', function($q) use ($student) {
+                        $q->where('students.id', $student->id)->where('students_courses.status', 1);
+                    });
+                    
+                    if ($ownTeacherId) {
+                        $query->orWhere('teacher_id', $ownTeacherId);
+                    }
+                });
+        }
+
+        // Collect teachers for filter from the query results (before pagination/filters)
+        $teachers = (clone $coursesQuery)->get()
             ->pluck('teacher')
             ->filter()
             ->unique('id')
             ->sortBy('name_locale')
             ->values();
 
-        $isImpersonating = session()->has('admin_impersonator');
-        $courses = $isImpersonating 
-            ? Courses::query()->active()->with('teacher')
-            : $student->courses()->with('teacher');
-
         if ($teacherId) {
-            $courses->where('teacher_id', $teacherId);
+            $coursesQuery->where('teacher_id', $teacherId);
         }
 
         if ($keyword !== '') {
@@ -183,7 +218,7 @@ class AccountController extends Controller
             ]));
 
             if (!empty($searchableColumns)) {
-                $courses->where(function ($query) use ($keyword, $searchableColumns) {
+                $coursesQuery->where(function ($query) use ($keyword, $searchableColumns) {
                     foreach ($searchableColumns as $index => $column) {
                         if ($index === 0) {
                             $query->where($column, 'like', '%' . $keyword . '%');
@@ -194,11 +229,13 @@ class AccountController extends Controller
                     }
                 });
             } else {
-                $courses->whereRaw('1 = 0');
+                $coursesQuery->whereRaw('1 = 0');
             }
         }
 
-        $courses = $courses->orderByPivot('created_at', 'desc')->paginate(3)->withQueryString();
+        // Handle sorting: if purchased, use pivot. If owned, use created_at. 
+        // For combined query, we just use courses.created_at or a better sort.
+        $courses = $coursesQuery->latest('created_at')->paginate(3)->withQueryString();
 
         $courseIds = $courses->getCollection()->pluck('id')->all();
 

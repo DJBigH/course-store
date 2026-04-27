@@ -66,6 +66,7 @@ class SettingController extends Controller
                 'payment_bank_enabled' => $request->boolean('payment_bank_enabled') ? '1' : '0',
                 'payment_momo_enabled' => $request->boolean('payment_momo_enabled') ? '1' : '0',
                 'payment_vnpay_enabled' => $request->boolean('payment_vnpay_enabled') ? '1' : '0',
+                'teacher_badge_notification_email_enabled' => $request->boolean('teacher_badge_notification_email_enabled') ? '1' : '0',
             ]
         );
 
@@ -148,6 +149,7 @@ class SettingController extends Controller
             'bank_transfer_account_number',
             'bank_transfer_account_name',
             'bank_transfer_note_prefix',
+            'teacher_badge_notification_email_enabled',
         ];
 
         $allowedSettingKeys = [];
@@ -413,6 +415,7 @@ class SettingController extends Controller
             'bank_transfer_account_number' => 'Số tài khoản ngân hàng',
             'bank_transfer_account_name' => 'Tên chủ tài khoản',
             'bank_transfer_note_prefix' => 'Tiền tố nội dung chuyển khoản',
+            'teacher_badge_notification_email_enabled' => 'Gửi email khi cấp huy hiệu giảng viên',
         ];
 
         if (isset($exactLabels[$key])) {

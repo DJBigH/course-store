@@ -9,6 +9,7 @@ return [
         'order' => '주문',
         'change_password' => '비밀번호 변경',
         'activity_history' => '활동 기록',
+        'inbox' => '시스템 보관함',
         'logout' => '로그아웃',
     ],
     'core' => [

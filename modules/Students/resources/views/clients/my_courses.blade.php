@@ -136,7 +136,7 @@
 
                                                     <td class="account-courses-status"
                                                         data-label="{{ __('students::clients/account.my_course.status') }}">
-                                                        @if ($course->pivot->status)
+                                                        @if (!$course->pivot || $course->pivot->status)
                                                             <span class="badge bg-success-subtle text-success px-3 py-2 account-courses-chip">
                                                                 <i class="bi bi-check-circle me-1"></i>
                                                                 {{ __('students::clients/account.my_course.active') }}

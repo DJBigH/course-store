@@ -99,6 +99,8 @@ return [
         'back' => '뒤로 가기',
         'notice_bank_transfer_title' => '무통장 입금 대기 중',
         'notice_bank_transfer_description' => '아래 정보를 확인하여 입금을 진행해 주세요. 관리자 확인을 위해 입금 후 "결제 완료로 표시"를 클릭해 주세요.',
+        'notice_thank_you_title' => '결제해 주셔서 감사합니다!',
+        'notice_thank_you_description' => '요청이 접수되었으며 관리자 승인을 기다리고 있습니다. 이 과정은 보통 15-30분 정도 소요됩니다.',
         'notice_downgrade_title' => '요금제 하향 조정 (예약됨)',
         'notice_downgrade_description' => '새 요금제가 승인되었으며 현재 요금제 만료 후 :date부터 적용됩니다.',
         'notice_activation_title' => '요금제 활성화 (예약됨)',
@@ -117,6 +119,16 @@ return [
         'label_payable' => '금액',
         'label_submitted_at' => '제출 일시',
         'request_note' => '대시보드에서의 요금제 업그레이드 요청',
+        'confirm' => [
+            'upgrade_title' => '요금제 변경 확인',
+            'upgrade_desc' => '<strong>:current</strong>에서 <strong>:target</strong>(으)로 변경을 진행합니다.',
+            'downgrade_warning' => '경고: 새 요금제는 현재 데이터보다 한도가 낮습니다. 일부 기능이 잠기거나 초과 데이터가 숨겨질 수 있습니다.',
+            'permanent_to_recurring_warning' => '경고: 영구 요금제에서 정기 결제 요금제로 전환합니다. 새 요금제에는 특정 만료일이 지정됩니다.',
+            'feature_loss_warning' => '새 요금제에는 다음 기능이 포함되어 있지 않습니다:',
+            'preview_expiry' => '예상 만료일: <strong>:date</strong>',
+            'confirm_btn' => '확인 및 결제',
+            'cancel_btn' => '뒤로 가기',
+        ],
     ],
     'common' => [
         'billing_cycle' => [
@@ -136,6 +148,19 @@ return [
         'pending_payment_description' => '업그레이드를 완료하려면 결제 수단을 선택해 주세요.',
         'cancel' => '취소',
         'submit_upgrade' => '업그레이드 확인',
+        'payment_maintenance' => '점검 중',
+        'payment_under_maintenance' => ':gateway 결제 수단이 현재 점검 중입니다. 다른 수단을 선택해 주세요.',
+        'bank_transfer_info' => [
+            'title' => '계좌 이체 정보',
+            'bank_name' => '은행명',
+            'bank_account' => '계좌번호',
+            'bank_account_name' => '예금주',
+            'amount' => '금액',
+            'transfer_content' => '이체 내용',
+            'download_qr' => 'QR 코드 다운로드',
+            'copy' => '복사',
+            'copied' => '복사됨!',
+        ],
     ],
     'features' => [
         'labels' => [

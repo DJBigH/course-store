@@ -9,6 +9,7 @@ return [
         'order' => '注文',
         'change_password' => 'パスワード変更',
         'activity_history' => '操作履歴',
+        'inbox' => 'システム受信トレイ',
         'logout' => 'ログアウト',
     ],
     'core' => [
