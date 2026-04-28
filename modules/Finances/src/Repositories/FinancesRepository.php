@@ -18,14 +18,19 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
         return PayoutRequest::class;
     }
 
-    public function getEarningsSummary(int $teacherId, ?string $groupBy = null, ?string $fromDate = null, ?string $toDate = null): array
+    public function getEarningsSummary($teacherId, ?string $groupBy = null, ?string $fromDate = null, ?string $toDate = null, ?string $currency = 'ALL'): array
     {
         $query = OrderDetail::query()
-            ->whereHas('order', function ($q) {
+            ->whereHas('order', function ($q) use ($currency) {
                 $q->whereHas('status', fn($sq) => $sq->where('is_success', true));
+                if ($currency && $currency !== 'ALL') {
+                    $q->where('currency', $currency);
+                }
             })
             ->whereHas('courses', function ($q) use ($teacherId) {
-                $q->withTrashed()->where('teacher_id', $teacherId);
+                if ($teacherId) {
+                    $q->withTrashed()->where('teacher_id', $teacherId);
+                }
             });
 
         if ($fromDate) {
@@ -180,6 +185,12 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
                 'bank_account_number' => $data['bank_account_number'],
                 'note'                => $data['note'] ?? null,
                 'status'              => 'requested',
+                'currency_code'       => $data['currency_code'] ?? 'VND',
+                'exchange_rate'       => $data['exchange_rate'] ?? 1.0,
+                'original_amount'     => $data['original_amount'] ?? $data['amount'],
+                'converted_amount_vnd'=> $data['converted_amount_vnd'] ?? $data['amount'],
+                'fee_percentage'      => $data['fee_percentage'] ?? 0.0,
+                'fee_amount_vnd'      => $data['fee_amount_vnd'] ?? 0.0,
             ]);
         });
 
@@ -237,8 +248,11 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
     public function getAdminEarnings(array $filters)
     {
         $query = OrderDetail::query()
-            ->whereHas('order', function ($q) {
+            ->whereHas('order', function ($q) use ($filters) {
                 $q->whereHas('status', fn($sq) => $sq->where('is_success', true));
+                if (!empty($filters['currency']) && $filters['currency'] !== 'ALL') {
+                    $q->where('currency', $filters['currency']);
+                }
             });
 
         if (!empty($filters['teacher_id'])) {

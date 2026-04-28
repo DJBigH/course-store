@@ -18,31 +18,40 @@ class FinanceController extends Controller
 
     public function earnings(Request $request)
     {
-        $filters = $request->only(['teacher_id', 'from_date', 'to_date']);
+        $pageTitle = 'Đối soát doanh thu giảng viên';
+        $filters = $request->only(['teacher_id', 'from_date', 'to_date', 'currency']);
+        $currency = $filters['currency'] ?? 'ALL';
+        
         $items = $this->financesRepo->getAdminEarnings($filters);
         
         // Fetch summary for top cards
-        $summary = $this->financesRepo::getEarningsSummary($filters['teacher_id'] ?? 0, null, $filters['from_date'] ?? null, $filters['to_date'] ?? null);
+        $summary = $this->financesRepo->getEarningsSummary($filters['teacher_id'] ?? 0, null, $filters['from_date'] ?? null, $filters['to_date'] ?? null, $currency);
         
         // Summarize by teacher for the second table
         $teacherSummaries = collect();
         if (empty($filters['teacher_id'])) {
-            $teachers = Teacher::has('order_details')->with('order_details.order')->get();
+            // Note: Use has('courses') because has('order_details') might not be mapped correctly
+            $teachers = Teacher::has('courses')->get();
             foreach ($teachers as $teacher) {
-                $teacherSummary = $this->financesRepo::getEarningsSummary($teacher->id, null, $filters['from_date'] ?? null, $filters['to_date'] ?? null);
+                $teacherSummary = $this->financesRepo->getEarningsSummary($teacher->id, null, $filters['from_date'] ?? null, $filters['to_date'] ?? null, $currency);
                 if ($teacherSummary['gross_amount'] > 0) {
-                    $teacherSummaries->push(array_merge($teacherSummary, ['teacher' => $teacher, 'orders_count' => OrderDetail::whereHas('courses', fn($q) => $q->where('teacher_id', $teacher->id))->count()]));
+                    $teacherSummaries->push(array_merge($teacherSummary, [
+                        'teacher' => $teacher, 
+                        'orders_count' => \Modules\Orders\src\Models\OrderDetail::whereHas('courses', fn($q) => $q->where('teacher_id', $teacher->id))->count()
+                    ]));
                 }
             }
         }
 
         $teachers = Teacher::all();
+        $currencies = collect(['VND', 'USD', 'KRW', 'JPY', 'CNY']);
 
-        return view('finances::admin.earnings', compact('items', 'summary', 'teacherSummaries', 'teachers'));
+        return view('finances::admin.earnings', compact('items', 'summary', 'teacherSummaries', 'teachers', 'currencies', 'currency', 'pageTitle'));
     }
 
     public function payouts(Request $request)
     {
+        $pageTitle = 'Xử lý rút tiền & Tài khoản';
         $filters = $request->only(['status', 'account_change_status']);
         $payouts = $this->financesRepo->getAdminPayouts($filters);
         $summary = $this->financesRepo->getAdminPayoutSummary();
@@ -55,19 +64,23 @@ class FinanceController extends Controller
 
         // Teacher payout summaries
         $teacherSummaries = collect();
-        $teachers = Teacher::whereHas('payouts')->get();
+        $teacherIds = \Modules\Finances\src\Models\PayoutRequest::distinct()->pluck('teacher_id');
+        $teachers = Teacher::whereIn('id', $teacherIds)->get();
         foreach ($teachers as $teacher) {
             $teacherSummaries->push([
                 'teacher' => $teacher,
-                'requested' => $teacher->payouts()->where('status', 'requested')->sum('amount'),
-                'processing' => $teacher->payouts()->where('status', 'processing')->sum('amount'),
-                'paid' => $teacher->payouts()->where('status', 'paid')->sum('amount'),
-                'rejected' => $teacher->payouts()->where('status', 'rejected')->sum('amount'),
+                'requested' => \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->where('status', 'requested')->sum('amount'),
+                'processing' => \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->where('status', 'processing')->sum('amount'),
+                'paid' => \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->where('status', 'paid')->sum('amount'),
+                'rejected' => \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->where('status', 'rejected')->sum('amount'),
             ]);
         }
 
-        return view('finances::admin.payouts', compact('payouts', 'summary', 'accountChangeRequests', 'teacherSummaries'));
+        $teachers = Teacher::all();
+
+        return view('finances::admin.payouts', compact('payouts', 'summary', 'accountChangeRequests', 'teacherSummaries', 'teachers', 'pageTitle'));
     }
+
 
     public function updatePayout(Request $request, $id)
     {

@@ -130,6 +130,11 @@
                                             <label class="form-label">Chatbot TTL (phút)</label>
                                             <input type="number" min="5" max="1440" name="chatbot_message_ttl_minutes" class="form-control" value="{{ old('chatbot_message_ttl_minutes', $settings['chatbot_message_ttl_minutes'] ?? env('CHATBOT_MESSAGE_TTL_MINUTES', 10)) }}">
                                         </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Số tiền rút tối thiểu (VND)</label>
+                                            <input type="number" min="1000" step="1000" name="min_payout_amount" class="form-control" value="{{ old('min_payout_amount', $settings['min_payout_amount'] ?? '50000') }}">
+                                            <small class="text-muted">Hạn mức tối thiểu một giảng viên cần đạt để gửi yêu cầu rút tiền.</small>
+                                        </div>
                                         <div class="col-12 mt-4">
                                             <div class="border rounded-4 p-3 bg-light">
                                                 <div class="form-check form-switch mb-2">

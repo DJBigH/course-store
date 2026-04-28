@@ -150,6 +150,7 @@ class SettingController extends Controller
             'bank_transfer_account_name',
             'bank_transfer_note_prefix',
             'teacher_badge_notification_email_enabled',
+            'min_payout_amount',
         ];
 
         $allowedSettingKeys = [];
@@ -416,6 +417,7 @@ class SettingController extends Controller
             'bank_transfer_account_name' => 'Tên chủ tài khoản',
             'bank_transfer_note_prefix' => 'Tiền tố nội dung chuyển khoản',
             'teacher_badge_notification_email_enabled' => 'Gửi email khi cấp huy hiệu giảng viên',
+            'min_payout_amount' => 'Hạn mức rút tiền tối thiểu',
         ];
 
         if (isset($exactLabels[$key])) {

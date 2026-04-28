@@ -253,8 +253,11 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Gia</label>
-                    <input type="number" class="form-control" name="price" min="0" step="0.01"
-                        value="{{ old('price', $package->price ?? 0) }}" required data-preview-global="price">
+                    <input type="hidden" name="price" id="admin-package-price" value="{{ old('price', $package->price ?? 0) }}" data-preview-global="price">
+                    <input type="text" class="form-control" id="admin-package-price-display"
+                        value="{{ number_format(old('price', $package->price ?? 0), 0, ',', '.') }}" 
+                        data-money-target="admin-package-price"
+                        required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Billing cycle</label>
@@ -274,6 +277,14 @@
                     <label class="form-label">Payout account limit</label>
                     <input type="number" class="form-control" name="payout_account_limit" min="1" max="3"
                         value="{{ old('payout_account_limit', $package->effective_payout_account_limit ?? 3) }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Hạn mức rút tối đa / ngày (VND)</label>
+                    <input type="hidden" name="max_payout_per_day" id="admin-package-payout-limit" value="{{ old('max_payout_per_day', $package->max_payout_per_day ?? '') }}">
+                    <input type="text" class="form-control" id="admin-package-payout-limit-display"
+                        value="{{ $package->max_payout_per_day ? number_format($package->max_payout_per_day, 0, ',', '.') : '' }}" 
+                        data-money-target="admin-package-payout-limit"
+                        placeholder="Để trống = Không giới hạn">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Commission rate</label>
@@ -337,6 +348,7 @@
                         'can_verify_certificates' => 'Xac thuc chung chi cong khai (QR Code)',
                         'can_customize_teacher_landing' => 'Cho phep tuy chinh landing page giang vien',
                         'can_use_affiliate_links' => 'Cho phep dung link gioi thieu rieng',
+                        'can_request_payouts' => 'Cho phep gui yeu cau rut tien',
                     ];
                 @endphp
 
@@ -554,6 +566,48 @@
                 }
             });
         }
+
+        // Money Input Formatting Logic
+        document.querySelectorAll('[data-money-target]').forEach(displayInput => {
+            const targetId = displayInput.getAttribute('data-money-target');
+            const hiddenInput = document.getElementById(targetId);
+            if (!hiddenInput) return;
+
+            displayInput.addEventListener('input', (e) => {
+                let cursorPosition = e.target.selectionStart;
+                let originalLength = e.target.value.length;
+                
+                // Keep only numeric characters
+                let rawValue = e.target.value.replace(/\D/g, '');
+                
+                if (rawValue === '') {
+                    hiddenInput.value = '';
+                    displayInput.value = '';
+                    updatePreview();
+                    return;
+                }
+
+                hiddenInput.value = rawValue;
+                
+                // Format with dots
+                let formattedValue = new Intl.NumberFormat('vi-VN').format(rawValue);
+                displayInput.value = formattedValue;
+
+                // Restore cursor position
+                let newLength = formattedValue.length;
+                let lengthDiff = newLength - originalLength;
+                displayInput.setSelectionRange(cursorPosition + lengthDiff, cursorPosition + lengthDiff);
+
+                updatePreview();
+            });
+
+            // Clean input on blur just in case
+            displayInput.addEventListener('blur', () => {
+                if (displayInput.value.trim() === '') {
+                    hiddenInput.value = '';
+                }
+            });
+        });
 
         document.querySelectorAll('[data-preview-field], [data-preview-global], input[name="code"], input[name="is_featured"]').forEach((element) => {
             element.addEventListener('input', updatePreview);

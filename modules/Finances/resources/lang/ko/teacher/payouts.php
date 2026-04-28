@@ -39,6 +39,8 @@ return [
     ],
     'flash' => [
         'amount_exceeds_balance' => '신청 금액이 출금 가능 잔액을 초과합니다.',
+        'max_payout_exceeded' => '귀하의 패키지는 하루에 최대 :limit까지만 출금할 수 있습니다.',
+        'feature_locked' => '현재 요금제는 출금 기능을 지원하지 않습니다.',
         'request_sent' => '출금 신청이 제출되어 검토 중입니다.',
         'account_already_saved' => '해당 계좌 정보가 이미 시스템에 존재합니다.',
         'limit_reached_use_change_request' => '계좌 등록 제한(:limit개)에 도달했습니다. 대신 계좌 변경 신청을 제출해 주세요.',

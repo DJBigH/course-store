@@ -45,6 +45,7 @@ class PackageRequest extends FormRequest
             'payout_account_limit' => ['nullable', 'integer', 'min:1', 'max:3'],
             'commission_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'priority_review' => ['nullable', 'boolean'],
+            'can_request_payouts' => ['nullable', 'boolean'],
             'can_duplicate_courses' => ['nullable', 'boolean'],
             'can_manage_comments' => ['nullable', 'boolean'],
             'can_manage_coupons' => ['nullable', 'boolean'],

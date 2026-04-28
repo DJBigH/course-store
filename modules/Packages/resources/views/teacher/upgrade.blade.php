@@ -86,7 +86,7 @@
             'expires_at' => $currentPackageExpiresAt?->toIso8601String(),
             'days_left' => $currentPackageDaysLeft,
         ];
-        $numericKeys = ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit'];
+        $numericKeys = ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day'];
         foreach ($features as $f) {
             if (in_array($f->key, $numericKeys)) continue;
             $currentPackageMap[$f->key] = (bool) ($currentPackage?->{$f->key} ?? false);
@@ -106,6 +106,8 @@
                     'commission_rate' => (float) $package->commission_rate,
                     'coupon_limit' => $package->coupon_limit,
                     'payout_account_limit' => $package->payout_account_limit,
+                    'ai_quiz_limit' => $package->ai_quiz_limit,
+                    'max_payout_per_day' => $package->max_payout_per_day,
                     'term_description' => $packageTermDescription($package, $preview),
                     'expires_at_formatted' => $formatDate($preview['expires_at']),
                     'meta' => __('packages::teacher.common.current_meta', [
@@ -457,12 +459,14 @@
                                             
                                             {{-- Cột Gói Hiện Tại --}}
                                             <td>
-                                                @if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit']))
+                                                @if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']))
                                                      <span class="teacher-upgrade-compare__pill is-neutral">
                                                         @if($featureKey === 'course_limit') {{ $currentPackage?->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited') }}
                                                         @elseif($featureKey === 'payout_account_limit') {{ $currentPackage?->effective_payout_account_limit ?? 3 }}
                                                         @elseif($featureKey === 'commission_rate') {{ rtrim(rtrim(number_format((float) ($currentPackage?->commission_rate ?? 0), 2, '.', ''), '0'), '.') }}%
                                                         @elseif($featureKey === 'coupon_limit') {{ $currentPackage?->can_manage_coupons ? ($currentPackage?->effective_coupon_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'ai_quiz_limit') {{ $currentPackage?->can_use_ai_quiz ? ($currentPackage?->effective_ai_quiz_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'max_payout_per_day') {{ $currentPackage?->can_request_payouts ? ($currentPackage?->max_payout_per_day ? moneyLocale((float) $currentPackage?->max_payout_per_day) : __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
                                                         @endif
                                                     </span>
                                                 @else
@@ -471,35 +475,40 @@
                                                     </span>
                                                 @endif
                                             </td>
-
                                             {{-- Các cột Gói Nâng Cấp --}}
                                             @foreach ($upgradePackages as $package)
                                                 @php
                                                     $cellValue = $package->{$featureKey};
                                                     $enabled = (bool) $cellValue;
                                                     
-                                                    if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit'])) {
+                                                    if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day'])) {
                                                         $currentVal = match($featureKey) {
                                                             'course_limit' => $currentPackage?->effective_course_limit,
                                                             'payout_account_limit' => $currentPackage?->effective_payout_account_limit ?? 3,
                                                             'commission_rate' => (float) ($currentPackage?->commission_rate ?? 0),
                                                             'coupon_limit' => $currentPackage?->can_manage_coupons ? $currentPackage?->effective_coupon_limit : 0,
+                                                            'ai_quiz_limit' => $currentPackage?->can_use_ai_quiz ? $currentPackage?->effective_ai_quiz_limit : 0,
+                                                            'max_payout_per_day' => $currentPackage?->can_request_payouts ? (float) $currentPackage?->max_payout_per_day : 0,
                                                         };
                                                         $targetVal = match($featureKey) {
                                                             'course_limit' => $package->effective_course_limit,
                                                             'payout_account_limit' => $package->effective_payout_account_limit,
                                                             'commission_rate' => (float) $package->commission_rate,
                                                             'coupon_limit' => $package->can_manage_coupons ? $package->effective_coupon_limit : 0,
+                                                            'ai_quiz_limit' => $package->can_use_ai_quiz ? $package->effective_ai_quiz_limit : 0,
+                                                            'max_payout_per_day' => $package->can_request_payouts ? (float) $package->max_payout_per_day : 0,
                                                         };
                                                         $delta = $compareDeltaLabel($currentVal, $targetVal, [
                                                             'mode' => 'number',
-                                                            'current_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit']) && empty($currentVal),
-                                                            'target_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit']) && empty($targetVal),
+                                                            'current_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) && empty($currentVal),
+                                                            'target_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) && empty($targetVal),
                                                             'suffix' => match($featureKey) {
                                                                 'course_limit' => ' ' . __('packages::teacher.features.compare_unit_courses'),
                                                                 'payout_account_limit' => ' ' . __('packages::teacher.features.compare_unit_accounts'),
                                                                 'commission_rate' => '%',
                                                                 'coupon_limit' => ' ' . __('packages::teacher.features.compare_unit_coupons'),
+                                                                'ai_quiz_limit' => ' ' . 'Quiz',
+                                                                'max_payout_per_day' => ' VND',
                                                             }
                                                         ]);
                                                     } else {
@@ -507,11 +516,13 @@
                                                     }
                                                 @endphp
                                                 <td data-compare-cell="{{ (int) $package->id }}" class="{{ (!$currentPackage?->{$featureKey} && $enabled) ? 'is-static-upgrade-gain' : '' }}">
-                                                    <span class="teacher-upgrade-compare__pill {{ in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit']) ? 'is-neutral' : ($enabled ? 'is-on' : 'is-off') }}">
+                                                    <span class="teacher-upgrade-compare__pill {{ in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) ? 'is-neutral' : ($enabled ? 'is-on' : 'is-off') }}">
                                                         @if($featureKey === 'course_limit') {{ $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited') }}
                                                         @elseif($featureKey === 'payout_account_limit') {{ $package->effective_payout_account_limit }}
                                                         @elseif($featureKey === 'commission_rate') {{ rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.') }}%
                                                         @elseif($featureKey === 'coupon_limit') {{ $package->can_manage_coupons ? ($package->effective_coupon_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'ai_quiz_limit') {{ $package->can_use_ai_quiz ? ($package->effective_ai_quiz_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'max_payout_per_day') {{ $package->can_request_payouts ? ($package->max_payout_per_day ? moneyLocale((float) $package->max_payout_per_day) : __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
                                                         @else {{ $enabled ? __('packages::teacher.features.available') : __('packages::teacher.features.unavailable') }}
                                                         @endif
                                                     </span>
@@ -647,28 +658,34 @@
                                                 $enabled = (bool) $package->{$featureKey};
                                                 $isUpgradeGain = !$currentPackage?->{$featureKey} && $enabled;
                                                 
-                                                if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit'])) {
+                                                if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day'])) {
                                                     $currentVal = match($featureKey) {
                                                         'course_limit' => $currentPackage?->effective_course_limit,
                                                         'payout_account_limit' => $currentPackage?->effective_payout_account_limit ?? 3,
                                                         'commission_rate' => (float) ($currentPackage?->commission_rate ?? 0),
                                                         'coupon_limit' => $currentPackage?->can_manage_coupons ? $currentPackage?->effective_coupon_limit : 0,
+                                                        'ai_quiz_limit' => $currentPackage?->can_use_ai_quiz ? $currentPackage?->effective_ai_quiz_limit : 0,
+                                                        'max_payout_per_day' => $currentPackage?->can_request_payouts ? (float) $currentPackage?->max_payout_per_day : 0,
                                                     };
                                                     $targetVal = match($featureKey) {
                                                         'course_limit' => $package->effective_course_limit,
                                                         'payout_account_limit' => $package->effective_payout_account_limit,
                                                         'commission_rate' => (float) $package->commission_rate,
                                                         'coupon_limit' => $package->can_manage_coupons ? $package->effective_coupon_limit : 0,
+                                                        'ai_quiz_limit' => $package->can_use_ai_quiz ? $package->effective_ai_quiz_limit : 0,
+                                                        'max_payout_per_day' => $package->can_request_payouts ? (float) $package->max_payout_per_day : 0,
                                                     };
                                                     $delta = $compareDeltaLabel($currentVal, $targetVal, [
                                                         'mode' => 'number',
-                                                        'current_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit']) && empty($currentVal),
-                                                        'target_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit']) && empty($targetVal),
+                                                        'current_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) && empty($currentVal),
+                                                        'target_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) && empty($targetVal),
                                                         'suffix' => match($featureKey) {
                                                             'course_limit' => ' ' . __('packages::teacher.features.compare_unit_courses'),
                                                             'payout_account_limit' => ' ' . __('packages::teacher.features.compare_unit_accounts'),
                                                             'commission_rate' => '%',
                                                             'coupon_limit' => ' ' . __('packages::teacher.features.compare_unit_coupons'),
+                                                            'ai_quiz_limit' => ' ' . 'Quiz',
+                                                            'max_payout_per_day' => ' VND',
                                                         }
                                                     ]);
                                                 } else {
@@ -688,11 +705,13 @@
                                                     @endif
                                                 </div>
                                                 <div class="text-end">
-                                                    <strong class="{{ in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit']) ? '' : ($enabled ? 'text-success' : 'text-muted') }}">
+                                                    <strong class="{{ in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) ? '' : ($enabled ? 'text-success' : 'text-muted') }}">
                                                         @if($featureKey === 'course_limit') {{ $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited') }}
                                                         @elseif($featureKey === 'payout_account_limit') {{ $package->effective_payout_account_limit }}
                                                         @elseif($featureKey === 'commission_rate') {{ rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.') }}%
                                                         @elseif($featureKey === 'coupon_limit') {{ $package->can_manage_coupons ? ($package->effective_coupon_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'ai_quiz_limit') {{ $package->can_use_ai_quiz ? ($package->effective_ai_quiz_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'max_payout_per_day') {{ $package->can_request_payouts ? ($package->max_payout_per_day ? moneyLocale((float) $package->max_payout_per_day) : __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
                                                         @else {{ $enabled ? __('packages::teacher.features.available') : __('packages::teacher.features.unavailable') }}
                                                         @endif
                                                     </strong>

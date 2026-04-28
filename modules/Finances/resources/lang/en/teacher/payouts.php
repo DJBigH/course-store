@@ -39,6 +39,8 @@ return [
     ],
     'flash' => [
         'amount_exceeds_balance' => 'Requested amount exceeds available balance.',
+        'max_payout_exceeded' => 'Your package only allows a maximum withdrawal of :limit per day.',
+        'feature_locked' => 'Your current package does not support the payout feature.',
         'request_sent' => 'Your payout request has been submitted and is pending review.',
         'account_already_saved' => 'This account information already exists in our system.',
         'limit_reached_use_change_request' => 'You have reached the limit of :limit accounts. Please submit a change request instead.',

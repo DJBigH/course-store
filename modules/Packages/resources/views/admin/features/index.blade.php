@@ -8,9 +8,17 @@
                     <h5 class="mb-1">{{ $pageTitle }}</h5>
                     <p class="text-muted mb-0">Quản lý nhãn và mô tả chi tiết của từng tính năng hiển thị trong bảng so sánh.</p>
                 </div>
-                <a href="{{ route('teacher-packages.index') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-list me-1"></i> Danh sách gói
-                </a>
+                <div class="d-flex gap-2">
+                    <form action="{{ route('teacher-package-features.sync') }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn đồng bộ lại tính năng từ code vào cơ sở dữ liệu?')">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-success">
+                            <i class="fas fa-sync-alt me-1"></i> Đồng bộ tính năng mới
+                        </button>
+                    </form>
+                    <a href="{{ route('teacher-packages.index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-1"></i> Danh sách gói
+                    </a>
+                </div>
             </div>
 
             @if (session('msg'))

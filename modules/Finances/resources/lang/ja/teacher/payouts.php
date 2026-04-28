@@ -39,6 +39,8 @@ return [
     ],
     'flash' => [
         'amount_exceeds_balance' => '申請額が出金可能残高を超えています.',
+        'max_payout_exceeded' => 'ご契約のパッケージでは、1日あたり最大 :limit までの出金が可能です。',
+        'feature_locked' => '現在のパッケージは出金機能をサポートしていません。',
         'request_sent' => '出金申請が提出されました. 承認をお待ちください.',
         'account_already_saved' => 'この口座情報は既にシステムに登録されています.',
         'limit_reached_use_change_request' => '口座登録数の上限（:limit件）に達しました. 変更が必要な場合は変更申請を提出してください.',

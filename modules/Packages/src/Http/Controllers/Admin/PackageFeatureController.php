@@ -89,4 +89,12 @@ class PackageFeatureController extends Controller
 
         return redirect()->route('teacher-package-features.index')->with('msg', $message);
     }
+
+    public function syncFeatures()
+    {
+        $seeder = new \Modules\Packages\database\seeders\PackageFeatureSeeder();
+        $seeder->run();
+
+        return redirect()->route('teacher-package-features.index')->with('msg', 'Đồng bộ tính năng gói thành công!');
+    }
 }

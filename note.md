@@ -484,8 +484,10 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Vi tài khoản học viên sẽ là tài khoản dùng chung để tạo tài khoản giáo viên nên giờ làm cách nào để vào khi admin dùng quản trị sẽ biết rõ tk nào giáo viên tk nào học viên và cho phép admin có thể vào xem tài khoản học viên hay tài khoản giáo viên và có thể đăng nhập vào tài khoản đó để xem kiểm tra cho dễ  ( Done )
 - Chưa làm config ngân hàng (bank, momo, vnpay thêm bật/tắt và bên clients và teacher khi tắt cái nào thì hiện bảo trì cái đó) ( Done )
 - Tạo thêm chức năng gửi thông báo cho giảng viên và học viên ( Done )
-- Thêm chức năng quản lý huy hiệu ( CURD, xóa mềm có thùng rác để khôi phục và cho tự thêm màu với từng huy hiệu và cho thêm icon và cung cấp nơi xem mã màu và icon để admin dễ dang dung và thay thế )
-- Sắp xếp lại nội dung trong dashboard của admin
+- Thêm chức năng quản lý huy hiệu ( CURD, xóa mềm có thùng rác để khôi phục và cho tự thêm màu với từng huy hiệu và cho thêm icon và cung cấp nơi xem mã màu và icon để admin dễ dang dung và thay thế ) ( Done )
+- Sắp xếp lại nội dung trong dashboard của admin ( Done )
+- Sắp xếp lại nội dung trong quản lý nguồn tiền ( Done )
+- Xin yêu cầu thay đổi ngân hàng ( Done )
 - Thêm chức năng viết được mô tả các chức năng trong gói đấy kiểu ( AI quiz: mổ tả là gì...)
 - Thêm chức năng khóa giảng viên ( Nếu giảng viên vi phạm j đó )
 - Cái góp ý / báo cáo đang trả dữ liệu sai

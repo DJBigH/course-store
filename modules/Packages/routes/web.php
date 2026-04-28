@@ -28,6 +28,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/edit/{id}', [PackageFeatureController::class, 'update'])->middleware('permission:teachers.edit')->name('post-edit');
         Route::post('/reorder', [PackageFeatureController::class, 'reorder'])->middleware('permission:teachers.edit')->name('reorder');
         Route::post('/bulk-update', [PackageFeatureController::class, 'bulkUpdate'])->middleware('permission:teachers.edit')->name('bulk-update');
+        Route::post('/sync', [PackageFeatureController::class, 'syncFeatures'])->middleware('permission:teachers.edit')->name('sync');
     });
 });
 
