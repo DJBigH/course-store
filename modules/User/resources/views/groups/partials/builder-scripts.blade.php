@@ -322,9 +322,10 @@
                     return;
                 }
 
-                const module = $(this).closest('.permission-module');
-                const moduleName = String(module.data('module') || '');
-                module.find('.permission-item:not(.is-hidden) .permission-checkbox').prop('checked', true);
+                const card = $(this).closest('.permission-matrix__module-card');
+                const moduleName = String(card.data('module') || '');
+                
+                $('.permission-module[data-module="' + moduleName + '"] .permission-checkbox').prop('checked', true);
                 syncManagePermissionState(moduleName);
                 syncModuleActionAvailability(moduleName);
                 syncSelectedCount();
@@ -335,9 +336,10 @@
                     return;
                 }
 
-                const module = $(this).closest('.permission-module');
-                const moduleName = String(module.data('module') || '');
-                module.find('.permission-checkbox').prop('checked', false);
+                const card = $(this).closest('.permission-matrix__module-card');
+                const moduleName = String(card.data('module') || '');
+                
+                $('.permission-module[data-module="' + moduleName + '"] .permission-checkbox').prop('checked', false);
                 syncManagePermissionState(moduleName);
                 syncModuleActionAvailability(moduleName);
                 syncSelectedCount();

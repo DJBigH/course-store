@@ -110,27 +110,94 @@ class FinanceController extends Controller
         return back()->with('msg', __('finances::admin.messages.payout_account_change_success'));
     }
 
-    public function exportEarnings(Request $request, $format)
+    public function exportEarnings(Request $request, $format = 'csv')
     {
-        $filters = $request->only(['teacher_id', 'from_date', 'to_date']);
-        $items = $this->financesRepo->getAdminEarnings(array_merge($filters, ['per_page' => 10000]))->getCollection();
-
-        if ($format === 'csv') {
-            // Implementation of CSV export
+        $filters = $request->only(['teacher_id', 'from_date', 'to_date', 'currency']);
+        $currency = $filters['currency'] ?? 'ALL';
+        
+        $items = $this->financesRepo->getAdminEarnings(array_merge($filters, ['per_page' => 50000]));
+        if (method_exists($items, 'getCollection')) {
+            $items = $items->getCollection();
         }
 
-        return view('finances::admin.exports.earnings_excel', compact('items'));
+        $fileName = 'doanh_thu_doi_soat_' . date('Y-m-d') . '.csv';
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['Mã Đơn Hàng', 'Ngày Giao Dịch', 'Giảng Viên', 'Khóa Học', 'Tiền Tệ', 'Gross', 'Discount', 'Net', 'Commission %', 'Teacher Share', 'Platform Net'];
+
+        $callback = function() use($items, $columns) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, $columns);
+
+            foreach ($items as $item) {
+                $itemCurrency = $item->order?->currency ?: 'VND';
+                fputcsv($file, [
+                    $item->order?->code,
+                    optional($item->order?->payment_complete_date ?: $item->order?->created_at)->format('Y-m-d H:i'),
+                    $item->courses?->teacher?->name_locale ?: '-',
+                    $item->courses?->name_locale ?: '-',
+                    $itemCurrency,
+                    $item->finance_breakdown['gross_amount'],
+                    $item->finance_breakdown['allocated_discount'],
+                    $item->finance_breakdown['net_revenue'],
+                    $item->finance_breakdown['commission_rate'] . '%',
+                    $item->finance_breakdown['teacher_revenue'],
+                    $item->finance_breakdown['platform_revenue']
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
-    public function exportPayouts(Request $request, $format)
+    public function exportPayouts(Request $request, $format = 'csv')
     {
         $filters = $request->only(['status']);
-        $payouts = $this->financesRepo->getAdminPayouts(array_merge($filters, ['per_page' => 10000]))->getCollection();
-
-        if ($format === 'csv') {
-            // Implementation of CSV export
+        $payouts = $this->financesRepo->getAdminPayouts(array_merge($filters, ['per_page' => 50000]));
+        if (method_exists($payouts, 'getCollection')) {
+            $payouts = $payouts->getCollection();
         }
 
-        return view('finances::admin.exports.payouts_excel', compact('payouts'));
+        $fileName = 'yeu_cau_rut_tien_' . date('Y-m-d') . '.csv';
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['Mã Rút Tiền', 'Giảng Viên', 'Số Tiền', 'Trạng Thái', 'Ngân Hàng', 'Số Tài Khoản', 'Tên Tài Khoản', 'Ngày Tạo', 'Ghi chú Admin'];
+
+        $callback = function() use($payouts, $columns) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, $columns);
+
+            foreach ($payouts as $p) {
+                fputcsv($file, [
+                    '#PAY' . $p->id,
+                    $p->teacher?->name_locale ?: '-',
+                    $p->amount,
+                    $p->status,
+                    $p->bank_name,
+                    $p->account_number,
+                    $p->account_name,
+                    $p->created_at->format('Y-m-d H:i'),
+                    $p->admin_note
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

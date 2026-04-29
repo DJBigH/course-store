@@ -11,6 +11,46 @@ class Contacts extends Model
     use HasFactory;
     use SoftDeletes;
 
+    protected static function booted()
+    {
+        static::created(function ($contact) {
+            try {
+                $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                $botToken = config('services.telegram.bot_token');
+                $chatId = config('services.telegram.chat_id');
+
+                if ($isEnabled === '1' && $botToken && $chatId) {
+                    $typeLabels = [
+                        self::TYPE_CONTACT => '📞 LIÊN HỆ',
+                        self::TYPE_FEEDBACK => '💡 GÓP Ý',
+                        self::TYPE_REPORT => '🚩 BÁO CÁO VI PHẠM',
+                    ];
+                    $typeStr = $typeLabels[$contact->submission_type] ?? '✉️ BIỂU MẪU MỚI';
+
+                    $text = "📬 <b>[THÔNG BÁO TỪ WEBSITE - {$typeStr}]</b>\n\n";
+                    $text .= "👤 <b>Họ tên:</b> {$contact->name}\n";
+                    $text .= "✉️ <b>Email:</b> <code>{$contact->email}</code>\n";
+                    if ($contact->phone) {
+                        $text .= "📞 <b>Số điện thoại:</b> <code>{$contact->phone}</code>\n";
+                    }
+                    if ($contact->subject) {
+                        $text .= "📌 <b>Tiêu đề:</b> {$contact->subject}\n";
+                    }
+                    $text .= "💬 <b>Nội dung:</b>\n<i>{$contact->message}</i>\n\n";
+                    $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                    \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                        'chat_id' => $chatId,
+                        'text' => $text,
+                        'parse_mode' => 'HTML'
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        });
+    }
+
     public const TYPE_CONTACT = 'contact';
     public const TYPE_FEEDBACK = 'feedback';
     public const TYPE_REPORT = 'report';

@@ -10,6 +10,58 @@ class TeacherApplication extends Model
 {
     protected $table = 'teacher_applications';
 
+    protected static function booted()
+    {
+        static::created(function ($app) {
+            try {
+                $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                $botToken = config('services.telegram.bot_token');
+                $chatId = config('services.telegram.chat_id');
+
+                if ($isEnabled === '1' && $botToken && $chatId) {
+                    $text = "👨‍🏫 <b>[YÊU CẦU ĐĂNG KÝ LÀM GIÁO VIÊN]</b>\n\n";
+                    $text .= "👤 <b>Họ tên:</b> {$app->full_name}\n";
+                    $text .= "✉️ <b>Email:</b> <code>{$app->email}</code>\n";
+                    $text .= "📞 <b>Số điện thoại:</b> <code>{$app->phone}</code>\n";
+                    $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                    \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                        'chat_id' => $chatId,
+                        'text' => $text,
+                        'parse_mode' => 'HTML'
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        });
+
+        static::updated(function ($app) {
+            try {
+                if ($app->isDirty('status') && $app->status === 'cancelled') {
+                    $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                    $botToken = config('services.telegram.bot_token');
+                    $chatId = config('services.telegram.chat_id');
+
+                    if ($isEnabled === '1' && $botToken && $chatId) {
+                        $text = "❌ <b>[THÔNG BÁO HỦY HỢP TÁC GIẢNG VIÊN]</b>\n\n";
+                        $text .= "👤 <b>Giảng viên:</b> {$app->full_name}\n";
+                        $text .= "✉️ <b>Email:</b> <code>{$app->email}</code>\n";
+                        $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                        \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                            'chat_id' => $chatId,
+                            'text' => $text,
+                            'parse_mode' => 'HTML'
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        });
+    }
+
     protected $fillable = [
         'student_id',
         'applicant_type',

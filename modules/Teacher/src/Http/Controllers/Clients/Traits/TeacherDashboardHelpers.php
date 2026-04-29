@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
+use Modules\Courses\src\Models\CourseQuiz;
 use Modules\Courses\src\Models\CourseViewTracking;
 use Modules\Coupons\src\Models\Coupons;
 use Modules\Lessons\src\Models\Lesson;
@@ -610,7 +611,7 @@ trait TeacherDashboardHelpers
             $query->where('id', '!=', (int) $currentPackage->id);
         }
 
-        return $query->get();
+        return $query->take(5)->get();
     }
 
     protected function canChangePackage(?Package $currentPackage, Package $targetPackage): bool

@@ -121,6 +121,32 @@ class PermissionSeeder extends Seeder
             ['slug' => 'chatbot.logs', 'name' => 'Xem log chatbot', 'module' => 'chatbot'],
 
             ['slug' => 'logs.view', 'name' => 'Xem nhật ký hệ thống', 'module' => 'logs'],
+
+            // Bổ sung quyền chuyên sâu
+            ['slug' => 'teachers.approve', 'name' => 'Duyệt giảng viên', 'module' => 'teachers'],
+            ['slug' => 'teachers.reject', 'name' => 'Từ chối giảng viên', 'module' => 'teachers'],
+            ['slug' => 'teachers.lock', 'name' => 'Khóa/Mở khóa giảng viên', 'module' => 'teachers'],
+
+            ['slug' => 'packages.view', 'name' => 'Xem danh sách gói', 'module' => 'packages'],
+            ['slug' => 'packages.manage', 'name' => 'Quản lý gói giảng viên', 'module' => 'packages'],
+
+            ['slug' => 'promotions.view', 'name' => 'Xem khuyến mại', 'module' => 'promotions'],
+            ['slug' => 'promotions.send', 'name' => 'Gửi khuyến mại hàng loạt', 'module' => 'promotions'],
+
+            ['slug' => 'students.grant_course', 'name' => 'Cấp khóa học thủ công', 'module' => 'students'],
+            ['slug' => 'students.lock', 'name' => 'Khóa tài khoản học viên', 'module' => 'students'],
+
+            ['slug' => 'reports.view', 'name' => 'Xem báo cáo vi phạm', 'module' => 'reports'],
+            ['slug' => 'reports.resolve', 'name' => 'Xử lý báo cáo vi phạm', 'module' => 'reports'],
+
+            ['slug' => 'courses.approve', 'name' => 'Duyệt xuất bản khóa học', 'module' => 'courses'],
+
+            ['slug' => 'certificates.view', 'name' => 'Xem chứng chỉ', 'module' => 'certificates'],
+
+            // Thông báo hệ thống
+            ['slug' => 'announcements.view', 'name' => 'Xem thông báo hệ thống', 'module' => 'announcements'],
+            ['slug' => 'announcements.create', 'name' => 'Gửi thông báo hệ thống', 'module' => 'announcements'],
+            ['slug' => 'announcements.delete', 'name' => 'Xóa thông báo hệ thống', 'module' => 'announcements'],
         ];
     }
 

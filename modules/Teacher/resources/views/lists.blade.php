@@ -96,24 +96,17 @@
             @endif
 
             <div class="table-responsive">
-                <table id="datatable" class="table align-middle w-100">
-                    <thead>
+                <table id="datatable" class="table align-middle w-100 table-hover">
+                    <thead class="table-light">
                         <tr>
                             <th class="text-center" style="width: 48px;">
                                 <input type="checkbox" id="select-all-records" class="form-check-input">
                             </th>
-                            <th>Huy hiệu</th>
-                            <th>Ảnh</th>
-                            <th>Tên</th>
+                            <th>Giảng viên</th>
+                            <th>Kinh nghiệm & Đánh giá</th>
                             <th>Trạng thái</th>
-                            <th>Đánh giá</th>
-                            <th>Kinh nghiệm</th>
-                            <th>Ngày tạo</th>
-                            <th>Hoạt động gần nhất</th>
-                            <th>Không hoạt động</th>
-                            <th>Lịch sử</th>
-                            <th>Sửa</th>
-                            <th>Xóa</th>
+                            <th>Hoạt động</th>
+                            <th class="text-end" style="width: 80px;">Hành động</th>
                         </tr>
                     </thead>
                 </table>
@@ -292,7 +285,7 @@
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
                 order: [
-                    [5, 'desc']
+                    [1, 'asc']
                 ],
                 ajax: {
                     url: "{{ route('teacher.data') }}",
@@ -310,15 +303,13 @@
                         searchable: false
                     },
                     {
-                        data: 'badge',
-                        orderable: false,
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'exp_rating',
+                        name: 'exp',
                         searchable: false
-                    },
-                    {
-                        data: 'image'
-                    },
-                    {
-                        data: 'name'
                     },
                     {
                         data: 'teacher_status',
@@ -326,32 +317,15 @@
                         searchable: false
                     },
                     {
-                        data: 'rating',
-                        name: 'ratings_avg_rating',
+                        data: 'activity_timeline',
+                        name: 'created_at',
                         searchable: false
                     },
                     {
-                        data: 'exp'
-                    },
-                    {
-                        data: 'created_at'
-                    },
-                    {
-                        data: 'last_active_at',
-                        searchable: false
-                    },
-                    {
-                        data: 'inactive_days',
-                        searchable: false
-                    },
-                    {
-                        data: 'logs'
-                    },
-                    {
-                        data: 'edit'
-                    },
-                    {
-                        data: 'delete'
+                        data: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-end'
                     }
                 ],
                 language: {

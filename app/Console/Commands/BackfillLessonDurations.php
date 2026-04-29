@@ -46,7 +46,7 @@ class BackfillLessonDurations extends Command
         $total = (clone $query)->count();
 
         if ($total === 0) {
-            $this->info('Không có bài giảng nào cần cập nhập thời gian.');
+            $this->info('Không có bài giảng nào cần cập nhật thời gian.');
             return self::SUCCESS;
         }
 

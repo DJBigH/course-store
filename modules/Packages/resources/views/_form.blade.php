@@ -19,15 +19,15 @@
         'zh' => ['label' => 'ZH', 'name' => 'Chinese'],
     ];
     $featureBadges = [
-        ['key' => 'can_manage_students', 'label' => 'Quan ly hoc vien'],
-        ['key' => 'can_view_student_progress', 'label' => 'Xem tien do'],
-        ['key' => 'can_view_activity_logs', 'label' => 'Nhat ky hoat dong'],
-        ['key' => 'can_manage_quizzes', 'label' => 'Quan ly quiz'],
+        ['key' => 'can_manage_students', 'label' => 'Quản lý học viên'],
+        ['key' => 'can_view_student_progress', 'label' => 'Xem tiến độ'],
+        ['key' => 'can_view_activity_logs', 'label' => 'Nhật ký hoạt động'],
+        ['key' => 'can_manage_quizzes', 'label' => 'Quản lý quiz'],
         ['key' => 'can_use_ai_quiz', 'label' => 'AI Quiz Generator'],
-        ['key' => 'can_import_export_lessons', 'label' => 'Import/Export bai hoc'],
-        ['key' => 'can_sell_bundles', 'label' => 'Bundle khoa hoc'],
-        ['key' => 'can_send_promotions', 'label' => 'Gui khuyen mai'],
-        ['key' => 'can_issue_certificates', 'label' => 'Cap chung chi'],
+        ['key' => 'can_import_export_lessons', 'label' => 'Import/Export bài học'],
+        ['key' => 'can_sell_bundles', 'label' => 'Combo khóa học'],
+        ['key' => 'can_send_promotions', 'label' => 'Gửi khuyến mại'],
+        ['key' => 'can_issue_certificates', 'label' => 'Cấp chứng chỉ'],
     ];
     $defaultPreviewName = old('name', $package->name ?? '');
     $defaultPreviewTagline = old('tagline', $package->tagline ?? '');
@@ -50,8 +50,8 @@
         <div class="border rounded-4 p-4 bg-light-subtle">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                 <div>
-                    <h6 class="mb-1">Thong tin he thong</h6>
-                    <p class="text-muted mb-0">Code, trang thai va quy tac sap xep cua goi.</p>
+                    <h6 class="mb-1">Thông tin hệ thống</h6>
+                    <p class="text-muted mb-0">Code, trạng thái và quy tắc sắp xếp của gói.</p>
                 </div>
             </div>
 
@@ -69,22 +69,22 @@
                     <div class="form-check mt-md-4">
                         <input class="form-check-input" type="checkbox" name="status" value="1"
                             {{ old('status', $package->status ?? true) ? 'checked' : '' }}>
-                        <label class="form-check-label">Hien cong khai cho nguoi mua</label>
+                        <label class="form-check-label">Hiện công khai cho người mua</label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="is_featured" value="1"
                             {{ old('is_featured', $package->is_featured ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Featured card tren landing</label>
+                        <label class="form-check-label">Đính trên landing page</label>
                     </div>
                 </div>
                 <div class="col-md-8">
-                    <label class="form-label">Khi da tat cong khai</label>
+                    <label class="form-label">Khi đã tắt công khai</label>
                     <select name="hidden_mode" class="form-select">
                         <option value="available" {{ $defaultHiddenMode === 'available' ? 'selected' : '' }}>
-                            An di nhung nguoi dang dung goi nay van tiep tuc su dung duoc
+                            Ẩn đi nhưng người đang dùng gói này vẫn tiếp tục sử dụng được
                         </option>
                         <option value="unavailable" {{ $defaultHiddenMode === 'unavailable' ? 'selected' : '' }}>
-                            An di va khong cho nguoi mua tiep tuc chon / su dung nua
+                            Ẩn đi và không cho người mua tiếp tục chọn / sử dụng nữa
                         </option>
                     </select>
                 </div>
@@ -111,8 +111,8 @@
         <div class="border rounded-4 p-4">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                 <div>
-                    <h6 class="mb-1">Noi dung da ngon ngu</h6>
-                    <p class="text-muted mb-0">Ten goi, tagline, badge, mo ta va muc ho tro hien thi theo locale.</p>
+                    <h6 class="mb-1">Nội dung đa ngôn ngữ</h6>
+                    <p class="text-muted mb-0">Tên gói, tagline, badge, mô tả và mức hỗ trợ hiển thị theo locale.</p>
                 </div>
             </div>
             <div class="row g-4 align-items-start">
@@ -147,26 +147,26 @@
                                         <div>
                                             <h6 class="mb-1">{{ $meta['name'] }}</h6>
                                             <p class="text-muted mb-0">
-                                                {{ $isDefault ? 'Day la noi dung mac dinh va duoc dung lam fallback cho cac locale khac.' : 'Neu de trong, he thong se fallback ve ban mac dinh.' }}
+                                                {{ $isDefault ? 'Đây là nội dung mặc định và được dùng làm fallback cho các locale khác.' : 'Nếu để trống, hệ thống sẽ fallback về bản mặc định.' }}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="form-label">Ten goi</label>
+                                            <label class="form-label">Tên gói</label>
                                             <input type="text" class="form-control" name="{{ $nameField }}"
                                                 value="{{ old($nameField, $package->{$nameField} ?? '') }}" {{ $isDefault ? 'required' : '' }}
                                                 data-preview-field="name" data-preview-locale="{{ $locale }}">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Muc ho tro</label>
+                                            <label class="form-label">Mức hỗ trợ</label>
                                             <input type="text" class="form-control" name="{{ $supportField }}"
                                                 value="{{ old($supportField, $package->{$supportField} ?? '') }}"
                                                 data-preview-field="support" data-preview-locale="{{ $locale }}">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Tagline ngan</label>
+                                            <label class="form-label">Tagline ngắn</label>
                                             <input type="text" class="form-control" name="{{ $taglineField }}" maxlength="190"
                                                 value="{{ old($taglineField, $package->{$taglineField} ?? '') }}"
                                                 data-preview-field="tagline" data-preview-locale="{{ $locale }}">
@@ -178,7 +178,7 @@
                                                 data-preview-field="badge" data-preview-locale="{{ $locale }}">
                                         </div>
                                         <div class="col-12">
-                                            <label class="form-label">Mo ta chi tiet</label>
+                                            <label class="form-label">Mô tả chi tiết</label>
                                             <textarea class="form-control" name="{{ $descriptionField }}" rows="4"
                                                 data-preview-field="description" data-preview-locale="{{ $locale }}">{{ old($descriptionField, $package->{$descriptionField} ?? '') }}</textarea>
                                         </div>
@@ -194,7 +194,7 @@
                         <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
                             <div>
                                 <h6 class="mb-1">Preview card</h6>
-                                <p class="text-muted mb-0 small">Xem nhanh giao dien package theo tab dang mo.</p>
+                                <p class="text-muted mb-0 small">Xem nhanh giao diện gói theo tab đang mở.</p>
                             </div>
                             <span class="badge text-bg-dark" data-preview-locale-badge>VI</span>
                         </div>
@@ -207,7 +207,7 @@
                                 <span class="package-preview-card__badge {{ $defaultPreviewBadge ? '' : 'd-none' }}" data-preview-badge>{{ $defaultPreviewBadge }}</span>
                             </div>
 
-                            <h5 class="package-preview-card__name" data-preview-name>{{ $defaultPreviewName ?: 'Ten goi' }}</h5>
+                            <h5 class="package-preview-card__name" data-preview-name>{{ $defaultPreviewName ?: 'Tên gói' }}</h5>
                             <p class="package-preview-card__tagline {{ $defaultPreviewTagline ? '' : 'd-none' }}" data-preview-tagline>{{ $defaultPreviewTagline }}</p>
                             <div class="package-preview-card__price" data-preview-price>{{ number_format($defaultPreviewPrice, 0, ',', '.') }} đ</div>
                             <p class="package-preview-card__description {{ $defaultPreviewDescription ? '' : 'd-none' }}" data-preview-description>{{ $defaultPreviewDescription }}</p>
@@ -245,14 +245,14 @@
         <div class="border rounded-4 p-4 bg-light-subtle">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                 <div>
-                    <h6 class="mb-1">Gia va quyen loi</h6>
-                    <p class="text-muted mb-0">Phan du lieu van hanh dung chung cho moi locale.</p>
+                    <h6 class="mb-1">Giá và quyền lợi</h6>
+                    <p class="text-muted mb-0">Phần dữ liệu vận hành dùng chung cho mọi locale.</p>
                 </div>
             </div>
 
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Gia</label>
+                    <label class="form-label">Giá</label>
                     <input type="hidden" name="price" id="admin-package-price" value="{{ old('price', $package->price ?? 0) }}" data-preview-global="price">
                     <input type="text" class="form-control" id="admin-package-price-display"
                         value="{{ number_format(old('price', $package->price ?? 0), 0, ',', '.') }}" 
@@ -268,7 +268,7 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Course limit {!! isset($globalFeatureStatus['course_limit']) && !$globalFeatureStatus['course_limit'] ? '<span class="badge text-bg-warning ms-1" style="font-size: 10px;">BAO TRI</span>' : '' !!}</label>
+                    <label class="form-label">Course limit {!! isset($globalFeatureStatus['course_limit']) && !$globalFeatureStatus['course_limit'] ? '<span class="badge text-bg-warning ms-1" style="font-size: 10px;">BẢO TRÌ</span>' : '' !!}</label>
                     <input type="number" class="form-control" name="course_limit" min="1"
                         value="{{ old('course_limit', $package->course_limit ?? '') }}" data-preview-global="course_limit"
                         {{ isset($globalFeatureStatus['course_limit']) && !$globalFeatureStatus['course_limit'] ? 'disabled' : '' }}>
@@ -276,13 +276,13 @@
                 <div class="col-md-4">
                     <label class="form-label">Payout account limit</label>
                     <input type="number" class="form-control" name="payout_account_limit" min="1" max="3"
-                        value="{{ old('payout_account_limit', $package->effective_payout_account_limit ?? 3) }}">
+                        value="{{ old('payout_account_limit', isset($package) ? $package->effective_payout_account_limit : 3) }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Hạn mức rút tối đa / ngày (VND)</label>
                     <input type="hidden" name="max_payout_per_day" id="admin-package-payout-limit" value="{{ old('max_payout_per_day', $package->max_payout_per_day ?? '') }}">
                     <input type="text" class="form-control" id="admin-package-payout-limit-display"
-                        value="{{ $package->max_payout_per_day ? number_format($package->max_payout_per_day, 0, ',', '.') : '' }}" 
+                        value="{{ isset($package) && $package->max_payout_per_day ? number_format($package->max_payout_per_day, 0, ',', '.') : '' }}" 
                         data-money-target="admin-package-payout-limit"
                         placeholder="Để trống = Không giới hạn">
                 </div>
@@ -296,24 +296,24 @@
                         <input class="form-check-input" type="checkbox" name="priority_review" value="1"
                             {{ old('priority_review', $package->priority_review ?? false) ? 'checked' : '' }} data-preview-global="priority_review"
                             {{ isset($globalFeatureStatus['priority_review']) && !$globalFeatureStatus['priority_review'] ? 'disabled' : '' }}>
-                        <label class="form-check-label">Priority review {!! isset($globalFeatureStatus['priority_review']) && !$globalFeatureStatus['priority_review'] ? '<small class="text-warning ms-1">(Maint)</small>' : '' !!}</label>
+                        <label class="form-check-label">Priority review {!! isset($globalFeatureStatus['priority_review']) && !$globalFeatureStatus['priority_review'] ? '<small class="text-warning ms-1">(Bảo trì)</small>' : '' !!}</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Coupon limit {!! isset($globalFeatureStatus['can_manage_coupons']) && !$globalFeatureStatus['can_manage_coupons'] ? '<small class="text-warning ms-1">(Maint)</small>' : '' !!}</label>
                     <input type="number" class="form-control" name="coupon_limit" min="1"
                         value="{{ old('coupon_limit', $package->coupon_limit ?? '') }}"
-                        placeholder="De trong = khong gioi han"
+                        placeholder="Để trống = không giới hạn"
                         {{ isset($globalFeatureStatus['can_manage_coupons']) && !$globalFeatureStatus['can_manage_coupons'] ? 'disabled' : '' }}>
-                    <div class="form-text">Chi ap dung khi da bat quyen quan ly coupon.</div>
+                    <div class="form-text">Chỉ áp dụng khi đã bật quyền quản lý coupon.</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">AI Quiz Limit / day {!! isset($globalFeatureStatus['can_use_ai_quiz']) && !$globalFeatureStatus['can_use_ai_quiz'] ? '<small class="text-warning ms-1">(Maint)</small>' : '' !!}</label>
+                    <label class="form-label">AI Quiz Limit / ngày {!! isset($globalFeatureStatus['can_use_ai_quiz']) && !$globalFeatureStatus['can_use_ai_quiz'] ? '<small class="text-warning ms-1">(Maint)</small>' : '' !!}</label>
                     <input type="number" class="form-control" name="ai_quiz_limit" min="1"
                         value="{{ old('ai_quiz_limit', $package->ai_quiz_limit ?? '') }}"
-                        placeholder="De trong = 3 (Free) / Ko gioi han"
+                        placeholder="Để trống = 3 (Miễn phí) / Không giới hạn"
                         {{ isset($globalFeatureStatus['can_use_ai_quiz']) && !$globalFeatureStatus['can_use_ai_quiz'] ? 'disabled' : '' }}>
-                    <div class="form-text">Số Quiz tối đa tạo bằng AI 1 ngày. Cần bật quyền "Quan ly quiz".</div>
+                    <div class="form-text">Số Quiz tối đa tạo bằng AI 1 ngày. Cần bật quyền "Quản lý quiz".</div>
                 </div>
             </div>
         </div>
@@ -323,57 +323,79 @@
         <div class="border rounded-4 p-4">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                 <div>
-                    <h6 class="mb-1">Feature flags theo goi</h6>
-                    <p class="text-muted mb-0">Bat/tat tung quyen trong teacher portal de phan hoa ro giua free, starter va pro.</p>
+                    <h6 class="mb-1">Tính năng đi kèm theo gói</h6>
+                    <p class="text-muted mb-0">Bật/tắt từng quyền trong portal để phân hóa quyền lợi của các gói.</p>
                 </div>
             </div>
 
-            <div class="row g-3">
+            <div class="row g-4 mt-1">
                 @php
-                    $systemFeatures = [
-                        'can_duplicate_courses' => 'Cho phep nhan ban khoa hoc',
-                        'can_manage_comments' => 'Cho phep quan ly binh luan',
-                        'can_manage_coupons' => 'Cho phep quan ly coupon',
-                        'can_manage_students' => 'Cho phep quan ly hoc vien',
-                        'can_view_student_progress' => 'Cho phep xem % tien do hoc cua hoc vien',
-                        'can_view_activity_logs' => 'Cho phep xem nhat ky hoat dong giang vien',
-                        'can_manage_quizzes' => 'Cho phep quan ly quiz',
-                        'can_use_ai_quiz' => 'Cho phep dùng AI tao Quiz (Gemini)',
-                        'can_grant_courses' => 'Cho phep cap quyen hoc thu cong',
-                        'can_import_export' => 'Cho phep Import/Export dữ liệu (Đơn hàng, Học viên, Bài học, Quiz)',
-                        'can_sell_bundles' => 'Cho phep ban combo / bundle khoa hoc',
-                        'can_schedule_content' => 'Cho phep mo bai hoc theo lich',
-                        'can_send_promotions' => 'Cho phep gui thong bao khuyen mai',
-                        'can_issue_certificates' => 'Cho phep cap chung chi hoan thanh',
-                        'can_verify_certificates' => 'Xac thuc chung chi cong khai (QR Code)',
-                        'can_customize_teacher_landing' => 'Cho phep tuy chinh landing page giang vien',
-                        'can_use_affiliate_links' => 'Cho phep dung link gioi thieu rieng',
-                        'can_request_payouts' => 'Cho phep gui yeu cau rut tien',
+                    $systemFeaturesGrouped = [
+                        'Quản lý Khóa học & Nội dung' => [
+                            'can_duplicate_courses' => 'Cho phép nhân bản khóa học',
+                            'can_manage_quizzes' => 'Cho phép quản lý quiz',
+                            'can_use_ai_quiz' => 'Cho phép dùng AI tạo Quiz (Gemini)',
+                            'can_schedule_content' => 'Cho phép mở bài học theo lịch',
+                            'can_import_export_lessons' => 'Cho phép Import/Export bài học',
+                        ],
+                        'Quản lý Học viên & Tương tác' => [
+                            'can_manage_students' => 'Cho phép quản lý học viên',
+                            'can_view_student_progress' => 'Cho phép xem % tiến độ học của học viên',
+                            'can_manage_comments' => 'Cho phép quản lý bình luận',
+                            'can_issue_certificates' => 'Cho phép cấp chứng chỉ hoàn thành',
+                            'can_verify_certificates' => 'Xác thực chứng chỉ công khai (QR Code)',
+                            'can_grant_courses' => 'Cho phép cấp quyền học thủ công',
+                        ],
+                        'Marketing & Bán hàng' => [
+                            'can_manage_coupons' => 'Cho phép quản lý mã giảm giá',
+                            'can_sell_bundles' => 'Cho phép bán combo / bundle khóa học',
+                            'can_send_promotions' => 'Cho phép gửi thông báo khuyến mại',
+                            'can_use_affiliate_links' => 'Cho phép dùng link giới thiệu riêng',
+                            'can_customize_teacher_landing' => 'Cho phép tùy chỉnh landing page giảng viên',
+                        ],
+                        'Tài chính & Hệ thống' => [
+                            'can_request_payouts' => 'Cho phép gửi yêu cầu rút tiền',
+                            'can_view_activity_logs' => 'Cho phép xem nhật ký hoạt động giảng viên',
+                            'can_import_export' => 'Cho phép Import/Export dữ liệu (Đơn hàng, Học viên, Quiz)',
+                            'can_export_orders' => 'Cho phép xuất dữ liệu đơn hàng (CSV/Excel)',
+                            'can_export_students' => 'Cho phép xuất danh sách học viên (CSV/Excel)',
+                        ]
                     ];
                 @endphp
 
-                @foreach($systemFeatures as $key => $label)
-                    @php
-                        $status = isset($globalFeatureStatus[$key]) ? (int) $globalFeatureStatus[$key] : 1;
-                        $isMaintenance = $status !== 1;
-                        $isChecked = (bool) old($key, $package->{$key} ?? false);
-                    @endphp
-                    <div class="{{ $key === 'can_import_export' ? 'col-md-12' : 'col-md-4' }}">
-                        <div class="form-check">
-                            <input class="form-check-input feature-checkbox" type="checkbox" name="{{ $key }}" value="1"
-                                {{ $isChecked ? 'checked' : '' }}
-                                {{ $isMaintenance ? 'disabled' : '' }}>
-                            
-                            @if($isMaintenance && $isChecked)
-                                <input type="hidden" name="{{ $key }}" value="1">
-                            @endif
+                @foreach($systemFeaturesGrouped as $groupName => $features)
+                    <div class="col-md-6">
+                        <div class="border rounded-4 p-4 bg-light-subtle h-100 shadow-sm">
+                            <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">
+                                <i class="fa-solid fa-folder-open me-2"></i>{{ $groupName }}
+                            </h6>
+                            <div class="row g-2">
+                                @foreach($features as $key => $label)
+                                    @php
+                                        $status = isset($globalFeatureStatus[$key]) ? (int) $globalFeatureStatus[$key] : 1;
+                                        $isMaintenance = $status !== 1;
+                                        $isChecked = (bool) old($key, $package->{$key} ?? false);
+                                    @endphp
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input class="form-check-input feature-checkbox" type="checkbox" name="{{ $key }}" value="1"
+                                                {{ $isChecked ? 'checked' : '' }}
+                                                {{ $isMaintenance ? 'disabled' : '' }}>
+                                            
+                                            @if($isMaintenance && $isChecked)
+                                                <input type="hidden" name="{{ $key }}" value="1">
+                                            @endif
 
-                            <label class="form-check-label">
-                                {{ $label }}
-                                @if($isMaintenance)
-                                    <small class="text-warning ms-1 fw-bold text-uppercase" style="font-size: 0.72rem;">(Bao tri)</small>
-                                @endif
-                            </label>
+                                            <label class="form-check-label text-dark" style="font-size: 0.9rem;">
+                                                {{ $label }}
+                                                @if($isMaintenance)
+                                                    <small class="text-warning ms-1 fw-bold text-uppercase" style="font-size: 0.72rem;">(Bảo trì)</small>
+                                                @endif
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 @endforeach

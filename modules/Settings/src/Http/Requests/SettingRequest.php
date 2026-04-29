@@ -38,6 +38,7 @@ class SettingRequest extends FormRequest
             'chatbot_widget_enabled' => ['nullable', 'boolean'],
             'checkout_countdown_minutes' => ['nullable', 'integer', 'min:0', 'max:10080'],
             'max_devices' => ['nullable', 'integer', 'min:1', 'max:10'],
+            'admin_max_devices' => ['nullable', 'integer', 'min:1', 'max:10'],
             'chatbot_enabled' => ['nullable', 'boolean'],
             'chatbot_message_ttl_minutes' => ['nullable', 'integer', 'min:5', 'max:1440'],
             'student_two_factor_timeout' => ['nullable', 'integer', 'min:60', 'max:86400'],

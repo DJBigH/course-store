@@ -198,7 +198,7 @@
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
                 ajax: {
-                    url: "{{ route('contacts.data') }}",
+                    url: "{{ ($mode ?? 'contact') === 'support' ? route('contacts.support-data') : route('contacts.data') }}",
                     data: function(d) {
                         d.q = $('#filter-q').val();
                         d.submission_type = $('#filter-type').val();

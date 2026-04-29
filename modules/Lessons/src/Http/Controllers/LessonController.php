@@ -398,7 +398,7 @@ class LessonController extends Controller
 
     public function edit(Request $request, $lessonId)
     {
-        $pageTitle = 'Cập nhập bài học';
+        $pageTitle = 'Cập nhật bài học';
         // $position = $this->lessonRepository->getPosition($courseId);
         $lesson = $this->lessonRepository->find($lessonId);
         $lessons = $this->lessonRepository->getAllLessions($lesson->course_id);
@@ -548,7 +548,7 @@ class LessonController extends Controller
                 'old' => $old,
                 'new' => $new,
             ],
-            logName: 'Cập nhập',
+            logName: 'Cập nhật',
             description: 'Cập nhật bài giảng'
         );
 

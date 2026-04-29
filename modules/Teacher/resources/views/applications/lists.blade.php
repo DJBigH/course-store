@@ -5,10 +5,10 @@
         <div class="card-body p-4">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center mb-4">
                 <div>
-                    <h5 class="mb-1">Ung tuyen giang vien</h5>
-                    <p class="text-muted mb-0">Theo doi cac ho so dang ky moi, trang thai va package da chon.</p>
+                    <h5 class="mb-1">Ứng tuyển giảng viên</h5>
+                    <p class="text-muted mb-0">Theo dõi các hồ sơ đăng ký mới, trạng thái và gói đã chọn.</p>
                 </div>
-                <a href="{{ route('teacher-packages.index') }}" class="btn btn-outline-primary">Quan ly goi</a>
+                <a href="{{ route('teacher-packages.index') }}" class="btn btn-outline-primary">Quản lý gói</a>
             </div>
 
             @if (session('msg'))
@@ -23,7 +23,7 @@
                     <label class="form-label">Trang thai</label>
                     <select name="status" class="form-select">
                         <option value="">Tat ca</option>
-                        @foreach (['draft' => 'Ban nhap', 'pending_payment' => 'Cho thanh toan', 'pending_review' => 'Cho duyet', 'approved' => 'Da duyet', 'rejected' => 'Bi tu choi'] as $value => $label)
+                        @foreach (['draft' => 'Bản nháp', 'pending_payment' => 'Chờ thanh toán', 'pending_review' => 'Chờ duyệt', 'approved' => 'Đã duyệt', 'rejected' => 'Bị từ chối'] as $value => $label)
                             <option value="{{ $value }}" {{ request('status') === $value ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -38,11 +38,11 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Hoc vien</th>
-                            <th>Goi</th>
-                            <th>Trang thai</th>
-                            <th>Gui luc</th>
-                            <th class="text-end">Thao tac</th>
+                            <th>Học viên</th>
+                            <th>Gói</th>
+                            <th>Trạng thái</th>
+                            <th>Gửi lúc</th>
+                            <th class="text-end">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,13 +67,13 @@
                                 <td>{{ optional($application->submitted_at)->format('d/m/Y H:i') ?: '-' }}</td>
                                 <td class="text-end">
                                     <a href="{{ route('teacher-applications.show', $application->id) }}" class="btn btn-sm btn-primary">
-                                        Xem chi tiet
+                                        Xem chi tiết
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">Chua co ho so dang ky nao.</td>
+                                <td colspan="6" class="text-center text-muted py-4">Chưa có hồ sơ đăng ký nào.</td>
                             </tr>
                         @endforelse
                     </tbody>

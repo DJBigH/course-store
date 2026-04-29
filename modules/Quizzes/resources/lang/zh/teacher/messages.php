@@ -160,4 +160,18 @@ return [
         ],
         'empty' => '未找到结果。',
     ],
+    'flash' => [
+        'created' => '测试创建成功！',
+        'assigned' => '测试已成功分配给学员！',
+        'updated' => '测试更新成功！',
+        'deleted' => '测试删除成功！',
+        'question_created' => '题目添加成功！',
+        'question_updated' => '题目更新成功！',
+        'question_deleted' => '题目删除成功！',
+        'ai_locked' => 'AI 生成题目功能已被锁定！',
+        'ai_limit' => '您已达到 AI 生成题目的最大次数（:max 次）！',
+        'ai_success' => '已成功通过 AI 生成 :count 道题目！',
+        'import_success' => '已成功导入 :count 道题目！',
+        'no_buyers' => '该课程目前还没有任何学员购买。',
+    ],
 ];

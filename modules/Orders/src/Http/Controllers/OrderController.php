@@ -40,46 +40,85 @@ class OrderController extends Controller
             ->getCategories()
             ->when(request()->filled('payment_method_filter'), function ($query) {
                 $query->where('payment_method', request()->input('payment_method_filter'));
+            })
+            ->when(request()->input('search.value'), function ($query, $search) {
+                $query->where(function ($sub) use ($search) {
+                    $sub->where('code', 'like', '%' . $search . '%')
+                        ->orWhere('customer_name_snapshot', 'like', '%' . $search . '%')
+                        ->orWhere('customer_email_snapshot', 'like', '%' . $search . '%')
+                        ->orWhereHas('students', function ($stQuery) use ($search) {
+                            $stQuery->where('name', 'like', '%' . $search . '%')
+                                    ->orWhere('email', 'like', '%' . $search . '%');
+                        });
+                });
             });
 
         return DataTables::of($orders)
             ->addColumn('select', function ($order) {
                 return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $order->id . '"></div>';
             })
-            ->editColumn('status_id', function ($order) {
-                $name = $order->status->name_locale;
-                $color = $order->status->color;
+            ->addColumn('order_info', function ($order) {
+                $studentName = e($order->students?->name ?: $order->customer_name_snapshot ?: 'Khách vãng lai');
+                $studentEmail = e($order->students?->email ?: $order->customer_email_snapshot ?: '-');
+                $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($studentName) . '&background=f1f5f9&color=64748b';
 
-                return '<button class="btn btn-' . $color . '">' . $name . '</button>';
+                return '
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="' . $avatar . '" class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                        <div>
+                            <div class="fw-bold text-dark mb-1">#' . e($order->code) . '</div>
+                            <div class="text-secondary small">' . $studentName . ' (' . $studentEmail . ')</div>
+                        </div>
+                    </div>';
             })
-            ->addColumn('total', function ($order) {
+            ->addColumn('financial_info', function ($order) {
+                $finalTotal = $order->total;
                 if (!empty($order->discount) && $order->discount > 0) {
-                    return number_format($order->total - $order->discount);
+                    $finalTotal = $order->total - $order->discount;
                 }
-
-                return number_format($order->total);
-            })
-            ->addColumn('payment_method', function ($order) {
-                return '<span class="badge rounded-pill" style="' . e($order->payment_method_badge_style) . '">' . e($order->payment_method_label) . '</span>';
-            })
-            ->addColumn('created_at', function ($order) {
-                return $order->created_at
-                    ? date('d/m/Y H:i:s', strtotime($order->created_at))
+                
+                $discountBadge = (!empty($order->discount) && $order->discount > 0)
+                    ? '<div class="text-muted small text-decoration-line-through">' . number_format($order->total) . ' đ</div>'
                     : '';
+
+                $paymentBadge = '<span class="badge rounded-pill mt-1" style="' . e($order->payment_method_badge_style) . '; font-size: 11px;">' . e($order->payment_method_label) . '</span>';
+
+                return '
+                    <div>
+                        ' . $discountBadge . '
+                        <div class="fw-bold text-primary">' . number_format($finalTotal) . ' đ</div>
+                        ' . $paymentBadge . '
+                    </div>';
             })
-            ->addColumn('detail', function ($order) use ($canView) {
-                return $canView
-                    ? '<a href="' . route('orders.show', $order->id) . '" class="btn btn-primary btn-sm">Xem</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
+            ->editColumn('status_id', function ($order) {
+                $name = $order->status->name_locale ?? 'Chưa rõ';
+                $color = $order->status->color ?? 'secondary';
+
+                return '<span class="badge bg-' . $color . '-subtle text-' . $color . ' px-2 py-1"><i class="fa-solid fa-circle me-1 small"></i>' . $name . '</span>';
             })
-            ->addColumn('delete', function ($order) use ($canDelete) {
-                if (!$canDelete) {
-                    return '<span class="text-muted small">Không có quyền</span>';
+            ->editColumn('created_at', function ($order) {
+                return '<div class="small text-muted">' . ($order->created_at ? date('d/m/Y H:i', strtotime($order->created_at)) : '') . '</div>';
+            })
+            ->addColumn('actions', function ($order) use ($canView, $canDelete) {
+                $btn = '<div class="dropdown">
+                            <button class="btn btn-light btn-sm border dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">';
+
+                if ($canView) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('orders.show', $order->id) . '"><i class="fa-solid fa-file-invoice text-info me-2"></i>Xem chi tiết</a></li>';
                 }
 
-                return '<a href="' . route('orders.delete', $order->id) . '" class="btn btn-outline-danger btn-sm delete-action">Xóa</a>';
+                if ($canDelete) {
+                    $btn .= '<li><hr class="dropdown-divider my-1"></li>';
+                    $btn .= '<li><a class="dropdown-item py-2 text-danger delete-action" href="' . route('orders.delete', $order->id) . '"><i class="fa-solid fa-trash me-2"></i>Xóa đơn hàng</a></li>';
+                }
+
+                $btn .= '</ul></div>';
+                return $btn;
             })
-            ->rawColumns(['select', 'detail', 'delete', 'status_id', 'payment_method'])
+            ->rawColumns(['select', 'order_info', 'financial_info', 'status_id', 'created_at', 'actions'])
             ->make(true);
     }
 

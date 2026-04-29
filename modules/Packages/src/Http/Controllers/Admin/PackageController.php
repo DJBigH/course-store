@@ -232,6 +232,54 @@ class PackageController extends Controller
         ]);
     }
 
+    public function toggleStatus($id)
+    {
+        $package = Package::query()->findOrFail($id);
+        $package->status = !$package->status;
+        $package->save();
+
+        activity_log(
+            action: 'update',
+            subject: $package,
+            properties: [
+                'action' => 'toggle_status',
+                'new_status' => $package->status,
+            ],
+            logName: 'admin_package_management',
+            description: "Đổi trạng thái hiển thị gói '{$package->name}' sang " . ($package->status ? 'Công khai' : 'Ẩn'),
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật trạng thái hiển thị thành công.',
+            'status' => $package->status,
+        ]);
+    }
+
+    public function toggleFeatured($id)
+    {
+        $package = Package::query()->findOrFail($id);
+        $package->is_featured = !$package->is_featured;
+        $package->save();
+
+        activity_log(
+            action: 'update',
+            subject: $package,
+            properties: [
+                'action' => 'toggle_featured',
+                'new_featured' => $package->is_featured,
+            ],
+            logName: 'admin_package_management',
+            description: "Đổi trạng thái Gói Hot/Nổi bật cho '{$package->name}'",
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật trạng thái Nổi bật thành công.',
+            'is_featured' => $package->is_featured,
+        ]);
+    }
+
     private function payload(PackageRequest $request): array
     {
         return [

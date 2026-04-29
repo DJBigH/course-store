@@ -32,18 +32,14 @@
         }
 
         .permission-builder__admin-section {
-            overflow: hidden;
-            max-height: 6000px;
+            overflow: visible;
             opacity: 1;
             transform: translateY(0);
-            transition: max-height 0.42s ease, opacity 0.28s ease, transform 0.28s ease;
+            transition: opacity 0.28s ease, transform 0.28s ease;
         }
 
         .permission-builder__admin-section.is-hidden {
-            max-height: 0;
-            opacity: 0;
-            transform: translateY(-12px);
-            pointer-events: none;
+            display: none;
         }
 
         .permission-builder__admin-state {
@@ -83,18 +79,14 @@
         }
 
         .permission-matrix__body {
-            overflow: hidden;
-            max-height: 1200px;
+            overflow: visible;
             opacity: 1;
             transform: translateY(0);
-            transition: max-height 0.35s ease, opacity 0.22s ease, transform 0.22s ease;
+            transition: opacity 0.22s ease, transform 0.22s ease;
         }
 
         .permission-matrix__body.is-collapsed {
-            max-height: 0;
-            opacity: 0;
-            transform: translateY(-8px);
-            pointer-events: none;
+            display: none;
         }
 
         .permission-matrix__table th,
@@ -351,6 +343,25 @@
                 min-width: 76px;
                 padding-inline: 0.75rem;
             }
+        }
+        .permission-matrix__module-card .card {
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        html[data-theme='dark'] .permission-matrix__module-card .card {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        html[data-theme='dark'] .permission-matrix__module-card .card-header {
+            background-color: rgba(15, 23, 42, 0.8) !important;
+            border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        html[data-theme='dark'] .permission-matrix__module-card .card-header h6 {
+            color: #f1f5f9 !important;
         }
     </style>
 @endsection

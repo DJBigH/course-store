@@ -83,6 +83,16 @@
                 </div>
             </div>
 
+            <div class="col-6">
+                <div class="mb-3">
+                    <label>Xác thực Email</label>
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" id="email_verified" name="email_verified" value="1" {{ old('email_verified', $students->email_verified_at ? '1' : '0') == '1' ? 'checked' : '' }}>
+                        <label class="form-check-label text-success fw-semibold" for="email_verified">Đã xác thực Email</label>
+                    </div>
+                </div>
+            </div>
+
             <div class="col-12 text-end admin-form__footer">
                 <button type="submit" class="btn btn-success">Lưu</button>
                 <a href="{{ route('students.index') }}" class="btn btn-warning">Trở về</a>

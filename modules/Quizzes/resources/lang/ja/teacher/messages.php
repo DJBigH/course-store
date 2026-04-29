@@ -160,4 +160,18 @@ return [
         ],
         'empty' => '結果が見つかりません。',
     ],
+    'flash' => [
+        'created' => 'クイズが正常に作成されました。',
+        'assigned' => '受講生にクイズが正常に割り当てられました。',
+        'updated' => 'クイズが正常に更新されました。',
+        'deleted' => 'クイズが正常に削除されました。',
+        'question_created' => '質問が正常に追加されました。',
+        'question_updated' => '質問が正常に更新されました。',
+        'question_deleted' => '質問が正常に削除されました。',
+        'ai_locked' => 'AI質問生成機能はロックされています。',
+        'ai_limit' => 'AIの最大制限（:max 回）に達しました。',
+        'ai_success' => 'AIによる :count 問の質問作成が正常に完了しました。',
+        'import_success' => ':count 問の質問を正常にインポートしました。',
+        'no_buyers' => 'このコースには現在、受講生がいません。',
+    ],
 ];

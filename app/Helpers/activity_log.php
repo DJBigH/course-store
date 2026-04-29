@@ -31,7 +31,7 @@ function activity_log(
         $causerLabel = buildLogCauserLabel(null);
     }
 
-    ActiveLog::create([
+    $log = ActiveLog::create([
         'log_name'     => $logName,
         'action'       => $action,
         'subject_type' => $subject ? get_class($subject) : null,
@@ -43,6 +43,40 @@ function activity_log(
         'ip'           => request()->ip(),
         'user_agent'   => request()->userAgent(),
     ]);
+
+    // Gửi log admin qua Telegram
+    if ($admin) {
+        try {
+            $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+            $botToken = config('services.telegram.bot_token');
+            $chatId = config('services.telegram.chat_id');
+
+            if ($isEnabled && $botToken && $chatId) {
+                $actionLabel = logActionLabel($action);
+                
+                $message = "🔔 *[Admin Log]*\n";
+                $message .= "👤 *Người thực hiện:* " . str_replace(['_', '*', '`'], ' ', $causerLabel) . "\n";
+                $message .= "🎯 *Hành động:* {$actionLabel}\n";
+                if ($description) {
+                    $message .= "📝 *Mô tả:* " . str_replace(['_', '*', '`'], ' ', $description) . "\n";
+                }
+
+                $propertiesText = presentLogProperties($log);
+                if ($propertiesText && $propertiesText !== 'Không có chi tiết thay đổi.') {
+                    $cleanProps = str_replace(['_', '*', '`'], ' ', $propertiesText);
+                    $message .= "🔍 *Chi tiết:*\n{$cleanProps}";
+                }
+
+                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => $message,
+                    'parse_mode' => 'Markdown'
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Đảm bảo không làm sập tiến trình chính
+        }
+    }
 }
 
 if (!function_exists('buildLogCauserLabel')) {

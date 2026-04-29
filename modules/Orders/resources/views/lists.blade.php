@@ -69,19 +69,17 @@
             @endif
 
             <div class="table-responsive">
-                <table id="datatable" class="table align-middle w-100">
-                    <thead>
+                <table id="datatable" class="table align-middle w-100 table-hover">
+                    <thead class="table-light">
                         <tr>
                             <th class="text-center" style="width: 48px;">
                                 <input type="checkbox" id="select-all-records" class="form-check-input">
                             </th>
-                            <th>Mã đơn hàng</th>
-                            <th>Tổng tiền</th>
+                            <th>Đơn hàng</th>
+                            <th>Thanh toán</th>
                             <th>Trạng thái</th>
-                            <th>Phương thức thanh toán</th>
                             <th>Ngày tạo đơn</th>
-                            <th>Chi tiết</th>
-                            <th>Xóa</th>
+                            <th class="text-end" style="width: 80px;">Hành động</th>
                         </tr>
                     </thead>
                 </table>
@@ -145,27 +143,26 @@
                         searchable: false
                     },
                     {
-                        data: 'code'
+                        data: 'order_info',
+                        name: 'code'
                     },
                     {
-                        data: 'total'
+                        data: 'financial_info',
+                        name: 'total'
                     },
                     {
-                        data: 'status_id'
+                        data: 'status_id',
+                        name: 'status_id'
                     },
                     {
-                        data: 'payment_method',
+                        data: 'created_at',
+                        name: 'created_at'
+                    },
+                    {
+                        data: 'actions',
                         orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'created_at'
-                    },
-                    {
-                        data: 'detail'
-                    },
-                    {
-                        data: 'delete'
+                        searchable: false,
+                        className: 'text-end'
                     }
                 ],
                 language: {

@@ -82,6 +82,32 @@ class LoginController extends Controller
             ]);
         }
 
+        try {
+            $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+            $botToken = config('services.telegram.bot_token');
+            $chatId = config('services.telegram.chat_id');
+
+            if ($isEnabled === '1' && $botToken && $chatId) {
+                $email = $user->email;
+                $ip = $request->ip();
+                $ua = $request->userAgent();
+
+                $text = "🔑 <b>[ĐĂNG NHẬP ADMIN THÀNH CÔNG]</b>\n\n";
+                $text .= "👤 <b>Tài khoản:</b> <code>{$email}</code>\n";
+                $text .= "🌐 <b>Địa chỉ IP:</b> <code>{$ip}</code>\n";
+                $text .= "🖥️ <b>Thiết bị:</b> {$ua}\n";
+                $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => $text,
+                    'parse_mode' => 'HTML'
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Fail silently
+        }
+
         return null;
     }
 
@@ -102,6 +128,31 @@ class LoginController extends Controller
 
     protected function sendFailedLoginResponse(Request $request)
     {
+        try {
+            $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+            $botToken = config('services.telegram.bot_token');
+            $chatId = config('services.telegram.chat_id');
+
+            if ($isEnabled === '1' && $botToken && $chatId) {
+                $email = $request->input($this->username());
+                $ip = $request->ip();
+
+                $text = "⚠️ <b>[CẢNH BÁO ĐĂNG NHẬP ADMIN THẤT BẠI]</b>\n\n";
+                $text .= "🔒 <b>Hành vi:</b> Thử truy cập trang Quản trị\n";
+                $text .= "✉️ <b>Email thử:</b> <code>{$email}</code>\n";
+                $text .= "🌐 <b>Địa chỉ IP:</b> <code>{$ip}</code>\n";
+                $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => $text,
+                    'parse_mode' => 'HTML'
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Fail silently
+        }
+
         throw ValidationException::withMessages([
             $this->username() => ['Email hoặc mật khẩu không hợp lệ'],
         ]);

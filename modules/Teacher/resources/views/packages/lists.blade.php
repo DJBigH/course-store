@@ -5,10 +5,10 @@
         <div class="card-body p-4">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center mb-4">
                 <div>
-                    <h5 class="mb-1">Goi giang vien</h5>
-                    <p class="text-muted mb-0">Quan ly bang gia va commission cho flow onboarding giang vien.</p>
+                    <h5 class="mb-1">Gói giảng viên</h5>
+                    <p class="text-muted mb-0">Quản lý bảng giá và commission cho flow onboarding giảng viên.</p>
                 </div>
-                <a href="{{ route('teacher-packages.add') }}" class="btn btn-primary">Them goi</a>
+                <a href="{{ route('teacher-packages.add') }}" class="btn btn-primary">Thêm gói</a>
             </div>
 
             @if (session('msg'))
@@ -17,7 +17,7 @@
 
             <div class="alert alert-info d-flex align-items-center gap-2" role="alert">
                 <i class="fa-solid fa-up-down-left-right"></i>
-                <span>Keo tha dong de doi thu tu hien thi package. He thong se luu lai sort order moi ngay khi ban tha chuot.</span>
+                <span>Kéo thả dòng để đổi thứ tự hiển thị gói. Hệ thống sẽ lưu lại thứ tự mới ngay khi bạn thả chuột.</span>
             </div>
 
             <div class="table-responsive">
@@ -25,15 +25,15 @@
                     <thead>
                         <tr>
                             <th style="width: 56px;"></th>
-                            <th>Code</th>
-                            <th>Ten goi</th>
-                            <th>Quyen noi bat</th>
-                            <th>Badge quyen</th>
-                            <th>Thu tu</th>
-                            <th>Gia</th>
+                            <th>Mã</th>
+                            <th>Tên gói</th>
+                            <th>Quyền nổi bật</th>
+                            <th>Badge quyền</th>
+                            <th>Thứ tự</th>
+                            <th>Giá</th>
                             <th>Commission</th>
-                            <th>Trang thai</th>
-                            <th class="text-end">Thao tac</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody data-package-sortable data-reorder-url="{{ route('teacher-packages.reorder') }}" data-csrf="{{ csrf_token() }}">
@@ -52,47 +52,47 @@
                                         @if ($package->can_view_student_progress)
                                             <span class="package-feature-pill is-progress">
                                                 <i class="fa-solid fa-chart-line"></i>
-                                                Xem tien do hoc vien
+                                                Xem tiến độ học viên
                                             </span>
                                         @endif
                                         @if ($package->can_manage_students)
                                             <span class="package-feature-pill is-students">
                                                 <i class="fa-solid fa-users"></i>
-                                                Quan ly hoc vien
+                                                Quản lý học viên
                                             </span>
                                         @endif
                                         @if ($package->can_view_activity_logs)
                                             <span class="package-feature-pill is-activity">
                                                 <i class="fa-solid fa-clock-rotate-left"></i>
-                                                Nhat ky hoat dong
+                                                Nhật ký hoạt động
                                             </span>
                                         @endif
                                         @if ($package->can_manage_quizzes)
                                             <span class="package-feature-pill is-growth">
                                                 <i class="fa-solid fa-square-check"></i>
-                                                Quan ly quiz
+                                                Quản lý quiz
                                             </span>
                                         @endif
                                         @if ($package->can_sell_bundles)
                                             <span class="package-feature-pill is-growth">
                                                 <i class="fa-solid fa-layer-group"></i>
-                                                Bundle khoa hoc
+                                                Combo khóa học
                                             </span>
                                         @endif
                                         @if ($package->can_send_promotions)
                                             <span class="package-feature-pill is-growth">
                                                 <i class="fa-solid fa-bullhorn"></i>
-                                                Gui khuyen mai
+                                                Gửi khuyến mại
                                             </span>
                                         @endif
                                         @if ($package->can_issue_certificates)
                                             <span class="package-feature-pill is-growth">
                                                 <i class="fa-solid fa-award"></i>
-                                                Chung chi
+                                                Chứng chỉ
                                             </span>
                                         @endif
                                         @if (!$package->can_view_student_progress && !$package->can_manage_students && !$package->can_view_activity_logs && !$package->can_manage_quizzes && !$package->can_sell_bundles && !$package->can_send_promotions && !$package->can_issue_certificates)
-                                            <span class="text-muted small">Chua co quyen noi bat</span>
+                                            <span class="text-muted small">Chưa có quyền nổi bật</span>
                                         @endif
                                     </div>
                                 </td>
@@ -101,10 +101,10 @@
                                 <td>{{ rtrim(rtrim(number_format($package->commission_rate, 2, '.', ''), '0'), '.') }}%</td>
                                 <td>
                                     <span class="badge bg-{{ $package->status ? 'success' : ($package->hidden_mode === 'available' ? 'warning text-dark' : 'secondary') }}">
-                                        {{ $package->status ? 'Cong khai' : ($package->hidden_mode === 'available' ? 'An nhung van dung duoc' : 'An va khoa su dung') }}
+                                        {{ $package->status ? 'Công khai' : ($package->hidden_mode === 'available' ? 'Ẩn nhưng vẫn dùng được' : 'Ẩn và khóa sử dụng') }}
                                     </span>
                                     @if ($package->is_featured)
-                                        <div class="small text-info mt-1">Featured</div>
+                                        <div class="small text-info mt-1">Nổi bật</div>
                                     @endif
                                 </td>
                                 <td class="text-end">

@@ -23,7 +23,11 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
 
     public function getAllStudents()
     {
-        return $this->model->with('teacher:id,student_id')->select(['id', 'name', 'email', 'status', 'two_factor_email_enabled', 'created_at'])->latest();
+        return $this->model->with([
+            'teacher:id,student_id',
+            'courses:id,name,teacher_id',
+            'courses.teacher:id,name'
+        ])->select(['id', 'name', 'email', 'status', 'email_verified_at', 'two_factor_email_enabled', 'created_at'])->latest();
     }
 
     public function setPassword($password, $id)

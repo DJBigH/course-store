@@ -214,7 +214,6 @@ class GroupController extends Controller
     private function buildPermissionData(): array
     {
         $permissions = Permission::query()
-            ->orderBy('module')
             ->orderBy('name')
             ->get()
             ->map(function ($permission) {
@@ -223,6 +222,21 @@ class GroupController extends Controller
                 return $permission;
             })
             ->groupBy(fn($permission) => $permission->display_module ?: 'other');
+
+        $moduleOrder = collect([
+            'dashboard', 
+            'courses', 'lessons', 'categories', 'certificates',
+            'users', 'groups', 'permissions', 'teachers', 'students',
+            'orders', 'coupons', 'packages', 
+            'contacts', 'comments', 'promotions', 'announcements', 
+            'chatbot', 'settings', 'logs', 'reports'
+        ]);
+
+        $permissions = $permissions->sortBy(function ($items, $module) use ($moduleOrder) {
+            $index = $moduleOrder->search($module);
+
+            return $index === false ? 999 : $index;
+        });
 
         $actionOrder = collect(['manage', 'view', 'create', 'edit', 'update', 'payment', 'captcha', 'delete', 'restore', 'force_delete', 'publish', 'logs', 'moderate']);
         $derivedActions = $permissions->flatten()
@@ -287,7 +301,7 @@ class GroupController extends Controller
     {
         return [
             [
-                'label' => 'Sale',
+                'label' => 'Nhân viên Bán hàng',
                 'name' => 'Sale',
                 'slug' => 'sale',
                 'description' => 'Theo dõi đơn hàng, khách hàng, coupon và liên hệ.',
@@ -317,7 +331,7 @@ class GroupController extends Controller
                 ],
             ],
             [
-                'label' => 'Content',
+                'label' => 'Biên tập viên Nội dung',
                 'name' => 'Content',
                 'slug' => 'content',
                 'description' => 'Quản lý nội dung khóa học, danh mục và bình luận.',
@@ -364,7 +378,7 @@ class GroupController extends Controller
                 ],
             ],
             [
-                'label' => 'Support',
+                'label' => 'Chăm sóc khách hàng',
                 'name' => 'Support',
                 'slug' => 'support',
                 'description' => 'Chăm sóc khách hàng, xử lý liên hệ và hỗ trợ học viên.',
@@ -380,7 +394,7 @@ class GroupController extends Controller
                 ],
             ],
             [
-                'label' => 'Teacher',
+                'label' => 'Giảng viên',
                 'name' => 'Teacher',
                 'slug' => 'teacher',
                 'description' => 'Giáo viên phụ trách nội dung khóa học và bài giảng.',
@@ -429,6 +443,13 @@ class GroupController extends Controller
             'publish' => 'Xuất bản',
             'logs' => 'Nhật ký',
             'moderate' => 'Kiểm duyệt',
+            'approve' => 'Duyệt',
+            'reject' => 'Từ chối',
+            'lock' => 'Khóa/Mở',
+            'send' => 'Gửi tin',
+            'grant_course' => 'Cấp khóa học',
+            'resolve' => 'Xử lý',
+            'assign' => 'Gán',
         ];
     }
 

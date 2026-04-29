@@ -227,8 +227,8 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
     public function getCategories()
     {
         return $this->model
-            ->with(['detail', 'status'])
-            ->select(['id', 'code', 'total', 'discount', 'coupon', 'status_id', 'payment_method', 'created_at'])
+            ->with(['detail', 'status', 'students'])
+            ->select(['id', 'code', 'student_id', 'customer_name_snapshot', 'customer_email_snapshot', 'total', 'discount', 'coupon', 'status_id', 'payment_method', 'created_at'])
             ->latest();
     }
 

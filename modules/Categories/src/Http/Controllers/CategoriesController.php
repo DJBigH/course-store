@@ -349,7 +349,7 @@ class CategoriesController extends Controller
 
     public function edit($id)
     {
-        $pageTitle = 'Cập nhập chuyên mục';
+        $pageTitle = 'Cập nhật chuyên mục';
         $category = $this->category->find($id);
         $categories = $this->category->getAllCategories();
         if (empty($category)) {
@@ -381,7 +381,7 @@ class CategoriesController extends Controller
                     'old' => $old,
                     'new' => $new,
                 ],
-                logName: 'Cập nhập',
+                logName: 'Cập nhật',
                 description: 'Cập nhật chuyên mục'
             );
 

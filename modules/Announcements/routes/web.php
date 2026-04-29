@@ -7,12 +7,12 @@ use Modules\Announcements\src\Http\Controllers\Clients\InboxController;
 // Admin routes
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::prefix('announcements')->name('announcements.')->group(function () {
-        Route::get('/', [AnnouncementController::class, 'index'])->name('index');
-        Route::get('/create', [AnnouncementController::class, 'create'])->name('create');
-        Route::post('/create', [AnnouncementController::class, 'store'])->name('store');
-        Route::get('/search-users', [AnnouncementController::class, 'searchUsers'])->name('search-users');
-        Route::get('/{announcement}', [AnnouncementController::class, 'show'])->name('show');
-        Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy');
+        Route::get('/', [AnnouncementController::class, 'index'])->middleware('permission:announcements.view')->name('index');
+        Route::get('/create', [AnnouncementController::class, 'create'])->middleware('permission:announcements.create')->name('create');
+        Route::post('/create', [AnnouncementController::class, 'store'])->middleware('permission:announcements.create')->name('store');
+        Route::get('/search-users', [AnnouncementController::class, 'searchUsers'])->middleware('permission:announcements.view')->name('search-users');
+        Route::get('/{announcement}', [AnnouncementController::class, 'show'])->middleware('permission:announcements.view')->name('show');
+        Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->middleware('permission:announcements.delete')->name('destroy');
     });
 });
 

@@ -9,6 +9,12 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Filesystem;
+use Masbug\Flysystem\GoogleDriveAdapter;
+use Google\Client as GoogleClient;
+use Google\Service\Drive as GoogleDrive;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Modules\Categories\src\Models\Category;
 use Modules\Settings\src\Models\Setting;
 
@@ -21,6 +27,20 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(SystemMailManager $systemMailManager): void
     {
+        Storage::extend('google', function($app, $config) {
+            $client = new GoogleClient();
+            $client->setClientId($config['clientId']);
+            $client->setClientSecret($config['clientSecret']);
+            $client->refreshToken($config['refreshToken']);
+
+            $service = new GoogleDrive($client);
+            $adapter = new GoogleDriveAdapter($service, $config['folder'] ?? '/');
+
+            return new FilesystemAdapter(
+                new Filesystem($adapter),
+                $adapter
+            );
+        });
 
         if (app()->environment('production')) {
             URL::forceScheme('https');

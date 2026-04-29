@@ -29,7 +29,42 @@ class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
-            //
+            $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+            $botToken = config('services.telegram.bot_token');
+            $chatId = config('services.telegram.chat_id');
+
+            if ($isEnabled === '1' && $botToken && $chatId) {
+                if ($e instanceof \Illuminate\Validation\ValidationException ||
+                    $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException ||
+                    $e instanceof \Illuminate\Auth\AuthenticationException) {
+                    return;
+                }
+
+                try {
+                    $url = request()->fullUrl();
+                    $ip = request()->ip();
+                    $errorClass = get_class($e);
+                    $errorMessage = $e->getMessage() ?: 'Không rõ lỗi';
+                    $file = $e->getFile();
+                    $line = $e->getLine();
+
+                    $text = "🚨 <b>[CẢNH BÁO LỖI HỆ THỐNG]</b>\n\n";
+                    $text .= "🔴 <b>Lỗi:</b> <code>{$errorClass}</code>\n";
+                    $text .= "💬 <b>Nội dung:</b> {$errorMessage}\n";
+                    $text .= "📁 <b>File:</b> <code>{$file}</code> (Dòng: {$line})\n\n";
+                    $text .= "🌐 <b>URL:</b> {$url}\n";
+                    $text .= "🖥️ <b>IP:</b> {$ip}\n";
+                    $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                    \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                        'chat_id' => $chatId,
+                        'text' => $text,
+                        'parse_mode' => 'HTML'
+                    ]);
+                } catch (\Exception $ex) {
+                    // Fail silently
+                }
+            }
         });
     }
 

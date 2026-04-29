@@ -17,7 +17,7 @@ class AdminSecurityService
 {
     public function maxDevices(): int
     {
-        return (int) setting('max_devices', config('auth.max_devices', 1));
+        return (int) setting('admin_max_devices', config('auth.admin_max_devices', 1));
     }
 
     public function challengeLifetime(): int

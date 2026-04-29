@@ -58,24 +58,18 @@
             @endif
 
             <div class="table-responsive">
-                <table id="datatable" class="table align-middle w-100">
-                    <thead>
+                <table id="datatable" class="table align-middle w-100 table-hover">
+                    <thead class="table-light">
                         <tr>
                             <th class="text-center" style="width: 48px;">
                                 <input type="checkbox" id="select-all-records" class="form-check-input">
                             </th>
-                            <th>Tên</th>
-                            <th>Email</th>
-                            <th>Vai trò</th>
-                            <th>2FA</th>
-                            <th>Trạng thái</th>
+                            <th>Học viên</th>
+                            <th>Trạng thái & Quyền</th>
+                            <th>Xác thực Email</th>
+                            <th>Khóa học & Giảng viên</th>
                             <th>Ngày tạo</th>
-                            <th>Khóa học</th>
-                            <th>Lịch sử mã</th>
-                            <th>Lịch sử</th>
-                            <th>Đăng nhập</th>
-                            <th>Sửa</th>
-                            <th>Xóa</th>
+                            <th class="text-end" style="width: 80px;">Hành động</th>
                         </tr>
                     </thead>
                 </table>
@@ -145,46 +139,33 @@
                         searchable: false
                     },
                     {
-                        data: 'name'
+                        data: 'student_info',
+                        name: 'name'
                     },
                     {
-                        data: 'email'
+                        data: 'security_status',
+                        name: 'status'
                     },
                     {
-                        data: 'roles',
+                        data: 'email_verified',
+                        name: 'email_verified_at',
                         orderable: false,
                         searchable: false
                     },
                     {
-                        data: 'two_factor',
+                        data: 'courses_list',
                         orderable: false,
                         searchable: false
                     },
                     {
-                        data: 'status'
+                        data: 'created_at',
+                        name: 'created_at'
                     },
                     {
-                        data: 'created_at'
-                    },
-                    {
-                        data: 'courses'
-                    },
-                    {
-                        data: 'link'
-                    },
-                    {
-                        data: 'logs'
-                    },
-                    {
-                        data: 'impersonate',
+                        data: 'actions',
                         orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'edit'
-                    },
-                    {
-                        data: 'delete'
+                        searchable: false,
+                        className: 'text-end'
                     }
                 ],
                 language: {

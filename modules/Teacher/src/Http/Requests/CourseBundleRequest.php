@@ -20,7 +20,7 @@ class CourseBundleRequest extends FormRequest
             'price' => ['required', 'numeric', 'min:0'],
             'sale_price' => ['nullable', 'numeric', 'min:0', 'lt:price'],
             'status' => ['nullable', 'boolean'],
-            'teacher_id' => ['nullable', 'integer', 'exists:teachers,id'],
+            'teacher_id' => ['nullable', 'integer', 'exists:teacher,id'],
             'quantity' => ['nullable', 'integer', 'min:0'],
             'is_coming_soon' => ['nullable', 'boolean'],
             'coming_soon_start_at' => ['nullable', 'required_if:is_coming_soon,1', 'date', 'after_or_equal:now'],

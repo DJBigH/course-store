@@ -160,4 +160,18 @@ return [
         ],
         'empty' => 'No results found.',
     ],
+    'flash' => [
+        'created' => 'Quiz created successfully!',
+        'assigned' => 'Quiz assigned to students successfully!',
+        'updated' => 'Quiz updated successfully!',
+        'deleted' => 'Quiz deleted successfully!',
+        'question_created' => 'Question added successfully!',
+        'question_updated' => 'Question updated successfully!',
+        'question_deleted' => 'Question deleted successfully!',
+        'ai_locked' => 'AI Question Generation feature is locked!',
+        'ai_limit' => 'You have reached the maximum AI limit of :max attempts!',
+        'ai_success' => 'Successfully generated :count questions via AI!',
+        'import_success' => 'Successfully imported :count questions!',
+        'no_buyers' => 'This course currently has no students.',
+    ],
 ];

@@ -130,7 +130,7 @@ class Package extends Model
 
     public function scopeVisibleForListing($query)
     {
-        return $query->where('status', true)->where('is_exclusive', false)->orderBy('sort_order')->limit(6);
+        return $query->where('status', true)->where('is_exclusive', false)->orderBy('sort_order')->limit(5);
     }
 
     /**

@@ -564,9 +564,9 @@ class TeacherQuizController extends Controller
             'topic'      => ['required', 'string', 'max:255'],
             'amount'     => ['required', 'integer', 'min:1', 'max:20'],
             'difficulty' => ['required', 'string', 'in:' . implode(',', [
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.easy'),
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.medium'),
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.hard')
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_easy'),
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_medium'),
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_hard')
             ])],
             'language'   => ['required', 'string', 'in:Vietnamese,English'],
         ]);
@@ -574,9 +574,9 @@ class TeacherQuizController extends Controller
         try {
             // Map difficulty from localized labels to English for the service
             $difficultyMap = [
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.easy') => 'Easy',
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.medium') => 'Medium',
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.hard') => 'Hard'
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_easy') => 'Easy',
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_medium') => 'Medium',
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_hard') => 'Hard'
             ];
             $mappedDifficulty = $difficultyMap[$request->input('difficulty')] ?? 'Medium';
 

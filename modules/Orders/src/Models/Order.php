@@ -15,6 +15,70 @@ class Order extends Model
     use HasFactory;
     use SoftDeletes;
 
+    protected static function booted()
+    {
+        static::created(function ($order) {
+            try {
+                $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                $botToken = config('services.telegram.bot_token');
+                $chatId = config('services.telegram.chat_id');
+
+                if ($isEnabled === '1' && $botToken && $chatId) {
+                    $studentName = $order->students?->name ?: $order->customer_name_snapshot ?: 'Khách vãng lai';
+                    $totalAmount = number_format($order->total) . ' ' . ($order->currency ?: 'VND');
+
+                    $text = "🛒 <b>[ĐƠN HÀNG MỚI ĐƯỢC TẠO]</b>\n\n";
+                    $text .= "📝 <b>Mã đơn:</b> <code>{$order->code}</code>\n";
+                    $text .= "👤 <b>Khách hàng:</b> {$studentName}\n";
+                    $text .= "💰 <b>Tổng tiền:</b> <b>{$totalAmount}</b>\n";
+                    $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                    \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                        'chat_id' => $chatId,
+                        'text' => $text,
+                        'parse_mode' => 'HTML'
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        });
+
+        static::updated(function ($order) {
+            try {
+                if ($order->isDirty('status_id')) {
+                    $oldStatus = \Modules\Orders\src\Models\OrderStatus::find($order->getOriginal('status_id'));
+                    $newStatus = \Modules\Orders\src\Models\OrderStatus::find($order->status_id);
+
+                    if ($newStatus && $newStatus->is_success && (!$oldStatus || !$oldStatus->is_success)) {
+                        $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                        $botToken = config('services.telegram.bot_token');
+                        $chatId = config('services.telegram.chat_id');
+
+                        if ($isEnabled === '1' && $botToken && $chatId) {
+                            $studentName = $order->students?->name ?: $order->customer_name_snapshot ?: 'Khách vãng lai';
+                            $totalAmount = number_format($order->total) . ' ' . ($order->currency ?: 'VND');
+
+                            $text = "🎉 <b>[ĐƠN HÀNG ĐÃ THANH TOÁN THÀNH CÔNG]</b>\n\n";
+                            $text .= "📝 <b>Mã đơn:</b> <code>{$order->code}</code>\n";
+                            $text .= "👤 <b>Khách hàng:</b> {$studentName}\n";
+                            $text .= "💰 <b>Tổng tiền:</b> <b>{$totalAmount}</b>\n";
+                            $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                            \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                                'chat_id' => $chatId,
+                                'text' => $text,
+                                'parse_mode' => 'HTML'
+                            ]);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        });
+    }
+
     protected $table = 'orders';
 
     protected $fillable = [

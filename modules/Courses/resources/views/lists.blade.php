@@ -160,24 +160,17 @@
             @endif
 
             <div class="table-responsive">
-                <table id="datatable" class="table align-middle admin-data-table w-100">
-                    <thead>
+                <table id="datatable" class="table align-middle admin-data-table w-100 table-hover">
+                    <thead class="table-light">
                         <tr>
                             <th class="text-center" style="width: 48px;">
                                 <input type="checkbox" id="select-all-courses" class="form-check-input">
                             </th>
                             <th>Khóa học</th>
-                            <th>Giá bán</th>
-                            <th>Trạng thái</th>
-                            <th>Học tập</th>
-                            <th>Đánh giá</th>
+                            <th>Thông tin học tập</th>
+                            <th>Giá & Trạng thái</th>
                             <th>Ngày tạo</th>
-                            <th>Publish nhanh</th>
-                            <th>Nhân bản</th>
-                            <th>Lịch sử</th>
-                            <th>Bài giảng</th>
-                            <th>Sửa</th>
-                            <th>Xóa</th>
+                            <th class="text-end" style="width: 80px;">Hành động</th>
                         </tr>
                     </thead>
                 </table>
@@ -404,7 +397,7 @@
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
                 order: [
-                    [6, 'desc']
+                    [1, 'asc']
                 ],
                 columns: [{
                         data: 'select',
@@ -416,21 +409,13 @@
                         name: 'name'
                     },
                     {
-                        data: 'price',
-                        name: 'price'
-                    },
-                    {
-                        data: 'status',
-                        name: 'status'
-                    },
-                    {
-                        data: 'learning',
-                        orderable: false,
+                        data: 'learning_stat',
+                        name: 'lessons_count',
                         searchable: false
                     },
                     {
-                        data: 'rating',
-                        name: 'ratings_avg_rating',
+                        data: 'price_status',
+                        name: 'price',
                         searchable: false
                     },
                     {
@@ -438,34 +423,10 @@
                         name: 'created_at'
                     },
                     {
-                        data: 'publish',
+                        data: 'actions',
                         orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'duplicate',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'logs',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'lessions',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'edit',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'delete',
-                        orderable: false,
-                        searchable: false
+                        searchable: false,
+                        className: 'text-end'
                     }
                 ],
                 ajax: {
