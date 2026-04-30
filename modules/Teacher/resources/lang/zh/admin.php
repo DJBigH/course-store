@@ -8,6 +8,8 @@ return [
         'edit' => '更新讲师信息',
         'logs' => '操作日志: :name',
         'applications' => '讲师申请管理',
+        'package_upgrades' => '套餐升级管理',
+        'upgrade_detail' => '升级申请详情',
         'application_detail' => '讲师申请详情',
         'earnings' => '讲师收入对账',
         'payouts' => '讲师提现处理',

@@ -19,10 +19,21 @@ class TeacherApplication extends Model
                 $chatId = config('services.telegram.chat_id');
 
                 if ($isEnabled === '1' && $botToken && $chatId) {
-                    $text = "👨‍🏫 <b>[YÊU CẦU ĐĂNG KÝ LÀM GIÁO VIÊN]</b>\n\n";
+                    $isUpgrade = $app->type === 'upgrade';
+                    $title = $isUpgrade ? "🚀 <b>[YÊU CẦU NÂNG CẤP GÓI]</b>" : "👨‍🏫 <b>[YÊU CẦU ĐĂNG KÝ LÀM GIÁO VIÊN]</b>";
+                    
+                    $text = "{$title}\n\n";
                     $text .= "👤 <b>Họ tên:</b> {$app->full_name}\n";
                     $text .= "✉️ <b>Email:</b> <code>{$app->email}</code>\n";
                     $text .= "📞 <b>Số điện thoại:</b> <code>{$app->phone}</code>\n";
+                    
+                    if ($isUpgrade) {
+                        $text .= "📦 <b>Gói yêu cầu:</b> " . ($app->package?->name ?? 'N/A') . "\n";
+                        if ($app->note) {
+                            $text .= "📝 <b>Ghi chú:</b> {$app->note}\n";
+                        }
+                    }
+
                     $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
 
                     \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
@@ -44,9 +55,17 @@ class TeacherApplication extends Model
                     $chatId = config('services.telegram.chat_id');
 
                     if ($isEnabled === '1' && $botToken && $chatId) {
-                        $text = "❌ <b>[THÔNG BÁO HỦY HỢP TÁC GIẢNG VIÊN]</b>\n\n";
+                        $isUpgrade = $app->type === 'upgrade';
+                        $title = $isUpgrade ? "❌ <b>[THÔNG BÁO HỦY NÂNG CẤP GÓI]</b>" : "❌ <b>[THÔNG BÁO HỦY HỢP TÁC GIẢNG VIÊN]</b>";
+                        
+                        $text = "{$title}\n\n";
                         $text .= "👤 <b>Giảng viên:</b> {$app->full_name}\n";
                         $text .= "✉️ <b>Email:</b> <code>{$app->email}</code>\n";
+                        
+                        if ($isUpgrade) {
+                            $text .= "📦 <b>Gói đã hủy:</b> " . ($app->package?->name ?? 'N/A') . "\n";
+                        }
+
                         $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
 
                         \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
@@ -101,6 +120,8 @@ class TeacherApplication extends Model
         'claim_token',
         'claim_expires_at',
         'claimed_at',
+        'type',
+        'note',
         'admin_note',
     ];
 

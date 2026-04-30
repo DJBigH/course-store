@@ -25,4 +25,8 @@ interface FinancesRepositoryInterface extends RepositoryInterface
     public function getAdminPayoutSummary(): array;
     public function updatePayoutStatus(int $payoutId, array $data): bool;
     public function updateAccountChangeRequest(int $requestId, array $data): bool;
+
+    public function getTeacherEarningsSummaries(?string $fromDate = null, ?string $toDate = null, ?string $currency = 'ALL'): array;
+
+    public function getDailyEarningsSummary(string $fromDate, string $toDate, ?string $currency = 'ALL'): array;
 }

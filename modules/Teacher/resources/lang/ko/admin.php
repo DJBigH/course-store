@@ -8,6 +8,8 @@ return [
         'edit' => '강사 정보 업데이트',
         'logs' => '활동 로그: :name',
         'applications' => '강사 신청 관리',
+        'package_upgrades' => '패키지 업그레이드 관리',
+        'upgrade_detail' => '업그레이드 요청 상세',
         'application_detail' => '강사 신청 상세',
         'earnings' => '강사 수익 정산',
         'payouts' => '강사 출금 처리',

@@ -30,16 +30,17 @@ class FinanceController extends Controller
         // Summarize by teacher for the second table
         $teacherSummaries = collect();
         if (empty($filters['teacher_id'])) {
-            // Note: Use has('courses') because has('order_details') might not be mapped correctly
-            $teachers = Teacher::has('courses')->get();
-            foreach ($teachers as $teacher) {
-                $teacherSummary = $this->financesRepo->getEarningsSummary($teacher->id, null, $filters['from_date'] ?? null, $filters['to_date'] ?? null, $currency);
-                if ($teacherSummary['gross_amount'] > 0) {
-                    $teacherSummaries->push(array_merge($teacherSummary, [
-                        'teacher' => $teacher, 
-                        'orders_count' => \Modules\Orders\src\Models\OrderDetail::whereHas('courses', fn($q) => $q->where('teacher_id', $teacher->id))->count()
-                    ]));
-                }
+            $summaries = $this->financesRepo->getTeacherEarningsSummaries($filters['from_date'] ?? null, $filters['to_date'] ?? null, $currency);
+            foreach ($summaries as $summaryItem) {
+                // We still need the teacher model object for the view, but we can fetch them all at once if needed
+                // or just pass the array. The view expects 'teacher' object.
+                $teacherSummaries->push(array_merge($summaryItem, [
+                    'teacher' => (object) [
+                        'id' => $summaryItem['teacher_id'],
+                        'name' => $summaryItem['teacher_name'],
+                        'slug' => $summaryItem['teacher_slug'],
+                    ]
+                ]));
             }
         }
 
@@ -62,19 +63,28 @@ class FinanceController extends Controller
             ->latest()
             ->paginate(10, ['*'], 'acc_change_page');
 
-        // Teacher payout summaries
-        $teacherSummaries = collect();
-        $teacherIds = \Modules\Finances\src\Models\PayoutRequest::distinct()->pluck('teacher_id');
-        $teachers = Teacher::whereIn('id', $teacherIds)->get();
-        foreach ($teachers as $teacher) {
-            $teacherSummaries->push([
-                'teacher' => $teacher,
-                'requested' => \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->where('status', 'requested')->sum('amount'),
-                'processing' => \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->where('status', 'processing')->sum('amount'),
-                'paid' => \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->where('status', 'paid')->sum('amount'),
-                'rejected' => \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->where('status', 'rejected')->sum('amount'),
-            ]);
-        }
+        // Teacher payout summaries - Optimized with one query
+        $teacherSummaries = \Modules\Finances\src\Models\PayoutRequest::query()
+            ->join('teacher as t', 't.id', '=', 'payout_requests.teacher_id')
+            ->selectRaw('
+                t.id as teacher_id, 
+                t.name as teacher_name, 
+                SUM(CASE WHEN status = "requested" THEN amount ELSE 0 END) as requested,
+                SUM(CASE WHEN status = "processing" THEN amount ELSE 0 END) as processing,
+                SUM(CASE WHEN status = "paid" THEN amount ELSE 0 END) as paid,
+                SUM(CASE WHEN status = "rejected" THEN amount ELSE 0 END) as rejected
+            ')
+            ->groupBy('t.id', 't.name')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'teacher' => (object) ['id' => $row->teacher_id, 'name' => $row->teacher_name],
+                    'requested' => $row->requested,
+                    'processing' => $row->processing,
+                    'paid' => $row->paid,
+                    'rejected' => $row->rejected,
+                ];
+            });
 
         $teachers = Teacher::all();
 
@@ -89,7 +99,25 @@ class FinanceController extends Controller
             'admin_note' => 'nullable|string|max:1000',
         ]);
 
+        $payout = \Modules\Finances\src\Models\PayoutRequest::findOrFail($id);
+        $oldStatus = $payout->status;
+        
         $this->financesRepo->updatePayoutStatus($id, $request->all());
+        $payout->refresh();
+
+        activity_log(
+            action: 'update_payout_status',
+            subject: $payout,
+            properties: [
+                'old_status' => $oldStatus,
+                'new_status' => $payout->status,
+                'admin_note' => $request->admin_note,
+                'amount' => $payout->amount,
+                'teacher' => $payout->teacher?->name_locale,
+            ],
+            logName: 'admin_finance_management',
+            description: "Cập nhật trạng thái rút tiền #PAY{$payout->id}: {$oldStatus} -> {$payout->status}"
+        );
 
         return back()->with('msg', __('finances::admin.messages.payout_update_success'));
     }
@@ -101,11 +129,29 @@ class FinanceController extends Controller
             'admin_note' => 'nullable|string|max:1000',
         ]);
 
+        $changeRequest = \Modules\Finances\src\Models\PayoutAccountChangeRequest::findOrFail($id);
+        $oldStatus = $changeRequest->status;
+
         $success = $this->financesRepo->updateAccountChangeRequest($id, $request->all());
 
         if (!$success) {
             return back()->with('msg', __('finances::admin.messages.payout_change_processed'));
         }
+
+        $changeRequest->refresh();
+
+        activity_log(
+            action: 'update_payout_account_change_status',
+            subject: $changeRequest,
+            properties: [
+                'old_status' => $oldStatus,
+                'new_status' => $changeRequest->status,
+                'admin_note' => $request->admin_note,
+                'teacher' => $changeRequest->teacher?->name_locale,
+            ],
+            logName: 'admin_finance_management',
+            description: "Xử lý yêu cầu thay đổi tài khoản rút tiền #ACC{$changeRequest->id}: {$changeRequest->status}"
+        );
 
         return back()->with('msg', __('finances::admin.messages.payout_account_change_success'));
     }

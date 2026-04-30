@@ -191,6 +191,23 @@ class CertificateController extends Controller
             return back()->with('msg_danger', __('certificates::teacher/messages.certificates.issue_failed'));
         }
 
+        activity_log(
+            action: 'issue_certificate',
+            subject: $certificate,
+            properties: [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'student_id' => $certificate->student_id,
+                'student_name' => $certificate->student_name_snapshot,
+                'course_id' => $certificate->course_id,
+                'course_name' => $certificate->course_name_snapshot,
+                'certificate_code' => $certificate->code,
+                'issue_mode' => 'manual',
+            ],
+            logName: 'teacher_student_management',
+            description: "Cấp chứng chỉ hoàn thành khóa học cho học viên [{$certificate->student_name_snapshot}]"
+        );
+
         return redirect()
             ->route('teacher.dashboard.certificates.show', $certificate->id)
             ->with('msg_success', __('certificates::teacher/messages.certificates.issue_success'));

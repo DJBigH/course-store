@@ -8,6 +8,8 @@ return [
         'edit' => 'Cập nhật giảng viên',
         'logs' => 'Nhật ký hoạt động: :name',
         'applications' => 'Ứng tuyển giảng viên',
+        'package_upgrades' => 'Quản lý nâng cấp gói',
+        'upgrade_detail' => 'Chi tiết yêu cầu nâng cấp',
         'application_detail' => 'Chi tiết ứng tuyển giảng viên',
         'earnings' => 'Đối soát doanh thu giảng viên',
         'payouts' => 'Xử lý rút tiền giảng viên',

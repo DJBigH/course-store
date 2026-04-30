@@ -644,6 +644,14 @@ class TeacherController extends Controller
         if ($action === 'restore') {
             foreach ($teachers as $teacher) {
                 $teacher->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $teacher->fresh(),
+                    properties: ['restored_from_trash' => true],
+                    logName: __('teacher::admin.logs.bulk_restore') ?? 'Khôi phục hàng loạt',
+                    description: __('teacher::admin.logs.bulk_restore_desc') ?? 'Khôi phục giảng viên'
+                );
             }
 
             return back()->with('msg', __('teacher::admin.messages.restore_success'));
@@ -657,11 +665,23 @@ class TeacherController extends Controller
             }
 
             foreach ($teachers as $teacher) {
+                $snapshot = method_exists($teacher, 'toArray') ? $teacher->toArray() : (array) $teacher;
                 if ($teacher->image) {
                     deleteFileStorage($teacher->image);
                 }
 
                 $teacher->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $teacher,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: __('teacher::admin.logs.bulk_force_delete') ?? 'Xóa vĩnh viễn hàng loạt',
+                    description: __('teacher::admin.logs.bulk_force_delete_desc') ?? 'Xóa vĩnh viễn giảng viên'
+                );
             }
 
             return back()->with('msg', __('teacher::admin.messages.force_delete_success'));
@@ -679,6 +699,14 @@ class TeacherController extends Controller
         }
 
         $teacher->restore();
+
+        activity_log(
+            action: 'restore',
+            subject: $teacher->fresh(),
+            properties: ['restored_from_trash' => true],
+            logName: __('teacher::admin.logs.restore') ?? 'Khôi phục',
+            description: __('teacher::admin.logs.restore_desc') ?? 'Khôi phục giảng viên thành công.'
+        );
 
         return back()->with('msg', __('teacher::admin.messages.restore_success'));
     }
@@ -699,7 +727,19 @@ class TeacherController extends Controller
             deleteFileStorage($teacher->image);
         }
 
+        $snapshot = method_exists($teacher, 'toArray') ? $teacher->toArray() : (array) $teacher;
         $teacher->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $teacher,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: __('teacher::admin.logs.force_delete') ?? 'Xóa vĩnh viễn',
+            description: __('teacher::admin.logs.force_delete_desc') ?? 'Xóa vĩnh viễn giảng viên'
+        );
 
         return back()->with('msg', __('teacher::admin.messages.force_delete_success'));
     }

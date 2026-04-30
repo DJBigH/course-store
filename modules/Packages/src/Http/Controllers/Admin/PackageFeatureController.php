@@ -36,6 +36,7 @@ class PackageFeatureController extends Controller
             'sort_order' => 'required|integer',
         ]);
 
+        $old = $feature->toArray();
         $feature->update([
             'name_vi' => $request->input('name_vi'),
             'name_en' => $request->input('name_en'),
@@ -53,6 +54,17 @@ class PackageFeatureController extends Controller
             'is_enabled' => (int) $request->input('is_enabled'),
         ]);
 
+        activity_log(
+            action: 'update',
+            subject: $feature,
+            properties: [
+                'old' => $old,
+                'new' => $feature->refresh()->toArray(),
+            ],
+            logName: 'admin_package_feature_management',
+            description: 'Cập nhật tính năng gói: ' . $feature->name_vi
+        );
+
         return redirect()->route('teacher-package-features.index')->with('msg', 'Cập nhật tính năng thành công');
     }
 
@@ -65,6 +77,14 @@ class PackageFeatureController extends Controller
                 ->where('id', (int) $id)
                 ->update(['sort_order' => $index + 1]);
         }
+
+        activity_log(
+            action: 'reorder',
+            subject: null,
+            properties: ['ids' => $ids],
+            logName: 'admin_package_feature_management',
+            description: 'Sắp xếp lại các tính năng gói'
+        );
 
         return response()->json(['success' => true]);
     }
@@ -82,6 +102,17 @@ class PackageFeatureController extends Controller
             ->whereIn('id', $ids)
             ->update(['is_enabled' => $status]);
 
+        activity_log(
+            action: 'bulk_update',
+            subject: null,
+            properties: [
+                'ids' => $ids,
+                'status' => $status,
+            ],
+            logName: 'admin_package_feature_management',
+            description: 'Cập nhật trạng thái hàng loạt tính năng gói'
+        );
+
         $message = 'Đã cập nhật trạng thái hàng loạt thành công';
         if ($status === PackageFeature::STATUS_MAINTENANCE_VISIBLE) {
             $message = 'Đã đưa các tính năng đã chọn vào chế độ bảo trì';
@@ -94,6 +125,14 @@ class PackageFeatureController extends Controller
     {
         $seeder = new \Modules\Packages\database\seeders\PackageFeatureSeeder();
         $seeder->run();
+
+        activity_log(
+            action: 'sync_features',
+            subject: null,
+            properties: [],
+            logName: 'admin_package_feature_management',
+            description: 'Đồng bộ hóa tính năng gói từ hệ thống'
+        );
 
         return redirect()->route('teacher-package-features.index')->with('msg', 'Đồng bộ tính năng gói thành công!');
     }

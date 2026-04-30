@@ -99,6 +99,18 @@ class TeacherCancellationController extends Controller
 
             DB::commit();
 
+            activity_log(
+                action: 'approve_cancellation',
+                subject: $cancelRequest,
+                properties: [
+                    'teacher_id' => $teacher->id,
+                    'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                    'admin_note' => $request->admin_note,
+                ],
+                logName: 'admin_teacher_management',
+                description: 'Phê duyệt yêu cầu nghỉ việc của giảng viên: ' . ($teacher->name_locale ?: $teacher->name)
+            );
+
             return back()->with('msg_success', __('teacher::admin.messages.cancellation_approved'));
         } catch (\Exception $e) {
             DB::rollBack();
@@ -135,6 +147,18 @@ class TeacherCancellationController extends Controller
             $request->admin_note,
             app()->getLocale()
         ));
+
+        activity_log(
+            action: 'reject_cancellation',
+            subject: $cancelRequest,
+            properties: [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'admin_note' => $request->admin_note,
+            ],
+            logName: 'admin_teacher_management',
+            description: 'Từ chối yêu cầu nghỉ việc của giảng viên: ' . ($teacher->name_locale ?: $teacher->name)
+        );
 
         return back()->with('msg_success', __('teacher::admin.messages.cancellation_rejected'));
     }

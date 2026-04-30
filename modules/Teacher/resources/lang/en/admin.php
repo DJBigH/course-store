@@ -8,6 +8,8 @@ return [
         'edit' => 'Update Instructor',
         'logs' => 'Activity Logs: :name',
         'applications' => 'Instructor Applications',
+        'package_upgrades' => 'Package Upgrades',
+        'upgrade_detail' => 'Upgrade Request Detail',
         'application_detail' => 'Instructor Application Details',
         'earnings' => 'Instructor Earnings Reconciliation',
         'payouts' => 'Instructor Payout Processing',

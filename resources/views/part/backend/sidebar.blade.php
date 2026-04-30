@@ -127,13 +127,19 @@
                         <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
                         Gửi thông báo (Broadcast)
                     </a>
+                    @if (auth()->user()?->hasPermission('media.manage'))
+                        <a class="nav-link {{ request()->is('admin/media*') ? 'active' : '' }}" href="{{ route('settings.media.index') }}">
+                            <div class="sb-nav-link-icon"><i class="fas fa-photo-video"></i></div>
+                            Thư viện Media
+                        </a>
+                    @endif
                 @endif
 
                 <!-- NHÓM 2: NỘI DUNG & TIẾP THỊ -->
                 <div class="sb-sidenav-menu-heading">Nội dung & Tiếp thị</div>
                 
                 {{-- Khóa học --}}
-                @if(auth()->user()->hasPermission('courses.view') || auth()->user()->hasPermission('categories.view'))
+                @if(auth()->user()?->hasPermission('courses.view') || auth()->user()?->hasPermission('categories.view'))
                     @php $isCourseGroupOpen = request()->is('admin/courses*') || request()->is('admin/categories*') || request()->is('admin/lessons*'); @endphp
                     <div class="sidebar-group {{ $isCourseGroupOpen ? 'is-open' : '' }}" data-sidebar-group="courses">
                         <a class="nav-link collapsed {{ $isCourseGroupOpen ? 'is-active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCourses" aria-expanded="false" data-sidebar-toggle>
@@ -146,7 +152,7 @@
                                 <a class="nav-link {{ (request()->is('admin/courses') || request()->is('admin/courses/edit*') || request()->is('admin/courses/create*')) ? 'active' : '' }}" href="{{ route('courses.index') }}">Danh sách khóa học</a>
                                 <a class="nav-link {{ request()->is('admin/courses/bundles*') ? 'active' : '' }}" href="{{ route('courses.bundles.index') }}">Quản lý Combo</a>
                                 <a class="nav-link {{ request()->is('admin/categories*') ? 'active' : '' }}" href="{{ route('categories.index') }}">Chuyên mục</a>
-                                @if(auth()->user()->hasPermission('comments.moderate'))
+                                @if(auth()->user()?->hasPermission('comments.moderate'))
                                     <a class="nav-link {{ request()->is('admin/courses/comments*') ? 'active' : '' }}" href="{{ route('courses.comments.admin') }}">Bình luận khóa học</a>
                                 @endif
                                 <a class="nav-link {{ request()->is('admin/courses/ratings*') ? 'active' : '' }}" href="{{ route('courses.ratings.index') }}">Quản lý đánh giá</a>
@@ -156,7 +162,7 @@
                 @endif
 
                 {{-- Tiếp thị --}}
-                @if(auth()->user()->hasPermission('coupons.view') || auth()->user()->hasPermission('chatbot.view'))
+                @if(auth()->user()?->hasPermission('coupons.view') || auth()->user()?->hasPermission('chatbot.view'))
                     @php $isMarketingGroupOpen = request()->is('admin/coupons*') || request()->is('admin/chatbot-knowledge*'); @endphp
                     <div class="sidebar-group {{ $isMarketingGroupOpen ? 'is-open' : '' }}" data-sidebar-group="marketing">
                         <a class="nav-link collapsed {{ $isMarketingGroupOpen ? 'is-active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMarketing" aria-expanded="false" data-sidebar-toggle>
@@ -194,6 +200,7 @@
                                     Quản lý Huy hiệu
                                 </a>
                                 <a class="nav-link {{ request()->is('admin/teacher-applications*') ? 'active' : '' }}" href="{{ route('teacher-applications.index') }}">Đơn ứng tuyển</a>
+                                <a class="nav-link {{ request()->is('admin/teacher-upgrades*') ? 'active' : '' }}" href="{{ route('teacher-upgrades.index') }}">Nâng cấp gói</a>
                                 <a class="nav-link {{ (request()->is('admin/teacher-packages') || request()->is('admin/teacher-package-features*')) ? 'active' : '' }}" href="{{ route('teacher-packages.index') }}">Gói cước & Tính năng</a>
                                 <a class="nav-link {{ request()->is('admin/teacher-packages/grant*') ? 'active' : '' }}" href="{{ route('teacher-packages.grant') }}">Cấp gói đặc quyền</a>
                                 <a class="nav-link {{ request()->is('admin/teacher-announcements*') ? 'active' : '' }}" href="{{ route('teacher-announcements.index') }}">Thông báo GV</a>
@@ -225,7 +232,7 @@
                 <div class="sb-sidenav-menu-heading">Học viên & Hỗ trợ</div>
                 
                 {{-- Bán hàng --}}
-                @if(auth()->user()->hasPermission('students.view') || auth()->user()->hasPermission('orders.view'))
+                @if(auth()->user()?->hasPermission('students.view') || auth()->user()?->hasPermission('orders.view'))
                     @php $isSalesGroupOpen = request()->is('admin/students*') || request()->is('admin/orders*'); @endphp
                     <div class="sidebar-group {{ $isSalesGroupOpen ? 'is-open' : '' }}" data-sidebar-group="sales">
                         <a class="nav-link collapsed {{ $isSalesGroupOpen ? 'is-active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseSales" aria-expanded="false" data-sidebar-toggle>
@@ -271,16 +278,24 @@
                     </a>
                     <div class="collapse {{ $isSystemGroupOpen ? 'show' : '' }}" id="collapseSystem" data-bs-parent="#sidenavAccordion" data-sidebar-content>
                         <nav class="sb-sidenav-menu-nested nav">
-                            @if(auth()->user()->hasPermission('settings.view'))
-                                <a class="nav-link {{ request()->is('admin/settings*') ? 'active' : '' }}" href="{{ route('settings.index') }}">Cấu hình website</a>
+                            @php
+                                $canViewSettings = auth()->user()?->hasPermission('settings.view') 
+                                    || auth()->user()?->hasPermission('settings.update')
+                                    || auth()->user()?->hasPermission('settings.cleanup')
+                                    || auth()->user()?->hasPermission('settings.maintenance')
+                                    || auth()->user()?->hasPermission('settings.health')
+                                    || auth()->user()?->hasPermission('settings.logs');
+                            @endphp
+                            @if($canViewSettings)
+                                <a class="nav-link {{ request()->is('admin/settings*') ? 'active' : '' }}" href="{{ route('settings.index') }}">Cấu hình & Sức khỏe web</a>
                             @endif
-                            @if(auth()->user()->hasPermission('users.view'))
+                            @if(auth()->user()?->hasPermission('users.view'))
                                 <a class="nav-link {{ request()->is('admin/user*') ? 'active' : '' }}" href="{{ route('user.index') }}">Quản lý người dùng</a>
                             @endif
-                            @if(auth()->user()->hasPermission('groups.view') || auth()->user()->hasPermission('permissions.view'))
+                            @if(auth()->user()?->hasPermission('groups.view') || auth()->user()?->hasPermission('permissions.view'))
                                 <a class="nav-link {{ request()->is('admin/groups*') ? 'active' : '' }}" href="{{ route('groups.index') }}">Phân quyền</a>
                             @endif
-                            @if(auth()->user()->hasPermission('logs.view'))
+                            @if(auth()->user()?->hasPermission('logs.view'))
                                 <a class="nav-link {{ request()->is('admin/activelogs*') ? 'active' : '' }}" href="{{ route('activelogs.index') }}">Nhật ký hoạt động</a>
                             @endif
                         </nav>

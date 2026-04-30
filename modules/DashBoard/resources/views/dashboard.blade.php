@@ -19,7 +19,7 @@
             <div class="card-body p-4 p-xl-5">
                 <div class="row align-items-center g-4">
                     <div class="col-12 col-xl-8">
-                        <span class="dashboard-kicker">Command Center</span>
+                        <span class="dashboard-kicker">Trung tâm điều hành</span>
                         <h3 class="dashboard-hero__title mb-3">Tổng quan vận hành trong {{ $activeRangeLabel }}</h3>
                         <p class="dashboard-hero__desc mb-4">
                             Theo dõi dòng tiền, tỷ lệ chuyển đổi, tăng trưởng học viên và các yêu cầu cần xử lý của hệ thống.
@@ -146,6 +146,15 @@
                                 <span class="badge bg-danger rounded-pill">{{ $actionItems['pending_contacts'] }}</span> 
                                 Liên hệ mới
                             </a>
+                            @endif
+
+                            @if(!empty($actionItems['health_alerts']))
+                                @foreach($actionItems['health_alerts'] as $alert)
+                                <a href="{{ $alert['link'] }}" class="action-item-link text-danger text-decoration-none d-flex align-items-center gap-2 fw-bold pulse-alert" title="{{ $alert['desc'] }}">
+                                    <span class="badge bg-danger"><i class="{{ $alert['icon'] }}"></i></span> 
+                                    {{ $alert['label'] }}
+                                </a>
+                                @endforeach
                             @endif
 
                             @if($actionItems['pending_reports'] > 0)
@@ -626,6 +635,15 @@
         
         html[data-theme="dark"] .tab-pane a.text-dark {
             color: #f8fafc !important;
+        }
+
+        @keyframes pulse-red {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.98); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .pulse-alert {
+            animation: pulse-red 2s infinite ease-in-out;
         }
     </style>
 @endsection

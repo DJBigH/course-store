@@ -165,6 +165,9 @@ return [
             'copy' => 'コピー',
             'copied' => 'コピーしました！',
         ],
+        'all_payments_maintenance_title' => 'すべての支払い方法がメンテナンス中です',
+        'all_payments_maintenance_desc' => '現在、メンテナンスのため有料アップグレード取引を一時停止しています。無料プラン（0円）へのアップグレードのみ可能です。',
+        'all_payments_maintenance_block' => '支払いシステムのメンテナンス中は、有料プランのアップグレードは利用できません。',
     ],
     'features' => [
         'labels' => [

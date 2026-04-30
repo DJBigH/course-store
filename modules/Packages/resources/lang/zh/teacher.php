@@ -167,6 +167,9 @@ return [
             'copy' => '复制',
             'copied' => '已复制！',
         ],
+        'all_payments_maintenance_title' => '所有支付方式正在维护中',
+        'all_payments_maintenance_desc' => '系统目前因维护暂停付费升级交易。您只能升级到免费计划（0元）。',
+        'all_payments_maintenance_block' => '在支付系统维护期间，付费计划升级不可用。',
     ],
     'features' => [
         'labels' => [

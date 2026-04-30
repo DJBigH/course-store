@@ -83,7 +83,15 @@ class TeacherBadgeController extends Controller
             ],
         ];
 
-        $this->badgeRepository->create($data);
+        $badge = $this->badgeRepository->create($data);
+
+        activity_log(
+            action: 'create',
+            subject: $badge,
+            properties: ['data' => $data],
+            logName: 'admin_teacher_badge_management',
+            description: 'Tạo mới huy hiệu giảng viên: ' . $request->name_vi
+        );
 
         return redirect()->route('teacher.badges.index')->with('msg', 'Thêm huy hiệu thành công');
     }
@@ -126,14 +134,40 @@ class TeacherBadgeController extends Controller
             ],
         ];
 
+        $badge = $this->badgeRepository->find($id);
+        $old = $badge ? $badge->toArray() : [];
+        
         $this->badgeRepository->update($id, $data);
+        
+        $badge->refresh();
+
+        activity_log(
+            action: 'update',
+            subject: $badge,
+            properties: [
+                'old' => $old,
+                'new' => $badge->toArray(),
+            ],
+            logName: 'admin_teacher_badge_management',
+            description: 'Cập nhật huy hiệu giảng viên: ' . $badge->name_locale
+        );
 
         return back()->with('msg', 'Cập nhật huy hiệu thành công');
     }
 
     public function delete($id)
     {
+        $badge = $this->badgeRepository->find($id);
+        $snapshot = $badge ? $badge->toArray() : [];
         $this->badgeRepository->delete($id);
+
+        activity_log(
+            action: 'delete',
+            subject: $badge,
+            properties: ['data' => $snapshot],
+            logName: 'admin_teacher_badge_management',
+            description: 'Xóa huy hiệu giảng viên: ' . ($snapshot['name']['vi'] ?? 'N/A')
+        );
 
         return back()->with('msg', 'Xóa huy hiệu thành công');
     }
@@ -167,7 +201,16 @@ class TeacherBadgeController extends Controller
     {
         $badge = $this->badgeRepository->getTrashBadges()->find($id);
         if ($badge) {
+            $snapshot = $badge->toArray();
             $badge->restore();
+
+            activity_log(
+                action: 'restore',
+                subject: $badge,
+                properties: ['data' => $snapshot],
+                logName: 'admin_teacher_badge_management',
+                description: 'Khôi phục huy hiệu giảng viên: ' . $badge->name_locale
+            );
         }
 
         return back()->with('msg', 'Khôi phục huy hiệu thành công');
@@ -177,7 +220,16 @@ class TeacherBadgeController extends Controller
     {
         $badge = $this->badgeRepository->getTrashBadges()->find($id);
         if ($badge) {
+            $snapshot = $badge->toArray();
             $badge->forceDelete();
+
+            activity_log(
+                action: 'force_delete',
+                subject: null,
+                properties: ['data' => $snapshot],
+                logName: 'admin_teacher_badge_management',
+                description: 'Xóa vĩnh viễn huy hiệu giảng viên: ' . ($snapshot['name']['vi'] ?? 'N/A')
+            );
         }
 
         return back()->with('msg', 'Đã xóa vĩnh viễn huy hiệu');

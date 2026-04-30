@@ -12,6 +12,15 @@ Route::prefix('admin')->group(function () {
       Route::post('/firewall', 'SettingController@storeFirewall')->middleware('permission:settings.update')->name('firewall.store');
       Route::post('/firewall/delete/{id}', 'SettingController@deleteFirewall')->middleware('permission:settings.update')->name('firewall.delete');
       Route::post('/test-telegram', 'SettingController@testTelegram')->middleware('permission:settings.update')->name('test-telegram');
+      Route::post('/cleanup', 'SettingController@cleanup')->middleware('permission:settings.cleanup')->name('cleanup');
+      Route::post('/clear-cache', 'SettingController@clearCache')->middleware('permission:settings.maintenance')->name('clear-cache');
+      Route::get('/health', 'SettingController@healthCheck')->middleware('permission:settings.health')->name('health');
+      
+      Route::prefix('media')->name('media.')->group(function() {
+          Route::get('/', 'MediaController@index')->middleware('permission:media.manage')->name('index');
+          Route::post('/delete', 'MediaController@delete')->middleware('permission:media.manage')->name('delete');
+      });
+
       Route::get('/logs', 'SettingController@logs')->middleware('permission:settings.logs')->name('logs');
    });
 });

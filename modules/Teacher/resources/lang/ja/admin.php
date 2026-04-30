@@ -8,6 +8,8 @@ return [
         'edit' => '講師情報更新',
         'logs' => '活動ログ: :name',
         'applications' => '講師申請管理',
+        'package_upgrades' => 'パッケージアップグレード管理',
+        'upgrade_detail' => 'アップグレード要求の詳細',
         'application_detail' => '講師申請詳細',
         'earnings' => '講師収益精算',
         'payouts' => '講師出金処理',

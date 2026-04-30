@@ -8,12 +8,12 @@ use Modules\Finances\src\Http\Controllers\Teacher\PayoutController;
 
 Route::prefix('admin')->group(function () {
     Route::prefix('teacher-finance')->name('teacher-finance.')->group(function () {
-        Route::get('/earnings', [AdminFinanceController::class, 'earnings'])->middleware('permission:teachers.view')->name('earnings');
-        Route::get('/earnings/export/{format}', [AdminFinanceController::class, 'exportEarnings'])->middleware('permission:teachers.view')->name('earnings.export');
-        Route::get('/payouts', [AdminFinanceController::class, 'payouts'])->middleware('permission:teachers.view')->name('payouts');
-        Route::get('/payouts/export/{format}', [AdminFinanceController::class, 'exportPayouts'])->middleware('permission:teachers.view')->name('payouts.export');
-        Route::post('/payouts/{id}', [AdminFinanceController::class, 'updatePayout'])->middleware('permission:teachers.edit')->name('payouts.update');
-        Route::post('/payout-account-change-requests/{id}', [AdminFinanceController::class, 'updatePayoutAccountChangeRequest'])->middleware('permission:teachers.edit')->name('payout-account-change-requests.update');
+        Route::get('/earnings', [AdminFinanceController::class, 'earnings'])->middleware('permission:finances.view')->name('earnings');
+        Route::get('/earnings/export/{format}', [AdminFinanceController::class, 'exportEarnings'])->middleware('permission:finances.export')->name('earnings.export');
+        Route::get('/payouts', [AdminFinanceController::class, 'payouts'])->middleware('permission:finances.view')->name('payouts');
+        Route::get('/payouts/export/{format}', [AdminFinanceController::class, 'exportPayouts'])->middleware('permission:finances.export')->name('payouts.export');
+        Route::post('/payouts/{id}', [AdminFinanceController::class, 'updatePayout'])->middleware('permission:finances.manage')->name('payouts.update');
+        Route::post('/payout-account-change-requests/{id}', [AdminFinanceController::class, 'updatePayoutAccountChangeRequest'])->middleware('permission:finances.manage')->name('payout-account-change-requests.update');
     });
 });
 

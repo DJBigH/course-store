@@ -165,6 +165,9 @@ return [
             'copy' => '복사',
             'copied' => '복사됨!',
         ],
+        'all_payments_maintenance_title' => '모든 결제 수단 점검 중',
+        'all_payments_maintenance_desc' => '현재 시스템 점검으로 인해 유료 업그레이드 거래가 일시 중지되었습니다. 무료 요금제(0원) 업그레이드만 가능합니다.',
+        'all_payments_maintenance_block' => '결제 시스템 점검 중에는 유료 요금제 업그레이드를 이용할 수 없습니다.',
     ],
     'features' => [
         'labels' => [

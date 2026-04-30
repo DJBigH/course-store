@@ -295,6 +295,16 @@ class CategoriesController extends Controller
         if ($action === 'restore') {
             foreach ($categories as $category) {
                 $this->restoreCategory($category);
+                activity_log(
+                    action: 'restore',
+                    subject: $category->fresh(),
+                    properties: [
+                        'restored_from_trash' => true,
+                        'category_id' => $category->id,
+                    ],
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục chuyên mục từ thùng rác'
+                );
             }
 
             return back()->with('msg', 'Đã khôi phục ' . $categories->count() . ' chuyên mục.');
@@ -302,7 +312,18 @@ class CategoriesController extends Controller
 
         if ($action === 'force_delete') {
             foreach ($categories as $category) {
+                $snapshot = method_exists($category, 'toArray') ? $category->toArray() : (array) $category;
                 $this->forceDeleteCategory($category);
+                activity_log(
+                    action: 'force_delete',
+                    subject: $category,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn chuyên mục khỏi thùng rác'
+                );
             }
 
             return back()->with('msg', 'Đã xóa vĩnh viễn ' . $categories->count() . ' chuyên mục.');
@@ -429,6 +450,17 @@ class CategoriesController extends Controller
 
         $this->restoreCategory($category);
 
+        activity_log(
+            action: 'restore',
+            subject: $category->fresh(),
+            properties: [
+                'restored_from_trash' => true,
+                'category_id' => $category->id,
+            ],
+            logName: 'Khôi phục',
+            description: 'Khôi phục chuyên mục thành công.'
+        );
+
         return back()->with('msg', 'Khôi phục chuyên mục thành công.');
     }
 
@@ -440,7 +472,19 @@ class CategoriesController extends Controller
             abort(404);
         }
 
+        $snapshot = method_exists($category, 'toArray') ? $category->toArray() : (array) $category;
         $this->forceDeleteCategory($category);
+
+        activity_log(
+            action: 'force_delete',
+            subject: $category,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn chuyên mục khỏi thùng rác'
+        );
 
         return back()->with('msg', 'Đã xóa vĩnh viễn chuyên mục.');
     }

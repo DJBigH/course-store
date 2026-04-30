@@ -27,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(SystemMailManager $systemMailManager): void
     {
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Queue\Events\Looping::class, function () {
+            \Illuminate\Support\Facades\Cache::put('queue_worker_heartbeat', now(), 3600);
+        });
+
         Storage::extend('google', function($app, $config) {
             $client = new GoogleClient();
             $client->setClientId($config['clientId']);
@@ -79,7 +83,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer('layouts.client', function ($view) {
-            $courseCategories = Category::withCount('courses')->get();
+            $courseCategories = \Illuminate\Support\Facades\Cache::remember('course_categories_with_count', 3600, function() {
+                return Category::withCount('courses')->get();
+            });
             $announcementKeys = ['global_notice_enabled', 'popup_notice_enabled', 'popup_notice_snooze_minutes'];
             $localizedFields = [
                 'global_notice_title',
@@ -99,9 +105,11 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            $announcementSettings = Setting::query()
-                ->whereIn('key', $announcementKeys)
-                ->get(['key', 'value', 'updated_at']);
+            $announcementSettings = \Illuminate\Support\Facades\Cache::remember('system_settings_announcements', 3600, function () use ($announcementKeys) {
+                return \Modules\Settings\src\Models\Setting::query()
+                    ->whereIn('key', $announcementKeys)
+                    ->get(['key', 'value', 'updated_at']);
+            });
 
             $popupAnnouncementVersion = optional(
                 $announcementSettings

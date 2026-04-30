@@ -293,6 +293,17 @@ class UserController extends Controller
         if ($action === 'restore') {
             foreach ($users as $user) {
                 $user->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $user->fresh(),
+                    properties: [
+                        'restored_from_trash' => true,
+                        'user_id' => $user->id,
+                    ],
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục tài khoản từ thùng rác'
+                );
             }
 
             return back()->with('msg', 'Đã khôi phục ' . $users->count() . ' người dùng.');
@@ -301,7 +312,19 @@ class UserController extends Controller
         if ($action === 'force_delete') {
             foreach ($users as $user) {
                 $this->logoutUserSessions($user->id);
+                $snapshot = method_exists($user, 'toArray') ? $user->toArray() : (array) $user;
                 $user->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $user,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn tài khoản khỏi thùng rác'
+                );
             }
 
             return back()->with('msg', 'Đã xóa vĩnh viễn ' . $users->count() . ' người dùng.');
@@ -592,6 +615,17 @@ class UserController extends Controller
 
         $user->restore();
 
+        activity_log(
+            action: 'restore',
+            subject: $user->fresh(),
+            properties: [
+                'restored_from_trash' => true,
+                'user_id' => $user->id,
+            ],
+            logName: 'Khôi phục',
+            description: 'Khôi phục người dùng thành công.'
+        );
+
         return back()->with('msg', 'Khôi phục người dùng thành công.');
     }
 
@@ -604,7 +638,19 @@ class UserController extends Controller
         }
 
         $this->logoutUserSessions($user->id);
+        $snapshot = method_exists($user, 'toArray') ? $user->toArray() : (array) $user;
         $user->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $user,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn người dùng khỏi thùng rác'
+        );
 
         return back()->with('msg', 'Đã xóa vĩnh viễn người dùng.');
     }

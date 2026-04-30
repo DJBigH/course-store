@@ -51,18 +51,14 @@ class TeacherRequest extends FormRequest
     }
 
 
-    public function messages()
-    {
-        return [
-            'required' => __('teacher::validation.required'),
-            'max' => __('teacher::validation.max'),
-            'min' => __('teacher::validation.min'),
-            'integer' => __('teacher::validation.integer'),
-        ];
-    }
-
     public function attributes()
     {
-        return __('teacher::validation.attributes');
+        return [
+            'name' => 'Tên giảng viên',
+            'slug' => 'Đường dẫn (Slug)',
+            'description' => 'Mô tả',
+            'exp' => 'Kinh nghiệm',
+            'image' => 'Hình ảnh',
+        ];
     }
 }

@@ -43,6 +43,7 @@
             </button>
         </li>
 
+        @if($admin)
         <li class="nav-item dropdown me-3">
             <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button"
                 data-bs-toggle="dropdown" aria-expanded="false">
@@ -140,5 +141,10 @@
                 </li>
             </ul>
         </li>
+        @else
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('login') }}">Đăng nhập</a>
+        </li>
+        @endif
     </ul>
 </nav>

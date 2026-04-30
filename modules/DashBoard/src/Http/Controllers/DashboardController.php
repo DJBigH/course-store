@@ -15,9 +15,21 @@ use Modules\Students\src\Models\Student;
 use Modules\Finances\src\Models\PayoutRequest;
 use Modules\Teacher\src\Models\TeacherApplication;
 use Modules\Teacher\src\Models\Teacher;
+use Modules\Finances\src\Repositories\FinancesRepositoryInterface;
 
 class DashboardController extends Controller
 {
+    protected $financesRepo;
+    protected $systemHealthService;
+
+    public function __construct(
+        FinancesRepositoryInterface $financesRepo,
+        \Modules\Settings\src\Support\SystemHealthService $systemHealthService
+    ) {
+        $this->financesRepo = $financesRepo;
+        $this->systemHealthService = $systemHealthService;
+    }
+
     public function index(Request $request)
     {
         $pageTitle = 'Tổng quan';
@@ -64,26 +76,9 @@ class DashboardController extends Controller
 
         $chartTitle = "Doanh thu {$rangeLabel}";
 
-        // Orders Query Helper
-        $buildOrderQuery = function($from, $to) use ($paidStatusId, $dateColumn, $currency) {
-            $q = Order::query()
-                ->with(['detail.courses.teacher'])
-                ->where('status_id', $paidStatusId)
-                ->whereNotNull($dateColumn)
-                ->whereBetween($dateColumn, [$from, $to]);
-                
-            if ($currency !== 'ALL') {
-                $q->where('currency', $currency);
-            }
-            return $q;
-        };
-
-        // Revenue Calculation
-        $orders = $buildOrderQuery($from, $to)->get();
-        $summary = $this->calculateRevenueSummary($orders, $currency);
-
-        $prevOrders = $buildOrderQuery($prevFrom, $prevTo)->get();
-        $prevSummary = $this->calculateRevenueSummary($prevOrders, $currency);
+        // Revenue Calculation - Optimized with Repository (SQL Aggregation)
+        $summary = $this->financesRepo->getEarningsSummary(0, null, $from->toDateTimeString(), $to->toDateTimeString(), $currency);
+        $prevSummary = $this->financesRepo->getEarningsSummary(0, null, $prevFrom->toDateTimeString(), $prevTo->toDateTimeString(), $currency);
 
         $revenue = $summary['gross_amount'];
         $prevRevenue = $prevSummary['gross_amount'];
@@ -101,7 +96,12 @@ class DashboardController extends Controller
         if ($currency !== 'ALL') $ordersCreatedQuery->where('currency', $currency);
         $totalOrdersCreated = $ordersCreatedQuery->count();
 
-        $paidOrdersCompleted = $orders->count();
+        // Optimized count for paid orders
+        $paidOrdersCompleted = Order::query()
+            ->where('status_id', $paidStatusId)
+            ->whereBetween($dateColumn, [$from, $to])
+            ->when($currency !== 'ALL', fn($q) => $q->where('currency', $currency))
+            ->count();
 
         $conversionRateByCreatedAt = $totalOrdersCreated > 0
             ? round(($paidOrdersCompleted / $totalOrdersCreated) * 100, 1)
@@ -163,6 +163,29 @@ class DashboardController extends Controller
         $pendingContacts = \Illuminate\Support\Facades\Schema::hasTable('contacts') ? DB::table('contacts')->where('status', 0)->count() : 0;
         $pendingReports = \Illuminate\Support\Facades\Schema::hasTable('reports') ? DB::table('reports')->where('status', 0)->count() : 0;
 
+        $healthSnapshot = $this->systemHealthService->getSnapshot();
+        $healthAlerts = [];
+        
+        if (($healthSnapshot['disk']['status'] ?? '') === 'critical') {
+            $healthAlerts[] = [
+                'type' => 'critical',
+                'label' => 'Ổ đĩa sắp đầy',
+                'desc' => "Dung lượng còn lại rất thấp ({$healthSnapshot['disk']['percent']}%).",
+                'icon' => 'fa-solid fa-hard-drive',
+                'link' => route('settings.index')
+            ];
+        }
+
+        if (($healthSnapshot['queue']['status'] ?? '') === 'critical') {
+            $healthAlerts[] = [
+                'type' => 'critical',
+                'label' => 'Hàng đợi (Queue) lỗi',
+                'desc' => 'Hệ thống xử lý nền đang bị gián đoạn.',
+                'icon' => 'fa-solid fa-bolt-lightning',
+                'link' => route('settings.index')
+            ];
+        }
+
         $actionItems = [
             'pending_payouts_count' => $pendingPayoutsCount,
             'pending_payouts_amount' => $pendingPayoutsAmount,
@@ -170,6 +193,7 @@ class DashboardController extends Controller
             'pending_courses' => $pendingCourses,
             'pending_contacts' => $pendingContacts,
             'pending_reports' => $pendingReports,
+            'health_alerts' => $healthAlerts,
         ];
 
         $kpi = [
@@ -193,23 +217,20 @@ class DashboardController extends Controller
             'lessons_count' => $lessonsCount,
         ];
 
-        // Revenue line chart data
+        // Revenue line chart data - Optimized with one query
         $period = CarbonPeriod::create($from->toDateString(), $to->toDateString());
         $revenueLabels = collect($period)->map(fn ($dt) => $dt->format('d/m'))->values();
 
-        $groupedOrders = $orders->groupBy(function($order) use ($dateColumn) {
-            return Carbon::parse($order->{$dateColumn})->toDateString();
-        });
+        $dailySummaries = $this->financesRepo->getDailyEarningsSummary($from->toDateTimeString(), $to->toDateTimeString(), $currency);
 
         $grossData = [];
         $netData = [];
         
         foreach ($period as $dt) {
             $dateString = $dt->toDateString();
-            if ($groupedOrders->has($dateString)) {
-                $daySummary = $this->calculateRevenueSummary($groupedOrders->get($dateString), $currency);
-                $grossData[] = (int) $daySummary['gross_amount'];
-                $netData[] = (int) $daySummary['platform_revenue'];
+            if (isset($dailySummaries[$dateString])) {
+                $grossData[] = (int) $dailySummaries[$dateString]['gross_amount'];
+                $netData[] = (int) $dailySummaries[$dateString]['platform_revenue'];
             } else {
                 $grossData[] = 0;
                 $netData[] = 0;
@@ -247,7 +268,6 @@ class DashboardController extends Controller
             ->join('orders as o', 'o.id', '=', 'od.order_id')
             ->join('courses as c', 'c.id', '=', 'od.course_id')
             ->where('o.status_id', $paidStatusId)
-            ->whereNotNull("o.$dateColumn")
             ->whereBetween("o.$dateColumn", [$from, $to]);
             
         if ($currency !== 'ALL') {
@@ -266,37 +286,17 @@ class DashboardController extends Controller
             'data' => $top->pluck('total_buy')->map(fn ($v) => (int) $v)->values(),
         ];
 
-        // Top Earning Teachers
-        $teacherEarnings = [];
-        foreach ($orders as $order) {
-            $exRate = $currency === 'ALL' ? (float) ($order->exchange_rate ?: 1) : 1;
-            $orderTotal = (float) ($order->total ?? 0);
-            $orderDiscount = (float) ($order->discount ?? 0);
-
-            foreach ($order->detail as $detail) {
-                if (!$detail->courses || !$detail->courses->teacher_id) continue;
-                $teacherId = $detail->courses->teacher_id;
-                $teacherName = $detail->courses->teacher->name ?? 'Giảng viên #' . $teacherId;
-                $teacherSlug = $detail->courses->teacher->slug ?? '';
-                
-                $grossAmount = ((float) ($detail->price ?? 0)) * $exRate;
-                $allocatedDiscount = 0.0;
-                if ($orderTotal > 0 && $orderDiscount > 0 && $grossAmount > 0) {
-                    $ratio = ((float) ($detail->price ?? 0)) / $orderTotal;
-                    $allocatedDiscount = min($grossAmount, ($orderDiscount * $exRate) * $ratio);
-                }
-                $netRevenue = max($grossAmount - $allocatedDiscount, 0);
-                $commissionRate = (float) ($detail->courses->teacher->commission_rate ?? 0);
-                $teacherRevenue = $netRevenue * max(min($commissionRate, 100), 0) / 100;
-
-                if (!isset($teacherEarnings[$teacherId])) {
-                    $teacherEarnings[$teacherId] = ['name' => $teacherName, 'slug' => $teacherSlug, 'revenue' => 0];
-                }
-                $teacherEarnings[$teacherId]['revenue'] += $teacherRevenue;
-            }
-        }
-        usort($teacherEarnings, fn($a, $b) => $b['revenue'] <=> $a['revenue']);
-        $topTeachers = array_slice($teacherEarnings, 0, 4);
+        // Top Earning Teachers - Optimized with Repository
+        $teacherSummaries = $this->financesRepo->getTeacherEarningsSummaries($from->toDateTimeString(), $to->toDateTimeString(), $currency);
+        usort($teacherSummaries, fn($a, $b) => $b['teacher_revenue'] <=> $a['teacher_revenue']);
+        
+        $topTeachers = collect(array_slice($teacherSummaries, 0, 4))->map(function($t) {
+            return [
+                'name' => $t['teacher_name'],
+                'slug' => $t['teacher_slug'],
+                'revenue' => $t['teacher_revenue']
+            ];
+        })->toArray();
 
         // Recent orders
         $recentOrdersQuery = Order::query()
@@ -310,11 +310,11 @@ class DashboardController extends Controller
             ->map(function ($od) {
                 return [
                     'code' => $od->code,
-                    'customer' => $od->customer_name_display ?: ('Student #' . $od->student_id),
+                    'customer' => $od->customer_name_display ?: ('Học viên #' . $od->student_id),
                     'total' => (int) $od->total,
                     'currency' => $od->currency,
                     'status_id' => (int) $od->status_id,
-                    'status' => optional($od->status)->name ?? ('Status ' . $od->status_id),
+                    'status' => optional($od->status)->name ?? ('Trạng thái ' . $od->status_id),
                     'created_at' => $od->created_at,
                 ];
             });
@@ -338,46 +338,5 @@ class DashboardController extends Controller
             'from',
             'to'
         ));
-    }
-
-    private function calculateRevenueSummary($orders, $currency)
-    {
-        $summary = [
-            'gross_amount' => 0.0,
-            'allocated_discount' => 0.0,
-            'net_revenue' => 0.0,
-            'teacher_revenue' => 0.0,
-            'platform_revenue' => 0.0,
-        ];
-
-        foreach ($orders as $order) {
-            $exRate = $currency === 'ALL' ? (float) ($order->exchange_rate ?: 1) : 1;
-            $orderTotal = (float) ($order->total ?? 0);
-            $orderDiscount = (float) ($order->discount ?? 0);
-
-            foreach ($order->detail as $detail) {
-                $grossAmount = ((float) ($detail->price ?? 0)) * $exRate;
-                
-                $allocatedDiscount = 0.0;
-                if ($orderTotal > 0 && $orderDiscount > 0 && $grossAmount > 0) {
-                    $ratio = ((float) ($detail->price ?? 0)) / $orderTotal;
-                    $allocatedDiscount = min($grossAmount, ($orderDiscount * $exRate) * $ratio);
-                }
-
-                $netRevenue = max($grossAmount - $allocatedDiscount, 0);
-                
-                $commissionRate = (float) ($detail->courses?->teacher?->commission_rate ?? 0);
-                $teacherRevenue = $netRevenue * max(min($commissionRate, 100), 0) / 100;
-                $platformRevenue = max($netRevenue - $teacherRevenue, 0);
-
-                $summary['gross_amount'] += $grossAmount;
-                $summary['allocated_discount'] += $allocatedDiscount;
-                $summary['net_revenue'] += $netRevenue;
-                $summary['teacher_revenue'] += $teacherRevenue;
-                $summary['platform_revenue'] += $platformRevenue;
-            }
-        }
-
-        return $summary;
     }
 }

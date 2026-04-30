@@ -113,6 +113,22 @@ class PermissionSeeder extends Seeder
             ['slug' => 'settings.view', 'name' => 'Xem cấu hình', 'module' => 'settings'],
             ['slug' => 'settings.update', 'name' => 'Cập nhật cấu hình', 'module' => 'settings'],
             ['slug' => 'settings.logs', 'name' => 'Xem lịch sử cấu hình', 'module' => 'settings'],
+            ['slug' => 'settings.cleanup', 'name' => 'Dọn dẹp hệ thống', 'module' => 'settings'],
+            ['slug' => 'settings.maintenance', 'name' => 'Bảo trì hệ thống', 'module' => 'settings'],
+            ['slug' => 'settings.health', 'name' => 'Sức khỏe web', 'module' => 'settings'],
+
+            ['slug' => 'ratings.view', 'name' => 'Xem đánh giá', 'module' => 'ratings'],
+            ['slug' => 'ratings.moderate', 'name' => 'Kiểm duyệt đánh giá', 'module' => 'ratings'],
+            ['slug' => 'ratings.delete', 'name' => 'Xóa đánh giá', 'module' => 'ratings'],
+
+            ['slug' => 'finances.view', 'name' => 'Xem tài chính', 'module' => 'finances'],
+            ['slug' => 'finances.manage', 'name' => 'Quản lý tài chính', 'module' => 'finances'],
+            ['slug' => 'finances.export', 'name' => 'Xuất báo cáo', 'module' => 'finances'],
+
+            ['slug' => 'badges.view', 'name' => 'Xem danh sách huy hiệu', 'module' => 'badges'],
+            ['slug' => 'badges.create', 'name' => 'Tạo huy hiệu', 'module' => 'badges'],
+            ['slug' => 'badges.edit', 'name' => 'Sửa huy hiệu', 'module' => 'badges'],
+            ['slug' => 'badges.delete', 'name' => 'Xóa huy hiệu', 'module' => 'badges'],
 
             ['slug' => 'chatbot.view', 'name' => 'Xem tri thức chatbot', 'module' => 'chatbot'],
             ['slug' => 'chatbot.create', 'name' => 'Thêm tri thức chatbot', 'module' => 'chatbot'],
@@ -135,9 +151,15 @@ class PermissionSeeder extends Seeder
 
             ['slug' => 'students.grant_course', 'name' => 'Cấp khóa học thủ công', 'module' => 'students'],
             ['slug' => 'students.lock', 'name' => 'Khóa tài khoản học viên', 'module' => 'students'],
+            ['slug' => 'students.impersonate', 'name' => 'Đăng nhập với tư cách học viên', 'module' => 'students'],
+
+            ['slug' => 'media.manage', 'name' => 'Toàn quyền Media', 'module' => 'media'],
+            ['slug' => 'media.delete', 'name' => 'Xóa tệp tin', 'module' => 'media'],
 
             ['slug' => 'reports.view', 'name' => 'Xem báo cáo vi phạm', 'module' => 'reports'],
             ['slug' => 'reports.resolve', 'name' => 'Xử lý báo cáo vi phạm', 'module' => 'reports'],
+
+            ['slug' => 'teachers.cancel_manage', 'name' => 'Quản lý yêu cầu hủy hợp tác', 'module' => 'teachers'],
 
             ['slug' => 'courses.approve', 'name' => 'Duyệt xuất bản khóa học', 'module' => 'courses'],
 

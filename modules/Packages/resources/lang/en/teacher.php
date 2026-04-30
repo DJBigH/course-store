@@ -157,6 +157,9 @@ return [
             'copy' => 'Copy',
             'copied' => 'Copied!',
         ],
+        'all_payments_maintenance_title' => 'All Payment Methods Under Maintenance',
+        'all_payments_maintenance_desc' => 'The system is currently pausing paid upgrade transactions for maintenance. You can only upgrade to Free plans (0đ).',
+        'all_payments_maintenance_block' => 'Paid plan upgrades are unavailable during payment system maintenance.',
     ],
     'features' => [
         'labels' => [

@@ -54,7 +54,17 @@ class PermissionController extends Controller
             'description' => ['nullable', 'string', 'max:255'],
         ]);
 
-        Permission::query()->create($data);
+        $permission = Permission::query()->create($data);
+
+        activity_log(
+            action: 'create',
+            subject: $permission,
+            properties: [
+                'data' => $data,
+            ],
+            logName: 'admin_user_management',
+            description: "Tạo mới quyền: {$permission->name}"
+        );
 
         return redirect()->route('permissions.index')->with('msg', 'Đã tạo quyền mới thành công.');
     }
@@ -78,7 +88,20 @@ class PermissionController extends Controller
             'description' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $old = $permission->toArray();
         $permission->update($data);
+        $new = $permission->fresh()->toArray();
+
+        activity_log(
+            action: 'update',
+            subject: $permission,
+            properties: [
+                'old' => $old,
+                'new' => $new,
+            ],
+            logName: 'admin_user_management',
+            description: "Cập nhật quyền: {$permission->name}"
+        );
 
         return back()->with('msg', 'Đã cập nhật quyền thành công.');
     }
@@ -91,7 +114,18 @@ class PermissionController extends Controller
             return back()->with('msg_danger', 'Không thể xóa quyền đang được gán cho nhóm quyền.');
         }
 
+        $snapshot = $permission->toArray();
         $permission->delete();
+
+        activity_log(
+            action: 'delete',
+            subject: $permission,
+            properties: [
+                'data' => $snapshot,
+            ],
+            logName: 'admin_user_management',
+            description: "Xóa tạm quyền: {$permission->name}"
+        );
 
         return redirect()->route('permissions.index')->with('msg', 'Đã xóa quyền thành công.');
     }
@@ -99,6 +133,16 @@ class PermissionController extends Controller
     {
         $permission = Permission::query()->onlyTrashed()->findOrFail($permission);
         $permission->restore();
+
+        activity_log(
+            action: 'restore',
+            subject: $permission->fresh(),
+            properties: [
+                'restored_from_trash' => true,
+            ],
+            logName: 'admin_user_management',
+            description: "Khôi phục quyền từ thùng rác: {$permission->name}"
+        );
 
         return redirect()->route('permissions.trash')->with('msg', 'Đã khôi phục quyền thành công.');
     }
@@ -111,8 +155,20 @@ class PermissionController extends Controller
             return back()->with('msg_danger', 'Không thể xóa vĩnh viễn quyền đang được gán cho nhóm quyền.');
         }
 
+        $snapshot = $permission->toArray();
         $permission->groups()->detach();
         $permission->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $permission,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'admin_user_management',
+            description: "Xóa vĩnh viễn quyền: " . ($snapshot['name'] ?? 'N/A')
+        );
 
         return redirect()->route('permissions.trash')->with('msg', 'Đã xóa vĩnh viễn quyền thành công.');
     }

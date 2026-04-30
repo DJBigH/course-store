@@ -2,37 +2,45 @@
 
 namespace App\Notifications;
 
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
 
-class TeacherResetPasswordQueued extends ResetPassword implements ShouldQueue
+class TeacherResetPasswordQueued extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(string $token, protected string $locale)
+    public $token;
+
+    /**
+     * Create a new notification instance.
+     */
+    public function __construct($token)
     {
-        parent::__construct($token);
-        $this->locale($locale);
+        $this->token = $token;
     }
 
+    /**
+     * Get the notification's delivery channels.
+     */
+    public function via($notifiable)
+    {
+        return ['mail'];
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
     public function toMail($notifiable)
     {
-        app()->setLocale($this->locale);
+        $url = URL::route('teacher.password.reset', [
+            'locale' => $this->locale ?? app()->getLocale(),
+            'token' => $this->token,
+            'email' => $notifiable->getEmailForPasswordReset(),
+        ]);
 
-        return $this->buildMailMessage(
-            URL::route('teacher.password.reset', [
-                'locale' => $this->locale,
-                'token' => $this->token,
-                'email' => $notifiable->getEmailForPasswordReset(),
-            ])
-        );
-    }
-
-    protected function buildMailMessage($url)
-    {
         return (new MailMessage)
             ->subject(__('teacher::auth.email.reset_password.subject'))
             ->greeting(__('teacher::auth.email.reset_password.greeting'))

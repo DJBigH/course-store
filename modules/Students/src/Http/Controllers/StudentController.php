@@ -28,14 +28,19 @@ class StudentController extends Controller
     {
         $pageTitle = 'Quản lý học viên';
 
-        return view('students::lists', compact('pageTitle'));
+        $breadcrumbs = [['label' => 'Quản lý học viên']];
+        return view('students::lists', compact('pageTitle', 'breadcrumbs'));
     }
 
     public function trash()
     {
         $pageTitle = 'Thùng rác học viên';
 
-        return view('students::trash', compact('pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Thùng rác']
+        ];
+        return view('students::trash', compact('pageTitle', 'breadcrumbs'));
     }
 
     public function data()
@@ -263,7 +268,11 @@ class StudentController extends Controller
     {
         $pageTitle = 'Thêm mới học viên';
 
-        return view('students::create', compact('pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Thêm mới']
+        ];
+        return view('students::create', compact('pageTitle', 'breadcrumbs'));
     }
 
     public function store(studentRequest $request)
@@ -302,7 +311,11 @@ class StudentController extends Controller
             abort(404);
         }
 
-        return view('students::edit', compact('students', 'pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Cập nhật']
+        ];
+        return view('students::edit', compact('students', 'pageTitle', 'breadcrumbs'));
     }
 
     public function update(studentRequest $request, $id)
@@ -409,6 +422,14 @@ class StudentController extends Controller
         if ($action === 'restore') {
             foreach ($students as $student) {
                 $student->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $student->fresh(),
+                    properties: ['restored_from_trash' => true],
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục học viên từ thùng rác'
+                );
             }
 
             return back()->with('msg', 'Đã khôi phục ' . $students->count() . ' học viên.');
@@ -416,10 +437,22 @@ class StudentController extends Controller
 
         if ($action === 'force_delete') {
             foreach ($students as $student) {
+                $snapshot = method_exists($student, 'toArray') ? $student->toArray() : (array) $student;
                 $this->logoutStudentSessions($student->id);
                 $student->courses()->detach();
                 $student->coupons()->detach();
                 $student->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $student,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn học viên'
+                );
             }
 
             return back()->with('msg', 'Đã xóa vĩnh viễn ' . $students->count() . ' học viên.');
@@ -438,6 +471,14 @@ class StudentController extends Controller
 
         $student->restore();
 
+        activity_log(
+            action: 'restore',
+            subject: $student->fresh(),
+            properties: ['restored_from_trash' => true],
+            logName: 'Khôi phục',
+            description: 'Khôi phục học viên thành công.'
+        );
+
         return back()->with('msg', 'Khôi phục học viên thành công.');
     }
 
@@ -449,10 +490,22 @@ class StudentController extends Controller
             abort(404);
         }
 
+        $snapshot = method_exists($student, 'toArray') ? $student->toArray() : (array) $student;
         $this->logoutStudentSessions($student->id);
         $student->courses()->detach();
         $student->coupons()->detach();
         $student->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $student,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn học viên'
+        );
 
         return back()->with('msg', 'Đã xóa vĩnh viễn học viên.');
     }
@@ -463,7 +516,11 @@ class StudentController extends Controller
 
         $student = Student::with(['coupons'])->findOrFail($id);
 
-        return view('students::coupon_history', compact('student', 'pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Lịch sử mã giảm']
+        ];
+        return view('students::coupon_history', compact('student', 'pageTitle', 'breadcrumbs'));
     }
 
     public function purchasedCourses($id)
@@ -483,7 +540,11 @@ class StudentController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'teacher_id']);
 
-        return view('students::course_student', compact('student', 'courses', 'allCourses', 'pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Khóa học đã mua']
+        ];
+        return view('students::course_student', compact('student', 'courses', 'allCourses', 'pageTitle', 'breadcrumbs'));
     }
 
     public function searchCourses(Request $request)
@@ -628,7 +689,11 @@ class StudentController extends Controller
             ->take(10)
             ->get();
 
-        return view('students::logs', compact('pageTitle', 'student', 'logs', 'loginLogs'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Lịch sử hoạt động']
+        ];
+        return view('students::logs', compact('pageTitle', 'student', 'logs', 'loginLogs', 'breadcrumbs'));
     }
 
     protected function logoutStudentSessions(int $studentId): void

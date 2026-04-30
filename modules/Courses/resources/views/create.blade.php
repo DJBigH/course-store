@@ -53,7 +53,7 @@
                                 <label>Slug (VI)</label>
                                 <input type="text"
                                     class="form-control slug {{ $errors->has('slug') ? 'is-invalid' : '' }}" name="slug"
-                                    placeholder="Auto generate..." value="{{ old('slug', $course->slug ?? '') }}" readonly>
+                                    placeholder="Tự động tạo..." value="{{ old('slug', $course->slug ?? '') }}" readonly>
                                 @error('slug')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -83,7 +83,7 @@
                                 <label>Slug (EN)</label>
                                 <input type="text"
                                     class="form-control slug-en {{ $errors->has('slug_en') ? 'is-invalid' : '' }}"
-                                    name="slug_en" placeholder="Auto generate..."
+                                    name="slug_en" placeholder="Tự động tạo..."
                                     value="{{ old('slug_en', $course->slug_en ?? '') }}" readonly>
                                 @error('slug_en')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -450,7 +450,9 @@
                         <div class="col-3">
                             <div id="holder" class="rounded p-1 text-center">
                                 @if (old('thumbnail'))
-                                    <img src="{{ old('thumbnail') }}" class="img-fluid">
+                                    <img src="{{ asset(old('thumbnail')) }}" class="img-fluid">
+                                @else
+                                    <img src="https://placehold.co/600x400?text=Course" class="img-fluid">
                                 @endif
                             </div>
                         </div>

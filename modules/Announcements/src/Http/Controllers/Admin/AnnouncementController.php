@@ -62,6 +62,20 @@ class AnnouncementController extends Controller
         // Gửi thông báo
         $this->sendAnnouncementNotifications($announcement);
 
+        activity_log(
+            action: 'create',
+            subject: $announcement,
+            properties: [
+                'data' => [
+                    'title' => $announcement->title,
+                    'target_type' => $announcement->target_type,
+                    'send_email' => $announcement->send_email,
+                ],
+            ],
+            logName: 'admin_announcement_management',
+            description: 'Tạo thông báo hệ thống mới: ' . $announcement->title
+        );
+
         return redirect()->route('admin.announcements.index')->with('msg', 'Đã gửi thông báo thành công.');
     }
 
@@ -118,7 +132,17 @@ class AnnouncementController extends Controller
 
     public function destroy(Announcement $announcement)
     {
+        $snapshot = $announcement->toArray();
         $announcement->delete();
+
+        activity_log(
+            action: 'delete',
+            subject: null,
+            properties: ['data' => $snapshot],
+            logName: 'admin_announcement_management',
+            description: 'Xóa thông báo hệ thống: ' . ($snapshot['title'] ?? 'N/A')
+        );
+
         return back()->with('msg', 'Đã xóa thông báo.');
     }
 }

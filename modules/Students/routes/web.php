@@ -24,10 +24,10 @@ Route::prefix('admin')->group(function () {
       Route::get('/{id}/coupon-history', 'StudentController@CouponHistory')->middleware('permission:students.view')->name('coupon-history');
       Route::get('/{id}/purchased-courses', 'StudentController@purchasedCourses')->middleware('permission:students.view')->name('purchased-courses');
       Route::get('/search-courses', 'StudentController@searchCourses')->middleware('permission:students.view')->name('search-courses');
-      Route::post('/{id}/grant-course', 'StudentController@grantCourse')->middleware('permission:students.edit')->name('grant-course');
-      Route::post('/{id}/revoke-course', 'StudentController@revokeCourse')->middleware('permission:students.edit')->name('revoke-course');
+      Route::post('/{id}/grant-course', 'StudentController@grantCourse')->middleware('permission:students.grant_course')->name('grant-course');
+      Route::post('/{id}/revoke-course', 'StudentController@revokeCourse')->middleware('permission:students.grant_course')->name('revoke-course');
       Route::get('logs/{student}', 'StudentController@logs')->middleware('permission:students.logs')->name('logs');
-      Route::get('impersonate/{student}', 'StudentController@impersonate')->middleware('permission:students.edit')->name('impersonate');
+      Route::get('impersonate/{student}', 'StudentController@impersonate')->middleware('permission:students.impersonate')->name('impersonate');
    });
 });
 

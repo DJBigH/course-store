@@ -114,13 +114,26 @@ class CommentController extends Controller
 
         $moderation = courseCommentModeration($content);
 
-        CourseComment::create([
+        $reply = CourseComment::create([
             'course_id' => $comment->course_id,
             'parent_id' => $comment->id,
             'student_id' => auth('students')->id(),
             'content' => $content,
             'is_visible' => ($moderation['status'] ?? 1) == 1,
         ]);
+
+        activity_log(
+            action: 'reply_comment',
+            subject: $reply,
+            properties: [
+                'parent_id' => $comment->id,
+                'course_id' => $comment->course_id,
+                'content_preview' => Str::limit($content, 100),
+                'is_visible' => $reply->is_visible,
+            ],
+            logName: 'teacher_comment_management',
+            description: "Giảng viên phản hồi bình luận của học viên"
+        );
 
         return $this->renderTeacherCommentThread($request, $comment->course_id, $teacher);
     }

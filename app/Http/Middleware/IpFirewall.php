@@ -13,10 +13,11 @@ class IpFirewall
     {
         $ip = $request->ip();
 
-        // Kiểm tra xem IP có nằm trong blacklist không
-        $isBlocked = IpBlacklist::where('ip_address', $ip)->exists();
+        $blacklist = \Illuminate\Support\Facades\Cache::remember('ip_blacklist', 3600, function () {
+            return IpBlacklist::pluck('ip_address')->toArray();
+        });
 
-        if ($isBlocked) {
+        if (in_array($ip, $blacklist)) {
             return response()->view('errors.403_firewall', ['ip' => $ip], 403);
         }
 

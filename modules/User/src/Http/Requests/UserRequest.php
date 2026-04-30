@@ -32,27 +32,14 @@ class UserRequest extends FormRequest
         return $rules;
     }
 
-    public function messages()
-    {
-        return [
-            'required' => __('user::validation.required'),
-            'email' => __('user::validation.email'),
-            'unique' => __('user::validation.unique'),
-            'max' => __('user::validation.max'),
-            'min' => __('user::validation.min'),
-            'integer' => __('user::validation.integer'),
-            'exists' => ':attribute không tồn tại trong hệ thống.',
-        ];
-    }
-
     public function attributes()
     {
         return [
-            'name' => __('user::validation.attributes.name'),
-            'email' => __('user::validation.attributes.email'),
-            'password' => __('user::validation.attributes.password'),
-            'group_id' => __('user::validation.attributes.group_id'),
-            'is_locked' => 'trạng thái tài khoản',
+            'name' => 'Tên',
+            'email' => 'Email',
+            'password' => 'Mật khẩu',
+            'group_id' => 'Nhóm người dùng',
+            'is_locked' => 'Trạng thái tài khoản',
         ];
     }
 }

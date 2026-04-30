@@ -9,6 +9,12 @@
             'ja' => '日本語',
             'zh' => '中文'
         ];
+
+        $hasAnyTab = $currentUser?->hasPermission('settings.view') 
+            || $currentUser?->hasPermission('settings.update') 
+            || $canCleanup 
+            || $canMaintenance 
+            || $canViewHealth;
     @endphp
     <div class="admin-form">
         <div class="admin-form__header d-flex justify-content-between align-items-center mb-4">
@@ -26,24 +32,47 @@
         <form action="{{ route('settings.post-setting') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
+            @if (!$hasAnyTab)
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-body p-5 text-center">
+                        <div class="mb-4">
+                            <i class="bi bi-shield-lock text-danger" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-3">Truy cập bị từ chối</h3>
+                        <p class="text-muted mb-4">Bạn không có quyền xem bất kỳ mục cấu hình nào trong trang này.<br>Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+                        <a href="{{ route('admin.index') }}" class="btn btn-primary rounded-pill px-5">Quay lại Tổng quan</a>
+                    </div>
+                </div>
+            @else
             <div class="row g-4">
                 <div class="col-xl-3 col-lg-4">
                     <div class="card border-0 shadow-sm settings-sidebar">
                         <div class="card-body p-3">
                             <div class="settings-sidebar__title mb-3 fw-bold text-muted small text-uppercase">Nhóm cấu hình</div>
                             <div class="settings-sidebar__nav d-flex flex-column gap-2">
-                                <button type="button" class="btn settings-tab-btn is-active text-start px-3 py-2 border-0" data-settings-tab="general">Hệ thống</button>
-                                <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="operations">Vận hành</button>
-                                <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="banners">Banner</button>
-                                <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="currency">Tỷ giá</button>
-                                @if ($canUpdateGeneralSettings)
-                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="mail">Cấu hình mail</button>
+                                @if ($currentUser?->hasPermission('settings.view'))
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="general">Hệ thống</button>
                                 @endif
-                                <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="announcements">Thông báo</button>
-                                <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="payments">Thanh toán</button>
-                                <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="bots">Cấu hình Bot</button>
-                                <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="firewall">Tường lửa (IP Firewall)</button>
-                                <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="backup">Sao lưu Cloud</button>
+                                
+                                @if ($currentUser?->hasPermission('settings.update'))
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="operations">Vận hành</button>
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="banners">Banner</button>
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="currency">Tỷ giá</button>
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="mail">Cấu hình mail</button>
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="announcements">Thông báo</button>
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="payments">Thanh toán</button>
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="bots">Cấu hình Bot</button>
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="firewall">Tường lửa (IP Firewall)</button>
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="backup">Sao lưu Cloud</button>
+                                @endif
+
+                                @if ($canCleanup || $canMaintenance)
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="cleanup">Vận hành & Bảo trì</button>
+                                @endif
+                                
+                                @if ($canViewHealth)
+                                    <button type="button" class="btn settings-tab-btn text-start px-3 py-2 border-0" data-settings-tab="health">Sức khỏe hệ thống</button>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -52,7 +81,8 @@
                 <div class="col-xl-9 col-lg-8">
                     <div class="settings-panels">
                         {{-- Panel: Hệ thống --}}
-                        <div class="settings-panel is-active" data-settings-panel="general">
+                        @if ($currentUser?->hasPermission('settings.view'))
+                        <div class="settings-panel" data-settings-panel="general">
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <div class="card shadow-sm border-0 h-100">
@@ -102,8 +132,10 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- Panel: Vận hành --}}
+                        @if ($currentUser?->hasPermission('settings.update'))
                         <div class="settings-panel" data-settings-panel="operations">
                             <div class="card shadow-sm border-0">
                                 <div class="card-header fw-bold bg-white pt-3 border-bottom-0">Cài đặt vận hành</div>
@@ -160,8 +192,10 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- Panel: Banner --}}
+                        @if ($currentUser?->hasPermission('settings.update'))
                         <div class="settings-panel" data-settings-panel="banners">
                             <div class="card shadow-sm border-0">
                                 <div class="card-header fw-bold bg-white pt-3 border-bottom-0">Cấu hình Banner & Logo</div>
@@ -235,8 +269,10 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- Panel: Tỷ giá --}}
+                        @if ($currentUser?->hasPermission('settings.update'))
                         <div class="settings-panel" data-settings-panel="currency">
                             <div class="card shadow-sm border-0">
                                 <div class="card-header fw-bold bg-white pt-3 border-bottom-0 d-flex justify-content-between align-items-center">
@@ -285,8 +321,10 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- Panel: Mail --}}
+                        @if ($currentUser?->hasPermission('settings.update'))
                         <div class="settings-panel" data-settings-panel="mail">
                             <div class="card shadow-sm border-0">
                                 <div class="card-header fw-bold bg-white pt-3 border-bottom-0">Cấu hình Mail hệ thống</div>
@@ -304,8 +342,10 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- Panel: Thông báo --}}
+                        @if ($currentUser?->hasPermission('settings.update'))
                         <div class="settings-panel" data-settings-panel="announcements">
                             {{-- Global Notice --}}
                             <div class="card shadow-sm border-0 mb-4">
@@ -409,8 +449,10 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- Panel: Thanh toán --}}
+                        @if ($currentUser?->hasPermission('settings.update'))
                         <div class="settings-panel" data-settings-panel="payments">
                             <div class="card shadow-sm border-0">
                                 <div class="card-header fw-bold bg-white pt-3 border-bottom-0">Cấu hình phương thức thanh toán</div>
@@ -534,7 +576,9 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                         {{-- Panel: Cấu hình Bot (AI & Telegram) --}}
+                        @if ($currentUser?->hasPermission('settings.update'))
                         <div class="settings-panel" data-settings-panel="bots">
                             {{-- Chatbot & AI Settings --}}
                             <div class="card shadow-sm border-0 mb-4">
@@ -600,8 +644,10 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- Panel: Tường lửa --}}
+                        @if ($currentUser?->hasPermission('settings.update'))
                         <div class="settings-panel" data-settings-panel="firewall">
                             <div class="card shadow-sm border-0">
                                 <div class="card-header fw-bold bg-white pt-3 border-bottom-0 d-flex justify-content-between align-items-center">
@@ -649,8 +695,10 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- Panel: Sao lưu Cloud --}}
+                        @if ($currentUser?->hasPermission('settings.update'))
                         <div class="settings-panel" data-settings-panel="backup">
                             <div class="card shadow-sm border-0">
                                 <div class="card-header fw-bold bg-white border-bottom-0 pt-3">Sao lưu dữ liệu (Google Drive)</div>
@@ -679,13 +727,175 @@
                                                 Chưa khởi chạy tác vụ.
                                             </div>
                                         </div>
+
+                                        {{-- Backup History --}}
+                                        <div class="mt-4 pt-3 border-top">
+                                            <h6 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Lịch sử sao lưu gần nhất</h6>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-hover align-middle mb-0">
+                                                    <thead class="table-light">
+                                                        <tr class="small">
+                                                            <th>Thời gian</th>
+                                                            <th>Mô tả</th>
+                                                            <th class="text-end">Trạng thái</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @forelse($backupLogs as $log)
+                                                            <tr>
+                                                                <td class="small">{{ $log->created_at->format('d/m/Y H:i:s') }}</td>
+                                                                <td class="small text-muted">{{ $log->description }}</td>
+                                                                <td class="text-end">
+                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">Thành công</span>
+                                                                </td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="3" class="text-center py-3 text-muted small">Chưa có lịch sử sao lưu.</td>
+                                                            </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        @endif
+                        {{-- Panel: Vận hành & Bảo trì --}}
+                        @if ($canCleanup || $canMaintenance)
+                            <div class="settings-panel" data-settings-panel="cleanup">
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-header fw-bold bg-white border-bottom-0 pt-3">Vận hành & Bảo trì (Maintenance)</div>
+                                    <div class="card-body">
+                                        <div class="row g-4">
+                                            @if ($canCleanup)
+                                            <div class="col-md-6">
+                                                <div class="p-4 bg-light rounded-4 border h-100 d-flex flex-column justify-content-between">
+                                                    <div>
+                                                        <h5 class="fw-bold mb-2"><i class="bi bi-brush me-2"></i>Dọn dẹp hệ thống</h5>
+                                                        <p class="text-muted small mb-3">Xóa log cũ (>60 ngày), session rác và các token hết hạn.</p>
+                                                    </div>
+                                                    <button type="submit" formaction="{{ route('settings.cleanup') }}" formmethod="POST" class="btn btn-outline-danger fw-bold rounded-pill shadow-sm w-100" onclick="return confirm('Xác nhận dọn dẹp hệ thống?')">
+                                                        Dọn dẹp ngay
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            @if ($canMaintenance)
+                                            <div class="col-md-6">
+                                                <div class="p-4 bg-light rounded-4 border h-100 d-flex flex-column justify-content-between">
+                                                    <div>
+                                                        <h5 class="fw-bold mb-2"><i class="bi bi-lightning-charge me-2"></i>Xóa Cache</h5>
+                                                        <p class="text-muted small mb-3">Làm mới toàn bộ bộ nhớ đệm (Cache), cấu hình và giao diện (View).</p>
+                                                    </div>
+                                                    <button type="submit" formaction="{{ route('settings.clear-cache') }}" formmethod="POST" class="btn btn-outline-primary fw-bold rounded-pill shadow-sm w-100" onclick="return confirm('Xác nhận xóa toàn bộ cache?')">
+                                                        Xóa Cache ngay
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Panel: Sức khỏe hệ thống --}}
+                        @if ($canViewHealth && $systemHealth)
+                            <div class="settings-panel" data-settings-panel="health">
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-header d-flex justify-content-between align-items-center bg-white border-bottom-0 pt-3">
+                                        <span class="fw-bold">Sức khỏe hệ thống (System Health)</span>
+                                        <span class="badge bg-light text-muted fw-normal">Cập nhật: {{ $systemHealth['timestamp'] }}</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-4">
+                                            <!-- Disk Space -->
+                                            <div class="col-md-6">
+                                                <div class="p-3 border rounded-4">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="text-muted small fw-bold text-uppercase">Dung lượng ổ đĩa</span>
+                                                        <span class="badge {{ $systemHealth['disk']['status'] === 'healthy' ? 'bg-success' : 'bg-warning' }}">
+                                                            {{ $systemHealth['disk']['status'] }}
+                                                        </span>
+                                                    </div>
+                                                    <h4 class="fw-bold mb-1">{{ $systemHealth['disk']['percent'] }}%</h4>
+                                                    <div class="progress mb-2" style="height: 6px;">
+                                                        <div class="progress-bar {{ $systemHealth['disk']['status'] === 'healthy' ? 'bg-primary' : 'bg-danger' }}" style="width: {{ $systemHealth['disk']['percent'] }}%"></div>
+                                                    </div>
+                                                    <div class="text-muted small">Đã dùng {{ $systemHealth['disk']['used'] }} / {{ $systemHealth['disk']['total'] }}</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Database -->
+                                            <div class="col-md-6">
+                                                <div class="p-3 border rounded-4 h-100">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="text-muted small fw-bold text-uppercase">Cơ sở dữ liệu</span>
+                                                        <span class="badge bg-success">Kết nối tốt</span>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <i class="bi bi-database fs-3 text-primary"></i>
+                                                        <div>
+                                                            <div class="fw-bold">{{ $systemHealth['database']['driver'] }}</div>
+                                                            <div class="text-muted small">Độ trễ: {{ $systemHealth['database']['latency'] }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Queue -->
+                                            <div class="col-md-4">
+                                                <div class="p-3 border rounded-4">
+                                                    <span class="text-muted small fw-bold text-uppercase d-block mb-2">Hàng đợi (Queue)</span>
+                                                    @if($systemHealth['queue']['status'] === 'healthy')
+                                                        <div class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Đang hoạt động</div>
+                                                        <div class="text-muted small mt-1">Phản hồi cuối: {{ $systemHealth['queue']['seconds_ago'] }} giây trước</div>
+                                                    @else
+                                                        <div class="text-warning fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Không hoạt động</div>
+                                                        <div class="text-muted small mt-1">{{ $systemHealth['queue']['message'] ?? 'Worker đang dừng.' }}</div>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <!-- Mail -->
+                                            <div class="col-md-4">
+                                                <div class="p-3 border rounded-4">
+                                                    <span class="text-muted small fw-bold text-uppercase d-block mb-2">Máy chủ Mail</span>
+                                                    @if($systemHealth['mail']['status'] === 'healthy')
+                                                        <div class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Đã kết nối</div>
+                                                        <div class="text-muted small mt-1">{{ $systemHealth['mail']['host'] }}</div>
+                                                    @else
+                                                        <div class="text-warning fw-bold"><i class="bi bi-x-circle-fill me-1"></i> {{ $systemHealth['mail']['status'] }}</div>
+                                                        <div class="text-muted small mt-1">{{ $systemHealth['mail']['message'] ?? 'Chưa cấu hình hoặc lỗi kết nối.' }}</div>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <!-- Cache -->
+                                            <div class="col-md-4">
+                                                <div class="p-3 border rounded-4">
+                                                    <span class="text-muted small fw-bold text-uppercase d-block mb-2">Bộ nhớ đệm (Cache)</span>
+                                                    @if($systemHealth['cache']['status'] === 'healthy')
+                                                        <div class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Hoạt động tốt</div>
+                                                        <div class="text-muted small mt-1">Driver: {{ $systemHealth['cache']['driver'] }}</div>
+                                                    @else
+                                                        <div class="text-danger fw-bold"><i class="bi bi-x-circle-fill me-1"></i> Lỗi kết nối</div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     </div> {{-- end settings-panels --}}
                 </div> {{-- end col-xl-9 --}}
             </div> {{-- end row --}}
+            @endif
 
             <div class="admin-form__footer mt-4 pt-4 border-top">
                 @if ($canUpdateGeneralSettings)
@@ -848,8 +1058,13 @@
             @endif
 
             const savedTab = localStorage.getItem('admin_settings_tab');
-            const initialTab = Array.from(tabButtons).find(btn => btn.dataset.settingsTab === savedTab) ? savedTab : tabButtons[0].dataset.settingsTab;
-            activateTab(initialTab);
+            const initialTab = (savedTab && Array.from(tabButtons).find(btn => btn.dataset.settingsTab === savedTab)) 
+                ? savedTab 
+                : (tabButtons.length > 0 ? tabButtons[0].dataset.settingsTab : null);
+            
+            if (initialTab) {
+                activateTab(initialTab);
+            }
 
             const initBankSelect2 = () => {
                 const $bankSelector = $('#bank_selector');

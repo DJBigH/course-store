@@ -223,6 +223,17 @@ class ContactController extends Controller
                     'status' => 1,
                     'workflow_status' => Contacts::STATUS_IN_PROGRESS,
                 ]);
+
+                activity_log(
+                    action: 'accept',
+                    subject: $contact,
+                    properties: [
+                        'old' => ['status' => $contact->status, 'workflow_status' => $contact->workflow_status],
+                        'new' => ['status' => 1, 'workflow_status' => Contacts::STATUS_IN_PROGRESS],
+                    ],
+                    logName: 'Tiếp nhận hàng loạt',
+                    description: 'Tiếp nhận yêu cầu'
+                );
             }
 
             return back()->with('msg', 'Đã tiếp nhận ' . $contacts->count() . ' yêu cầu.');
@@ -230,7 +241,16 @@ class ContactController extends Controller
 
         if ($action === 'delete') {
             foreach ($contacts as $contact) {
+                $snapshot = method_exists($contact, 'toArray') ? $contact->toArray() : (array) $contact;
                 $this->contactrepository->delete($contact->id);
+
+                activity_log(
+                    action: 'delete',
+                    subject: $contact,
+                    properties: ['data' => $snapshot],
+                    logName: 'Xóa hàng loạt',
+                    description: 'Xóa yêu cầu/liên hệ'
+                );
             }
 
             return back()->with('msg', 'Đã xóa ' . $contacts->count() . ' yêu cầu.');
@@ -263,6 +283,14 @@ class ContactController extends Controller
         if ($action === 'restore') {
             foreach ($contacts as $contact) {
                 $contact->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $contact->fresh(),
+                    properties: ['restored_from_trash' => true],
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục yêu cầu/liên hệ'
+                );
             }
 
             return back()->with('msg', 'Đã khôi phục ' . $contacts->count() . ' yêu cầu.');
@@ -270,7 +298,19 @@ class ContactController extends Controller
 
         if ($action === 'force_delete') {
             foreach ($contacts as $contact) {
+                $snapshot = method_exists($contact, 'toArray') ? $contact->toArray() : (array) $contact;
                 $contact->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $contact,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn yêu cầu'
+                );
             }
 
             return back()->with('msg', 'Đã xóa vĩnh viễn ' . $contacts->count() . ' yêu cầu.');
@@ -292,6 +332,19 @@ class ContactController extends Controller
             'workflow_status' => Contacts::STATUS_IN_PROGRESS,
         ]);
 
+        $freshContact = $this->contactrepository->find($id);
+
+        activity_log(
+            action: 'accept',
+            subject: $freshContact ?? $contact,
+            properties: [
+                'old' => ['status' => $contact->status, 'workflow_status' => $contact->workflow_status],
+                'new' => ['status' => 1, 'workflow_status' => Contacts::STATUS_IN_PROGRESS],
+            ],
+            logName: 'Tiếp nhận',
+            description: 'Tiếp nhận yêu cầu'
+        );
+
         return back()->with('msg', 'Tiếp nhận yêu cầu thành công.');
     }
 
@@ -309,7 +362,21 @@ class ContactController extends Controller
         ]);
 
         $data['status'] = in_array($data['workflow_status'], [Contacts::STATUS_IN_PROGRESS, Contacts::STATUS_RESOLVED], true) ? 1 : 0;
+        
+        $oldSnapshot = $contact->toArray();
         $this->contactrepository->update($id, $data);
+        $freshContact = $this->contactrepository->find($id);
+
+        activity_log(
+            action: 'update_status',
+            subject: $freshContact ?? $contact,
+            properties: [
+                'old' => ['status' => $oldSnapshot['status'], 'workflow_status' => $oldSnapshot['workflow_status'], 'admin_note' => $oldSnapshot['admin_note']],
+                'new' => ['status' => $data['status'], 'workflow_status' => $data['workflow_status'], 'admin_note' => $data['admin_note'] ?? null],
+            ],
+            logName: 'Cập nhật trạng thái',
+            description: 'Cập nhật trạng thái xử lý yêu cầu'
+        );
 
         return back()->with('msg', 'Đã cập nhật trạng thái xử lý.');
     }
@@ -322,9 +389,18 @@ class ContactController extends Controller
             abort(404);
         }
 
+        $snapshot = method_exists($contact, 'toArray') ? $contact->toArray() : (array) $contact;
         $status = $this->contactrepository->delete($id);
 
         if ($status) {
+            activity_log(
+                action: 'delete',
+                subject: $contact,
+                properties: ['data' => $snapshot],
+                logName: 'Xóa',
+                description: 'Xóa yêu cầu/liên hệ'
+            );
+
             return redirect()->route('contacts.index')->with('msg', 'Xóa yêu cầu thành công');
         }
 
@@ -341,6 +417,14 @@ class ContactController extends Controller
 
         $contact->restore();
 
+        activity_log(
+            action: 'restore',
+            subject: $contact->fresh(),
+            properties: ['restored_from_trash' => true],
+            logName: 'Khôi phục',
+            description: 'Khôi phục yêu cầu thành công.'
+        );
+
         return back()->with('msg', 'Khôi phục yêu cầu thành công.');
     }
 
@@ -352,7 +436,19 @@ class ContactController extends Controller
             abort(404);
         }
 
+        $snapshot = method_exists($contact, 'toArray') ? $contact->toArray() : (array) $contact;
         $contact->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $contact,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn yêu cầu'
+        );
 
         return back()->with('msg', 'Đã xóa vĩnh viễn yêu cầu.');
     }

@@ -493,12 +493,17 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Ở quản lý học viên thêm cái học viên đó đang học khóa học nào của giảng viên nào để dễ kiểm soát ( Done )
 - Hỏi AI ở 2 màn kia tôi đều đa ngôn ngữ nên số tiền của nó lúc sẽ khác nên bên admin có cần phải làm j để biết đúng số tiền không có cần đa ngôn ngữ không ( Done )
 - Cần thêm tính năng hay lượt bỏ tính năng j không ( Done )
-- Chức năng log có thiếu hay không thiếu nhật ký nhiều vui lòng check lại toàn màn admin ( Và log nao cũng báo về tele)
+- Chức năng log có thiếu hay không thiếu nhật ký nhiều vui lòng check lại toàn màn admin ( Và log nao cũng báo về tele) ( Done )
 - Sửa lỗi ngôn ngữ chỉ cần VI (có dấu) và chữ bị lỗi mojibake ( Done )
 - Làm lại giao diện Quản lý gói giảng viên ( Done )
 - Chức năng phần quyền check xem có thiếu j không ( Done )
 - Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi ( Done )
-- Check lại các truy vẫn xem có cái nào làm chậm website không
+- Check lại các truy vẫn xem có cái nào làm chậm website không ( Done )
+- Thêm trang 403,404 các trang cấm hay lỗi ( fix cả url khi gõ sai hay cố tình thay id không đúng, thay vai trò không phù hợp) ( Done )
+- Check toàn bộ màn admin xem còn thiếu, thừa cái j nữa không ( Done )
+- Luồng nâng cấp gói tạo trang mới danh sách cho admin biết và xử lý, thêm noti khi có người nâng cấp và thêm cả khi hủy ( tách riêng luồng đó vì nó đang bị gộp với ứng cử giáo viên)
+- Thêm log khi giáo viên nâng cấp gói, hủy gói, hủy hợp tác và xử lý các yêu cầu khác tại admin ( Khi đẩy lên tele ghi rõ trạng thái đã thanh toán + nâng thành công, và ngược lại hủy giao dịch hoặc giao dịch bị từ chối, lỗi giao dịch chỉ nhận trạng thái khi ấn thanh toán xong và nâng thành công, thất bại, lỗi giao dịch... không nhận trạng thái linh tinh)
+
   Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
@@ -617,9 +622,9 @@ Teacher:
 - Có nên cho giáo viên xóa vĩnh viễn các dữ liệu không nhỉ hay chỉ cho xóa mềm vào thùng rác và khôi phục ( Done )
 - Check lại toàn bộ validate xem có chỗ nào thiếu không ( Done )
 - Làm trang 403,404 riêng dành cho màn teacher ( Note )
-- Fix lại thanh toán giáo viên
-- Check lại toàn bộ notification mail và web gửi cho học viên và admin
-- Quên mật khẩu (lỗi email)
+- Fix lại thanh toán giáo viên ( momo, vnpay)
+- Check lại toàn bộ notification web gửi cho học viên và admin
   Tổng kết
 - Tìm tất cả file .bak ( Done )
 - check lại lần cuối trước khi đẩy lên production
+ 

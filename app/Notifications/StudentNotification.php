@@ -5,7 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class StudentNotification extends Notification
+class StudentNotification extends Notification implements \Illuminate\Contracts\Queue\ShouldQueue
 {
     use Queueable;
 

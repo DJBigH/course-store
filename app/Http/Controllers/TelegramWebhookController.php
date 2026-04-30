@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Modules\Orders\src\Models\Order;
 use Modules\Students\src\Models\Student;
 use Modules\Settings\src\Models\Setting;
+use Modules\Settings\src\Support\SystemHealthService;
 
 class TelegramWebhookController extends Controller
 {
@@ -39,11 +40,29 @@ class TelegramWebhookController extends Controller
                 ? '🔴 Đang bảo trì' 
                 : '🟢 Đang hoạt động';
 
-            $reply = "📊 <b>BÁO CÁO TÌNH TRẠNG WEBSITE</b>\n\n";
-            $reply .= "🖥️ <b>Trạng thái:</b> {$maintenanceMode}\n";
-            $reply .= "👥 <b>Tổng học viên:</b> " . number_format($totalStudents) . "\n";
-            $reply .= "🛒 <b>Đơn hàng hôm nay:</b> " . number_format($todayOrders) . "\n";
-            $reply .= "💰 <b>Doanh thu hôm nay:</b> " . number_format($todayRevenue) . " VND\n\n";
+            // Lấy thông tin sức khỏe hệ thống
+            $healthService = app(SystemHealthService::class);
+            $health = $healthService->getSnapshot();
+            
+            $diskIcon = $health['disk']['status'] === 'healthy' ? '✅' : ($health['disk']['status'] === 'warning' ? '⚠️' : '🚨');
+            $dbIcon = $health['database']['status'] === 'healthy' ? '✅' : '🚨';
+            $queueIcon = $health['queue']['status'] === 'healthy' ? '✅' : '🚨';
+            $mailIcon = $health['mail']['status'] === 'healthy' ? '✅' : '⚠️';
+            $cacheIcon = $health['cache']['status'] === 'healthy' ? '✅' : '🚨';
+
+            $reply = "📊 <b>BÁO CÁO TỔNG QUAN WEBSITE</b>\n\n";
+            $reply .= "🚩 <b>Trạng thái:</b> {$maintenanceMode}\n";
+            $reply .= "👥 <b>Học viên:</b> " . number_format($totalStudents) . "\n";
+            $reply .= "🛒 <b>Đơn hàng (Hnay):</b> " . number_format($todayOrders) . "\n";
+            $reply .= "💰 <b>Doanh thu (Hnay):</b> " . number_format($todayRevenue) . " đ\n\n";
+            
+            $reply .= "🛠️ <b>SỨC KHỎE HỆ THỐNG:</b>\n";
+            $reply .= "{$diskIcon} <b>Ổ đĩa:</b> " . ($health['disk']['percent'] ?? 0) . "% (" . ($health['disk']['free'] ?? '0B') . " trống)\n";
+            $reply .= "{$dbIcon} <b>Database:</b> " . ($health['database']['latency'] ?? 'N/A') . "\n";
+            $reply .= "{$queueIcon} <b>Queue (Hàng đợi):</b> " . ($health['queue']['status'] === 'healthy' ? 'Hoạt động' : 'Lỗi/Dừng') . "\n";
+            $reply .= "{$mailIcon} <b>Email:</b> " . ($health['mail']['status'] === 'healthy' ? 'Sẵn sàng' : 'Chưa cấu hình/Lỗi') . "\n";
+            $reply .= "{$cacheIcon} <b>Cache:</b> " . ($health['cache']['status'] === 'healthy' ? 'Ổn định' : 'Lỗi') . "\n\n";
+            
             $reply .= "⏱️ <i>Cập nhật: " . now()->format('H:i:s d/m/Y') . "</i>";
 
             try {

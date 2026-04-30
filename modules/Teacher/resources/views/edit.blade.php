@@ -232,7 +232,7 @@
                     </button>
                 @endif
 
-                @can('teachers.edit')
+                @can('packages.manage')
                 <a href="{{ route('teacher-packages.grant', ['teacher_id' => $teacher->id]) }}"
                    class="btn btn-warning"
                    title="Tặng gói đặc quyền cho giáo viên này">

@@ -19,7 +19,7 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
         return $this->model
             ->withoutGlobalScope(ActiveScope::class)
             ->with(['teacher:id,name'])
-            ->select(['id', 'name', 'price', 'status', 'sale_price', 'created_at', 'teacher_id', 'view', 'slug', 'slug_en', 'slug_ko', 'slug_ja', 'slug_zh'])
+            ->select(['id', 'name', 'price', 'status', 'sale_price', 'created_at', 'teacher_id', 'view', 'slug', 'slug_en', 'slug_ko', 'slug_ja', 'slug_zh', 'thumbnail'])
             ->withCount([
                 'lessons', 
                 'students', 

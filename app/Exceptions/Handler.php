@@ -75,7 +75,7 @@ class Handler extends ExceptionHandler
             app()->setLocale($seg);
         }
 
-        if ($e instanceof NotFoundHttpException) {
+        if ($e instanceof NotFoundHttpException || $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
             if ($request->is('admin') || $request->is('admin/*')) {
                 return response()->view('errors.admin.404', [], 404);
             }
@@ -140,6 +140,17 @@ class Handler extends ExceptionHandler
             return response()->view('errors.admin.403', [
                 'message' => $e->getMessage() ?: 'Bạn không có quyền truy cập khu vực này.',
             ], 403);
+        }
+
+        // Global 500 for production
+        if (!config('app.debug') && !($e instanceof HttpExceptionInterface)) {
+            if ($request->is('admin') || $request->is('admin/*')) {
+                return response()->view('errors.admin.500', [], 500);
+            }
+            if (($request->is('teacher') || $request->is('teacher/*') || $request->is('*/teacher/*')) && !$request->expectsJson()) {
+                return response()->view('errors.teacher.500', [], 500);
+            }
+            return response()->view('errors.clients.500', [], 500);
         }
 
         return parent::render($request, $e);

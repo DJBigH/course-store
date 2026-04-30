@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Modules\User\seeders\PermissionSeeder;
 use Modules\User\src\Models\Group;
 use Modules\User\src\Models\Permission;
+use Modules\ActiveLogs\src\Models\ActiveLog;
 
 class GroupController extends Controller
 {
@@ -73,6 +74,17 @@ class GroupController extends Controller
 
         $group->permissions()->sync($data['permissions'] ?? []);
 
+        ActiveLog::log(
+            action: 'create',
+            subject: $group,
+            properties: [
+                'data' => $data,
+                'permissions' => $data['permissions'] ?? [],
+            ],
+            logName: 'Nhóm quyền',
+            description: 'Tạo mới nhóm quyền'
+        );
+
         return redirect()->route('groups.index')->with('msg', 'Đã tạo nhóm quyền thành công.');
     }
 
@@ -119,6 +131,17 @@ class GroupController extends Controller
 
         $group->permissions()->sync($data['permissions'] ?? []);
 
+        ActiveLog::log(
+            action: 'update',
+            subject: $group,
+            properties: [
+                'data' => $data,
+                'permissions' => $data['permissions'] ?? [],
+            ],
+            logName: 'Nhóm quyền',
+            description: 'Cập nhật nhóm quyền'
+        );
+
         return back()->with('msg', 'Đã cập nhật nhóm quyền thành công.');
     }
 
@@ -151,7 +174,16 @@ class GroupController extends Controller
             return back()->withErrors(['group' => 'Không thể xóa nhóm quyền đang có người dùng.']);
         }
 
+        $snapshot = method_exists($group, 'toArray') ? $group->toArray() : (array) $group;
         $group->delete();
+
+        ActiveLog::log(
+            action: 'delete',
+            subject: $group,
+            properties: ['data' => $snapshot],
+            logName: 'Nhóm quyền',
+            description: 'Xóa mềm nhóm quyền'
+        );
 
         return redirect()->route('groups.index')->with('msg', 'Đã xóa nhóm quyền thành công.');
     }
@@ -161,6 +193,14 @@ class GroupController extends Controller
         $group = Group::query()->onlyTrashed()->withCount('users')->findOrFail($group);
         $this->authorizeGroupAccess($group, 'khôi phục');
         $group->restore();
+
+        ActiveLog::log(
+            action: 'restore',
+            subject: $group->fresh(),
+            properties: ['restored_from_trash' => true],
+            logName: 'Nhóm quyền',
+            description: 'Khôi phục nhóm quyền'
+        );
 
         return redirect()->route('groups.trash')->with('msg', 'Đã khôi phục nhóm quyền thành công.');
     }
@@ -183,7 +223,20 @@ class GroupController extends Controller
         }
 
         $group->permissions()->detach();
+        
+        $snapshot = method_exists($group, 'toArray') ? $group->toArray() : (array) $group;
         $group->forceDelete();
+
+        ActiveLog::log(
+            action: 'force_delete',
+            subject: $group,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Nhóm quyền',
+            description: 'Xóa vĩnh viễn nhóm quyền'
+        );
 
         return redirect()->route('groups.trash')->with('msg', 'Đã xóa vĩnh viễn nhóm quyền thành công.');
     }

@@ -46,14 +46,22 @@ class CoursesController extends Controller
         $teachers = $this->teacherRepository->getAllTeacher()->get(['id', 'name']);
         $categories = $this->categoriesRepository->getAllCategories();
 
-        return view('courses::lists', compact('pageTitle', 'stats', 'teachers', 'categories'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học']
+        ];
+
+        return view('courses::lists', compact('pageTitle', 'stats', 'teachers', 'categories', 'breadcrumbs'));
     }
 
     public function trash()
     {
         $pageTitle = 'Thùng rác khóa học';
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học', 'link' => route('courses.index')],
+            ['label' => 'Thùng rác']
+        ];
 
-        return view('courses::trash', compact('pageTitle'));
+        return view('courses::trash', compact('pageTitle', 'breadcrumbs'));
     }
     public function data(Request $request)
     {
@@ -151,7 +159,7 @@ class CoursesController extends Controller
                     $badges .= '<span class="badge bg-secondary ms-1" style="font-size: 10px;">Hết hạn</span>';
                 }
 
-                $thumbnail = $course->thumbnail ?: asset('resources/assets/course_fallback.png');
+                $thumbnail = $course->thumbnail ? asset($course->thumbnail) : 'https://placehold.co/600x400?text=Course';
 
                 return '
                     <div class="d-flex align-items-center gap-3">
@@ -606,7 +614,12 @@ class CoursesController extends Controller
         $categories = $this->categoriesRepository->getAllCategories();
         $teacher = $this->teacherRepository->getAllTeacher()->get();
 
-        return view('courses::create', compact('pageTitle', 'categories', 'teacher'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học', 'link' => route('courses.index')],
+            ['label' => 'Thêm mới']
+        ];
+
+        return view('courses::create', compact('pageTitle', 'categories', 'teacher', 'breadcrumbs'));
     }
 
     public function store(CoursesRequest $request)
@@ -673,7 +686,12 @@ class CoursesController extends Controller
             abort(404);
         }
 
-        return view('courses::edit', compact('courses', 'pageTitle', 'categories', 'categoriesId', 'teacher'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học', 'link' => route('courses.index')],
+            ['label' => 'Cập nhật']
+        ];
+
+        return view('courses::edit', compact('courses', 'pageTitle', 'categories', 'categoriesId', 'teacher', 'breadcrumbs'));
     }
 
     public function update(CoursesRequest $request, $id)
@@ -812,7 +830,12 @@ class CoursesController extends Controller
             ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
-        return view('courses::logs', compact('pageTitle', 'course', 'logs'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học', 'link' => route('courses.index')],
+            ['label' => 'Lịch sử hoạt động']
+        ];
+
+        return view('courses::logs', compact('pageTitle', 'course', 'logs', 'breadcrumbs'));
     }
 
     protected function categoriesPivotPayload(array $categoryIds): array

@@ -218,7 +218,7 @@ class UpgradeController extends Controller
             return redirect()->route('teacher.dashboard.index');
         }
 
-        $upgradeRequest->delete();
+        $upgradeRequest->update(['status' => 'cancelled']);
 
         return redirect()->route('teacher.dashboard.index')
             ->with('msg_success', __('packages::teacher.flash.cancelled'));

@@ -12,12 +12,14 @@ use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Home\src\Support\GeminiHealthService;
 use Modules\Settings\src\Http\Requests\SettingRequest;
 use Modules\Settings\src\Models\Setting;
+use Modules\Settings\src\Support\SystemHealthService;
 
 class SettingController extends Controller
 {
     public function __construct(
         protected SystemMailManager $systemMailManager,
         protected GeminiHealthService $geminiHealthService,
+        protected SystemHealthService $systemHealthService,
     ) {}
 
     public function index()
@@ -29,16 +31,32 @@ class SettingController extends Controller
         $settings = Setting::pluck('value', 'key')->toArray();
         $currentUser = auth()->user();
         $canUpdateGeneralSettings = $currentUser?->hasPermission('settings.update') ?? false;
+        $canCleanup = $currentUser?->hasPermission('settings.cleanup') ?? false;
+        $canViewHealth = $currentUser?->hasPermission('settings.health') ?? false;
+        $canMaintenance = $currentUser?->hasPermission('settings.maintenance') ?? false;
+
         $mailConfigured = $this->systemMailManager->isConfigured();
         $geminiHealth = $this->geminiHealthService->snapshot();
+        $systemHealth = $canViewHealth ? $this->systemHealthService->getSnapshot() : null;
+
+        $backupLogs = ActiveLog::where('action', 'Backup')
+            ->latest()
+            ->limit(5)
+            ->get();
 
         return view('settings::index', compact(
             'settings',
             'pageName',
             'pageTitle',
             'canUpdateGeneralSettings',
+            'canCleanup',
+            'canViewHealth',
+            'canMaintenance',
             'mailConfigured',
-            'geminiHealth'
+            'geminiHealth',
+            'systemHealth',
+            'currentUser',
+            'backupLogs'
         ));
     }
 
@@ -214,6 +232,7 @@ class SettingController extends Controller
         }
 
         \Illuminate\Support\Facades\Cache::forget('currency_rates_base_vnd');
+        \Illuminate\Support\Facades\Cache::forget('system_settings_announcements');
 
         if (!empty($keysToDelete)) {
             Setting::whereIn('key', $keysToDelete)->delete();
@@ -567,7 +586,20 @@ class SettingController extends Controller
             'reason' => 'nullable|string|max:255',
         ]);
 
-        \Modules\Settings\src\Models\IpBlacklist::create($request->only(['ip_address', 'reason']));
+        $item = \Modules\Settings\src\Models\IpBlacklist::create($request->only(['ip_address', 'reason']));
+
+        activity_log(
+            action: 'create_firewall',
+            subject: $item,
+            properties: [
+                'ip_address' => $item->ip_address,
+                'reason' => $item->reason,
+            ],
+            logName: 'admin_setting_management',
+            description: "Thêm IP vào danh sách đen: {$item->ip_address}"
+        );
+
+        \Illuminate\Support\Facades\Cache::forget('ip_blacklist');
 
         return back()->with([
             'msg' => 'Đã thêm IP vào danh sách đen thành công!',
@@ -579,7 +611,18 @@ class SettingController extends Controller
     public function deleteFirewall($id)
     {
         $item = \Modules\Settings\src\Models\IpBlacklist::findOrFail($id);
+        $snapshot = $item->toArray();
         $item->delete();
+
+        activity_log(
+            action: 'delete_firewall',
+            subject: null,
+            properties: ['data' => $snapshot],
+            logName: 'admin_setting_management',
+            description: "Gỡ bỏ IP khỏi danh sách đen: " . ($snapshot['ip_address'] ?? 'N/A')
+        );
+
+        \Illuminate\Support\Facades\Cache::forget('ip_blacklist');
 
         return back()->with([
             'msg' => 'Đã gỡ bỏ IP khỏi danh sách đen!',
@@ -630,6 +673,77 @@ class SettingController extends Controller
                 'active_tab' => 'bots'
             ]);
         }
+    }
+
+    public function cleanup()
+    {
+        $currentUser = auth()->user();
+        if (!$currentUser?->hasPermission('settings.cleanup')) {
+            abort(403);
+        }
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('model:prune');
+            
+            ActiveLog::log(
+                action: 'system_cleanup',
+                logName: 'admin_setting_management',
+                description: "Đã thực hiện dọn dẹp hệ thống thủ công."
+            );
+
+            return back()->with([
+                'msg' => 'Đã thực hiện dọn dẹp hệ thống thành công!',
+                'msgType' => 'success',
+                'active_tab' => 'cleanup'
+            ]);
+        } catch (\Exception $e) {
+            return back()->with([
+                'msg' => 'Lỗi khi dọn dẹp: ' . $e->getMessage(),
+                'msgType' => 'danger',
+                'active_tab' => 'cleanup'
+            ]);
+        }
+    }
+
+    public function clearCache()
+    {
+        $currentUser = auth()->user();
+        if (!$currentUser?->hasPermission('settings.maintenance')) {
+            abort(403);
+        }
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('cache:clear');
+            \Illuminate\Support\Facades\Artisan::call('view:clear');
+            \Illuminate\Support\Facades\Artisan::call('config:clear');
+            
+            ActiveLog::log(
+                action: 'maintenance_clear_cache',
+                logName: 'admin_setting_management',
+                description: "Đã thực hiện xóa toàn bộ Cache hệ thống."
+            );
+
+            return back()->with([
+                'msg' => 'Đã xóa toàn bộ Cache hệ thống thành công!',
+                'msgType' => 'success',
+                'active_tab' => 'cleanup'
+            ]);
+        } catch (\Exception $e) {
+            return back()->with([
+                'msg' => 'Lỗi khi xóa cache: ' . $e->getMessage(),
+                'msgType' => 'danger',
+                'active_tab' => 'cleanup'
+            ]);
+        }
+    }
+
+    public function healthCheck()
+    {
+        if (!auth()->user()?->hasPermission('settings.health')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return response()->json($this->systemHealthService->getSnapshot());
     }
 }
 

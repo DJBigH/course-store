@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use Modules\Orders\src\Models\Order;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
+use Modules\ActiveLogs\src\Models\ActiveLog;
 
 class OrderController extends Controller
 {
@@ -192,17 +193,44 @@ class OrderController extends Controller
         }
 
         if ($action === 'cancel') {
-            $affected = Order::query()
+            $affectedOrders = Order::query()
+                ->whereIn('id', $selectedIds)
+                ->where('status_id', '!=', 2)
+                ->get();
+
+            Order::query()
                 ->whereIn('id', $selectedIds)
                 ->where('status_id', '!=', 2)
                 ->update(['status_id' => 4]);
 
-            return back()->with('msg', 'Đã hủy ' . $affected . ' đơn hàng chưa thanh toán.');
+            foreach ($affectedOrders as $order) {
+                activity_log(
+                    action: 'cancel',
+                    subject: $order,
+                    properties: [
+                        'old' => ['status_id' => $order->status_id],
+                        'new' => ['status_id' => 4],
+                    ],
+                    logName: 'Hủy đơn hàng',
+                    description: 'Hủy đơn hàng chưa thanh toán'
+                );
+            }
+
+            return back()->with('msg', 'Đã hủy ' . $affectedOrders->count() . ' đơn hàng chưa thanh toán.');
         }
 
         if ($action === 'delete') {
             foreach ($orders as $order) {
+                $snapshot = $order->toArray();
                 $this->orderRepository->delete($order->id);
+
+                activity_log(
+                    action: 'delete',
+                    subject: $order,
+                    properties: ['data' => $snapshot],
+                    logName: 'Xóa hàng loạt',
+                    description: 'Xóa đơn hàng'
+                );
             }
 
             return back()->with('msg', 'Đã xóa ' . $orders->count() . ' đơn hàng.');
@@ -235,6 +263,14 @@ class OrderController extends Controller
         if ($action === 'restore') {
             foreach ($orders as $order) {
                 $order->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $order->fresh(),
+                    properties: ['restored_from_trash' => true],
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục đơn hàng'
+                );
             }
 
             return back()->with('msg', 'Đã khôi phục ' . $orders->count() . ' đơn hàng.');
@@ -242,7 +278,19 @@ class OrderController extends Controller
 
         if ($action === 'force_delete') {
             foreach ($orders as $order) {
+                $snapshot = $order->toArray();
                 $order->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $order,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn đơn hàng'
+                );
             }
 
             return back()->with('msg', 'Đã xóa vĩnh viễn ' . $orders->count() . ' đơn hàng.');
@@ -273,7 +321,16 @@ class OrderController extends Controller
             ], 404);
         }
 
+        $snapshot = $order->toArray();
         $this->orderRepository->delete($orderId);
+
+        activity_log(
+            action: 'delete',
+            subject: $order,
+            properties: ['data' => $snapshot],
+            logName: 'Xóa',
+            description: 'Xóa đơn hàng'
+        );
 
         return back()->with('msg', __('orders::messages.delete.success'));
     }
@@ -288,6 +345,14 @@ class OrderController extends Controller
 
         $order->restore();
 
+        activity_log(
+            action: 'restore',
+            subject: $order->fresh(),
+            properties: ['restored_from_trash' => true],
+            logName: 'Khôi phục',
+            description: 'Khôi phục đơn hàng thành công.'
+        );
+
         return back()->with('msg', 'Khôi phục đơn hàng thành công.');
     }
 
@@ -299,7 +364,19 @@ class OrderController extends Controller
             abort(404);
         }
 
+        $snapshot = $order->toArray();
         $order->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $order,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn đơn hàng'
+        );
 
         return back()->with('msg', 'Đã xóa vĩnh viễn đơn hàng.');
     }

@@ -28,6 +28,7 @@ class TeacherApplicationController extends Controller
     {
         $pageTitle = __('teacher::admin.titles.applications');
         $applications = TeacherApplication::query()
+            ->where('type', 'new')
             ->with(['student', 'package', 'teacher', 'reviewer'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
             ->latest('id')
@@ -166,6 +167,18 @@ class TeacherApplicationController extends Controller
             'reviewed_by' => auth()->id(),
             'admin_note' => trim((string) $request->input('admin_note')) ?: __('teacher::admin.messages.default_reject_note'),
         ]);
+
+        activity_log(
+            action: 'teacher_application_rejected',
+            subject: $application->fresh(),
+            properties: [
+                'application_id' => $application->id,
+                'email' => $application->email,
+                'admin_note' => $application->admin_note,
+            ],
+            logName: __('teacher::admin.logs.reject_title') ?? 'Từ chối hồ sơ giảng viên',
+            description: __('teacher::admin.logs.reject_desc') ?? 'Từ chối hồ sơ đăng ký giảng viên'
+        );
 
         Mail::to($application->email)
             ->locale(app()->getLocale())

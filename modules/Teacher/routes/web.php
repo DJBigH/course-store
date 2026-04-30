@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherApplicationController as AdminTeacherApplicationController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherAnnouncementController as AdminTeacherAnnouncementController;
+use Modules\Teacher\src\Http\Controllers\Admin\TeacherUpgradeController as AdminTeacherUpgradeController;
 use Modules\Teacher\src\Http\Controllers\Clients\StudentQuizController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherApplicationController as ClientTeacherApplicationController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherCancellationController;
@@ -41,41 +42,48 @@ Route::prefix('admin')->group(function () {
 
       // Teacher Badges
       Route::prefix('badges')->name('badges.')->group(function () {
-          Route::get('/', 'Admin\TeacherBadgeController@index')->middleware('permission:teachers.view')->name('index');
-          Route::get('/data', 'Admin\TeacherBadgeController@data')->middleware('permission:teachers.view')->name('data');
-          Route::get('/trash', 'Admin\TeacherBadgeController@trash')->middleware('permission:teachers.view')->name('trash');
-          Route::get('/trash/data', 'Admin\TeacherBadgeController@trashData')->middleware('permission:teachers.view')->name('trash.data');
-          Route::get('/create', 'Admin\TeacherBadgeController@create')->middleware('permission:teachers.create')->name('create');
-          Route::post('/create', 'Admin\TeacherBadgeController@store')->middleware('permission:teachers.create')->name('store');
-          Route::get('/edit/{id}', 'Admin\TeacherBadgeController@edit')->middleware('permission:teachers.edit')->name('edit');
-          Route::post('/edit/{id}', 'Admin\TeacherBadgeController@update')->middleware('permission:teachers.edit')->name('update');
-          Route::delete('/delete/{id}', 'Admin\TeacherBadgeController@delete')->middleware('permission:teachers.delete')->name('delete');
-          Route::post('/restore/{id}', 'Admin\TeacherBadgeController@restore')->middleware('permission:teachers.edit')->name('restore');
-          Route::delete('/force-delete/{id}', 'Admin\TeacherBadgeController@forceDelete')->middleware('permission:teachers.delete')->name('force-delete');
+          Route::get('/', 'Admin\TeacherBadgeController@index')->middleware('permission:badges.view')->name('index');
+          Route::get('/data', 'Admin\TeacherBadgeController@data')->middleware('permission:badges.view')->name('data');
+          Route::get('/trash', 'Admin\TeacherBadgeController@trash')->middleware('permission:badges.view')->name('trash');
+          Route::get('/trash/data', 'Admin\TeacherBadgeController@trashData')->middleware('permission:badges.view')->name('trash.data');
+          Route::get('/create', 'Admin\TeacherBadgeController@create')->middleware('permission:badges.create')->name('create');
+          Route::post('/create', 'Admin\TeacherBadgeController@store')->middleware('permission:badges.create')->name('store');
+          Route::get('/edit/{id}', 'Admin\TeacherBadgeController@edit')->middleware('permission:badges.edit')->name('edit');
+          Route::post('/edit/{id}', 'Admin\TeacherBadgeController@update')->middleware('permission:badges.edit')->name('update');
+          Route::delete('/delete/{id}', 'Admin\TeacherBadgeController@delete')->middleware('permission:badges.delete')->name('delete');
+          Route::post('/restore/{id}', 'Admin\TeacherBadgeController@restore')->middleware('permission:badges.edit')->name('restore');
+          Route::delete('/force-delete/{id}', 'Admin\TeacherBadgeController@forceDelete')->middleware('permission:badges.delete')->name('force-delete');
       });
    });
 
    Route::prefix('teacher-applications')->name('teacher-applications.')->group(function () {
       Route::get('/', [AdminTeacherApplicationController::class, 'index'])->middleware('permission:teachers.view')->name('index');
       Route::get('/{id}', [AdminTeacherApplicationController::class, 'show'])->middleware('permission:teachers.view')->name('show');
-      Route::post('/{id}/approve', [AdminTeacherApplicationController::class, 'approve'])->middleware('permission:teachers.edit')->name('approve');
-      Route::post('/{id}/reject', [AdminTeacherApplicationController::class, 'reject'])->middleware('permission:teachers.edit')->name('reject');
+      Route::post('/{id}/approve', [AdminTeacherApplicationController::class, 'approve'])->middleware('permission:teachers.approve')->name('approve');
+      Route::post('/{id}/reject', [AdminTeacherApplicationController::class, 'reject'])->middleware('permission:teachers.reject')->name('reject');
+   });
+
+   Route::prefix('teacher-upgrades')->name('teacher-upgrades.')->group(function () {
+      Route::get('/', [AdminTeacherUpgradeController::class, 'index'])->middleware('permission:teachers.view')->name('index');
+      Route::get('/{id}', [AdminTeacherUpgradeController::class, 'show'])->middleware('permission:teachers.view')->name('show');
+      Route::post('/{id}/approve', [AdminTeacherUpgradeController::class, 'approve'])->middleware('permission:teachers.approve')->name('approve');
+      Route::post('/{id}/reject', [AdminTeacherUpgradeController::class, 'reject'])->middleware('permission:teachers.reject')->name('reject');
    });
 
 
    Route::prefix('teacher-announcements')->name('teacher-announcements.')->group(function () {
-      Route::get('/', [AdminTeacherAnnouncementController::class, 'index'])->middleware('permission:teachers.view')->name('index');
-      Route::get('/create', [AdminTeacherAnnouncementController::class, 'create'])->middleware('permission:teachers.edit')->name('add');
-      Route::post('/create', [AdminTeacherAnnouncementController::class, 'store'])->middleware('permission:teachers.edit')->name('post-add');
-      Route::get('/edit/{id}', [AdminTeacherAnnouncementController::class, 'edit'])->middleware('permission:teachers.edit')->name('edit');
-      Route::post('/edit/{id}', [AdminTeacherAnnouncementController::class, 'update'])->middleware('permission:teachers.edit')->name('post-edit');
-      Route::delete('/delete/{id}', [AdminTeacherAnnouncementController::class, 'delete'])->middleware('permission:teachers.delete')->name('delete');
+      Route::get('/', [AdminTeacherAnnouncementController::class, 'index'])->middleware('permission:announcements.view')->name('index');
+      Route::get('/create', [AdminTeacherAnnouncementController::class, 'create'])->middleware('permission:announcements.create')->name('add');
+      Route::post('/create', [AdminTeacherAnnouncementController::class, 'store'])->middleware('permission:announcements.create')->name('post-add');
+      Route::get('/edit/{id}', [AdminTeacherAnnouncementController::class, 'edit'])->middleware('permission:announcements.create')->name('edit');
+      Route::post('/edit/{id}', [AdminTeacherAnnouncementController::class, 'update'])->middleware('permission:announcements.create')->name('post-edit');
+      Route::delete('/delete/{id}', [AdminTeacherAnnouncementController::class, 'delete'])->middleware('permission:announcements.delete')->name('delete');
    });
 
    Route::prefix('teacher-finance')->name('teacher-finance.')->group(function () {
-      Route::get('/cancellations', 'Admin\TeacherCancellationController@index')->middleware('permission:teachers.view')->name('cancellations.index');
-      Route::post('/cancellations/{id}/approve', 'Admin\TeacherCancellationController@approve')->middleware('permission:teachers.edit')->name('cancellations.approve');
-      Route::post('/cancellations/{id}/reject', 'Admin\TeacherCancellationController@reject')->middleware('permission:teachers.edit')->name('cancellations.reject');
+      Route::get('/cancellations', 'Admin\TeacherCancellationController@index')->middleware('permission:teachers.cancel_manage')->name('cancellations.index');
+      Route::post('/cancellations/{id}/approve', 'Admin\TeacherCancellationController@approve')->middleware('permission:teachers.cancel_manage')->name('cancellations.approve');
+      Route::post('/cancellations/{id}/reject', 'Admin\TeacherCancellationController@reject')->middleware('permission:teachers.cancel_manage')->name('cancellations.reject');
    });
 });
 

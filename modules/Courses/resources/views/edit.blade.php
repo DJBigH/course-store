@@ -456,7 +456,9 @@
                         <div class="col-3">
                             <div id="holder">
                                 @if (old('thumbnail') || $courses->thumbnail)
-                                    <img src="{{ old('thumbnail') ?? $courses->thumbnail }}" alt="">
+                                    <img src="{{ asset(old('thumbnail') ?? $courses->thumbnail) }}" alt="">
+                                @else
+                                    <img src="https://placehold.co/600x400?text=Course" alt="">
                                 @endif
                             </div>
                         </div>

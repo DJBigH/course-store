@@ -98,6 +98,7 @@ class TeacherApplicationController extends Controller
             'payment_method' => $request->string('payment_method')->toString() ?: null,
             'coupon_code' => $couponData['coupon_code'],
             'discount_amount' => $couponData['discount_amount'],
+            'type' => 'new',
             'submitted_at' => now(),
             'reviewed_at' => null,
             'reviewed_by' => null,

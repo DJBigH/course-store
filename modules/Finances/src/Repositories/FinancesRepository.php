@@ -20,31 +20,63 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
 
     public function getEarningsSummary($teacherId, ?string $groupBy = null, ?string $fromDate = null, ?string $toDate = null, ?string $currency = 'ALL'): array
     {
-        $query = OrderDetail::query()
-            ->whereHas('order', function ($q) use ($currency) {
-                $q->whereHas('status', fn($sq) => $sq->where('is_success', true));
-                if ($currency && $currency !== 'ALL') {
-                    $q->where('currency', $currency);
-                }
-            })
-            ->whereHas('courses', function ($q) use ($teacherId) {
-                if ($teacherId) {
-                    $q->withTrashed()->where('teacher_id', $teacherId);
-                }
-            });
+        $paidStatusId = (int) (DB::table('orders_status')->where('is_success', true)->value('id') ?? 2);
+
+        $query = DB::table('orders_detail as od')
+            ->join('orders as o', 'o.id', '=', 'od.order_id')
+            ->join('courses as c', 'c.id', '=', 'od.course_id')
+            ->join('teacher as t', 't.id', '=', 'c.teacher_id')
+            ->where('o.status_id', $paidStatusId);
+
+        if ($teacherId) {
+            $query->where('c.teacher_id', $teacherId);
+        }
+
+        if ($currency && $currency !== 'ALL') {
+            $query->where('o.currency', $currency);
+        }
 
         if ($fromDate) {
-            $query->whereDate('created_at', '>=', $fromDate);
+            $query->whereDate('od.created_at', '>=', $fromDate);
         }
         if ($toDate) {
-            $query->whereDate('created_at', '<=', $toDate);
+            $query->whereDate('od.created_at', '<=', $toDate);
         }
 
-        $details = $query->with(['order', 'courses.teacher'])->get();
+        // Logic for calculated fields:
+        // gross = od.price * exRate
+        // discount = min(gross, (o.discount * exRate) * (od.price / o.total))
+        // net = gross - discount
+        // teacher = net * (t.commission_rate / 100)
+        
+        $exRate = $currency === 'ALL' ? 'IFNULL(o.exchange_rate, 1)' : '1';
+        
+        $summary = $query->selectRaw("
+            SUM(od.price * {$exRate}) as gross_amount,
+            SUM(
+                LEAST(
+                    od.price * {$exRate}, 
+                    IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0)
+                )
+            ) as allocated_discount,
+            SUM(
+                GREATEST(0, (od.price * {$exRate}) - LEAST(od.price * {$exRate}, IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0)))
+            ) as net_revenue,
+            SUM(
+                GREATEST(0, (od.price * {$exRate}) - LEAST(od.price * {$exRate}, IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0))) 
+                * (IFNULL(t.commission_rate, 0) / 100)
+            ) as teacher_revenue
+        ")->first();
 
-        return FinanceCalculator::summarize($details, function ($detail) {
-            return $detail->courses?->teacher?->commission_rate ?? 0;
-        });
+        $platformRevenue = max(0, ($summary->net_revenue ?? 0) - ($summary->teacher_revenue ?? 0));
+
+        return [
+            'gross_amount' => (float) ($summary->gross_amount ?? 0),
+            'allocated_discount' => (float) ($summary->allocated_discount ?? 0),
+            'net_revenue' => (float) ($summary->net_revenue ?? 0),
+            'teacher_revenue' => (float) ($summary->teacher_revenue ?? 0),
+            'platform_revenue' => (float) $platformRevenue,
+        ];
     }
 
     public function getCourseEarnings(int $teacherId, ?string $fromDate = null, ?string $toDate = null): array
@@ -367,5 +399,114 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
         );
 
         return true;
+    }
+
+    public function getTeacherEarningsSummaries(?string $fromDate = null, ?string $toDate = null, ?string $currency = 'ALL'): array
+    {
+        $paidStatusId = (int) (DB::table('orders_status')->where('is_success', true)->value('id') ?? 2);
+
+        $query = DB::table('orders_detail as od')
+            ->join('orders as o', 'o.id', '=', 'od.order_id')
+            ->join('courses as c', 'c.id', '=', 'od.course_id')
+            ->join('teacher as t', 't.id', '=', 'c.teacher_id')
+            ->where('o.status_id', $paidStatusId);
+
+        if ($currency && $currency !== 'ALL') {
+            $query->where('o.currency', $currency);
+        }
+
+        if ($fromDate) {
+            $query->whereDate('od.created_at', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $query->whereDate('od.created_at', '<=', $toDate);
+        }
+
+        $exRate = $currency === 'ALL' ? 'IFNULL(o.exchange_rate, 1)' : '1';
+
+        $results = $query->selectRaw("
+            c.teacher_id,
+            t.name as teacher_name,
+            t.slug as teacher_slug,
+            COUNT(DISTINCT o.id) as orders_count,
+            SUM(od.price * {$exRate}) as gross_amount,
+            SUM(
+                LEAST(
+                    od.price * {$exRate}, 
+                    IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0)
+                )
+            ) as allocated_discount,
+            SUM(
+                GREATEST(0, (od.price * {$exRate}) - LEAST(od.price * {$exRate}, IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0)))
+            ) as net_revenue,
+            SUM(
+                GREATEST(0, (od.price * {$exRate}) - LEAST(od.price * {$exRate}, IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0))) 
+                * (IFNULL(t.commission_rate, 0) / 100)
+            ) as teacher_revenue
+        ")
+        ->groupBy('c.teacher_id', 't.name', 't.slug')
+        ->having('gross_amount', '>', 0)
+        ->get();
+
+        return $results->map(function ($row) {
+            return [
+                'teacher_id' => $row->teacher_id,
+                'teacher_name' => $row->teacher_name,
+                'teacher_slug' => $row->teacher_slug,
+                'orders_count' => $row->orders_count,
+                'gross_amount' => (float) $row->gross_amount,
+                'allocated_discount' => (float) $row->allocated_discount,
+                'net_revenue' => (float) $row->net_revenue,
+                'teacher_revenue' => (float) $row->teacher_revenue,
+                'platform_revenue' => (float) max(0, $row->net_revenue - $row->teacher_revenue),
+            ];
+        })->toArray();
+    }
+
+    public function getDailyEarningsSummary(string $fromDate, string $toDate, ?string $currency = 'ALL'): array
+    {
+        $paidStatusId = (int) (DB::table('orders_status')->where('is_success', true)->value('id') ?? 2);
+
+        $query = DB::table('orders_detail as od')
+            ->join('orders as o', 'o.id', '=', 'od.order_id')
+            ->join('courses as c', 'c.id', '=', 'od.course_id')
+            ->join('teacher as t', 't.id', '=', 'c.teacher_id')
+            ->where('o.status_id', $paidStatusId)
+            ->whereBetween('od.created_at', [$fromDate, $toDate]);
+
+        if ($currency && $currency !== 'ALL') {
+            $query->where('o.currency', $currency);
+        }
+
+        $exRate = $currency === 'ALL' ? 'IFNULL(o.exchange_rate, 1)' : '1';
+
+        $results = $query->selectRaw("
+            DATE(od.created_at) as date,
+            SUM(od.price * {$exRate}) as gross_amount,
+            SUM(
+                LEAST(
+                    od.price * {$exRate}, 
+                    IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0)
+                )
+            ) as allocated_discount,
+            SUM(
+                GREATEST(0, (od.price * {$exRate}) - LEAST(od.price * {$exRate}, IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0)))
+            ) as net_revenue,
+            SUM(
+                GREATEST(0, (od.price * {$exRate}) - LEAST(od.price * {$exRate}, IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0))) 
+                * (IFNULL(t.commission_rate, 0) / 100)
+            ) as teacher_revenue
+        ")
+        ->groupBy('date')
+        ->get();
+
+        return $results->mapWithKeys(function ($row) {
+            return [$row->date => [
+                'gross_amount' => (float) $row->gross_amount,
+                'net_revenue' => (float) $row->net_revenue,
+                'teacher_revenue' => (float) $row->teacher_revenue,
+                'platform_revenue' => (float) max(0, $row->net_revenue - $row->teacher_revenue),
+            ]];
+        })->toArray();
     }
 }

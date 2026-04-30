@@ -47,7 +47,7 @@ class CoursesRequest extends FormRequest
             'detail_zh' => 'nullable',
             'teacher_id' => ['required', 'integer', function ($attribute, $value, $fail) {
                 if ($value == 0) {
-                    $fail(__('courses::validation.select'));
+                    $fail('Vui lòng chọn giảng viên.');
                 }
             }],
             'thumbnail' => 'required|max:225',
@@ -67,20 +67,19 @@ class CoursesRequest extends FormRequest
         return $rules;
     }
 
-    public function messages()
-    {
-        return [
-            'required' => __('courses::validation.required'),
-            'email' => __('courses::validation.email'),
-            'unique' => __('courses::validation.unique'),
-            'max' => __('courses::validation.max'),
-            'min' => __('courses::validation.min'),
-            'integer' => __('courses::validation.integer'),
-        ];
-    }
-
     public function attributes()
     {
-        return __('courses::validation.attributes');
+        return [
+            'name' => 'Tên khóa học',
+            'slug' => 'Đường dẫn (Slug)',
+            'detail' => 'Chi tiết khóa học',
+            'teacher_id' => 'Giảng viên',
+            'thumbnail' => 'Hình thu nhỏ',
+            'code' => 'Mã khóa học',
+            'is_document' => 'Tài liệu',
+            'supports' => 'Hỗ trợ',
+            'status' => 'Trạng thái',
+            'categories' => 'Danh mục',
+        ];
     }
 }

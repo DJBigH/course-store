@@ -99,7 +99,19 @@ class SettingRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'banner_right.max' => 'Banner ben phai chi duoc toi da 3 anh.',
+            'banner_right.max' => 'Banner bên phải chỉ được tối đa 3 ảnh.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'site_name' => 'Tên website',
+            'email' => 'Email liên hệ',
+            'phone' => 'Số điện thoại',
+            'currency_rate_usd' => 'Tỷ giá USD',
+            'checkout_countdown_minutes' => 'Thời gian thanh toán',
+            'max_devices' => 'Số thiết bị tối đa',
         ];
     }
 }

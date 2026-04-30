@@ -154,7 +154,7 @@ class TeacherAuthController extends Controller
         if ($student) {
             $student->forceFill(['preferred_locale' => $locale])->save();
             $token = Password::broker('students')->createToken($student);
-            $student->notify((new TeacherResetPasswordQueued($token, $locale))->locale($locale));
+            $student->notify((new TeacherResetPasswordQueued($token))->locale($locale));
         }
 
         return back()->with('msg', __('teacher::auth.messages.reset_link_sent'));

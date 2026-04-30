@@ -196,6 +196,7 @@
         $bankTransferAccountName = setting('bank_transfer_account_name', '');
         $bankTransferNotePrefix = trim((string) setting('bank_transfer_note_prefix', 'CK'));
         $bankTransferNote = trim($bankTransferNotePrefix . ' T' . auth()->user()->id);
+        $allPaymentsDisabled = !$bankEnabled && !$vnpayEnabled && !$momoEnabled;
     @endphp
 
     <div class="teacher-page-shell">
@@ -206,10 +207,22 @@
                     <h3 class="teacher-upgrade-title">{{ __('packages::teacher.upgrade.upgrade_title') }}</h3>
                     <p class="teacher-upgrade-desc mb-0">{{ __('packages::teacher.upgrade.upgrade_description') }}</p>
                 </div>
-                <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-outline-secondary teacher-upgrade-back">
-                    {{ __('courses::teacher/messages.trash.return') }}
                 </a>
             </div>
+            
+            @if ($allPaymentsDisabled)
+                <div class="alert alert-warning mb-4 rounded-4 shadow-sm border-0" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2) !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="flex-shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation fs-4 text-warning"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-warning">{{ __('packages::teacher.common.all_payments_maintenance_title') }}</div>
+                            <div class="small opacity-75 text-warning">{{ __('packages::teacher.common.all_payments_maintenance_desc') }}</div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             @if (session('msg_success'))
                 <div class="alert alert-success">{{ session('msg_success') }}</div>
@@ -853,7 +866,7 @@
                                 <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-outline-secondary">
                                     {{ __('packages::teacher.common.cancel') }}
                                 </a>
-                                <button type="submit" class="btn btn-primary flex-grow-1">
+                                <button type="submit" id="upgrade-submit-btn" class="btn btn-primary flex-grow-1">
                                     {{ __('packages::teacher.common.submit_upgrade') }}
                                 </button>
                             </div>
@@ -1964,6 +1977,7 @@
             const unlimitedText = @json(__('courses::teacher/messages.courses.unlimited'));
             const currentPackage = @json($currentPackageMap);
             const packageMap = @json($packageMap);
+            const allPaymentsDisabled = @json($allPaymentsDisabled);
             const getCollapsedCompareHeight = () => window.matchMedia('(max-width: 767.98px)').matches ? 560 : 700;
 
             const formatMoney = (value) => {
@@ -2076,12 +2090,35 @@
                 }
 
                 if (paymentGrid) {
-                    paymentGrid.classList.toggle('is-hidden', selectedPrice <= 0);
+                    paymentGrid.classList.toggle('is-hidden', selectedPrice <= 0 || allPaymentsDisabled);
                 }
 
                 const paymentSection = document.querySelector('[data-payment-section]');
                 if (paymentSection) {
-                    paymentSection.classList.toggle('d-none', selectedPrice <= 0);
+                    paymentSection.classList.toggle('d-none', selectedPrice <= 0 || (allPaymentsDisabled && selectedPrice > 0));
+                }
+
+                const submitBtn = document.getElementById('upgrade-submit-btn');
+                if (submitBtn) {
+                    if (allPaymentsDisabled && selectedPrice > 0) {
+                        submitBtn.style.display = 'none';
+                        let mtBtn = document.getElementById('maintenance-btn');
+                        if (!mtBtn) {
+                            mtBtn = document.createElement('button');
+                            mtBtn.id = 'maintenance-btn';
+                            mtBtn.type = 'button';
+                            mtBtn.className = 'btn btn-outline-warning flex-grow-1 opacity-75';
+                            mtBtn.disabled = true;
+                            mtBtn.textContent = @json(__('packages::teacher.common.payment_maintenance'));
+                            submitBtn.parentNode.appendChild(mtBtn);
+                        } else {
+                            mtBtn.style.display = '';
+                        }
+                    } else {
+                        submitBtn.style.display = '';
+                        const mtBtn = document.getElementById('maintenance-btn');
+                        if (mtBtn) mtBtn.style.display = 'none';
+                    }
                 }
 
                 if (warningBox && packageMap[selectedId]) {
@@ -2099,6 +2136,10 @@
                     } else if (hasRemainingRecurring && target.sort_order !== currentPackage.sort_order) {
                         const expiresText = currentExpiresAt.toLocaleDateString(document.documentElement.lang || 'vi');
                         warning = @json(__('packages::teacher.warnings.queued_package')).replace(':date', expiresText);
+                    }
+
+                    if (allPaymentsDisabled && target.price > 0) {
+                        warning = @json(__('packages::teacher.common.all_payments_maintenance_block'));
                     }
 
                     warningBox.textContent = warning;
@@ -2180,7 +2221,7 @@
                 // Hiển thị thông tin chuyển khoản nếu chọn bank
                 const bankInfo = document.getElementById('bank-transfer-details');
                 if (bankInfo) {
-                    bankInfo.classList.toggle('d-none', input?.value !== 'bank_transfer');
+                    bankInfo.classList.toggle('d-none', input?.value !== 'bank_transfer' || allPaymentsDisabled);
                 }
             };
 
