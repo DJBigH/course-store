@@ -81,43 +81,76 @@
                     </div>
                 </div>
 
-                <div class="card shadow-sm">
-                    <div class="card-header fw-semibold">
-                        Danh sách khóa học
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Tên khóa học</th>
-                                    <th class="text-end">Giá</th>
-                                    <th class="text-end">Giá sale</th>
-                                    <th>Giảng viên</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($order->detail as $key => $item)
+                @if ($order->type === 'teacher_upgrade')
+                    <div class="card shadow-sm">
+                        <div class="card-header fw-semibold">
+                            Thông tin gói giảng viên
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
                                     <tr>
-                                        <td>{{ $key + 1 }}</td>
+                                        <th>Tên gói</th>
+                                        <th class="text-end">Giá</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
                                         <td class="fw-semibold">
-                                            {{ $item->courses->name ?? '-' }}
+                                            {{ $order->orderable->package->name ?? '-' }}
                                         </td>
-                                        <td class="text-end">
-                                            {{ money($item->courses->price ?? 0) }}
-                                        </td>
-                                        <td class="text-end text-danger fw-semibold">
-                                            {{ money($item->courses->sale_price ?? $item->courses->price) }}
-                                        </td>
-                                        <td>
-                                            {{ $item->courses->teacher->name ?? '-' }}
+                                        <td class="text-end fw-bold text-primary">
+                                            {{ money($order->total) }}
                                         </td>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                @else
+                    <div class="card shadow-sm">
+                        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                            <span>Danh sách khóa học</span>
+                            @if($order->bundle_id && $order->bundle)
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">
+                                    <i class="bi bi-layers-half me-1"></i> Combo: {{ $order->bundle->name }}
+                                </span>
+                            @endif
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Tên khóa học</th>
+                                        <th class="text-end">Giá</th>
+                                        <th class="text-end">Giá sale</th>
+                                        <th>Giảng viên</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($order->detail as $key => $item)
+                                        <tr>
+                                            <td>{{ $key + 1 }}</td>
+                                            <td class="fw-semibold">
+                                                {{ $item->courses->name ?? '-' }}
+                                            </td>
+                                            <td class="text-end">
+                                                {{ money($item->courses->price ?? 0) }}
+                                            </td>
+                                            <td class="text-end text-danger fw-semibold">
+                                                {{ money($item->courses->sale_price ?? $item->courses->price) }}
+                                            </td>
+                                            <td>
+                                                {{ $item->courses->teacher->name ?? '-' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div class="col-lg-4">

@@ -5,6 +5,8 @@ return [
         'dashbroad' => 'ダッシュボード',
         'profile' => '個人情報',
         'my_course' => 'マイコース',
+        'my_certificates' => 'マイ修了証',
+        'my_quizzes' => 'マイテスト',
         'coupons' => 'クーポン',
         'order' => '注文',
         'change_password' => 'パスワード変更',

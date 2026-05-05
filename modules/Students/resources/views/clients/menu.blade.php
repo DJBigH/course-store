@@ -45,7 +45,15 @@
             class="nav-link {{ request()->routeIs('students.account.certificates.*') ? 'active' : '' }}"
             data-account-nav>
             <i class="fa-solid fa-award"></i>
-            Chung chi cua toi
+            {{ __('students::clients/account.menu.my_certificates') }}
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{{ route('students.account.my-quizzes', ['locale' => app()->getLocale()]) }}"
+            class="nav-link {{ activeMenu('students.account.my-quizzes') ? 'active' : '' }}"
+            data-account-nav>
+            <i class="fa-solid fa-vial-circle-check"></i>
+            {{ __('students::clients/account.menu.my_quizzes') }}
         </a>
     </li>
     <li class="nav-item">

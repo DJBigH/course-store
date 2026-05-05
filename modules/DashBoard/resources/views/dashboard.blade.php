@@ -317,10 +317,13 @@
                     <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
                         <ul class="nav nav-tabs border-0" id="topPerformersTab" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active fw-bold border-0 bg-transparent" id="top-courses-tab" data-bs-toggle="tab" data-bs-target="#top-courses" type="button" role="tab" style="color: #0f172a;">Top Khóa học (Tổng: {{ $kpi['courses_count'] ?? 0 }})</button>
+                                <button class="nav-link active fw-bold border-0 bg-transparent custom-tab-btn" id="top-courses-tab" data-bs-toggle="tab" data-bs-target="#top-courses" type="button" role="tab">Top Khóa học ({{ $kpi['top_courses_count'] ?? 0 }})</button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link fw-bold border-0 bg-transparent text-muted" id="top-teachers-tab" data-bs-toggle="tab" data-bs-target="#top-teachers" type="button" role="tab">Top Giảng viên</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold border-0 bg-transparent text-muted" id="top-packages-tab" data-bs-toggle="tab" data-bs-target="#top-packages" type="button" role="tab">Top Gói</button>
                             </li>
                         </ul>
                     </div>
@@ -331,14 +334,17 @@
                                     @foreach($topCourses['labels'] as $idx => $label)
                                     <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="top-rank-badge rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; background: #e0e7ff; color: #4f46e5;">{{ $idx + 1 }}</div>
+                                            <div class="top-rank-badge top-course-badge rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px;">{{ $idx + 1 }}</div>
                                             <a href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $topCourses['slugs'][$idx] ?? '#']) }}" target="_blank" class="fw-semibold text-truncate text-decoration-none text-dark" style="max-width: 180px;">{{ $label }}</a>
                                         </div>
                                         <div class="fw-bold text-success">{{ $topCourses['data'][$idx] }} lượt mua</div>
                                     </div>
                                     @endforeach
-                                    @if(empty($topCourses['labels']))
-                                        <div class="text-center text-muted py-4">Chưa có dữ liệu khóa học</div>
+                                    @if(empty($topCourses['labels']) || count($topCourses['labels']) === 0)
+                                        <div class="text-center py-4">
+                                            <i class="fa-solid fa-book-open text-muted mb-2 d-block" style="font-size: 1.2rem; opacity: 0.3;"></i>
+                                            <div class="text-muted small fw-medium">Chưa có khóa học nào được mua</div>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -347,14 +353,36 @@
                                     @foreach($topTeachers as $idx => $t)
                                     <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="top-teacher-badge rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; background: #ffedd5; color: #ea580c;">{{ $idx + 1 }}</div>
+                                            <div class="top-rank-badge top-teacher-badge rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px;">{{ $idx + 1 }}</div>
                                             <a href="{{ route('teacher.public.show', ['locale' => app()->getLocale(), 'slug' => $t['slug'] ?? '#']) }}" target="_blank" class="fw-semibold text-truncate text-decoration-none text-dark" style="max-width: 150px;">{{ $t['name'] }}</a>
                                         </div>
                                         <div class="fw-bold text-primary">{{ $currency === 'ALL' ? money($t['revenue']) : number_format($t['revenue']) }}</div>
                                     </div>
                                     @endforeach
                                     @if(empty($topTeachers))
-                                        <div class="text-center text-muted py-4">Chưa có dữ liệu giảng viên</div>
+                                        <div class="text-center py-4">
+                                            <i class="fa-solid fa-chalkboard-user text-muted mb-2 d-block" style="font-size: 1.2rem; opacity: 0.3;"></i>
+                                            <div class="text-muted small fw-medium">Chưa có dữ liệu giảng viên</div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="top-packages" role="tabpanel">
+                                <div class="mt-2">
+                                    @foreach($topPackages['labels'] as $idx => $label)
+                                    <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="top-rank-badge top-package-badge rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px;">{{ $idx + 1 }}</div>
+                                            <span class="fw-semibold text-truncate text-dark" style="max-width: 150px;">{{ $label }}</span>
+                                        </div>
+                                        <div class="fw-bold text-success">{{ $topPackages['data'][$idx] }} lượt mua</div>
+                                    </div>
+                                    @endforeach
+                                    @if(empty($topPackages['labels']) || count($topPackages['labels']) === 0)
+                                        <div class="text-center py-4">
+                                            <i class="fa-solid fa-box-open text-muted mb-2 d-block" style="font-size: 1.2rem; opacity: 0.3;"></i>
+                                            <div class="text-muted small fw-medium">Chưa có gói nào được mua</div>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -432,6 +460,14 @@
         .dashboard-highlight--teacher::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:#fbbf24; }
         .dashboard-highlight--discount::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:#f87171; }
 
+        .top-course-badge { background: #e0e7ff; color: #4f46e5; }
+        .top-teacher-badge { background: #ffedd5; color: #ea580c; }
+        .top-package-badge { background: #d1fae5; color: #059669; }
+
+        html[data-theme='dark'] .top-course-badge { background: rgba(79, 70, 229, 0.2); color: #a5b4fc; }
+        html[data-theme='dark'] .top-teacher-badge { background: rgba(234, 88, 12, 0.2); color: #fdba74; }
+        html[data-theme='dark'] .top-package-badge { background: rgba(5, 150, 105, 0.2); color: #6ee7b7; }
+
         .dashboard-highlight strong {
             display: block;
             font-size: 1.45rem;
@@ -445,6 +481,24 @@
             color: rgba(255, 255, 255, 0.78) !important;
         }
 
+        .custom-tab-btn {
+            color: #64748b !important;
+        }
+        .custom-tab-btn.active {
+            color: #0f172a !important;
+        }
+        html[data-theme='dark'] .custom-tab-btn.active {
+            color: #f8fafc !important;
+        }
+        html[data-theme='dark'] .card-header.bg-white {
+            background-color: transparent !important;
+        }
+        html[data-theme='dark'] .tab-content .text-dark {
+            color: #e2e8f0 !important;
+        }
+        html[data-theme='dark'] .tab-content .border-bottom {
+            border-color: rgba(148, 163, 184, 0.1) !important;
+        }
         .dashboard-highlight__label {
             display: block;
             font-size: 0.75rem;

@@ -19,7 +19,14 @@ class TeacherApplication extends Model
                 $chatId = config('services.telegram.chat_id');
 
                 if ($isEnabled === '1' && $botToken && $chatId) {
+                    $app->loadMissing('package');
                     $isUpgrade = $app->type === 'upgrade';
+                    
+                    // Nếu là nâng cấp gói 0đ thì không gửi thông báo "Yêu cầu" vì sẽ gửi thông báo "Thành công" ngay sau đó
+                    if ($isUpgrade && ($app->package?->price ?? 0) <= 0) {
+                        return;
+                    }
+
                     $title = $isUpgrade ? "🚀 <b>[YÊU CẦU NÂNG CẤP GÓI]</b>" : "👨‍🏫 <b>[YÊU CẦU ĐĂNG KÝ LÀM GIÁO VIÊN]</b>";
                     
                     $text = "{$title}\n\n";
@@ -67,6 +74,28 @@ class TeacherApplication extends Model
                         }
 
                         $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+                        \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                            'chat_id' => $chatId,
+                            'text' => $text,
+                            'parse_mode' => 'HTML'
+                        ]);
+                    }
+                }
+
+                if ($app->isDirty('status') && $app->status === 'approved' && $app->type === 'upgrade') {
+                    $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                    $botToken = config('services.telegram.bot_token');
+                    $chatId = config('services.telegram.chat_id');
+
+                    if ($isEnabled === '1' && $botToken && $chatId) {
+                        $app->loadMissing('package');
+                        $text = "✅ <b>[NÂNG CẤP GÓI THÀNH CÔNG]</b>\n\n";
+                        $text .= "👤 <b>Giảng viên:</b> {$app->full_name}\n";
+                        $text .= "✉️ <b>Email:</b> <code>{$app->email}</code>\n";
+                        $text .= "📦 <b>Gói đã kích hoạt:</b> " . ($app->package?->name ?? 'N/A') . "\n";
+                        $text .= "💰 <b>Số tiền:</b> " . number_format($app->package?->price ?? 0) . " VNĐ\n";
+                        $text .= "💳 <b>Thanh toán:</b> " . strtoupper((string) $app->payment_method) . "\n";
+                        $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
 
                         \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                             'chat_id' => $chatId,
@@ -107,6 +136,8 @@ class TeacherApplication extends Model
         'intro_video_url',
         'cv_file',
         'identity_file',
+        'cv_file_path',
+        'identity_file_path',
         'submitted_at',
         'reviewed_at',
         'activates_at',
@@ -154,6 +185,11 @@ class TeacherApplication extends Model
     public function package()
     {
         return $this->belongsTo(\Modules\Packages\src\Models\Package::class, 'package_id', 'id');
+    }
+
+    public function orders()
+    {
+        return $this->morphMany(\Modules\Orders\src\Models\Order::class, 'orderable');
     }
 
     public function reviewer()

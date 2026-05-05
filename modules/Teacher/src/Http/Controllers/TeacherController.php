@@ -556,6 +556,12 @@ class TeacherController extends Controller
                 : "Đã mở khóa quyền giáo viên cho [{$teacher->name}]"
         );
 
+        // Notify Teacher
+        if ($teacher->student) {
+            $type = $isLocking ? 'locked' : 'unlocked';
+            $teacher->student->notify(new \App\Notifications\TeacherAccountStatusNotification($teacher, $type));
+        }
+
         return back()->with('msg', $isLocking ? 'Đã khóa tài khoản giáo viên thành công.' : 'Đã mở khóa tài khoản giáo viên thành công.');
     }
 
@@ -584,6 +590,12 @@ class TeacherController extends Controller
                 ? "Đã huỷ hợp tác với giảng viên [{$teacher->name}]"
                 : "Đã khôi phục hợp tác với giảng viên [{$teacher->name}]"
         );
+
+        // Notify Teacher
+        if ($teacher->student) {
+            $type = $newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED ? 'ceased' : 'restored';
+            $teacher->student->notify(new \App\Notifications\TeacherAccountStatusNotification($teacher, $type));
+        }
 
         return back()->with('msg', $newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED ? 'Đã huỷ hợp tác với giảng viên thành công.' : 'Đã khôi phục hợp tác với giảng viên thành công.');
     }

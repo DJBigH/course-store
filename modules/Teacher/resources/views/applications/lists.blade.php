@@ -40,6 +40,7 @@
                             <th>ID</th>
                             <th>Học viên</th>
                             <th>Gói</th>
+                            <th class="text-end">Giá tiền</th>
                             <th>Trạng thái</th>
                             <th>Gửi lúc</th>
                             <th class="text-end">Thao tác</th>
@@ -54,6 +55,9 @@
                                     <div class="text-muted small">{{ $application->student?->email }}</div>
                                 </td>
                                 <td>{{ $application->package?->name ?: '-' }}</td>
+                                <td class="text-end fw-bold text-primary">
+                                    {{ money($application->orders->first()?->total ?? $application->package?->price ?? 0) }}
+                                </td>
                                 <td>
                                     <span class="badge bg-{{ match ($application->status) {
                                         'approved' => 'success',

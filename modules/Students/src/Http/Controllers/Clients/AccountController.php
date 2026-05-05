@@ -27,6 +27,10 @@ use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
 use Modules\Certificates\src\Models\Certificate;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
+use Modules\Courses\src\Models\CourseQuiz;
+use Modules\Courses\src\Models\CourseQuizSubmission;
+use Modules\Courses\src\Models\CourseQuizAssignment;
+use Modules\Courses\src\Models\Courses;
 
 class AccountController extends Controller
 {
@@ -66,6 +70,32 @@ class AccountController extends Controller
         $totalCoupons = $student->coupons()->count();
         $totalOrders = $student->orders()->count();
 
+        // Enhanced Stats (P1)
+        $totalCertificates = Certificate::where('student_id', $student->id)->whereNull('revoked_at')->count();
+
+        $activeCourseIds = $student->courses()->where('students_courses.status', 1)->pluck('courses.id')->toArray();
+        $totalLessonsCount = Lesson::active()->whereIn('course_id', $activeCourseIds)->whereNotNull('parent_id')->count();
+        $completedLessonsCount = StudentLessonProgress::where('student_id', $student->id)->whereIn('course_id', $activeCourseIds)->count();
+        $averageProgress = $totalLessonsCount > 0 ? round(($completedLessonsCount * 100) / $totalLessonsCount) : 0;
+
+        $upcomingQuizzes = CourseQuiz::query()
+            ->with(['course'])
+            ->where(function ($query) use ($student, $activeCourseIds) {
+                $query->whereHas('assignments', function ($q) use ($student) {
+                    $q->where('student_id', $student->id);
+                })
+                    ->orWhere(function ($q) use ($activeCourseIds) {
+                        $q->whereIn('course_id', $activeCourseIds)->where('status', 1);
+                    });
+            })
+            ->where('deadline_at', '>', now())
+            ->whereDoesntHave('submissions', function ($q) use ($student) {
+                $q->where('student_id', $student->id)->whereNotNull('submitted_at');
+            })
+            ->orderBy('deadline_at')
+            ->take(3)
+            ->get();
+
         // Combined recent courses
         $recentPurchased = $student->courses()
             ->with('teacher')
@@ -98,6 +128,9 @@ class AccountController extends Controller
             'totalCoupons',
             'totalCourses',
             'totalOrders',
+            'totalCertificates',
+            'averageProgress',
+            'upcomingQuizzes',
             'recentCourses',
             'recentOrders'
         ));
@@ -297,6 +330,55 @@ class AccountController extends Controller
             ->latest()
             ->paginate(3);
         return view('students::clients.my_coupons', compact('pageTitle', 'pageName', 'coupons'));
+    }
+
+    public function myQuizzes(Request $request)
+    {
+        $pageTitle = __('students::clients/account.menu.my_quizzes');
+        $pageName = $pageTitle;
+        $student = Auth::guard('students')->user();
+
+        // Get course IDs for active courses
+        $activeCourseIds = $student->courses()
+            ->where('students_courses.status', 1)
+            ->pluck('courses.id')
+            ->toArray();
+
+        $quizzesQuery = CourseQuiz::query()
+            ->with(['course', 'creator.student'])
+            ->where(function ($query) use ($student, $activeCourseIds) {
+                // Specifically assigned
+                $query->whereHas('assignments', function ($q) use ($student) {
+                    $q->where('student_id', $student->id);
+                })
+                // OR Published in active courses
+                ->orWhere(function ($q) use ($activeCourseIds) {
+                    $q->whereIn('course_id', $activeCourseIds)
+                        ->where('status', 1);
+                });
+            })
+            ->latest();
+
+        $quizzes = $quizzesQuery->paginate(10)->withQueryString();
+
+        // Map submissions
+        $quizIds = $quizzes->pluck('id')->toArray();
+        $submissions = CourseQuizSubmission::query()
+            ->where('student_id', $student->id)
+            ->whereIn('quiz_id', $quizIds)
+            ->whereNotNull('submitted_at')
+            ->get()
+            ->groupBy('quiz_id');
+
+        $quizzes->getCollection()->transform(function ($quiz) use ($submissions) {
+            $quizSubmissions = $submissions->get($quiz->id) ?? collect();
+            $quiz->setAttribute('my_submissions_count', $quizSubmissions->count());
+            $quiz->setAttribute('best_score', $quizSubmissions->max('score'));
+            $quiz->setAttribute('latest_submission', $quizSubmissions->sortByDesc('submitted_at')->first());
+            return $quiz;
+        });
+
+        return view('students::clients.my_quizzes', compact('pageTitle', 'pageName', 'quizzes'));
     }
 
     public function myOrder(Request $request)

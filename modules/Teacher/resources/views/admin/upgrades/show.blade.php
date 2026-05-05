@@ -35,6 +35,10 @@
                             <dd class="col-sm-8">
                                 <span class="badge bg-primary fs-6">{{ $upgrade->package?->name ?: '-' }}</span>
                             </dd>
+                            <dt class="col-sm-4">Giá tiền</dt>
+                            <dd class="col-sm-8 fw-bold text-primary">
+                                {{ money($upgrade->orders->first()?->total ?? $upgrade->package?->price ?? 0) }}
+                            </dd>
                             <dt class="col-sm-4">Phương thức thanh toán</dt>
                             <dd class="col-sm-8">{{ strtoupper((string) $upgrade->payment_method) }}</dd>
                             <dt class="col-sm-4">Trạng thái hiện tại</dt>
@@ -64,33 +68,26 @@
 
                 <div class="col-lg-5">
                     <div class="border rounded-4 p-4 mb-4">
-                        <h6 class="fw-bold mb-3">Xử lý yêu cầu</h6>
-                        @php $isFinalStatus = in_array($upgrade->status, ['approved', 'cancelled', 'rejected']); @endphp
-                        <form method="POST" action="{{ route('teacher-upgrades.approve', $upgrade->id) }}" class="mb-3">
-                            @csrf
-                            <label class="form-label">Phản hồi từ Admin (Gửi cho giảng viên)</label>
-                            <textarea name="admin_note" class="form-control" rows="4" {{ $isFinalStatus ? 'disabled' : '' }}
-                                placeholder="Ghi chú phê duyệt hoặc hướng dẫn...">{{ old('admin_note', $upgrade->admin_note) }}</textarea>
-                            <button type="submit" class="btn btn-success w-100 mt-3" 
-                                {{ $upgrade->status !== 'pending_review' ? 'disabled' : '' }}>
-                                <i class="fa-solid fa-check me-2"></i> Phê duyệt nâng cấp
-                            </button>
-                            @if ($upgrade->status === 'pending_payment')
-                                <p class="small text-warning mt-2 mb-0 text-center">
-                                    <i class="fa-solid fa-circle-info me-1"></i> Chờ giảng viên hoàn tất thanh toán.
-                                </p>
-                            @endif
-                        </form>
+                        <h6 class="fw-bold mb-3">Ghi chú xử lý (Admin)</h6>
+                        @if ($upgrade->admin_note)
+                            <div class="bg-light p-3 rounded-3 mb-3">
+                                {{ $upgrade->admin_note }}
+                            </div>
+                        @else
+                            <p class="text-muted italic">Không có ghi chú nào.</p>
+                        @endif
 
-                        <form method="POST" action="{{ route('teacher-upgrades.reject', $upgrade->id) }}">
-                            @csrf
-                            <label class="form-label">Lý do từ chối</label>
-                            <textarea name="admin_note" class="form-control" rows="4" {{ $isFinalStatus ? 'disabled' : '' }}
-                                placeholder="Vui lòng nêu rõ lý do từ chối yêu cầu nâng cấp...">{{ old('admin_note', $upgrade->admin_note) }}</textarea>
-                            <button type="submit" class="btn btn-outline-danger w-100 mt-3" {{ $isFinalStatus ? 'disabled' : '' }}>
-                                <i class="fa-solid fa-xmark me-2"></i> Từ chối yêu cầu
-                            </button>
-                        </form>
+                        @if ($upgrade->status === 'pending_payment')
+                            <div class="alert alert-warning border-0 small mb-0">
+                                <i class="fa-solid fa-circle-info me-1"></i> Hệ thống đang chờ giảng viên hoàn tất thanh toán để tự động kích hoạt.
+                            </div>
+                        @endif
+                        
+                        @if ($upgrade->status === 'approved')
+                            <div class="alert alert-success border-0 small mb-0">
+                                <i class="fa-solid fa-check-circle me-1"></i> Yêu cầu đã được phê duyệt và kích hoạt thành công.
+                            </div>
+                        @endif
                     </div>
 
                     <div class="border rounded-4 p-4">

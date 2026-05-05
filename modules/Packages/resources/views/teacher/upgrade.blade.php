@@ -775,6 +775,7 @@
                                 ] as $method => $data)
                                     <label class="teacher-upgrade-payment {{ $selectedPaymentMethod === $method ? 'is-selected' : '' }} {{ !$data['enabled'] ? 'is-maintenance' : '' }}" 
                                         data-upgrade-payment 
+                                        data-method-id="{{ $method }}"
                                         data-enabled="{{ $data['enabled'] ? 1 : 0 }}"
                                         data-method-name="{{ $data['label'] }}">
                                         <input type="radio" name="payment_method" value="{{ $method }}" @checked($selectedPaymentMethod === $method)>
@@ -2180,6 +2181,22 @@
                     currentSrc.searchParams.set('amount', selectedPrice);
                     qrImg.src = currentSrc.toString();
                 }
+
+                // Đồng bộ hiển thị thông tin ngân hàng
+                const bankInfo = document.getElementById('bank-transfer-details');
+                if (bankInfo) {
+                    const bankLabel = document.querySelector('[data-method-id="bank_transfer"]');
+                    const bankInput = bankLabel?.querySelector('input');
+                    const isBankSelected = bankInput?.checked;
+                    const isBankEnabled = bankLabel?.dataset.enabled === '1';
+                    
+                    if (!isBankSelected || !isBankEnabled || allPaymentsDisabled) {
+                        bankInfo.setAttribute('style', 'display: none !important');
+                    } else {
+                        bankInfo.setAttribute('style', '');
+                        bankInfo.classList.remove('d-none');
+                    }
+                }
             };
 
             const updatePayments = () => {
@@ -2217,12 +2234,7 @@
                     return;
                 }
                 updatePayments();
-
-                // Hiển thị thông tin chuyển khoản nếu chọn bank
-                const bankInfo = document.getElementById('bank-transfer-details');
-                if (bankInfo) {
-                    bankInfo.classList.toggle('d-none', input?.value !== 'bank_transfer' || allPaymentsDisabled);
-                }
+                updateCards(false); // Gọi updateCards để đồng bộ lại thông tin ngân hàng
             };
 
             cards.forEach((card) => {
@@ -2250,6 +2262,10 @@
             });
 
             window.addEventListener('resize', updateCompareToggleState);
+
+            // Khởi tạo trạng thái ban đầu
+            updateCards(false);
+            updatePayments();
 
             const featureLabels = @json($groupedFeatures->flatMap(fn($g) => collect($g)->mapWithKeys(fn($f) => [$f->key => $f->name_locale])));
             const confirmModal = new bootstrap.Modal(document.getElementById('upgradeConfirmModal'));

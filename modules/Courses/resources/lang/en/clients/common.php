@@ -107,4 +107,8 @@ return [
     'rating_invalid' => 'Please choose a valid rating from 1 to 5 stars.',
     'rating_already_submitted' => 'You have already rated this course and can only rate it once.',
     'rating_submitted_once' => 'You rated this course :rating stars. Each student can rate only once.',
+    'rating_hint_label' => 'Hover or touch to choose your satisfaction level',
+    'comment_empty_desc' => 'Be the first to ask a question or share your thoughts about this course!',
+    'comment_success' => 'Comment posted successfully.',
+    'rating_success' => 'Thank you for rating this course!',
 ];

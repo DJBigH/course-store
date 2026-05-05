@@ -93,7 +93,7 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             })
             ->whereHas('students', function ($query) use ($studentId) {
                 $query->where('student_id', $studentId)
-                    ->wherePivot('status', 1);
+                    ->where('students_courses.status', 1);
             })
             ->first();
     }

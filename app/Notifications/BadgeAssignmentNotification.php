@@ -79,21 +79,47 @@ class BadgeAssignmentNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
-        if ($this->status === 'success') {
-            $badgeNames = collect($this->badges)->map(fn($b) => $b->name['vi'] ?? 'Huy hiệu')->implode(', ');
-            return [
-                'title' => 'Cấp huy hiệu thành công',
-                'message' => 'Bạn vừa được cấp huy hiệu: ' . $badgeNames,
-                'status' => 'success',
-                'teacher_id' => $this->teacher->id
-            ];
-        } else {
-            return [
-                'title' => 'Cấp huy hiệu thất bại',
-                'message' => 'Lỗi: ' . $this->message,
-                'status' => 'failure',
-                'teacher_id' => $this->teacher->id
-            ];
-        }
+        $locale = app()->getLocale();
+        $isSuccess = $this->status === 'success';
+        
+        $badgeNamesVi = collect($this->badges)->map(fn($b) => $b->name['vi'] ?? 'Huy hiệu')->implode(', ');
+        $badgeNamesEn = collect($this->badges)->map(fn($b) => $b->name['en'] ?? 'Badge')->implode(', ');
+        $badgeNamesKo = collect($this->badges)->map(fn($b) => $b->name['ko'] ?? '뱃지')->implode(', ');
+        $badgeNamesJa = collect($this->badges)->map(fn($b) => $b->name['ja'] ?? 'バッジ')->implode(', ');
+        $badgeNamesZh = collect($this->badges)->map(fn($b) => $b->name['zh'] ?? '勋章')->implode(', ');
+
+        $titleTranslations = [
+            'vi' => $isSuccess ? 'Cấp huy hiệu thành công' : 'Cấp huy hiệu thất bại',
+            'en' => $isSuccess ? 'Badge assigned successfully' : 'Badge assignment failed',
+            'ko' => $isSuccess ? '뱃지 지급 완료' : '뱃지 지급 실패',
+            'ja' => $isSuccess ? 'バッジの付与完了' : 'バッジの付与失敗',
+            'zh' => $isSuccess ? '勋章授予成功' : '勋章授予失败',
+        ];
+
+        $messageTranslations = [
+            'vi' => $isSuccess ? 'Bạn vừa được cấp huy hiệu: ' . $badgeNamesVi : 'Lỗi: ' . $this->message,
+            'en' => $isSuccess ? 'You have been awarded a badge: ' . $badgeNamesEn : 'Error: ' . $this->message,
+            'ko' => $isSuccess ? '새로운 뱃지가 지급되었습니다: ' . $badgeNamesKo : '오류: ' . $this->message,
+            'ja' => $isSuccess ? '新しいバッジが付与されました: ' . $badgeNamesJa : 'エラー: ' . $this->message,
+            'zh' => $isSuccess ? '您已获得新勋章：' . $badgeNamesZh : '错误：' . $this->message,
+        ];
+
+        return [
+            'type' => 'teacher.badge',
+            'title' => $titleTranslations['vi'],
+            'title_translations' => $titleTranslations,
+            'message' => $messageTranslations['vi'],
+            'message_translations' => $messageTranslations,
+            'url' => route('teachers.show', $this->teacher->slug),
+            'severity' => $isSuccess ? 'success' : 'danger',
+            'icon' => $isSuccess ? 'fas fa-medal' : 'fas fa-exclamation-circle',
+            'entity_type' => 'teacher',
+            'entity_id' => $this->teacher->id,
+            'meta' => [
+                'status' => $this->status,
+                'badge_count' => count($this->badges),
+                'error_message' => $isSuccess ? null : $this->message,
+            ],
+        ];
     }
 }

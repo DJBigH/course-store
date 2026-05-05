@@ -209,6 +209,13 @@ class PayoutController extends Controller
             return back()->with('msg_danger', __('finances::teacher/payouts.flash.amount_exceeds_balance'));
         }
 
+        // Notify Admins
+        $payoutRequest = \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->latest()->first();
+        if ($payoutRequest) {
+            $admins = \Modules\User\src\Models\User::adminPanelUsers()->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\AdminFinanceAlertNotification($payoutRequest, 'payout_request'));
+        }
+
         return redirect()->route('teacher.dashboard.payouts.index')->with('msg_success', __('finances::teacher/payouts.flash.request_sent'));
     }
 
@@ -248,7 +255,12 @@ class PayoutController extends Controller
             'bank_account_number' => 'required|string',
         ]);
 
-        $this->financesRepo->createAccountChangeRequest($teacher->id, $request->all());
+        $changeRequest = $this->financesRepo->createAccountChangeRequest($teacher->id, $request->all());
+
+        if ($changeRequest) {
+            $admins = \Modules\User\src\Models\User::adminPanelUsers()->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\AdminFinanceAlertNotification($changeRequest, 'account_change'));
+        }
 
         return back()->with('msg_success', __('finances::teacher/payouts.flash.change_request_sent'));
     }

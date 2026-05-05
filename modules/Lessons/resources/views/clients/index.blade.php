@@ -105,6 +105,7 @@
                     <div class="nav flex">
                         <p class="lesson active">{{ __('lessons::clients/common.lesson') }}</p>
                         <p class="document">{{ __('lessons::clients/common.document') }}</p>
+                        <p class="quiz">{{ __('quizzes::clients.tab_quiz') }}</p>
                     </div>
                     <div class="group">
                         <div class="accordion active title">
@@ -112,6 +113,9 @@
                         </div>
                         <div class="document-title title">
                             @include('lessons::clients.document')
+                        </div>
+                        <div class="quiz-title title">
+                            @include('lessons::clients.quiz')
                         </div>
                     </div>
                 </div>
@@ -134,6 +138,24 @@
         const lessonToggleFallbackError = @json(__('lessons::clients/common.completion_error'));
         const lockedLessonList = document.querySelectorAll('.js-locked-lesson');
         const lessonPurchaseRequiredMessage = @json(__('courses::clients/common.lesson_purchase_required'));
+
+        // Tab switching logic
+        const tabButtons = document.querySelectorAll('.nav.flex p');
+        const tabContents = document.querySelectorAll('.group .title');
+
+        tabButtons.forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                tabButtons.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => {
+                    c.classList.remove('active');
+                    c.style.display = 'none';
+                });
+
+                btn.classList.add('active');
+                tabContents[index].classList.add('active');
+                tabContents[index].style.display = 'block';
+            });
+        });
 
         const setLessonToggleError = (message) => {
             if (!lessonToggleError) {
@@ -794,5 +816,26 @@
                 border-radius: 16px;
             }
         }
+
+    /* Tab visibility logic */
+    .group .title {
+        display: none;
+    }
+    .group .title.active {
+        display: block;
+    }
+
+    .nav.flex p {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .nav.flex p:hover {
+        color: #2563eb;
+    }
+    .nav.flex p.active {
+        color: #2563eb;
+        font-weight: 600;
+        border-bottom: 2px solid #2563eb;
+    }
     </style>
 @endsection

@@ -122,6 +122,11 @@ class CommentController extends Controller
             'is_visible' => ($moderation['status'] ?? 1) == 1,
         ]);
 
+        // Notify Student who owns the parent comment
+        if ($comment->student) {
+            $comment->student->notify(new \App\Notifications\CommentNotification($reply, 'reply'));
+        }
+
         activity_log(
             action: 'reply_comment',
             subject: $reply,

@@ -21,7 +21,25 @@
 
                 <div class="col-lg-9">
                     <div class="account-content">
-                        <div class="card mb-3">
+                        <ul class="nav nav-pills mb-3 gap-2">
+                            <li class="nav-item">
+                                <a class="nav-link px-4 {{ !request('status') ? 'active' : '' }}"
+                                    href="{{ route('students.notifications.index', ['locale' => app()->getLocale(), 'type' => request('type')]) }}">
+                                    Tất cả
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link px-4 {{ request('status') === 'unread' ? 'active' : '' }}"
+                                    href="{{ route('students.notifications.index', ['locale' => app()->getLocale(), 'status' => 'unread', 'type' => request('type')]) }}">
+                                    Chưa đọc
+                                    @if(auth('students')->user()->unreadNotifications()->count() > 0)
+                                        <span class="badge bg-danger ms-1">{{ auth('students')->user()->unreadNotifications()->count() }}</span>
+                                    @endif
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="card mb-3 d-none">
                             <div class="card-body">
                                 <form method="GET"
                                     action="{{ route('students.notifications.index', ['locale' => app()->getLocale()]) }}"
@@ -124,11 +142,21 @@
                                                         class="text-muted">{{ $notification->created_at?->format('d/m/Y H:i') }}</small>
                                                 </div>
                                             </div>
-                                            <div class="text-start text-md-end ms-md-auto">
-                                                <a
-                                                    href="{{ route('students.notifications.read', ['locale' => app()->getLocale(), 'id' => $notification->id]) }}">
+                                            <div class="text-start text-md-end ms-md-auto d-flex flex-column gap-2 align-items-md-end">
+                                                <a href="{{ route('students.notifications.read', ['locale' => app()->getLocale(), 'id' => $notification->id]) }}"
+                                                   class="btn btn-sm btn-outline-primary px-3">
                                                     Xem chi tiết
                                                 </a>
+                                                @if (is_null($notification->read_at))
+                                                    <form action="{{ route('students.notifications.mark-read', ['locale' => app()->getLocale(), 'id' => $notification->id]) }}"
+                                                          method="POST" data-mark-read-form>
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none text-muted" 
+                                                                data-mark-read-button style="font-size: 0.75rem;">
+                                                            Đánh dấu đã đọc
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

@@ -5,6 +5,8 @@ return [
         'dashbroad' => '대시보드',
         'profile' => '개인 정보',
         'my_course' => '내 강의',
+        'my_certificates' => '나의 수료증',
+        'my_quizzes' => '나의 퀴즈',
         'coupons' => '쿠폰',
         'order' => '주문',
         'change_password' => '비밀번호 변경',

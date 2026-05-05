@@ -22,10 +22,10 @@ use Yajra\DataTables\Facades\DataTables;
 
 class LessonController extends Controller
 {
-    protected $courseRepository;
-    protected $videoRepository;
-    protected $documentRepository;
-    protected $lessonRepository;
+    protected CoursesRepositoryInterface $courseRepository;
+    protected VideoRepositoryInterface $videoRepository;
+    protected DocumentRepositoryInterface $documentRepository;
+    protected LessonsRepositoryInterface $lessonRepository;
     public function __construct(CoursesRepositoryInterface $courseRepository, VideoRepositoryInterface $videoRepository, DocumentRepositoryInterface $documentRepository, LessonsRepositoryInterface $lessonRepository)
     {
         $this->courseRepository = $courseRepository;
@@ -151,13 +151,13 @@ class LessonController extends Controller
                     : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i>Chưa kích hoạt</span>';
 
                 $row['add'] = $canCreateLessons
-                    ? '<a href="' . route('lessons.add', $row['course_id']) . '?module=' . $row['id'] . '" class="btn btn-primary btn-sm">Thêm bài</a>'
+                    ? '<a href="' . route('lessons.add', ['courseId' => $row['course_id']]) . '?module=' . $row['id'] . '" class="btn btn-primary btn-sm">Thêm bài</a>'
                     : '<span class="text-muted small">Không có quyền</span>';
                 $row['edit'] = $canEditLessons
-                    ? '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>'
+                    ? '<a href="' . route('lessons.edit', ['lessonId' => $row['id']]) . '" class="btn btn-warning btn-sm">Sửa</a>'
                     : '<span class="text-muted small">Không có quyền</span>';
                 $row['delete'] = $canDeleteLessons
-                    ? '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa mềm</a>'
+                    ? '<a href="' . route('lessons.delete', ['lessonId' => $lesson['id']]) . '" class="btn btn-danger btn-sm delete-action">Xóa mềm</a>'
                     : '<span class="text-muted small">Không có quyền</span>';
             } else {
                 $row['is_trial'] = $row['is_trial'] == 1 ? 'Có' : 'Không';
@@ -169,10 +169,10 @@ class LessonController extends Controller
                     : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i>Chưa kích hoạt</span>';
                 $row['add'] = '';
                 $row['edit'] = $canEditLessons
-                    ? '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>'
+                    ? '<a href="' . route('lessons.edit', ['lessonId' => $row['id']]) . '" class="btn btn-warning btn-sm">Sửa</a>'
                     : '<span class="text-muted small">Không có quyền</span>';
                 $row['delete'] = $canDeleteLessons
-                    ? '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa mềm</a>'
+                    ? '<a href="' . route('lessons.delete', ['lessonId' => $lesson['id']]) . '" class="btn btn-danger btn-sm delete-action">Xóa mềm</a>'
                     : '<span class="text-muted small">Không có quyền</span>';
             }
 
@@ -187,46 +187,6 @@ class LessonController extends Controller
             }
         }
 
-        return $result;
-
-        if (!empty($lessons)) {
-            foreach ($lessons as $key => $lesson) {
-                $row = $lesson;
-                $row['name'] = $char . $lesson['name'];
-                if ($row['parent_id'] == null) {
-                    $row['is_trial'] = '';
-                    $row['document_id'] = $row['document_id'] != null ? 'Có' : 'Không';
-                    $row['view'] = '';
-                    $row['durations'] = '';
-                    $row['status'] = $row['status'] == 1
-                        ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>'
-                        : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
-
-                    $row['add'] = '<a href="' . route('lessons.add', $row['course_id']) . '?module=' . $row['id'] . '" class="btn btn-primary btn-sm">Thêm bài</a>';
-                    $row['edit'] = '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>';
-                    $row['delete'] = '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa</a>';
-                } else {
-                    $row['is_trial'] = $row['is_trial'] == 1 ? 'Có' : 'Không';
-                    $row['document_id'] = $row['document_id']  != null ? 'Có' : 'Không';
-                    $row['view'] = $lesson['view'];
-                    $row['durations'] = getTime($row['durations']);
-                    $row['status'] = $row['status'] == 1
-                        ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>'
-                        : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
-                    $row['add'] = '';
-                    $row['edit'] = '<a href="' . route('lessons.edit', $row['id']) . '" class="btn btn-warning btn-sm">Sửa</a>';
-                    $row['delete'] = '<a href="' . route('lessons.delete', $lesson['id']) . '" class="btn btn-danger btn-sm delete-action">Xóa</a>';
-                }
-                unset($row['sub_lessons']);
-                unset($row['course_id']);
-                unset($row['created_at']);
-                unset($row['updated_at']);
-                $result[] = $row;
-                if (!empty($lesson['sub_lessons'])) {
-                    $this->getLessonTable($lesson['sub_lessons'], $char . '|--', $result);
-                }
-            }
-        }
         return $result;
     }
 
@@ -369,29 +329,47 @@ class LessonController extends Controller
             description: 'Tạo mới bài giảng'
         );
 
-        Student::chunk(100, function ($students) use ($lesson) {
-            foreach ($students as $student) {
-                $student->notify(new StudentNotification([
-                    'title' => 'Bài học mới',
-                    'title_translations' => [
-                        'vi' => 'Bài học mới',
-                        'en' => 'New lesson',
-                        'ko' => '새 레슨',
-                        'ja' => '新しいレッスン',
-                        'zh' => '新课程内容',
-                    ],
-                    'message' => localizedModelField($lesson, 'name', 'vi') . ' vừa được thêm vào',
-                    'message_translations' => [
-                        'vi' => localizedModelField($lesson, 'name', 'vi') . ' vừa được thêm vào',
-                        'en' => localizedModelField($lesson, 'name', 'en') . ' has just been added',
-                        'ko' => localizedModelField($lesson, 'name', 'ko') . ' 레슨이 새로 추가되었습니다',
-                        'ja' => localizedModelField($lesson, 'name', 'ja') . ' が新しく追加されました',
-                        'zh' => localizedModelField($lesson, 'name', 'zh') . ' 已新增',
-                    ],
-                    'url' => route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $lesson->slug]),
-                ]));
-            }
-        });
+        $studentIds = \Illuminate\Support\Facades\DB::table('orders')
+            ->join('orders_detail', 'orders.id', '=', 'orders_detail.order_id')
+            ->where('orders_detail.course_id', $courseId)
+            ->where('orders.status', 'finished')
+            ->distinct()
+            ->pluck('orders.student_id');
+
+        if ($studentIds->isNotEmpty()) {
+            Student::whereIn('id', $studentIds)->chunk(100, function ($students) use ($lesson) {
+                foreach ($students as $student) {
+                    $student->notify(new StudentNotification([
+                        'type' => 'student.lesson.new',
+                        'title' => 'Bài học mới',
+                        'title_translations' => [
+                            'vi' => 'Bài học mới',
+                            'en' => 'New lesson',
+                            'ko' => '새 레슨',
+                            'ja' => '新しいレッスン',
+                            'zh' => '新课程内容',
+                        ],
+                        'message' => localizedModelField($lesson, 'name', 'vi') . ' vừa được thêm vào',
+                        'message_translations' => [
+                            'vi' => localizedModelField($lesson, 'name', 'vi') . ' vừa được thêm vào',
+                            'en' => localizedModelField($lesson, 'name', 'en') . ' has just been added',
+                            'ko' => localizedModelField($lesson, 'name', 'ko') . ' 레슨이 새로 추가되었습니다',
+                            'ja' => localizedModelField($lesson, 'name', 'ja') . ' が新しく追加されました',
+                            'zh' => localizedModelField($lesson, 'name', 'zh') . ' 已新增',
+                        ],
+                        'url' => route('lessons.home', ['locale' => app()->getLocale(), 'slug' => $lesson->slug]),
+                        'severity' => 'info',
+                        'icon' => 'fas fa-play-circle',
+                        'entity_type' => 'lesson',
+                        'entity_id' => $lesson->id,
+                        'meta' => [
+                            'course_id' => $lesson->course_id,
+                            'lesson_id' => $lesson->id,
+                        ],
+                    ]));
+                }
+            });
+        }
         $this->updateDurations($courseId);
         return redirect()->route('lessons.index', $courseId)->with('msg', __('lessons::messages.create.success'));
     }
@@ -652,7 +630,7 @@ class LessonController extends Controller
 
         $this->updateDurations($snapshot['course_id'] ?? null);
 
-        return redirect()->route('lessons.trash', $snapshot['course_id'])->with('msg', 'Đã xóa vĩnh viễn bài giảng thành công.');
+        return redirect()->route('lessons.trash', ['courseId' => $snapshot['course_id']])->with('msg', 'Đã xóa vĩnh viễn bài giảng thành công.');
     }
 
     private function updateDurations($courseId)
@@ -694,7 +672,8 @@ class LessonController extends Controller
             });
         }
 
-        $logs = $query->latest()->paginate(config('paginate.log_limit'))->withQueryString();
+        $logs = $query->latest()->paginate(config('paginate.log_limit'));
+        $logs->withQueryString();
 
         return view('courses::logs', compact('pageTitle', 'lesson', 'logs'));
     }

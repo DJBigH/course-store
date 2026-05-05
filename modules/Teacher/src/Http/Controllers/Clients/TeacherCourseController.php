@@ -134,6 +134,10 @@ class TeacherCourseController extends Controller
 
         $course = Courses::query()->create($this->buildCoursePayload($data, $teacher));
         $this->syncCourseCategories($course, $data['categories'] ?? []);
+
+        // Notify Admins
+        $admins = \Modules\User\src\Models\User::adminPanelUsers()->get();
+        \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\AdminTeacherAlertNotification($course->fresh(), 'course_created'));
         $this->logTeacherCourseActivity(
             $teacher,
             $course->fresh(),

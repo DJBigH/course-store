@@ -19,6 +19,8 @@ use Modules\Courses\src\Policies\CourseQuizPolicy;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
 use Modules\Teacher\src\Models\Teacher;
+use Modules\Teacher\src\Notifications\QuizAssignedNotification;
+use Modules\Students\src\Models\Student;
 
 class TeacherQuizController extends Controller
 {
@@ -206,6 +208,19 @@ class TeacherQuizController extends Controller
                 );
             }
         });
+
+        // Gửi thông báo cho học viên
+        $quizUrl = route('teacher.dashboard.quizzes.show', [
+            'course' => $course->id,
+            'quiz' => $quiz->id
+        ]);
+
+        foreach ($studentIds as $studentId) {
+            $student = Student::query()->find($studentId);
+            if ($student) {
+                $student->notify(new QuizAssignedNotification($quiz, $course, $quizUrl));
+            }
+        }
 
         $this->logTeacherQuizActivity(
             $teacher,

@@ -55,10 +55,30 @@ class TeacherPublicController extends Controller
             ->withAvg(['ratings' => function ($query) {
                 $query->where('status', 1);
             }], 'rating')
+            ->withCount(['students' => function($query) {
+                $query->where('students_courses.status', 1);
+            }])
+            ->withCount(['lessons' => function($query) {
+                $query->where('status', 1)->whereNotNull('parent_id');
+            }])
             ->where('teacher_id', $teacher->id)
             ->where('status', 1)
             ->latest('id')
             ->get();
+
+        $totalStudents = $courses->sum('students_count');
+        $totalLessons = $courses->sum('lessons_count');
+        $totalRatings = $teacher->ratings_count;
+        
+        // Star distribution
+        $starDistribution = [];
+        for ($i = 5; $i >= 1; $i--) {
+            $count = $teacher->ratings()->where('rating', '>=', $i)->where('rating', '<', $i + 1)->where('status', 1)->count();
+            $starDistribution[$i] = [
+                'count' => $count,
+                'percent' => $totalRatings > 0 ? ($count / $totalRatings) * 100 : 0
+            ];
+        }
 
         $bundles = $teacher->bundles()
             ->where('status', 1)
@@ -83,7 +103,11 @@ class TeacherPublicController extends Controller
             'courses',
             'bundles',
             'canRateTeacher',
-            'viewerTeacherRating'
+            'viewerTeacherRating',
+            'totalStudents',
+            'totalLessons',
+            'totalRatings',
+            'starDistribution'
         ));
     }
 

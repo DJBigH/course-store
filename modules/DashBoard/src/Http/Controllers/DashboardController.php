@@ -93,14 +93,12 @@ class DashboardController extends Controller
 
         // Orders + conversion
         $ordersCreatedQuery = Order::query()->whereBetween('created_at', [$from, $to]);
-        if ($currency !== 'ALL') $ordersCreatedQuery->where('currency', $currency);
         $totalOrdersCreated = $ordersCreatedQuery->count();
 
         // Optimized count for paid orders
         $paidOrdersCompleted = Order::query()
             ->where('status_id', $paidStatusId)
             ->whereBetween($dateColumn, [$from, $to])
-            ->when($currency !== 'ALL', fn($q) => $q->where('currency', $currency))
             ->count();
 
         $conversionRateByCreatedAt = $totalOrdersCreated > 0
@@ -122,7 +120,6 @@ class DashboardController extends Controller
         $failedOrdersQuery = Order::query()
             ->whereIn('status_id', $failedStatusIds->values())
             ->whereBetween('created_at', [$from, $to]);
-        if ($currency !== 'ALL') $failedOrdersQuery->where('currency', $currency);
         $failedOrders = $failedOrdersQuery->count();
 
         $failedRate = $totalOrdersCreated > 0
@@ -153,6 +150,13 @@ class DashboardController extends Controller
             ->count();
 
         $coursesCount = Courses::query()->count();
+        $topCoursesCount = DB::table('orders_detail as od')
+            ->join('orders as o', 'o.id', '=', 'od.order_id')
+            ->where('o.status_id', $paidStatusId)
+            ->whereBetween("o.$dateColumn", [$from, $to])
+            ->distinct('od.course_id')
+            ->count('od.course_id');
+
         $lessonsCount = Lesson::query()->count();
 
         // Action Items (Pending)
@@ -214,6 +218,7 @@ class DashboardController extends Controller
             'new_teachers' => $newTeachersCount,
             'total_teachers' => $totalTeachers,
             'courses_count' => $coursesCount,
+            'top_courses_count' => $topCoursesCount,
             'lessons_count' => $lessonsCount,
         ];
 
@@ -251,10 +256,6 @@ class DashboardController extends Controller
             ->whereBetween('created_at', [$from, $to])
             ->selectRaw('status_id, COUNT(*) as c')
             ->groupBy('status_id');
-            
-        if ($currency !== 'ALL') {
-            $statusCountsQuery->where('currency', $currency);
-        }
         
         $statusCounts = $statusCountsQuery->pluck('c', 'status_id');
 
@@ -269,10 +270,6 @@ class DashboardController extends Controller
             ->join('courses as c', 'c.id', '=', 'od.course_id')
             ->where('o.status_id', $paidStatusId)
             ->whereBetween("o.$dateColumn", [$from, $to]);
-            
-        if ($currency !== 'ALL') {
-            $topCoursesQuery->where('o.currency', $currency);
-        }
         
         $top = $topCoursesQuery->selectRaw('c.name as course_name, c.slug as course_slug, COUNT(*) as total_buy')
             ->groupBy('c.id', 'c.name', 'c.slug')
@@ -286,26 +283,46 @@ class DashboardController extends Controller
             'data' => $top->pluck('total_buy')->map(fn ($v) => (int) $v)->values(),
         ];
 
-        // Top Earning Teachers - Optimized with Repository
+        // Top Earning Teachers - Filter to only include those with actual course revenue
         $teacherSummaries = $this->financesRepo->getTeacherEarningsSummaries($from->toDateTimeString(), $to->toDateTimeString(), $currency);
-        usort($teacherSummaries, fn($a, $b) => $b['teacher_revenue'] <=> $a['teacher_revenue']);
+        $topTeachers = collect($teacherSummaries)
+            ->filter(fn($t) => (float)$t['teacher_revenue'] > 0)
+            ->sortByDesc('teacher_revenue')
+            ->take(4)
+            ->map(function($t) {
+                return [
+                    'name' => $t['teacher_name'],
+                    'slug' => $t['teacher_slug'],
+                    'revenue' => $t['teacher_revenue']
+                ];
+            })->toArray();
+
+        // Top Packages (Upgrade/Registration)
+        $topPackagesQuery = DB::table('orders as o')
+            ->join('teacher_applications as ta', function($join) {
+                $join->on('ta.id', '=', 'o.orderable_id')
+                     ->where('o.orderable_type', '=', 'Modules\Teacher\src\Models\TeacherApplication');
+            })
+            ->join('teacher_packages as tp', 'tp.id', '=', 'ta.package_id')
+            ->where('o.status_id', $paidStatusId)
+            ->whereBetween("o.$dateColumn", [$from, $to]);
         
-        $topTeachers = collect(array_slice($teacherSummaries, 0, 4))->map(function($t) {
-            return [
-                'name' => $t['teacher_name'],
-                'slug' => $t['teacher_slug'],
-                'revenue' => $t['teacher_revenue']
-            ];
-        })->toArray();
+        $packages = $topPackagesQuery->selectRaw('tp.name as package_name, COUNT(*) as total_buy')
+            ->groupBy('tp.id', 'tp.name')
+            ->orderByDesc('total_buy')
+            ->limit(4)
+            ->get();
+
+        $topPackages = [
+            'labels' => $packages->pluck('package_name')->values(),
+            'data' => $packages->pluck('total_buy')->map(fn ($v) => (int) $v)->values(),
+        ];
 
         // Recent orders
         $recentOrdersQuery = Order::query()
             ->whereBetween('created_at', [$from, $to])
             ->latest('created_at')
             ->limit(12);
-        if ($currency !== 'ALL') {
-            $recentOrdersQuery->where('currency', $currency);
-        }
         $recentOrders = $recentOrdersQuery->get()
             ->map(function ($od) {
                 return [
@@ -327,6 +344,7 @@ class DashboardController extends Controller
             'orderStatus',
             'topCourses',
             'topTeachers',
+            'topPackages',
             'recentOrders',
             'pageTitle',
             'range',

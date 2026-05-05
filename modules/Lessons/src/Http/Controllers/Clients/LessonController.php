@@ -15,6 +15,8 @@ use Modules\Students\src\Models\StudentsCourses;
 use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Certificates\src\Models\Certificate;
 use Modules\Certificates\src\Support\CertificateIssuer;
+use Modules\Courses\src\Models\CourseQuiz;
+use Modules\Courses\src\Models\CourseQuizSubmission;
 
 class LessonController extends Controller
 {
@@ -125,6 +127,40 @@ class LessonController extends Controller
                 ->first()
             : null;
 
+        $isTeacherOrAdmin = auth('web')->check();
+
+        $quizzes = CourseQuiz::query()
+            ->where('course_id', $course->id)
+            ->where('status', 1)
+            ->where(function ($query) use ($student, $isTeacherOrAdmin) {
+                if ($isTeacherOrAdmin) {
+                    // Admin/Teacher thấy tất cả quiz
+                    return;
+                }
+
+                if ($student) {
+                    // Học viên thấy quiz được giao cho mình HOẶC quiz công khai (chưa giao ai)
+                    $query->whereHas('assignments', fn ($q) => $q->where('student_id', $student->id))
+                        ->orWhereDoesntHave('assignments');
+                } else {
+                    // Khách chỉ thấy quiz công khai (chưa giao ai)
+                    $query->whereDoesntHave('assignments');
+                }
+            })
+            ->orderBy('position')
+            ->get();
+
+        $quizSubmissions = collect();
+        if ($student) {
+            $quizSubmissions = CourseQuizSubmission::query()
+                ->whereIn('quiz_id', $quizzes->pluck('id'))
+                ->where('student_id', $student->id)
+                ->whereNotNull('submitted_at')
+                ->latest('id')
+                ->get()
+                ->groupBy('quiz_id');
+        }
+
         return view('lessons::clients.index', compact(
             'pageTitle',
             'pageName',
@@ -140,7 +176,10 @@ class LessonController extends Controller
             'studentCertificate',
             'lessonScheduleLocked',
             'lessonScheduleMessage',
-            'lessonAvailabilityMap'
+            'lessonAvailabilityMap',
+            'quizzes',
+            'quizSubmissions',
+            'student'
         ));
     }
 

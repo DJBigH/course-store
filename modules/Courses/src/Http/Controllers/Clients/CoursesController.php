@@ -153,7 +153,7 @@ class CoursesController extends Controller
         $pageName = $course->name_locale;
         $index = 0;
         $canComment = $hasCourse;
-        $canRate = $hasCourse;
+        $canRate = $student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists();
         $viewerIsAdmin = Auth::check();
         $course->loadCount(['ratings' => function ($query) {
             $query->where('status', 1);
@@ -174,6 +174,15 @@ class CoursesController extends Controller
             ? $student->courseRatings()->where('course_id', $course->id)->value('rating')
             : null;
 
+        // ✅ THÊM: Breakdown đánh giá (5 sao, 4 sao...)
+        $ratingBreakdown = \Illuminate\Support\Facades\DB::table('course_ratings')
+            ->where('course_id', $course->id)
+            ->where('status', 1)
+            ->select('rating', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('rating')
+            ->pluck('count', 'rating')
+            ->toArray();
+
         return view('courses::clients.detail', compact(
             'pageTitle',
             'pageName',
@@ -184,7 +193,8 @@ class CoursesController extends Controller
             'canRate',
             'viewerIsAdmin',
             'hasCourse',
-            'viewerCourseRating'
+            'viewerCourseRating',
+            'ratingBreakdown'
         ));
     }
 
@@ -377,7 +387,7 @@ class CoursesController extends Controller
             : $course->price;
 
         $orderData = [
-            'code' => generateUniqueCouponCode(),
+            'code' => 'ORD_' . generateUniqueCouponCode(),
             'student_id' => $studentId,
             'affiliate_link_id' => $course->teacher
                 ? optional($this->affiliateLinkManager->resolveTrackedLink(request(), $course->teacher, 'course', (int) $course->id))->id
@@ -471,7 +481,7 @@ class CoursesController extends Controller
         $payableAmount = (float) $detailRows->sum('price');
 
         $orderData = [
-            'code' => generateUniqueCouponCode(),
+            'code' => 'ORD_' . generateUniqueCouponCode(),
             'student_id' => $student->id,
             'bundle_id' => $bundle->id,
             'affiliate_link_id' => $bundle->teacher

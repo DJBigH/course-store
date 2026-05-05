@@ -724,6 +724,73 @@
                 }
             });
         });
+
+        document.querySelectorAll('[data-mark-read-form]').forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const submitButton = form.querySelector('[data-mark-read-button]');
+                const token = form.querySelector('input[name="_token"]')?.value;
+
+                if (!token) {
+                    form.submit();
+                    return;
+                }
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({}),
+                        credentials: 'same-origin',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Request failed');
+                    }
+
+                    const data = await response.json();
+                    
+                    // Update badge
+                    const badges = document.querySelectorAll('[data-unread-badge]');
+                    if (data.unread_count > 0) {
+                        badges.forEach(badge => {
+                            badge.textContent = data.unread_count;
+                        });
+                    } else {
+                        badges.forEach(badge => badge.remove());
+                        document.querySelectorAll('[data-mark-all-read-form]').forEach(f => f.remove());
+                    }
+
+                    // Update item status
+                    const item = form.closest('[data-notification-item]');
+                    if (item) {
+                        const statusBadge = item.querySelector('[data-notification-status]');
+                        if (statusBadge) {
+                            statusBadge.className = 'badge bg-success';
+                            statusBadge.textContent = statusBadge.dataset.readLabel || 'Da doc';
+                        }
+                    }
+                    
+                    form.remove();
+                } catch (error) {
+                    form.submit();
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                }
+            });
+        });
     });
 </script>
 <style>

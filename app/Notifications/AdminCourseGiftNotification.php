@@ -40,15 +40,38 @@ class AdminCourseGiftNotification extends Notification implements ShouldQueue
 
     public function toDatabase($notifiable): array
     {
+        $courseName = $this->course->name_locale ?: $this->course->name;
+        
+        $titleTranslations = [
+            'vi' => '🎁 Bạn được tặng khóa học mới',
+            'en' => '🎁 You received a new course gift',
+            'ko' => '🎁 새 강좌 선물 도착',
+            'ja' => '🎁 新しいコースのプレゼント',
+            'zh' => '🎁 收到新课程赠送',
+        ];
+
+        $messageTranslations = [
+            'vi' => 'Bạn vừa được Admin tặng khóa học: ' . $courseName,
+            'en' => 'Admin has gifted you the course: ' . $courseName,
+            'ko' => '관리자가 **' . $courseName . '** 강좌를 선물했습니다. 지금 바로 학습을 시작하세요!',
+            'ja' => '管理者から **' . $courseName . '** コースが届きました。今すぐ学習を始めましょう！',
+            'zh' => '管理员向您赠送了 **' . $courseName . '** 课程。现在就开始学习吧！',
+        ];
+
         return [
             'type' => 'admin.course_gift',
-            'title' => '🎁 Bạn được tặng khóa học mới',
-            'message' => 'Bạn vừa được Admin tặng khóa học: ' . $this->course->name,
+            'title' => $titleTranslations['vi'],
+            'title_translations' => $titleTranslations,
+            'message' => $messageTranslations['vi'],
+            'message_translations' => $messageTranslations,
             'url' => route('students.account.my-courses', ['locale' => $this->locale]),
             'icon' => 'fas fa-gift',
             'severity' => 'success',
+            'entity_type' => 'course',
+            'entity_id' => $this->course->id,
             'meta' => [
                 'course_id' => $this->course->id,
+                'course_name' => $courseName,
             ],
         ];
     }

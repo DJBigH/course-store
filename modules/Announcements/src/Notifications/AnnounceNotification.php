@@ -53,13 +53,37 @@ class AnnounceNotification extends Notification implements ShouldQueue
 
     public function toArray($notifiable): array
     {
+        $titleTranslations = [
+            'vi' => $this->announcement->title_vi ?: $this->announcement->title,
+            'en' => $this->announcement->title_en ?: $this->announcement->title,
+            'ko' => $this->announcement->title_ko ?: $this->announcement->title,
+            'ja' => $this->announcement->title_ja ?: $this->announcement->title,
+            'zh' => $this->announcement->title_zh ?: $this->announcement->title,
+        ];
+
+        $messageTranslations = [
+            'vi' => $this->announcement->message_vi ?: $this->announcement->message,
+            'en' => $this->announcement->message_en ?: $this->announcement->message,
+            'ko' => $this->announcement->message_ko ?: $this->announcement->message,
+            'ja' => $this->announcement->message_ja ?: $this->announcement->message,
+            'zh' => $this->announcement->message_zh ?: $this->announcement->message,
+        ];
+
         return [
-            'announcement_id' => $this->announcement->id,
-            'title' => $this->announcement->title_locale,
-            'message' => $this->announcement->message_locale,
-            'icon' => 'fas fa-bullhorn',
             'type' => 'announcement',
+            'title' => $titleTranslations['vi'],
+            'title_translations' => $titleTranslations,
+            'message' => $messageTranslations['vi'],
+            'message_translations' => $messageTranslations,
             'url' => route('clients.inbox.show', ['locale' => app()->getLocale(), 'announcement' => $this->announcement->id]),
+            'icon' => 'fas fa-bullhorn',
+            'severity' => 'primary',
+            'entity_type' => 'announcement',
+            'entity_id' => $this->announcement->id,
+            'meta' => [
+                'announcement_id' => $this->announcement->id,
+                'send_email' => $this->announcement->send_email,
+            ],
         ];
     }
 }

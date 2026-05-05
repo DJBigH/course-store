@@ -9,6 +9,7 @@ use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\Student;
 use Modules\Courses\src\Models\CourseBundle;
 use Modules\Finances\src\Models\AffiliateLink;
+use Modules\Teacher\src\Models\TeacherApplication;
 
 class Order extends Model
 {
@@ -51,6 +52,9 @@ class Order extends Model
                     $newStatus = \Modules\Orders\src\Models\OrderStatus::find($order->status_id);
 
                     if ($newStatus && $newStatus->is_success && (!$oldStatus || !$oldStatus->is_success)) {
+                        if (empty($order->payment_complete_date)) {
+                            $order->payment_complete_date = now();
+                        }
                         $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
                         $botToken = config('services.telegram.bot_token');
                         $chatId = config('services.telegram.chat_id');
@@ -70,6 +74,24 @@ class Order extends Model
                                 'text' => $text,
                                 'parse_mode' => 'HTML'
                             ]);
+                        }
+
+                        // Unified Activation for Teacher Upgrade
+                        if ($order->type === 'teacher_upgrade' && $order->orderable instanceof TeacherApplication) {
+                            try {
+                                $lifecycleManager = app(\Modules\Packages\src\Support\PackageLifecycleManager::class);
+                                
+                                // We check if it's already approved to avoid double activation, 
+                                // though PackageLifecycleManager handles some of this.
+                                if ($order->orderable->status !== 'approved') {
+                                    $lifecycleManager->activateTeacherUpgrade($order->orderable);
+                                }
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error('Teacher Upgrade Activation Error via Order Observer', [
+                                    'order_id' => $order->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                            }
                         }
                     }
                 }
@@ -95,6 +117,9 @@ class Order extends Model
         'discount',
         'coupon',
         'status_id',
+        'orderable_id',
+        'orderable_type',
+        'type',
         'payment_date',
         'payment_complete_date',
         'payment_method',
@@ -141,6 +166,11 @@ class Order extends Model
     public function affiliateLink()
     {
         return $this->belongsTo(AffiliateLink::class, 'affiliate_link_id', 'id');
+    }
+
+    public function orderable()
+    {
+        return $this->morphTo();
     }
 
     public function getCustomerNameDisplayAttribute(): string

@@ -29,11 +29,12 @@ class TeacherApplicationController extends Controller
         $pageTitle = __('teacher::admin.titles.applications');
         $applications = TeacherApplication::query()
             ->where('type', 'new')
-            ->with(['student', 'package', 'teacher', 'reviewer'])
+            ->with(['student', 'package', 'teacher', 'reviewer', 'orders'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
             ->latest('id')
-            ->paginate(12)
-            ->withQueryString();
+            ->paginate(12);
+        
+        $applications->withQueryString();
 
         return view('teacher::applications.lists', compact('pageTitle', 'applications'));
     }
@@ -42,15 +43,29 @@ class TeacherApplicationController extends Controller
     {
         $pageTitle = __('teacher::admin.titles.application_detail');
         $application = TeacherApplication::query()
-            ->with(['student', 'package', 'teacher', 'reviewer'])
+            ->where('type', 'new')
+            ->with(['student', 'package', 'teacher', 'reviewer', 'orders'])
             ->findOrFail($id);
 
-        return view('teacher::applications.show', compact('pageTitle', 'application'));
+        $history = TeacherApplication::query()
+            ->where('id', '!=', $application->id)
+            ->where(function($q) use ($application) {
+                $q->where('email', $application->email);
+                if ($application->student_id) {
+                    $q->orWhere('student_id', $application->student_id);
+                }
+            })
+            ->with(['package', 'reviewer'])
+            ->latest('id')
+            ->get();
+
+        return view('teacher::applications.show', compact('pageTitle', 'application', 'history'));
     }
 
     public function approve(Request $request, $id)
     {
         $application = TeacherApplication::query()
+            ->where('type', 'new')
             ->with(['student', 'package', 'teacher.application.package', 'teacher.student'])
             ->findOrFail($id);
 
@@ -81,9 +96,11 @@ class TeacherApplicationController extends Controller
                 'email_verified_at' => now(),
             ]);
             $accountWasCreated = true;
+            /** @var \Illuminate\Auth\Passwords\PasswordBroker $broker */
+            $broker = Password::broker('students');
             $passwordSetupUrl = URL::route('teacher.password.reset', [
                 'locale' => $mailLocale,
-                'token' => Password::broker('students')->createToken($student),
+                'token' => $broker->createToken($student),
                 'email' => $student->email,
             ]);
         } elseif ($student->preferred_locale !== $mailLocale) {
@@ -146,12 +163,17 @@ class TeacherApplicationController extends Controller
         Mail::to($application->email)
             ->locale($mailLocale)
             ->queue(new TeacherApplicationApprovedMail(
-                $application->fresh(['package', 'teacher', 'student']),
+                $application,
                 $passwordSetupUrl,
                 !$accountWasCreated,
                 $packageAction,
                 $mailLocale
             ));
+
+        // Notify Student via web
+        if ($student) {
+            $student->notify(new \App\Notifications\TeacherApplicationStatusNotification($application->fresh()));
+        }
 
         return redirect()->route('teacher-applications.show', $application->id)
             ->with('msg', __('teacher::admin.messages.approve_success'));
@@ -159,7 +181,9 @@ class TeacherApplicationController extends Controller
 
     public function reject(Request $request, $id)
     {
-        $application = TeacherApplication::query()->findOrFail($id);
+        $application = TeacherApplication::query()
+            ->where('type', 'new')
+            ->findOrFail($id);
 
         $application->update([
             'status' => 'rejected',
@@ -183,6 +207,12 @@ class TeacherApplicationController extends Controller
         Mail::to($application->email)
             ->locale(app()->getLocale())
             ->queue(new TeacherApplicationRejectedMail($application, app()->getLocale()));
+
+        // Notify Student via web (if exists)
+        $student = $application->student ?: Student::where('email', $application->email)->first();
+        if ($student) {
+            $student->notify(new \App\Notifications\TeacherApplicationStatusNotification($application->fresh()));
+        }
 
         return redirect()->route('teacher-applications.show', $application->id)
             ->with('msg', __('teacher::admin.messages.reject_success'));

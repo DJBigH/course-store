@@ -6,7 +6,7 @@
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center mb-4">
                 <div>
                     <h5 class="mb-1">{{ $pageTitle }}</h5>
-                    <p class="text-muted mb-0">Theo dõi và phê duyệt các yêu cầu nâng cấp gói từ giảng viên hiện tại.</p>
+                    <p class="text-muted mb-0">Xem lại lịch sử và thông tin các yêu cầu nâng cấp gói từ giảng viên.</p>
                 </div>
             </div>
 
@@ -39,6 +39,7 @@
                             <th>ID</th>
                             <th>Giảng viên</th>
                             <th>Gói yêu cầu</th>
+                            <th class="text-end">Giá tiền</th>
                             <th>Thanh toán</th>
                             <th>Trạng thái</th>
                             <th>Ngày yêu cầu</th>
@@ -55,6 +56,9 @@
                                 </td>
                                 <td>
                                     <span class="fw-bold">{{ $upgrade->package?->name ?: '-' }}</span>
+                                </td>
+                                <td class="text-end fw-bold text-primary">
+                                    {{ money($upgrade->orders->first()?->total ?? $upgrade->package?->price ?? 0) }}
                                 </td>
                                 <td>
                                     <span class="badge bg-light text-dark border">

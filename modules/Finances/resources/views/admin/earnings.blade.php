@@ -160,7 +160,12 @@
                                         <div class="small text-muted">{{ optional($item->order?->payment_complete_date ?: $item->order?->created_at)->format('d/m/Y H:i') }}</div>
                                     </td>
                                     <td>{{ $item->courses?->teacher?->name_locale ?: '-' }}</td>
-                                    <td class="text-truncate" style="max-width: 200px;">{{ $item->courses?->name_locale ?: '-' }}</td>
+                                    <td class="text-truncate" style="max-width: 250px;">
+                                        <div class="fw-bold">{{ $item->courses?->name_locale ?: '-' }}</div>
+                                        @if(!empty($item->bundle_name))
+                                            <div class="small text-primary"><i class="fa-solid fa-layer-group me-1"></i> Combo: {{ $item->bundle_name }}</div>
+                                        @endif
+                                    </td>
                                     <td class="text-end">{{ $currency === 'ALL' ? money($grossAmount) : number_format($grossAmount) . ' ' . $itemCurrency }}</td>
                                     <td class="text-end text-danger">-{{ $currency === 'ALL' ? money($allocatedDiscount) : number_format($allocatedDiscount) . ' ' . $itemCurrency }}</td>
                                     <td class="text-end">{{ $currency === 'ALL' ? money($netRevenue) : number_format($netRevenue) . ' ' . $itemCurrency }}</td>

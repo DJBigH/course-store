@@ -4,6 +4,8 @@ namespace Modules\Finances\src\Repositories;
 
 use App\Repositories\RepositoryInterface;
 
+use Modules\Finances\src\Models\PayoutAccountChangeRequest;
+
 interface FinancesRepositoryInterface extends RepositoryInterface
 {
     public function getEarningsSummary(int $teacherId, ?string $groupBy = null, ?string $fromDate = null, ?string $toDate = null): array;
@@ -17,7 +19,7 @@ interface FinancesRepositoryInterface extends RepositoryInterface
     public function getPayoutHistory(int $teacherId, int $perPage = 15);
     public function createPayoutRequest(int $teacherId, array $data): bool;
     public function createPayoutAccount(int $teacherId, array $data): bool;
-    public function createAccountChangeRequest(int $teacherId, array $data): bool;
+    public function createAccountChangeRequest(int $teacherId, array $data): PayoutAccountChangeRequest;
 
     // Admin methods
     public function getAdminEarnings(array $filters);

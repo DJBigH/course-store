@@ -154,18 +154,40 @@
                         </div>
                     @endif
 
-                    @if ($upgradeRequest->status === 'pending_payment')
+                    @if (in_array($upgradeRequest->status, ['pending_payment', 'pending_review']))
                         <div class="teacher-upgrade-action mt-4">
                             <div>
-                                <div class="teacher-upgrade-action__title">{{ __('packages::teacher.upgrade.pending_payment_title') }}</div>
-                                <p class="teacher-upgrade-action__desc mb-0">{{ __('packages::teacher.common.pending_payment_description') }}</p>
+                                <div class="teacher-upgrade-action__title">
+                                    @if(in_array($upgradeRequest->payment_method, ['momo', 'vnpay']))
+                                        {{ __('packages::teacher.result.repay_incomplete') }}
+                                    @else
+                                        {{ __('packages::teacher.upgrade.pending_payment_title') }}
+                                    @endif
+                                </div>
+                                <p class="teacher-upgrade-action__desc mb-0">
+                                    @if(in_array($upgradeRequest->payment_method, ['momo', 'vnpay']))
+                                        {{ __('packages::teacher.result.repay_desc') }}
+                                    @else
+                                        {{ __('packages::teacher.common.pending_payment_description') }}
+                                    @endif
+                                </p>
                             </div>
-                            <form method="POST" action="{{ route('teacher.dashboard.package.upgrade.mark-paid') }}">
-                                @csrf
-                                <button type="submit" class="btn btn-primary">
-                                    {{ __('packages::teacher.upgrade.mark_paid') }}
-                                </button>
-                            </form>
+                            
+                            @if(in_array($upgradeRequest->payment_method, ['momo', 'vnpay']))
+                                <form method="POST" action="{{ route('teacher.dashboard.package.upgrade.repay') }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill">
+                                        <i class="fa-solid fa-credit-card me-2"></i> {{ __('packages::teacher.result.repay_cta', ['method' => strtoupper($upgradeRequest->payment_method)]) }}
+                                    </button>
+                                </form>
+                            @elseif($upgradeRequest->payment_method === 'bank_transfer')
+                                <form method="POST" action="{{ route('teacher.dashboard.package.upgrade.mark-paid') }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-pill">
+                                        {{ __('packages::teacher.upgrade.mark_paid') }}
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     @endif
                 </div>

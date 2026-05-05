@@ -42,8 +42,16 @@ Route::group([
     Route::get('/goi/nang-cap', [UpgradeController::class, 'upgradePackage'])->name('package.upgrade');
     Route::post('/goi/nang-cap', [UpgradeController::class, 'storeUpgradePackage'])->name('package.upgrade.store');
     Route::get('/goi/nang-cap/trang-thai', [UpgradeController::class, 'upgradePackageStatus'])->name('package.upgrade.status');
+    Route::get('/goi/nang-cap/ket-qua', [UpgradeController::class, 'upgradeResult'])->name('package.upgrade.result');
+    Route::post('/goi/nang-cap/thanh-toan-lai', [UpgradeController::class, 'repayPackage'])->name('package.upgrade.repay');
     Route::post('/goi/nang-cap/xac-nhan-da-thanh-toan', [UpgradeController::class, 'markUpgradePaid'])->name('package.upgrade.mark-paid');
     Route::post('/goi/nang-cap/huy', [UpgradeController::class, 'cancelUpgradePackage'])->name('package.upgrade.cancel');
+
+    // Payment Return/IPN Routes
+    Route::get('/goi/nang-cap/vnpay-return', [UpgradeController::class, 'vnpayReturn'])->name('package.upgrade.vnpay-return');
+    Route::get('/goi/nang-cap/vnpay-ipn', [UpgradeController::class, 'vnpayIpn'])->name('package.upgrade.vnpay-ipn');
+    Route::get('/goi/nang-cap/momo-return', [UpgradeController::class, 'momoReturn'])->name('package.upgrade.momo-return');
+    Route::post('/goi/nang-cap/momo-ipn', [UpgradeController::class, 'momoIpn'])->name('package.upgrade.momo-ipn');
     // ─── Claim granted package ─────────────────────────────────────────────────
     Route::get('/goi/nhan-qua/{token}', [\Modules\Packages\src\Http\Controllers\Teacher\PackageClaimController::class, 'show'])->name('package.claim');
     Route::post('/goi/nhan-qua/{token}', [\Modules\Packages\src\Http\Controllers\Teacher\PackageClaimController::class, 'claim'])->name('package.claim.store');

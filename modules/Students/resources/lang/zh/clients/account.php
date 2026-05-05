@@ -5,6 +5,8 @@ return [
         'dashbroad' => '仪表盘',
         'profile' => '个人信息',
         'my_course' => '我的课程',
+        'my_certificates' => '我的证书',
+        'my_quizzes' => '我的测验',
         'coupons' => '优惠券',
         'order' => '订单',
         'change_password' => '修改密码',

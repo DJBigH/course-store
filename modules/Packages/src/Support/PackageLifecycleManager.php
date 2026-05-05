@@ -12,6 +12,33 @@ use Modules\Packages\src\Models\Package;
 
 class PackageLifecycleManager
 {
+    public function activateTeacherUpgrade(TeacherApplication $application): void
+    {
+        $teacher = Teacher::find($application->teacher_id);
+        if (!$teacher) return;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($teacher, $application) {
+            $application->update([
+                'status' => 'approved',
+                'reviewed_at' => now(),
+            ]);
+
+            $this->applyApprovedChange($teacher, $application->fresh(['package']));
+        });
+
+        activity_log(
+            action: 'teacher_package_upgraded_online',
+            subject: $teacher,
+            properties: [
+                'application_id' => $application->id,
+                'package' => $application->package?->name,
+                'method' => $application->payment_method
+            ],
+            logName: 'Nang cap goi online',
+            description: 'Giao vien nang cap goi thanh cong qua ' . $application->payment_method
+        );
+    }
+
     public function sync(Teacher $teacher): Teacher
     {
         $teacher->loadMissing(['application.package', 'student']);

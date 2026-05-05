@@ -67,7 +67,14 @@ class OrderController extends Controller
                     <div class="d-flex align-items-center gap-3">
                         <img src="' . $avatar . '" class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
                         <div>
-                            <div class="fw-bold text-dark mb-1">#' . e($order->code) . '</div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="fw-bold text-dark">#' . e($order->code) . '</span>
+                                ' . ($order->type === 'teacher_upgrade' 
+                                    ? '<span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 10px;">Nâng cấp gói</span>' 
+                                    : ($order->bundle_id 
+                                        ? '<span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 10px;">Combo</span>' 
+                                        : '<span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 10px;">Khóa học</span>')) . '
+                            </div>
                             <div class="text-secondary small">' . $studentName . ' (' . $studentEmail . ')</div>
                         </div>
                     </div>';
@@ -214,6 +221,11 @@ class OrderController extends Controller
                     logName: 'Hủy đơn hàng',
                     description: 'Hủy đơn hàng chưa thanh toán'
                 );
+
+                // Notify Student
+                if ($order->students) {
+                    $order->students->notify(new \App\Notifications\OrderStatusNotification($order, 'cancelled'));
+                }
             }
 
             return back()->with('msg', 'Đã hủy ' . $affectedOrders->count() . ' đơn hàng chưa thanh toán.');

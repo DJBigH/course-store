@@ -200,7 +200,7 @@
                                     Quản lý Huy hiệu
                                 </a>
                                 <a class="nav-link {{ request()->is('admin/teacher-applications*') ? 'active' : '' }}" href="{{ route('teacher-applications.index') }}">Đơn ứng tuyển</a>
-                                <a class="nav-link {{ request()->is('admin/teacher-upgrades*') ? 'active' : '' }}" href="{{ route('teacher-upgrades.index') }}">Nâng cấp gói</a>
+                                <a class="nav-link {{ request()->is('admin/teacher-upgrades*') ? 'active' : '' }}" href="{{ route('teacher-upgrades.index') }}">Lịch sử nâng cấp</a>
                                 <a class="nav-link {{ (request()->is('admin/teacher-packages') || request()->is('admin/teacher-package-features*')) ? 'active' : '' }}" href="{{ route('teacher-packages.index') }}">Gói cước & Tính năng</a>
                                 <a class="nav-link {{ request()->is('admin/teacher-packages/grant*') ? 'active' : '' }}" href="{{ route('teacher-packages.grant') }}">Cấp gói đặc quyền</a>
                                 <a class="nav-link {{ request()->is('admin/teacher-announcements*') ? 'active' : '' }}" href="{{ route('teacher-announcements.index') }}">Thông báo GV</a>

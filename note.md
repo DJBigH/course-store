@@ -502,7 +502,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm trang 403,404 các trang cấm hay lỗi ( fix cả url khi gõ sai hay cố tình thay id không đúng, thay vai trò không phù hợp) ( Done )
 - Check toàn bộ màn admin xem còn thiếu, thừa cái j nữa không ( Done )
 - Luồng nâng cấp gói tạo trang mới danh sách cho admin biết và xử lý, thêm noti khi có người nâng cấp và thêm cả khi hủy ( tách riêng luồng đó vì nó đang bị gộp với ứng cử giáo viên)
-- Thêm log khi giáo viên nâng cấp gói, hủy gói, hủy hợp tác và xử lý các yêu cầu khác tại admin ( Khi đẩy lên tele ghi rõ trạng thái đã thanh toán + nâng thành công, và ngược lại hủy giao dịch hoặc giao dịch bị từ chối, lỗi giao dịch chỉ nhận trạng thái khi ấn thanh toán xong và nâng thành công, thất bại, lỗi giao dịch... không nhận trạng thái linh tinh)
+- Thêm log khi giáo viên nâng cấp gói, hủy gói, hủy hợp tác và xử lý các yêu cầu khác tại admin ( Khi đẩy lên tele ghi rõ trạng thái đã thanh toán + nâng thành công, và ngược lại hủy giao dịch hoặc giao dịch bị từ chối, lỗi giao dịch chỉ nhận trạng thái khi ấn thanh toán xong và nâng thành công, thất bại, lỗi giao dịch... không nhận trạng thái linh tinh) ( Done )
+- Check lại toàn bộ notification web gửi cho học viên và admin ( Done )
 
   Clients:
 - Làm trang tổng quan cho cả clients ( Done )
@@ -545,10 +546,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị ( Done )
 - Check cái notify của học viên xem thiếu hay thừa cái j ( Done )
 - Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký ) ( Done )
-- Chưa check validate đăng ký giáo viên
-- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên
+- Chưa check validate đăng ký giáo viên ( Done )
+- Làm cái trang xem profile của giảng viên ( Giảng viên sẽ hiện ra profile khi đăng ký đổ ra, và có rating giảng viên, có bao nhiêu khóa học, bài giảng trong website ) ( Done )
 - Thêm cái danh mục dành cho các gói mua của giáo viên ( Gói hợp tác, Gói theo tháng/năm, Gói j đó...)
-- Làm cái trang xem profile của giảng viên ( Giảng viên sẽ hiện ra profile khi đăng ký đổ ra, và có rating giảng viên, có bao nhiêu khóa học, bài giảng trong website )
 - Đối với tài khoản đã được nâng lên làm teacher thì sẽ có tất cả các khóa học mà mình tạo ra
 - Đối với tài khoản đã được nâng lên làm teacher sẽ bỏ cái trở thành giáo viên
 - Chỉ có super admin mới có quyền xóa nên làm chức năng khóa tài khoản giảng viên vì nếu admin thấy không hoạt động thì khóa lại
@@ -562,6 +562,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm cái thông báo khi vào màn teacher và popup khi vào màn teacher
 - Ghi chú thông minh ngay trong Video (In-Video Notes)
 - Lading page trở thành giáo viên khi giới thiệu gói sẽ hiện gói theo danh mục ( thời hạn: Vĩnh Viễn, 1 năm, 1 tháng, bán chạy)
+- Check lại toàn bộ notification web gửi cho học viên và teacher
+- Trang thanh toán bảo trì
 Teacher:
 
 - Làm cái hồ sơ giáo viên ( Done )
@@ -622,8 +624,8 @@ Teacher:
 - Có nên cho giáo viên xóa vĩnh viễn các dữ liệu không nhỉ hay chỉ cho xóa mềm vào thùng rác và khôi phục ( Done )
 - Check lại toàn bộ validate xem có chỗ nào thiếu không ( Done )
 - Làm trang 403,404 riêng dành cho màn teacher ( Note )
-- Fix lại thanh toán giáo viên ( momo, vnpay)
-- Check lại toàn bộ notification web gửi cho học viên và admin
+- Fix lại thanh toán giáo viên ( momo, vnpay) ( Done )
+- Check lại toàn bộ notification web gửi cho học viên và admin ( Done )
   Tổng kết
 - Tìm tất cả file .bak ( Done )
 - check lại lần cuối trước khi đẩy lên production

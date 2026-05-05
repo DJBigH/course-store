@@ -46,6 +46,7 @@ Route::group(['as' => 'students.'], function () {
       Route::post('/vo-hieu-hoa/xac-thuc', [TwoFactorController::class, 'startDeactivate'])->name('deactivate-start-2fa');
       Route::post('/vo-hieu-hoa', 'Clients\AccountController@deactivate')->name('deactivate-submit');
       Route::get('/khoa-hoc', 'Clients\AccountController@showMyCourse')->name('my-courses');
+      Route::get('/bai-kiem-tra', 'Clients\AccountController@myQuizzes')->name('my-quizzes');
       Route::get('/chung-chi', [StudentCertificateController::class, 'index'])->name('certificates.index');
       Route::get('/chung-chi/{id}', [StudentCertificateController::class, 'show'])->name('certificates.show');
       Route::get('/ma-giam-gia', 'Clients\AccountController@myCoupon')->name('my-coupon');
@@ -158,6 +159,25 @@ Route::group([
 
       return back()->with('msg_success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
    })->name('mark-all-read');
+
+   Route::post('/danh-dau-da-doc/{id}', function (Request $request, string $locale, $id) {
+      $notification = auth('students')->user()
+         ->notifications()
+         ->where('id', $id)
+         ->firstOrFail();
+
+      $notification->markAsRead();
+
+      if ($request->expectsJson() || $request->ajax()) {
+         return response()->json([
+            'success' => true,
+            'unread_count' => auth('students')->user()->unreadNotifications()->count(),
+            'message' => 'Đã đánh dấu thông báo là đã đọc.',
+         ]);
+      }
+
+      return back()->with('msg_success', 'Đã đánh dấu thông báo là đã đọc.');
+   })->name('mark-read');
 
    Route::get('/doc/{id}', function (string $locale, $id) {
       $notification = auth('students')->user()

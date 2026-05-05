@@ -1,128 +1,226 @@
 @extends('layouts.client')
 
 @section('content')
-    @include('part.clients.page_title')
-
-    <section class="teacher-public-page">
+    <section class="teacher-profile-premium py-5">
         <div class="container">
-            <div class="teacher-public-shell">
-                <div class="teacher-public-hero">
-                    <div class="teacher-public-hero__main">
-                        <div class="teacher-public-hero__avatar">
-                            <img src="{{ teacherAvatarUrl($teacher) }}" alt="{{ $teacher->name_locale }}">
-                        </div>
-                        <div>
-                            <span class="teacher-public-hero__eyebrow">{{ __('teacher::public.hero_eyebrow') }}</span>
-                            <h2 class="teacher-public-hero__name">{{ $teacher->name_locale }}</h2>
-                            @if (!empty($teacher->badge_labels))
-                                <div class="teacher-public-badges">
+            {{-- Breadcrumb --}}
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">{{ __('teacher::public.home') }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}">{{ __('teacher::public.teachers') }}</a></li>
+                    <li class="breadcrumb-item active">{{ $teacher->name_locale }}</li>
+                </ol>
+            </nav>
+
+            <div class="row g-4">
+                {{-- Left Side: Teacher Main Info --}}
+                <div class="col-lg-8">
+                    {{-- Hero Section --}}
+                    <div class="profile-hero-card p-4 p-md-5 rounded-5 shadow-lg border-0 mb-4 overflow-hidden position-relative">
+                        <div class="hero-blur-bg"></div>
+                        <div class="row align-items-center position-relative">
+                            <div class="col-md-auto text-center text-md-start mb-4 mb-md-0">
+                                <div class="avatar-wrapper shadow-premium">
+                                    <img src="{{ teacherAvatarUrl($teacher) }}" alt="{{ $teacher->name_locale }}" class="avatar-img rounded-circle">
+                                    @if($teacher->is_verified_badge)
+                                        <div class="verified-tick" title="Verified Teacher">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md">
+                                <div class="d-flex flex-wrap gap-2 mb-3 justify-content-center justify-content-md-start">
                                     @foreach ($teacher->badge_labels as $badge)
-                                        <span class="teacher-public-badge teacher-public-badge--{{ $badge['key'] }}" 
-                                              style="@if($badge['tone'] === 'custom') background-color: {{ $badge['color_bg'] }}; color: {{ $badge['color_text'] }}; border-color: rgba(0,0,0,0.05); @endif">
-                                            @if($badge['tone'] === 'custom')
-                                                <i class="{{ $badge['icon'] }} me-1"></i>
-                                            @endif
+                                        <span class="badge-premium badge-{{ $badge['key'] }}" 
+                                              style="@if($badge['tone'] === 'custom') background-color: {{ $badge['color_bg'] }}; color: {{ $badge['color_text'] }}; @endif">
+                                            <i class="{{ $badge['icon'] ?? 'fas fa-award' }} me-1"></i>
                                             {{ $badge['label'] }}
                                         </span>
                                     @endforeach
                                 </div>
-                            @endif
-                            <div class="teacher-public-hero__meta">
-                                <span><i class="fa-solid fa-briefcase me-2"></i>{{ $teacher->exp }} {{ __('teacher::public.experience_years') }}</span>
-                                <span><i class="fa-solid fa-book-open me-2"></i>{{ __('teacher::public.course_count', ['count' => $courses->count()]) }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="teacher-rating-wrap">
-                        @include('teacher::clients.partials.rating_panel', [
-                            'teacher' => $teacher,
-                            'canRateTeacher' => $canRateTeacher,
-                            'viewerTeacherRating' => $viewerTeacherRating,
-                        ])
-                    </div>
-                </div>
-
-                <div class="teacher-public-card mt-4">
-                    <h3>{{ __('teacher::public.about_title') }}</h3>
-                    <div class="teacher-public-card__content">
-                        {!! $teacher->description_locale !!}
-                    </div>
-                </div>
-
-                <div class="teacher-public-card mt-4">
-                    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center mb-3">
-                        <div>
-                            <h3 class="mb-1">{{ __('teacher::public.course_section_title') }}</h3>
-                            <p class="mb-0 text-muted">{{ __('teacher::public.course_section_description') }}</p>
-                        </div>
-                    </div>
-
-                    <div class="row g-3">
-                        @forelse ($courses as $course)
-                            <div class="col-md-6">
-                                <article class="teacher-public-course">
-                                    <img src="{{ $course->thumbnail }}" alt="{{ $course->name_locale }}" class="teacher-public-course__thumb">
-                                    <div class="teacher-public-course__body">
-                                        <h4>{{ $course->name_locale }}</h4>
-                                        <div class="teacher-public-course__rating">
-                                            <i class="fa-solid fa-star"></i>
-                                            <strong>{{ $course->ratings_count > 0 ? number_format((float) $course->ratings_avg_rating, 1) : '0.0' }}</strong>
-                                            <span>{{ __('teacher::public.rating_count', ['count' => (int) $course->ratings_count]) }}</span>
-                                        </div>
-                                        <a href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}" class="btn btn-outline-primary btn-sm mt-3">
-                                            {{ __('teacher::public.view_course') }}
-                                        </a>
+                                <h1 class="teacher-name h2 fw-bold mb-2 text-center text-md-start">{{ $teacher->name_locale }}</h1>
+                                <p class="teacher-headline text-muted mb-4 text-center text-md-start">{{ $teacher->headline ?? __('teacher::public.default_headline') }}</p>
+                                
+                                <div class="stats-grid d-flex flex-wrap gap-4 justify-content-center justify-content-md-start">
+                                    <div class="stat-item">
+                                        <span class="stat-value">{{ number_format($totalStudents) }}</span>
+                                        <span class="stat-label">{{ __('teacher::public.total_students') }}</span>
                                     </div>
-                                </article>
+                                    <div class="stat-item">
+                                        <span class="stat-value">{{ $totalRatings }}</span>
+                                        <span class="stat-label">{{ __('teacher::public.reviews_count') }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-value">{{ $courses->count() }}</span>
+                                        <span class="stat-label">{{ __('teacher::public.courses_count') }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-value">{{ $totalLessons }}</span>
+                                        <span class="stat-label">{{ __('teacher::public.total_lessons') }}</span>
+                                    </div>
+                                </div>
                             </div>
-                        @empty
-                            <div class="col-12">
-                                <div class="alert alert-info mb-0">{{ __('teacher::public.no_courses') }}</div>
-                            </div>
-                        @endforelse
+                        </div>
+                    </div>
+
+                    {{-- About Section --}}
+                    <div class="content-card p-4 p-md-5 rounded-5 shadow-sm border mb-4">
+                        <h3 class="section-title h4 fw-bold mb-4">
+                            <i class="fas fa-user-tie text-primary me-2"></i> {{ __('teacher::public.about_title') }}
+                        </h3>
+                        <div class="bio-content rich-text">
+                            {!! $teacher->description_locale !!}
+                        </div>
+                    </div>
+
+                    {{-- Courses Section --}}
+                    <div class="content-card p-4 p-md-5 rounded-5 shadow-sm border mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h3 class="section-title h4 fw-bold mb-0">
+                                <i class="fas fa-graduation-cap text-primary me-2"></i> {{ __('teacher::public.courses_by_teacher') }}
+                            </h3>
+                        </div>
+                        
+                        <div class="courses-list">
+                            @forelse ($courses as $course)
+                                <a href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}" class="course-horizontal-card mb-3 text-decoration-none">
+                                    <div class="row g-0 align-items-center">
+                                        <div class="col-sm-4 col-md-3">
+                                            <div class="course-thumb-container">
+                                                <img src="{{ $course->thumbnail }}" alt="{{ $course->name_locale }}" class="course-thumb">
+                                                @php
+                                                    $price = $course->price_locale;
+                                                    $salePrice = $course->sale_price_locale;
+                                                    $hasRealSale = $salePrice > 0 && $salePrice < $price;
+                                                @endphp
+                                                @if($hasRealSale)
+                                                    <div class="course-sale-badge">{{ __('teacher::public.on_sale') }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-8 col-md-9">
+                                            <div class="p-3">
+                                                <h4 class="course-name h6 fw-bold mb-2">{{ $course->name_locale }}</h4>
+                                                <div class="course-meta d-flex flex-wrap gap-3 mb-2 small text-muted">
+                                                    <span><i class="far fa-play-circle me-1"></i> {{ $course->lessons_count }} {{ __('teacher::public.lessons') }}</span>
+                                                    <span><i class="far fa-user me-1"></i> {{ number_format($course->students_count) }} {{ __('teacher::public.students') }}</span>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-2">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="course-stars text-warning small">
+                                                            @php $rating = (float) $course->ratings_avg_rating; @endphp
+                                                            @for($i = 1; $i <= 5; $i++)
+                                                                <i class="{{ $i <= $rating ? 'fas' : ($i - 0.5 <= $rating ? 'fas fa-star-half-alt' : 'far') }} fa-star"></i>
+                                                            @endfor
+                                                        </div>
+                                                        <span class="fw-bold small text-dark">{{ number_format($rating, 1) }}</span>
+                                                        <span class="small text-muted">({{ $course->ratings_count }})</span>
+                                                    </div>
+
+                                                    <div class="course-pricing text-end">
+                                                        @php
+                                                            $price = $course->price_locale;
+                                                            $salePrice = $course->sale_price_locale;
+                                                            $hasSale = $salePrice > 0 && $salePrice < $price;
+                                                            $displayPrice = $hasSale ? $salePrice : $price;
+                                                        @endphp
+                                                        
+                                                        @if($displayPrice > 0)
+                                                            @if($hasSale)
+                                                                <span class="text-muted small text-decoration-line-through me-2">{{ number_format($price, 0) }}{{ $course->currency_symbol }}</span>
+                                                            @endif
+                                                            <span class="fw-black text-primary fs-5">{{ number_format($displayPrice, 0) }}{{ $course->currency_symbol }}</span>
+                                                        @else
+                                                            <span class="badge bg-success-soft text-success fw-bold">{{ __('teacher::public.free') }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="text-center py-5">
+                                    <img src="/assets/img/empty-courses.svg" alt="No courses" style="width: 120px;" class="mb-3 opacity-50">
+                                    <p class="text-muted">{{ __('teacher::public.no_courses_found') }}</p>
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
 
-                @if ($bundles->isNotEmpty())
-                    <div class="teacher-public-card mt-4">
-                        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-center mb-3">
-                            <div>
-                                <h3 class="mb-1">Combo khóa học tiết kiệm</h3>
-                                <p class="mb-0 text-muted">Mua nhiều khóa học cùng lúc với giá ưu đãi đặc biệt.</p>
-                            </div>
+                {{-- Right Side: Stats & Rating Interaction --}}
+                <div class="col-lg-4">
+                    <div class="sticky-sidebar">
+                        {{-- Expert Highlights --}}
+                        <div class="content-card p-4 rounded-5 shadow-sm border mb-4 bg-gradient-premium text-white overflow-hidden position-relative">
+                            <div class="decoration-circle"></div>
+                            <h4 class="h5 fw-bold mb-3 position-relative">{{ __('teacher::public.expert_highlights') }}</h4>
+                            <ul class="list-unstyled mb-0 position-relative">
+                                <li class="mb-3 d-flex gap-3">
+                                    <div class="highlight-icon"><i class="fas fa-clock"></i></div>
+                                    <div>
+                                        <div class="fw-bold">{{ $teacher->exp }} {{ __('teacher::public.years') }}</div>
+                                        <div class="small opacity-75">{{ __('teacher::public.professional_exp') }}</div>
+                                    </div>
+                                </li>
+                                <li class="mb-3 d-flex gap-3">
+                                    <div class="highlight-icon"><i class="fas fa-certificate"></i></div>
+                                    <div>
+                                        <div class="fw-bold">{{ __('teacher::public.verified_expert') }}</div>
+                                        <div class="small opacity-75">{{ __('teacher::public.verified_desc') }}</div>
+                                    </div>
+                                </li>
+                                <li class="d-flex gap-3">
+                                    <div class="highlight-icon"><i class="fas fa-users"></i></div>
+                                    <div>
+                                        <div class="fw-bold">{{ number_format($totalStudents) }}+ {{ __('teacher::public.active_students') }}</div>
+                                        <div class="small opacity-75">{{ __('teacher::public.student_community') }}</div>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
 
-                        <div class="row g-3">
-                            @foreach ($bundles as $bundle)
-                                <div class="col-md-6">
-                                    <article class="teacher-public-course bundle-card {{ $bundle->is_hot ? 'is-hot' : '' }}">
-                                        @if ($bundle->is_hot)
-                                            <div class="bundle-hot-badge">
-                                                <i class="fa-solid fa-fire me-1"></i> HOT
-                                            </div>
-                                        @endif
-                                        <img src="{{ $bundle->image }}" alt="{{ $bundle->name }}" class="teacher-public-course__thumb">
-                                        <div class="teacher-public-course__body">
-                                            <h4>{{ $bundle->name }}</h4>
-                                            <div class="mb-2">
-                                                <span class="badge bg-light text-dark border">
-                                                    <i class="fa-solid fa-layer-group me-1"></i> {{ $bundle->items()->count() }} khóa học
-                                                </span>
-                                            </div>
-                                            <div class="teacher-public-course__price mb-3">
-                                                <span class="fw-bold text-danger fs-5">{{ number_format($bundle->price, 0) }} đ</span>
-                                            </div>
-                                            <a href="{{ route('courses.bundle.detail', ['locale' => app()->getLocale(), 'slug' => $bundle->slug]) }}" class="btn btn-primary btn-sm">
-                                                Xem chi tiết combo
-                                            </a>
-                                        </div>
-                                    </article>
+                        {{-- Rating Summary Card --}}
+                        <div class="content-card p-4 rounded-5 shadow-sm border mb-4">
+                            <h4 class="h5 fw-bold mb-4">{{ __('teacher::public.teacher_rating') }}</h4>
+                            <div class="text-center mb-4">
+                                <div class="display-1 fw-black text-primary mb-2">{{ number_format($teacher->ratings_avg_rating, 1) }}</div>
+                                <div class="rating-stars mb-2">
+                                    @php $avg = (float) $teacher->ratings_avg_rating; @endphp
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <i class="{{ $i <= $avg ? 'fas' : ($i - 0.5 <= $avg ? 'fas fa-star-half-alt' : 'far') }} fa-star text-warning fa-lg"></i>
+                                    @endfor
                                 </div>
-                            @endforeach
+                                <div class="small text-muted">{{ __('teacher::public.total_reviews', ['count' => $totalRatings]) }}</div>
+                            </div>
+
+                            <div class="star-bars mb-4">
+                                @foreach($starDistribution as $star => $data)
+                                    <div class="star-bar-item d-flex align-items-center gap-2 mb-2">
+                                        <div class="star-label small fw-bold" style="width: 20px;">{{ $star }}</div>
+                                        <div class="progress flex-grow-1" style="height: 8px;">
+                                            <div class="progress-bar bg-warning" style="width: {{ $data['percent'] }}%"></div>
+                                        </div>
+                                        <div class="star-percent small text-muted" style="width: 35px;">{{ round($data['percent']) }}%</div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            @if($canRateTeacher)
+                                <div class="separator-text mb-4"><span>{{ __('teacher::public.rate_this_teacher') }}</span></div>
+                                <div id="teacher-rating-wrap">
+                                    @include('teacher::clients.partials.rating_panel', [
+                                        'teacher' => $teacher,
+                                        'canRateTeacher' => $canRateTeacher,
+                                        'viewerTeacherRating' => $viewerTeacherRating,
+                                    ])
+                                </div>
+                            @endif
                         </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
     </section>
@@ -130,271 +228,306 @@
 
 @section('stylesheets')
     <style>
-        .teacher-public-page {
-            padding-bottom: 48px;
+        :root {
+            --premium-primary: #4f46e5;
+            --premium-secondary: #0ea5e9;
+            --premium-accent: #f59e0b;
+            --card-bg: #ffffff;
+            --card-border: rgba(0, 0, 0, 0.06);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --premium-grad: linear-gradient(135deg, #4f46e5, #0ea5e9);
         }
-        .teacher-public-shell {
-            display: grid;
-            gap: 1.25rem;
+
+        html[data-theme="dark"] {
+            --card-bg: #1e293b;
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
         }
-        .teacher-public-hero,
-        .teacher-public-card {
-            padding: 1.5rem;
-            border-radius: 24px;
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            background: rgba(255, 255, 255, 0.92);
-            box-shadow: 0 20px 42px rgba(15, 23, 42, 0.08);
-        }
-        .teacher-public-hero {
-            display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-            gap: 1.25rem;
-            align-items: start;
-        }
-        .teacher-public-hero__main {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-        .teacher-public-hero__avatar img {
-            width: 104px;
-            height: 104px;
-            border-radius: 28px;
-            object-fit: cover;
-            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.18);
-        }
-        .teacher-public-hero__eyebrow,
-        .teacher-public-rating__eyebrow {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.42rem 0.78rem;
-            border-radius: 999px;
-            background: rgba(37, 99, 235, 0.1);
-            color: #1d4ed8;
-            font-size: 0.78rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .teacher-public-hero__name {
-            margin: 0.85rem 0 0.55rem;
-            font-size: clamp(2rem, 3vw, 2.7rem);
-            font-weight: 900;
-            color: #0f172a;
-        }
-        .teacher-public-hero__meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            color: #475569;
-        }
-        .teacher-public-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.65rem;
-            margin: -0.05rem 0 0.85rem;
-        }
-        .teacher-public-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            padding: 0.48rem 0.85rem;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            font-weight: 800;
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
-            border: 1px solid transparent;
-        }
-        .teacher-public-badge::before {
-            font-family: "Font Awesome 6 Free";
-            font-weight: 900;
-            font-size: 0.82rem;
-        }
-        .teacher-public-badge--verified {
-            background: rgba(37, 99, 235, 0.1);
-            color: #1d4ed8;
-            border-color: rgba(37, 99, 235, 0.18);
-        }
-        .teacher-public-badge--verified::before {
-            content: "\f058";
-        }
-        .teacher-public-badge--premium {
-            background: rgba(245, 158, 11, 0.12);
-            color: #b45309;
-            border-color: rgba(245, 158, 11, 0.18);
-        }
-        .teacher-public-badge--premium::before {
-            content: "\f005";
-        }
-        .teacher-public-rating__summary {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            align-items: start;
-        }
-        .teacher-public-rating__stars,
-        .teacher-public-course__rating {
-            color: #f59e0b;
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            flex-wrap: wrap;
-        }
-        .teacher-public-rating__score {
-            text-align: right;
-        }
-        .teacher-public-rating__score strong {
-            display: block;
-            font-size: 1.8rem;
-            color: #0f172a;
-            line-height: 1;
-        }
-        .teacher-public-rating__picker {
-            display: block;
-        }
-        .teacher-public-rating__track {
-            position: relative;
-            width: min(100%, 270px);
-            padding: 0.9rem 1rem;
-            border: 1px solid rgba(245, 158, 11, 0.22);
-            background: linear-gradient(180deg, #ffffff, #fff7ed);
-            border-radius: 18px;
-            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.1);
-            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-        }
-        .teacher-public-rating__track:hover,
-        .teacher-public-rating__track.is-preview {
-            transform: translateY(-2px) scale(1.03);
-            border-color: rgba(245, 158, 11, 0.45);
-            background: linear-gradient(180deg, #fff7ed, #ffedd5);
-            box-shadow: 0 14px 24px rgba(245, 158, 11, 0.16);
-        }
-        .teacher-public-rating__track.is-active {
-            background: linear-gradient(135deg, #f59e0b, #f97316);
-            border-color: transparent;
-            transform: translateY(-2px);
-            box-shadow: 0 16px 28px rgba(249, 115, 22, 0.28);
-        }
-        .teacher-public-rating__stars-base,
-        .teacher-public-rating__stars-fill {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            font-size: 1.75rem;
-            line-height: 1;
-            white-space: nowrap;
-        }
-        .teacher-public-rating__stars-base {
-            color: #cbd5e1;
-        }
-        .teacher-public-rating__stars-fill {
-            position: absolute;
-            inset: 0.9rem auto auto 1rem;
-            overflow: hidden;
-            color: #f59e0b;
-            pointer-events: none;
-            transition: width 0.16s ease;
-        }
-        .teacher-public-rating__track.is-active .teacher-public-rating__stars-base {
-            color: rgba(255, 255, 255, 0.32);
-        }
-        .teacher-public-rating__track.is-active .teacher-public-rating__stars-fill {
-            color: #fff8e1;
-        }
-        .teacher-public-rating__hotspots {
-            position: absolute;
-            inset: 0;
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            z-index: 2;
-        }
-        .teacher-public-rating__hotspot {
-            border: 0;
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            cursor: pointer;
-        }
-        .teacher-public-rating__hotspot:focus-visible {
-            outline: 2px solid rgba(249, 115, 22, 0.6);
-            outline-offset: -3px;
-        }
-        .teacher-public-card h3 {
-            color: #0f172a;
-            font-size: 1.4rem;
-            font-weight: 800;
-            margin-bottom: 0.9rem;
-        }
-        .teacher-public-card__content {
-            color: #334155;
-            line-height: 1.75;
-        }
-        .teacher-public-course {
-            display: flex;
-            gap: 1rem;
-            border: 1px solid rgba(148, 163, 184, 0.14);
-            border-radius: 20px;
-            background: #f8fafc;
-            padding: 1rem;
-            height: 100%;
-        }
-        .teacher-public-course__thumb {
-            width: 120px;
-            height: 90px;
-            object-fit: cover;
-            border-radius: 16px;
-            flex: 0 0 120px;
-        }
-        .teacher-public-course__body h4 {
-            font-size: 1.05rem;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 0.55rem;
-        }
-        .bundle-card {
-            position: relative;
+
+        .teacher-profile-premium {
+            background-color: var(--card-bg);
+            color: var(--text-main);
             transition: all 0.3s ease;
         }
-        .bundle-card.is-hot {
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            background: linear-gradient(180deg, #fffafa, #fff);
-            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.08);
+
+        .content-card {
+            background-color: var(--card-bg);
+            border-color: var(--card-border) !important;
         }
-        .bundle-hot-badge {
+
+        .profile-hero-card {
+            background: #f8fafc;
+            border: 1px solid var(--card-border) !important;
+        }
+
+        html[data-theme="dark"] .profile-hero-card {
+            background: #0f172a;
+        }
+
+        .hero-blur-bg {
             position: absolute;
-            top: -10px;
-            right: 15px;
-            background: linear-gradient(135deg, #ef4444, #f97316);
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 0.7rem;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: var(--premium-primary);
+            filter: blur(120px);
+            opacity: 0.08;
+            z-index: 1;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            display: inline-block;
+            padding: 8px;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        html[data-theme="dark"] .avatar-wrapper {
+            background: #334155;
+        }
+
+        .avatar-img {
+            width: 160px;
+            height: 160px;
+            object-fit: cover;
+            border: 4px solid var(--card-bg);
+        }
+
+        .verified-tick {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: #22c55e;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #fff;
+            font-size: 14px;
+        }
+
+        .badge-premium {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .badge-verified { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+        .badge-premium { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .badge-top_seller { background: rgba(79, 70, 229, 0.1); color: #4f46e5; }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
             font-weight: 800;
+            color: var(--premium-primary);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text-muted);
             letter-spacing: 0.05em;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
-            z-index: 10;
-            animation: pulse-hot 2s infinite;
         }
-        @keyframes pulse-hot {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+
+        .course-horizontal-card {
+            display: block;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        @media (max-width: 991.98px) {
-            .teacher-public-hero {
-                grid-template-columns: 1fr;
+
+        .course-horizontal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+            border-color: var(--premium-primary);
+        }
+
+        .course-thumb-container {
+            position: relative;
+            padding-top: 75%;
+            overflow: hidden;
+        }
+
+        .course-thumb {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .course-sale-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 6px;
+            z-index: 2;
+        }
+
+        .bg-gradient-premium {
+            background: var(--premium-grad);
+        }
+
+        .highlight-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .decoration-circle {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .sticky-sidebar {
+            position: sticky;
+            top: 100px;
+        }
+
+        .rich-text {
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .separator-text {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .separator-text::before,
+        .separator-text::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .separator-text span {
+            padding: 0 15px;
+        }
+
+        .progress {
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 99px;
+        }
+
+        html[data-theme="dark"] .progress {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .fw-black {
+            font-weight: 900;
+        }
+
+        .bg-success-soft {
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+
+        .teacher-public-rating__picker {
+            position: relative;
+            user-select: none;
+            padding: 10px 0;
+        }
+
+        .teacher-public-rating__track {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            font-size: 2rem;
+            line-height: 1;
+        }
+
+        .teacher-public-rating__stars-base {
+            color: #e2e8f0;
+            display: flex;
+            gap: 4px;
+        }
+
+        .teacher-public-rating__stars-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            color: #f59e0b;
+            display: flex;
+            gap: 4px;
+            transition: width 0.1s ease;
+            pointer-events: none;
+        }
+
+        .teacher-public-rating__hotspots {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .teacher-public-rating__hotspot {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            cursor: pointer;
+        }
+
+        html[data-theme="dark"] .teacher-public-rating__stars-base {
+            color: #334155;
+        }
+
+        @media (max-width: 767.98px) {
+            .avatar-img {
+                width: 120px;
+                height: 120px;
             }
-        }
-        @media (max-width: 575.98px) {
-            .teacher-public-hero__main,
-            .teacher-public-course {
-                flex-direction: column;
-            }
-            .teacher-public-course__thumb {
-                width: 100%;
-                height: 180px;
-                flex-basis: auto;
+            .stat-value {
+                font-size: 1.25rem;
             }
         }
     </style>
@@ -404,148 +537,85 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const ratingWrap = document.getElementById('teacher-rating-wrap');
-            if (!ratingWrap) {
-                return;
-            }
+            if (!ratingWrap) return;
 
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const updateRatingVisual = (form, value, state = 'idle') => {
-                if (!form) {
-                    return;
-                }
+            // Rating Star Picker Interaction
+            const initRatingPicker = (container) => {
+                const form = container.querySelector('[data-teacher-rating-form]');
+                if (!form) return;
 
-                const track = form.querySelector('[data-rating-track]');
-                const fill = form.querySelector('[data-rating-fill]');
-                const numericValue = Math.max(0, Math.min(Number(value || 0), 5));
+                const track = container.querySelector('[data-rating-track]');
+                const fill = container.querySelector('[data-rating-fill]');
+                const input = container.querySelector('[data-rating-input]');
+                const label = container.querySelector('[data-rating-current-label]');
+                const options = container.querySelectorAll('[data-rating-option]');
+                const submitBtn = form.querySelector('button[type="submit"]');
 
-                if (fill) {
-                    fill.style.width = `${numericValue * 20}%`;
-                }
+                let selectedRating = null;
 
-                if (track) {
-                    track.classList.toggle('is-preview', state === 'preview' && numericValue > 0);
-                    track.classList.toggle('is-active', numericValue > 0);
-                }
-            };
-
-            ratingWrap.addEventListener('click', (event) => {
-                const option = event.target.closest('[data-rating-option]');
-                if (!option) {
-                    return;
-                }
-
-                const form = option.closest('form');
-                if (!form) {
-                    return;
-                }
-
-                form.querySelector('[data-rating-input]').value = option.dataset.value;
-                updateRatingVisual(form, option.dataset.value, 'selected');
-
-                const label = form.querySelector('[data-rating-current-label]');
-                if (label) {
-                    label.textContent = @js(__('teacher::public.rating_selected_label')) + ' ' + option.dataset.value;
-                }
-            });
-
-            ratingWrap.addEventListener('mouseover', (event) => {
-                const option = event.target.closest('[data-rating-option]');
-                if (!option) {
-                    return;
-                }
-
-                const form = option.closest('form');
-                if (!form) {
-                    return;
-                }
-
-                updateRatingVisual(form, option.dataset.value, 'preview');
-
-                const label = form.querySelector('[data-rating-current-label]');
-                if (label) {
-                    label.textContent = @js(__('teacher::public.rating_selected_label')) + ' ' + option.dataset.value;
-                }
-            });
-
-            ratingWrap.addEventListener('mouseout', (event) => {
-                const form = event.target.closest('[data-teacher-rating-form]');
-                if (!form) {
-                    return;
-                }
-
-                if (event.relatedTarget && form.contains(event.relatedTarget)) {
-                    return;
-                }
-
-                const selectedValue = form.querySelector('[data-rating-input]')?.value || '';
-                updateRatingVisual(form, selectedValue, selectedValue ? 'selected' : 'idle');
-
-                const label = form.querySelector('[data-rating-current-label]');
-                if (label) {
-                    label.textContent = selectedValue
-                        ? @js(__('teacher::public.rating_selected_label')) + ' ' + selectedValue
-                        : @js(__('teacher::public.rating_hint'));
-                }
-            });
-
-            ratingWrap.addEventListener('focusin', (event) => {
-                const option = event.target.closest('[data-rating-option]');
-                if (!option) {
-                    return;
-                }
-
-                const form = option.closest('form');
-                if (!form) {
-                    return;
-                }
-
-                updateRatingVisual(form, option.dataset.value, 'preview');
-            });
-
-            ratingWrap.addEventListener('focusout', (event) => {
-                const form = event.target.closest('[data-teacher-rating-form]');
-                if (!form) {
-                    return;
-                }
-
-                if (event.relatedTarget && form.contains(event.relatedTarget)) {
-                    return;
-                }
-
-                const selectedValue = form.querySelector('[data-rating-input]')?.value || '';
-                updateRatingVisual(form, selectedValue, selectedValue ? 'selected' : 'idle');
-            });
-
-            ratingWrap.addEventListener('submit', async (event) => {
-                const form = event.target.closest('[data-teacher-rating-form]');
-                if (!form) {
-                    return;
-                }
-
-                event.preventDefault();
-
-                try {
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': token,
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json',
-                        },
-                        body: new FormData(form),
+                options.forEach(opt => {
+                    opt.addEventListener('mouseenter', () => updateStars(parseFloat(opt.dataset.value)));
+                    opt.addEventListener('click', () => {
+                        selectedRating = parseFloat(opt.dataset.value);
+                        input.value = selectedRating;
+                        updateStars(selectedRating);
+                        if (label) {
+                            label.textContent = `{{ __('teacher::public.rating_selected_label') }} ${selectedRating} sao`;
+                            label.classList.remove('text-muted');
+                            label.classList.add('text-primary', 'fw-bold');
+                        }
                     });
+                });
 
-                    const result = await response.json();
-                    if (!response.ok || !result.success) {
-                        alert(result.message || 'Unable to save rating.');
+                track.addEventListener('mouseleave', () => updateStars(selectedRating || 0));
+
+                function updateStars(val) {
+                    fill.style.width = (val / 5 * 100) + '%';
+                }
+
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (!selectedRating) {
+                        alert('{{ __('teacher::public.rating_hint') }}');
                         return;
                     }
 
-                    ratingWrap.innerHTML = result.html;
-                } catch (error) {
-                    alert('Unable to save rating.');
-                }
-            });
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{{ __('teacher::public.rating_submit') }}';
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ rating: selectedRating }),
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok || !result.success) {
+                            alert(result.message || 'Unable to save rating.');
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = '{{ __('teacher::public.rating_submit') }}';
+                            return;
+                        }
+
+                        ratingWrap.innerHTML = result.html;
+                        // Trigger a reload to refresh global averages and stats
+                        setTimeout(() => window.location.reload(), 1000);
+                    } catch (error) {
+                        console.error('Rating Error:', error);
+                        alert('An error occurred while saving your rating.');
+                        submitBtn.disabled = false;
+                    }
+                });
+            };
+
+            initRatingPicker(ratingWrap);
         });
     </script>
 @endsection
+

@@ -6,7 +6,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AdminInactiveTeacherAlertNotification extends Notification
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class AdminInactiveTeacherAlertNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -24,35 +26,45 @@ class AdminInactiveTeacherAlertNotification extends Notification
     public function toMail($notifiable): MailMessage
     {
         $teacherName = $this->teacher->name_locale ?? $this->teacher->name ?? ('Teacher #' . ($this->teacher->id ?? ''));
-        $packageName = $this->teacher->currentPackage()?->name_locale ?? 'Chua xac dinh';
+        $packageName = $this->teacher->currentPackage()?->name_locale ?? 'Chưa xác định';
 
         return (new MailMessage)
-            ->subject('Canh bao giang vien lau khong hoat dong')
-            ->greeting('Xin chao ' . ($notifiable->name ?? 'admin') . ',')
-            ->line('He thong ghi nhan mot giang vien lau khong hoat dong.')
-            ->line('Giang vien: ' . $teacherName)
-            ->line('So ngay khong hoat dong: ' . $this->inactiveDays)
-            ->line('Goi hien tai: ' . $packageName)
-            ->action('Xem danh sach giang vien', route('teacher.index'))
-            ->line('Ban co the loc theo cot hoat dong gan nhat trong admin de kiem tra them.');
+            ->subject('Cảnh báo giảng viên lâu không hoạt động')
+            ->greeting('Xin chào ' . ($notifiable->name ?? 'admin') . ',')
+            ->line('Hệ thống ghi nhận một giảng viên lâu không hoạt động.')
+            ->line('Giảng viên: ' . $teacherName)
+            ->line('Số ngày không hoạt động: ' . $this->inactiveDays)
+            ->line('Gói hiện tại: ' . $packageName)
+            ->action('Xem danh sách giảng viên', route('teacher.index'))
+            ->line('Bạn có thể lọc theo cột hoạt động gần nhất trong admin để kiểm tra thêm.');
     }
 
     public function toArray($notifiable): array
     {
         $teacherName = $this->teacher->name_locale ?? $this->teacher->name ?? ('Teacher #' . ($this->teacher->id ?? ''));
 
+        $titleTranslations = [
+            'vi' => 'Cảnh báo giảng viên không hoạt động',
+            'en' => 'Inactive teacher alert',
+            'ko' => '비활성 강사 알림',
+            'ja' => '非アクティブ講師のアラート',
+            'zh' => '非活跃讲师警报',
+        ];
+
+        $messageTranslations = [
+            'vi' => $teacherName . ' đã không có hoạt động trong ' . $this->inactiveDays . ' ngày.',
+            'en' => $teacherName . ' has been inactive for ' . $this->inactiveDays . ' days.',
+            'ko' => $teacherName . ' 강사가 ' . $this->inactiveDays . '일 동안 활동하지 않았습니다.',
+            'ja' => $teacherName . ' 講師が ' . $this->inactiveDays . ' 日間活動していません。',
+            'zh' => $teacherName . ' 讲师已有 ' . $this->inactiveDays . ' 天未活动。',
+        ];
+
         return [
             'type' => 'teacher.inactive.admin_alert',
-            'title' => 'Canh bao giang vien khong hoat dong',
-            'title_translations' => [
-                'vi' => 'Cảnh báo giảng viên không hoạt động',
-                'en' => 'Inactive teacher alert',
-            ],
-            'message' => $teacherName . ' da khong co hoat dong trong ' . $this->inactiveDays . ' ngay.',
-            'message_translations' => [
-                'vi' => $teacherName . ' đã không có hoạt động trong ' . $this->inactiveDays . ' ngày.',
-                'en' => $teacherName . ' has been inactive for ' . $this->inactiveDays . ' days.',
-            ],
+            'title' => $titleTranslations['vi'],
+            'title_translations' => $titleTranslations,
+            'message' => $messageTranslations['vi'],
+            'message_translations' => $messageTranslations,
             'url' => route('teacher.index'),
             'severity' => 'warning',
             'icon' => 'fas fa-user-slash',

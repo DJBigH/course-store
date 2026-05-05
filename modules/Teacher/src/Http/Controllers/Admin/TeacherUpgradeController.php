@@ -21,7 +21,7 @@ class TeacherUpgradeController extends Controller
         $pageTitle = __('teacher::admin.titles.package_upgrades') ?: 'Quản lý nâng cấp gói';
         $upgrades = TeacherApplication::query()
             ->where('type', 'upgrade')
-            ->with(['student', 'package', 'teacher', 'reviewer'])
+            ->with(['student', 'package', 'teacher', 'reviewer', 'orders'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
             ->latest('id')
             ->paginate(12)
@@ -35,7 +35,7 @@ class TeacherUpgradeController extends Controller
         $pageTitle = __('teacher::admin.titles.upgrade_detail') ?: 'Chi tiết yêu cầu nâng cấp';
         $upgrade = TeacherApplication::query()
             ->where('type', 'upgrade')
-            ->with(['student', 'package', 'teacher', 'reviewer'])
+            ->with(['student', 'package', 'teacher', 'reviewer', 'orders'])
             ->findOrFail($id);
 
         return view('teacher::admin.upgrades.show', compact('pageTitle', 'upgrade'));

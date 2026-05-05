@@ -38,7 +38,7 @@ class CourseRatingController extends Controller
         }
 
         $payload = $request->validate([
-            'rating' => ['required', 'numeric', 'min:1', 'max:5'],
+            'rating' => ['required', 'numeric', 'min:0.5', 'max:5'],
         ]);
 
         $rating = $this->normalizeHalfStarRating($payload['rating']);
@@ -46,11 +46,16 @@ class CourseRatingController extends Controller
             return $this->errorResponse($request, __('courses::clients/common.rating_invalid'), 422);
         }
 
-        CourseRating::query()->create([
+        $newRating = CourseRating::query()->create([
             'course_id' => $course->id,
             'student_id' => $student->id,
             'rating' => $rating,
         ]);
+
+        // Notify Teacher
+        if ($course->teacher && $course->teacher->student) {
+            $course->teacher->student->notify(new \App\Notifications\RatingNotification($newRating));
+        }
 
         return $this->renderRatingResponse($request, $course, $student->id, $hasCourse);
     }
@@ -77,6 +82,14 @@ class CourseRatingController extends Controller
             $query->where('status', 1);
         }], 'rating');
 
+        $ratingBreakdown = \Illuminate\Support\Facades\DB::table('course_ratings')
+            ->where('course_id', $course->id)
+            ->where('status', 1)
+            ->select('rating', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('rating')
+            ->pluck('count', 'rating')
+            ->toArray();
+
         $html = view('courses::clients.partials.rating_panel', [
             'course' => $course,
             'canRate' => $canRate,
@@ -84,6 +97,7 @@ class CourseRatingController extends Controller
                 ->where('course_id', $course->id)
                 ->where('student_id', $studentId)
                 ->value('rating'),
+            'ratingBreakdown' => $ratingBreakdown,
         ])->render();
 
         return response()->json([

@@ -38,6 +38,7 @@ class FinanceController extends Controller
                     'teacher' => (object) [
                         'id' => $summaryItem['teacher_id'],
                         'name' => $summaryItem['teacher_name'],
+                        'name_locale' => $summaryItem['teacher_name'], // Since we don't have all name_XX columns in the query, use default name or load model
                         'slug' => $summaryItem['teacher_slug'],
                     ]
                 ]));
@@ -78,7 +79,7 @@ class FinanceController extends Controller
             ->get()
             ->map(function($row) {
                 return [
-                    'teacher' => (object) ['id' => $row->teacher_id, 'name' => $row->teacher_name],
+                    'teacher' => (object) ['id' => $row->teacher_id, 'name' => $row->teacher_name, 'name_locale' => $row->teacher_name],
                     'requested' => $row->requested,
                     'processing' => $row->processing,
                     'paid' => $row->paid,
@@ -104,6 +105,10 @@ class FinanceController extends Controller
         
         $this->financesRepo->updatePayoutStatus($id, $request->all());
         $payout->refresh();
+
+        if ($payout->teacher && $payout->teacher->student) {
+            $payout->teacher->student->notify(new \App\Notifications\TeacherPayoutStatusNotification($payout));
+        }
 
         activity_log(
             action: 'update_payout_status',
@@ -152,6 +157,10 @@ class FinanceController extends Controller
             logName: 'admin_finance_management',
             description: "Xử lý yêu cầu thay đổi tài khoản rút tiền #ACC{$changeRequest->id}: {$changeRequest->status}"
         );
+
+        if ($changeRequest->teacher && $changeRequest->teacher->student) {
+            $changeRequest->teacher->student->notify(new \App\Notifications\PayoutAccountStatusNotification($changeRequest));
+        }
 
         return back()->with('msg', __('finances::admin.messages.payout_account_change_success'));
     }

@@ -33,6 +33,27 @@ class FinanceCalculator
         ];
     }
 
+    public static function breakdownForUpgrade(\Modules\Orders\src\Models\Order $order, float $commissionRate): array
+    {
+        $grossAmount = (float) ($order->total ?? 0);
+        $orderDiscount = (float) ($order->discount ?? 0);
+
+        // For upgrades, the entire discount belongs to the package
+        $allocatedDiscount = min($grossAmount, $orderDiscount);
+        $netRevenue = max($grossAmount - $allocatedDiscount, 0);
+        $teacherRevenue = $netRevenue * max(min($commissionRate, 100), 0) / 100;
+        $platformRevenue = max($netRevenue - $teacherRevenue, 0);
+
+        return [
+            'gross_amount' => $grossAmount,
+            'allocated_discount' => $allocatedDiscount,
+            'net_revenue' => $netRevenue,
+            'teacher_revenue' => $teacherRevenue,
+            'platform_revenue' => $platformRevenue,
+            'commission_rate' => $commissionRate,
+        ];
+    }
+
     public static function summarize(iterable $details, callable $commissionResolver): array
     {
         $summary = [

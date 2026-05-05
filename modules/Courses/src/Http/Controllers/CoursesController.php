@@ -525,6 +525,13 @@ class CoursesController extends Controller
             logName: 'Cập nhật trạng thái',
             description: $newStatus === 1 ? 'Xuất bản khóa học' : 'Ẩn khóa học'
         );
+
+        // Notify Teacher
+        if ($course->teacher && $course->teacher->student) {
+            $type = $newStatus === 1 ? 'published' : 'draft';
+            $course->teacher->student->notify(new \App\Notifications\CourseStatusNotification($course, $type));
+        }
+
         return back()->with('msg', $newStatus === 1 ? 'Đã xuất bản khóa học.' : 'Đã chuyển khóa học về bản nháp.');
     }
 
@@ -647,6 +654,7 @@ class CoursesController extends Controller
         Student::chunk(100, function ($students) use ($course) {
             foreach ($students as $student) {
                 $student->notify(new StudentNotification([
+                    'type' => 'student.course.new',
                     'title' => 'Khóa học mới',
                     'title_translations' => [
                         'vi' => 'Khóa học mới',
@@ -667,6 +675,10 @@ class CoursesController extends Controller
                         'locale' => app()->getLocale(),
                         'slug' => $course->slug
                     ]),
+                    'severity' => 'primary',
+                    'icon' => 'fas fa-rocket',
+                    'entity_type' => 'course',
+                    'entity_id' => $course->id,
                 ]));
             }
         });
@@ -729,6 +741,14 @@ class CoursesController extends Controller
             logName: 'Cập nhật',
             description: 'Cập nhật khóa học'
         );
+
+        // Notify Teacher if learning lock changed
+        $oldLock = (int) ($oldData['is_learning_locked'] ?? 0);
+        $newLock = (int) ($newData['is_learning_locked'] ?? 0);
+        if ($oldLock !== $newLock && $course->teacher && $course->teacher->student) {
+            $type = $newLock === 1 ? 'locked' : 'unlocked';
+            $course->teacher->student->notify(new \App\Notifications\CourseStatusNotification($course, $type));
+        }
 
         return back()->with('msg', __('courses::messages.update.success'));
     }

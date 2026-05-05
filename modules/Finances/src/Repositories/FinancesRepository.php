@@ -8,7 +8,9 @@ use Modules\Finances\src\Models\PayoutAccount;
 use Modules\Finances\src\Models\PayoutAccountChangeRequest;
 use Modules\Finances\src\Models\PayoutRequest;
 use Modules\Finances\src\Support\FinanceCalculator;
+use Modules\Orders\src\Models\Order;
 use Modules\Orders\src\Models\OrderDetail;
+use Modules\Teacher\src\Models\TeacherApplication;
 use Modules\Teacher\src\Models\Teacher;
 
 class FinancesRepository extends BaseRepository implements FinancesRepositoryInterface
@@ -32,10 +34,6 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             $query->where('c.teacher_id', $teacherId);
         }
 
-        if ($currency && $currency !== 'ALL') {
-            $query->where('o.currency', $currency);
-        }
-
         if ($fromDate) {
             $query->whereDate('od.created_at', '>=', $fromDate);
         }
@@ -43,16 +41,17 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             $query->whereDate('od.created_at', '<=', $toDate);
         }
 
-        // Logic for calculated fields:
-        // gross = od.price * exRate
-        // discount = min(gross, (o.discount * exRate) * (od.price / o.total))
-        // net = gross - discount
-        // teacher = net * (t.commission_rate / 100)
-        
-        $exRate = $currency === 'ALL' ? 'IFNULL(o.exchange_rate, 1)' : '1';
+        // 1. Get Target Currency Rate
+        $targetRate = 1.0;
+        if ($currency && $currency !== 'ALL') {
+            $rateKey = 'currency_rate_' . strtolower($currency);
+            $targetRate = (float) (DB::table('settings')->where('key', $rateKey)->value('value') ?: 1.0);
+        }
+
+        $exRate = 'IFNULL(o.exchange_rate, 1)';
         
         $summary = $query->selectRaw("
-            SUM(od.price * {$exRate}) as gross_amount,
+            SUM(od.price * {$exRate}) as course_gross,
             SUM(
                 LEAST(
                     od.price * {$exRate}, 
@@ -68,14 +67,75 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             ) as teacher_revenue
         ")->first();
 
-        $platformRevenue = max(0, ($summary->net_revenue ?? 0) - ($summary->teacher_revenue ?? 0));
+        // 1b. Calculate Upgrade Teacher Revenue
+        $upgradeTeacherRevenue = 0.0;
+        $upgradeQuery = DB::table('orders as o')
+            ->join('teacher_applications as ta', 'ta.id', '=', 'o.orderable_id')
+            ->leftJoin('teacher as t', 't.id', '=', 'ta.teacher_id')
+            ->where('o.status_id', $paidStatusId)
+            ->where('o.orderable_type', 'Modules\Teacher\src\Models\TeacherApplication');
+
+        if ($teacherId) {
+            $upgradeQuery->where('ta.teacher_id', $teacherId);
+        }
+        if ($fromDate) {
+            $upgradeQuery->whereDate('o.payment_complete_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $upgradeQuery->whereDate('o.payment_complete_date', '<=', $toDate);
+        }
+
+        $upgradeTeacherRevenue = 0.0; // Teacher gets 0% from system upgrades/registrations
+
+        // 2. Total Gross from ALL successful orders (including non-course ones)
+        $grossQuery = DB::table('orders as o')
+            ->where('o.status_id', $paidStatusId);
+
+        // Filter by date range
+        if ($fromDate) {
+            $grossQuery->whereDate('o.payment_complete_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $grossQuery->whereDate('o.payment_complete_date', '<=', $toDate);
+        }
+
+        // If filtering by teacher, we only include their course sales and their own upgrades
+        if ($teacherId) {
+            $grossQuery->where(function ($q) use ($teacherId) {
+                $q->whereExists(function ($sub) use ($teacherId) {
+                    $sub->select(DB::raw(1))
+                        ->from('orders_detail as sod')
+                        ->join('courses as sc', 'sc.id', '=', 'sod.course_id')
+                        ->whereRaw('sod.order_id = o.id')
+                        ->where('sc.teacher_id', $teacherId);
+                })->orWhere(function ($sub) use ($teacherId) {
+                    $sub->where('o.orderable_type', 'Modules\Teacher\src\Models\TeacherApplication')
+                        ->whereExists(function ($ta) use ($teacherId) {
+                            $ta->select(DB::raw(1))
+                                ->from('teacher_applications as sta')
+                                ->whereRaw('sta.id = o.orderable_id')
+                                ->where('sta.teacher_id', $teacherId);
+                        });
+                });
+            });
+        }
+
+        $totalGross = $grossQuery->sum(DB::raw("o.total * {$exRate}"));
+
+        // Convert to target currency if not ALL
+        $finalGross = (float) $totalGross / $targetRate;
+        $totalTeacherRevenueRaw = (float) ($summary->teacher_revenue ?? 0) + (float) $upgradeTeacherRevenue;
+        $finalTeacherRevenue = $totalTeacherRevenueRaw / $targetRate;
+        $finalDiscount = (float) ($summary->allocated_discount ?? 0) / $targetRate;
+
+        $platformRevenue = max(0, $finalGross - $finalTeacherRevenue - $finalDiscount);
 
         return [
-            'gross_amount' => (float) ($summary->gross_amount ?? 0),
-            'allocated_discount' => (float) ($summary->allocated_discount ?? 0),
-            'net_revenue' => (float) ($summary->net_revenue ?? 0),
-            'teacher_revenue' => (float) ($summary->teacher_revenue ?? 0),
-            'platform_revenue' => (float) $platformRevenue,
+            'gross_amount' => $finalGross,
+            'allocated_discount' => $finalDiscount,
+            'net_revenue' => $finalGross - $finalDiscount,
+            'teacher_revenue' => $finalTeacherRevenue,
+            'platform_revenue' => $platformRevenue,
         ];
     }
 
@@ -263,9 +323,9 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
         return true;
     }
 
-    public function createAccountChangeRequest(int $teacherId, array $data): bool
+    public function createAccountChangeRequest(int $teacherId, array $data): PayoutAccountChangeRequest
     {
-        PayoutAccountChangeRequest::create([
+        return PayoutAccountChangeRequest::create([
             'teacher_id' => $teacherId,
             'replace_payout_account_id' => $data['replace_payout_account_id'],
             'bank_name' => $data['bank_name'],
@@ -273,41 +333,96 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             'bank_account_number' => $data['bank_account_number'],
             'status' => 'pending',
         ]);
-
-        return true;
     }
 
     public function getAdminEarnings(array $filters)
     {
-        $query = OrderDetail::query()
-            ->whereHas('order', function ($q) use ($filters) {
-                $q->whereHas('status', fn($sq) => $sq->where('is_success', true));
-                if (!empty($filters['currency']) && $filters['currency'] !== 'ALL') {
-                    $q->where('currency', $filters['currency']);
-                }
-            });
+        $paidStatusId = (int) (DB::table('orders_status')->where('is_success', true)->value('id') ?? 2);
 
-        if (!empty($filters['teacher_id'])) {
-            $query->whereHas('courses', function ($q) use ($filters) {
-                $q->withTrashed()->where('teacher_id', $filters['teacher_id']);
-            });
+        // We query Orders directly to include both Course orders (via details) and Upgrade orders
+        $query = Order::query()
+            ->where('status_id', $paidStatusId)
+            ->with(['detail.courses.teacher', 'orderable.teacher', 'orderable.package', 'bundle']);
+
+        if (!empty($filters['currency']) && $filters['currency'] !== 'ALL') {
+            $query->where('currency', $filters['currency']);
         }
+
         if (!empty($filters['from_date'])) {
-            $query->whereDate('created_at', '>=', $filters['from_date']);
+            $query->whereDate('payment_complete_date', '>=', $filters['from_date']);
         }
         if (!empty($filters['to_date'])) {
-            $query->whereDate('created_at', '<=', $filters['to_date']);
+            $query->whereDate('payment_complete_date', '<=', $filters['to_date']);
         }
 
-        $items = $query->with(['order', 'courses.teacher'])->latest()->paginate(20);
+        if (!empty($filters['teacher_id'])) {
+            $teacherId = $filters['teacher_id'];
+            $query->where(function ($q) use ($teacherId) {
+                $q->whereHas('detail.courses', function ($sub) use ($teacherId) {
+                    $sub->withTrashed()->where('teacher_id', $teacherId);
+                })->orWhere(function ($sub) use ($teacherId) {
+                    $sub->where('orderable_type', 'Modules\Teacher\src\Models\TeacherApplication')
+                        ->whereHasMorph('orderable', [TeacherApplication::class], function ($ta) use ($teacherId) {
+                            $ta->where('teacher_id', $teacherId);
+                        });
+                });
+            });
+        }
 
-        // Decorate paginated items
-        $items->getCollection()->transform(function ($item) {
-            $item->finance_breakdown = FinanceCalculator::breakdown($item, $item->courses?->teacher?->commission_rate ?? 0);
-            return $item;
-        });
+        $orders = $query->latest('payment_complete_date')->paginate(20);
 
-        return $items;
+        // Flatten orders into items for the view
+        $items = collect();
+        foreach ($orders as $order) {
+            if ($order->detail->isNotEmpty()) {
+                foreach ($order->detail as $detail) {
+                    // Check teacher filter for each detail if active
+                    if (!empty($filters['teacher_id']) && ($detail->courses?->teacher_id != $filters['teacher_id'])) {
+                        continue;
+                    }
+                    
+                    $detail->finance_breakdown = FinanceCalculator::breakdown($detail, $detail->courses?->teacher?->commission_rate ?? 0);
+                    if ($order->bundle_id && $order->bundle) {
+                        $detail->bundle_name = $order->bundle->name;
+                    }
+                    $items->push($detail);
+                }
+            } elseif ($order->orderable_type === 'Modules\Teacher\src\Models\TeacherApplication') {
+                $app = $order->orderable;
+                if ($app) {
+                    // Check teacher filter
+                    if (!empty($filters['teacher_id']) && ($app->teacher_id != $filters['teacher_id'])) {
+                        continue;
+                    }
+
+                    // Create a virtual item for the upgrade/new registration
+                    $isUpgrade = $app->type === 'upgrade';
+                    $typeLabel = $isUpgrade ? ' (Nâng cấp)' : ' (Đăng ký mới)';
+                    
+                    $virtualItem = (object) [
+                        'id' => 'UPGRADE_' . $order->id,
+                        'order' => $order,
+                        'courses' => (object) [
+                            'name_locale' => ($app->package?->name ?? 'Gói giảng viên') . $typeLabel,
+                            'teacher' => $app->teacher,
+                        ],
+                        'finance_breakdown' => FinanceCalculator::breakdownForUpgrade($order, 0), // Teacher gets 0%
+                    ];
+                    $items->push($virtualItem);
+                }
+            }
+        }
+
+        // We wrap it back into a LengthAwarePaginator to keep the view happy, 
+        // but note that the number of items might differ slightly from the order count.
+        // However, usually it's 1 item per order.
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $orders->total(),
+            $orders->perPage(),
+            $orders->currentPage(),
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+        );
     }
 
     public function getAdminPayouts(array $filters)
@@ -411,10 +526,6 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             ->join('teacher as t', 't.id', '=', 'c.teacher_id')
             ->where('o.status_id', $paidStatusId);
 
-        if ($currency && $currency !== 'ALL') {
-            $query->where('o.currency', $currency);
-        }
-
         if ($fromDate) {
             $query->whereDate('od.created_at', '>=', $fromDate);
         }
@@ -422,7 +533,14 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             $query->whereDate('od.created_at', '<=', $toDate);
         }
 
-        $exRate = $currency === 'ALL' ? 'IFNULL(o.exchange_rate, 1)' : '1';
+        // Get Target Currency Rate
+        $targetRate = 1.0;
+        if ($currency && $currency !== 'ALL') {
+            $rateKey = 'currency_rate_' . strtolower($currency);
+            $targetRate = (float) (DB::table('settings')->where('key', $rateKey)->value('value') ?: 1.0);
+        }
+
+        $exRate = 'IFNULL(o.exchange_rate, 1)';
 
         $results = $query->selectRaw("
             c.teacher_id,
@@ -445,22 +563,86 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             ) as teacher_revenue
         ")
         ->groupBy('c.teacher_id', 't.name', 't.slug')
-        ->having('gross_amount', '>', 0)
         ->get();
 
-        return $results->map(function ($row) {
-            return [
+        // 1b. Get Upgrade Earnings per teacher
+        $upgradeQuery = DB::table('orders as o')
+            ->join('teacher_applications as ta', 'ta.id', '=', 'o.orderable_id')
+            ->leftJoin('teacher as t', 't.id', '=', 'ta.teacher_id')
+            ->where('o.status_id', $paidStatusId)
+            ->where('o.orderable_type', 'Modules\Teacher\src\Models\TeacherApplication');
+
+        if ($fromDate) {
+            $upgradeQuery->whereDate('o.payment_complete_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $upgradeQuery->whereDate('o.payment_complete_date', '<=', $toDate);
+        }
+
+        $upgradeResults = $upgradeQuery->selectRaw("
+            ta.teacher_id,
+            t.name as teacher_name,
+            t.slug as teacher_slug,
+            COUNT(o.id) as orders_count,
+            SUM(o.total * {$exRate}) as gross_amount,
+            SUM(o.discount * {$exRate}) as allocated_discount,
+            SUM(GREATEST(0, (o.total * {$exRate}) - (o.discount * {$exRate}))) as net_revenue,
+            0 as teacher_revenue
+        ")
+        ->groupBy('ta.teacher_id', 't.name', 't.slug')
+        ->get();
+
+        // Merge results
+        $summaries = collect();
+        
+        // Add course results
+        foreach ($results as $row) {
+            $summaries->put($row->teacher_id, [
                 'teacher_id' => $row->teacher_id,
                 'teacher_name' => $row->teacher_name,
                 'teacher_slug' => $row->teacher_slug,
-                'orders_count' => $row->orders_count,
+                'orders_count' => (int) $row->orders_count,
                 'gross_amount' => (float) $row->gross_amount,
                 'allocated_discount' => (float) $row->allocated_discount,
                 'net_revenue' => (float) $row->net_revenue,
                 'teacher_revenue' => (float) $row->teacher_revenue,
-                'platform_revenue' => (float) max(0, $row->net_revenue - $row->teacher_revenue),
-            ];
-        })->toArray();
+            ]);
+        }
+
+        // Merge upgrade results
+        foreach ($upgradeResults as $row) {
+            if (!$row->teacher_id) continue;
+            
+            if ($summaries->has($row->teacher_id)) {
+                $existing = $summaries->get($row->teacher_id);
+                $existing['orders_count'] += (int) $row->orders_count;
+                $existing['gross_amount'] += (float) $row->gross_amount;
+                $existing['allocated_discount'] += (float) $row->allocated_discount;
+                $existing['net_revenue'] += (float) $row->net_revenue;
+                $existing['teacher_revenue'] += (float) $row->teacher_revenue;
+                $summaries->put($row->teacher_id, $existing);
+            } else {
+                $summaries->put($row->teacher_id, [
+                    'teacher_id' => $row->teacher_id,
+                    'teacher_name' => $row->teacher_name,
+                    'teacher_slug' => $row->teacher_slug,
+                    'orders_count' => (int) $row->orders_count,
+                    'gross_amount' => (float) $row->gross_amount,
+                    'allocated_discount' => (float) $row->allocated_discount,
+                    'net_revenue' => (float) $row->net_revenue,
+                    'teacher_revenue' => (float) $row->teacher_revenue,
+                ]);
+            }
+        }
+
+        return $summaries->map(function ($item) use ($targetRate) {
+            $item['gross_amount'] /= $targetRate;
+            $item['allocated_discount'] /= $targetRate;
+            $item['net_revenue'] /= $targetRate;
+            $item['teacher_revenue'] /= $targetRate;
+            $item['platform_revenue'] = max(0, $item['net_revenue'] - $item['teacher_revenue']);
+            return $item;
+        })->values()->toArray();
     }
 
     public function getDailyEarningsSummary(string $fromDate, string $toDate, ?string $currency = 'ALL'): array
@@ -471,27 +653,26 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             ->join('orders as o', 'o.id', '=', 'od.order_id')
             ->join('courses as c', 'c.id', '=', 'od.course_id')
             ->join('teacher as t', 't.id', '=', 'c.teacher_id')
-            ->where('o.status_id', $paidStatusId)
-            ->whereBetween('od.created_at', [$fromDate, $toDate]);
-
-        if ($currency && $currency !== 'ALL') {
-            $query->where('o.currency', $currency);
+            ->where('o.status_id', $paidStatusId);
+        if ($fromDate) {
+            $query->whereDate('od.created_at', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $query->whereDate('od.created_at', '<=', $toDate);
         }
 
-        $exRate = $currency === 'ALL' ? 'IFNULL(o.exchange_rate, 1)' : '1';
+        // Get Target Currency Rate
+        $targetRate = 1.0;
+        if ($currency && $currency !== 'ALL') {
+            $rateKey = 'currency_rate_' . strtolower($currency);
+            $targetRate = (float) (DB::table('settings')->where('key', $rateKey)->value('value') ?: 1.0);
+        }
+
+        $exRate = 'IFNULL(o.exchange_rate, 1)';
 
         $results = $query->selectRaw("
             DATE(od.created_at) as date,
-            SUM(od.price * {$exRate}) as gross_amount,
-            SUM(
-                LEAST(
-                    od.price * {$exRate}, 
-                    IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0)
-                )
-            ) as allocated_discount,
-            SUM(
-                GREATEST(0, (od.price * {$exRate}) - LEAST(od.price * {$exRate}, IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0)))
-            ) as net_revenue,
+            SUM(od.price * {$exRate}) as course_gross,
             SUM(
                 GREATEST(0, (od.price * {$exRate}) - LEAST(od.price * {$exRate}, IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0))) 
                 * (IFNULL(t.commission_rate, 0) / 100)
@@ -500,12 +681,30 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
         ->groupBy('date')
         ->get();
 
-        return $results->mapWithKeys(function ($row) {
-            return [$row->date => [
-                'gross_amount' => (float) $row->gross_amount,
-                'net_revenue' => (float) $row->net_revenue,
-                'teacher_revenue' => (float) $row->teacher_revenue,
-                'platform_revenue' => (float) max(0, $row->net_revenue - $row->teacher_revenue),
+        // Also get total daily gross from all orders
+        $dailyGross = DB::table('orders as o')
+            ->where('o.status_id', $paidStatusId)
+            ->whereBetween('o.payment_complete_date', [$fromDate, $toDate])
+            ->selectRaw("DATE(o.payment_complete_date) as date, SUM(o.total * {$exRate}) as total_gross")
+            ->groupBy('date')
+            ->pluck('total_gross', 'date');
+
+        $allDates = collect($results->pluck('date'))
+            ->merge($dailyGross->keys())
+            ->unique();
+
+        return $allDates->mapWithKeys(function ($date) use ($results, $dailyGross, $targetRate) {
+            $courseRow = $results->firstWhere('date', $date);
+            $totalGrossBase = (float) ($dailyGross[$date] ?? ($courseRow->course_gross ?? 0));
+            $teacherRevenueBase = (float) ($courseRow->teacher_revenue ?? 0);
+            
+            $totalGross = $totalGrossBase / $targetRate;
+            $teacherRevenue = $teacherRevenueBase / $targetRate;
+
+            return [$date => [
+                'gross_amount' => $totalGross,
+                'teacher_revenue' => $teacherRevenue,
+                'platform_revenue' => (float) max(0, $totalGross - $teacherRevenue),
             ]];
         })->toArray();
     }
