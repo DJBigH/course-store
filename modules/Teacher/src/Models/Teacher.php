@@ -4,6 +4,7 @@ namespace Modules\Teacher\src\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Modules\Students\src\Models\Student;
 
 class Teacher extends Model
@@ -64,6 +65,9 @@ class Teacher extends Model
         'lock_reason',
         'locked_at',
         'locked_by',
+        'telegram_chat_id',
+        'is_telegram_notifications_enabled',
+        'telegram_feature_expires_at',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -80,7 +84,30 @@ class Teacher extends Model
         'last_active_at'             => 'datetime',
         'inactive_teacher_notified_at' => 'datetime',
         'inactive_admin_notified_at' => 'datetime',
+        'is_telegram_notifications_enabled' => 'boolean',
+        'telegram_feature_expires_at' => 'datetime',
     ];
+
+    public function hasTelegramFeature(): bool
+    {
+        if (!$this->telegram_feature_expires_at) {
+            return false;
+        }
+        return $this->telegram_feature_expires_at->isFuture();
+    }
+
+    public function getTelegramPackageStatus(): array
+    {
+        if (!$this->telegram_feature_expires_at) {
+            return ['status' => 'inactive', 'expires_at' => null];
+        }
+        
+        $isFuture = $this->telegram_feature_expires_at->isFuture();
+        return [
+            'status' => $isFuture ? 'active' : 'expired',
+            'expires_at' => $this->telegram_feature_expires_at
+        ];
+    }
 
     public function lockedByAdmin()
     {
@@ -311,5 +338,27 @@ class Teacher extends Model
         }
 
         return null;
+    }
+
+    public function addTelegramDuration(int $value, string $unit): Carbon
+    {
+        $currentExpires = $this->telegram_feature_expires_at;
+        $baseDate = ($currentExpires && $currentExpires->isFuture()) ? $currentExpires : now();
+
+        $newExpires = match ($unit) {
+            'minute', 'minutes' => $baseDate->addMinutes($value),
+            'hour', 'hours' => $baseDate->addHours($value),
+            'day', 'days' => $baseDate->addDays($value),
+            'month', 'months' => $baseDate->addMonths($value),
+            'year', 'years' => $baseDate->addYears($value),
+            'lifetime' => now()->addYears(73), // ~2099
+            default => $baseDate,
+        };
+
+        $this->update([
+            'telegram_feature_expires_at' => $newExpires
+        ]);
+
+        return $newExpires;
     }
 }

@@ -78,9 +78,12 @@
         ];
         $passwordErrorKeys = ['current_password', 'password', 'password_confirmation'];
         $securityErrorKeys = [];
+        $telegramErrorKeys = ['telegram_chat_id', 'is_telegram_notifications_enabled'];
         $activeProfileTab = 'profile';
 
-        if (collect($passwordErrorKeys)->contains(fn ($key) => $errors->has($key))) {
+        if (collect($telegramErrorKeys)->contains(fn ($key) => $errors->has($key))) {
+            $activeProfileTab = 'telegram';
+        } elseif (collect($passwordErrorKeys)->contains(fn ($key) => $errors->has($key))) {
             $activeProfileTab = 'password';
         } elseif (collect($securityErrorKeys)->contains(fn ($key) => $errors->has($key))) {
             $activeProfileTab = 'security';
@@ -147,6 +150,12 @@
                         <span class="teacher-profile-tab-badge {{ $student->two_factor_email_enabled ? 'is-enabled' : 'is-disabled' }}">
                             {{ $student->two_factor_email_enabled ? __('courses::teacher/messages.profile.two_factor.enabled_short') : __('courses::teacher/messages.profile.two_factor.disabled_short') }}
                         </span>
+                    </button>
+                    <button type="button"
+                        class="teacher-profile-tab-button {{ $activeProfileTab === 'telegram' ? 'is-active' : '' }}"
+                        data-profile-tab="telegram">
+                        <i class="fa-brands fa-telegram"></i>
+                        <span>Telegram</span>
                     </button>
                 </div>
             </div>
@@ -579,6 +588,74 @@
                                 <button type="submit" class="btn btn-primary" form="teacher-two-factor-enable-form">
                                     {{ __('courses::teacher/messages.profile.two_factor.enable_button') }}
                                 </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="teacher-profile-tab-panel {{ $activeProfileTab === 'telegram' ? 'is-active' : '' }}" data-profile-panel="telegram">
+                    <div class="teacher-profile-card teacher-profile-card--narrow">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <h4>Tích hợp Telegram</h4>
+                                <p class="text-muted mb-0">Nhận thông báo trực tiếp về doanh thu, đơn hàng, nhận xét và tương tác hai chiều thông qua Bot Telegram.</p>
+                            </div>
+                            @php
+                                $telegramStatus = $teacher?->getTelegramPackageStatus() ?? ['status' => 'inactive', 'expires_at' => null];
+                            @endphp
+                            @if($telegramStatus['status'] === 'active')
+                                <span class="badge bg-success">Đang hoạt động</span>
+                            @else
+                                <span class="badge bg-danger">Hết hạn / Chưa mua</span>
+                            @endif
+                        </div>
+
+                        <div class="mt-4">
+                            @if($telegramStatus['status'] === 'active')
+                                <div class="alert alert-info border-0 rounded-3 mb-4" style="background-color: rgba(59, 130, 246, 0.1);">
+                                    <h6 class="fw-bold text-primary"><i class="fa-solid fa-circle-info me-2"></i>Hướng dẫn kết nối</h6>
+                                    <ul class="mb-0 small ps-3 mt-2 text-dark">
+                                        <li class="mb-1"><strong>Bước 1:</strong> Bấm vào link Bot <a href="https://t.me/{{ config('services.telegram.bot_username', 'your_bot') }}" target="_blank" class="fw-bold text-primary">Bot Telegram Hệ Thống</a></li>
+                                        <li class="mb-1"><strong>Bước 2:</strong> Gửi tin nhắn bất kỳ cho Bot để lấy ID của bạn. Bot sẽ phản hồi lại Chat ID.</li>
+                                        <li class="mb-1"><strong>Bước 3:</strong> Nhập Chat ID vào ô bên dưới và bấm Lưu cấu hình.</li>
+                                        <li class="mt-2 text-muted"><em>Bạn có thể dùng các lệnh <code>/status</code>, <code>/order</code>, <code>/hsd</code> trên Telegram.</em></li>
+                                    </ul>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label">Telegram Chat ID</label>
+                                        <input type="text" name="telegram_chat_id" class="form-control @error('telegram_chat_id') is-invalid @enderror" value="{{ old('telegram_chat_id', $teacher->telegram_chat_id) }}">
+                                        @error('telegram_chat_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check form-switch mt-2">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="is_telegram_notifications_enabled" name="is_telegram_notifications_enabled" value="1" @checked(old('is_telegram_notifications_enabled', $teacher->is_telegram_notifications_enabled))>
+                                            <label class="form-check-label ms-2" style="user-select: none; cursor: pointer;" for="is_telegram_notifications_enabled">Bật thông báo tự động (Đơn hàng, đánh giá...)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="teacher-section-submit mt-4">
+                                    <button type="submit" name="profile_section" value="telegram" class="btn btn-primary" formnovalidate>
+                                        Lưu cấu hình Telegram
+                                    </button>
+                                </div>
+                            @else
+                                <div class="alert alert-warning border-0 rounded-3">
+                                    <i class="fa-solid fa-lock me-2"></i> <strong>Tính năng bị khóa hoặc đã hết hạn</strong><br>
+                                    Vui lòng gia hạn gói của bạn để tiếp tục sử dụng tính năng thông báo và Bot Telegram.
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label text-muted">Telegram Chat ID</label>
+                                        <input type="text" class="form-control bg-light" value="{{ $teacher?->telegram_chat_id }}" disabled>
+                                    </div>
+                                </div>
+                            @endif
+                            
+                            @if($telegramStatus['expires_at'])
+                                <div class="text-muted small mt-4 pt-3 border-top">
+                                    <i class="fa-regular fa-clock me-1"></i> Gói Telegram của bạn có hiệu lực đến: <strong>{{ $telegramStatus['expires_at']->format('d/m/Y H:i:s') }}</strong>
+                                </div>
                             @endif
                         </div>
                     </div>

@@ -76,6 +76,35 @@ class Order extends Model
                             ]);
                         }
 
+                        // Notify Teachers about new sales via Queue
+                        try {
+                            $orderDetails = $order->detail()->with('courses.teacher')->get();
+                            $notifiedTeachers = [];
+
+                            foreach ($orderDetails as $detail) {
+                                $course = $detail->courses;
+                                if ($course && $course->teacher && $course->teacher->hasTelegramFeature()) {
+                                    $teacher = $course->teacher;
+                                    
+                                    if (in_array($teacher->id, $notifiedTeachers)) continue;
+
+                                    $studentName = $order->students?->name ?: $order->customer_name_snapshot ?: 'Học viên';
+                                    $courseName = $course->name_locale ?: $course->name;
+                                    
+                                    $msg = "💰 <b>BẠN CÓ ĐƠN HÀNG MỚI!</b>\n\n";
+                                    $msg .= "🎓 <b>Khóa học:</b> {$courseName}\n";
+                                    $msg .= "👤 <b>Học viên:</b> {$studentName}\n";
+                                    $msg .= "💵 <b>Giá bán:</b> " . number_format($detail->total_amount) . " đ\n";
+                                    $msg .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i d/m/Y');
+
+                                    dispatch(new \App\Jobs\SendTelegramTeacherNotification($teacher, $msg));
+                                    $notifiedTeachers[] = $teacher->id;
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error('Telegram Teacher Sale Notification Error: ' . $e->getMessage());
+                        }
+
                         // Unified Activation for Teacher Upgrade
                         if ($order->type === 'teacher_upgrade' && $order->orderable instanceof TeacherApplication) {
                             try {

@@ -26,6 +26,7 @@ return array (
     'support' => 'Hỗ trợ',
     'cancellation' => 'Hủy tư cách',
     'inbox' => 'Hộp thư',
+    'telegram' => 'Cấu hình Telegram',
   ),
   'brand' => 
   array (

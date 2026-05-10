@@ -13,9 +13,11 @@ use Modules\Video\src\Repositories\VideoRepository;
 use Modules\Orders\src\Repositories\OrdersRepository;
 use Modules\Courses\src\Repositories\CoursesRepository;
 use Modules\Lessons\src\Repositories\LessonsRepository;
+use Modules\Lessons\src\Repositories\LessonNotesRepository;
 use Modules\Students\src\Repositories\CouponRepository;
 use Modules\Teacher\src\Repositories\TeacherRepository;
 use Modules\Teacher\src\Repositories\TeacherBadgeRepository;
+use Modules\Teacher\src\Repositories\TelegramPackageRepository;
 use Modules\Document\src\Repositories\DocumentRepository;
 use Modules\Students\src\Repositories\StudentsRepository;
 use Modules\Auth\src\Http\Middlewares\BlockUserMiddleware;
@@ -28,9 +30,11 @@ use Modules\Categories\src\Repositories\CategoriesRepository;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 use Modules\Courses\src\Repositories\CoursesRepositoryInterface;
 use Modules\Lessons\src\Repositories\LessonsRepositoryInterface;
+use Modules\Lessons\src\Repositories\LessonNotesRepositoryInterface;
 use Modules\Students\src\Repositories\CouponRepositoryInterface;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 use Modules\Teacher\src\Repositories\TeacherBadgeRepositoryInterface;
+use Modules\Teacher\src\Repositories\TelegramPackageRepositoryInterface;
 use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
 use Modules\Orders\src\Repositories\OrdersStatusRepositoryInterface;
@@ -88,6 +92,12 @@ class ModuleServiceProvider extends ServiceProvider
             TeacherBadgeRepository::class
         );
 
+        //Telegram Package Repository
+        $this->app->singleton(
+            TelegramPackageRepositoryInterface::class,
+            TelegramPackageRepository::class
+        );
+
         //Video Repository
         $this->app->singleton(
             VideoRepositoryInterface::class,
@@ -104,6 +114,12 @@ class ModuleServiceProvider extends ServiceProvider
         $this->app->singleton(
             LessonsRepositoryInterface::class,
             LessonsRepository::class
+        );
+
+        //Lesson Notes Repository
+        $this->app->singleton(
+            LessonNotesRepositoryInterface::class,
+            LessonNotesRepository::class
         );
 
         //Students Repository

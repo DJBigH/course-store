@@ -54,37 +54,8 @@ class LoginController extends Controller
 
         $student = Auth::guard('students')->user();
 
-        // Prevent active teachers from logging in via the student portal
-        if ($student && $student->teacher && $student->teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE) {
-            Auth::guard('students')->logout();
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => __('auth::messages.login.failure'),
-                    'errors' => [
-                        'email' => [__('auth::messages.login.failure')],
-                    ],
-                ], 422);
-            }
-
-            return back()->with('msg_danger', __('auth::messages.login.failure'));
-        }
-
         $studentId = $student?->id;
         $maxDevices = (int) setting('max_devices', config('auth.max_devices', 1));
-
-        // if ($student && (int) $student->status === 0) {
-        //     $redirect = route('block-index', ['locale' => app()->getLocale()]);
-
-        //     if ($request->expectsJson()) {
-        //         return response()->json([
-        //             'message' => 'Tài khoản của bạn hiện đang bị khóa.',
-        //             'redirect' => $redirect,
-        //         ], 403);
-        //     }
-
-        //     return redirect($redirect);
-        // }
 
         $activeSessions = DB::table('sessions')
             ->where('user_id', $studentId)
@@ -136,14 +107,17 @@ class LoginController extends Controller
         $this->twoFactorService->markRecentVerification($request);
         $this->twoFactorService->handleSuccessfulLogin($student, $request, app()->getLocale());
 
+        $isTeacher = $student && $student->teacher && $student->teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE;
+        $redirectUrl = $isTeacher ? route('teacher.dashboard.index') : route('home', ['locale' => app()->getLocale()]);
+
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => __('auth::clients/auth.login.success_title'),
-                'redirect' => route('home', ['locale' => app()->getLocale()]),
+                'redirect' => $redirectUrl,
             ]);
         }
 
-        return redirect()->route('home', ['locale' => app()->getLocale()]);
+        return redirect($redirectUrl);
     }
 
     public function logout()

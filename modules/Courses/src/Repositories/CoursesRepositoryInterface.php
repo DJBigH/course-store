@@ -33,4 +33,5 @@ interface CoursesRepositoryInterface extends RepositoryInterface
     public function getCourseCreateUpdate();
     public function getAllCoursesHome();
     public function getCourseForYou($studentId);
+    public function getFilteredCourses($filter, $studentId = null, $limit = 8);
 }

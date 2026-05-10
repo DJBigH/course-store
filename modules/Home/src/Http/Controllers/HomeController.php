@@ -24,6 +24,15 @@ class HomeController extends Controller
         $pageTitle = __('home::common.pageTile');
         $courseFree = $this->courseRepository->getCourseFree();
         $courseView = $this->courseRepository->getCourseView();
+        
+        // Default filter logic
+        $filter = $request->get('filter', 'latest');
+        $studentId = Auth::guard('students')->id();
+        
+        // We use a shared limit for the home section
+        $limit = 8;
+        
+        $courseAll = $this->courseRepository->getFilteredCourses($filter, $studentId, $limit);
         $courseNew = $this->courseRepository->getCourseCreateUpdate();
 
         $studentId = Auth::guard('students')->id();
@@ -50,6 +59,9 @@ class HomeController extends Controller
         }
 
         if ($request->ajax()) {
+            if ($request->has('filter')) {
+                return view('home::all_course_home_list', compact('courseAll'))->render();
+            }
             return view('home::my_course_home', compact('myCourse'))->render();
         }
 

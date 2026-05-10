@@ -83,6 +83,7 @@ class TeacherCourseRequest extends FormRequest
             'is_learning_locked' => ['required', 'integer', 'in:0,1'],
             'is_coming_soon' => ['nullable'],
             'coming_soon_start_at' => ['nullable', 'date'],
+            'completion_condition' => ['nullable', 'string', 'in:none,all_lessons,all_quizzes,all'],
             'categories' => ['required', 'array', 'min:1'],
             'categories.*' => ['integer', 'distinct', 'exists:categories,id'],
         ];

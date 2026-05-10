@@ -128,7 +128,7 @@
                 }
 
                 return `
-                    <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
+                    <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered w-100" controls preload="auto">
                         <source src="${video.url}" type="video/mp4"/>
                     </video>
                 `;
@@ -148,25 +148,29 @@
                     }
 
                     button.innerText = messages.opening;
+                    button.disabled = true;
                     activeBtnMap.set('current', button);
 
                     try {
                         const response = await fetch(
                             "{{ route('courses.data.trial', ['locale' => app()->getLocale()]) }}/" +
                             id);
+                        const result = await response.json();
+                        
                         const {
                             success,
                             data,
                             requires_login: requiresLogin,
                             message
-                        } = await response.json();
+                        } = result;
+
                         if (!success && requiresLogin) {
                             alert(message || messages.loginRequired);
                             return;
                         }
 
                         if (!success || data.is_trial !== 1) {
-                            return alert(messages.unavailable);
+                            return alert(message || messages.unavailable);
                         }
 
                         if (!data.video || !data.video.url) {
@@ -177,14 +181,20 @@
                         modalEl.querySelector('.modal-body').innerHTML = renderTrialContent(data.video);
 
                         Modal.show();
+                        
+                        // Khởi tạo videojs sau khi modal hiện (để đảm bảo element có trong DOM)
                         const videoEl = modalEl.querySelector('#my-video');
-                        if (videoEl) {
-                            videojs(videoEl);
+                        if (videoEl && typeof window.videojs !== 'undefined') {
+                            window.videojs(videoEl, {}, function() {
+                                // Player ready
+                            });
                         }
                     } catch (error) {
+                        console.error('Trial video error:', error);
                         alert(messages.unavailable);
                     } finally {
                         button.innerText = initialTexts.get(button) ?? '{{ __('courses::clients/common.trial') }}';
+                        button.disabled = false;
                     }
                 });
             });

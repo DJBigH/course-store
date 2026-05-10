@@ -44,5 +44,11 @@ return [
     'btn_call'    => '立即致电',
     'feature_1' => '与导师一对一咨询',
     'feature_2' => '个性化学习路线',
-    'feature_3' => '无需额外费用',
+    'feature_3' => '没有额外费用',
+
+    //Filters
+    'filter_all' => '全部',
+    'filter_views' => '最多观看',
+    'filter_teacher' => '推荐讲师',
+    'filter_seller' => '畅销',
 ];

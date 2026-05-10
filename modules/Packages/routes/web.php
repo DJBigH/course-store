@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Packages\src\Http\Controllers\Admin\PackageController as AdminPackageController;
+use Modules\Packages\src\Http\Controllers\Admin\PackageCategoryController;
 use Modules\Packages\src\Http\Controllers\Admin\PackageFeatureController;
 use Modules\Packages\src\Http\Controllers\Admin\PackageGrantController;
 use Modules\Packages\src\Http\Controllers\Teacher\UpgradeController;
@@ -22,6 +23,16 @@ Route::prefix('admin')->group(function () {
         Route::get('/grant', [PackageGrantController::class, 'index'])->middleware('permission:packages.manage')->name('grant');
         Route::get('/grant/search-teachers', [PackageGrantController::class, 'searchTeachers'])->middleware('permission:packages.manage')->name('grant.search-teachers');
         Route::post('/grant', [PackageGrantController::class, 'grant'])->middleware('permission:packages.manage')->name('grant.store');
+
+        // ─── Categories ──────────────────────────────────────────────────────────
+        Route::prefix('categories')->name('categories.')->group(function () {
+            Route::get('/', [PackageCategoryController::class, 'index'])->middleware('permission:packages.view')->name('index');
+            Route::get('/create', [PackageCategoryController::class, 'create'])->middleware('permission:packages.manage')->name('create');
+            Route::post('/create', [PackageCategoryController::class, 'store'])->middleware('permission:packages.manage')->name('store');
+            Route::get('/edit/{id}', [PackageCategoryController::class, 'edit'])->middleware('permission:packages.manage')->name('edit');
+            Route::post('/edit/{id}', [PackageCategoryController::class, 'update'])->middleware('permission:packages.manage')->name('update');
+            Route::delete('/delete/{id}', [PackageCategoryController::class, 'delete'])->middleware('permission:packages.manage')->name('delete');
+        });
     });
 
     Route::prefix('teacher-package-features')->name('teacher-package-features.')->group(function () {

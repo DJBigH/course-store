@@ -23,4 +23,11 @@ Route::prefix('admin')->group(function () {
 Route::group(['as' => 'lessons.', 'prefix' => '{locale}', 'where' => ['locale' => 'vi|en|ko|ja|zh'], 'middleware' => ['setLocale','auth:students', 'verified', 'user.block']], function () {
    Route::get('/bai-hoc/{slug}', 'Clients\LessonController@index')->name('home');
    Route::post('/bai-hoc/{slug}/hoan-thanh', 'Clients\LessonController@toggleCompletion')->name('toggle-completion');
+
+   // Notes
+   Route::prefix('bai-hoc/ghi-chu')->name('notes.')->group(function () {
+       Route::get('/{lessonId}', 'Clients\LessonNoteController@index')->name('index');
+       Route::post('/{lessonId}', 'Clients\LessonNoteController@store')->name('store');
+       Route::delete('/{id}', 'Clients\LessonNoteController@destroy')->name('destroy');
+   });
 });

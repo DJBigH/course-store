@@ -45,4 +45,10 @@ return [
     'feature_1' => '멘토와 1:1 상담',
     'feature_2' => '맞춤형 학습 로드맵',
     'feature_3' => '추가 비용 없음',
+
+    //Filters
+    'filter_all' => '전체',
+    'filter_views' => '조회수 높은순',
+    'filter_teacher' => '추천 강사',
+    'filter_seller' => '베스트셀러',
 ];

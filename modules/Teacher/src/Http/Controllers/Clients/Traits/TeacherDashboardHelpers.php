@@ -140,6 +140,7 @@ trait TeacherDashboardHelpers
                 ? max(now()->startOfDay()->diffInDays($pendingUpgradeStartsAt->copy()->startOfDay(), false), 0)
                 : null,
             'pending_upgrade_is_queued' => $pendingUpgradeIsQueued,
+            'telegram_status' => $teacher->getTelegramPackageStatus(),
         ];
     }
 

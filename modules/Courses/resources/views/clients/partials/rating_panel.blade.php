@@ -169,7 +169,7 @@
                         <i class="fa-solid fa-user-lock text-muted"></i>
                     </div>
                     <h6 class="fw-bold text-dark mb-2">{{ __('courses::clients/common.rating_login_required') }}</h6>
-                    <a href="{{ route('students.login', ['locale' => app()->getLocale()]) }}" class="btn btn-dark btn-sm rounded-pill px-4 mt-2">
+                    <a href="{{ route('clients-login', ['locale' => app()->getLocale()]) }}" class="btn btn-dark btn-sm rounded-pill px-4 mt-2">
                         <i class="fa-solid fa-right-to-bracket me-2"></i> {{ __('students::auth.login_title') ?? 'Đăng nhập ngay' }}
                     </a>
                 </div>

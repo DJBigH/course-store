@@ -100,6 +100,9 @@ class TeacherProfileUpdateRequest extends FormRequest
             ],
             'password' => [Rule::requiredIf($isPasswordAttempt), 'nullable', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => [Rule::requiredIf($isPasswordAttempt), 'nullable'],
+
+            'telegram_chat_id' => ['nullable', 'string', 'max:50'],
+            'is_telegram_notifications_enabled' => ['nullable', 'boolean'],
         ];
     }
 

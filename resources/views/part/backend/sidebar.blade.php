@@ -107,6 +107,38 @@
     #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu-nested .nav-link.active {
         background: rgba(255, 255, 255, 0.08);
     }
+
+    /* Sidebar Badges */
+    .sb-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1;
+        border-radius: 50rem;
+        margin-left: auto;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .sb-badge-info { background: #3b82f6; color: white; }
+    .sb-badge-danger { background: #ef4444; color: white; }
+    .sb-badge-warning { background: #f59e0b; color: white; }
+    .sb-badge-success { background: #10b981; color: white; }
+    .sb-badge-primary { background: #8b5cf6; color: white; }
+
+    .sb-badge-pulse {
+        animation: sb-pulse 2s infinite;
+    }
+
+    @keyframes sb-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
 </style>
 <div id="layoutSidenav_nav">
     <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
@@ -145,6 +177,10 @@
                         <a class="nav-link collapsed {{ $isCourseGroupOpen ? 'is-active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCourses" aria-expanded="false" data-sidebar-toggle>
                             <div class="sb-nav-link-icon"><i class="fas fa-graduation-cap"></i></div>
                             <span class="sidebar-link-label">Quản lý Khóa học</span>
+                            @php $courseTotal = ($sidebarCounts['pending_comments'] ?? 0); @endphp
+                            @if($courseTotal > 0)
+                                <span class="sb-badge sb-badge-success ms-2">{{ $courseTotal }}</span>
+                            @endif
                             <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down sidebar-group__icon"></i></div>
                         </a>
                         <div class="collapse {{ $isCourseGroupOpen ? 'show' : '' }}" id="collapseCourses" data-bs-parent="#sidenavAccordion" data-sidebar-content>
@@ -153,7 +189,12 @@
                                 <a class="nav-link {{ request()->is('admin/courses/bundles*') ? 'active' : '' }}" href="{{ route('courses.bundles.index') }}">Quản lý Combo</a>
                                 <a class="nav-link {{ request()->is('admin/categories*') ? 'active' : '' }}" href="{{ route('categories.index') }}">Chuyên mục</a>
                                 @if(auth()->user()?->hasPermission('comments.moderate'))
-                                    <a class="nav-link {{ request()->is('admin/courses/comments*') ? 'active' : '' }}" href="{{ route('courses.comments.admin') }}">Bình luận khóa học</a>
+                                    <a class="nav-link {{ request()->is('admin/courses/comments*') ? 'active' : '' }}" href="{{ route('courses.comments.admin') }}">
+                                        Bình luận khóa học
+                                        @if(($sidebarCounts['pending_comments'] ?? 0) > 0)
+                                            <span class="sb-badge sb-badge-success">{{ $sidebarCounts['pending_comments'] }}</span>
+                                        @endif
+                                    </a>
                                 @endif
                                 <a class="nav-link {{ request()->is('admin/courses/ratings*') ? 'active' : '' }}" href="{{ route('courses.ratings.index') }}">Quản lý đánh giá</a>
                             </nav>
@@ -190,6 +231,10 @@
                         <a class="nav-link collapsed {{ $isTeacherGroupOpen ? 'is-active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseTeachers" aria-expanded="false" data-sidebar-toggle>
                             <div class="sb-nav-link-icon"><i class="fas fa-chalkboard-teacher"></i></div>
                             <span class="sidebar-link-label">Quản lý Giảng viên</span>
+                            @php $teacherTotal = ($sidebarCounts['teacher_applications'] ?? 0) + ($sidebarCounts['teacher_cancellations'] ?? 0); @endphp
+                            @if($teacherTotal > 0)
+                                <span class="sb-badge sb-badge-primary ms-2">{{ $teacherTotal }}</span>
+                            @endif
                             <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down sidebar-group__icon"></i></div>
                         </a>
                         <div class="collapse {{ $isTeacherGroupOpen ? 'show' : '' }}" id="collapseTeachers" data-bs-parent="#sidenavAccordion" data-sidebar-content>
@@ -199,12 +244,26 @@
                                     <div class="sb-nav-link-icon"><i class="fas fa-award"></i></div>
                                     Quản lý Huy hiệu
                                 </a>
-                                <a class="nav-link {{ request()->is('admin/teacher-applications*') ? 'active' : '' }}" href="{{ route('teacher-applications.index') }}">Đơn ứng tuyển</a>
+                                <a class="nav-link {{ request()->is('admin/teacher-applications*') ? 'active' : '' }}" href="{{ route('teacher-applications.index') }}">
+                                    Đơn ứng tuyển
+                                    @if(($sidebarCounts['teacher_applications'] ?? 0) > 0)
+                                        <span class="sb-badge sb-badge-primary">{{ $sidebarCounts['teacher_applications'] }}</span>
+                                    @endif
+                                </a>
                                 <a class="nav-link {{ request()->is('admin/teacher-upgrades*') ? 'active' : '' }}" href="{{ route('teacher-upgrades.index') }}">Lịch sử nâng cấp</a>
                                 <a class="nav-link {{ (request()->is('admin/teacher-packages') || request()->is('admin/teacher-package-features*')) ? 'active' : '' }}" href="{{ route('teacher-packages.index') }}">Gói cước & Tính năng</a>
                                 <a class="nav-link {{ request()->is('admin/teacher-packages/grant*') ? 'active' : '' }}" href="{{ route('teacher-packages.grant') }}">Cấp gói đặc quyền</a>
                                 <a class="nav-link {{ request()->is('admin/teacher-announcements*') ? 'active' : '' }}" href="{{ route('teacher-announcements.index') }}">Thông báo GV</a>
-                                <a class="nav-link {{ request()->is('admin/teacher-finance/cancellations*') ? 'active' : '' }}" href="{{ route('teacher-finance.cancellations.index') }}">Yêu cầu hủy hợp tác</a>
+                                <a class="nav-link {{ request()->is('admin/teacher/telegram-packages*') ? 'active' : '' }}" href="{{ route('teacher.telegram-packages.index') }}">
+                                    <div class="sb-nav-link-icon"><i class="fa-brands fa-telegram"></i></div>
+                                    Gói Telegram
+                                </a>
+                                <a class="nav-link {{ request()->is('admin/teacher-finance/cancellations*') ? 'active' : '' }}" href="{{ route('teacher-finance.cancellations.index') }}">
+                                    Yêu cầu hủy hợp tác
+                                    @if(($sidebarCounts['teacher_cancellations'] ?? 0) > 0)
+                                        <span class="sb-badge sb-badge-danger">{{ $sidebarCounts['teacher_cancellations'] }}</span>
+                                    @endif
+                                </a>
                             </nav>
                         </div>
                     </div>
@@ -217,12 +276,22 @@
                         <a class="nav-link collapsed {{ $isFinanceGroupOpen ? 'is-active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseFinance" aria-expanded="false" data-sidebar-toggle>
                             <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
                             <span class="sidebar-link-label">Quản lý Tài chính</span>
+                            @php $financeTotal = ($sidebarCounts['payout_requests'] ?? 0) + ($sidebarCounts['payout_account_changes'] ?? 0); @endphp
+                            @if($financeTotal > 0)
+                                <span class="sb-badge sb-badge-danger sb-badge-pulse ms-2">{{ $financeTotal }}</span>
+                            @endif
                             <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down sidebar-group__icon"></i></div>
                         </a>
                         <div class="collapse {{ $isFinanceGroupOpen ? 'show' : '' }}" id="collapseFinance" data-bs-parent="#sidenavAccordion" data-sidebar-content>
                             <nav class="sb-sidenav-menu-nested nav">
                                 <a class="nav-link {{ request()->is('admin/teacher-finance/earnings*') ? 'active' : '' }}" href="{{ route('teacher-finance.earnings') }}">Đối soát doanh thu</a>
-                                <a class="nav-link {{ request()->is('admin/teacher-finance/payouts*') ? 'active' : '' }}" href="{{ route('teacher-finance.payouts') }}">Xử lý rút tiền</a>
+                                <a class="nav-link {{ request()->is('admin/teacher-finance/payouts*') ? 'active' : '' }}" href="{{ route('teacher-finance.payouts') }}">
+                                    Xử lý rút tiền
+                                    @php $payoutTotal = ($sidebarCounts['payout_requests'] ?? 0) + ($sidebarCounts['payout_account_changes'] ?? 0); @endphp
+                                    @if($payoutTotal > 0)
+                                        <span class="sb-badge sb-badge-danger sb-badge-pulse">{{ $payoutTotal }}</span>
+                                    @endif
+                                </a>
                             </nav>
                         </div>
                     </div>
@@ -238,12 +307,26 @@
                         <a class="nav-link collapsed {{ $isSalesGroupOpen ? 'is-active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseSales" aria-expanded="false" data-sidebar-toggle>
                             <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
                             <span class="sidebar-link-label">Học viên & Đơn hàng</span>
+                            @php $salesTotal = ($sidebarCounts['new_students'] ?? 0) + ($sidebarCounts['new_orders'] ?? 0); @endphp
+                            @if($salesTotal > 0)
+                                <span class="sb-badge sb-badge-danger sb-badge-pulse ms-2">{{ $salesTotal }}</span>
+                            @endif
                             <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down sidebar-group__icon"></i></div>
                         </a>
                         <div class="collapse {{ $isSalesGroupOpen ? 'show' : '' }}" id="collapseSales" data-bs-parent="#sidenavAccordion" data-sidebar-content>
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link {{ request()->is('admin/students*') ? 'active' : '' }}" href="{{ route('students.index') }}">Danh sách học viên</a>
-                                <a class="nav-link {{ request()->is('admin/orders*') ? 'active' : '' }}" href="{{ route('orders.index') }}">Quản lý đơn hàng</a>
+                                <a class="nav-link {{ request()->is('admin/students*') ? 'active' : '' }}" href="{{ route('students.index') }}">
+                                    Danh sách học viên
+                                    @if(($sidebarCounts['new_students'] ?? 0) > 0)
+                                        <span class="sb-badge sb-badge-info">{{ $sidebarCounts['new_students'] }}</span>
+                                    @endif
+                                </a>
+                                <a class="nav-link {{ request()->is('admin/orders*') ? 'active' : '' }}" href="{{ route('orders.index') }}">
+                                    Quản lý đơn hàng
+                                    @if(($sidebarCounts['new_orders'] ?? 0) > 0)
+                                        <span class="sb-badge sb-badge-danger sb-badge-pulse">{{ $sidebarCounts['new_orders'] }}</span>
+                                    @endif
+                                </a>
                             </nav>
                         </div>
                     </div>
@@ -256,12 +339,26 @@
                         <a class="nav-link collapsed {{ $isSupportGroupOpen ? 'is-active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#collapseSupport" aria-expanded="false" data-sidebar-toggle>
                             <div class="sb-nav-link-icon"><i class="fas fa-headset"></i></div>
                             <span class="sidebar-link-label">Hỗ trợ khách hàng</span>
+                            @php $supportTotal = ($sidebarCounts['new_contacts'] ?? 0) + ($sidebarCounts['new_supports'] ?? 0); @endphp
+                            @if($supportTotal > 0)
+                                <span class="sb-badge sb-badge-warning ms-2">{{ $supportTotal }}</span>
+                            @endif
                             <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down sidebar-group__icon"></i></div>
                         </a>
                         <div class="collapse {{ $isSupportGroupOpen ? 'show' : '' }}" id="collapseSupport" data-bs-parent="#sidenavAccordion" data-sidebar-content>
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link {{ request()->is('admin/contacts') ? 'active' : '' }}" href="{{ route('contacts.index') }}">Liên hệ</a>
-                                <a class="nav-link {{ request()->is('admin/contacts/support*') ? 'active' : '' }}" href="{{ route('contacts.support-index') }}">Góp ý & Báo cáo</a>
+                                <a class="nav-link {{ request()->is('admin/contacts') ? 'active' : '' }}" href="{{ route('contacts.index') }}">
+                                    Liên hệ
+                                    @if(($sidebarCounts['new_contacts'] ?? 0) > 0)
+                                        <span class="sb-badge sb-badge-warning">{{ $sidebarCounts['new_contacts'] }}</span>
+                                    @endif
+                                </a>
+                                <a class="nav-link {{ request()->is('admin/contacts/support*') ? 'active' : '' }}" href="{{ route('contacts.support-index') }}">
+                                    Góp ý & Báo cáo
+                                    @if(($sidebarCounts['new_supports'] ?? 0) > 0)
+                                        <span class="sb-badge sb-badge-warning">{{ $sidebarCounts['new_supports'] }}</span>
+                                    @endif
+                                </a>
                             </nav>
                         </div>
                     </div>

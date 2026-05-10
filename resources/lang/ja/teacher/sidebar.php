@@ -1,15 +1,15 @@
 <?php
 
-return array (
-  'group' => 
-  array (
+return array(
+  'group' =>
+  array(
     'management' => '管理',
     'growth' => '成長',
     'trainees' => '受講生',
     'account' => 'アカウント',
   ),
-  'nav' => 
-  array (
+  'nav' =>
+  array(
     'overview' => '概要',
     'courses' => 'コース',
     'earnings' => '収益',
@@ -26,9 +26,10 @@ return array (
     'support' => 'サポート',
     'cancellation' => '登録解除',
     'inbox' => 'システム受信トレイ',
+    'telegram' => 'Telegram設定',
   ),
-  'brand' => 
-  array (
+  'brand' =>
+  array(
     'logged_in_as' => 'ログイン中のユーザー:',
     'student_fallback' => '学生',
     'active_channel' => '活動中のチャンネル',

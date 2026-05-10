@@ -112,6 +112,18 @@ class CertificateIssuer
 
     public function resolveProgress(int $studentId, int $courseId): array
     {
+        $course = Courses::query()->find($courseId);
+        $condition = $course?->completion_condition ?? 'all_lessons';
+
+        if ($condition === 'none') {
+            return [
+                'total_lessons' => 0,
+                'completed_lessons' => 0,
+                'progress_percent' => 0,
+                'condition' => 'none',
+            ];
+        }
+
         $totalLessons = (int) Lesson::query()
             ->where('course_id', $courseId)
             ->whereNotNull('parent_id')
@@ -125,11 +137,60 @@ class CertificateIssuer
             ->count('lesson_id');
 
         $completedLessons = min($completedLessons, $totalLessons);
+        $lessonProgress = $totalLessons > 0 ? min((int) round(($completedLessons * 100) / $totalLessons), 100) : 0;
+
+        if ($condition === 'all_lessons') {
+            return [
+                'total_lessons' => $totalLessons,
+                'completed_lessons' => $completedLessons,
+                'progress_percent' => $lessonProgress,
+                'condition' => 'all_lessons',
+            ];
+        }
+
+        $totalQuizzes = (int) \Modules\Courses\src\Models\CourseQuiz::query()
+            ->where('course_id', $courseId)
+            ->where('status', 1)
+            ->count();
+
+        $passedQuizzes = (int) \Modules\Courses\src\Models\CourseQuizSubmission::query()
+            ->whereHas('quiz', fn($q) => $q->where('course_id', $courseId)->where('status', 1))
+            ->where('student_id', $studentId)
+            ->where('passed', true)
+            ->distinct('quiz_id')
+            ->count('quiz_id');
+
+        $passedQuizzes = min($passedQuizzes, $totalQuizzes);
+        $quizProgress = $totalQuizzes > 0 ? min((int) round(($passedQuizzes * 100) / $totalQuizzes), 100) : 0;
+
+        if ($condition === 'all_quizzes') {
+            return [
+                'total_lessons' => $totalLessons,
+                'completed_lessons' => $completedLessons,
+                'total_quizzes' => $totalQuizzes,
+                'passed_quizzes' => $passedQuizzes,
+                'progress_percent' => $totalQuizzes > 0 ? $quizProgress : 0,
+                'condition' => 'all_quizzes',
+            ];
+        }
+
+        // condition === 'all'
+        $finalProgress = 0;
+        if ($totalLessons > 0 && $totalQuizzes > 0) {
+            $finalProgress = ($lessonProgress == 100 && $quizProgress == 100) ? 100 : min((int) round(($lessonProgress + $quizProgress) / 2), 99);
+        } elseif ($totalLessons > 0) {
+            $finalProgress = $lessonProgress;
+        } elseif ($totalQuizzes > 0) {
+            $finalProgress = $quizProgress;
+        }
 
         return [
             'total_lessons' => $totalLessons,
             'completed_lessons' => $completedLessons,
-            'progress_percent' => $totalLessons > 0 ? min((int) round(($completedLessons * 100) / $totalLessons), 100) : 0,
+            'total_quizzes' => $totalQuizzes,
+            'passed_quizzes' => $passedQuizzes,
+            'progress_percent' => $finalProgress,
+            'condition' => 'all',
         ];
     }
 

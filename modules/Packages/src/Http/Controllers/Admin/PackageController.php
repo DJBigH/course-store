@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Packages\src\Http\Requests\PackageRequest;
 use Modules\Packages\src\Models\Package;
+use Modules\Packages\src\Models\PackageCategory;
 
 class PackageController extends Controller
 {
@@ -22,8 +23,9 @@ class PackageController extends Controller
     {
         $pageTitle = __('packages::admin.titles.create');
         $nextSortOrder = ((int) Package::query()->max('sort_order')) + 1;
+        $categories = PackageCategory::query()->where('status', true)->orderBy('sort_order')->get();
 
-        return view('packages::admin.create', compact('pageTitle', 'nextSortOrder'));
+        return view('packages::admin.create', compact('pageTitle', 'nextSortOrder', 'categories'));
     }
 
     public function store(PackageRequest $request)
@@ -64,8 +66,9 @@ class PackageController extends Controller
     {
         $pageTitle = __('packages::admin.titles.edit');
         $package = Package::query()->findOrFail($id);
+        $categories = PackageCategory::query()->where('status', true)->orderBy('sort_order')->get();
 
-        return view('packages::admin.edit', compact('pageTitle', 'package'));
+        return view('packages::admin.edit', compact('pageTitle', 'package', 'categories'));
     }
 
     public function update(PackageRequest $request, $id)
@@ -343,7 +346,28 @@ class PackageController extends Controller
             'hidden_mode' => $request->string('hidden_mode')->toString() ?: 'unavailable',
             'is_featured' => $request->boolean('is_featured'),
             'badge_tone' => $request->string('badge_tone')->toString() ?: null,
+            'category_id' => $request->filled('category_id') ? $request->integer('category_id') : null,
         ];
+
+        // Sync legacy category strings for backward compatibility and database constraints
+        if ($data['category_id']) {
+            $cat = \Modules\Packages\src\Models\PackageCategory::find($data['category_id']);
+            if ($cat) {
+                $data['category'] = $cat->name;
+                $data['category_en'] = $cat->name_en;
+                $data['category_ko'] = $cat->name_ko;
+                $data['category_ja'] = $cat->name_ja;
+                $data['category_zh'] = $cat->name_zh;
+            }
+        } else {
+            $data['category'] = $request->string('category')->toString() ?: 'Khác'; // Fallback to avoid null constraint
+            $data['category_en'] = $request->string('category_en')->toString() ?: $data['category'];
+            $data['category_ko'] = $request->string('category_ko')->toString() ?: $data['category'];
+            $data['category_ja'] = $request->string('category_ja')->toString() ?: $data['category'];
+            $data['category_zh'] = $request->string('category_zh')->toString() ?: $data['category'];
+        }
+
+        return $data;
     }
 
     private function resolveRequestedSortOrder(PackageRequest $request): int

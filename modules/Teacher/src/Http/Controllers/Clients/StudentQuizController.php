@@ -13,6 +13,7 @@ use Modules\Courses\src\Models\CourseQuizQuestion;
 use Modules\Courses\src\Models\CourseQuizSubmission;
 use Modules\Courses\src\Models\CourseQuizSubmissionAnswer;
 use Modules\Students\src\Models\Student;
+use Modules\Certificates\src\Support\CertificateIssuer;
 
 class StudentQuizController extends Controller
 {
@@ -225,6 +226,13 @@ class StudentQuizController extends Controller
         });
 
         $submission->refresh();
+
+        // Kiểm tra và cấp chứng chỉ nếu đủ điều kiện (ngay sau khi nộp)
+        if ($submission->passed) {
+            $issuer = app(CertificateIssuer::class);
+            $issuer->issueIfEligible($student, $course, null, $student->id, 'Auto issued after passing quiz');
+        }
+
         $msgKey = $submission->passed ? 'success_msg' : 'fail_msg';
         $msg = __('courses::teacher/messages.quizzes_student.' . $msgKey, [
             'score' => $submission->score,

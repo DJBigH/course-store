@@ -3,11 +3,11 @@
     $otherQuizzes = $quizzes->where('lesson_id', '!=', $lesson->id);
 @endphp
 
-<div class="quiz-container p-3">
+<div class="cp-quiz-container p-3">
     @if($lessonQuizzes->isNotEmpty())
-        <div class="quiz-section mb-4">
-            <h6 class="quiz-section-title text-uppercase fw-bold mb-3" style="font-size: 12px; color: #3b82f6; letter-spacing: 0.05em;">
-                <i class="fa-solid fa-book-open me-1"></i> {{ __('quizzes::clients.lesson_quizzes') }}
+        <div class="cp-quiz-section mb-4">
+            <h6 class="cp-quiz-section-title">
+                <i class="fa-solid fa-book-open"></i> {{ __('quizzes::clients.lesson_quizzes') }}
             </h6>
             @foreach($lessonQuizzes as $item)
                 @include('lessons::clients.quiz_item', ['quiz' => $item])
@@ -16,9 +16,9 @@
     @endif
 
     @if($otherQuizzes->isNotEmpty())
-        <div class="quiz-section">
-            <h6 class="quiz-section-title text-uppercase fw-bold mb-3" style="font-size: 12px; color: #64748b; letter-spacing: 0.05em;">
-                <i class="fa-solid fa-layer-group me-1"></i> {{ __('quizzes::clients.course_quizzes') }}
+        <div class="cp-quiz-section">
+            <h6 class="cp-quiz-section-title muted">
+                <i class="fa-solid fa-layer-group"></i> {{ __('quizzes::clients.course_quizzes') }}
             </h6>
             @foreach($otherQuizzes as $item)
                 @include('lessons::clients.quiz_item', ['quiz' => $item])
@@ -27,118 +27,125 @@
     @endif
 
     @if($quizzes->isEmpty())
-        <div class="text-center py-5">
-            <div class="mb-3">
-                <i class="fa-solid fa-clipboard-question fa-3x text-muted opacity-25"></i>
-            </div>
-            <p class="text-muted mb-0">{{ __('quizzes::clients.no_quizzes') }}</p>
+        <div class="text-center py-5 opacity-50">
+            <i class="fa-solid fa-clipboard-question d-block mb-2 fs-3"></i>
+            <div class="small">{{ __('quizzes::clients.no_quizzes') }}</div>
         </div>
     @endif
 </div>
 
 <style>
-    .quiz-item {
-        padding: 16px;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        margin-bottom: 12px;
-        background: #fff;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
+    .cp-quiz-section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--cp-tab-active);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
-    .quiz-item:hover {
-        border-color: #3b82f6;
-        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.08);
+
+    .cp-quiz-section-title.muted {
+        color: var(--cp-text-muted);
+    }
+
+    .cp-quiz-item {
+        padding: 1.25rem;
+        background-color: var(--cp-nav-bg);
+        border-radius: 0.75rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--cp-border);
+        transition: all 0.2s;
+    }
+
+    .cp-quiz-item:hover {
+        border-color: var(--cp-tab-active);
         transform: translateY(-2px);
     }
-    .quiz-item__title {
+
+    .cp-quiz-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+        gap: 1rem;
+    }
+
+    .cp-quiz-title {
+        font-size: 0.9375rem;
         font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 6px;
-        display: block;
-        font-size: 0.95rem;
+        color: var(--cp-text-main);
         line-height: 1.4;
     }
-    .quiz-item__meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        font-size: 12px;
-        color: #64748b;
-        margin-bottom: 12px;
-    }
-    .quiz-item__meta-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .quiz-item__status {
-        display: inline-flex;
-        align-items: center;
-        padding: 3px 10px;
-        border-radius: 999px;
-        font-size: 10px;
+
+    .cp-quiz-status {
+        font-size: 0.6875rem;
         font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 0.02em;
+        padding: 0.25rem 0.625rem;
+        border-radius: 999px;
+        white-space: nowrap;
     }
-    .status--not-started { background: #f1f5f9; color: #475569; }
-    .status--in-progress { background: #eff6ff; color: #2563eb; }
-    .status--passed { background: #f0fdf4; color: #16a34a; }
-    .status--failed { background: #fef2f2; color: #dc2626; }
 
-    .quiz-item__actions {
+    .status-not_started { background-color: var(--cp-sidebar-bg); color: var(--cp-text-muted); }
+    .status-in_progress { background-color: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .status-passed { background-color: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .status-failed { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+    .cp-quiz-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .cp-quiz-meta-item {
+        font-size: 0.75rem;
+        color: var(--cp-text-muted);
         display: flex;
         align-items: center;
-        gap: 8px;
-    }
-    .btn-quiz {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 8px 16px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-        text-decoration: none !important;
-        width: 100%;
-    }
-    .btn-quiz--primary {
-        background: #2563eb;
-        color: #fff;
-    }
-    .btn-quiz--primary:hover {
-        background: #1d4ed8;
-        transform: scale(1.02);
-    }
-    .btn-quiz--outline {
-        background: transparent;
-        border: 1px solid #e2e8f0;
-        color: #475569;
-    }
-    .btn-quiz--outline:hover {
-        background: #f8fafc;
-        border-color: #cbd5e1;
+        gap: 0.375rem;
     }
 
-    html[data-theme="dark"] .quiz-item {
-        background: #1e293b;
-        border-color: #334155;
+    .cp-quiz-actions {
+        display: flex;
+        gap: 0.5rem;
     }
-    html[data-theme="dark"] .quiz-item__title {
-        color: #f8fafc;
+
+    .cp-quiz-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.625rem;
+        border-radius: 0.5rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
     }
-    html[data-theme="dark"] .quiz-item__meta {
-        color: #94a3b8;
+
+    .cp-quiz-btn-primary {
+        background-color: var(--cp-tab-active);
+        color: #fff;
     }
-    html[data-theme="dark"] .btn-quiz--outline {
-        border-color: #334155;
-        color: #cbd5e1;
+
+    .cp-quiz-btn-primary:hover {
+        opacity: 0.9;
+        color: #fff;
     }
-    html[data-theme="dark"] .btn-quiz--outline:hover {
-        background: #0f172a;
+
+    .cp-quiz-btn-outline {
+        background-color: var(--cp-sidebar-bg);
+        border: 1px solid var(--cp-border);
+        color: var(--cp-text-main);
+    }
+
+    .cp-quiz-btn-outline:hover {
+        background-color: var(--cp-border);
+        color: var(--cp-text-main);
     }
 </style>

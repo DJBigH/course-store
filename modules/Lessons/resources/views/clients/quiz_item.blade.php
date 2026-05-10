@@ -22,34 +22,34 @@
     $resultUrl = $lastSubmission ? route('teacher.dashboard.quizzes.result', ['course' => $course->id, 'quiz' => $quiz->id, 'submission' => $lastSubmission->id]) : '#';
 @endphp
 
-<div class="quiz-item">
-    <div class="d-flex justify-content-between align-items-start mb-2">
-        <span class="quiz-item__title">{{ $quiz->title }}</span>
-        <span class="quiz-item__status status--{{ $status }}">{{ $statusLabel }}</span>
+<div class="cp-quiz-item">
+    <div class="cp-quiz-item-header">
+        <span class="cp-quiz-title">{{ $quiz->title }}</span>
+        <span class="cp-quiz-status status-{{ $status }}">{{ $statusLabel }}</span>
     </div>
     
-    <div class="quiz-item__meta">
+    <div class="cp-quiz-meta">
         @if($lastSubmission)
-            <div class="quiz-item__meta-item">
+            <div class="cp-quiz-meta-item">
                 <i class="fa-solid fa-chart-simple"></i>
                 {{ __('quizzes::clients.score', ['score' => $lastSubmission->score]) }}
             </div>
         @endif
-        <div class="quiz-item__meta-item">
+        <div class="cp-quiz-meta-item">
             <i class="fa-solid fa-rotate-left"></i>
             {{ __('quizzes::clients.attempts', ['count' => $submissions->count()]) }}
         </div>
         @if($quiz->deadline_at)
-            <div class="quiz-item__meta-item">
+            <div class="cp-quiz-meta-item">
                 <i class="fa-regular fa-clock"></i>
                 {{ __('quizzes::clients.deadline', ['date' => $quiz->deadline_at->format('d/m/Y H:i')]) }}
             </div>
         @endif
     </div>
 
-    <div class="quiz-item__actions">
+    <div class="cp-quiz-actions">
         @if($status === 'not_started' || $status === 'in_progress' || ($quiz->max_attempts && $submissions->count() < $quiz->max_attempts))
-            <a href="{{ $quizUrl }}" class="btn-quiz btn-quiz--primary">
+            <a href="{{ $quizUrl }}" class="cp-quiz-btn cp-quiz-btn-primary">
                 @if($status === 'in_progress')
                     <i class="fa-solid fa-play"></i>
                     {{ __('quizzes::clients.resume') }}
@@ -61,7 +61,7 @@
         @endif
         
         @if($lastSubmission)
-            <a href="{{ $resultUrl }}" class="btn-quiz btn-quiz--outline">
+            <a href="{{ $resultUrl }}" class="cp-quiz-btn cp-quiz-btn-outline">
                 <i class="fa-solid fa-eye"></i>
                 {{ __('quizzes::clients.view_result') }}
             </a>

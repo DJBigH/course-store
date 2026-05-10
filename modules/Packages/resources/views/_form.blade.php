@@ -1,6 +1,10 @@
 @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
+    <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">
+        <div class="d-flex align-items-center mb-2">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <h6 class="mb-0 fw-bold">Đã có lỗi xảy ra:</h6>
+        </div>
+        <ul class="mb-0 ps-4">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -12,11 +16,11 @@
     $globalFeatureStatus = \Modules\Packages\src\Models\PackageFeature::pluck('is_enabled', 'key')->toArray();
     $package = $package ?? null;
     $locales = [
-        'vi' => ['label' => 'VI', 'name' => 'Tiếng Việt'],
-        'en' => ['label' => 'EN', 'name' => 'English'],
-        'ko' => ['label' => 'KO', 'name' => 'Korean'],
-        'ja' => ['label' => 'JA', 'name' => 'Japanese'],
-        'zh' => ['label' => 'ZH', 'name' => 'Chinese'],
+        'vi' => ['label' => 'VI', 'name' => 'Tiếng Việt', 'flag' => 'vn'],
+        'en' => ['label' => 'EN', 'name' => 'English', 'flag' => 'us'],
+        'ko' => ['label' => 'KO', 'name' => 'Korean', 'flag' => 'kr'],
+        'ja' => ['label' => 'JA', 'name' => 'Japanese', 'flag' => 'jp'],
+        'zh' => ['label' => 'ZH', 'name' => 'Chinese', 'flag' => 'cn'],
     ];
     $featureBadges = [
         ['key' => 'can_manage_students', 'label' => 'Quản lý học viên'],
@@ -45,352 +49,252 @@
     $defaultBadgeTone = old('badge_tone', $package->badge_tone ?? '#2563eb');
 @endphp
 
-<div class="row g-4">
-    <div class="col-12">
-        <div class="border rounded-4 p-4 bg-light-subtle">
-            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
+<div class="row g-4 admin-package-form">
+    {{-- Left Column: Main Configuration --}}
+    <div class="col-xl-8 col-lg-7">
+        {{-- Section 1: Core Identity --}}
+        <div class="glass-section mb-4">
+            <div class="section-header">
+                <div class="icon-box"><i class="fas fa-fingerprint"></i></div>
                 <div>
-                    <h6 class="mb-1">Thông tin hệ thống</h6>
-                    <p class="text-muted mb-0">Code, trạng thái và quy tắc sắp xếp của gói.</p>
+                    <h6 class="title">Định danh & Phân loại</h6>
+                    <p class="subtitle">Thiết lập mã định danh và nhóm cho gói dịch vụ.</p>
                 </div>
             </div>
 
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Code</label>
-                    <input type="text" class="form-control" name="code" value="{{ old('code', $package->code ?? '') }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Sort order</label>
-                    <input type="number" class="form-control" name="sort_order" min="1"
-                        value="{{ $resolvedSortOrder }}">
-                </div>
-                <div class="col-md-4 d-flex flex-column justify-content-center gap-2">
-                    <div class="form-check mt-md-4">
-                        <input class="form-check-input" type="checkbox" name="status" value="1"
-                            {{ old('status', $package->status ?? true) ? 'checked' : '' }}>
-                        <label class="form-check-label">Hiện công khai cho người mua</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="is_featured" value="1"
-                            {{ old('is_featured', $package->is_featured ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Đính trên landing page</label>
+                    <label class="form-label-custom">Code định danh</label>
+                    <div class="input-group-custom">
+                        <span class="input-icon"><i class="fas fa-hashtag"></i></span>
+                        <input type="text" class="form-control" name="code" value="{{ old('code', $package->code ?? '') }}" 
+                            placeholder="VD: VIP_GOLD" required>
                     </div>
                 </div>
-                <div class="col-md-8">
-                    <label class="form-label">Khi đã tắt công khai</label>
-                    <select name="hidden_mode" class="form-select">
-                        <option value="available" {{ $defaultHiddenMode === 'available' ? 'selected' : '' }}>
-                            Ẩn đi nhưng người đang dùng gói này vẫn tiếp tục sử dụng được
-                        </option>
-                        <option value="unavailable" {{ $defaultHiddenMode === 'unavailable' ? 'selected' : '' }}>
-                            Ẩn đi và không cho người mua tiếp tục chọn / sử dụng nữa
-                        </option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label d-flex justify-content-between">
-                        Màu chủ đạo (Tone màu)
-                        <a href="https://flatuicolors.com/" target="_blank" class="text-primary small" style="text-decoration: none;">
-                            <i class="fas fa-palette me-1"></i>Gợi ý màu đẹp
+                <div class="col-md-5">
+                    <label class="form-label-custom d-flex justify-content-between">
+                        Danh mục gói
+                        <a href="{{ route('teacher-packages.categories.index') }}" class="manage-link">
+                            <i class="fas fa-external-link-alt me-1"></i>Quản lý
                         </a>
                     </label>
-                    <div class="d-flex gap-2 align-items-center">
-                        <input type="color" class="form-control form-control-color" name="badge_tone" 
-                            value="{{ $defaultBadgeTone }}" title="Chọn màu đặc trưng cho gói">
-                        <input type="text" class="form-control font-monospace" id="badge_tone_hex" 
-                            value="{{ $defaultBadgeTone }}" placeholder="#000000" maxlength="7">
+                    <div class="input-group-custom">
+                        <span class="input-icon"><i class="fas fa-layer-group"></i></span>
+                        <select name="category_id" class="form-select select-custom">
+                            <option value="">-- Chọn danh mục --</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}" {{ old('category_id', $package->category_id ?? '') == $cat->id ? 'selected' : '' }}>
+                                    {{ $cat->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="form-text">Màu này sẽ hiển thị trên Card và Sidebar giảng viên.</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-custom">Thứ tự</label>
+                    <div class="input-group-custom">
+                        <span class="input-icon"><i class="fas fa-sort-numeric-down"></i></span>
+                        <input type="number" class="form-control" name="sort_order" min="1" value="{{ $resolvedSortOrder }}">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-12">
-        <div class="border rounded-4 p-4">
-            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
-                <div>
-                    <h6 class="mb-1">Nội dung đa ngôn ngữ</h6>
-                    <p class="text-muted mb-0">Tên gói, tagline, badge, mô tả và mức hỗ trợ hiển thị theo locale.</p>
-                </div>
-            </div>
-            <div class="row g-4 align-items-start">
-                <div class="col-xl-8">
-                    <ul class="nav nav-pills gap-2 mb-4" id="package-locale-tabs" role="tablist">
-                        @foreach ($locales as $locale => $meta)
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link {{ $loop->first ? 'active' : '' }}" type="button"
-                                    data-bs-toggle="tab" data-bs-target="#package-locale-{{ $locale }}" role="tab"
-                                    aria-selected="{{ $loop->first ? 'true' : 'false' }}"
-                                    data-package-locale-tab="{{ $locale }}">
-                                    {{ $meta['label'] }}
-                                </button>
-                            </li>
-                        @endforeach
-                    </ul>
-
-                    <div class="tab-content">
-                        @foreach ($locales as $locale => $meta)
-                            @php
-                                $isDefault = $locale === 'vi';
-                                $nameField = $isDefault ? 'name' : 'name_' . $locale;
-                                $taglineField = $isDefault ? 'tagline' : 'tagline_' . $locale;
-                                $badgeField = $isDefault ? 'badge_text' : 'badge_text_' . $locale;
-                                $descriptionField = $isDefault ? 'description' : 'description_' . $locale;
-                                $supportField = $isDefault ? 'support_level' : 'support_level_' . $locale;
-                            @endphp
-
-                            <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="package-locale-{{ $locale }}" role="tabpanel">
-                                <div class="border rounded-4 p-4 bg-light-subtle">
-                                    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
-                                        <div>
-                                            <h6 class="mb-1">{{ $meta['name'] }}</h6>
-                                            <p class="text-muted mb-0">
-                                                {{ $isDefault ? 'Đây là nội dung mặc định và được dùng làm fallback cho các locale khác.' : 'Nếu để trống, hệ thống sẽ fallback về bản mặc định.' }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Tên gói</label>
-                                            <input type="text" class="form-control" name="{{ $nameField }}"
-                                                value="{{ old($nameField, $package->{$nameField} ?? '') }}" {{ $isDefault ? 'required' : '' }}
-                                                data-preview-field="name" data-preview-locale="{{ $locale }}">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Mức hỗ trợ</label>
-                                            <input type="text" class="form-control" name="{{ $supportField }}"
-                                                value="{{ old($supportField, $package->{$supportField} ?? '') }}"
-                                                data-preview-field="support" data-preview-locale="{{ $locale }}">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Tagline ngắn</label>
-                                            <input type="text" class="form-control" name="{{ $taglineField }}" maxlength="190"
-                                                value="{{ old($taglineField, $package->{$taglineField} ?? '') }}"
-                                                data-preview-field="tagline" data-preview-locale="{{ $locale }}">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Badge text</label>
-                                            <input type="text" class="form-control" name="{{ $badgeField }}" maxlength="100"
-                                                value="{{ old($badgeField, $package->{$badgeField} ?? '') }}"
-                                                data-preview-field="badge" data-preview-locale="{{ $locale }}">
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label">Mô tả chi tiết</label>
-                                            <textarea class="form-control" name="{{ $descriptionField }}" rows="4"
-                                                data-preview-field="description" data-preview-locale="{{ $locale }}">{{ old($descriptionField, $package->{$descriptionField} ?? '') }}</textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
+        {{-- Section 2: Multilingual Content --}}
+        <div class="glass-section mb-4">
+            <div class="section-header justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box"><i class="fas fa-language"></i></div>
+                    <div>
+                        <h6 class="title">Nội dung đa ngôn ngữ</h6>
+                        <p class="subtitle">Tùy chỉnh thông tin hiển thị cho từng thị trường.</p>
                     </div>
                 </div>
+                <ul class="nav nav-pills locale-pills" id="package-locale-tabs" role="tablist">
+                    @foreach ($locales as $locale => $meta)
+                        <li class="nav-item">
+                            <button class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab" 
+                                data-bs-target="#package-locale-{{ $locale }}" data-package-locale-tab="{{ $locale }}">
+                                <span class="flag-icon flag-{{ $meta['flag'] }}"></span> {{ $meta['label'] }}
+                            </button>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
 
-                <div class="col-xl-4">
-                    <div class="border rounded-4 p-4 bg-light-subtle position-sticky" style="top: 1rem;">
-                        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
-                            <div>
-                                <h6 class="mb-1">Preview card</h6>
-                                <p class="text-muted mb-0 small">Xem nhanh giao diện gói theo tab đang mở.</p>
+            <div class="tab-content pt-2">
+                @foreach ($locales as $locale => $meta)
+                    @php
+                        $isDefault = $locale === 'vi';
+                        $nameField = $isDefault ? 'name' : 'name_' . $locale;
+                        $taglineField = $isDefault ? 'tagline' : 'tagline_' . $locale;
+                        $badgeField = $isDefault ? 'badge_text' : 'badge_text_' . $locale;
+                        $descriptionField = $isDefault ? 'description' : 'description_' . $locale;
+                        $supportField = $isDefault ? 'support_level' : 'support_level_' . $locale;
+                    @endphp
+                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="package-locale-{{ $locale }}">
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label-custom">Tên gói ({{ $meta['name'] }})</label>
+                                <input type="text" class="form-control input-premium" name="{{ $nameField }}"
+                                    value="{{ old($nameField, $package->{$nameField} ?? '') }}" {{ $isDefault ? 'required' : '' }}
+                                    data-preview-field="name" data-preview-locale="{{ $locale }}" placeholder="VD: Gói Chuyên Nghiệp">
                             </div>
-                            <span class="badge text-bg-dark" data-preview-locale-badge>VI</span>
-                        </div>
-
-                        <div class="package-preview-card {{ $defaultPreviewFeatured ? 'is-featured' : '' }}" 
-                            data-package-preview-card
-                            style="--package-tone: {{ $defaultBadgeTone }}">
-                            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-                                <span class="package-preview-card__code" data-preview-code>{{ $defaultPreviewCode }}</span>
-                                <span class="package-preview-card__badge {{ $defaultPreviewBadge ? '' : 'd-none' }}" data-preview-badge>{{ $defaultPreviewBadge }}</span>
+                            <div class="col-md-5">
+                                <label class="form-label-custom">Mức hỗ trợ</label>
+                                <input type="text" class="form-control input-premium" name="{{ $supportField }}"
+                                    value="{{ old($supportField, $package->{$supportField} ?? '') }}"
+                                    data-preview-field="support" data-preview-locale="{{ $locale }}" placeholder="VD: 24/7 VIP">
                             </div>
-
-                            <h5 class="package-preview-card__name" data-preview-name>{{ $defaultPreviewName ?: 'Tên gói' }}</h5>
-                            <p class="package-preview-card__tagline {{ $defaultPreviewTagline ? '' : 'd-none' }}" data-preview-tagline>{{ $defaultPreviewTagline }}</p>
-                            <div class="package-preview-card__price" data-preview-price>{{ number_format($defaultPreviewPrice, 0, ',', '.') }} đ</div>
-                            <p class="package-preview-card__description {{ $defaultPreviewDescription ? '' : 'd-none' }}" data-preview-description>{{ $defaultPreviewDescription }}</p>
-
-                            <ul class="package-preview-card__features">
-                                <li data-preview-commission>Chia doanh thu {{ rtrim(rtrim(number_format($defaultPreviewCommission, 2, '.', ''), '0'), '.') }}%</li>
-                                <li data-preview-course-limit>
-                                    @if ($defaultPreviewCourseLimit !== '' && $defaultPreviewCourseLimit !== null)
-                                        Đăng tối đa {{ $defaultPreviewCourseLimit }} khóa
-                                    @else
-                                        Đăng khóa học không giới hạn
-                                    @endif
-                                </li>
-                                <li data-preview-priority>{{ $defaultPreviewPriority ? 'Ưu tiên duyệt hồ sơ' : 'Duyệt theo hàng chờ tiêu chuẩn' }}</li>
-                                <li data-preview-support>{{ $defaultPreviewSupport ? 'Hỗ trợ ' . $defaultPreviewSupport : 'Hỗ trợ cơ bản' }}</li>
-                            </ul>
-
-                            <div class="package-preview-card__cta">Đăng ký với gói này</div>
+                            <div class="col-md-7">
+                                <label class="form-label-custom">Tagline ngắn</label>
+                                <input type="text" class="form-control input-premium" name="{{ $taglineField }}" maxlength="190"
+                                    value="{{ old($taglineField, $package->{$taglineField} ?? '') }}"
+                                    data-preview-field="tagline" data-preview-locale="{{ $locale }}" placeholder="Slogan thu hút người mua">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label-custom">Badge Text</label>
+                                <input type="text" class="form-control input-premium" name="{{ $badgeField }}" maxlength="100"
+                                    value="{{ old($badgeField, $package->{$badgeField} ?? '') }}"
+                                    data-preview-field="badge" data-preview-locale="{{ $locale }}" placeholder="VD: Phổ biến nhất">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-custom">Mô tả chi tiết</label>
+                                <textarea class="form-control input-premium" name="{{ $descriptionField }}" rows="3"
+                                    data-preview-field="description" data-preview-locale="{{ $locale }}" placeholder="Mô tả ngắn gọn về giá trị của gói...">{{ old($descriptionField, $package->{$descriptionField} ?? '') }}</textarea>
+                            </div>
                         </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
 
-                        <div class="mt-3 d-flex flex-wrap gap-2">
-                            @foreach ($featureBadges as $badge)
-                                <span class="badge rounded-pill text-bg-light border {{ old($badge['key'], $package->{$badge['key']} ?? false) ? 'text-success border-success' : 'text-muted' }}">
-                                    {{ $badge['label'] }}
-                                </span>
+        {{-- Section 3: Pricing & Limits --}}
+        <div class="glass-section mb-4">
+            <div class="section-header">
+                <div class="icon-box"><i class="fas fa-hand-holding-usd"></i></div>
+                <div>
+                    <h6 class="title">Giá & Hạn mức vận hành</h6>
+                    <p class="subtitle">Thiết lập chi phí và giới hạn kỹ thuật cho gói.</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="pricing-card-input">
+                        <div class="d-flex justify-content-between mb-2">
+                            <label class="form-label-custom mb-0">Giá bán</label>
+                            <span class="badge text-bg-soft-primary">VND</span>
+                        </div>
+                        <input type="hidden" name="price" id="admin-package-price" value="{{ old('price', $package->price ?? 0) }}" data-preview-global="price">
+                        <div class="input-money-wrapper">
+                            <input type="text" class="form-control price-input" id="admin-package-price-display"
+                                value="{{ number_format(old('price', $package->price ?? 0), 0, ',', '.') }}" 
+                                data-money-target="admin-package-price" required>
+                            <span class="currency-symbol">₫</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="pricing-card-input h-100 d-flex flex-column justify-content-center px-4 border-start">
+                        <label class="form-label-custom mb-2">Chu kỳ thanh toán</label>
+                        <div class="d-flex gap-2">
+                            @foreach (['one_time' => 'Một lần', 'monthly' => 'Hàng tháng', 'yearly' => 'Hàng năm'] as $val => $lbl)
+                                <input type="radio" class="btn-check" name="billing_cycle" id="bc_{{ $val }}" value="{{ $val }}" 
+                                    {{ old('billing_cycle', $package->billing_cycle ?? 'one_time') === $val ? 'checked' : '' }}>
+                                <label class="btn btn-outline-soft-primary btn-sm rounded-pill px-3" for="bc_{{ $val }}">{{ $lbl }}</label>
                             @endforeach
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-12">
-        <div class="border rounded-4 p-4 bg-light-subtle">
-            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
-                <div>
-                    <h6 class="mb-1">Giá và quyền lợi</h6>
-                    <p class="text-muted mb-0">Phần dữ liệu vận hành dùng chung cho mọi locale.</p>
+                <div class="col-12 mt-2">
+                    <hr class="opacity-10">
                 </div>
-            </div>
 
-            <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Giá</label>
-                    <input type="hidden" name="price" id="admin-package-price" value="{{ old('price', $package->price ?? 0) }}" data-preview-global="price">
-                    <input type="text" class="form-control" id="admin-package-price-display"
-                        value="{{ number_format(old('price', $package->price ?? 0), 0, ',', '.') }}" 
-                        data-money-target="admin-package-price"
-                        required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Billing cycle</label>
-                    <select name="billing_cycle" class="form-select">
-                        @foreach (['one_time' => 'One time', 'monthly' => 'Monthly', 'yearly' => 'Yearly'] as $value => $label)
-                            <option value="{{ $value }}" {{ old('billing_cycle', $package->billing_cycle ?? 'one_time') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Course limit {!! isset($globalFeatureStatus['course_limit']) && !$globalFeatureStatus['course_limit'] ? '<span class="badge text-bg-warning ms-1" style="font-size: 10px;">BẢO TRÌ</span>' : '' !!}</label>
-                    <input type="number" class="form-control" name="course_limit" min="1"
+                    <label class="form-label-custom">Hạn mức khóa học</label>
+                    <input type="number" class="form-control input-premium" name="course_limit" min="1"
                         value="{{ old('course_limit', $package->course_limit ?? '') }}" data-preview-global="course_limit"
-                        {{ isset($globalFeatureStatus['course_limit']) && !$globalFeatureStatus['course_limit'] ? 'disabled' : '' }}>
+                        placeholder="Không giới hạn">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Payout account limit</label>
-                    <input type="number" class="form-control" name="payout_account_limit" min="1" max="3"
-                        value="{{ old('payout_account_limit', isset($package) ? $package->effective_payout_account_limit : 3) }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Hạn mức rút tối đa / ngày (VND)</label>
-                    <input type="hidden" name="max_payout_per_day" id="admin-package-payout-limit" value="{{ old('max_payout_per_day', $package->max_payout_per_day ?? '') }}">
-                    <input type="text" class="form-control" id="admin-package-payout-limit-display"
-                        value="{{ isset($package) && $package->max_payout_per_day ? number_format($package->max_payout_per_day, 0, ',', '.') : '' }}" 
-                        data-money-target="admin-package-payout-limit"
-                        placeholder="Để trống = Không giới hạn">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Commission rate</label>
-                    <input type="number" class="form-control" name="commission_rate" min="0" max="100" step="0.01"
-                        value="{{ old('commission_rate', $package->commission_rate ?? 50) }}" required data-preview-global="commission_rate">
-                </div>
-                <div class="col-md-4 d-flex align-items-center">
-                    <div class="form-check mt-md-4">
-                        <input class="form-check-input" type="checkbox" name="priority_review" value="1"
-                            {{ old('priority_review', $package->priority_review ?? false) ? 'checked' : '' }} data-preview-global="priority_review"
-                            {{ isset($globalFeatureStatus['priority_review']) && !$globalFeatureStatus['priority_review'] ? 'disabled' : '' }}>
-                        <label class="form-check-label">Priority review {!! isset($globalFeatureStatus['priority_review']) && !$globalFeatureStatus['priority_review'] ? '<small class="text-warning ms-1">(Bảo trì)</small>' : '' !!}</label>
+                    <label class="form-label-custom">Commission Rate (%)</label>
+                    <div class="input-group-custom">
+                        <span class="input-icon"><i class="fas fa-percentage"></i></span>
+                        <input type="number" class="form-control" name="commission_rate" min="0" max="100" step="0.01"
+                            value="{{ old('commission_rate', $package->commission_rate ?? 50) }}" required data-preview-global="commission_rate">
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Coupon limit {!! isset($globalFeatureStatus['can_manage_coupons']) && !$globalFeatureStatus['can_manage_coupons'] ? '<small class="text-warning ms-1">(Maint)</small>' : '' !!}</label>
-                    <input type="number" class="form-control" name="coupon_limit" min="1"
-                        value="{{ old('coupon_limit', $package->coupon_limit ?? '') }}"
-                        placeholder="Để trống = không giới hạn"
-                        {{ isset($globalFeatureStatus['can_manage_coupons']) && !$globalFeatureStatus['can_manage_coupons'] ? 'disabled' : '' }}>
-                    <div class="form-text">Chỉ áp dụng khi đã bật quyền quản lý coupon.</div>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">AI Quiz Limit / ngày {!! isset($globalFeatureStatus['can_use_ai_quiz']) && !$globalFeatureStatus['can_use_ai_quiz'] ? '<small class="text-warning ms-1">(Maint)</small>' : '' !!}</label>
-                    <input type="number" class="form-control" name="ai_quiz_limit" min="1"
-                        value="{{ old('ai_quiz_limit', $package->ai_quiz_limit ?? '') }}"
-                        placeholder="Để trống = 3 (Miễn phí) / Không giới hạn"
-                        {{ isset($globalFeatureStatus['can_use_ai_quiz']) && !$globalFeatureStatus['can_use_ai_quiz'] ? 'disabled' : '' }}>
-                    <div class="form-text">Số Quiz tối đa tạo bằng AI 1 ngày. Cần bật quyền "Quản lý quiz".</div>
+                    <label class="form-label-custom">Payout Limit/Ngày</label>
+                    <input type="hidden" name="max_payout_per_day" id="admin-package-payout-limit" value="{{ old('max_payout_per_day', $package->max_payout_per_day ?? '') }}">
+                    <input type="text" class="form-control input-premium" id="admin-package-payout-limit-display"
+                        value="{{ isset($package) && $package->max_payout_per_day ? number_format($package->max_payout_per_day, 0, ',', '.') : '' }}" 
+                        data-money-target="admin-package-payout-limit" placeholder="Không giới hạn">
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-12">
-        <div class="border rounded-4 p-4">
-            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
+        {{-- Section 4: Features Grid --}}
+        <div class="glass-section mb-4">
+            <div class="section-header">
+                <div class="icon-box"><i class="fas fa-tasks"></i></div>
                 <div>
-                    <h6 class="mb-1">Tính năng đi kèm theo gói</h6>
-                    <p class="text-muted mb-0">Bật/tắt từng quyền trong portal để phân hóa quyền lợi của các gói.</p>
+                    <h6 class="title">Tính năng đi kèm</h6>
+                    <p class="subtitle">Phân hóa quyền lợi đặc quyền của gói.</p>
                 </div>
             </div>
 
-            <div class="row g-4 mt-1">
-                @php
-                    $systemFeaturesGrouped = [
-                        'Quản lý Khóa học & Nội dung' => [
-                            'can_duplicate_courses' => 'Cho phép nhân bản khóa học',
-                            'can_manage_quizzes' => 'Cho phép quản lý quiz',
-                            'can_use_ai_quiz' => 'Cho phép dùng AI tạo Quiz (Gemini)',
-                            'can_schedule_content' => 'Cho phép mở bài học theo lịch',
-                            'can_import_export_lessons' => 'Cho phép Import/Export bài học',
-                        ],
-                        'Quản lý Học viên & Tương tác' => [
-                            'can_manage_students' => 'Cho phép quản lý học viên',
-                            'can_view_student_progress' => 'Cho phép xem % tiến độ học của học viên',
-                            'can_manage_comments' => 'Cho phép quản lý bình luận',
-                            'can_issue_certificates' => 'Cho phép cấp chứng chỉ hoàn thành',
-                            'can_verify_certificates' => 'Xác thực chứng chỉ công khai (QR Code)',
-                            'can_grant_courses' => 'Cho phép cấp quyền học thủ công',
-                        ],
-                        'Marketing & Bán hàng' => [
-                            'can_manage_coupons' => 'Cho phép quản lý mã giảm giá',
-                            'can_sell_bundles' => 'Cho phép bán combo / bundle khóa học',
-                            'can_send_promotions' => 'Cho phép gửi thông báo khuyến mại',
-                            'can_use_affiliate_links' => 'Cho phép dùng link giới thiệu riêng',
-                            'can_customize_teacher_landing' => 'Cho phép tùy chỉnh landing page giảng viên',
-                        ],
-                        'Tài chính & Hệ thống' => [
-                            'can_request_payouts' => 'Cho phép gửi yêu cầu rút tiền',
-                            'can_view_activity_logs' => 'Cho phép xem nhật ký hoạt động giảng viên',
-                            'can_import_export' => 'Cho phép Import/Export dữ liệu (Đơn hàng, Học viên, Quiz)',
-                            'can_export_orders' => 'Cho phép xuất dữ liệu đơn hàng (CSV/Excel)',
-                            'can_export_students' => 'Cho phép xuất danh sách học viên (CSV/Excel)',
-                        ]
-                    ];
-                @endphp
+            @php
+                $systemFeaturesGrouped = [
+                    'Nội dung & Học tập' => [
+                        'can_duplicate_courses' => 'Nhân bản khóa học',
+                        'can_manage_quizzes' => 'Quản lý quiz',
+                        'can_use_ai_quiz' => 'AI Quiz Generator',
+                        'can_schedule_content' => 'Lịch trình bài học',
+                    ],
+                    'Vận hành & Học viên' => [
+                        'can_manage_students' => 'Quản lý học viên',
+                        'can_view_student_progress' => 'Xem tiến độ học',
+                        'can_manage_comments' => 'Quản lý bình luận',
+                        'can_issue_certificates' => 'Cấp chứng chỉ',
+                    ],
+                    'Bán hàng & Marketing' => [
+                        'can_manage_coupons' => 'Quản lý Coupon',
+                        'can_sell_bundles' => 'Combo khóa học',
+                        'can_send_promotions' => 'Gửi khuyến mại',
+                        'can_use_affiliate_links' => 'Link tiếp thị (Affiliate)',
+                        'can_customize_teacher_landing' => 'Tùy chỉnh Landing',
+                    ],
+                    'Tài chính & Hệ thống' => [
+                        'can_request_payouts' => 'Yêu cầu rút tiền',
+                        'can_view_activity_logs' => 'Nhật ký hoạt động',
+                        'can_import_export' => 'Import/Export dữ liệu',
+                        'can_export_orders' => 'Xuất đơn hàng',
+                    ]
+                ];
+            @endphp
 
+            <div class="row g-3 mt-1">
                 @foreach($systemFeaturesGrouped as $groupName => $features)
                     <div class="col-md-6">
-                        <div class="border rounded-4 p-4 bg-light-subtle h-100 shadow-sm">
-                            <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">
-                                <i class="fa-solid fa-folder-open me-2"></i>{{ $groupName }}
-                            </h6>
-                            <div class="row g-2">
+                        <div class="feature-group-card">
+                            <h6 class="feature-group-title">{{ $groupName }}</h6>
+                            <div class="feature-grid">
                                 @foreach($features as $key => $label)
                                     @php
                                         $status = isset($globalFeatureStatus[$key]) ? (int) $globalFeatureStatus[$key] : 1;
                                         $isMaintenance = $status !== 1;
                                         $isChecked = (bool) old($key, $package->{$key} ?? false);
                                     @endphp
-                                    <div class="col-12">
-                                        <div class="form-check">
-                                            <input class="form-check-input feature-checkbox" type="checkbox" name="{{ $key }}" value="1"
-                                                {{ $isChecked ? 'checked' : '' }}
-                                                {{ $isMaintenance ? 'disabled' : '' }}>
-                                            
-                                            @if($isMaintenance && $isChecked)
-                                                <input type="hidden" name="{{ $key }}" value="1">
-                                            @endif
-
-                                            <label class="form-check-label text-dark" style="font-size: 0.9rem;">
+                                    <div class="feature-item {{ $isMaintenance ? 'is-maintenance' : '' }}">
+                                        <div class="form-check form-switch-premium">
+                                            <input class="form-check-input" type="checkbox" name="{{ $key }}" value="1"
+                                                id="feat_{{ $key }}" {{ $isChecked ? 'checked' : '' }} {{ $isMaintenance ? 'disabled' : '' }}>
+                                            <label class="form-check-label" for="feat_{{ $key }}">
                                                 {{ $label }}
-                                                @if($isMaintenance)
-                                                    <small class="text-warning ms-1 fw-bold text-uppercase" style="font-size: 0.72rem;">(Bảo trì)</small>
-                                                @endif
+                                                @if($isMaintenance) <span class="maint-tag">Maint</span> @endif
                                             </label>
                                         </div>
                                     </div>
@@ -403,89 +307,582 @@
         </div>
     </div>
 
+    {{-- Right Column: Preview & Status --}}
+    <div class="col-xl-4 col-lg-5">
+        <div class="sticky-top" style="top: 1.5rem; z-index: 10;">
+            {{-- Preview Box --}}
+            <div class="glass-section mb-4 overflow-hidden position-relative">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="title mb-0">Preview Giao diện</h6>
+                    <span class="preview-locale-badge" data-preview-locale-badge>VI</span>
+                </div>
+
+                <div class="package-card-premium {{ $defaultPreviewFeatured ? 'is-featured' : '' }}" 
+                    data-package-preview-card style="--package-tone: {{ $defaultBadgeTone }}">
+                    <div class="premium-badge-wrapper">
+                        <span class="p-card-code" data-preview-code>{{ $defaultPreviewCode }}</span>
+                        <span class="p-card-badge {{ $defaultPreviewBadge ? '' : 'd-none' }}" data-preview-badge>{{ $defaultPreviewBadge }}</span>
+                    </div>
+
+                    <div class="p-card-header">
+                        <h4 class="p-card-name" data-preview-name>{{ $defaultPreviewName ?: 'Tên gói' }}</h4>
+                        <p class="p-card-tagline {{ $defaultPreviewTagline ? '' : 'd-none' }}" data-preview-tagline>{{ $defaultPreviewTagline }}</p>
+                    </div>
+
+                    <div class="p-card-pricing">
+                        <div class="p-card-price" data-preview-price>{{ number_format($defaultPreviewPrice, 0, ',', '.') }} đ</div>
+                        <div class="p-card-cycle">/ thanh toán</div>
+                    </div>
+
+                    <div class="p-card-description {{ $defaultPreviewDescription ? '' : 'd-none' }}" data-preview-description>
+                        {{ $defaultPreviewDescription }}
+                    </div>
+
+                    <div class="p-card-divider"></div>
+
+                    <ul class="p-card-features">
+                        <li data-preview-commission><i class="fas fa-check-circle"></i> Chia doanh thu {{ rtrim(rtrim(number_format($defaultPreviewCommission, 2, '.', ''), '0'), '.') }}%</li>
+                        <li data-preview-course-limit><i class="fas fa-check-circle"></i> 
+                            {{ $defaultPreviewCourseLimit !== '' ? "Tối đa $defaultPreviewCourseLimit khóa" : 'Khóa học không giới hạn' }}
+                        </li>
+                        <li data-preview-priority><i class="fas fa-check-circle"></i> {{ $defaultPreviewPriority ? 'Ưu tiên duyệt hồ sơ' : 'Duyệt tiêu chuẩn' }}</li>
+                        <li data-preview-support><i class="fas fa-check-circle"></i> {{ $defaultPreviewSupport ? 'Hỗ trợ ' . $defaultPreviewSupport : 'Hỗ trợ cơ bản' }}</li>
+                    </ul>
+
+                    <div class="p-card-action">Chọn gói dịch vụ này</div>
+                </div>
+
+                <div class="active-features-pills mt-3">
+                    @foreach ($featureBadges as $badge)
+                        <span class="f-pill {{ old($badge['key'], $package->{$badge['key']} ?? false) ? 'active' : '' }}">
+                            {{ $badge['label'] }}
+                        </span>
+                    @endforeach
+                    <span class="f-pill {{ old('can_use_affiliate_links', $package->can_use_affiliate_links ?? false) ? 'active' : '' }}">
+                        Link tiếp thị
+                    </span>
+                </div>
+            </div>
+
+            {{-- Visibility & Advanced --}}
+            <div class="glass-section">
+                <h6 class="title mb-3">Cài đặt hiển thị</h6>
+                
+                <div class="mb-4">
+                    <label class="form-label-custom">Màu chủ đạo (Theme Color)</label>
+                    <div class="color-picker-premium">
+                        <input type="color" class="form-control-color" name="badge_tone" value="{{ $defaultBadgeTone }}">
+                        <input type="text" class="form-control text-uppercase" id="badge_tone_hex" value="{{ $defaultBadgeTone }}" maxlength="7">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label-custom">Khi đã tắt công khai</label>
+                    <select name="hidden_mode" class="form-select select-custom">
+                        <option value="available" {{ $defaultHiddenMode === 'available' ? 'selected' : '' }}>Tiếp tục dùng (Legacy)</option>
+                        <option value="unavailable" {{ $defaultHiddenMode === 'unavailable' ? 'selected' : '' }}>Ngắt hoàn toàn</option>
+                    </select>
+                </div>
+
+                <div class="status-switches p-3 border rounded-4 bg-white">
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center ps-0 mb-3">
+                        <label class="form-check-label fw-bold">Trạng thái công khai</label>
+                        <input class="form-check-input ms-0" type="checkbox" name="status" value="1" {{ old('status', $package->status ?? true) ? 'checked' : '' }}>
+                    </div>
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center ps-0">
+                        <label class="form-check-label fw-bold">Nổi bật (Landing Page)</label>
+                        <input class="form-check-input ms-0" type="checkbox" name="is_featured" value="1" {{ old('is_featured', $package->is_featured ?? false) ? 'checked' : '' }}>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
-    .package-preview-card {
+    :root {
+        --admin-bg: #f8fafc;
+        --admin-card-bg: rgba(255, 255, 255, 0.8);
+        --admin-accent: #2563eb;
+        --admin-accent-soft: rgba(37, 99, 235, 0.1);
+        --admin-text-main: #1e293b;
+        --admin-text-muted: #64748b;
+        --admin-border: #e2e8f0;
+    }
+
+    .admin-package-form {
+        color: var(--admin-text-main);
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Glass Section Layout */
+    .glass-section {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
         border-radius: 24px;
-        padding: 1.35rem;
-        color: #e5eefc;
-        background: 
-            radial-gradient(circle at top right, rgba(var(--package-tone-rgb, 96, 165, 250), 0.14), transparent 28%),
-            linear-gradient(180deg, #111827 0%, #16233a 100%);
-        border: 1px solid var(--package-tone, rgba(96, 165, 250, 0.18));
-        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
-        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        backdrop-filter: blur(10px);
     }
 
-    .package-preview-card.is-featured {
-        background:
-            radial-gradient(circle at top right, rgba(45, 212, 191, 0.16), transparent 28%),
-            linear-gradient(180deg, #0f2748 0%, #143961 100%);
-        border-color: rgba(125, 211, 252, 0.34);
-    }
-
-    .package-preview-card__code,
-    .package-preview-card__badge {
-        display: inline-flex;
+    .section-header {
+        display: flex;
         align-items: center;
-        padding: 0.45rem 0.7rem;
-        border-radius: 999px;
-        font-size: 0.74rem;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 1rem;
+    }
+
+    .icon-box {
+        width: 42px;
+        height: 42px;
+        background: var(--admin-accent-soft);
+        color: var(--admin-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.1rem;
+    }
+
+    .title {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.1rem;
+        color: #0f172a;
+    }
+
+    .subtitle {
+        font-size: 0.8rem;
+        color: var(--admin-text-muted);
+        margin: 0;
+    }
+
+    /* Inputs Styling */
+    .form-label-custom {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .input-group-custom {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        color: #94a3b8;
+        font-size: 0.9rem;
+        z-index: 5;
+    }
+
+    .input-group-custom .form-control,
+    .input-group-custom .form-select {
+        padding-left: 2.75rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 1.5px solid #e2e8f0;
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--admin-accent);
+        box-shadow: 0 0 0 4px var(--admin-accent-soft);
+    }
+
+    .input-premium {
+        background: #fcfdfe;
+    }
+
+    /* Tabs Styling */
+    .locale-pills {
+        background: #f1f5f9;
+        padding: 0.3rem;
+        border-radius: 12px;
+    }
+
+    .locale-pills .nav-link {
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.4rem 0.8rem;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+
+    .locale-pills .nav-link.active {
+        background: #ffffff;
+        color: var(--admin-accent);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    /* Pricing Section */
+    .pricing-card-input {
+        padding: 0.5rem;
+    }
+
+    .input-money-wrapper {
+        position: relative;
+    }
+
+    .price-input {
+        font-size: 1.5rem !important;
         font-weight: 800;
+        padding-right: 2.5rem !important;
+        color: #0f172a;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
     }
 
-    .package-preview-card__code {
-        color: #8fc3ff;
-        background: rgba(96, 165, 250, 0.14);
-    }
-
-    .package-preview-card__badge {
-        color: #7cead9;
-        background: rgba(45, 212, 191, 0.14);
-    }
-
-    .package-preview-card__name {
-        font-size: 1.55rem;
+    .currency-symbol {
+        position: absolute;
+        right: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
         font-weight: 800;
-        margin-bottom: 0.6rem;
+        color: #94a3b8;
+        font-size: 1.2rem;
     }
 
-    .package-preview-card__tagline,
-    .package-preview-card__description {
-        color: #b7c7df;
-        line-height: 1.7;
+    .btn-outline-soft-primary {
+        border: 1.5px solid #e2e8f0;
+        color: #64748b;
+        font-weight: 600;
     }
 
-    .package-preview-card__price {
-        font-size: 2rem;
-        font-weight: 900;
-        margin: 0.7rem 0 1rem;
+    .btn-check:checked + .btn-outline-soft-primary {
+        background: var(--admin-accent-soft);
+        color: var(--admin-accent);
+        border-color: var(--admin-accent);
+    }
+
+    /* Features Styling */
+    .feature-group-card {
+        background: #f8fafc;
+        border-radius: 18px;
+        padding: 1.2rem;
+        height: 100%;
+        border: 1px solid #eef2f6;
+    }
+
+    .feature-group-title {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .feature-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .feature-item {
+        background: #ffffff;
+        padding: 0.5rem 0.8rem;
+        border-radius: 10px;
+        border: 1px solid #f1f5f9;
+        transition: transform 0.1s;
+    }
+
+    .feature-item:hover {
+        border-color: #cbd5e1;
+    }
+
+    .form-switch-premium .form-check-input {
+        width: 2.2em;
+        height: 1.1em;
+        cursor: pointer;
+    }
+
+    .form-switch-premium .form-check-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #334155;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    /* Premium Preview Card */
+    .package-card-premium {
+        background: linear-gradient(165deg, #0f172a 0%, #1e293b 100%);
+        border-radius: 28px;
+        padding: 1.75rem;
         color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     }
 
-    .package-preview-card__features {
-        padding-left: 1.1rem;
-        margin-bottom: 0;
+    .package-card-premium::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, var(--package-tone, #2563eb) 0%, transparent 70%);
+        opacity: 0.15;
+        pointer-events: none;
     }
 
-    .package-preview-card__features li + li {
-        margin-top: 0.35rem;
+    .p-card-code {
+        background: rgba(255,255,255,0.08);
+        color: #94a3b8;
+        padding: 0.3rem 0.7rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 1px;
     }
 
-    .package-preview-card__cta {
+    .p-card-badge {
+        background: var(--package-tone, #2563eb);
+        color: #fff;
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        margin-left: 0.5rem;
+    }
+
+    .p-card-name {
+        font-size: 1.5rem;
+        font-weight: 800;
         margin-top: 1.2rem;
-        border-radius: 14px;
-        padding: 0.8rem 1rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .p-card-tagline {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-bottom: 1.5rem;
+    }
+
+    .p-card-price {
+        font-size: 2.25rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .p-card-cycle {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 0.4rem;
+    }
+
+    .p-card-divider {
+        height: 1px;
+        background: rgba(255,255,255,0.06);
+        margin: 1.5rem 0;
+    }
+
+    .p-card-features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .p-card-features li {
+        font-size: 0.85rem;
+        color: #cbd5e1;
+        margin-bottom: 0.6rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .p-card-features i {
+        color: var(--package-tone, #2563eb);
+        font-size: 0.9rem;
+    }
+
+    .p-card-action {
+        margin-top: 2rem;
+        background: #ffffff;
+        color: #0f172a;
+        padding: 0.9rem;
+        border-radius: 16px;
         text-align: center;
         font-weight: 800;
-        background: var(--package-tone, linear-gradient(180deg, #ffffff 0%, #dbeafe 100%));
-        @if($package && $package->badge_tone)
-            color: #fff;
-        @else
-            color: #12325b;
-            background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
-        @endif
+        font-size: 0.95rem;
+        box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+    }
+
+    /* Helper pills */
+    .f-pill {
+        display: inline-block;
+        padding: 0.25rem 0.6rem;
+        background: #f1f5f9;
+        color: #94a3b8;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        margin: 0.2rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .f-pill.active {
+        background: var(--admin-accent-soft);
+        color: var(--admin-accent);
+        border-color: var(--admin-accent);
+    }
+
+    .color-picker-premium {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .form-control-color {
+        width: 48px;
+        height: 40px;
+        padding: 0.2rem;
+        border-radius: 10px;
+    }
+
+    /* Dark Mode Overrides */
+    html[data-theme="dark"] .glass-section {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    html[data-theme="dark"] .section-header {
+        border-bottom-color: #334155;
+    }
+
+    html[data-theme="dark"] .title {
+        color: #f1f5f9;
+    }
+
+    html[data-theme="dark"] .form-label-custom {
+        color: #94a3b8;
+    }
+
+    html[data-theme="dark"] .form-control, 
+    html[data-theme="dark"] .form-select {
+        background-color: #0f172a;
+        border-color: #334155;
+        color: #f1f5f9;
+    }
+
+    html[data-theme="dark"] .input-premium {
+        background: #111827;
+    }
+
+    html[data-theme="dark"] .locale-pills {
+        background: #0f172a;
+    }
+
+    html[data-theme="dark"] .locale-pills .nav-link:not(.active) {
+        color: #94a3b8;
+    }
+
+    html[data-theme="dark"] .locale-pills .nav-link.active {
+        background: #1e293b;
+        color: #38bdf8;
+    }
+
+    html[data-theme="dark"] .price-input {
+        background: #0f172a;
+        color: #f1f5f9;
+        border-color: #334155;
+    }
+
+    html[data-theme="dark"] .feature-group-card {
+        background: #111827;
+        border-color: #1e293b;
+    }
+
+    html[data-theme="dark"] .feature-group-title {
+        color: #f1f5f9;
+    }
+
+    html[data-theme="dark"] .feature-item {
+        background: #1e293b;
+        border-color: #334155;
+    }
+
+    html[data-theme="dark"] .feature-item:hover {
+        border-color: #475569;
+    }
+
+    html[data-theme="dark"] .status-switches {
+        background: #0f172a !important;
+        border-color: #334155 !important;
+    }
+
+    html[data-theme="dark"] .status-switches label {
+        color: #f1f5f9;
+    }
+
+    /* Hover Fixes for Dark Mode */
+    html[data-theme="dark"] .btn-outline-soft-primary:hover {
+        background: #38bdf8;
+        color: #0f172a !important;
+        border-color: #38bdf8;
+    }
+
+    html[data-theme="dark"] .feature-item:hover {
+        background: #1e293b;
+        border-color: #38bdf8;
+    }
+
+    html[data-theme="dark"] .locale-pills .nav-link:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: #f1f5f9;
+    }
+
+    html[data-theme="dark"] .form-check-label {
+        color: #e2e8f0 !important;
+    }
+
+    html[data-theme="dark"] .subtitle {
+        color: #94a3b8 !important;
+    }
+
+    html[data-theme="dark"] .feature-group-title {
+        color: #f8fafc !important;
+    }
+
+    html[data-theme="dark"] .p-card-cycle {
+        color: #94a3b8;
+    }
+
+    html[data-theme="dark"] .form-control::placeholder {
+        color: #475569;
+    }
+
+    html[data-theme="dark"] .f-pill {
+        background: #0f172a;
+        border-color: #334155;
+    }
+
+    html[data-theme="dark"] .fw-black {
+        color: #f1f5f9 !important;
+    }
+
+    html[data-theme="dark"] .manage-link {
+        color: #38bdf8 !important;
     }
 </style>
 
@@ -520,7 +917,6 @@
 
         const updatePreview = () => {
             const toneInput = document.querySelector('input[name="badge_tone"]');
-            const toneHexInput = document.getElementById('badge_tone_hex');
             const toneValue = toneInput?.value || '#2563eb';
             
             const code = document.querySelector('input[name="code"]')?.value.trim() || 'PKG';
@@ -529,8 +925,9 @@
             const commission = document.querySelector('[data-preview-global="commission_rate"]')?.value ?? 0;
             const priority = document.querySelector('[data-preview-global="priority_review"]')?.checked ?? false;
             const isFeatured = document.querySelector('input[name="is_featured"]')?.checked ?? false;
+            
             const support = getLocaleValue('support', activeLocale);
-            const name = getLocaleValue('name', activeLocale) || 'Ten goi';
+            const name = getLocaleValue('name', activeLocale) || 'Tên gói dịch vụ';
             const tagline = getLocaleValue('tagline', activeLocale);
             const badge = getLocaleValue('badge', activeLocale);
             const description = getLocaleValue('description', activeLocale);
@@ -538,16 +935,10 @@
             document.querySelector('[data-preview-code]').textContent = code.toUpperCase();
             document.querySelector('[data-preview-name]').textContent = name;
             document.querySelector('[data-preview-price]').textContent = formatPrice(price);
-            document.querySelector('[data-preview-commission]').textContent = `Chia doanh thu ${Number(commission || 0)}%`;
-            document.querySelector('[data-preview-course-limit]').textContent = courseLimit !== ''
-                ? `Đăng tối đa ${courseLimit} khóa`
-                : 'Đăng khóa học không giới hạn';
-            document.querySelector('[data-preview-priority]').textContent = priority
-                ? 'Ưu tiên duyệt hồ sơ'
-                : 'Duyệt theo hàng chờ tiêu chuẩn';
-            document.querySelector('[data-preview-support]').textContent = support !== ''
-                ? `Hỗ trợ ${support}`
-                : 'Hỗ trợ cơ bản';
+            document.querySelector('[data-preview-commission]').innerHTML = `<i class="fas fa-check-circle"></i> Chia doanh thu ${Number(commission || 0)}%`;
+            document.querySelector('[data-preview-course-limit]').innerHTML = `<i class="fas fa-check-circle"></i> ${courseLimit !== '' ? `Tối đa ${courseLimit} khóa` : 'Khóa học không giới hạn'}`;
+            document.querySelector('[data-preview-priority]').innerHTML = `<i class="fas fa-check-circle"></i> ${priority ? 'Ưu tiên duyệt hồ sơ' : 'Duyệt tiêu chuẩn'}`;
+            document.querySelector('[data-preview-support]').innerHTML = `<i class="fas fa-check-circle"></i> ${support !== '' ? `Hỗ trợ ${support}` : 'Hỗ trợ cơ bản'}`;
 
             const taglineNode = document.querySelector('[data-preview-tagline]');
             taglineNode.textContent = tagline;
@@ -564,7 +955,6 @@
             const previewCard = document.querySelector('[data-package-preview-card]');
             if (previewCard) {
                 previewCard.style.setProperty('--package-tone', toneValue);
-                previewCard.style.setProperty('--package-tone-rgb', hexToRgb(toneValue));
                 previewCard.classList.toggle('is-featured', isFeatured);
             }
 
@@ -598,8 +988,6 @@
             displayInput.addEventListener('input', (e) => {
                 let cursorPosition = e.target.selectionStart;
                 let originalLength = e.target.value.length;
-                
-                // Keep only numeric characters
                 let rawValue = e.target.value.replace(/\D/g, '');
                 
                 if (rawValue === '') {
@@ -610,28 +998,16 @@
                 }
 
                 hiddenInput.value = rawValue;
-                
-                // Format with dots
                 let formattedValue = new Intl.NumberFormat('vi-VN').format(rawValue);
                 displayInput.value = formattedValue;
 
-                // Restore cursor position
-                let newLength = formattedValue.length;
-                let lengthDiff = newLength - originalLength;
+                let lengthDiff = formattedValue.length - originalLength;
                 displayInput.setSelectionRange(cursorPosition + lengthDiff, cursorPosition + lengthDiff);
-
                 updatePreview();
-            });
-
-            // Clean input on blur just in case
-            displayInput.addEventListener('blur', () => {
-                if (displayInput.value.trim() === '') {
-                    hiddenInput.value = '';
-                }
             });
         });
 
-        document.querySelectorAll('[data-preview-field], [data-preview-global], input[name="code"], input[name="is_featured"]').forEach((element) => {
+        document.querySelectorAll('[data-preview-field], [data-preview-global], input[name="code"], input[name="is_featured"], .btn-check').forEach((element) => {
             element.addEventListener('input', updatePreview);
             element.addEventListener('change', updatePreview);
         });

@@ -221,4 +221,42 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             })
             ->get();
     }
+
+    public function getFilteredCourses($filter, $studentId = null, $limit = 8)
+    {
+        $query = $this->model
+            ->withCount(['ratings', 'students'])
+            ->withAvg('ratings', 'rating')
+            ->where('status', 1)
+            ->whereHas('teacher', function ($q) {
+                $q->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+            });
+
+        switch ($filter) {
+            case 'featured':
+                $query->orderBy('is_package_priority', 'DESC')->latest();
+                break;
+            case 'most_viewed':
+                $query->orderBy('view', 'DESC')->latest();
+                break;
+            case 'best_seller':
+                $query->orderBy('students_count', 'DESC')->latest();
+                break;
+            case 'hot':
+                $query->orderBy('ratings_avg_rating', 'DESC')->orderBy('students_count', 'DESC')->latest();
+                break;
+            case 'featured_teachers':
+                $query->whereHas('teacher', function ($q) {
+                    $q->where('is_premium_badge', true)
+                      ->orWhere('badge_key', 'featured');
+                })->latest();
+                break;
+            case 'latest':
+            default:
+                $query->latest();
+                break;
+        }
+
+        return $query->paginate($limit);
+    }
 }

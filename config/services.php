@@ -71,4 +71,9 @@ return [
         'enabled' => (bool) env('TELEGRAM_BOT_ENABLED', false),
     ],
 
+    'telegram_teacher' => [
+        'bot_token' => env('TELEGRAM_TEACHER_BOT_TOKEN'),
+        'enabled' => (bool) env('TELEGRAM_TEACHER_BOT_ENABLED', false),
+    ],
+
 ];

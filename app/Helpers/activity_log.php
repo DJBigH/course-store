@@ -67,11 +67,7 @@ function activity_log(
                     $message .= "🔍 *Chi tiết:*\n{$cleanProps}";
                 }
 
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                    'chat_id' => $chatId,
-                    'text' => $message,
-                    'parse_mode' => 'Markdown'
-                ]);
+                \App\Jobs\SendTelegramAlertJob::dispatch($message);
             }
         } catch (\Throwable $e) {
             // Đảm bảo không làm sập tiến trình chính

@@ -12,6 +12,11 @@ return [
         'starter' => 'Starter',
         'pro' => 'Pro',
     ],
+    'categories' => [
+        'standard' => 'Standard',
+        'partnership' => 'Partnership',
+        'subscription' => 'Subscription',
+    ],
     'ui' => [
         'hero_login_prefix' => 'If you are already an instructor, just',
         'hero_login_link' => 'sign in here',
@@ -23,9 +28,10 @@ return [
         'earnings_kicker' => 'Revenue',
         'packages_kicker' => 'Packages',
         'faq_kicker' => 'FAQ',
-        'final_kicker' => 'Ready when you are',
+        'final_kicker' => 'Get started when you\'re ready',
         'free_label' => 'Free',
     ],
+    'one_time' => 'One-time',
     'hero' => [
         'eyebrow' => 'Teacher Program',
         'title' => 'Turn what you know into a teaching channel with structure, momentum, and real earning potential.',

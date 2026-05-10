@@ -199,6 +199,61 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
                         'created_at' => now(),
                     ]
                 );
+
+                if ($detail->course && $detail->course->teacher && $detail->course->teacher->student) {
+                    $teacherStudent = $detail->course->teacher->student;
+                    $student = $order->students;
+                    
+                    if ($student) {
+                        $teacherStudent->notify(new \App\Notifications\TeacherCourseSaleNotification($order, $detail->course, $student));
+
+                        // Telegram Notification for Teacher
+                        $teacher = $detail->course->teacher;
+                        if ($teacher && $teacher->hasTelegramFeature() && $teacher->telegram_chat_id && $teacher->is_telegram_notifications_enabled) {
+                            $courseName = $detail->course->name_locale ?: $detail->course->name;
+                            $studentName = $student->name ?: 'Học viên';
+                            $orderCode = $order->code ?: ('#' . $order->id);
+                            $totalFormatted = number_format($detail->price) . ' ' . ($order->currency ?: 'VND');
+
+                            $text = "💰 <b>[THÔNG BÁO DOANH THU MỚI]</b>\n\n";
+                            $text .= "Chúc mừng <b>{$teacher->name}</b>, bạn vừa có một đơn hàng mới cho khóa học:\n";
+                            $text .= "📚 <b>{$courseName}</b>\n\n";
+                            $text .= "👤 <b>Học viên:</b> {$studentName}\n";
+                            $text .= "🏷️ <b>Mã đơn hàng:</b> {$orderCode}\n";
+                            $text .= "💵 <b>Số tiền:</b> {$totalFormatted}\n";
+                            $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                            \App\Jobs\SendTelegramTeacherNotification::dispatch($teacher, $text);
+                        }
+
+                        try {
+                            $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                            $botToken = config('services.telegram.bot_token');
+                            $chatId = config('services.telegram.chat_id');
+
+                            if ($isEnabled === '1' && $botToken && $chatId) {
+                                $courseName = $detail->course->name_locale ?: $detail->course->name;
+                                $studentName = $student->name ?: 'Học viên';
+                                $orderCode = $order->code ?: ('#' . $order->id);
+
+                                $text = "🎓 <b>[KHÓA HỌC ĐÃ ĐƯỢC BÁN]</b>\n\n";
+                                $text .= "👨‍🏫 <b>Giảng viên:</b> {$detail->course->teacher->name}\n";
+                                $text .= "📚 <b>Khóa học:</b> {$courseName}\n";
+                                $text .= "👤 <b>Học viên:</b> {$studentName}\n";
+                                $text .= "🏷️ <b>Đơn hàng:</b> {$orderCode}\n";
+                                $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                                    'chat_id' => $chatId,
+                                    'text' => $text,
+                                    'parse_mode' => 'HTML'
+                                ]);
+                            }
+                        } catch (\Exception $e) {
+                            // Fail silently
+                        }
+                    }
+                }
             }
 
             // Giảm số lượng combo nếu có

@@ -60,4 +60,10 @@ return [
     'feature_1' => '1–1 consultation with a mentor',
     'feature_2' => 'Personalized learning roadmap',
     'feature_3' => 'No additional costs',
+
+    //Filters
+    'filter_all' => 'All',
+    'filter_views' => 'Most Viewed',
+    'filter_teacher' => 'Featured Teachers',
+    'filter_seller' => 'Best Sellers',
 ];

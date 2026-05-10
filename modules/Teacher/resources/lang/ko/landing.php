@@ -12,6 +12,11 @@ return [
         'starter' => 'Starter',
         'pro' => 'Pro',
     ],
+    'categories' => [
+        'standard' => '기본 패키지',
+        'partnership' => '파트너 패키지',
+        'subscription' => '구독 패키지',
+    ],
     'ui' => [
         'hero_login_prefix' => '이미 강사라면',
         'hero_login_link' => '여기에서 로그인',
@@ -26,6 +31,7 @@ return [
         'final_kicker' => '준비되면 시작하세요',
         'free_label' => '무료',
     ],
+    'one_time' => '최초 1회',
     'hero' => [
         'eyebrow' => 'Teacher Program',
         'title' => '당신의 지식을 구조와 성장 가능성을 갖춘 강의 채널로 바꿔보세요.',

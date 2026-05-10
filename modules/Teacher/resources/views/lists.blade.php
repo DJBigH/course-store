@@ -106,6 +106,7 @@
                             <th>Kinh nghiệm & Đánh giá</th>
                             <th>Trạng thái</th>
                             <th>Hoạt động</th>
+                            <th>Gói Telegram</th>
                             <th class="text-end" style="width: 80px;">Hành động</th>
                         </tr>
                     </thead>
@@ -319,6 +320,11 @@
                     {
                         data: 'activity_timeline',
                         name: 'created_at',
+                        searchable: false
+                    },
+                    {
+                        data: 'telegram_package',
+                        orderable: false,
                         searchable: false
                     },
                     {

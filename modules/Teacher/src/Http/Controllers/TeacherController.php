@@ -187,6 +187,18 @@ class TeacherController extends Controller
                             <div><span class="activity-age ' . $tone . '">' . $daysText . '</span></div>
                         </div>';
             })
+            ->addColumn('telegram_package', function ($teacher) {
+                $status = $teacher->getTelegramPackageStatus();
+                if ($status['status'] === 'active') {
+                    $date = $status['expires_at'] ? $status['expires_at']->format('d/m/Y') : '';
+                    return '<span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                                <i class="fa-brands fa-telegram me-1"></i>Đến ' . $date . '
+                            </span>';
+                }
+                return '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                            <i class="fa-solid fa-ban me-1"></i>Không có
+                        </span>';
+            })
             ->addColumn('select', function ($teacher) {
                 return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teacher->id . '"></div>';
             })
@@ -250,7 +262,7 @@ class TeacherController extends Controller
                 $btn .= '</ul></div>';
                 return $btn;
             })
-            ->rawColumns(['select', 'actions', 'name', 'teacher_status', 'exp_rating', 'activity_timeline'])
+            ->rawColumns(['select', 'actions', 'name', 'teacher_status', 'exp_rating', 'activity_timeline', 'telegram_package'])
             ->toJson();
     }
 
@@ -405,13 +417,21 @@ class TeacherController extends Controller
         }
 
         $old = $teacherModel->toArray();
-        $data = $request->except('_token');
+        $data = $request->except('_token', 'telegram_duration_value', 'telegram_duration_unit');
         $data = array_merge($data, $this->normalizeBadgePayload($request));
 
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
         } else {
             unset($data['password']);
+        }
+
+        // Handle Telegram Package Extension
+        if ($request->filled('telegram_duration_value') && $request->filled('telegram_duration_unit')) {
+            $teacherModel->addTelegramDuration(
+                (int) $request->input('telegram_duration_value'),
+                $request->input('telegram_duration_unit')
+            );
         }
 
         $status = $this->teacherRepository->update($id, $data);
@@ -817,5 +837,40 @@ class TeacherController extends Controller
             ->get(['id', 'name', 'price', 'sale_price']);
 
         return response()->json($courses);
+    }
+
+    public function testTelegram($id)
+    {
+        $teacher = $this->teacherRepository->find($id);
+
+        if (empty($teacher) || empty($teacher->telegram_chat_id)) {
+            return response()->json(['success' => false, 'message' => 'Giáo viên chưa cấu hình Telegram Chat ID.']);
+        }
+
+        try {
+            $botToken = config('services.telegram.bot_token');
+            if (!$botToken) {
+                return response()->json(['success' => false, 'message' => 'Chưa cấu hình Telegram Bot Token trong .env']);
+            }
+
+            $text = "🔔 <b>Hệ thống Giáo dục Đa Ngôn Ngữ</b>\n\n";
+            $text .= "Xin chào <b>{$teacher->name}</b>,\n";
+            $text .= "Đây là tin nhắn kiểm tra kết nối từ hệ thống Admin.\n";
+            $text .= "Nếu bạn nhận được tin nhắn này, kết nối Telegram của bạn đã hoạt động bình thường!";
+
+            $response = \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                'chat_id' => $teacher->telegram_chat_id,
+                'text' => $text,
+                'parse_mode' => 'HTML'
+            ]);
+
+            if ($response->successful()) {
+                return response()->json(['success' => true]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'API Telegram trả về lỗi: ' . $response->body()]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi kết nối: ' . $e->getMessage()]);
+        }
     }
 }

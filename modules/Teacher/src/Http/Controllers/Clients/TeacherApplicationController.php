@@ -35,8 +35,9 @@ class TeacherApplicationController extends Controller
         $pageTitle = __('teacher::portal.titles.apply');
         $pageName = $pageTitle;
         $packages = $this->resolvePublicPackages($application?->package_id);
+        $groupedPackages = $packages->groupBy(fn($package) => $package->category_locale ?: 'Standard');
 
-        return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'application', 'student', 'couponPreview'));
+        return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'groupedPackages', 'application', 'student', 'couponPreview'));
     }
 
     public function store(ClientTeacherApplicationRequest $request)
@@ -261,9 +262,10 @@ class TeacherApplicationController extends Controller
         $pageTitle = __('teacher::portal.titles.edit');
         $pageName = $pageTitle;
         $packages = $this->resolvePublicPackages($application?->package_id);
+        $groupedPackages = $packages->groupBy(fn($package) => $package->category_locale ?: 'Khác');
         $couponPreview = $this->resolveCouponPreview($request, $application);
 
-        return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'application', 'student', 'couponPreview'));
+        return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'groupedPackages', 'application', 'student', 'couponPreview'));
     }
 
     public function update(ClientTeacherApplicationRequest $request)
@@ -327,16 +329,42 @@ class TeacherApplicationController extends Controller
 
     private function resolvePublicPackages(?int $selectedPackageId = null)
     {
-        $packages = Package::query()->visibleForListing()->get();
+        $packages = Package::query()
+            ->with('packageCategory')
+            ->visibleForListing()
+            ->get();
+
+        // Sort by category sort_order, then by package sort_order
+        $packages = $packages->sort(function ($a, $b) {
+            $aCatOrder = $a->packageCategory?->sort_order ?? 9999;
+            $bCatOrder = $b->packageCategory?->sort_order ?? 9999;
+
+            if ($aCatOrder !== $bCatOrder) {
+                return $aCatOrder <=> $bCatOrder;
+            }
+
+            return $a->sort_order <=> $b->sort_order;
+        })->values();
 
         if ($selectedPackageId && !$packages->contains('id', $selectedPackageId)) {
             $selectedPackage = Package::query()
+                ->with('packageCategory')
                 ->selectable()
                 ->find($selectedPackageId);
 
             if ($selectedPackage) {
                 $packages->push($selectedPackage);
-                $packages = $packages->sortBy('sort_order')->values();
+                // Re-sort
+                $packages = $packages->sort(function ($a, $b) {
+                    $aCatOrder = $a->packageCategory?->sort_order ?? 9999;
+                    $bCatOrder = $b->packageCategory?->sort_order ?? 9999;
+
+                    if ($aCatOrder !== $bCatOrder) {
+                        return $aCatOrder <=> $bCatOrder;
+                    }
+
+                    return $a->sort_order <=> $b->sort_order;
+                })->values();
             }
         }
 

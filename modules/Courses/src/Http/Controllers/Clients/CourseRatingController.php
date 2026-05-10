@@ -55,6 +55,23 @@ class CourseRatingController extends Controller
         // Notify Teacher
         if ($course->teacher && $course->teacher->student) {
             $course->teacher->student->notify(new \App\Notifications\RatingNotification($newRating));
+
+            // Telegram Notification for Teacher
+            $teacher = $course->teacher;
+            if ($teacher && $teacher->hasTelegramFeature() && $teacher->telegram_chat_id && $teacher->is_telegram_notifications_enabled) {
+                $courseName = $course->name_locale ?: $course->name;
+                $studentName = $student->name ?: 'Học viên';
+                $stars = str_repeat('⭐', floor($newRating->rating)) . ($newRating->rating - floor($newRating->rating) > 0 ? '✨' : '');
+
+                $text = "⭐ <b>[ĐÁNH GIÁ MỚI]</b>\n\n";
+                $text .= "Giảng viên <b>{$teacher->name}</b> ơi, học viên vừa đánh giá khóa học của bạn:\n";
+                $text .= "📚 <b>{$courseName}</b>\n\n";
+                $text .= "👤 <b>Học viên:</b> {$studentName}\n";
+                $text .= "🌟 <b>Đánh giá:</b> {$newRating->rating} / 5 {$stars}\n";
+                $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                \App\Jobs\SendTelegramTeacherNotification::dispatch($teacher, $text);
+            }
         }
 
         return $this->renderRatingResponse($request, $course, $student->id, $hasCourse);

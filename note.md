@@ -540,7 +540,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check UI/UX xem có trang nào khiến người dùng khó chịu hay không (các trang, light mode, đa ngôn ngữ) (Check lại để khi đẩy lên production tránh fix) ( Done )
 - Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin ( Bot tự đọc db các khóa học, mã giảm giá, hay liên quan j đến website không được đọc những thông tin nhạy cảm hay bảo mật) ( Done )
 - Kết nối với api của con gemeni thêm cho nó các api xem khóa học, đa ngôn ngữ (nếu thấy ổn thì làm)
-- Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không
+- Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không ( Done )
 - Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi ) ( Done )
 - Check lại responsive ( Done )
 - Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị ( Done )
@@ -548,22 +548,24 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký ) ( Done )
 - Chưa check validate đăng ký giáo viên ( Done )
 - Làm cái trang xem profile của giảng viên ( Giảng viên sẽ hiện ra profile khi đăng ký đổ ra, và có rating giảng viên, có bao nhiêu khóa học, bài giảng trong website ) ( Done )
-- Thêm cái danh mục dành cho các gói mua của giáo viên ( Gói hợp tác, Gói theo tháng/năm, Gói j đó...)
-- Đối với tài khoản đã được nâng lên làm teacher thì sẽ có tất cả các khóa học mà mình tạo ra
-- Đối với tài khoản đã được nâng lên làm teacher sẽ bỏ cái trở thành giáo viên
-- Chỉ có super admin mới có quyền xóa nên làm chức năng khóa tài khoản giảng viên vì nếu admin thấy không hoạt động thì khóa lại
-- Đối với user, teacher, student thêm quyền khóa trong phân quyền
-- Check tất cả phân quyền là khi tắt quyền nào thì ẩn quyền nó ở màn đó đi (VD: tắt quyền sửa học viên thì ẩn sửa đi)
-- Với các gói thì xem được chi tiết rõ các gói đó như nào, Thêm so sánh ở đó
-- Khi tạo giáo viên yêu cầu phải thêm rõ cái tài khoản ngân hàng, yêu cầu phải có 1 tài khoản ngân hàng mới được tạo quyền
-- Trong profile có thêm cái chứng chỉ nx để ấn vô xem
+- Đối với tài khoản đã được nâng lên làm teacher thì sẽ có tất cả các khóa học mà mình tạo ra ( Done )
+- Đối với user, teacher, student thêm quyền khóa trong phân quyền ( Done )
+- Với các gói thì xem được chi tiết rõ các gói đó như nào, Thêm so sánh ở đó ( Done )
+- Khi tạo giáo viên yêu cầu phải thêm rõ cái tài khoản ngân hàng, yêu cầu phải có 1 tài khoản ngân hàng mới được tạo quyền ( Done )
+- Trong profile có thêm cái chứng chỉ nx để ấn vô xem ( Done )
+- Trang thanh toán bảo trì ( Done )
+- Lading page trở thành giáo viên khi giới thiệu gói sẽ hiện gói theo danh mục ( thời hạn: Vĩnh Viễn, 1 năm, 1 tháng, bán chạy) ( Done )
 - À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá ( Chưa xong bên clients )
-- Ở trang chủ thêm cái ô button lựa chọn theo nổi bật, nhiều view, giáo viên nổi bật.
-- Thêm cái thông báo khi vào màn teacher và popup khi vào màn teacher
-- Ghi chú thông minh ngay trong Video (In-Video Notes)
-- Lading page trở thành giáo viên khi giới thiệu gói sẽ hiện gói theo danh mục ( thời hạn: Vĩnh Viễn, 1 năm, 1 tháng, bán chạy)
-- Check lại toàn bộ notification web gửi cho học viên và teacher
-- Trang thanh toán bảo trì
+- Ở trang chủ thêm cái ô button lựa chọn theo nổi bật, nhiều view, giáo viên nổi bật. ( Done )
+- Thêm cái thông báo khi vào màn teacher và popup khi vào màn teacher ( Hỏi AI )
+- Ghi chú thông minh ngay trong Video (In-Video Notes) ( Done )
+- Check lại toàn bộ notification/mail/telegram student gửi cho admin và teacher ( Done )
+- Check lại logic khi học xong khóa học được cấp chứng chỉ tự động ( Bắt buộc phải xem hết video có nghĩa là đánh dấu, làm hết bài kiểm tra và bên teacher, admin có cần cái yêu cầu j không vì sẽ có case là họ chỉ cần 1 bài là có chứng chỉ thì sao) ( Done )
+- Có nên thêm 1 chức năng tele dành riêng cho teacher không phải mua thêm gói tele riêng kiểu bao nhiêu 1 tháng ( phí duy trì) hàng tháng sẽ tự trừ từ tiền của teacher nếu teacher có doanh thu nếu không trả sẽ hủy gói và bot dừng lại khi đăng ký xong sẽ có hướng dẫn khi và lưu ý khi dùng bot, có case là bot sẽ phải trả đúng với teacher đó không được trả teacher khác hoặc mỗi teacher là 1 key và tự tạo bot điền key thẳng lên web để lưu và khi đó web phải cẩn trọng khi lưu key này ( Hỏi AI )
+- Check màn clients xem có chỗ nào cần phải làm mượt mà hơn hay không
+- Nếu làm thêm chức năng tele dành riêng cho teacher thì check lại xem còn thiếu noti tele nào không cần thêm cái nào không 
+- Cần thêm chức năng nào bên clients không
+
 Teacher:
 
 - Làm cái hồ sơ giáo viên ( Done )
@@ -626,7 +628,9 @@ Teacher:
 - Làm trang 403,404 riêng dành cho màn teacher ( Note )
 - Fix lại thanh toán giáo viên ( momo, vnpay) ( Done )
 - Check lại toàn bộ notification web gửi cho học viên và admin ( Done )
+
   Tổng kết
 - Tìm tất cả file .bak ( Done )
 - check lại lần cuối trước khi đẩy lên production
- 
+- Check lại migration và seeder
+- Check toàn bộ middleware có cần sửa j không, thiếu hay thừa j không 

@@ -62,6 +62,7 @@ class Courses extends Model
         'package_lock_reason',
         'is_package_priority',
         'is_learning_locked',
+        'completion_condition',
         'is_coming_soon',
         'coming_soon_start_at',
         'quantity',

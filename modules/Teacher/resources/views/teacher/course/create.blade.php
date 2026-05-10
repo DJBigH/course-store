@@ -237,6 +237,15 @@
                                         <option value="1" @selected(old('is_learning_locked', $course?->is_learning_locked ?? 0) == 1)>{{ __('teacher::teacher/course/common.locking.locked') }}</option>
                                     </select>
                                 </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Điều kiện cấp chứng chỉ</label>
+                                    <select name="completion_condition" class="form-select @error('completion_condition') is-invalid @enderror">
+                                        <option value="all_lessons" @selected(old('completion_condition', $course?->completion_condition ?? 'all_lessons') === 'all_lessons')>100% Bài giảng</option>
+                                        <option value="all_quizzes" @selected(old('completion_condition', $course?->completion_condition ?? 'all_lessons') === 'all_quizzes')>Thi đậu tất cả Quiz</option>
+                                        <option value="all" @selected(old('completion_condition', $course?->completion_condition ?? 'all_lessons') === 'all')>Bài giảng + Quiz</option>
+                                        <option value="none" @selected(old('completion_condition', $course?->completion_condition ?? 'all_lessons') === 'none')>Không cấp chứng chỉ</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <hr class="my-4 opacity-10">

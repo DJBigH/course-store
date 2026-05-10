@@ -60,4 +60,10 @@ return [
     'feature_1' => 'メンターとの1対1相談',
     'feature_2' => '個別最適化された学習ロードマップ',
     'feature_3' => '追加費用なし',
+
+    //Filters
+    'filter_all' => 'すべて',
+    'filter_views' => '閲覧数が多い',
+    'filter_teacher' => '注目の講師',
+    'filter_seller' => 'ベストセラー',
 ];

@@ -77,9 +77,10 @@ class StudentController extends Controller
                     ? '<span class="badge bg-primary-subtle text-primary px-2 py-1 ms-1">2FA On</span>'
                     : '<span class="badge bg-light text-muted border px-2 py-1 ms-1" style="font-size: 10px;">2FA Off</span>';
 
-                $rolesBadge = '<span class="badge bg-info-subtle text-info px-2 py-1 ms-1">Học viên</span>';
                 if ($student->teacher) {
-                    $rolesBadge .= '<span class="badge bg-success text-white px-2 py-1 ms-1" style="font-size: 10px;">Giảng viên</span>';
+                    $rolesBadge = '<span class="badge bg-success text-white px-2 py-1 ms-1" style="font-size: 10px;">Giảng viên</span>';
+                } else {
+                    $rolesBadge = '<span class="badge bg-info-subtle text-info px-2 py-1 ms-1">Học viên</span>';
                 }
 
                 return '

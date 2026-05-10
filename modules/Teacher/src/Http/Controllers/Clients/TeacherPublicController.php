@@ -142,11 +142,15 @@ class TeacherPublicController extends Controller
             return $this->errorResponse($request, __('courses::clients/common.rating_invalid'), 422);
         }
 
-        TeacherRating::query()->create([
+        $newRating = TeacherRating::query()->create([
             'teacher_id' => $teacher->id,
             'student_id' => $student->id,
             'rating' => $rating,
         ]);
+
+        if ($teacher->student) {
+            $teacher->student->notify(new \App\Notifications\TeacherRatingNotification($newRating));
+        }
 
         $teacher->loadCount(['ratings' => function ($query) {
             $query->where('status', 1);

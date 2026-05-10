@@ -70,6 +70,12 @@ class Package extends Model
         'is_exclusive',
         'sort_order',
         'badge_tone',
+        'category',
+        'category_en',
+        'category_ko',
+        'category_ja',
+        'category_zh',
+        'category_id',
     ];
 
     protected $casts = [
@@ -149,6 +155,11 @@ class Package extends Model
         });
     }
 
+    public function packageCategory()
+    {
+        return $this->belongsTo(PackageCategory::class, 'category_id', 'id');
+    }
+
     public function applications()
     {
         return $this->hasMany(\Modules\Teacher\src\Models\TeacherApplication::class, 'package_id', 'id');
@@ -217,6 +228,15 @@ class Package extends Model
     public function getSupportLevelLocaleAttribute(): string
     {
         return $this->resolveLocalizedAttribute('support_level');
+    }
+
+    public function getCategoryLocaleAttribute(): string
+    {
+        if ($this->packageCategory) {
+            return $this->packageCategory->name_locale;
+        }
+
+        return $this->resolveLocalizedAttribute('category');
     }
 
     public function getVisibilityStateAttribute(): string

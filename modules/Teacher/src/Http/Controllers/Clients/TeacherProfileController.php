@@ -104,6 +104,14 @@ class TeacherProfileController extends Controller
                 $teacherData['exp'] = $request->filled('experience_years') ? (int) $request->input('experience_years') : null;
             }
 
+            // Telegram Section
+            if (in_array($section, ['all', 'telegram'], true)) {
+                if ($teacher->hasTelegramFeature()) {
+                    $teacherData['telegram_chat_id'] = $request->filled('telegram_chat_id') ? (string) $request->input('telegram_chat_id') : null;
+                    $teacherData['is_telegram_notifications_enabled'] = $request->has('is_telegram_notifications_enabled');
+                }
+            }
+
             if ($teacherData !== []) {
                 $teacher->forceFill($teacherData)->save();
             }

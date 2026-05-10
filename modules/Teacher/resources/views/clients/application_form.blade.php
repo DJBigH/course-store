@@ -182,29 +182,60 @@
                     <!-- Step 4: Package & Payment -->
                     <div class="wizard-step" data-step="4">
                         <div class="teacher-apply-card">
-                            <div class="teacher-section-heading mb-4">
-                                <h3>{{ $copy['wizard']['step_4_label'] }}</h3>
-                                <p class="text-muted">Chọn gói dịch vụ và hoàn tất đăng ký.</p>
+                            <div class="teacher-section-heading mb-4 d-flex justify-content-between align-items-end">
+                                <div>
+                                    <h3>{{ $copy['wizard']['step_4_label'] }}</h3>
+                                    <p class="text-muted mb-0">Chọn gói dịch vụ và hoàn tất đăng ký.</p>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-4 py-2 fw-bold" 
+                                    style="border-width: 2px;"
+                                    data-bs-toggle="modal" data-bs-target="#comparePackagesModal">
+                                    <i class="fas fa-columns me-2"></i> {{ $copy['wizard']['compare_btn'] ?? 'So sánh tính năng' }}
+                                </button>
                             </div>
 
-                            <div class="row g-4 mb-5">
-                                @foreach ($packages as $package)
-                                    <div class="col-lg-4">
-                                        <label class="teacher-package-option {{ $selectedPackageId === (string) $package->id ? 'is-selected' : '' }}" data-package-card>
-                                            <input type="radio" name="package_id" value="{{ $package->id }}" class="d-none"
-                                                data-package-price="{{ (float) $package->price }}"
-                                                {{ $selectedPackageId === (string) $package->id ? 'checked' : '' }}>
-                                            <div class="teacher-package-option__code">{{ strtoupper((string) $package->code) }}</div>
-                                            <div class="fw-bold fs-5 mt-2">{{ $package->name_locale ?: $package->name }}</div>
-                                            <div class="teacher-package-option__price">
-                                                {{ (float) $package->price > 0 ? money($package->price) : $copy['package']['free'] }}
-                                            </div>
-                                            <p class="text-muted small mb-3 flex-grow-1">{{ $package->description_locale ?: $package->description }}</p>
-                                            <div class="teacher-package-option__meta border-top pt-3 small text-muted">
-                                                <i class="fas fa-percent me-1"></i> {{ str_replace(':rate', rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.'), $copy['package']['commission']) }}<br>
-                                                <i class="fas fa-book me-1"></i> {{ $package->effective_course_limit ? str_replace(':count', $package->effective_course_limit, $copy['package']['course_limit']) : $copy['package']['unlimited'] }}
-                                            </div>
-                                        </label>
+                            <!-- Category Tabs -->
+                            <ul class="nav nav-pills teacher-category-pills mb-4 p-1 rounded-pill bg-dark bg-opacity-10 d-inline-flex" id="packageTabs" role="tablist">
+                                @foreach($groupedPackages as $category => $items)
+                                    @php $catSlug = \Illuminate\Support\Str::slug($category); @endphp
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link rounded-pill px-4 fw-bold text-uppercase {{ $loop->first ? 'active' : '' }}" 
+                                                id="tab-{{ $catSlug }}" 
+                                                data-bs-toggle="pill" 
+                                                data-bs-target="#cat-{{ $catSlug }}" 
+                                                type="button" 
+                                                role="tab">
+                                            {{ str_replace('_', ' ', $category) }}
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+
+                            <div class="tab-content mb-5" id="packageTabContent">
+                                @foreach($groupedPackages as $category => $items)
+                                    @php $catSlug = \Illuminate\Support\Str::slug($category); @endphp
+                                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="cat-{{ $catSlug }}" role="tabpanel">
+                                        <div class="row g-4">
+                                            @foreach ($items as $package)
+                                                <div class="col-lg-4">
+                                                    <label class="teacher-package-option {{ $selectedPackageId === (string) $package->id ? 'is-selected' : '' }}" data-package-card>
+                                                        <input type="radio" name="package_id" value="{{ $package->id }}" class="d-none"
+                                                            data-package-price="{{ (float) $package->price }}"
+                                                            {{ $selectedPackageId === (string) $package->id ? 'checked' : '' }}>
+                                                        <div class="teacher-package-option__code">{{ strtoupper((string) $package->code) }}</div>
+                                                        <div class="fw-bold fs-5 mt-2">{{ $package->name_locale ?: $package->name }}</div>
+                                                        <div class="teacher-package-option__price">
+                                                            {{ (float) $package->price > 0 ? money($package->price) : $copy['package']['free'] }}
+                                                        </div>
+                                                        <p class="text-muted small mb-3 flex-grow-1">{{ $package->description_locale ?: $package->description }}</p>
+                                                        <div class="teacher-package-option__meta border-top pt-3 small text-muted">
+                                                            <i class="fas fa-percent me-1"></i> {{ str_replace(':rate', rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.'), $copy['package']['commission']) }}<br>
+                                                            <i class="fas fa-book me-1"></i> {{ $package->effective_course_limit ? str_replace(':count', $package->effective_course_limit, $copy['package']['course_limit']) : $copy['package']['unlimited'] }}
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
@@ -345,6 +376,58 @@
             </div>
         </div>
     </section>
+@endsection
+
+@section('modals')
+    <!-- Comparison Modal - Moved to standard modals yield for correct DOM placement -->
+    <div class="modal fade" id="comparePackagesModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="z-index: 10000;">
+            <div class="modal-content teacher-comparison-modal border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0 d-flex align-items-center">
+                    <h5 class="modal-title fw-bold fs-4 ms-2 mt-2">
+                        <i class="fas fa-columns text-primary me-2"></i>
+                        {{ __('teacher::portal.form.comparison.title') }}
+                    </h5>
+                    <button type="button" class="btn-close-custom ms-auto border-0 bg-transparent p-3 fs-4 text-muted hover-opacity-100" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle comparison-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 30%;"></th>
+                                    <th style="width: 35%;">
+                                        <select class="form-select rounded-pill border-2 fw-bold" id="compare-select-1">
+                                            @foreach($packages as $pkg)
+                                                <option value="{{ $pkg->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $pkg->name_locale ?: $pkg->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </th>
+                                    <th style="width: 35%;">
+                                        <select class="form-select rounded-pill border-2 fw-bold" id="compare-select-2">
+                                            @foreach($packages as $pkg)
+                                                <option value="{{ $pkg->id }}" {{ $loop->index === 1 ? 'selected' : '' }}>{{ $pkg->name_locale ?: $pkg->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparison-body">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 pb-4 justify-content-center">
+                    <button type="button" class="btn btn-secondary rounded-pill px-5 fw-bold shadow-sm" data-bs-dismiss="modal">
+                         {{ __('teacher::portal.form.wizard.prev') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('stylesheets')
@@ -738,6 +821,78 @@
         .ck-editor__editable_inline {
             min-height: 250px;
         }
+
+        /* Comparison Modal Styles */
+        .teacher-comparison-modal {
+            background: var(--teacher-card-bg);
+            border-radius: 24px;
+        }
+        
+        .comparison-table th {
+            padding: 1.5rem 1rem;
+            background: var(--teacher-summary-bg);
+            border-radius: 12px;
+        }
+
+        .comparison-table td {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid var(--teacher-input-border);
+        }
+
+        .feature-label {
+            font-weight: 700;
+            color: var(--teacher-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .feature-value {
+            font-weight: 600;
+            font-size: 1.05rem;
+            text-align: center;
+        }
+
+        .feature-value.is-check { font-size: 1.25rem; }
+        
+        .comparison-table select {
+            background-color: var(--teacher-card-bg);
+            color: var(--teacher-text);
+            padding: 0.75rem 1.25rem;
+        }
+
+        html[data-theme="dark"] .comparison-table select option {
+            background-color: #1e293b;
+            color: #f1f5f9;
+        }
+
+        .btn-close-custom {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            color: var(--teacher-muted);
+        }
+        
+        .btn-close-custom:hover {
+            color: var(--teacher-text);
+            transform: rotate(90deg);
+        }
+
+        .teacher-category-pills .nav-link {
+            color: var(--teacher-muted);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .teacher-category-pills .nav-link.active {
+            background-color: var(--bs-primary);
+            color: #fff !important;
+            box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.3);
+        }
+
+        .teacher-category-pills .nav-link:hover:not(.active) {
+            color: var(--teacher-text);
+            background-color: rgba(var(--bs-primary-rgb), 0.1);
+        }
     </style>
 @endsection
 
@@ -765,7 +920,7 @@
                         { name: 'tools', items: ['Maximize'] }
                     ],
                     // Use project's file manager if needed, but standard image is usually enough
-                    removePlugins: 'elementspath',
+                    removePlugins: 'elementspath,exportpdf,notification',
                     resize_enabled: false
                 });
 
@@ -798,6 +953,65 @@
             const cvInput = document.getElementById('cv_file_input');
             const cvFileName = document.getElementById('cv-file-name');
             const packageInputs = document.querySelectorAll('input[name="package_id"]');
+
+            // --- Comparison Feature ---
+            const packagesData = @json($packages);
+            const comparisonCopy = @json(__('teacher::portal.form.comparison'));
+            const pkgSelect1 = document.getElementById('compare-select-1');
+            const pkgSelect2 = document.getElementById('compare-select-2');
+            const comparisonBody = document.getElementById('comparison-body');
+
+            const renderComparison = () => {
+                const pkg1 = packagesData.find(p => p.id == pkgSelect1.value);
+                const pkg2 = packagesData.find(p => p.id == pkgSelect2.value);
+                if (!pkg1 || !pkg2) return;
+
+                const features = [
+                    { key: 'price', label: comparisonCopy.features.price, value: (p) => p.price > 0 ? formatMoney(p.price) : "{{ __('teacher::landing.ui.free_label') }}" },
+                    { key: 'billing', label: comparisonCopy.features.billing, value: (p) => comparisonCopy.values[p.billing_cycle] || p.billing_cycle },
+                    { key: 'commission', label: comparisonCopy.features.commission, value: (p) => `${p.commission_rate}%` },
+                    { key: 'course_limit', label: comparisonCopy.features.course_limit, value: (p) => p.course_limit || comparisonCopy.values.unlimited },
+                    { key: 'payout_limit', label: comparisonCopy.features.payout_limit, value: (p) => p.payout_account_limit },
+                    { key: 'support', label: comparisonCopy.features.support, value: (p) => p.support_level === 'priority' ? comparisonCopy.values.priority : comparisonCopy.values.standard },
+                    { key: 'priority_review', label: comparisonCopy.features.priority_review, isBool: true, field: 'priority_review' },
+                    { key: 'ai_quiz', label: comparisonCopy.features.ai_quiz, isBool: true, field: 'can_use_ai_quiz' },
+                    { key: 'certificates', label: comparisonCopy.features.certificates, isBool: true, field: 'can_issue_certificates' },
+                    { key: 'coupons', label: comparisonCopy.features.coupons, isBool: true, field: 'can_manage_coupons' },
+                    { key: 'promotions', label: comparisonCopy.features.promotions, isBool: true, field: 'can_send_promotions' },
+                    { key: 'student_manage', label: comparisonCopy.features.student_manage, isBool: true, field: 'can_manage_students' },
+                    { key: 'student_progress', label: comparisonCopy.features.student_progress, isBool: true, field: 'can_view_student_progress' },
+                    { key: 'activity_logs', label: comparisonCopy.features.activity_logs, isBool: true, field: 'can_view_activity_logs' },
+                    { key: 'bundles', label: comparisonCopy.features.bundles, isBool: true, field: 'can_sell_bundles' },
+                    { key: 'scheduling', label: comparisonCopy.features.scheduling, isBool: true, field: 'can_schedule_content' },
+                    { key: 'affiliate', label: comparisonCopy.features.affiliate, isBool: true, field: 'can_use_affiliate_links' },
+                    { key: 'duplicate', label: comparisonCopy.features.duplicate, isBool: true, field: 'can_duplicate_courses' },
+                ];
+
+                let html = '';
+                features.forEach(f => {
+                    const val1 = f.isBool 
+                        ? (pkg1[f.field] ? `<i class="fas fa-check-circle text-success"></i>` : `<i class="fas fa-times-circle text-danger opacity-50"></i>`)
+                        : f.value(pkg1);
+                    const val2 = f.isBool 
+                        ? (pkg2[f.field] ? `<i class="fas fa-check-circle text-success"></i>` : `<i class="fas fa-times-circle text-danger opacity-50"></i>`)
+                        : f.value(pkg2);
+
+                    html += `
+                        <tr>
+                            <td class="feature-label">${f.label}</td>
+                            <td class="feature-value ${f.isBool ? 'is-check' : ''}">${val1}</td>
+                            <td class="feature-value ${f.isBool ? 'is-check' : ''}">${val2}</td>
+                        </tr>
+                    `;
+                });
+                comparisonBody.innerHTML = html;
+            };
+
+            if (pkgSelect1 && pkgSelect2) {
+                pkgSelect1.addEventListener('change', renderComparison);
+                pkgSelect2.addEventListener('change', renderComparison);
+                document.getElementById('comparePackagesModal').addEventListener('show.bs.modal', renderComparison);
+            }
             const paymentMethodsWrapper = document.getElementById('payment-methods-wrapper');
             const selectedPriceEl = document.querySelectorAll('[data-selected-price]');
             const paymentHintEl = document.querySelectorAll('[data-payment-hint]');

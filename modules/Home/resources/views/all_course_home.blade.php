@@ -1,111 +1,68 @@
 <section class="foundation-course">
     <div class="container py-5">
 
-        <h3 class="section-title mb-4 text-danger">
-            {{ auth('students')->check()
-                ? '🎓 ' . __('home::common.all_course_for_you')
-                : '📚 ' . __('home::common.all_course_home') }}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
+            <h3 class="section-title mb-0 text-danger">
+                {{ auth('students')->check()
+                    ? '🎓 ' . __('home::common.all_course_for_you')
+                    : '📚 ' . __('home::common.all_course_home') }}
+            </h3>
 
-        </h3>
-
-        <div class="row g-4">
-            @forelse ($courseAll as $item)
-                @php
-                    $thumbnail = $item->thumbnail
-                        ? (\Illuminate\Support\Str::startsWith($item->thumbnail, ['http://', 'https://']) ? $item->thumbnail : asset($item->thumbnail))
-                        : asset('clients/assets/banner-course.png');
-
-                    $teacherImage = teacherAvatarUrl($item->teacher);
-                @endphp
-                <div class="col-12 col-lg-6">
-                    <div class="course-card d-flex">
-                        <div class="course-thumb">
-                            <img src="{{ $thumbnail }}" alt="{{ $item->name_locale }}"
-                                onerror="this.onerror=null;this.src='{{ asset('clients/assets/banner-course.png') }}';">
-                        </div>
-
-                        <div class="course-content">
-                            <div>
-                                <div class="course-meta">
-                                    <span><i class="fa-solid fa-clock"></i> {{ getTime($item->durations) }}</span>
-                                    <span><i class="fa-solid fa-video"></i>
-                                        {{ getLessonCount($item)->module }} {{ __('home::common.portion') }} /
-                                        {{ getLessonCount($item)->lessons }} {{ __('home::common.lesson') }}
-                                    </span>
-                                    <span><i class="fa-solid fa-eye"></i>
-                                        {{ number_format($item->view ?? 0) }} {{ __('home::common.view') }}
-                                    </span>
-                                </div>
-
-                                <h5 class="course-title">
-                                    <a
-                                        href="{{ route('courses.detail', [
-                                            'locale' => app()->getLocale(),
-                                            'slug' => $item->slug_locale,
-                                        ]) }}">
-                                        {{ $item->name_locale }}
-                                    </a>
-                                </h5>
-
-                                <div class="course-teacher">
-                                    <img src="{{ $teacherImage }}" alt="{{ $item->teacher?->name_locale }}"
-                                        onerror="this.onerror=null;this.src='{{ asset('resources/assets/teacher.png') }}';">
-                                    <span>{{ $item->teacher->name_locale }}</span>
-                                </div>
-
-                                <div class="course-rating">
-                                    <i class="fa-solid fa-star"></i>
-                                    <strong>{{ $item->ratings_count > 0 ? number_format((float) $item->ratings_avg_rating, 1) : '0.0' }}</strong>
-                                    <span>({{ (int) ($item->ratings_count ?? 0) }})</span>
-                                </div>
-                            </div>
-
-                            <div class="course-bottom">
-                                <div class="course-price">
-                                    <span class="price-old">{{ moneyLocale($item->price_locale) }}</span>
-                                    <span class="price-new">{{ moneyLocale($item->sale_price_locale) }}</span>
-                                </div>
-
-                                <a href="{{ route('courses.detail', [
-                                    'locale' => app()->getLocale(),
-                                    'slug' => $item->slug_locale,
-                                ]) }}"
-                                    class="btn-view">
-                                    {{ __('home::common.detail') }} →
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+            <div class="course-filters-wrapper overflow-auto pb-1">
+                <div class="course-filters d-flex gap-2">
+                    <button class="btn btn-sm btn-filter active" data-filter="latest">{{ __('home::common.filter_all') ?? 'Tất cả' }}</button>
+                    <button class="btn btn-sm btn-filter" data-filter="most_viewed">{{ __('home::common.filter_views') ?? 'Nhiều lượt xem' }}</button>
+                    <button class="btn btn-sm btn-filter" data-filter="featured_teachers">{{ __('home::common.filter_teacher') ?? 'Giảng viên nổi bật' }}</button>
+                    <button class="btn btn-sm btn-filter" data-filter="best_seller">{{ __('home::common.filter_seller') ?? 'Bán chạy' }}</button>
                 </div>
-            @empty
-                <div class="col-12 text-center py-5">
-                    <p>{{ __('home::common.no_course') }}</p>
-                </div>
-            @endforelse
+            </div>
+        </div>
+
+        <div class="row g-4" id="home-course-list">
+            @include('home::all_course_home_list')
         </div>
 
         {{-- NÚT XEM THÊM --}}
-        @if ($courseAll instanceof \Illuminate\Pagination\AbstractPaginator && $courseAll->total() > 4)
-            <div class="text-center mt-4">
-                <a href="{{ route('courses.home') }}" class="btn btn-outline-primary px-4">
+        <div class="text-center mt-5" id="home-course-load-more">
+            @if ($courseAll instanceof \Illuminate\Pagination\AbstractPaginator && $courseAll->total() > 8)
+                <a href="{{ route('courses.home') }}" class="btn btn-outline-primary px-5 py-2 rounded-pill fw-bold">
                     {{ __('home::common.all_course') }} →
                 </a>
-            </div>
-        @endif
+            @endif
+        </div>
 
     </div>
 </section>
 
-@section('stylesheets')
-    <style>
-        .foundation-course {
-            background: #f8fafc;
-        }
+<style>
+    .foundation-course {
+        background: #f8fafc;
+    }
 
-        .section-title {
-            font-weight: 700;
-            color: #1f2937;
-        }
+    .section-title,
+    .foundation-course h3.section-title {
+        font-size: 26px !important;
+        font-weight: 700 !important;
+        color: #1e293b !important;
+        position: relative;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        display: inline-block;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 45px;
+        height: 4px;
+        background: #ef4444;
+        border-radius: 10px;
+    }
 
         .course-card {
             background: #fff;
@@ -365,11 +322,10 @@
 
         html[data-theme="dark"] .foundation-course .section-title,
         html[data-theme="dark"] .foundation-course h3 {
-            background: linear-gradient(135deg, #132238 0%, #1d3557 100%);
-            color: #e5eef9 !important;
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            border-radius: 18px;
-            box-shadow: 0 16px 36px rgba(2, 6, 23, 0.24);
+            background: transparent;
+            color: #f8fafc !important;
+            border: none;
+            box-shadow: none;
         }
 
         html[data-theme="dark"] .foundation-course .course-card {
@@ -408,5 +364,134 @@
             background: #2563eb;
             color: #eff6ff;
         }
+
+        /* Filter Buttons */
+        .btn-filter {
+            position: relative;
+            z-index: 5;
+            border: 1px solid transparent;
+            border-radius: 50px;
+            padding: 8px 22px;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #f1f5f9;
+            color: #64748b !important;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .btn-filter:hover {
+            color: #2563eb !important;
+            background: #e0e7ff;
+            transform: translateY(-1px);
+        }
+
+        .btn-filter.active {
+            background: #2563eb !important;
+            color: #fff !important;
+            border-color: #2563eb;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
+        }
+
+    html[data-theme="dark"] .btn-filter {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #e2e8f0 !important; /* Lighter text for dark mode */
+        box-shadow: none;
+    }
+
+    html[data-theme="dark"] .btn-filter:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff !important;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    html[data-theme="dark"] .btn-filter.active {
+        background: #2563eb !important;
+        color: #fff !important;
+        border-color: #2563eb;
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    html[data-theme="dark"] .section-title,
+    html[data-theme="dark"] .foundation-course h3.section-title {
+        color: #f8fafc !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+        .course-filters-wrapper {
+            position: relative;
+            z-index: 10;
+            overflow-x: auto;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .course-filters-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        #home-course-list {
+            transition: opacity 0.3s ease;
+        }
+        #home-course-list.loading {
+            opacity: 0.4;
+            pointer-events: none;
+        }
     </style>
-@endsection
+
+<script>
+    (function() {
+        function initFilters() {
+            const filterBtns = document.querySelectorAll('.btn-filter');
+            const courseList = document.getElementById('home-course-list');
+            
+            if (!filterBtns.length || !courseList) return;
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (this.classList.contains('active')) return;
+
+                    const filter = this.dataset.filter;
+                    
+                    // Update UI
+                    document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    courseList.classList.add('loading');
+
+                    // Fetch data
+                    fetch(`{{ route('home', ['locale' => app()->getLocale()]) }}?filter=${filter}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.text();
+                    })
+                    .then(html => {
+                        courseList.innerHTML = html;
+                        courseList.classList.remove('loading');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching courses:', error);
+                        courseList.classList.remove('loading');
+                    });
+                });
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFilters);
+        } else {
+            initFilters();
+        }
+    })();
+</script>

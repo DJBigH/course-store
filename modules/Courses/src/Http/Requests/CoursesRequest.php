@@ -62,6 +62,7 @@ class CoursesRequest extends FormRequest
             'is_coming_soon' => 'nullable|integer|in:0,1',
             'coming_soon_start_at' => 'nullable|required_if:is_coming_soon,1|date',
             'is_learning_locked' => 'required|integer|in:0,1',
+            'completion_condition' => 'nullable|string|in:none,all_lessons,all_quizzes,all',
             'categories' => 'required',
         ];
         return $rules;

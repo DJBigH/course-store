@@ -60,4 +60,10 @@ return [
     'feature_1' => 'Tư vấn 1–1 cùng mentor',
     'feature_2' => 'Lộ trình cá nhân hóa',
     'feature_3' => 'Không phát sinh chi phí',
+
+    //Filters
+    'filter_all' => 'Tất cả',
+    'filter_views' => 'Nhiều lượt xem',
+    'filter_teacher' => 'Giảng viên nổi bật',
+    'filter_seller' => 'Bán chạy',
 ];

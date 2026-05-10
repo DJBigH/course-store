@@ -333,6 +333,23 @@
                 </div>
             </div>
 
+            <div class="col-6">
+                <div class="mb-3">
+                    <label for="">Điều kiện cấp chứng chỉ</label>
+                    <select name="completion_condition" class="form-select{{ $errors->has('completion_condition') ? ' is-invalid' : '' }}">
+                        <option value="all_lessons" {{ old('completion_condition', $course->completion_condition ?? 'all_lessons') === 'all_lessons' ? 'selected' : '' }}>100% Bài giảng</option>
+                        <option value="all_quizzes" {{ old('completion_condition', $course->completion_condition ?? 'all_lessons') === 'all_quizzes' ? 'selected' : '' }}>Thi đậu tất cả Quiz</option>
+                        <option value="all" {{ old('completion_condition', $course->completion_condition ?? 'all_lessons') === 'all' ? 'selected' : '' }}>Bài giảng + Quiz</option>
+                        <option value="none" {{ old('completion_condition', $course->completion_condition ?? 'all_lessons') === 'none' ? 'selected' : '' }}>Không cấp chứng chỉ</option>
+                    </select>
+                    @error('completion_condition')
+                        <div class="invalid-feedback d-block">
+                            {{ $message }}
+                        </div>
+                    @enderror
+                </div>
+            </div>
+
             <div class="col-12">
                 {{-- VI --}}
                 <div class="lang-block lang-vi">

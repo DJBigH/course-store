@@ -331,8 +331,9 @@ class LessonController extends Controller
 
         $studentIds = \Illuminate\Support\Facades\DB::table('orders')
             ->join('orders_detail', 'orders.id', '=', 'orders_detail.order_id')
+            ->join('orders_status', 'orders.status_id', '=', 'orders_status.id')
             ->where('orders_detail.course_id', $courseId)
-            ->where('orders.status', 'finished')
+            ->where('orders_status.is_success', 1)
             ->distinct()
             ->pluck('orders.student_id');
 

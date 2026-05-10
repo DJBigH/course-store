@@ -1,15 +1,15 @@
 <?php
 
-return array (
-  'group' => 
-  array (
+return array(
+  'group' =>
+  array(
     'management' => 'Management',
     'growth' => 'Growth',
     'trainees' => 'Trainees',
     'account' => 'Account',
   ),
-  'nav' => 
-  array (
+  'nav' =>
+  array(
     'overview' => 'Overview',
     'courses' => 'Courses',
     'earnings' => 'Earnings',
@@ -26,9 +26,10 @@ return array (
     'support' => 'Support',
     'cancellation' => 'Cancellation',
     'inbox' => 'System Inbox',
+    'telegram' => 'Telegram Configuration',
   ),
-  'brand' => 
-  array (
+  'brand' =>
+  array(
     'logged_in_as' => 'Logged in as',
     'student_fallback' => 'Student',
     'active_channel' => 'Active Channel',

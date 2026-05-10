@@ -390,7 +390,8 @@ if (!function_exists('videoEmbedUrl')) {
                 $id = explode('/', $id)[0];
             }
 
-            return $id ? "https://www.youtube.com/embed/{$id}" : null;
+            $origin = request()->getSchemeAndHttpHost();
+            return $id ? "https://www.youtube.com/embed/{$id}?enablejsapi=1&origin={$origin}" : null;
         }
 
         if (str_contains($host, 'vimeo.com')) {

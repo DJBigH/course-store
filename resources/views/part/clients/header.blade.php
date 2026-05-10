@@ -159,7 +159,7 @@
                 'students.account.deactivate',
                 'students.account.delete',
                 'students.account.order-detail',
-                'students.account.checkout',
+                'students.account.checkout' => route($currentRouteName, array_merge(['locale' => $locale], $params)),
                 'teacher.portal.index' => route('teacher.portal.index', ['locale' => $locale]),
                 'teacher.account.begin',
                 'teacher.account.apply',
@@ -534,9 +534,9 @@
 
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('teacher.portal.*', 'teacher.account.*', 'teacher.dashboard.*') ? 'active' : '' }}"
-                            href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}">
+                            href="{{ $teacherPortalHeaderUrl ?: route('teacher.portal.index', ['locale' => app()->getLocale()]) }}">
                             <i class="fas fa-chalkboard-user"></i>
-                            {{ $teacherUi['become'] }}
+                            {{ $teacherPortalHeaderUrl ? $teacherUi['portal'] : $teacherUi['become'] }}
                         </a>
                     </li>
 

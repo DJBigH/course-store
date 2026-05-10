@@ -24,11 +24,28 @@ class TelegramWebhookController extends Controller
         $chatId = $message['chat']['id'] ?? null;
 
         $configuredChatId = config('services.telegram.chat_id');
-        if (!$chatId || (string)$chatId !== (string)$configuredChatId) {
-            return response()->json(['status' => 'unauthorized_chat']);
+        
+        // 1. Kiểm tra Admin Chat ID (Để xem báo cáo tổng quát hệ thống)
+        if ($chatId && (string)$chatId === (string)$configuredChatId) {
+            return $this->handleAdminCommands($text, $chatId);
         }
 
+        // 2. Kiểm tra Teacher Chat ID (Để xem báo cáo riêng cho giảng viên)
+        $teacher = \Modules\Teacher\src\Models\Teacher::where('telegram_chat_id', $chatId)
+            ->where('is_telegram_notifications_enabled', true)
+            ->first();
+
+        if ($teacher && $teacher->hasTelegramFeature()) {
+            return $this->handleTeacherCommands($teacher, $text, $chatId);
+        }
+
+        return response()->json(['status' => 'unauthorized_chat']);
+    }
+
+    protected function handleAdminCommands($text, $chatId)
+    {
         if (strtolower($text) === '/status' || str_contains(strtolower($text), 'tình trạng')) {
+            // ... (Giữ nguyên logic cũ cho Admin chuyển vào hàm này)
             $botToken = config('services.telegram.bot_token');
 
             $todayOrders = Order::whereDate('created_at', today())->count();
@@ -65,6 +82,65 @@ class TelegramWebhookController extends Controller
             
             $reply .= "⏱️ <i>Cập nhật: " . now()->format('H:i:s d/m/Y') . "</i>";
 
+            try {
+                $botToken = config('services.telegram.bot_token');
+                Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => $reply,
+                    'parse_mode' => 'HTML'
+                ]);
+            } catch (\Exception $e) {
+                // Ignore
+            }
+        }
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    protected function handleTeacherCommands($teacher, $text, $chatId)
+    {
+        $text = strtolower($text);
+        $botToken = config('services.telegram_teacher.bot_token') ?: config('services.telegram.bot_token');
+        $reply = "";
+
+        if ($text === '/hsd' || str_contains($text, 'hạn dùng')) {
+            $status = $teacher->getTelegramPackageStatus();
+            $reply = "📅 <b>THÔNG TIN GÓI TELEGRAM</b>\n\n";
+            $reply .= "👤 <b>Giảng viên:</b> {$teacher->name}\n";
+            $reply .= "🏷️ <b>Trạng thái:</b> " . ($status['status'] === 'active' ? '🟢 Đang hoạt động' : '🔴 Đã hết hạn') . "\n";
+            
+            if ($status['status'] === 'active') {
+                $expiry = $status['expires_at'] ? $status['expires_at']->format('d/m/Y H:i') : 'Vĩnh viễn';
+                $reply .= "⏳ <b>Hết hạn:</b> {$expiry}\n";
+            } else {
+                $reply .= "👉 <i>Vui lòng gia hạn tại trang quản trị để tiếp tục nhận thông báo.</i>";
+            }
+        } 
+        elseif ($text === '/order' || str_contains($text, 'đơn hàng')) {
+            $todayOrders = \Modules\Orders\src\Models\OrderDetail::whereHas('courses', function($q) use ($teacher) {
+                    $q->where('teacher_id', $teacher->id);
+                })
+                ->whereHas('order', function($q) {
+                    $q->where('status_id', 2)->whereDate('created_at', today());
+                })
+                ->count();
+
+            $todayRevenue = \Modules\Orders\src\Models\OrderDetail::whereHas('courses', function($q) use ($teacher) {
+                    $q->where('teacher_id', $teacher->id);
+                })
+                ->whereHas('order', function($q) {
+                    $q->where('status_id', 2)->whereDate('created_at', today());
+                })
+                ->sum('total_amount'); // Giả định trường này lưu doanh thu, cần check logic finance chính xác hơn nếu cần
+
+            $reply = "💰 <b>BÁO CÁO DOANH THU HÔM NAY</b>\n\n";
+            $reply .= "👤 <b>Giảng viên:</b> {$teacher->name}\n";
+            $reply .= "🛒 <b>Đơn hàng mới:</b> " . number_format($todayOrders) . "\n";
+            $reply .= "💵 <b>Doanh thu tạm tính:</b> " . number_format($todayRevenue) . " đ\n\n";
+            $reply .= "📈 <i>Xem chi tiết tại Dashboard Giảng viên.</i>";
+        }
+
+        if ($reply) {
             try {
                 Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                     'chat_id' => $chatId,

@@ -792,6 +792,12 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-user-slash"></i></div>
                                 {{ __('teacher/sidebar.nav.cancellation') }}
                             </a>
+
+                            <a class="nav-link {{ request()->routeIs('teacher.dashboard.telegram.*') ? 'active' : '' }}"
+                                href="{{ route('teacher.dashboard.telegram.index') }}">
+                                <div class="sb-nav-link-icon"><i class="fa-brands fa-telegram"></i></div>
+                                {{ __('teacher/sidebar.nav.telegram') }}
+                            </a>
                         </div>
                     </div>
                 </div>

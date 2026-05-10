@@ -19,6 +19,7 @@ use Modules\Teacher\src\Http\Controllers\Clients\TeacherLessonController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherOrderController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherBundleController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherNotificationController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherTelegramController;
 
 Route::prefix('admin')->group(function () {
    Route::prefix('teacher')->name('teacher.')->group(function () {
@@ -38,6 +39,7 @@ Route::prefix('admin')->group(function () {
       Route::get('logs/{teacher}', 'TeacherController@logs')->middleware('permission:teachers.logs')->name('logs');
       Route::post('/toggle-lock/{teacher}', 'TeacherController@toggleLock')->middleware('permission:teachers.edit')->name('toggle-lock');
       Route::post('/toggle-ceased/{teacher}', 'TeacherController@toggleCeased')->middleware('permission:teachers.edit')->name('toggle-ceased');
+      Route::post('/{id}/test-telegram', 'TeacherController@testTelegram')->middleware('permission:teachers.edit')->name('test-telegram');
       Route::get('/{id}/courses', 'TeacherController@getCourses')->middleware('permission:teachers.view')->name('courses');
 
       // Teacher Badges
@@ -53,6 +55,17 @@ Route::prefix('admin')->group(function () {
           Route::delete('/delete/{id}', 'Admin\TeacherBadgeController@delete')->middleware('permission:badges.delete')->name('delete');
           Route::post('/restore/{id}', 'Admin\TeacherBadgeController@restore')->middleware('permission:badges.edit')->name('restore');
           Route::delete('/force-delete/{id}', 'Admin\TeacherBadgeController@forceDelete')->middleware('permission:badges.delete')->name('force-delete');
+      });
+
+      // Telegram Packages
+      Route::prefix('telegram-packages')->name('telegram-packages.')->group(function () {
+          Route::get('/', 'Admin\TelegramPackageController@index')->middleware('permission:packages.view')->name('index');
+          Route::get('/data', 'Admin\TelegramPackageController@data')->middleware('permission:packages.view')->name('data');
+          Route::get('/create', 'Admin\TelegramPackageController@create')->middleware('permission:packages.create')->name('create');
+          Route::post('/create', 'Admin\TelegramPackageController@store')->middleware('permission:packages.create')->name('store');
+          Route::get('/edit/{id}', 'Admin\TelegramPackageController@edit')->middleware('permission:packages.edit')->name('edit');
+          Route::put('/edit/{id}', 'Admin\TelegramPackageController@update')->middleware('permission:packages.edit')->name('update');
+          Route::delete('/delete/{id}', 'Admin\TelegramPackageController@delete')->middleware('permission:packages.delete')->name('delete');
       });
    });
 
@@ -93,13 +106,14 @@ Route::group([
    'middleware' => ['setLocale'],
 ], function () {
    Route::get('/tro-thanh-giang-vien', [TeacherLandingController::class, 'index'])->name('teacher.portal.index');
-   Route::get('/teacher/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.auth.login');
-   Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->name('teacher.auth.post-login');
-   Route::get('/teacher/forgot-password', [TeacherAuthController::class, 'showForgotForm'])->name('teacher.auth.forgot');
-   Route::post('/teacher/forgot-password', [TeacherAuthController::class, 'sendResetLink'])->name('teacher.auth.post-forgot');
-   Route::get('/teacher/reset-password/{token}', [TeacherAuthController::class, 'showResetForm'])->name('teacher.password.reset');
-   Route::post('/teacher/reset-password', [TeacherAuthController::class, 'updatePassword'])->name('teacher.auth.password.update');
-   Route::get('/teacher/logout', [TeacherAuthController::class, 'logout'])->name('teacher.auth.logout');
+   // Redirect old teacher auth routes to unified client auth
+   Route::get('/teacher/login', fn($locale) => redirect()->route('clients-login', ['locale' => $locale]))->name('teacher.auth.login');
+   Route::post('/teacher/login', fn($locale) => redirect()->route('clients-login', ['locale' => $locale]))->name('teacher.auth.post-login');
+   Route::get('/teacher/forgot-password', fn($locale) => redirect()->route('clients-forgot', ['locale' => $locale]))->name('teacher.auth.forgot');
+   Route::post('/teacher/forgot-password', fn($locale) => redirect()->route('clients-postforgot', ['locale' => $locale]))->name('teacher.auth.post-forgot');
+   Route::get('/teacher/reset-password/{token}', fn($locale, $token) => redirect()->route('password.reset', ['locale' => $locale, 'token' => $token]))->name('teacher.password.reset');
+   Route::post('/teacher/reset-password', fn($locale) => redirect()->route('clients.update.password', ['locale' => $locale]))->name('teacher.auth.password.update');
+   Route::get('/teacher/logout', fn($locale) => redirect()->route('clients-logout', ['locale' => $locale]))->name('teacher.auth.logout');
    Route::get('/tro-thanh-giang-vien/bat-dau', [ClientTeacherApplicationController::class, 'begin'])->name('teacher.account.begin');
    Route::get('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'create'])->name('teacher.account.apply');
    Route::post('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'store'])->name('teacher.account.submit');
@@ -194,6 +208,14 @@ Route::group([
    Route::get('/huy-hop-tac', [TeacherCancellationController::class, 'index'])->name('cancellation');
    Route::post('/huy-hop-tac/otp', [TeacherCancellationController::class, 'sendOtp'])->name('cancellation.otp');
    Route::post('/huy-hop-tac', [TeacherCancellationController::class, 'store'])->name('cancellation.store');
+
+    // Telegram
+    Route::prefix('telegram')->name('telegram.')->group(function () {
+        Route::get('/', [TeacherTelegramController::class, 'index'])->name('index');
+        Route::post('/settings', [TeacherTelegramController::class, 'updateSettings'])->name('settings');
+        Route::post('/purchase/{packageId}', [TeacherTelegramController::class, 'purchase'])->name('purchase');
+        Route::post('/test-connection', [TeacherTelegramController::class, 'testConnection'])->name('test');
+    });
 });
 
 // ─── Routes làm bài quiz dành cho học viên ──────────────────────────────────

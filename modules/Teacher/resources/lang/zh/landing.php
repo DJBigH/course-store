@@ -12,6 +12,11 @@ return [
         'starter' => 'Starter',
         'pro' => 'Pro',
     ],
+    'categories' => [
+        'standard' => '标准套餐',
+        'partnership' => '合作伙伴套餐',
+        'subscription' => '订阅套餐',
+    ],
     'ui' => [
         'hero_login_prefix' => '如果你已经是讲师，只需',
         'hero_login_link' => '在这里登录',
@@ -23,9 +28,10 @@ return [
         'earnings_kicker' => 'Revenue',
         'packages_kicker' => 'Packages',
         'faq_kicker' => 'FAQ',
-        'final_kicker' => '准备好时就开始',
+        'final_kicker' => '准备好就开始吧',
         'free_label' => '免费',
     ],
+    'one_time' => '一次性',
     'hero' => [
         'eyebrow' => 'Teacher Program',
         'title' => '把你的知识变成一个可持续成长的讲师频道。',
