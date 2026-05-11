@@ -134,6 +134,16 @@
                     <label class="form-check-label">Ghim lên trên</label>
                 </div>
 
+                <div class="alert alert-info border-0 p-3 mb-4 rounded-3">
+                    <div class="form-check form-switch m-0">
+                        <input class="form-check-input" type="checkbox" name="notify_telegram" value="1" id="notifyTelegram">
+                        <label class="form-check-label fw-bold" for="notifyTelegram">
+                            🚀 Gửi thông báo Telegram
+                        </label>
+                    </div>
+                    <div class="small mt-2 text-muted">Hệ thống sẽ gửi thông báo này trực tiếp đến Telegram của các giảng viên hợp lệ.</div>
+                </div>
+
                 <button class="btn btn-primary w-100">{{ $announcement->exists ? 'Cập nhật thông báo' : 'Tạo thông báo' }}</button>
             </div>
         </div>

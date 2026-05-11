@@ -13,8 +13,42 @@ use Modules\Teacher\src\Models\TeacherAnnouncement;
 use Modules\Teacher\src\Models\TeacherNotificationRead;
 use Modules\Packages\src\Models\Package;
 
+use Modules\Teacher\src\Models\TelegramPackage;
+use Modules\Teacher\src\Notifications\TelegramGiftNotification;
+
 class TeacherNotificationCenter
 {
+    public function sendTelegramGiftNotification(Teacher $teacher, TelegramPackage $package, $sub = null)
+    {
+        if ($teacher->student) {
+            $teacher->student->notify(new TelegramGiftNotification($package, $sub));
+
+            try {
+                $isEnabled = \Modules\Settings\src\Models\Setting::getValue('telegram_bot_enabled');
+                $botToken = config('services.telegram.bot_token');
+                $chatId = config('services.telegram.chat_id');
+
+                if ($isEnabled === '1' && $botToken && $chatId) {
+                    $fullName = $teacher->student->name ?: 'N/A';
+                    $email = $teacher->student->email ?: 'N/A';
+                    $packageName = $package->name ?: 'N/A';
+
+                    $text = "🎁 <b>[TẶNG GÓI QUÀ TẶNG THÀNH CÔNG]</b>\n\n";
+                    $text .= "👤 <b>Giảng viên:</b> {$fullName}\n";
+                    $text .= "✉️ <b>Email:</b> <code>{$email}</code>\n";
+                    $text .= "📦 <b>Gói quà tặng:</b> {$packageName}\n";
+                    if ($sub) {
+                        $text .= "📝 <b>Ghi chú:</b> {$sub}\n";
+                    }
+                    $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                    \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        }
+    }
     public function summary(?Student $student, int $limit = 20): array
     {
         if (!$student) {

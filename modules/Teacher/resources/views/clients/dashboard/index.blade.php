@@ -403,7 +403,11 @@
                         @forelse ($recentSales as $detail)
                             <div class="teacher-subtle-card">
                                 <strong class="d-block">
-                                    {{ $detail->courses?->name_locale ?: __('teacher::teacher/dashboard.common.unknown_course') }}
+                                    @if($detail->order?->type === 'telegram_package')
+                                        Gói Telegram
+                                    @else
+                                        {{ $detail->courses?->name_locale ?: __('teacher::teacher/dashboard.common.unknown_course') }}
+                                    @endif
                                 </strong>
                                 <small class="d-block text-muted">
                                     {{ __('teacher::teacher/dashboard.overview.labels.order_code', ['code' => $detail->order?->code]) }}

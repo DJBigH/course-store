@@ -107,6 +107,17 @@ class CertificateIssuer
             $existing ? 'Đã cấp lại chứng chỉ cho học viên.' : 'Đã cấp chứng chỉ cho học viên.'
         );
 
+        // Notify Teacher via Telegram
+        if ($teacher->hasTelegramFeature()) {
+            $msg = "🎓 <b>HỌC VIÊN NHẬN CHỨNG CHỈ!</b>\n\n";
+            $msg .= "👤 <b>Học viên:</b> {$student->name}\n";
+            $msg .= "📚 <b>Khóa học:</b> " . ($course->name_locale ?: $course->name) . "\n";
+            $msg .= "📜 <b>Mã chứng chỉ:</b> <code>{$certificate->code}</code>\n";
+            $msg .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i d/m/Y');
+            
+            dispatch(new \App\Jobs\SendTelegramTeacherNotification($teacher, $msg));
+        }
+
         return $certificate;
     }
 

@@ -34,11 +34,7 @@ class Order extends Model
                     $text .= "💰 <b>Tổng tiền:</b> <b>{$totalAmount}</b>\n";
                     $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
 
-                    \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                        'chat_id' => $chatId,
-                        'text' => $text,
-                        'parse_mode' => 'HTML'
-                    ]);
+                    \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
                 }
             } catch (\Exception $e) {
                 // Fail silently
@@ -69,11 +65,7 @@ class Order extends Model
                             $text .= "💰 <b>Tổng tiền:</b> <b>{$totalAmount}</b>\n";
                             $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
 
-                            \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                                'chat_id' => $chatId,
-                                'text' => $text,
-                                'parse_mode' => 'HTML'
-                            ]);
+                            \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
                         }
 
                         // Notify Teachers about new sales via Queue
@@ -106,7 +98,7 @@ class Order extends Model
                         }
 
                         // Unified Activation for Teacher Upgrade
-                        if ($order->type === 'teacher_upgrade' && $order->orderable instanceof TeacherApplication) {
+                        if ($order->type === 'teacher_upgrade' && $order->orderable instanceof \Modules\Teacher\src\Models\TeacherApplication) {
                             try {
                                 $lifecycleManager = app(\Modules\Packages\src\Support\PackageLifecycleManager::class);
                                 
@@ -114,9 +106,55 @@ class Order extends Model
                                 // though PackageLifecycleManager handles some of this.
                                 if ($order->orderable->status !== 'approved') {
                                     $lifecycleManager->activateTeacherUpgrade($order->orderable);
+                                    
+                                    // Notify Teacher via Telegram if they have the feature (newly granted or already had it)
+                                    $teacher = $order->orderable->teacher;
+                                    if ($teacher && $teacher->hasTelegramFeature()) {
+                                        $package = $order->orderable->package;
+                                        $msg = "🚀 <b>NÂNG CẤP TÀI KHOẢN THÀNH CÔNG!</b>\n\n";
+                                        $msg .= "Tài khoản của bạn đã được nâng cấp lên gói: <b>" . ($package->name_locale ?: $package->name) . "</b>\n";
+                                        $msg .= "Tận hưởng các tính năng ưu việt ngay từ bây giờ!";
+                                        
+                                        dispatch(new \App\Jobs\SendTelegramTeacherNotification($teacher, $msg));
+                                    }
                                 }
                             } catch (\Exception $e) {
                                 \Illuminate\Support\Facades\Log::error('Teacher Upgrade Activation Error via Order Observer', [
+                                    'order_id' => $order->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                            }
+                        }
+
+                        // Activation for Telegram Package
+                        if ($order->type === 'telegram_package' && $order->orderable instanceof \Modules\Teacher\src\Models\TeacherTelegramSubscription) {
+                            try {
+                                $subscription = $order->orderable;
+                                if ($subscription->status !== 'active') {
+                                    $teacher = $subscription->teacher;
+                                    $package = $subscription->package;
+                                    
+                                    // Calculate and update expiry on Teacher model
+                                    $newExpiry = $teacher->addTelegramDuration($package->duration_value, $package->duration_unit);
+                                    
+                                    // Update subscription record
+                                    $subscription->update([
+                                        'status' => 'active',
+                                        'started_at' => now(),
+                                        'expires_at' => $newExpiry
+                                    ]);
+
+                                    // Notify Teacher via Telegram
+                                    if ($teacher->hasTelegramFeature()) {
+                                        $msg = "💳 <b>GIA HẠN TELEGRAM THÀNH CÔNG!</b>\n\n";
+                                        $msg .= "Gói: <b>" . ($package->name_locale ?: $package->name) . "</b>\n";
+                                        $msg .= "📅 <b>Hạn dùng mới:</b> " . $newExpiry->format('d/m/Y');
+                                        
+                                        dispatch(new \App\Jobs\SendTelegramTeacherNotification($teacher, $msg));
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error('Telegram Package Activation Error via Order Observer', [
                                     'order_id' => $order->id,
                                     'error' => $e->getMessage()
                                 ]);
@@ -273,7 +311,9 @@ class Order extends Model
             'bank', 'bank_transfer' => 'background:#16a34a;color:#ffffff;',
             'vnpay' => 'background:#0f6cbd;color:#ffffff;',
             'momo' => 'background:#a21caf;color:#ffffff;',
+            'wallet' => 'background:#4338ca;color:#ffffff;',
             'free' => 'background:#0ea5e9;color:#ffffff;',
+            'gift' => 'background:#8b5cf6;color:#ffffff;',
             default => 'background:#64748b;color:#ffffff;',
         };
     }

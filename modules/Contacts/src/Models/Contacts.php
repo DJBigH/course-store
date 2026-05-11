@@ -39,11 +39,7 @@ class Contacts extends Model
                     $text .= "💬 <b>Nội dung:</b>\n<i>{$contact->message}</i>\n\n";
                     $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
 
-                    \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                        'chat_id' => $chatId,
-                        'text' => $text,
-                        'parse_mode' => 'HTML'
-                    ]);
+                    \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
                 }
             } catch (\Exception $e) {
                 // Fail silently

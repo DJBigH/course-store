@@ -233,6 +233,22 @@
                         value="{{ isset($package) && $package->max_payout_per_day ? number_format($package->max_payout_per_day, 0, ',', '.') : '' }}" 
                         data-money-target="admin-package-payout-limit" placeholder="Không giới hạn">
                 </div>
+
+                <div class="col-md-4">
+                    <label class="form-label-custom">Hạn mức ví liên kết</label>
+                    <input type="number" class="form-control input-premium" name="payout_account_limit" min="1" max="10"
+                        value="{{ old('payout_account_limit', $package->payout_account_limit ?? 3) }}" placeholder="Mặc định: 3">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-custom">Giới hạn AI Quiz (lần/tháng)</label>
+                    <input type="number" class="form-control input-premium" name="ai_quiz_limit" min="1"
+                        value="{{ old('ai_quiz_limit', $package->ai_quiz_limit ?? '') }}" placeholder="Không giới hạn">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-custom">Giới hạn Coupon</label>
+                    <input type="number" class="form-control input-premium" name="coupon_limit" min="1"
+                        value="{{ old('coupon_limit', $package->coupon_limit ?? '') }}" placeholder="Không giới hạn">
+                </div>
             </div>
         </div>
 
@@ -259,6 +275,8 @@
                         'can_view_student_progress' => 'Xem tiến độ học',
                         'can_manage_comments' => 'Quản lý bình luận',
                         'can_issue_certificates' => 'Cấp chứng chỉ',
+                        'can_verify_certificates' => 'Xác minh chứng chỉ',
+                        'can_grant_courses' => 'Cấp quyền khóa học',
                     ],
                     'Bán hàng & Marketing' => [
                         'can_manage_coupons' => 'Quản lý Coupon',

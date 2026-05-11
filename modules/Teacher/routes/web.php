@@ -67,6 +67,14 @@ Route::prefix('admin')->group(function () {
           Route::put('/edit/{id}', 'Admin\TelegramPackageController@update')->middleware('permission:packages.edit')->name('update');
           Route::delete('/delete/{id}', 'Admin\TelegramPackageController@delete')->middleware('permission:packages.delete')->name('delete');
       });
+
+      // Telegram Subscribers
+      Route::prefix('telegram-subscribers')->name('telegram-subscribers.')->group(function () {
+          Route::get('/data', 'Admin\TelegramPackageController@subscriberData')->middleware('permission:teachers.view')->name('data');
+          Route::get('/history-data/{teacherId}', 'Admin\TelegramPackageController@subscriberHistory')->middleware('permission:teachers.view')->name('history');
+          Route::post('/gift', 'Admin\TelegramPackageController@giftSubscriber')->middleware('permission:teachers.edit')->name('gift');
+          Route::post('/{id}/cancel', 'Admin\TelegramPackageController@cancelSubscriber')->middleware('permission:teachers.edit')->name('cancel');
+      });
    });
 
    Route::prefix('teacher-applications')->name('teacher-applications.')->group(function () {
@@ -125,6 +133,12 @@ Route::group([
    Route::post('/tro-thanh-giang-vien/xac-nhan-da-thanh-toan', [ClientTeacherApplicationController::class, 'markPaid'])->name('teacher.account.mark-paid');
    Route::get('/giang-vien/{slug}', [TeacherPublicController::class, 'show'])->name('teacher.public.show');
    Route::post('/giang-vien/{slug}/rating', [TeacherPublicController::class, 'rate'])->middleware(['auth:students', 'verified', 'user.block'])->name('teacher.public.rate');
+
+    // Telegram Claim (Unique name to avoid conflicts)
+    Route::prefix('teacher/telegram')->name('telegram.claim.')->group(function () {
+        Route::get('/gift/{token}', [TeacherTelegramController::class, 'showClaim'])->name('show');
+        Route::post('/gift/{token}', [TeacherTelegramController::class, 'claim'])->name('post');
+    });
 });
 
 Route::group([
@@ -158,8 +172,20 @@ Route::group([
    Route::get('/thong-bao/doc', [TeacherNotificationController::class, 'readNotification'])->name('notifications.read');
    Route::get('/thong-bao/announcement/{announcement}/doc', [TeacherNotificationController::class, 'readAnnouncement'])->name('notifications.announcements.read');
    Route::get('/combo-khoa-hoc', [TeacherBundleController::class, 'bundles'])->name('bundles');
-   Route::get('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'createBundle'])->name('bundles.create');
-   Route::post('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'storeBundle'])->name('bundles.store');
+    Route::get('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'createBundle'])->name('bundles.create');
+    Route::post('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'storeBundle'])->name('bundles.store');
+
+    // Telegram Management (Inside dashboard group)
+    Route::prefix('telegram')->name('telegram.')->group(function () {
+        Route::get('/', [TeacherTelegramController::class, 'index'])->name('index');
+        Route::post('/settings', [TeacherTelegramController::class, 'updateSettings'])->name('settings');
+        Route::post('/purchase/cancel-pending', [TeacherTelegramController::class, 'cancelPending'])->name('purchase.cancel-pending');
+        Route::post('/purchase/{packageId}', [TeacherTelegramController::class, 'purchase'])->name('purchase');
+        Route::get('/purchase/vnpay-return', [TeacherTelegramController::class, 'vnpayReturn'])->name('purchase.vnpay-return');
+        Route::get('/purchase/momo-return', [TeacherTelegramController::class, 'momoReturn'])->name('purchase.momo-return');
+        Route::post('/purchase/momo-ipn', [TeacherTelegramController::class, 'momoIpn'])->name('purchase.momo-ipn');
+        Route::post('/test-connection', [TeacherTelegramController::class, 'testConnection'])->name('test');
+    });
    Route::get('/combo-khoa-hoc/{bundle}/chinh-sua', [TeacherBundleController::class, 'editBundle'])->name('bundles.edit');
    Route::post('/combo-khoa-hoc/{bundle}/chinh-sua', [TeacherBundleController::class, 'updateBundle'])->name('bundles.update');
    Route::delete('/combo-khoa-hoc/{bundle}', [TeacherBundleController::class, 'deleteBundle'])->name('bundles.delete');
@@ -209,13 +235,6 @@ Route::group([
    Route::post('/huy-hop-tac/otp', [TeacherCancellationController::class, 'sendOtp'])->name('cancellation.otp');
    Route::post('/huy-hop-tac', [TeacherCancellationController::class, 'store'])->name('cancellation.store');
 
-    // Telegram
-    Route::prefix('telegram')->name('telegram.')->group(function () {
-        Route::get('/', [TeacherTelegramController::class, 'index'])->name('index');
-        Route::post('/settings', [TeacherTelegramController::class, 'updateSettings'])->name('settings');
-        Route::post('/purchase/{packageId}', [TeacherTelegramController::class, 'purchase'])->name('purchase');
-        Route::post('/test-connection', [TeacherTelegramController::class, 'testConnection'])->name('test');
-    });
 });
 
 // ─── Routes làm bài quiz dành cho học viên ──────────────────────────────────

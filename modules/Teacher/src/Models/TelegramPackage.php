@@ -11,7 +11,14 @@ class TelegramPackage extends Model
     protected $fillable = [
         'name',
         'name_en',
+        'name_ja',
+        'name_ko',
+        'name_zh',
         'description',
+        'description_en',
+        'description_ja',
+        'description_ko',
+        'description_zh',
         'price',
         'sale_price',
         'duration_value',
@@ -55,21 +62,39 @@ class TelegramPackage extends Model
     public function getFormattedDurationAttribute(): string
     {
         if ($this->duration_unit === self::UNIT_LIFETIME) {
-            return 'Vĩnh viễn';
+            return __('teacher::teacher/telegram.gift.units.lifetime');
         }
 
-        $units = self::getUnits();
-        $unitLabel = $units[$this->duration_unit] ?? $this->duration_unit;
-
+        $unitLabel = __('teacher::teacher/telegram.gift.units.' . $this->duration_unit);
         return $this->duration_value . ' ' . $unitLabel;
+    }
+
+    public function getDurationLabelAttribute(): string
+    {
+        return $this->getFormattedDurationAttribute();
     }
 
     public function getNameLocaleAttribute(): string
     {
         $locale = app()->getLocale();
-        if ($locale === 'en' && $this->name_en) {
-            return $this->name_en;
+        $field = 'name_' . $locale;
+        
+        if ($locale === 'vi') {
+            return $this->name;
         }
-        return $this->name;
+        
+        return $this->{$field} ?: $this->name;
+    }
+
+    public function getDescriptionLocaleAttribute(): ?string
+    {
+        $locale = app()->getLocale();
+        $field = 'description_' . $locale;
+        
+        if ($locale === 'vi') {
+            return $this->description;
+        }
+        
+        return $this->{$field} ?: $this->description;
     }
 }

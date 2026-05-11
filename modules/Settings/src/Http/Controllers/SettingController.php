@@ -88,6 +88,7 @@ class SettingController extends Controller
                 'payment_bank_enabled' => $request->boolean('payment_bank_enabled') ? '1' : '0',
                 'payment_momo_enabled' => $request->boolean('payment_momo_enabled') ? '1' : '0',
                 'payment_vnpay_enabled' => $request->boolean('payment_vnpay_enabled') ? '1' : '0',
+                'payment_wallet_enabled' => $request->boolean('payment_wallet_enabled') ? '1' : '0',
                 'teacher_badge_notification_email_enabled' => $request->boolean('teacher_badge_notification_email_enabled') ? '1' : '0',
                 'telegram_bot_enabled' => $request->boolean('telegram_bot_enabled') ? '1' : '0',
             ]
@@ -176,6 +177,7 @@ class SettingController extends Controller
             'payment_bank_enabled',
             'payment_momo_enabled',
             'payment_vnpay_enabled',
+            'payment_wallet_enabled',
             'bank_transfer_bank_bin',
             'bank_transfer_bank_name',
             'bank_transfer_account_number',
@@ -645,24 +647,11 @@ class SettingController extends Controller
         }
 
         try {
-            $response = \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => "🔔 [TEST] Kết nối Telegram Bot thành công!\nHệ thống: " . url('/'),
-                'parse_mode' => 'HTML'
-            ]);
+            \App\Jobs\SendTelegramNotification::dispatch($chatId, "🔔 [TEST] Kết nối Telegram Bot thành công!\nHệ thống: " . url('/'), $botToken);
 
-            if ($response->successful()) {
-                return back()->with([
-                    'msg' => 'Gửi tin nhắn test thành công! Hãy kiểm tra ứng dụng Telegram của bạn.',
-                    'msgType' => 'success',
-                    'active_tab' => 'bots'
-                ]);
-            }
-
-            $error = $response->json('description') ?? 'Không thể gửi tin nhắn.';
             return back()->with([
-                'msg' => 'Telegram trả về lỗi: ' . $error,
-                'msgType' => 'danger',
+                'msg' => 'Đã gửi lệnh gửi tin nhắn test!',
+                'msgType' => 'success',
                 'active_tab' => 'bots'
             ]);
 

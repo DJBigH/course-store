@@ -760,6 +760,10 @@
 
                             <div class="teacher-upgrade-payment-grid" data-upgrade-payment-methods>
                                 @foreach ([
+                                    'wallet' => [
+                                        'label' => __('teacher::portal.payment_methods.wallet'),
+                                        'enabled' => $walletEnabled
+                                    ],
                                     'bank_transfer' => [
                                         'label' => __('teacher::portal.payment_methods.bank_transfer'),
                                         'enabled' => $bankEnabled
@@ -781,6 +785,9 @@
                                         <input type="radio" name="payment_method" value="{{ $method }}" @checked($selectedPaymentMethod === $method)>
                                         <div class="d-flex flex-column align-items-center gap-1">
                                             <span>{{ $data['label'] }}</span>
+                                            @if ($method === 'wallet')
+                                                <span class="small text-muted" style="font-size: 0.7rem;">({{ moneyLocale($availableBalance) }})</span>
+                                            @endif
                                             @unless ($data['enabled'])
                                                 <span class="badge bg-warning text-dark px-2 py-1" style="font-size: 0.65rem;">
                                                     {{ __('packages::teacher.common.payment_maintenance') }}

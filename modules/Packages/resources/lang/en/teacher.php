@@ -10,6 +10,7 @@ return [
         'feature_locked' => 'This feature is locked in your current plan.',
         'import_export_locked' => 'CSV Import/Export features are locked in your current plan.',
         'quiz_management_locked_desc' => 'Quiz management features are locked in your current plan.',
+        'students_locked_grants' => 'Course Granting features are locked in your current plan.',
         'upsell_submessage' => 'Upgrade to a higher plan to unlock more benefits.',
         'labels' => [
             'course_limit' => 'Course Limit',

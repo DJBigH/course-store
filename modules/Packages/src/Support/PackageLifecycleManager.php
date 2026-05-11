@@ -238,6 +238,15 @@ class PackageLifecycleManager
         $refreshedTeacher = $teacher->fresh(['application.package']);
         $this->syncCouponLocks($refreshedTeacher);
         $this->syncCourseLocks($refreshedTeacher);
+
+        // Notify via Telegram if teacher has feature
+        if ($teacher->hasTelegramFeature() && $package && $package->code !== 'free') {
+            $msg = "✅ <b>NÂNG CẤP GÓI THÀNH CÔNG!</b>\n\n";
+            $msg .= "Hệ thống đã kích hoạt thành công gói đặc quyền: <b>" . ($package->name_locale ?: $package->name) . "</b>\n";
+            $msg .= "⏱️ <b>Thời gian kích hoạt:</b> " . now()->format('H:i d/m/Y');
+            
+            dispatch(new \App\Jobs\SendTelegramTeacherNotification($teacher, $msg));
+        }
     }
 
     private function resolveFallbackPackage(?Package $currentPackage): ?Package

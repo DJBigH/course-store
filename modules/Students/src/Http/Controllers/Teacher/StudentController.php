@@ -23,6 +23,7 @@ use Modules\Document\src\Repositories\DocumentRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Finances\src\Support\FinanceCalculator as TeacherFinanceCalculator;
 use App\Notifications\TeacherCourseGiftInvitationNotification;
+use Modules\Orders\src\Models\Order;
 
 class StudentController extends Controller
 {
@@ -189,7 +190,29 @@ class StudentController extends Controller
             ]
         );
 
+        // Create Order for tracking history
+        $grant->orders()->create([
+            'code' => 'GIFT' . strtoupper(uniqid()),
+            'student_id' => $student->id,
+            'total' => 0,
+            'status_id' => 2, // Success
+            'type' => 'course_grant',
+            'payment_method' => 'gift',
+            'payment_complete_date' => now(),
+            'currency' => 'VND'
+        ]);
+
         $student->notify(new TeacherCourseGiftInvitationNotification($grant->fresh(['teacher', 'course']), session('locale', app()->getLocale())));
+
+        // Notify Teacher via Telegram
+        if ($teacher->hasTelegramFeature()) {
+            $msg = "🎁 <b>BẠN VỪA TẶNG KHÓA HỌC!</b>\n\n";
+            $msg .= "👤 <b>Học viên:</b> {$student->name}\n";
+            $msg .= "📚 <b>Khóa học:</b> " . ($course->name_locale ?: $course->name) . "\n";
+            $msg .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i d/m/Y');
+            
+            dispatch(new \App\Jobs\SendTelegramTeacherNotification($teacher, $msg));
+        }
 
         ActiveLog::log(
             'grant_created',

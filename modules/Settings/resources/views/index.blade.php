@@ -463,11 +463,24 @@
                                     </div>
 
                                     <div class="row g-4">
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
+                                            <div class="p-3 border rounded-4 h-100 bg-light d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">Ví doanh thu</h6>
+                                                    <p class="text-muted small mb-3">Thanh toán nội bộ bằng số dư thu nhập</p>
+                                                </div>
+                                                <div class="form-check form-switch m-0">
+                                                    <input class="form-check-input" type="checkbox" id="payment_wallet_enabled" name="payment_wallet_enabled" value="1" @checked(old('payment_wallet_enabled', $settings['payment_wallet_enabled'] ?? '1') == '1')>
+                                                    <label class="form-check-label fw-bold text-primary" for="payment_wallet_enabled">Đang hoạt động</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-3">
                                             <div class="p-3 border rounded-4 h-100 bg-light d-flex flex-column justify-content-between">
                                                 <div>
                                                     <h6 class="fw-bold mb-1">Chuyển khoản ngân hàng</h6>
-                                                    <p class="text-muted small mb-3">Thanh toán qua QR Code ngân hàng (VietQR)</p>
+                                                    <p class="text-muted small mb-3">Thanh toán qua QR Code (VietQR)</p>
                                                 </div>
                                                 <div class="form-check form-switch m-0">
                                                     <input class="form-check-input" type="checkbox" id="payment_bank_enabled" name="payment_bank_enabled" value="1" @checked(old('payment_bank_enabled', $settings['payment_bank_enabled'] ?? '1') == '1')>
@@ -476,11 +489,11 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="p-3 border rounded-4 h-100 bg-light d-flex flex-column justify-content-between">
                                                 <div>
                                                     <h6 class="fw-bold mb-1">Ví điện tử Momo</h6>
-                                                    <p class="text-muted small mb-3">Cổng thanh toán Momo (Online Payment)</p>
+                                                    <p class="text-muted small mb-3">Cổng Momo (Online Payment)</p>
                                                 </div>
                                                 <div class="form-check form-switch m-0">
                                                     <input class="form-check-input" type="checkbox" id="payment_momo_enabled" name="payment_momo_enabled" value="1" @checked(old('payment_momo_enabled', $settings['payment_momo_enabled'] ?? '1') == '1')>
@@ -489,11 +502,11 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="p-3 border rounded-4 h-100 bg-light d-flex flex-column justify-content-between">
                                                 <div>
                                                     <h6 class="fw-bold mb-1">Cổng VNPAY</h6>
-                                                    <p class="text-muted small mb-3">Thanh toán qua ứng dụng ngân hàng & thẻ</p>
+                                                    <p class="text-muted small mb-3">Thanh toán qua ngân hàng & thẻ</p>
                                                 </div>
                                                 <div class="form-check form-switch m-0">
                                                     <input class="form-check-input" type="checkbox" id="payment_vnpay_enabled" name="payment_vnpay_enabled" value="1" @checked(old('payment_vnpay_enabled', $settings['payment_vnpay_enabled'] ?? '1') == '1')>
@@ -607,10 +620,13 @@
                                     </div>
 
                                     <div class="border rounded-4 p-3 bg-light">
-                                        <div class="form-check form-switch mb-0">
-                                            <input class="form-check-input" type="checkbox" id="ai_quiz_enabled" name="ai_quiz_enabled" value="1" @checked(old('ai_quiz_enabled', $settings['ai_quiz_enabled'] ?? '1') == '1')>
-                                            <label class="form-check-label fw-bold" for="ai_quiz_enabled">Cho phép Giảng viên tạo Quiz bằng AI (Generative AI)</label>
-                                        </div>
+                                        <label class="form-label fw-bold mb-2">Trạng thái tính năng Tạo Quiz bằng AI (Generative AI)</label>
+                                        <select name="ai_quiz_enabled" class="form-select border-0 shadow-sm rounded-3">
+                                            <option value="1" @selected(old('ai_quiz_enabled', $settings['ai_quiz_enabled'] ?? '1') == '1')>✅ Đang hoạt động (Bật)</option>
+                                            <option value="0" @selected(old('ai_quiz_enabled', $settings['ai_quiz_enabled'] ?? '1') == '0')>❌ Ngừng hoạt động (Tắt)</option>
+                                            <option value="2" @selected(old('ai_quiz_enabled', $settings['ai_quiz_enabled'] ?? '1') == '2')>⚠️ Đang bảo trì (Chỉ hiện nhãn)</option>
+                                        </select>
+                                        <small class="text-muted d-block mt-2">Ở chế độ bảo trì, nút "Tạo bằng AI" vẫn hiện nhưng sẽ bị vô hiệu hóa kèm nhãn BẢO TRÌ.</small>
                                     </div>
                                 </div>
                             </div>

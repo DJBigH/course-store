@@ -37,14 +37,29 @@
                                 <input type="text" class="form-control" name="name_en" value="{{ old('name_en') }}">
                             </div>
 
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_name_ja') }}</label>
+                                <input type="text" class="form-control" name="name_ja" value="{{ old('name_ja') }}">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_name_ko') }}</label>
+                                <input type="text" class="form-control" name="name_ko" value="{{ old('name_ko') }}">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_name_zh') }}</label>
+                                <input type="text" class="form-control" name="name_zh" value="{{ old('name_zh') }}">
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_price') }} <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" name="price" value="{{ old('price', 0) }}" required min="0">
+                                <input type="text" class="form-control price-format" name="price" value="{{ old('price', 0) }}" required>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_sale_price') }}</label>
-                                <input type="number" class="form-control" name="sale_price" value="{{ old('sale_price') }}" min="0">
+                                <input type="text" class="form-control price-format" name="sale_price" value="{{ old('sale_price') }}">
                             </div>
 
                             <div class="col-md-6">
@@ -61,9 +76,29 @@
                                 </select>
                             </div>
 
-                            <div class="col-12">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_description') }}</label>
-                                <textarea class="form-control" name="description" rows="4">{{ old('description') }}</textarea>
+                                <textarea class="form-control" name="description" rows="3">{{ old('description') }}</textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_description_en') }}</label>
+                                <textarea class="form-control" name="description_en" rows="3">{{ old('description_en') }}</textarea>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_description_ja') }}</label>
+                                <textarea class="form-control" name="description_ja" rows="3">{{ old('description_ja') }}</textarea>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_description_ko') }}</label>
+                                <textarea class="form-control" name="description_ko" rows="3">{{ old('description_ko') }}</textarea>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ __('teacher::admin.fields.telegram_description_zh') }}</label>
+                                <textarea class="form-control" name="description_zh" rows="3">{{ old('description_zh') }}</textarea>
                             </div>
 
                             <div class="col-md-6">
@@ -99,4 +134,34 @@
         }
         html[data-theme="dark"] .btn-light { background-color: #334155; border-color: #475569; color: #f1f5f9; }
     </style>
+@endsection
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            function formatNumber(n) {
+                return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+
+            $('.price-format').on('input', function() {
+                var input = $(this).val();
+                $(this).val(formatNumber(input));
+            });
+
+            // Format on load if there's a value
+            $('.price-format').each(function() {
+                var val = $(this).val();
+                if (val) {
+                    $(this).val(formatNumber(val.toString()));
+                }
+            });
+
+            // Strip commas before submit
+            $('form').on('submit', function() {
+                $('.price-format').each(function() {
+                    var val = $(this).val().replace(/,/g, '');
+                    $(this).val(val);
+                });
+            });
+        });
+    </script>
 @endsection

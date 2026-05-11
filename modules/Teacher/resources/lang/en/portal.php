@@ -33,6 +33,7 @@ return [
         'bank_transfer' => 'Bank Transfer',
         'vnpay' => 'VNPay',
         'momo' => 'MoMo',
+        'wallet' => 'Wallet Balance',
         'maintenance' => '(Maintenance)',
     ],
     'form' => [

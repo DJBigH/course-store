@@ -42,6 +42,9 @@ class OrderController extends Controller
             ->when(request()->filled('payment_method_filter'), function ($query) {
                 $query->where('payment_method', request()->input('payment_method_filter'));
             })
+            ->when(request()->filled('order_code_filter'), function ($query) {
+                $query->where('code', 'like', '%' . request()->input('order_code_filter') . '%');
+            })
             ->when(request()->input('search.value'), function ($query, $search) {
                 $query->where(function ($sub) use ($search) {
                     $sub->where('code', 'like', '%' . $search . '%')
@@ -69,32 +72,43 @@ class OrderController extends Controller
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1">
                                 <span class="fw-bold text-dark">#' . e($order->code) . '</span>
-                                ' . ($order->type === 'teacher_upgrade' 
-                                    ? '<span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 10px;">Nâng cấp gói</span>' 
-                                    : ($order->bundle_id 
-                                        ? '<span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 10px;">Combo</span>' 
-                                        : '<span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 10px;">Khóa học</span>')) . '
+                                ' . ($order->type === 'telegram_package'
+                                    ? '<span class="badge bg-primary text-white border border-primary" style="font-size: 10px;">Telegram</span>'
+                                    : ($order->type === 'teacher_upgrade' 
+                                        ? '<span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 10px;">Gói giảng viên</span>' 
+                                        : ($order->bundle_id 
+                                            ? '<span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 10px;">Combo</span>' 
+                                            : '<span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 10px;">Khóa học</span>'))) . '
                             </div>
                             <div class="text-secondary small">' . $studentName . ' (' . $studentEmail . ')</div>
                         </div>
                     </div>';
             })
             ->addColumn('financial_info', function ($order) {
+                $currency = $order->currency ?: 'VND';
+                $symbol = $currency === 'VND' ? 'đ' : $currency;
+                
                 $finalTotal = $order->total;
                 if (!empty($order->discount) && $order->discount > 0) {
                     $finalTotal = $order->total - $order->discount;
                 }
                 
                 $discountBadge = (!empty($order->discount) && $order->discount > 0)
-                    ? '<div class="text-muted small text-decoration-line-through">' . number_format($order->total) . ' đ</div>'
+                    ? '<div class="text-muted small text-decoration-line-through">' . number_format($order->total, $currency === 'VND' ? 0 : 2) . ' ' . $symbol . '</div>'
                     : '';
 
                 $paymentBadge = '<span class="badge rounded-pill mt-1" style="' . e($order->payment_method_badge_style) . '; font-size: 11px;">' . e($order->payment_method_label) . '</span>';
 
+                $priceDisplay = '<div class="fw-bold text-primary">' . number_format($finalTotal, $currency === 'VND' ? 0 : 2) . ' ' . $symbol . '</div>';
+                
+                if ($currency !== 'VND' && $order->base_total > 0) {
+                    $priceDisplay .= '<div class="text-muted" style="font-size: 10px;">(' . number_format($order->base_total) . ' đ)</div>';
+                }
+
                 return '
                     <div>
                         ' . $discountBadge . '
-                        <div class="fw-bold text-primary">' . number_format($finalTotal) . ' đ</div>
+                        ' . $priceDisplay . '
                         ' . $paymentBadge . '
                     </div>';
             })

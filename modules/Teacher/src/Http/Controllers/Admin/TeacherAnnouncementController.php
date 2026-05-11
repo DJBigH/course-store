@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\Teacher\src\Http\Requests\TeacherAnnouncementRequest;
 use Modules\Teacher\src\Models\TeacherAnnouncement;
 use Modules\Packages\src\Models\Package;
+use App\Jobs\BroadcastAnnouncementToTelegram;
 
 class TeacherAnnouncementController extends Controller
 {
@@ -59,6 +60,10 @@ class TeacherAnnouncementController extends Controller
             description: 'Tạo thông báo bảng điều khiển giảng viên: ' . $announcement->title
         );
 
+        if ($request->boolean('notify_telegram')) {
+            dispatch(new BroadcastAnnouncementToTelegram($announcement));
+        }
+
         return redirect()->route('teacher-announcements.edit', $announcement->id)
             ->with('msg', __('teacher::admin.messages.announcement_create_success'));
     }
@@ -93,6 +98,10 @@ class TeacherAnnouncementController extends Controller
             logName: 'admin_teacher_management',
             description: 'Cập nhật thông báo bảng điều khiển giảng viên: ' . $announcement->title
         );
+
+        if ($request->boolean('notify_telegram')) {
+            dispatch(new BroadcastAnnouncementToTelegram($announcement));
+        }
 
         return redirect()->route('teacher-announcements.edit', $announcement->id)
             ->with('msg', __('teacher::admin.messages.announcement_update_success'));

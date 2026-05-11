@@ -9,10 +9,16 @@ class FinanceCalculator
 {
     public static function breakdown(OrderDetail $detail, float $commissionRate): array
     {
-        $grossAmount = (float) ($detail->price ?? 0);
         $order = $detail->order;
-        $orderTotal = (float) ($order->total ?? 0);
-        $orderDiscount = (float) ($order->discount ?? 0);
+        $vndRate = (float) (\Illuminate\Support\Facades\DB::table('settings')->where('key', 'currency_rate_usd')->value('value') ?: 25000.0);
+        $multiplier = 1.0;
+        if ($order && $order->currency !== 'VND') {
+            $multiplier = $vndRate / ($order->exchange_rate ?: 1.0);
+        }
+
+        $grossAmount = (float) ($detail->price ?? 0) * $multiplier;
+        $orderTotal = (float) ($order->total ?? 0) * $multiplier;
+        $orderDiscount = (float) ($order->discount ?? 0) * $multiplier;
 
         $allocatedDiscount = 0.0;
         if ($orderTotal > 0 && $orderDiscount > 0 && $grossAmount > 0) {
@@ -20,8 +26,8 @@ class FinanceCalculator
         }
 
         $netRevenue = max($grossAmount - $allocatedDiscount, 0);
-        $teacherRevenue = $netRevenue * max(min($commissionRate, 100), 0) / 100;
-        $platformRevenue = max($netRevenue - $teacherRevenue, 0);
+        $teacherRevenue = $netRevenue * min($commissionRate, 100) / 100;
+        $platformRevenue = $netRevenue - max($teacherRevenue, 0);
 
         return [
             'gross_amount' => $grossAmount,
@@ -35,14 +41,20 @@ class FinanceCalculator
 
     public static function breakdownForUpgrade(\Modules\Orders\src\Models\Order $order, float $commissionRate): array
     {
-        $grossAmount = (float) ($order->total ?? 0);
-        $orderDiscount = (float) ($order->discount ?? 0);
+        $vndRate = (float) (\Illuminate\Support\Facades\DB::table('settings')->where('key', 'currency_rate_usd')->value('value') ?: 25000.0);
+        $multiplier = 1.0;
+        if ($order->currency !== 'VND') {
+            $multiplier = $vndRate / ($order->exchange_rate ?: 1.0);
+        }
+
+        $grossAmount = (float) ($order->total ?? 0) * $multiplier;
+        $orderDiscount = (float) ($order->discount ?? 0) * $multiplier;
 
         // For upgrades, the entire discount belongs to the package
         $allocatedDiscount = min($grossAmount, $orderDiscount);
         $netRevenue = max($grossAmount - $allocatedDiscount, 0);
-        $teacherRevenue = $netRevenue * max(min($commissionRate, 100), 0) / 100;
-        $platformRevenue = max($netRevenue - $teacherRevenue, 0);
+        $teacherRevenue = $netRevenue * min($commissionRate, 100) / 100;
+        $platformRevenue = $netRevenue - max($teacherRevenue, 0);
 
         return [
             'gross_amount' => $grossAmount,

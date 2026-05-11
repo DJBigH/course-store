@@ -47,4 +47,9 @@ class CourseGrant extends Model
     {
         return $this->belongsTo(Courses::class, 'course_id', 'id')->withoutGlobalScopes()->withTrashed();
     }
+
+    public function orders()
+    {
+        return $this->morphMany(\Modules\Orders\src\Models\Order::class, 'orderable');
+    }
 }

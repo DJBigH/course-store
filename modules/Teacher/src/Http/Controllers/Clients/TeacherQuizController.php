@@ -554,6 +554,16 @@ class TeacherQuizController extends Controller
         $quiz    = CourseQuiz::query()->where('course_id', $course->id)->findOrFail($quizId);
         $this->authorizeQuizAccess($teacher, 'update', $quiz);
         
+        $aiQuizStatus = \Modules\Settings\src\Models\Setting::getValue('ai_quiz_enabled');
+        if ($aiQuizStatus === '0' || $aiQuizStatus === '2') {
+             return response()->json([
+                'success' => false,
+                'message' => $aiQuizStatus === '2' 
+                    ? __('quizzes::teacher/messages.flash.ai_maintenance')
+                    : __('quizzes::teacher/messages.flash.ai_disabled')
+            ], 403);
+        }
+
         if (!$teacher->packageHasFeature('can_use_ai_quiz')) {
             return response()->json([
                 'success' => false,

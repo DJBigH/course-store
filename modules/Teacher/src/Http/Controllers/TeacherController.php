@@ -11,6 +11,9 @@ use Modules\Courses\src\Models\Courses;
 use Modules\Teacher\src\Http\Requests\TeacherRequest;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
 use Modules\Teacher\src\Models\TeacherBadge;
+use Modules\Teacher\src\Models\TeacherTelegramSubscription;
+use Modules\Orders\src\Models\Order;
+use App\Jobs\SendTelegramTeacherNotification;
 use Yajra\DataTables\Facades\DataTables;
 
 class TeacherController extends Controller
@@ -428,10 +431,37 @@ class TeacherController extends Controller
 
         // Handle Telegram Package Extension
         if ($request->filled('telegram_duration_value') && $request->filled('telegram_duration_unit')) {
-            $teacherModel->addTelegramDuration(
-                (int) $request->input('telegram_duration_value'),
-                $request->input('telegram_duration_unit')
-            );
+            $value = (int) $request->input('telegram_duration_value');
+            $unit = $request->input('telegram_duration_unit');
+            
+            $newExpiry = $teacherModel->addTelegramDuration($value, $unit);
+
+            // Log as Order for history
+            $order = Order::create([
+                'code' => 'ADMIN' . strtoupper(uniqid()),
+                'student_id' => $teacherModel->student_id,
+                'total' => 0,
+                'status_id' => 2, // Success
+                'type' => 'telegram_package',
+                'payment_method' => 'gift',
+                'payment_complete_date' => now(),
+                'currency' => 'VND'
+            ]);
+
+            // Notify Teacher via Telegram if active
+            if ($teacherModel->hasTelegramFeature()) {
+                $unitLabel = match($unit) {
+                    'day' => 'ngày',
+                    'month' => 'tháng',
+                    'year' => 'năm',
+                    default => $unit
+                };
+                $msg = "🎁 <b>QUÀ TẶNG TỪ HỆ THỐNG!</b>\n\n";
+                $msg .= "Quản trị viên vừa gia hạn gói Telegram cho bạn thêm: <b>{$value} {$unitLabel}</b>\n";
+                $msg .= "📅 <b>Hết hạn mới:</b> " . $newExpiry->format('d/m/Y');
+                
+                dispatch(new SendTelegramTeacherNotification($teacherModel, $msg));
+            }
         }
 
         $status = $this->teacherRepository->update($id, $data);
@@ -473,6 +503,16 @@ class TeacherController extends Controller
                         $addedBadges = TeacherBadge::whereIn('id', $addedBadgeIds)->get();
                         if ($teacherModel->student) {
                             $teacherModel->student->notify(new \App\Notifications\BadgeAssignmentNotification($teacherModel, $addedBadges, 'success'));
+                        }
+
+                        // Notify via Telegram
+                        if ($teacherModel->hasTelegramFeature()) {
+                            $badgeNames = $addedBadges->map(fn($b) => "🏆 <b>{$b->name_locale}</b>")->implode("\n");
+                            $msg = "🌟 <b>CHÚC MỪNG BẠN ĐÃ NHẬN HUY HIỆU MỚI!</b>\n\n";
+                            $msg .= "Bạn vừa được quản trị viên cấp các huy hiệu:\n{$badgeNames}\n\n";
+                            $msg .= "Hãy truy cập bảng điều khiển để xem ngay nhé!";
+                            
+                            dispatch(new SendTelegramTeacherNotification($teacherModel, $msg));
                         }
                     }
                 } catch (\Exception $e) {
@@ -582,6 +622,20 @@ class TeacherController extends Controller
             $teacher->student->notify(new \App\Notifications\TeacherAccountStatusNotification($teacher, $type));
         }
 
+        // Notify via Telegram
+        if ($teacher->hasTelegramFeature()) {
+            $statusTitle = $isLocking ? "🔒 <b>TÀI KHOẢN CỦA BẠN ĐÃ BỊ KHÓA</b>" : "🔓 <b>TÀI KHOẢN CỦA BẠN ĐÃ ĐƯỢC MỞ KHÓA</b>";
+            $msg = "{$statusTitle}\n\n";
+            if ($isLocking) {
+                $msg .= "⚠️ <b>Lý do:</b> {$teacher->lock_reason}\n";
+                $msg .= "Vui lòng liên hệ quản trị viên để biết thêm chi tiết.";
+            } else {
+                $msg .= "Chào mừng bạn đã trở lại! Bạn hiện đã có thể tiếp tục các hoạt động trên hệ thống.";
+            }
+            
+            dispatch(new SendTelegramTeacherNotification($teacher, $msg));
+        }
+
         return back()->with('msg', $isLocking ? 'Đã khóa tài khoản giáo viên thành công.' : 'Đã mở khóa tài khoản giáo viên thành công.');
     }
 
@@ -615,6 +669,22 @@ class TeacherController extends Controller
         if ($teacher->student) {
             $type = $newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED ? 'ceased' : 'restored';
             $teacher->student->notify(new \App\Notifications\TeacherAccountStatusNotification($teacher, $type));
+        }
+
+        // Notify via Telegram
+        if ($teacher->hasTelegramFeature()) {
+            $statusTitle = ($newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) 
+                ? "🤝 <b>HỢP TÁC TẠM DỪNG</b>" 
+                : "🤝 <b>HỢP TÁC ĐÃ ĐƯỢC KHÔI PHỤC</b>";
+            
+            $msg = "{$statusTitle}\n\n";
+            if ($newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) {
+                $msg .= "Hệ thống đã tạm dừng hợp tác với tài khoản của bạn. Vui lòng liên hệ quản trị viên nếu có thắc mắc.";
+            } else {
+                $msg .= "Chào mừng bạn đã trở lại! Quan hệ hợp tác của bạn đã được khôi phục thành công.";
+            }
+            
+            dispatch(new SendTelegramTeacherNotification($teacher, $msg));
         }
 
         return back()->with('msg', $newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED ? 'Đã huỷ hợp tác với giảng viên thành công.' : 'Đã khôi phục hợp tác với giảng viên thành công.');
@@ -858,17 +928,9 @@ class TeacherController extends Controller
             $text .= "Đây là tin nhắn kiểm tra kết nối từ hệ thống Admin.\n";
             $text .= "Nếu bạn nhận được tin nhắn này, kết nối Telegram của bạn đã hoạt động bình thường!";
 
-            $response = \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                'chat_id' => $teacher->telegram_chat_id,
-                'text' => $text,
-                'parse_mode' => 'HTML'
-            ]);
+            \App\Jobs\SendTelegramNotification::dispatch($teacher->telegram_chat_id, $text, $botToken);
 
-            if ($response->successful()) {
-                return response()->json(['success' => true]);
-            }
-
-            return response()->json(['success' => false, 'message' => 'API Telegram trả về lỗi: ' . $response->body()]);
+            return response()->json(['success' => true]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi kết nối: ' . $e->getMessage()]);
         }

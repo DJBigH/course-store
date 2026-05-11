@@ -87,6 +87,42 @@ class TeacherAnnouncement extends Model
         return $this->resolveLocalizedAttribute('action_label');
     }
 
+    public function getTitleLocaleForTeacher(Teacher $teacher): string
+    {
+        return $this->resolveLocalizedAttributeForTeacher('title', $teacher);
+    }
+
+    public function getMessageLocaleForTeacher(Teacher $teacher): string
+    {
+        return $this->resolveLocalizedAttributeForTeacher('message', $teacher);
+    }
+
+    public function getActionLabelLocaleForTeacher(Teacher $teacher): string
+    {
+        return $this->resolveLocalizedAttributeForTeacher('action_label', $teacher);
+    }
+
+    private function resolveLocalizedAttributeForTeacher(string $attribute, Teacher $teacher): string
+    {
+        $locale = $teacher->student?->locale ?: 'vi';
+        $fields = match ($locale) {
+            'zh' => ["{$attribute}_zh", $attribute, "{$attribute}_en", "{$attribute}_ko", "{$attribute}_ja"],
+            'ja' => ["{$attribute}_ja", $attribute, "{$attribute}_en", "{$attribute}_ko", "{$attribute}_zh"],
+            'ko' => ["{$attribute}_ko", $attribute, "{$attribute}_en", "{$attribute}_ja", "{$attribute}_zh"],
+            'en' => ["{$attribute}_en", $attribute, "{$attribute}_ko", "{$attribute}_ja", "{$attribute}_zh"],
+            default => [$attribute, "{$attribute}_en", "{$attribute}_ko", "{$attribute}_ja", "{$attribute}_zh"],
+        };
+
+        foreach ($fields as $field) {
+            $value = trim((string) ($this->{$field} ?? ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
     private function resolveLocalizedAttribute(string $attribute): string
     {
         $fields = match (app()->getLocale()) {

@@ -30,6 +30,10 @@
 
             <div class="row g-3 mb-4">
                 <div class="col-12 col-md-4">
+                    <label class="form-label">Mã đơn hàng</label>
+                    <input type="text" id="order-code-filter" class="form-control" placeholder="Nhập mã đơn hàng...">
+                </div>
+                <div class="col-12 col-md-4">
                     <label class="form-label">Phương thức thanh toán</label>
                     <select id="payment-method-filter" class="form-select">
                         <option value="">Tất cả phương thức</option>
@@ -135,6 +139,7 @@
                     url: "{{ route('orders.data') }}",
                     data: function(d) {
                         d.payment_method_filter = $('#payment-method-filter').val();
+                        d.order_code_filter = $('#order-code-filter').val();
                     }
                 },
                 columns: [{
@@ -239,7 +244,11 @@
                 $('#bulk-action-form').trigger('submit');
             });
 
-            $('#payment-method-filter').on('change', function() {
+            $('#payment-method-filter, #order-code-filter').on('change', function() {
+                table.ajax.reload();
+            });
+
+            $('#order-code-filter').on('keyup', function() {
                 table.ajax.reload();
             });
         });

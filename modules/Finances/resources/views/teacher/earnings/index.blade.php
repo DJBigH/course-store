@@ -264,7 +264,13 @@
                         @forelse ($items as $item)
                             <tr>
                                 <td>#{{ $item->order?->code }}</td>
-                                <td>{{ $item->courses?->name_locale ?: '-' }}</td>
+                                <td>
+                                    @if($item->order?->type === 'telegram_package')
+                                        Gói Telegram
+                                    @else
+                                        {{ $item->courses?->name_locale ?: '-' }}
+                                    @endif
+                                </td>
                                 <td>{{ $item->order?->students?->name ?: '-' }}</td>
                                 <td>{{ moneyLocale($item->finance_breakdown['gross_amount'], null, true) }}</td>
                                 <td class="text-danger">-{{ moneyLocale($item->finance_breakdown['allocated_discount'], null, true) }}</td>

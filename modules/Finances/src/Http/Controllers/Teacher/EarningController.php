@@ -44,7 +44,13 @@ class EarningController extends Controller
 
         $summary = TeacherFinanceCalculator::summarize(
             (clone $paidQuery)->get(),
-            fn () => $effectiveCommissionRate
+            function ($detail) use ($effectiveCommissionRate) {
+                if ($detail->order?->type === 'telegram_package') {
+                    if ($detail->order?->payment_method === 'wallet') return -100;
+                    return 0;
+                }
+                return $effectiveCommissionRate;
+            }
         );
 
         $revenueInsights = $this->buildTeacherRevenueInsights($teacher, $effectiveCommissionRate, $dashboardRange);
@@ -65,7 +71,13 @@ class EarningController extends Controller
 
         $items = $paidQuery->latest()->paginate(20);
         $items->setCollection(
-            TeacherFinanceCalculator::decorate($items->getCollection(), fn () => $effectiveCommissionRate)
+            TeacherFinanceCalculator::decorate($items->getCollection(), function ($detail) use ($effectiveCommissionRate) {
+                if ($detail->order?->type === 'telegram_package') {
+                    if ($detail->order?->payment_method === 'wallet') return -100;
+                    return 0;
+                }
+                return $effectiveCommissionRate;
+            })
         );
 
         $currentRangeKey = $rangeKey;

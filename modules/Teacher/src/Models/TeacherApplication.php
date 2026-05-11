@@ -19,35 +19,40 @@ class TeacherApplication extends Model
                 $chatId = config('services.telegram.chat_id');
 
                 if ($isEnabled === '1' && $botToken && $chatId) {
-                    $app->loadMissing('package');
+                    $app->loadMissing(['package', 'student']);
                     $isUpgrade = $app->type === 'upgrade';
                     
-                    // Nếu là nâng cấp gói 0đ thì không gửi thông báo "Yêu cầu" vì sẽ gửi thông báo "Thành công" ngay sau đó
-                    if ($isUpgrade && ($app->package?->price ?? 0) <= 0) {
+                    // Nếu là nâng cấp gói 0đ HOẶC là gói đang chờ giáo viên nhận (gift/manual grant) thì không gửi thông báo "Yêu cầu"
+                    if (($isUpgrade && ($app->package?->price ?? 0) <= 0) || $app->status === 'pending_claim') {
                         return;
                     }
+
+                    $fullName = $app->full_name ?: ($app->student?->name ?? 'N/A');
+                    $email = $app->email ?: ($app->student?->email ?? 'N/A');
+                    $phone = $app->phone ?: ($app->student?->phone ?? 'N/A');
 
                     $title = $isUpgrade ? "🚀 <b>[YÊU CẦU NÂNG CẤP GÓI]</b>" : "👨‍🏫 <b>[YÊU CẦU ĐĂNG KÝ LÀM GIÁO VIÊN]</b>";
                     
                     $text = "{$title}\n\n";
-                    $text .= "👤 <b>Họ tên:</b> {$app->full_name}\n";
-                    $text .= "✉️ <b>Email:</b> <code>{$app->email}</code>\n";
-                    $text .= "📞 <b>Số điện thoại:</b> <code>{$app->phone}</code>\n";
+                    $text .= "👤 <b>Họ tên:</b> {$fullName}\n";
+                    $text .= "✉️ <b>Email:</b> <code>{$email}</code>\n";
+                    $text .= "📞 <b>Số điện thoại:</b> <code>{$phone}</code>\n";
                     
                     if ($isUpgrade) {
                         $text .= "📦 <b>Gói yêu cầu:</b> " . ($app->package?->name ?? 'N/A') . "\n";
                         if ($app->note) {
                             $text .= "📝 <b>Ghi chú:</b> {$app->note}\n";
                         }
+                    } else {
+                        // Check if already a teacher
+                        if ($app->student?->is_teacher) {
+                            $text .= "⚠️ <b>Lưu ý:</b> Tài khoản này đã là Giảng viên.\n";
+                        }
                     }
 
                     $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
 
-                    \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                        'chat_id' => $chatId,
-                        'text' => $text,
-                        'parse_mode' => 'HTML'
-                    ]);
+                    \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
                 }
             } catch (\Exception $e) {
                 // Fail silently
@@ -62,23 +67,23 @@ class TeacherApplication extends Model
                     $chatId = config('services.telegram.chat_id');
 
                     if ($isEnabled === '1' && $botToken && $chatId) {
+                        $app->loadMissing('student');
                         $isUpgrade = $app->type === 'upgrade';
                         $title = $isUpgrade ? "❌ <b>[THÔNG BÁO HỦY NÂNG CẤP GÓI]</b>" : "❌ <b>[THÔNG BÁO HỦY HỢP TÁC GIẢNG VIÊN]</b>";
                         
+                        $fullName = $app->full_name ?: ($app->student?->name ?? 'N/A');
+                        $email = $app->email ?: ($app->student?->email ?? 'N/A');
+
                         $text = "{$title}\n\n";
-                        $text .= "👤 <b>Giảng viên:</b> {$app->full_name}\n";
-                        $text .= "✉️ <b>Email:</b> <code>{$app->email}</code>\n";
+                        $text .= "👤 <b>Giảng viên:</b> {$fullName}\n";
+                        $text .= "✉️ <b>Email:</b> <code>{$email}</code>\n";
                         
                         if ($isUpgrade) {
                             $text .= "📦 <b>Gói đã hủy:</b> " . ($app->package?->name ?? 'N/A') . "\n";
                         }
 
                         $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
-                        \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                            'chat_id' => $chatId,
-                            'text' => $text,
-                            'parse_mode' => 'HTML'
-                        ]);
+                        \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
                     }
                 }
 
@@ -88,20 +93,19 @@ class TeacherApplication extends Model
                     $chatId = config('services.telegram.chat_id');
 
                     if ($isEnabled === '1' && $botToken && $chatId) {
-                        $app->loadMissing('package');
+                        $app->loadMissing(['package', 'student']);
+                        $fullName = $app->full_name ?: ($app->student?->name ?? 'N/A');
+                        $email = $app->email ?: ($app->student?->email ?? 'N/A');
+
                         $text = "✅ <b>[NÂNG CẤP GÓI THÀNH CÔNG]</b>\n\n";
-                        $text .= "👤 <b>Giảng viên:</b> {$app->full_name}\n";
-                        $text .= "✉️ <b>Email:</b> <code>{$app->email}</code>\n";
+                        $text .= "👤 <b>Giảng viên:</b> {$fullName}\n";
+                        $text .= "✉️ <b>Email:</b> <code>{$email}</code>\n";
                         $text .= "📦 <b>Gói đã kích hoạt:</b> " . ($app->package?->name ?? 'N/A') . "\n";
                         $text .= "💰 <b>Số tiền:</b> " . number_format($app->package?->price ?? 0) . " VNĐ\n";
                         $text .= "💳 <b>Thanh toán:</b> " . strtoupper((string) $app->payment_method) . "\n";
                         $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
 
-                        \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                            'chat_id' => $chatId,
-                            'text' => $text,
-                            'parse_mode' => 'HTML'
-                        ]);
+                        \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
                     }
                 }
             } catch (\Exception $e) {
@@ -228,6 +232,8 @@ class TeacherApplication extends Model
         return match ($this->payment_method) {
             'vnpay' => __('teacher::portal.payment_methods.vnpay'),
             'momo' => __('teacher::portal.payment_methods.momo'),
+            'wallet' => __('teacher::portal.payment_methods.wallet'),
+            'free' => __('teacher::portal.form.package.free'),
             default => __('teacher::portal.payment_methods.bank_transfer'),
         };
     }

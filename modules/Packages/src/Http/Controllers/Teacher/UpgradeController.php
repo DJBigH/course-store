@@ -72,7 +72,38 @@ class UpgradeController extends Controller
 
         $selectedPackageId = (int) request('package_id', $upgradePackages->first()?->id);
 
-        return view('packages::teacher.upgrade', compact('pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradePackages', 'features', 'selectedPackageId'));
+        $paymentSettings = \Modules\Settings\src\Models\Setting::whereIn('key', [
+            'payment_bank_enabled',
+            'payment_momo_enabled',
+            'payment_vnpay_enabled',
+            'payment_wallet_enabled',
+            'bank_transfer_bank_bin',
+            'bank_transfer_bank_name',
+            'bank_transfer_account_number',
+            'bank_transfer_account_name',
+            'bank_transfer_note_prefix'
+        ])->pluck('value', 'key')->toArray();
+
+        $bankEnabled = (int) ($paymentSettings['payment_bank_enabled'] ?? 1) === 1;
+        $vnpayEnabled = (int) ($paymentSettings['payment_vnpay_enabled'] ?? 1) === 1;
+        $momoEnabled = (int) ($paymentSettings['payment_momo_enabled'] ?? 1) === 1;
+        $walletEnabled = (int) ($paymentSettings['payment_wallet_enabled'] ?? 1) === 1;
+
+        $bankTransferBankBin = $paymentSettings['bank_transfer_bank_bin'] ?? '';
+        $bankTransferBankName = $paymentSettings['bank_transfer_bank_name'] ?? '';
+        $bankTransferAccountNumber = $paymentSettings['bank_transfer_account_number'] ?? '';
+        $bankTransferAccountName = $paymentSettings['bank_transfer_account_name'] ?? '';
+        $bankTransferNote = ($paymentSettings['bank_transfer_note_prefix'] ?? 'UPG') . $teacher->id;
+
+        $availableBalance = $this->resolveAvailableBalance($teacher);
+        $selectedPaymentMethod = old('payment_method', 'wallet');
+
+        return view('packages::teacher.upgrade', compact(
+            'pageTitle', 'pageName', 'teacher', 'currentPackage', 'upgradePackages', 'features', 
+            'selectedPackageId', 'bankEnabled', 'vnpayEnabled', 'momoEnabled', 'walletEnabled',
+            'bankTransferBankBin', 'bankTransferBankName', 'bankTransferAccountNumber', 
+            'bankTransferAccountName', 'bankTransferNote', 'availableBalance', 'selectedPaymentMethod'
+        ));
     }
 
     public function storeUpgradePackage(Request $request)
@@ -89,7 +120,7 @@ class UpgradeController extends Controller
 
         $data = $request->validate([
             'package_id' => ['required', 'integer'],
-            'payment_method' => ['nullable', 'string', 'in:bank_transfer,vnpay,momo'],
+            'payment_method' => ['nullable', 'string', 'in:bank_transfer,vnpay,momo,wallet'],
         ]);
 
         $currentPackage = $teacher->application?->package;
@@ -104,6 +135,13 @@ class UpgradeController extends Controller
             return back()->withErrors(['payment_method' => __('packages::teacher.form.package.payment_required')]);
         }
 
+        if ($data['payment_method'] === 'wallet') {
+            $availableBalance = $this->resolveAvailableBalance($teacher);
+            if ($availableBalance < $targetPackage->price) {
+                return back()->with('msg_danger', 'Số dư ví không đủ để thực hiện nâng cấp.');
+            }
+        }
+
         $changeRequest = DB::transaction(function () use ($teacher, $targetPackage, $data) {
             $isFree = $targetPackage->price <= 0;
             
@@ -116,29 +154,31 @@ class UpgradeController extends Controller
                 'phone' => $teacher->student?->phone,
                 'package_id' => $targetPackage->id,
                 'payment_method' => $isFree ? 'free' : $data['payment_method'],
-                'status' => $isFree ? 'approved' : 'pending_payment',
+                'status' => ($isFree || $data['payment_method'] === 'wallet') ? 'approved' : 'pending_payment',
                 'type' => 'upgrade',
                 'submitted_at' => now(),
-                'reviewed_at' => $isFree ? now() : null,
-                'reviewed_by' => $isFree ? null : null, // System auto-approved
+                'reviewed_at' => ($isFree || $data['payment_method'] === 'wallet') ? now() : null,
+                'reviewed_by' => null, // System auto-approved
                 'note' => __('packages::teacher.upgrade.request_note'),
             ]);
+
+            $isWallet = $data['payment_method'] === 'wallet';
 
             // Create Order for the upgrade
             Order::query()->create([
                 'code' => 'UPG_' . generateUniqueCouponCode(),
                 'student_id' => $teacher->student_id,
                 'total' => $targetPackage->price,
-                'status_id' => $isFree ? 2 : 1, // 2 = Success, 1 = Pending
+                'status_id' => ($isFree || $isWallet) ? 2 : 1, // 2 = Success, 1 = Pending
                 'orderable_id' => $application->id,
                 'orderable_type' => TeacherApplication::class,
                 'type' => 'teacher_upgrade',
                 'payment_method' => $application->payment_method,
-                'payment_date' => $isFree ? now() : null,
-                'payment_complete_date' => $isFree ? now() : null,
+                'payment_date' => ($isFree || $isWallet) ? now() : null,
+                'payment_complete_date' => ($isFree || $isWallet) ? now() : null,
             ]);
 
-            if ($isFree) {
+            if ($isFree || $isWallet) {
                 $packageAction = $this->packageLifecycleManager->applyApprovedChange($teacher, $application->fresh(['package']));
                 
                 activity_log(
@@ -148,17 +188,18 @@ class UpgradeController extends Controller
                         'application_id' => $application->id,
                         'package' => $targetPackage->name,
                         'action' => $packageAction,
-                        'is_free' => true
+                        'is_free' => $isFree,
+                        'is_wallet' => $isWallet
                     ],
                     logName: __('teacher::admin.logs.approve_title'),
-                    description: __('teacher::admin.logs.approve_upgrade_desc')
+                    description: $isWallet ? 'Học viên nâng cấp gói qua Ví (Tự động kích hoạt)' : __('teacher::admin.logs.approve_upgrade_desc')
                 );
             }
 
             return $application;
         });
 
-        if ($targetPackage->price <= 0) {
+        if ($targetPackage->price <= 0 || $data['payment_method'] === 'wallet') {
             $this->activateUpgrade($changeRequest);
             return redirect()->route('teacher.dashboard.package.upgrade.result', ['status' => 'success']);
         }
@@ -497,5 +538,35 @@ class UpgradeController extends Controller
 
         return redirect()->route('teacher.dashboard.index')
             ->with('msg_success', __('packages::teacher.flash.cancelled'));
+    }
+
+    private function resolveAvailableBalance(Teacher $teacher): float
+    {
+        $paidStatusId = (int) (DB::table('orders_status')->where('is_success', true)->value('id') ?? 2);
+
+        // Calculate total revenue from courses
+        $vndRate = (float) (DB::table('settings')->where('key', 'currency_rate_usd')->value('value') ?: 25000.0);
+        $exRate = "CASE WHEN o.currency = 'VND' THEN 1 ELSE ({$vndRate} / IFNULL(o.exchange_rate, 1)) END";
+
+        $teacherRevenue = DB::table('orders_detail as od')
+            ->join('orders as o', 'o.id', '=', 'od.order_id')
+            ->join('courses as c', 'c.id', '=', 'od.course_id')
+            ->join('teacher as t', 't.id', '=', 'c.teacher_id')
+            ->where('o.status_id', $paidStatusId)
+            ->where('c.teacher_id', $teacher->id)
+            ->selectRaw("
+                SUM(
+                    GREATEST(0, (od.price * {$exRate}) - LEAST(od.price * {$exRate}, IF(o.total > 0, (o.discount * {$exRate}) * (od.price / o.total), 0))) 
+                    * (IFNULL(t.commission_rate, 0) / 100)
+                ) as teacher_revenue
+            ")->value('teacher_revenue') ?: 0.0;
+
+        // Calculate total requested/paid payouts
+        $requested = DB::table('teacher_payout_requests')
+            ->where('teacher_id', $teacher->id)
+            ->whereIn('status', ['requested', 'processing', 'paid'])
+            ->sum('amount');
+
+        return (float) max(0, $teacherRevenue - $requested);
     }
 }

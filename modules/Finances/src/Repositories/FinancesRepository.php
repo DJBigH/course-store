@@ -48,7 +48,8 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             $targetRate = (float) (DB::table('settings')->where('key', $rateKey)->value('value') ?: 1.0);
         }
 
-        $exRate = 'IFNULL(o.exchange_rate, 1)';
+        $vndRate = (float) (DB::table('settings')->where('key', 'currency_rate_usd')->value('value') ?: 25000.0);
+        $exRate = "CASE WHEN o.currency = 'VND' THEN 1 ELSE ({$vndRate} / IFNULL(o.exchange_rate, 1)) END";
         
         $summary = $query->selectRaw("
             SUM(od.price * {$exRate}) as course_gross,
@@ -365,6 +366,11 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
                         ->whereHasMorph('orderable', [TeacherApplication::class], function ($ta) use ($teacherId) {
                             $ta->where('teacher_id', $teacherId);
                         });
+                })->orWhere(function ($sub) use ($teacherId) {
+                    $sub->where('type', 'telegram_package')
+                        ->whereHasMorph('orderable', [\Modules\Teacher\src\Models\TeacherTelegramSubscription::class], function ($ts) use ($teacherId) {
+                            $ts->where('teacher_id', $teacherId);
+                        });
                 });
             });
         }
@@ -407,6 +413,25 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
                             'teacher' => $app->teacher,
                         ],
                         'finance_breakdown' => FinanceCalculator::breakdownForUpgrade($order, 0), // Teacher gets 0%
+                    ];
+                    $items->push($virtualItem);
+                }
+            } elseif ($order->type === 'telegram_package') {
+                $subscription = $order->orderable;
+                if ($subscription) {
+                    // Check teacher filter
+                    if (!empty($filters['teacher_id']) && ($subscription->teacher_id != $filters['teacher_id'])) {
+                        continue;
+                    }
+
+                    $virtualItem = (object) [
+                        'id' => 'TELE_' . $order->id,
+                        'order' => $order,
+                        'courses' => (object) [
+                            'name_locale' => 'Gói Telegram: ' . ($subscription->package?->name ?? 'N/A'),
+                            'teacher' => $subscription->teacher,
+                        ],
+                        'finance_breakdown' => FinanceCalculator::breakdownForUpgrade($order, 0), // Platform Net 100%
                     ];
                     $items->push($virtualItem);
                 }
@@ -540,7 +565,8 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             $targetRate = (float) (DB::table('settings')->where('key', $rateKey)->value('value') ?: 1.0);
         }
 
-        $exRate = 'IFNULL(o.exchange_rate, 1)';
+        $vndRate = (float) (DB::table('settings')->where('key', 'currency_rate_usd')->value('value') ?: 25000.0);
+        $exRate = "CASE WHEN o.currency = 'VND' THEN 1 ELSE ({$vndRate} / IFNULL(o.exchange_rate, 1)) END";
 
         $results = $query->selectRaw("
             c.teacher_id,
@@ -565,7 +591,9 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
         ->groupBy('c.teacher_id', 't.name', 't.slug')
         ->get();
 
-        // 1b. Get Upgrade Earnings per teacher
+        $vndRate = (float) (DB::table('settings')->where('key', 'currency_rate_usd')->value('value') ?: 25000.0);
+        $exRate = "CASE WHEN o.currency = 'VND' THEN 1 ELSE ({$vndRate} / IFNULL(o.exchange_rate, 1)) END";
+
         $upgradeQuery = DB::table('orders as o')
             ->join('teacher_applications as ta', 'ta.id', '=', 'o.orderable_id')
             ->leftJoin('teacher as t', 't.id', '=', 'ta.teacher_id')
@@ -668,7 +696,8 @@ class FinancesRepository extends BaseRepository implements FinancesRepositoryInt
             $targetRate = (float) (DB::table('settings')->where('key', $rateKey)->value('value') ?: 1.0);
         }
 
-        $exRate = 'IFNULL(o.exchange_rate, 1)';
+        $vndRate = (float) (DB::table('settings')->where('key', 'currency_rate_usd')->value('value') ?: 25000.0);
+        $exRate = "CASE WHEN o.currency = 'VND' THEN 1 ELSE ({$vndRate} / IFNULL(o.exchange_rate, 1)) END";
 
         $results = $query->selectRaw("
             DATE(od.created_at) as date,

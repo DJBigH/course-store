@@ -33,6 +33,7 @@ return [
         'bank_transfer' => 'Chuyển khoản ngân hàng',
         'vnpay' => 'VNPay',
         'momo' => 'MoMo',
+        'wallet' => 'Số dư ví',
         'maintenance' => '(Đang bảo trì)',
     ],
     'form' => [

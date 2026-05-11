@@ -1,5 +1,4 @@
-
-http://127.0.0.1:8000/teacher/ho-so@extends('layouts.teacher')
+@extends('layouts.teacher')
 
 @section('style')
 <style>

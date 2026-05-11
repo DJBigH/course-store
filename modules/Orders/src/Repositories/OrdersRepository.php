@@ -243,11 +243,7 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
                                 $text .= "🏷️ <b>Đơn hàng:</b> {$orderCode}\n";
                                 $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
 
-                                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                                    'chat_id' => $chatId,
-                                    'text' => $text,
-                                    'parse_mode' => 'HTML'
-                                ]);
+                                \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
                             }
                         } catch (\Exception $e) {
                             // Fail silently
@@ -282,8 +278,8 @@ class OrdersRepository extends BaseRepository implements OrdersRepositoryInterfa
     public function getCategories()
     {
         return $this->model
-            ->with(['detail', 'status', 'students'])
-            ->select(['id', 'code', 'student_id', 'customer_name_snapshot', 'customer_email_snapshot', 'total', 'discount', 'coupon', 'status_id', 'payment_method', 'created_at'])
+            ->with(['detail', 'status', 'students', 'bundle'])
+            ->select(['id', 'code', 'student_id', 'bundle_id', 'customer_name_snapshot', 'customer_email_snapshot', 'total', 'discount', 'coupon', 'status_id', 'payment_method', 'type', 'currency', 'base_total', 'created_at'])
             ->latest();
     }
 

@@ -81,7 +81,37 @@
                     </div>
                 </div>
 
-                @if ($order->type === 'teacher_upgrade')
+                @if ($order->type === 'telegram_package')
+                    <div class="card shadow-sm">
+                        <div class="card-header fw-semibold">
+                            Thông tin gói Telegram
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tên gói</th>
+                                        <th>Thời hạn</th>
+                                        <th class="text-end">Giá</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-semibold">
+                                            {{ $order->orderable->package->name_locale ?? $order->orderable->package->name ?? '-' }}
+                                        </td>
+                                        <td>
+                                            {{ $order->orderable->package->duration_value }} {{ $order->orderable->package->duration_unit }}
+                                        </td>
+                                        <td class="text-end fw-bold text-primary">
+                                            {{ money($order->total) }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @elseif ($order->type === 'teacher_upgrade')
                     <div class="card shadow-sm">
                         <div class="card-header fw-semibold">
                             Thông tin gói giảng viên
@@ -200,7 +230,12 @@
                                 <tr class="table-success">
                                     <th class="fw-bold">Tổng thanh toán</th>
                                     <td class="fw-bold text-end text-success">
-                                        {{ money($order->total - $order->discount) }}
+                                        {{ money($order->total - $order->discount, $order->currency ?: 'đ') }}
+                                        @if($order->currency && $order->currency !== 'VND' && $order->base_total > 0)
+                                            <div class="small text-muted fw-normal" style="font-size: 11px;">
+                                                (~ {{ money($order->base_total, 'đ') }})
+                                            </div>
+                                        @endif
                                     </td>
                                 </tr>
                             </tbody>

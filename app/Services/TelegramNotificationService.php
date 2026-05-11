@@ -26,14 +26,28 @@ class TelegramNotificationService
         }
 
         $botToken = config('services.telegram_teacher.bot_token') ?: config('services.telegram.bot_token');
-        if (empty($botToken)) {
-            Log::warning('TelegramNotificationService: Teacher Bot token is not configured.');
+        return $this->sendMessage($teacher->telegram_chat_id, $message, $botToken);
+    }
+
+    /**
+     * Send a generic notification via Telegram Bot.
+     *
+     * @param string $chatId
+     * @param string $message
+     * @param string|null $botToken
+     * @return bool
+     */
+    public function sendMessage(string $chatId, string $message, ?string $botToken = null): bool
+    {
+        $botToken = $botToken ?: config('services.telegram.bot_token');
+
+        if (empty($botToken) || empty($chatId)) {
             return false;
         }
 
         try {
             $response = Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                'chat_id' => $teacher->telegram_chat_id,
+                'chat_id' => $chatId,
                 'text' => $message,
                 'parse_mode' => 'HTML',
                 'disable_web_page_preview' => true,
@@ -44,15 +58,14 @@ class TelegramNotificationService
             }
 
             Log::error('TelegramNotificationService: Failed to send message.', [
-                'teacher_id' => $teacher->id,
-                'chat_id' => $teacher->telegram_chat_id,
+                'chat_id' => $chatId,
                 'response' => $response->body()
             ]);
 
             return false;
         } catch (\Exception $e) {
             Log::error('TelegramNotificationService: Exception while sending message.', [
-                'teacher_id' => $teacher->id,
+                'chat_id' => $chatId,
                 'error' => $e->getMessage()
             ]);
             return false;

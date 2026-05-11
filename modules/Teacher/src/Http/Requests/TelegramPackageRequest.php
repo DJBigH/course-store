@@ -19,11 +19,18 @@ class TelegramPackageRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'name_en' => 'nullable|string|max:255',
+            'name_ja' => 'nullable|string|max:255',
+            'name_ko' => 'nullable|string|max:255',
+            'name_zh' => 'nullable|string|max:255',
             'price' => 'required|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0|lt:price',
             'duration_value' => 'required|integer|min:1',
             'duration_unit' => 'required|in:' . implode(',', $units),
             'description' => 'nullable|string',
+            'description_en' => 'nullable|string',
+            'description_ja' => 'nullable|string',
+            'description_ko' => 'nullable|string',
+            'description_zh' => 'nullable|string',
             'sort_order' => 'nullable|integer',
             'is_active' => 'nullable',
         ];

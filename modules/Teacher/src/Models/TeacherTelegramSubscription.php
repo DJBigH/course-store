@@ -15,6 +15,8 @@ class TeacherTelegramSubscription extends Model
         'expires_at',
         'amount',
         'status',
+        'claim_token',
+        'claimed_at',
     ];
 
     protected $casts = [
@@ -31,5 +33,10 @@ class TeacherTelegramSubscription extends Model
     public function package()
     {
         return $this->belongsTo(TelegramPackage::class, 'telegram_package_id');
+    }
+
+    public function orders()
+    {
+        return $this->morphMany(\Modules\Orders\src\Models\Order::class, 'orderable');
     }
 }

@@ -169,9 +169,16 @@ return [
         'question_updated' => 'Đã cập nhật câu hỏi thành công!',
         'question_deleted' => 'Đã xóa câu hỏi thành công!',
         'ai_locked' => 'Tính năng tạo câu hỏi bằng AI đang bị khóa!',
+        'ai_maintenance' => 'Tính năng tạo câu hỏi bằng AI đang bảo trì, vui lòng thử lại sau!',
+        'ai_disabled' => 'Tính năng tạo câu hỏi bằng AI hiện đang bị tắt bởi quản trị viên.',
         'ai_limit' => 'Bạn đã đạt giới hạn tạo câu hỏi AI tối đa :max lần!',
         'ai_success' => 'Đã tạo thành công :count câu hỏi bằng AI!',
         'import_success' => 'Đã nhập thành công :count câu hỏi!',
         'no_buyers' => 'Khóa học này hiện chưa có học viên nào mua.',
+    ],
+    'history' => [
+        'quiz_created' => 'Tạo bài kiểm tra mới',
+        'quiz_updated' => 'Cập nhật thông tin bài kiểm tra',
+        'quiz_deleted' => 'Xóa bài kiểm tra',
     ],
 ];

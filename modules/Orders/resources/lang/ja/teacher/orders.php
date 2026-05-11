@@ -54,7 +54,9 @@ return [
         'bank_transfer' => '銀行振込',
         'vnpay' => 'VNPay',
         'momo' => 'MoMo',
+        'wallet' => '講師ウォレット',
         'free' => '無料',
+        'gift' => 'ギフト',
         'unknown' => '不明',
     ],
     'export' => [

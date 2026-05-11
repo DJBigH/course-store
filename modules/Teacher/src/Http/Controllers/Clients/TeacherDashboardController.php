@@ -54,7 +54,7 @@ class TeacherDashboardController extends Controller
         )->get();
         $summary = TeacherFinanceCalculator::summarize(
             $orderDetails,
-            fn () => $effectiveCommissionRate
+            $this->getCommissionResolver($effectiveCommissionRate)
         );
         $payoutRequested = $this->resolveCommittedPayoutAmount($teacher);
 
@@ -65,7 +65,7 @@ class TeacherDashboardController extends Controller
         )->get();
         $previousSummary = TeacherFinanceCalculator::summarize(
             $previousOrderDetails,
-            fn () => $effectiveCommissionRate
+            $this->getCommissionResolver($effectiveCommissionRate)
         );
 
         $calcTrend = function ($current, $previous) {
@@ -84,7 +84,7 @@ class TeacherDashboardController extends Controller
         $allTimeOrderDetails = $this->paidOrderDetailsQuery($teacher)->get();
         $allTimeSummary = TeacherFinanceCalculator::summarize(
             $allTimeOrderDetails,
-            fn () => $effectiveCommissionRate
+            $this->getCommissionResolver($effectiveCommissionRate)
         );
 
         $stats = [
@@ -102,7 +102,7 @@ class TeacherDashboardController extends Controller
         $revenueInsights = $this->buildTeacherRevenueInsights($teacher, $effectiveCommissionRate, $dashboardRange);
         $coursePerformance = $this->buildTeacherCoursePerformance($teacher, $effectiveCommissionRate, $dashboardRange);
         $recentCourses = $coursesQuery->latest('id')->take(4)->get();
-        $recentSales = TeacherFinanceCalculator::decorate($orderDetails->sortByDesc('created_at')->take(6)->values(), fn () => $effectiveCommissionRate);
+        $recentSales = TeacherFinanceCalculator::decorate($orderDetails->sortByDesc('created_at')->take(6)->values(), $this->getCommissionResolver($effectiveCommissionRate));
         $topBundles = $this->resolveTopBundles($teacher);
         $packageSummary = $this->resolvePackageSummary($teacher);
 

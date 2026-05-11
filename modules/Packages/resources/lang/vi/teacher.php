@@ -8,6 +8,7 @@ return [
         'feature_locked' => 'Tính năng này bị khóa trong gói hiện tại của bạn.',
         'import_export_locked' => 'Tính năng Nhập/Xuất CSV đang bị khóa do giới hạn gói hiện tại.',
         'quiz_management_locked_desc' => 'Tính năng Quản lý Quiz đang bị khóa do giới hạn gói hiện tại.',
+        'students_locked_grants' => 'Tính năng Tặng Khóa học cho học viên đang bị khóa trong gói hiện tại.',
         'upsell_submessage' => 'Nâng cấp lên gói cao hơn để mở khóa thêm nhiều quyền lợi.',
         'labels' => [
             'course_limit' => 'Giới hạn khóa học',

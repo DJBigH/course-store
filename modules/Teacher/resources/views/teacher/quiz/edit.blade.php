@@ -95,9 +95,21 @@
                         📁 {{ __('quizzes::teacher/messages.edit.import_csv') }}
                     </button>
                 @endif
-                @if(\Modules\Settings\src\Models\Setting::getValue('ai_quiz_enabled') !== '0')
-                <button class="btn btn-outline-info btn-sm text-info fw-bold" type="button" data-bs-toggle="modal" data-bs-target="#aiGenerateModal">
+                @php
+                    $aiQuizStatus = \Modules\Settings\src\Models\Setting::getValue('ai_quiz_enabled');
+                    $isAiMaintenance = $aiQuizStatus === '2';
+                    $isAiEnabled = $aiQuizStatus !== '0';
+                    $hasAiFeature = $teacher->packageHasFeature('can_use_ai_quiz');
+                @endphp
+                @if($isAiEnabled)
+                <button class="btn btn-outline-info btn-sm text-info fw-bold" type="button" 
+                    @if(!$isAiMaintenance && $hasAiFeature) data-bs-toggle="modal" data-bs-target="#aiGenerateModal" @else disabled @endif>
                     ✨ {{ __('quizzes::teacher/messages.edit.ai_generate') }}
+                    @if($isAiMaintenance)
+                        <span class="badge bg-warning text-dark ms-1" style="font-size: 0.65rem;">BẢO TRÌ</span>
+                    @elseif(!$hasAiFeature)
+                        <i class="fas fa-lock ms-1 small"></i>
+                    @endif
                 </button>
                 @endif
                 <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#addQuestionForm">
@@ -171,7 +183,7 @@
             </div>
         </div>
 
-        @if(\Modules\Settings\src\Models\Setting::getValue('ai_quiz_enabled') !== '0')
+        @if($isAiEnabled && !$isAiMaintenance && $hasAiFeature)
         <div class="modal fade" id="aiGenerateModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content text-light" style="background: #1e293b; border-color: #334155;">
@@ -346,7 +358,7 @@
                 }
             }
         </script>
-        @if(\Modules\Settings\src\Models\Setting::getValue('ai_quiz_enabled') !== '0')
+        @if($isAiEnabled && !$isAiMaintenance && $hasAiFeature)
         <script>
             function generateAi() {
                 const btn = document.getElementById('btnAiGenerate');

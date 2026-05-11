@@ -98,14 +98,33 @@ class Teacher extends Model
 
     public function getTelegramPackageStatus(): array
     {
-        if (!$this->telegram_feature_expires_at) {
-            return ['status' => 'inactive', 'expires_at' => null];
+        if ($this->telegram_feature_expires_at && $this->telegram_feature_expires_at->isFuture()) {
+            return [
+                'status' => 'active',
+                'expires_at' => $this->telegram_feature_expires_at,
+                'is_active' => true
+            ];
+        }
+
+        // Kiểm tra xem có đơn hàng nào đang chờ xử lý hoặc quà tặng chưa nhận không
+        $pendingSub = TeacherTelegramSubscription::query()
+            ->where('teacher_id', $this->id)
+            ->whereIn('status', ['pending', 'pending_claim'])
+            ->latest()
+            ->first();
+
+        if ($pendingSub) {
+            return [
+                'status' => $pendingSub->status === 'pending_claim' ? 'pending_claim' : 'pending',
+                'expires_at' => null,
+                'is_active' => false
+            ];
         }
         
-        $isFuture = $this->telegram_feature_expires_at->isFuture();
         return [
-            'status' => $isFuture ? 'active' : 'expired',
-            'expires_at' => $this->telegram_feature_expires_at
+            'status' => $this->telegram_feature_expires_at ? 'expired' : 'inactive',
+            'expires_at' => $this->telegram_feature_expires_at,
+            'is_active' => false
         ];
     }
 
@@ -343,7 +362,7 @@ class Teacher extends Model
     public function addTelegramDuration(int $value, string $unit): Carbon
     {
         $currentExpires = $this->telegram_feature_expires_at;
-        $baseDate = ($currentExpires && $currentExpires->isFuture()) ? $currentExpires : now();
+        $baseDate = ($currentExpires && $currentExpires->isFuture()) ? $currentExpires->copy() : now();
 
         $newExpires = match ($unit) {
             'minute', 'minutes' => $baseDate->addMinutes($value),
@@ -352,7 +371,7 @@ class Teacher extends Model
             'month', 'months' => $baseDate->addMonths($value),
             'year', 'years' => $baseDate->addYears($value),
             'lifetime' => now()->addYears(73), // ~2099
-            default => $baseDate,
+            default => $baseDate->addDays($value > 0 ? $value : 30), // Fallback to days
         };
 
         $this->update([
@@ -360,5 +379,15 @@ class Teacher extends Model
         ]);
 
         return $newExpires;
+    }
+
+    public function telegramSubscriptions()
+    {
+        return $this->hasMany(TeacherTelegramSubscription::class, 'teacher_id', 'id');
+    }
+
+    public function latestTelegramSubscription()
+    {
+        return $this->hasOne(TeacherTelegramSubscription::class, 'teacher_id', 'id')->latestOfMany();
     }
 }

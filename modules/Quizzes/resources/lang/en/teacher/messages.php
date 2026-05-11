@@ -174,4 +174,9 @@ return [
         'import_success' => 'Successfully imported :count questions!',
         'no_buyers' => 'This course currently has no students.',
     ],
+    'history' => [
+        'quiz_created' => 'Created new quiz',
+        'quiz_updated' => 'Updated quiz info',
+        'quiz_deleted' => 'Deleted quiz',
+    ],
 ];
