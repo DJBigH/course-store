@@ -76,8 +76,9 @@ Route::group([
    Route::post('/khoa-hoc/{slug}/rating', 'Clients\CourseRatingController@store')
       ->middleware(['auth:students', 'verified', 'user.block'])
       ->name('rating.store');
-   Route::prefix('data')->name('data.')->group(function () {
-      Route::get('/trial/{lessonId?}', 'Clients\CoursesController@getTrialVideo')->name('trial');
+    Route::prefix('data')->name('data.')->group(function () {
+       Route::get('/search/suggest', 'Clients\CourseSearchController@suggest')->name('search.suggest');
+       Route::get('/trial/{lessonId?}', 'Clients\CoursesController@getTrialVideo')->name('trial');
       Route::get('/stream', 'Clients\CoursesController@streamVideo')->name('stream');
    });
    Route::post('/tao-don-combo', [CoursesController::class, 'createBundleOrder'])->middleware(['auth:students', 'verified', 'user.block'])->name('bundle.create');

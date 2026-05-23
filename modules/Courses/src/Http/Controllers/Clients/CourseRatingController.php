@@ -139,11 +139,11 @@ class CourseRatingController extends Controller
     {
         $rating = round(((float) $value) * 2) / 2;
 
-        if ($rating < 1 || $rating > 5) {
+        if ($rating < 0.5 || $rating > 5) {
             return null;
         }
 
-        $validRatings = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+        $validRatings = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 
         return in_array($rating, $validRatings, true) ? $rating : null;
     }

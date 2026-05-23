@@ -276,4 +276,11 @@ class Courses extends Model
             default => 'VND',
         };
     }
+
+    public function getIsOnFlashSaleAttribute(): bool
+    {
+        return $this->sale_price_locale > 0 
+            && $this->end_at 
+            && $this->end_at->isFuture();
+    }
 }

@@ -626,7 +626,18 @@ class CoursesController extends Controller
             ['label' => 'Thêm mới']
         ];
 
-        return view('courses::create', compact('pageTitle', 'categories', 'teacher', 'breadcrumbs'));
+        $exchangeRates = \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray();
+        // Bổ sung tỉ giá mặc định từ .env nếu thiếu (Lấy USD làm gốc 1.0)
+        $vndRate = (float) (env('CURRENCY_USD_VND_RATE') ?: 25000);
+        if (empty($exchangeRates['USD'])) $exchangeRates['USD'] = 1;
+        if (empty($exchangeRates['VND'])) $exchangeRates['VND'] = $vndRate;
+        if (empty($exchangeRates['KRW'])) $exchangeRates['KRW'] = $vndRate / (env('CURRENCY_KRW_VND_RATE') ?: 18);
+        if (empty($exchangeRates['JPY'])) $exchangeRates['JPY'] = $vndRate / (env('CURRENCY_JPY_VND_RATE') ?: 170);
+        if (empty($exchangeRates['CNY'])) $exchangeRates['CNY'] = $vndRate / (env('CURRENCY_CNY_VND_RATE') ?: 3500);
+
+        $conversionFee = (float) setting('conversion_fee', 0);
+
+        return view('courses::create', compact('pageTitle', 'categories', 'teacher', 'breadcrumbs', 'exchangeRates', 'conversionFee'));
     }
 
     public function store(CoursesRequest $request)
@@ -690,20 +701,32 @@ class CoursesController extends Controller
     {
         $pageTitle = 'Cập nhật khóa học';
         $courses = $this->courseRepository->getCourse($id);
+
+        if (empty($courses)) {
+            abort(404);
+        }
+
         $categoriesId = $this->courseRepository->getRelatedCategories($courses);
         $categories = $this->categoriesRepository->getAllCategories();
         $teacher = $this->teacherRepository->getAllTeacher()->get();
-
-        if (empty($courses) || empty($categoriesId) || empty($categories) || empty($teacher)) {
-            abort(404);
-        }
 
         $breadcrumbs = [
             ['label' => 'Quản lý khóa học', 'link' => route('courses.index')],
             ['label' => 'Cập nhật']
         ];
 
-        return view('courses::edit', compact('courses', 'pageTitle', 'categories', 'categoriesId', 'teacher', 'breadcrumbs'));
+        $exchangeRates = \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray();
+        // Bổ sung tỉ giá mặc định từ .env nếu thiếu (Lấy USD làm gốc 1.0)
+        $vndRate = (float) (env('CURRENCY_USD_VND_RATE') ?: 25000);
+        if (empty($exchangeRates['USD'])) $exchangeRates['USD'] = 1;
+        if (empty($exchangeRates['VND'])) $exchangeRates['VND'] = $vndRate;
+        if (empty($exchangeRates['KRW'])) $exchangeRates['KRW'] = $vndRate / (env('CURRENCY_KRW_VND_RATE') ?: 18);
+        if (empty($exchangeRates['JPY'])) $exchangeRates['JPY'] = $vndRate / (env('CURRENCY_JPY_VND_RATE') ?: 170);
+        if (empty($exchangeRates['CNY'])) $exchangeRates['CNY'] = $vndRate / (env('CURRENCY_CNY_VND_RATE') ?: 3500);
+
+        $conversionFee = (float) setting('conversion_fee', 0);
+
+        return view('courses::edit', compact('courses', 'pageTitle', 'categories', 'categoriesId', 'teacher', 'breadcrumbs', 'exchangeRates', 'conversionFee'));
     }
 
     public function update(CoursesRequest $request, $id)

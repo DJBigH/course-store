@@ -33,7 +33,9 @@ return array (
   ),
   'flash' => 
   array (
-    'deleted' => '강의 콤보가 삭제되었습니다.',
+    'created' => '코스 콤보가 성공적으로 생성되었습니다.',
+    'updated' => '코스 콤보가 성공적으로 업데이트되었습니다.',
+    'deleted' => '코스 콤보가 삭제되었습니다.',
   ),
   'labels' => 
   array (

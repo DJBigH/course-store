@@ -49,6 +49,9 @@
                                         <span class="badge bg-secondary">Đang ẩn</span>
                                     @endif
                                 </div>
+                                @if ($package->category_locale)
+                                    <div class="small text-muted mb-1"><i class="fa-solid fa-folder-open me-1"></i>{{ $package->category_locale }}</div>
+                                @endif
                                 <h4 class="fw-bold mt-2 mb-1 text-dark">{{ $package->name }}</h4>
                                 <span class="badge mb-3 text-uppercase" style="background-color: {{ $package->badge_tone ?: '#2563eb' }}; width: fit-content; font-size: 0.7rem;">
                                     {{ $package->code }}
@@ -124,12 +127,17 @@
                                     <span class="badge bg-dark font-monospace order-rank-badge" id="rank-badge-{{ $package->id }}">#{{ $package->sort_order }}</span>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
+                                     <div class="d-flex align-items-center gap-2">
                                         <strong>{{ $package->name }}</strong>
                                         <span class="badge font-monospace text-uppercase" style="background-color: {{ $package->badge_tone ?: '#6c757d' }}; font-size: 0.65rem;">
                                             {{ $package->code }}
                                         </span>
                                     </div>
+                                    @if ($package->category_locale)
+                                        <div class="text-primary small" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-folder-open me-1"></i>{{ $package->category_locale }}
+                                        </div>
+                                    @endif
                                     <div class="text-muted small text-truncate" style="max-width: 300px;">{{ $package->description }}</div>
                                 </td>
                                 <td>

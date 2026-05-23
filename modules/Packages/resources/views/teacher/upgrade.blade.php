@@ -110,6 +110,7 @@
                     'max_payout_per_day' => $package->max_payout_per_day,
                     'term_description' => $packageTermDescription($package, $preview),
                     'expires_at_formatted' => $formatDate($preview['expires_at']),
+                    'category' => $package->category_locale,
                     'meta' => __('packages::teacher.common.current_meta', [
                         'commission' => rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.'),
                         'limit' => $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited'),
@@ -197,6 +198,12 @@
         $bankTransferNotePrefix = trim((string) setting('bank_transfer_note_prefix', 'CK'));
         $bankTransferNote = trim($bankTransferNotePrefix . ' T' . auth()->user()->id);
         $allPaymentsDisabled = !$bankEnabled && !$vnpayEnabled && !$momoEnabled;
+
+        $packagesByCategory = $upgradePackages->groupBy(function($pkg) {
+            return $pkg->category_locale ?: __('packages::teacher.common.category_other');
+        });
+        $categoriesList = $packagesByCategory->keys();
+        $activeCategoryId = (string) request('category', $categoriesList->first());
     @endphp
 
     <div class="teacher-page-shell">
@@ -243,6 +250,13 @@
                         'limit' => $currentPackage?->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited'),
                     ]) }}
                 </div>
+                @if($currentPackage?->category_locale)
+                    <div class="teacher-upgrade-current__category mt-1">
+                        <span class="badge bg-soft-info text-info border-0 px-2 py-1" style="font-size: 0.7rem; background: rgba(56, 189, 248, 0.1);">
+                            <i class="fa-solid fa-layer-group me-1"></i>{{ $currentPackage->category_locale }}
+                        </span>
+                    </div>
+                @endif
                 <div class="teacher-upgrade-current__term">
                     {{ __('packages::teacher.common.term_label') }}: {{ $packageTermLabel($currentPackage) }}
                 </div>
@@ -258,7 +272,7 @@
                     <div class="mt-2">
                         <span style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.75rem;border-radius:999px;font-size:0.77rem;font-weight:700;background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);">
                             <i class="fa-solid fa-gift" style="font-size:0.72rem;"></i>
-                            Được tặng bởi Admin
+                            {{ __('packages::teacher.common.granted_by_admin') }}
                         </span>
                     </div>
                 @endif
@@ -287,73 +301,105 @@
                         </div>
                     </div>
 
-                    <div class="row g-4">
-                        @foreach ($upgradePackages as $package)
-                            @php
-                                $packageId = (int) $package->id;
-                                $price = (float) $package->price;
-                                $isSelected = $selectedPackageId === $packageId;
-                                $isFeatured = (bool) $package->is_featured;
-                                $isRecommended = $recommendedPackageId !== null && $recommendedPackageId === $packageId;
-                                $packagePreview = $calculatePackagePreview($package);
-                            @endphp
-                            <div class="col-xl-4 col-md-6">
-                                <label class="teacher-upgrade-card {{ $isSelected ? 'is-selected' : '' }} {{ $isFeatured ? 'is-featured' : '' }} {{ $isRecommended ? 'is-recommended' : '' }}" 
-                                    data-upgrade-card 
-                                    @if($package->badge_tone) style="--package-tone: {{ $package->badge_tone }};" @endif>
-                                    <input type="radio" name="package_id" value="{{ $packageId }}" data-package-price="{{ $price }}" @checked($isSelected)>
+                        </div>
+                    </div>
 
-                                    @if ($isFeatured)
-                                        <span class="teacher-upgrade-card__ribbon">
-                                            {{ __('teacher::landing.packages.most_popular') }}
-                                        </span>
-                                    @endif
-                                    @if ($isRecommended)
-                                        <span class="teacher-upgrade-card__recommend">
-                                            {{ __('packages::teacher.features.recommended_badge') }}
-                                        </span>
-                                    @endif
+                    @if($categoriesList->count() > 1)
+                        <div class="teacher-upgrade-categories">
+                            <div class="nav nav-pills teacher-upgrade-tabs" role="tablist">
+                                @foreach($categoriesList as $catName)
+                                    <button class="nav-link {{ $activeCategoryId === $catName ? 'active' : '' }}" 
+                                        id="cat-tab-{{ Str::slug($catName) }}" 
+                                        data-bs-toggle="pill" 
+                                        data-bs-target="#cat-content-{{ Str::slug($catName) }}" 
+                                        type="button" role="tab">
+                                        {{ $catName }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
-                                    <div class="teacher-upgrade-card__top">
-                                        <span class="teacher-upgrade-card__tag">{{ strtoupper((string) $package->code) }}</span>
-                                        @if (($package->badge_text_locale ?: '') !== '')
-                                            <span class="teacher-upgrade-card__badge">{{ $package->badge_text_locale }}</span>
-                                        @endif
-                                    </div>
+                    <div class="tab-content teacher-upgrade-tab-content">
+                        @foreach($packagesByCategory as $catName => $catPackages)
+                            <div class="tab-pane fade {{ $activeCategoryId === $catName ? 'show active' : '' }}" 
+                                id="cat-content-{{ Str::slug($catName) }}" 
+                                role="tabpanel">
+                                <div class="row g-4">
+                                    @foreach ($catPackages as $package)
+                                        @php
+                                            $packageId = (int) $package->id;
+                                            $price = (float) $package->price;
+                                            $isSelected = $selectedPackageId === $packageId;
+                                            $isFeatured = (bool) $package->is_featured;
+                                            $isRecommended = $recommendedPackageId !== null && $recommendedPackageId === $packageId;
+                                            $packagePreview = $calculatePackagePreview($package);
+                                        @endphp
+                                        <div class="col-xl-4 col-md-6">
+                                            <label class="teacher-upgrade-card {{ $isSelected ? 'is-selected' : '' }} {{ $isFeatured ? 'is-featured' : '' }} {{ $isRecommended ? 'is-recommended' : '' }}" 
+                                                data-upgrade-card 
+                                                @if($package->badge_tone) style="--package-tone: {{ $package->badge_tone }};" @endif>
+                                                <input type="radio" name="package_id" value="{{ $packageId }}" data-package-price="{{ $price }}" @checked($isSelected)>
 
-                                    <div class="teacher-upgrade-card__body">
-                                        <h5>{{ $package->name_locale ?: $package->name }}</h5>
-                                        <div class="teacher-upgrade-card__price">
-                                            {{ $price > 0 ? moneyLocale($price) : moneyLocale(0) }}
+                                                @if ($isFeatured)
+                                                    <span class="teacher-upgrade-card__ribbon">
+                                                        {{ __('teacher::landing.packages.most_popular') }}
+                                                    </span>
+                                                @endif
+                                                @if ($isRecommended)
+                                                    <span class="teacher-upgrade-card__recommend">
+                                                        {{ __('packages::teacher.features.recommended_badge') }}
+                                                    </span>
+                                                @endif
+
+                                                <div class="teacher-upgrade-card__top">
+                                                    <div class="d-flex flex-column gap-1">
+                                                        @if($package->category_locale)
+                                                            <span class="teacher-upgrade-card__category">{{ $package->category_locale }}</span>
+                                                        @endif
+                                                        <span class="teacher-upgrade-card__tag">{{ strtoupper((string) $package->code) }}</span>
+                                                    </div>
+                                                    @if (($package->badge_text_locale ?: '') !== '')
+                                                        <span class="teacher-upgrade-card__badge">{{ $package->badge_text_locale }}</span>
+                                                    @endif
+                                                </div>
+
+                                                <div class="teacher-upgrade-card__body">
+                                                    <h5>{{ $package->name_locale ?: $package->name }}</h5>
+                                                    <div class="teacher-upgrade-card__price">
+                                                        {{ $price > 0 ? moneyLocale($price) : moneyLocale(0) }}
+                                                    </div>
+                                                    @if (($package->tagline_locale ?: '') !== '')
+                                                        <p class="teacher-upgrade-card__tagline">{{ $package->tagline_locale }}</p>
+                                                    @endif
+                                                    <p class="teacher-upgrade-card__desc">{{ $package->description_locale ?: $package->description }}</p>
+
+                                                    <ul class="teacher-upgrade-card__features">
+                                                        <li>
+                                                            {{ __('packages::teacher.common.current_meta', [
+                                                                'commission' => rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.'),
+                                                                'limit' => $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited'),
+                                                            ]) }}
+                                                        </li>
+                                                        <li>
+                                                            {{ __('packages::teacher.common.term_label') }}: {{ $packageTermLabel($package) }}
+                                                        </li>
+                                                        <li class="teacher-upgrade-card__term">
+                                                            {{ $packageTermDescription($package, $packagePreview) }}
+                                                        </li>
+                                                        @if (($package->support_level_locale ?: '') !== '')
+                                                            <li>{{ $package->support_level_locale }}</li>
+                                                        @endif
+                                                    </ul>
+                                                </div>
+
+                                                <div class="teacher-upgrade-card__check">
+                                                    <span>{{ $isSelected ? '✓' : '' }}</span>
+                                                </div>
+                                            </label>
                                         </div>
-                                        @if (($package->tagline_locale ?: '') !== '')
-                                            <p class="teacher-upgrade-card__tagline">{{ $package->tagline_locale }}</p>
-                                        @endif
-                                        <p class="teacher-upgrade-card__desc">{{ $package->description_locale ?: $package->description }}</p>
-
-                                        <ul class="teacher-upgrade-card__features">
-                                            <li>
-                                                {{ __('packages::teacher.common.current_meta', [
-                                                    'commission' => rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.'),
-                                                    'limit' => $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited'),
-                                                ]) }}
-                                            </li>
-                                            <li>
-                                                {{ __('packages::teacher.common.term_label') }}: {{ $packageTermLabel($package) }}
-                                            </li>
-                                            <li class="teacher-upgrade-card__term">
-                                                {{ $packageTermDescription($package, $packagePreview) }}
-                                            </li>
-                                            @if (($package->support_level_locale ?: '') !== '')
-                                                <li>{{ $package->support_level_locale }}</li>
-                                            @endif
-                                        </ul>
-                                    </div>
-
-                                    <div class="teacher-upgrade-card__check">
-                                        <span>{{ $isSelected ? '✓' : '' }}</span>
-                                    </div>
-                                </label>
+                                    @endforeach
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -1174,11 +1220,28 @@
             color: #8af4e3;
         }
 
+        .teacher-upgrade-card__category {
+            display: inline-flex;
+            width: fit-content;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
         .teacher-upgrade-card__body h5 {
-            color: #f8fbff;
-            font-size: 1.35rem;
+            color: #ffffff;
+            background: linear-gradient(to right, #ffffff, #bfdbfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.55rem;
             font-weight: 800;
-            margin-bottom: 0.45rem;
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.02em;
         }
 
         .teacher-upgrade-card__price {
@@ -1359,6 +1422,112 @@
         .teacher-upgrade-compare-shell:not(.is-collapsed) .teacher-upgrade-compare-shell__toggle-icon {
             transform: rotate(-135deg);
             margin-top: 0.18rem;
+        }
+
+        .teacher-upgrade-current {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(96, 165, 250, 0.15);
+            border-radius: 24px;
+            padding: 2.2rem;
+            margin-bottom: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teacher-upgrade-current::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.3), transparent);
+        }
+
+        .teacher-upgrade-current__label {
+            color: #60a5fa;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            margin-bottom: 1rem;
+        }
+
+        .teacher-upgrade-current__name {
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+        }
+
+        .teacher-upgrade-categories {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .teacher-upgrade-tabs {
+            display: inline-flex;
+            padding: 0.4rem;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 
+                0 4px 24px -1px rgba(0, 0, 0, 0.2),
+                inset 0 0 20px rgba(255, 255, 255, 0.02);
+            gap: 0.25rem;
+        }
+
+        .teacher-upgrade-tabs .nav-link {
+            border: none;
+            background: transparent !important;
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 0.7rem 1.75rem;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            position: relative;
+            z-index: 1;
+            white-space: nowrap;
+        }
+
+        .teacher-upgrade-tabs .nav-link:hover {
+            color: #f1f5f9;
+        }
+
+        .teacher-upgrade-tabs .nav-link.active {
+            color: #ffffff !important;
+            background: rgba(59, 130, 246, 0.85) !important;
+            box-shadow: 
+                0 10px 25px -5px rgba(37, 99, 235, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+        }
+
+        .teacher-upgrade-tab-content {
+            animation: premiumFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes premiumFadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(15px) scale(0.98);
+                filter: blur(4px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
         }
 
         .teacher-upgrade-compare {

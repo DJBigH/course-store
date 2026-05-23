@@ -62,6 +62,24 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá gốc (VI)</label>
+                                <input type="text" class="form-control money-format" name="price"
+                                    placeholder="Giá khóa học(Mặc định là 0đ)..."
+                                    value="{{ number_format(old('price', $courses->price ?? 0)) }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá khuyến mãi (VI)</label>
+                                <input type="text" class="form-control money-format" name="sale_price"
+                                    placeholder="Giá khuyến mãi..."
+                                    value="{{ number_format(old('sale_price', $courses->sale_price ?? 0)) }}">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- ================= EN ================= --}}
@@ -90,6 +108,22 @@
                                 @error('slug_en')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá gốc (EN)</label>
+                                <input type="text" class="form-control price-en money-format" name="price_en"
+                                    value="{{ number_format(old('price_en', $courses->price_en ?? 0), 2) }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá khuyến mãi (EN)</label>
+                                <input type="text" class="form-control sale-price-en money-format" name="sale_price_en"
+                                    value="{{ number_format(old('sale_price_en', $courses->sale_price_en ?? 0), 2) }}">
                             </div>
                         </div>
                     </div>
@@ -123,6 +157,22 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá gốc (KO)</label>
+                                <input type="text" class="form-control price-ko money-format" name="price_ko"
+                                    value="{{ number_format(old('price_ko', $courses->price_ko ?? 0)) }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá khuyến mãi (KO)</label>
+                                <input type="text" class="form-control sale-price-ko money-format" name="sale_price_ko"
+                                    value="{{ number_format(old('sale_price_ko', $courses->sale_price_ko ?? 0)) }}">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="lang-block lang-ja d-none">
@@ -153,6 +203,22 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá gốc (JA)</label>
+                                <input type="text" class="form-control price-ja money-format" name="price_ja"
+                                    value="{{ number_format(old('price_ja', $courses->price_ja ?? 0)) }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá khuyến mãi (JA)</label>
+                                <input type="text" class="form-control sale-price-ja money-format" name="sale_price_ja"
+                                    value="{{ number_format(old('sale_price_ja', $courses->sale_price_ja ?? 0)) }}">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="lang-block lang-zh d-none">
@@ -180,6 +246,22 @@
                                 @error('slug_zh')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá gốc (ZH)</label>
+                                <input type="text" class="form-control price-zh money-format" name="price_zh"
+                                    value="{{ number_format(old('price_zh', $courses->price_zh ?? 0)) }}">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label>Giá khuyến mãi (ZH)</label>
+                                <input type="text" class="form-control sale-price-zh money-format" name="sale_price_zh"
+                                    value="{{ number_format(old('sale_price_zh', $courses->sale_price_zh ?? 0)) }}">
                             </div>
                         </div>
                     </div>
@@ -229,31 +311,30 @@
                 </div>
             </div>
 
-            <div class="col-6">
+
+            <div class="col-12">
                 <div class="mb-3">
-                    <label for="">Giá khóa học</label>
-                    <input type="number" class="form-control{{ $errors->has('price') ? ' is-invalid' : '' }}"
-                        name="price" placeholder="Giá khóa học(Mặc định là 0đ)..."
-                        value="{{ old('price') ?? $courses->price }}">
-                    @error('price')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
+                    <label class="form-label d-block">Loại khuyến mãi</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="sale_type" id="sale_type_permanent" value="0" {{ !old('end_at', $courses->end_at) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="sale_type_permanent">Khuyến mãi vĩnh viễn</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="sale_type" id="sale_type_timed" value="1" {{ old('end_at', $courses->end_at) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="sale_type_timed">Khuyến mãi có thời gian (Flash Sale)</label>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-6">
+            <div class="col-6" id="sale_end_at_wrapper" style="display: {{ !old('end_at', $courses->end_at) ? 'none' : 'block' }}">
                 <div class="mb-3">
-                    <label for="">Giá khuyến mãi</label>
-                    <input type="number" name="sale_price"
-                        class="form-control {{ $errors->has('sale_price') ? 'is-invalid' : '' }}"
-                        placeholder="Giá khuyến mãi..." id=""
-                        value="{{ old('sale_price') ?? $courses->sale_price }}">
-                    @error('sale_price')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
+                    <label for="">Ngày kết thúc khuyến mãi</label>
+                    <input type="datetime-local" name="end_at" id="sale_end_at"
+                        class="form-control{{ $errors->has('end_at') ? ' is-invalid' : '' }}"
+                        value="{{ old('end_at', $courses->end_at ? $courses->end_at->format('Y-m-d\TH:i') : '') }}">
+                    <small class="text-muted">Hệ thống sẽ tự động tắt Flash Sale và về giá gốc khi hết hạn.</small>
+                    @error('end_at')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
@@ -574,5 +655,144 @@
             // Chạy ngay khi load trang
             toggleComingSoon();
         }
+
+        // Sale Type Toggle
+        const saleTypePermanent = document.getElementById('sale_type_permanent');
+        const saleTypeTimed = document.getElementById('sale_type_timed');
+        const saleEndWrapper = document.getElementById('sale_end_at_wrapper');
+        const saleEndInput = document.getElementById('sale_end_at');
+
+        function toggleSaleType() {
+            if (!saleEndWrapper) return;
+            if (saleTypeTimed.checked) {
+                saleEndWrapper.style.display = 'block';
+            } else {
+                saleEndWrapper.style.display = 'none';
+                if (saleEndInput) saleEndInput.value = '';
+            }
+        }
+
+        if (saleTypePermanent && saleTypeTimed) {
+            saleTypePermanent.addEventListener('change', toggleSaleType);
+            saleTypeTimed.addEventListener('change', toggleSaleType);
+        }
+
+        // Auto Sync Prices Logic
+        (function() {
+            const supported = ['vi', 'en', 'ko', 'ja', 'zh'];
+            const exchangeRates = @json($exchangeRates);
+            const conversionFee = {{ $conversionFee }};
+            let currentLocale = 'vi';
+
+            // Update currentLocale based on tab changes
+            ['vi', 'en', 'ko', 'ja', 'zh'].forEach(loc => {
+                const btn = document.getElementById('lang_' + loc);
+                if (btn) {
+                    // Cả change và click để chắc chắn
+                    ['change', 'click'].forEach(evt => {
+                        btn.addEventListener(evt, () => {
+                            currentLocale = loc;
+                        });
+                    });
+                }
+            });
+
+            const getCurrencyByLocale = (locale) => ({
+                'en': 'USD', 'ko': 'KRW', 'ja': 'JPY', 'zh': 'CNY', 'vi': 'VND'
+            }[locale]);
+
+            const convertPrice = (amount, fromCurrency, toCurrency) => {
+                if (fromCurrency === toCurrency) return amount;
+                if (!exchangeRates[fromCurrency] || !exchangeRates[toCurrency]) return amount;
+                
+                // Quy đổi về USD làm gốc
+                const usdAmount = amount / exchangeRates[fromCurrency];
+                let targetAmount = usdAmount * exchangeRates[toCurrency];
+                
+                if (conversionFee > 0) targetAmount *= (1 + (conversionFee / 100));
+                
+                return ['VND', 'KRW', 'JPY'].includes(toCurrency) ? Math.round(targetAmount) : Math.round(targetAmount * 100) / 100;
+            };
+
+            const formatMoney = (val) => {
+                if (!val) return '0';
+                // Remove existing commas and non-digits
+                let num = val.toString().replace(/,/g, '');
+                if (isNaN(num)) return '0';
+                // Format with commas
+                return num.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            };
+
+            const unformatMoney = (val) => {
+                return val.toString().replace(/,/g, '');
+            };
+
+            // Apply formatting to all money-format inputs on load
+            document.querySelectorAll('.money-format').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    let cursorPosition = e.target.selectionStart;
+                    let originalLength = e.target.value.length;
+                    
+                    let rawValue = unformatMoney(e.target.value);
+                    if (rawValue === '') rawValue = '0';
+                    
+                    e.target.value = formatMoney(rawValue);
+                    
+                    // Adjust cursor position
+                    let newLength = e.target.value.length;
+                    e.target.setSelectionRange(cursorPosition + (newLength - originalLength), cursorPosition + (newLength - originalLength));
+                });
+            });
+
+            const syncPrices = (sourceLocale, isSale = false) => {
+                const prefix = isSale ? 'sale_price' : 'price';
+                const sourceFieldName = sourceLocale === 'vi' ? prefix : `${prefix}_${sourceLocale}`;
+                const sourceInput = document.querySelector(`input[name="${sourceFieldName}"]`);
+                if (!sourceInput) return;
+
+                const sourceValue = Number(unformatMoney(sourceInput.value) || 0);
+                const fromCurrency = getCurrencyByLocale(sourceLocale);
+
+                supported.forEach(targetLocale => {
+                    if (targetLocale === sourceLocale) return;
+                    const targetFieldName = targetLocale === 'vi' ? prefix : `${prefix}_${targetLocale}`;
+                    const toCurrency = getCurrencyByLocale(targetLocale);
+                    const convertedValue = convertPrice(sourceValue, fromCurrency, toCurrency);
+                    const targetInput = document.querySelector(`input[name="${targetFieldName}"]`);
+                    if (targetInput) {
+                        targetInput.value = formatMoney(convertedValue);
+                    }
+                });
+            };
+
+            // Lắng nghe sự kiện để tự động nhảy số
+            supported.forEach(locale => {
+                const suffix = locale === 'vi' ? '' : `_${locale}`;
+                const priceInput = document.querySelector(`input[name="price${suffix}"]`);
+                const salePriceInput = document.querySelector(`input[name="sale_price${suffix}"]`);
+
+                if (priceInput) {
+                    ['input', 'change'].forEach(evt => {
+                        priceInput.addEventListener(evt, () => { 
+                            if (currentLocale === locale) syncPrices(locale, false); 
+                        });
+                    });
+                }
+                if (salePriceInput) {
+                    ['input', 'change'].forEach(evt => {
+                        salePriceInput.addEventListener(evt, () => { 
+                            if (currentLocale === locale) syncPrices(locale, true); 
+                        });
+                    });
+                }
+            });
+
+            // Override form submission to unformat money values
+            document.querySelector('.admin-form').addEventListener('submit', function() {
+                document.querySelectorAll('.money-format').forEach(input => {
+                    input.value = unformatMoney(input.value);
+                });
+            });
+        })();
     </script>
 @endsection

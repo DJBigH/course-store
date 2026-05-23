@@ -169,6 +169,8 @@ return [
         'all_payments_maintenance_title' => 'Tất cả phương thức thanh toán đang bảo trì',
         'all_payments_maintenance_desc' => 'Hệ thống hiện đang tạm dừng các giao dịch nâng cấp có tính phí để bảo trì. Bạn chỉ có thể nâng cấp các gói Miễn phí (0đ).',
         'all_payments_maintenance_block' => 'Không thể thực hiện nâng cấp gói có phí trong thời gian bảo trì hệ thống thanh toán.',
+        'category_other' => 'Khác',
+        'granted_by_admin' => 'Được tặng bởi Admin',
     ],
     'features' => [
         'labels' => [

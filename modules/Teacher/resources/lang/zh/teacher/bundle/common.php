@@ -33,6 +33,8 @@ return array (
   ),
   'flash' => 
   array (
+    'created' => '课程组合创建成功。',
+    'updated' => '课程组合更新成功。',
     'deleted' => '课程组合已删除。',
   ),
   'labels' => 

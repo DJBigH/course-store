@@ -105,7 +105,16 @@ class TeacherCourseController extends Controller
             'selectedCategories' => [],
             'formAction' => route('teacher.dashboard.courses.store'),
             'submitLabel' => __('teacher::teacher/course/common.actions.create'),
-            'exchangeRates' => \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray(),
+            'exchangeRates' => (function() {
+                $rates = \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray();
+                $vndRate = (float) (env('CURRENCY_USD_VND_RATE') ?: 25000);
+                if (empty($rates['USD'])) $rates['USD'] = 1;
+                if (empty($rates['VND'])) $rates['VND'] = $vndRate;
+                if (empty($rates['KRW'])) $rates['KRW'] = $vndRate / (env('CURRENCY_KRW_VND_RATE') ?: 18);
+                if (empty($rates['JPY'])) $rates['JPY'] = $vndRate / (env('CURRENCY_JPY_VND_RATE') ?: 170);
+                if (empty($rates['CNY'])) $rates['CNY'] = $vndRate / (env('CURRENCY_CNY_VND_RATE') ?: 3500);
+                return $rates;
+            })(),
             'conversionFee' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee', 0),
         ]);
     }
@@ -180,7 +189,16 @@ class TeacherCourseController extends Controller
             'selectedCategories' => $course->categories()->pluck('categories.id')->all(),
             'formAction' => route('teacher.dashboard.courses.update', $course->id),
             'submitLabel' => __('teacher::teacher/course/common.actions.update'),
-            'exchangeRates' => \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray(),
+            'exchangeRates' => (function() {
+                $rates = \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray();
+                $vndRate = (float) (env('CURRENCY_USD_VND_RATE') ?: 25000);
+                if (empty($rates['USD'])) $rates['USD'] = 1;
+                if (empty($rates['VND'])) $rates['VND'] = $vndRate;
+                if (empty($rates['KRW'])) $rates['KRW'] = $vndRate / (env('CURRENCY_KRW_VND_RATE') ?: 18);
+                if (empty($rates['JPY'])) $rates['JPY'] = $vndRate / (env('CURRENCY_JPY_VND_RATE') ?: 170);
+                if (empty($rates['CNY'])) $rates['CNY'] = $vndRate / (env('CURRENCY_CNY_VND_RATE') ?: 3500);
+                return $rates;
+            })(),
             'conversionFee' => (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee', 0),
         ]);
     }

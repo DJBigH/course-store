@@ -33,6 +33,8 @@ return array (
   ),
   'flash' => 
   array (
+    'created' => 'Đã tạo combo khóa học thành công.',
+    'updated' => 'Đã cập nhật combo khóa học thành công.',
     'deleted' => 'Đã xóa combo khóa học.',
   ),
   'labels' => 

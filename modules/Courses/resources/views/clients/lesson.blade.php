@@ -140,14 +140,16 @@
                     const id = button.dataset.id;
 
                     if (!id) {
-                        return alert(messages.unavailable);
+                        if (window.showMessage) window.showMessage(messages.unavailable, 'error');
+                        else alert(messages.unavailable);
+                        return;
                     }
 
                     if (!initialTexts.has(button)) {
                         initialTexts.set(button, button.innerText);
                     }
 
-                    button.innerText = messages.opening;
+                    button.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${messages.opening}`;
                     button.disabled = true;
                     activeBtnMap.set('current', button);
 
@@ -165,16 +167,21 @@
                         } = result;
 
                         if (!success && requiresLogin) {
-                            alert(message || messages.loginRequired);
+                            if (window.showMessage) window.showMessage(message || messages.loginRequired, 'error');
+                            else alert(message || messages.loginRequired);
                             return;
                         }
 
                         if (!success || data.is_trial !== 1) {
-                            return alert(message || messages.unavailable);
+                            if (window.showMessage) window.showMessage(message || messages.unavailable, 'error');
+                            else alert(message || messages.unavailable);
+                            return;
                         }
 
                         if (!data.video || !data.video.url) {
-                            return alert(messages.noVideo);
+                            if (window.showMessage) window.showMessage(messages.noVideo, 'error');
+                            else alert(messages.noVideo);
+                            return;
                         }
 
                         modalEl.querySelector('.modal-title').innerText = data.name;
@@ -191,9 +198,10 @@
                         }
                     } catch (error) {
                         console.error('Trial video error:', error);
-                        alert(messages.unavailable);
+                        if (window.showMessage) window.showMessage(messages.unavailable, 'error');
+                        else alert(messages.unavailable);
                     } finally {
-                        button.innerText = initialTexts.get(button) ?? '{{ __('courses::clients/common.trial') }}';
+                        button.innerHTML = initialTexts.get(button) ?? '{{ __('courses::clients/common.trial') }}';
                         button.disabled = false;
                     }
                 });
@@ -202,14 +210,16 @@
             lockedLessonList.forEach((lessonLink) => {
                 lessonLink.addEventListener('click', (e) => {
                     e.preventDefault();
-                    alert(lessonLink.dataset.message || messages.lessonPurchaseRequired);
+                    if (window.showMessage) window.showMessage(lessonLink.dataset.message || messages.lessonPurchaseRequired, 'error');
+                    else alert(lessonLink.dataset.message || messages.lessonPurchaseRequired);
                 });
             });
 
             loginRequiredLessonList.forEach((lessonLink) => {
                 lessonLink.addEventListener('click', (e) => {
                     e.preventDefault();
-                    alert(lessonLink.dataset.message || messages.lessonLoginRequired);
+                    if (window.showMessage) window.showMessage(lessonLink.dataset.message || messages.lessonLoginRequired, 'error');
+                    else alert(lessonLink.dataset.message || messages.lessonLoginRequired);
                 });
             });
 

@@ -50,10 +50,11 @@ a:hover {
         transform 0.25s ease;
 }
 
-[data-pagination-container].is-loading {
+[data-pagination-container].is-loading,
+[data-filter-block].is-loading {
     pointer-events: none;
-    opacity: 0.68;
-    filter: saturate(0.9);
+    opacity: 0.6;
+    filter: blur(2px) saturate(0.8);
 }
 
 [data-pagination-container].is-loaded {

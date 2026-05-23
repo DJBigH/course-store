@@ -167,7 +167,7 @@
 
                                 @if ($course->is_coming_soon)
                                     <div class="teacher-course-card__limit-badge" style="background: rgba(139, 92, 246, 0.18); color: #c4b5fd;">
-                                        <i class="fas fa-clock me-1"></i> {{ __('courses::messages.coming_soon') ?? 'Sắp ra mắt' }}
+                                        <i class="fas fa-clock me-1"></i> {{ __('courses::clients/common.coming_soon') ?? 'Sắp ra mắt' }}
                                     </div>
                                 @endif
 

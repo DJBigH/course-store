@@ -156,6 +156,7 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->withAvg('ratings', 'rating')
             ->where('price', 0)
             ->where('sale_price', 0)
+            ->where('is_coming_soon', false)
             ->where('status', 1)
             ->whereHas('teacher', function ($query) {
                 $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
@@ -170,6 +171,7 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->withCount('ratings')
             ->withAvg('ratings', 'rating')
             ->orderBy('view', 'DESC')
+            ->where('is_coming_soon', false)
             ->where('status', 1)
             ->whereHas('teacher', function ($query) {
                 $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
@@ -185,6 +187,7 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->withAvg('ratings', 'rating')
             ->orderBy('created_at', 'DESC')
             ->orderBy('updated_at', 'DESC')
+            ->where('is_coming_soon', false)
             ->where('status', 1)
             ->whereHas('teacher', function ($query) {
                 $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
@@ -193,11 +196,27 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
             ->get();
     }
 
+    public function getCourseComingSoon()
+    {
+        return $this->model
+            ->where('is_coming_soon', true)
+            ->whereNotNull('coming_soon_start_at')
+            ->where('coming_soon_start_at', '>', now())
+            ->where('status', 1)
+            ->whereHas('teacher', function ($query) {
+                $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
+            })
+            ->orderBy('coming_soon_start_at', 'ASC')
+            ->limit(8)
+            ->get();
+    }
+
     public function getAllCoursesHome()
     {
         return $this->model
             ->withCount('ratings')
             ->withAvg('ratings', 'rating')
+            ->where('is_coming_soon', false)
             ->where('status', 1)
             ->whereHas('teacher', function ($query) {
                 $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
@@ -210,6 +229,7 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
         return $this->model
             ->withCount('ratings')
             ->withAvg('ratings', 'rating')
+            ->where('is_coming_soon', false)
             ->where('status', 1)
             ->whereHas('teacher', function ($query) {
                 $query->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);
@@ -227,6 +247,7 @@ class CoursesRepository extends BaseRepository implements CoursesRepositoryInter
         $query = $this->model
             ->withCount(['ratings', 'students'])
             ->withAvg('ratings', 'rating')
+            ->where('is_coming_soon', false)
             ->where('status', 1)
             ->whereHas('teacher', function ($q) {
                 $q->where('status', '!=', \Modules\Teacher\src\Models\Teacher::STATUS_CEASED);

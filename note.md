@@ -563,8 +563,8 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check lại logic khi học xong khóa học được cấp chứng chỉ tự động ( Bắt buộc phải xem hết video có nghĩa là đánh dấu, làm hết bài kiểm tra và bên teacher, admin có cần cái yêu cầu j không vì sẽ có case là họ chỉ cần 1 bài là có chứng chỉ thì sao) ( Done )
 - Có nên thêm 1 chức năng tele dành riêng cho teacher không phải mua thêm gói tele riêng kiểu bao nhiêu 1 tháng ( phí duy trì) hàng tháng sẽ tự trừ từ tiền của teacher nếu teacher có doanh thu nếu không trả sẽ hủy gói và bot dừng lại khi đăng ký xong sẽ có hướng dẫn khi và lưu ý khi dùng bot, có case là bot sẽ phải trả đúng với teacher đó không được trả teacher khác hoặc mỗi teacher là 1 key và tự tạo bot điền key thẳng lên web để lưu và khi đó web phải cẩn trọng khi lưu key này ( Hỏi AI ) ( Done )
 - Nếu làm thêm chức năng tele dành riêng cho teacher thì check lại xem còn thiếu noti tele nào không cần thêm cái nào không ( Done )
-- Check màn clients xem có chỗ nào cần phải làm mượt mà hơn hay không
-- Cần thêm chức năng nào bên clients không
+- Check màn clients xem có chỗ nào cần phải làm mượt mà hơn hay không ( Done )
+- Cần thêm chức năng nào bên clients không ( Done )
 
 Teacher:
 
@@ -631,6 +631,6 @@ Teacher:
 
   Tổng kết
 - Tìm tất cả file .bak ( Done )
-- check lại lần cuối trước khi đẩy lên production
-- Check lại migration và seeder
+- Check lại migration và seeder có hoạt động khi chạy câu lệnh không
 - Check toàn bộ middleware có cần sửa j không, thiếu hay thừa j không 
+- check lại lần cuối trước khi đẩy lên production

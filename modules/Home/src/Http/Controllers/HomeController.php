@@ -34,6 +34,7 @@ class HomeController extends Controller
         
         $courseAll = $this->courseRepository->getFilteredCourses($filter, $studentId, $limit);
         $courseNew = $this->courseRepository->getCourseCreateUpdate();
+        $courseComingSoon = $this->courseRepository->getCourseComingSoon();
 
         $studentId = Auth::guard('students')->id();
         $myCourse = collect();
@@ -67,13 +68,22 @@ class HomeController extends Controller
 
         $courseAll = $this->courseRepository->getCourseForYou($studentId);
 
+        $courseBundles = \Modules\Courses\src\Models\CourseBundle::query()
+            ->with(['items.course', 'teacher'])
+            ->where('status', 1)
+            ->latest()
+            ->take(8)
+            ->get();
+
         return view('home::index', compact(
             'pageTitle',
             'courseFree',
             'courseView',
             'courseNew',
+            'courseComingSoon',
             'myCourse',
-            'courseAll'
+            'courseAll',
+            'courseBundles'
         ));
     }
 

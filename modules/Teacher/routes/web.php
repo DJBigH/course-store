@@ -157,6 +157,20 @@ Route::group([
       $redirect = (string) $request->query('redirect', route('teacher.dashboard.index'));
       $fallback = route('teacher.dashboard.index');
 
+      // Update locale segment in redirect URL if present
+      $locales = ['vi', 'en', 'ko', 'ja', 'zh'];
+      $baseUrl = url('/');
+      foreach ($locales as $l) {
+          if (str_starts_with($redirect, "$baseUrl/$l")) {
+              $redirect = str_replace("$baseUrl/$l", "$baseUrl/$locale", $redirect);
+              break;
+          }
+          if (str_starts_with($redirect, "/$l/")) {
+              $redirect = preg_replace("#^/$l/#", "/$locale/", $redirect);
+              break;
+          }
+      }
+
       if (!str_starts_with($redirect, url('/')) && !str_starts_with($redirect, '/')) {
          $redirect = $fallback;
       }

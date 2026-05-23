@@ -3,7 +3,7 @@
     @include('part.clients.page_title')
     <section class="all-course" data-pagination-scroll>
         <div class="container" data-pagination-container="courses-index">
-            <form method="GET" class="course-index-toolbar mt-4">
+            <form method="GET" class="course-index-toolbar js-smooth-filter mt-4" data-filter-block-target="courses-index-list">
                 <div class="row g-3 align-items-end">
                     <div class="col-lg-5">
                         <label class="form-label">{{ __('courses::clients/common.search_label') }}</label>
@@ -16,7 +16,7 @@
                     </div>
                     <div class="col-lg-3">
                         <label class="form-label">{{ __('courses::clients/common.rating_filter_label') }}</label>
-                        <select name="rating_min" class="form-select" onchange="this.form.submit()">
+                        <select name="rating_min" class="form-select" onchange="this.dispatchEvent(new Event('submit', {bubbles: true}))">
                             <option value="" @selected(($ratingMin ?? '') === '')>{{ __('courses::clients/common.rating_filter_all') }}</option>
                             <option value="4" @selected(($ratingMin ?? '') === '4')>{{ __('courses::clients/common.rating_filter_4_plus') }}</option>
                             <option value="4.5" @selected(($ratingMin ?? '') === '4.5')>{{ __('courses::clients/common.rating_filter_45_plus') }}</option>
@@ -24,7 +24,7 @@
                     </div>
                     <div class="col-lg-4">
                         <label class="form-label">{{ __('courses::clients/common.sort_label') }}</label>
-                        <select name="sort" class="form-select" onchange="this.form.submit()">
+                        <select name="sort" class="form-select" onchange="this.dispatchEvent(new Event('submit', {bubbles: true}))">
                             <option value="latest" @selected(($sort ?? 'latest') === 'latest')>{{ __('courses::clients/common.sort_latest') }}</option>
                             <option value="rating_desc" @selected(($sort ?? 'latest') === 'rating_desc')>{{ __('courses::clients/common.sort_rating_desc') }}</option>
                             <option value="rating_asc" @selected(($sort ?? 'latest') === 'rating_asc')>{{ __('courses::clients/common.sort_rating_asc') }}</option>
@@ -33,115 +33,117 @@
                 </div>
             </form>
 
-            @if ($courses && $courses->count())
-                <div class="row">
-                    @foreach ($courses as $course)
-                        @php
-                            $thumbnail = $course->thumbnail
-                                ? (\Illuminate\Support\Str::startsWith($course->thumbnail, ['http://', 'https://']) ? $course->thumbnail : asset($course->thumbnail))
-                                : asset('clients/assets/banner-course.png');
+            <div data-filter-block="courses-index-list">
+                @if ($courses && $courses->count())
+                    <div class="row">
+                        @foreach ($courses as $course)
+                            @php
+                                $thumbnail = $course->thumbnail
+                                    ? (\Illuminate\Support\Str::startsWith($course->thumbnail, ['http://', 'https://']) ? $course->thumbnail : asset($course->thumbnail))
+                                    : asset('clients/assets/banner-course.png');
 
-                            $teacherImage = teacherAvatarUrl($course->teacher);
-                            $teacherBadge = $course->teacher?->primary_badge;
+                                $teacherImage = teacherAvatarUrl($course->teacher);
+                                $teacherBadge = $course->teacher?->primary_badge;
 
-                        @endphp
-                        <div class="col-12 col-lg-6 mb-4">
-                            <div class="d-flex course">
-                                <div class="banner-course">
-                                    <img src="{{ $thumbnail }}" alt="{{ $course->name_locale }}"
-                                        onerror="this.onerror=null;this.src='{{ asset('clients/assets/banner-course.png') }}';" />
-                                </div>
-
-                                <div class="descreption-course">
-                                    <div class="descreption-top">
-                                        <p><i class="fa-solid fa-clock"></i> {{ getTime($course->durations) }}</p>
-                                        <p><i class="fa-solid fa-video"></i> {{ getLessonCount($course)->module }}
-                                            {{ __('courses::clients/common.portion') }}/{{ getLessonCount($course)->lessons }}
-                                            {{ __('courses::clients/common.poem') }}</p>
-                                        <p><i class="fa-solid fa-eye"></i>
-                                            {{ $course->view ? number_format($course->view) : 0 }}
-                                            {{ __('courses::clients/common.view') }}</p>
+                            @endphp
+                            <div class="col-12 col-lg-6 mb-4">
+                                <div class="d-flex course">
+                                    <div class="banner-course">
+                                        <img src="{{ $thumbnail }}" alt="{{ $course->name_locale }}"
+                                            onerror="this.onerror=null;this.src='{{ asset('clients/assets/banner-course.png') }}';" />
                                     </div>
 
-                                    <div class="descreption-meta">
-                                        <p>
-                                            <i class="fa-solid fa-calendar-check"></i>
-                                            {{ __('courses::clients/common.updated_at') }}:
-                                            <span>{{ format_date_dmy($course->updated_at) }}</span>
-                                        </p>
+                                    <div class="descreption-course">
+                                        <div class="descreption-top">
+                                            <p><i class="fa-solid fa-clock"></i> {{ getTime($course->durations) }}</p>
+                                            <p><i class="fa-solid fa-video"></i> {{ getLessonCount($course)->module }}
+                                                {{ __('courses::clients/common.portion') }}/{{ getLessonCount($course)->lessons }}
+                                                {{ __('courses::clients/common.poem') }}</p>
+                                            <p><i class="fa-solid fa-eye"></i>
+                                                {{ $course->view ? number_format($course->view) : 0 }}
+                                                {{ __('courses::clients/common.view') }}</p>
+                                        </div>
 
-                                        <p>
-                                            <i class="fa-solid fa-users"></i>
-                                            {{ number_format($course->students_count ?? 0) }}
-                                            {{ __('courses::clients/common.students') }}
-                                        </p>
+                                        <div class="descreption-meta">
+                                            <p>
+                                                <i class="fa-solid fa-calendar-check"></i>
+                                                {{ __('courses::clients/common.updated_at') }}:
+                                                <span>{{ format_date_dmy($course->updated_at) }}</span>
+                                            </p>
 
-                                        <p class="course-rating-inline">
-                                            <i class="fa-solid fa-star"></i>
-                                            {{ $course->ratings_count > 0 ? number_format((float) $course->ratings_avg_rating, 1) : '0.0' }}
-                                            <span>({{ (int) ($course->ratings_count ?? 0) }})</span>
-                                        </p>
-                                    </div>
+                                            <p>
+                                                <i class="fa-solid fa-users"></i>
+                                                {{ number_format($course->students_count ?? 0) }}
+                                                {{ __('courses::clients/common.students') }}
+                                            </p>
 
-                                    <h5 class="descreption-title">
-                                            <a
-                                                href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}">
-                                                {{ $course->name_locale }}
-                                            </a>
-                                    </h5>
+                                            <p class="course-rating-inline">
+                                                <i class="fa-solid fa-star"></i>
+                                                {{ $course->ratings_count > 0 ? number_format((float) $course->ratings_avg_rating, 1) : '0.0' }}
+                                                <span>({{ (int) ($course->ratings_count ?? 0) }})</span>
+                                            </p>
+                                        </div>
+
+                                        <h5 class="descreption-title">
+                                                <a
+                                                    href="{{ route('courses.detail', ['locale' => app()->getLocale(), 'slug' => $course->slug_locale]) }}">
+                                                    {{ $course->name_locale }}
+                                                </a>
+                                        </h5>
 
 
-                                    <div class="descreption-teacher">
-                                        <img src="{{ $teacherImage }}" alt="{{ $course->teacher?->name_locale }}"
-                                            onerror="this.onerror=null;this.src='{{ asset('resources/assets/teacher.png') }}';" />
-                                        <span class="course-teacher-meta">
-                                            <strong
-                                                style="font-weight: bold">{{ __('courses::clients/common.instructor') }}:</strong>
-                                            {{ $course->teacher?->name_locale }}
-                                            @if ($teacherBadge)
-                                                <span class="course-teacher-badge course-teacher-badge--{{ $teacherBadge['tone'] }}">{{ $teacherBadge['label'] }}</span>
+                                        <div class="descreption-teacher">
+                                            <img src="{{ $teacherImage }}" alt="{{ $course->teacher?->name_locale }}"
+                                                onerror="this.onerror=null;this.src='{{ asset('resources/assets/teacher.png') }}';" />
+                                            <span class="course-teacher-meta">
+                                                <strong
+                                                    style="font-weight: bold">{{ __('courses::clients/common.instructor') }}:</strong>
+                                                {{ $course->teacher?->name_locale }}
+                                                @if ($teacherBadge)
+                                                    <span class="course-teacher-badge course-teacher-badge--{{ $teacherBadge['tone'] }}">{{ $teacherBadge['label'] }}</span>
+                                                @endif
+                                            </span>
+                                        </div>
+
+                                        <p class="descreption-price">
+                                            @if ($course->sale_price)
+                                                <span class="sale">{{ moneyLocale($course->price) }}</span>
+                                                <span>{{ moneyLocale($course->sale_price) }}</span>
+                                            @else
+                                                <span>{{ moneyLocale($course->price) }}</span>
                                             @endif
-                                        </span>
+                                        </p>
+
                                     </div>
-
-                                    <p class="descreption-price">
-                                        @if ($course->sale_price)
-                                            <span class="sale">{{ moneyLocale($course->price) }}</span>
-                                            <span>{{ moneyLocale($course->sale_price) }}</span>
-                                        @else
-                                            <span>{{ moneyLocale($course->price) }}</span>
-                                        @endif
-                                    </p>
-
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
-                </div>
-                <div class="mt-3">
-                    {{ $courses->links() }}
-                </div>
-            @else
-                <div class="empty-course text-center py-5">
-                    {{-- <img src="{{ asset('clients/assets/empty.webm') }}" alt="Không có khóa học" class="mb-4"
-                        width="220"> --}}
-                    <video src="{{ asset('clients/assets/empty.webm') }}" autoplay loop muted class="mb-4"
-                        width="220"></video>
+                        @endforeach
+                    </div>
+                    <div class="mt-3">
+                        {{ $courses->links() }}
+                    </div>
+                @else
+                    <div class="empty-course text-center py-5">
+                        {{-- <img src="{{ asset('clients/assets/empty.webm') }}" alt="Không có khóa học" class="mb-4"
+                            width="220"> --}}
+                        <video src="{{ asset('clients/assets/empty.webm') }}" autoplay loop muted class="mb-4"
+                            width="220"></video>
 
-                    <h4 class="fw-bold mb-2">{{ __('courses::clients/common.empty_page_title') }}</h4>
+                        <h4 class="fw-bold mb-2">{{ __('courses::clients/common.empty_page_title') }}</h4>
 
-                    <p class="text-muted mb-4">
-                        {{ __('courses::clients/common.empty_description') }}
-                        <br>
-                        {{ __('courses::clients/common.empty_suggestion') }} 🚀
-                    </p>
+                        <p class="text-muted mb-4">
+                            {{ __('courses::clients/common.empty_description') }}
+                            <br>
+                            {{ __('courses::clients/common.empty_suggestion') }} 🚀
+                        </p>
 
-                    <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary px-4">
-                        <i class="fa-solid fa-book-open me-1"></i>
-                        {{ __('courses::clients/common.explore_courses') }}
-                    </a>
-                </div>
-            @endif
+                        <a href="{{ route('home', ['locale' => app()->getLocale()]) }}" class="btn btn-primary px-4">
+                            <i class="fa-solid fa-book-open me-1"></i>
+                            {{ __('courses::clients/common.explore_courses') }}
+                        </a>
+                    </div>
+                @endif
+            </div>
         </div>
     </section>
 

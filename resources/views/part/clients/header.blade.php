@@ -207,16 +207,20 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="d-none d-xl-block col-xl-3">
-                    <form class="header-search" action="{{ route('courses.home', ['locale' => app()->getLocale()]) }}"
-                        method="GET" role="search">
+                    <form class="header-search js-smooth-filter" action="{{ route('courses.home', ['locale' => app()->getLocale()]) }}"
+                        method="GET" role="search" data-filter-block-target="courses-index">
                         <label class="visually-hidden"
                             for="header-search-input">{{ __('clients/common.search') }}</label>
                         <span class="header-search__icon" aria-hidden="true">
                             <i class="fas fa-search"></i>
                         </span>
-                        <input id="header-search-input" type="text" name="keyword"
-                            value="{{ request('keyword') }}"
-                            placeholder="{{ __('clients/common.search_placeholder') }}" />
+                        <div class="header-search__input-wrapper">
+                            <input id="header-search-input" type="text" name="keyword"
+                                value="{{ request('keyword') }}"
+                                placeholder="{{ __('clients/common.search_placeholder') }}"
+                                autocomplete="off" />
+                            <div id="search-suggestions" class="search-suggestions"></div>
+                        </div>
                         <button type="submit" class="btn btn-primary header-search__button">
                             {{ __('clients/common.search') }}
                         </button>
@@ -309,21 +313,17 @@
                                             <li>
                                                 <a class="dropdown-item notification-item {{ is_null($notification->read_at) ? 'unread' : '' }}"
                                                     href="{{ route('students.notifications.read', ['locale' => app()->getLocale(), 'id' => $notification->id]) }}">
-
                                                     <div class="notification-content">
                                                         <div class="notification-title">
                                                             {{ notificationText($notification, 'title', __('clients/common.notifications')) }}
                                                         </div>
-
                                                         <div class="notification-message">
                                                             {{ notificationText($notification, 'message', '') }}
                                                         </div>
-
                                                         <div class="notification-time">
                                                             {{ $notification->created_at->diffForHumans() }}
                                                         </div>
                                                     </div>
-
                                                 </a>
                                             </li>
                                         @empty

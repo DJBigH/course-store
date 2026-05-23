@@ -180,6 +180,60 @@
                     @endforeach
                 </div>
 
+                @if ($errors->any())
+                    <div class="alert alert-danger mb-4 py-3 border-0 shadow-sm rounded-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fa-solid fa-triangle-exclamation fs-4 me-3"></i>
+                            <div>
+                                <h6 class="mb-1 fw-bold">Phát hiện dữ liệu không hợp lệ!</h6>
+                                <p class="mb-0 small">Vui lòng kiểm tra các ô báo đỏ bên dưới. 
+                                @php
+                                    $errorKeys = $errors->keys();
+                                    $otherLocales = ['en', 'ko', 'ja', 'zh'];
+                                    $hasLocaleError = false;
+                                    foreach($otherLocales as $l) {
+                                        foreach($errorKeys as $k) {
+                                            if (str_ends_with($k, '_' . $l)) { $hasLocaleError = true; break 2; }
+                                        }
+                                    }
+                                @endphp
+                                @if ($hasLocaleError)
+                                    <strong class="text-decoration-underline">Lưu ý: Có lỗi trong các tab ngôn ngữ khác (EN, KO, JA, ZH).</strong>
+                                @endif
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="teacher-panel mb-4">
+                    <h4 class="h5 mb-3">Cấu hình khuyến mãi</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Loại khuyến mãi</label>
+                            <div class="d-flex gap-3 mt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sale_type" id="sale_type_permanent" value="0" {{ !old('end_at', $course?->end_at) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="sale_type_permanent">Vĩnh viễn</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sale_type" id="sale_type_timed" value="1" {{ old('end_at', $course?->end_at) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="sale_type_timed">Có thời gian (Flash Sale)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6" id="sale_end_at_wrapper" style="{{ !old('end_at', $course?->end_at) ? 'display: none;' : '' }}">
+                            <label class="form-label">Thời gian kết thúc khuyến mãi</label>
+                            <input type="datetime-local" name="end_at" id="sale_end_at" class="form-control @error('end_at') is-invalid @enderror" 
+                                value="{{ old('end_at', $course?->end_at ? $course->end_at->format('Y-m-d\TH:i') : '') }}">
+                            @error('end_at')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted d-block mt-1">Sau thời gian này, giá sẽ tự động quay về giá gốc ngoài trang chủ.</small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row g-4">
                     <div class="col-xl-7">
                         <div class="teacher-panel h-100">
@@ -399,22 +453,24 @@
                     block.classList.toggle('d-none', block.dataset.langBlock !== locale);
                 });
                 localStorage.setItem('teacher_course_lang', locale);
+                
+                // Cập nhật lại trạng thái các nút radio nếu cần
+                const input = getLangInput(locale);
+                if (input && !input.checked) {
+                    input.checked = true;
+                }
             };
 
             const saved = localStorage.getItem('teacher_course_lang');
             const initial = supported.includes(saved) ? saved : 'vi';
-            const input = getLangInput(initial);
-            if (input) {
-                input.checked = true;
-            }
             showLang(initial);
 
             supported.forEach((locale) => {
                 const radio = getLangInput(locale);
-                if (!radio) {
-                    return;
-                }
+                if (!radio) return;
                 radio.addEventListener('change', () => showLang(locale));
+                // Thêm sự kiện click để chắc chắn
+                radio.addEventListener('click', () => showLang(locale));
             });
 
             const randomCodeButton = document.getElementById('teacherRandomCode');
@@ -440,11 +496,10 @@
                 if (fromCurrency === toCurrency) return amount;
                 if (!exchangeRates[fromCurrency] || !exchangeRates[toCurrency]) return amount;
 
-                // Convert to USD base first
+                // Quy đổi về USD làm gốc
                 const usdAmount = amount / exchangeRates[fromCurrency];
                 let targetAmount = usdAmount * exchangeRates[toCurrency];
 
-                // Apply fee if converting AWAY from the active base
                 if (conversionFee > 0) {
                     targetAmount *= (1 + (conversionFee / 100));
                 }
@@ -458,7 +513,10 @@
             const syncPrices = (sourceLocale, isSale = false) => {
                 const prefix = isSale ? 'sale_price' : 'price';
                 const sourceField = sourceLocale === 'vi' ? prefix : `${prefix}_${sourceLocale}`;
-                const sourceValue = Number(document.getElementById(`teacher-course-${sourceField}`).value || 0);
+                const sourceInput = document.getElementById(`teacher-course-${sourceField}`);
+                if (!sourceInput) return;
+
+                const sourceValue = Number(sourceInput.value || 0);
                 const fromCurrency = getCurrencyByLocale(sourceLocale);
 
                 supported.forEach(targetLocale => {
@@ -468,46 +526,55 @@
                     const toCurrency = getCurrencyByLocale(targetLocale);
                     const convertedValue = convertPrice(sourceValue, fromCurrency, toCurrency);
 
-                    const targetInput = document.getElementById(`teacher-course-${targetField}`);
+                    const targetHidden = document.getElementById(`teacher-course-${targetField}`);
                     const targetDisplay = document.getElementById(`teacher-course-${targetField}-display`);
 
-                    if (targetInput && targetDisplay) {
-                        targetInput.value = convertedValue;
-                        targetDisplay.value = convertedValue;
-                        // Trigger money input formatting if available
-                        window.TeacherMoneyInput?.formatElement(targetDisplay);
+                    if (targetHidden) {
+                        targetHidden.value = convertedValue;
+                        targetHidden.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+
+                    if (targetDisplay) {
+                        if (window.TeacherMoneyInput && typeof window.TeacherMoneyInput.formatDigits === 'function') {
+                            targetDisplay.value = window.TeacherMoneyInput.formatDigits(convertedValue);
+                        } else {
+                            targetDisplay.value = convertedValue;
+                        }
+                        targetDisplay.dispatchEvent(new Event('input', { bubbles: true }));
+                        targetDisplay.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                 });
             };
 
             const form = document.querySelector('.teacher-course-form');
             
-            // Listen for changes in price fields
             supported.forEach(locale => {
                 const suffix = locale === 'vi' ? '' : `_${locale}`;
-                
                 const priceDisplay = document.getElementById(`teacher-course-price${suffix}-display`);
                 const salePriceDisplay = document.getElementById(`teacher-course-sale_price${suffix}-display`);
 
                 if (priceDisplay) {
-                    priceDisplay.addEventListener('change', () => {
-                        if (currentLocale === locale) {
-                            syncPrices(locale, false);
-                        }
+                    ['input', 'change'].forEach(evt => {
+                        priceDisplay.addEventListener(evt, () => {
+                            if (currentLocale === locale) {
+                                setTimeout(() => syncPrices(locale, false), 50);
+                            }
+                        });
                     });
                 }
 
                 if (salePriceDisplay) {
-                    salePriceDisplay.addEventListener('change', () => {
-                        if (currentLocale === locale) {
-                            syncPrices(locale, true);
-                        }
+                    ['input', 'change'].forEach(evt => {
+                        salePriceDisplay.addEventListener(evt, () => {
+                            if (currentLocale === locale) {
+                                setTimeout(() => syncPrices(locale, true), 50);
+                            }
+                        });
                     });
                 }
             });
 
             document.addEventListener('teacher:money-input-sync', (e) => {
-                // If the synced element is the current active locale's price, sync others
                 const targetId = e.detail?.targetId;
                 if (!targetId) return;
 
@@ -536,6 +603,43 @@
             if (isComingSoonCheck) {
                 isComingSoonCheck.addEventListener('change', toggleComingSoon);
                 toggleComingSoon();
+            }
+
+            // Sale Type Toggle
+            const saleTypePermanent = document.getElementById('sale_type_permanent');
+            const saleTypeTimed = document.getElementById('sale_type_timed');
+            const saleEndWrapper = document.getElementById('sale_end_at_wrapper');
+            const saleEndInput = document.getElementById('sale_end_at');
+
+            function toggleSaleType() {
+                if (!saleEndWrapper) return;
+                if (saleTypeTimed.checked) {
+                    saleEndWrapper.style.display = 'block';
+                } else {
+                    saleEndWrapper.style.display = 'none';
+                    if (saleEndInput) saleEndInput.value = '';
+                }
+            }
+
+            if (saleTypePermanent && saleTypeTimed) {
+                saleTypePermanent.addEventListener('change', toggleSaleType);
+                saleTypeTimed.addEventListener('change', toggleSaleType);
+            }
+
+            // Auto-switch to tab with errors
+            const firstError = document.querySelector('.is-invalid, .invalid-feedback');
+            if (firstError) {
+                const parentBlock = firstError.closest('[data-lang-block]');
+                if (parentBlock) {
+                    const errorLocale = parentBlock.dataset.langBlock;
+                    const langBtn = document.getElementById(`lang_${errorLocale}`);
+                    if (langBtn) {
+                        langBtn.checked = true;
+                        document.querySelectorAll('.lang-block').forEach(el => el.classList.add('d-none'));
+                        document.querySelectorAll('.lang-' + errorLocale).forEach(el => el.classList.remove('d-none'));
+                    }
+                }
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         })();
     </script>

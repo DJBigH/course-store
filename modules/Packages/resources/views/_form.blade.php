@@ -131,6 +131,7 @@
                         $badgeField = $isDefault ? 'badge_text' : 'badge_text_' . $locale;
                         $descriptionField = $isDefault ? 'description' : 'description_' . $locale;
                         $supportField = $isDefault ? 'support_level' : 'support_level_' . $locale;
+                        $categoryField = $isDefault ? 'category' : 'category_' . $locale;
                     @endphp
                     <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="package-locale-{{ $locale }}">
                         <div class="row g-3">
@@ -157,6 +158,12 @@
                                 <input type="text" class="form-control input-premium" name="{{ $badgeField }}" maxlength="100"
                                     value="{{ old($badgeField, $package->{$badgeField} ?? '') }}"
                                     data-preview-field="badge" data-preview-locale="{{ $locale }}" placeholder="VD: Phổ biến nhất">
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label-custom">Danh mục (Ghi đè - {{ $meta['name'] }})</label>
+                                <input type="text" class="form-control input-premium" name="{{ $categoryField }}"
+                                    value="{{ old($categoryField, $package->{$categoryField} ?? '') }}"
+                                    data-preview-field="category" data-preview-locale="{{ $locale }}" placeholder="VD: Nhóm cá nhân">
                             </div>
                             <div class="col-12">
                                 <label class="form-label-custom">Mô tả chi tiết</label>
@@ -338,7 +345,10 @@
                 <div class="package-card-premium {{ $defaultPreviewFeatured ? 'is-featured' : '' }}" 
                     data-package-preview-card style="--package-tone: {{ $defaultBadgeTone }}">
                     <div class="premium-badge-wrapper">
-                        <span class="p-card-code" data-preview-code>{{ $defaultPreviewCode }}</span>
+                        <div class="d-flex flex-column gap-1">
+                            <span class="p-card-category {{ $package->category_locale ? '' : 'd-none' }}" data-preview-category>{{ $package->category_locale }}</span>
+                            <span class="p-card-code" data-preview-code>{{ $defaultPreviewCode }}</span>
+                        </div>
                         <span class="p-card-badge {{ $defaultPreviewBadge ? '' : 'd-none' }}" data-preview-badge>{{ $defaultPreviewBadge }}</span>
                     </div>
 
@@ -682,6 +692,17 @@
         margin-left: 0.5rem;
     }
 
+    .p-card-category {
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        width: fit-content;
+    }
+
     .p-card-name {
         font-size: 1.5rem;
         font-weight: 800;
@@ -949,8 +970,18 @@
             const tagline = getLocaleValue('tagline', activeLocale);
             const badge = getLocaleValue('badge', activeLocale);
             const description = getLocaleValue('description', activeLocale);
+            const categoryText = getLocaleValue('category', activeLocale);
+
+            const categoryIdSelect = document.querySelector('select[name="category_id"]');
+            const selectedCategoryText = categoryIdSelect?.options[categoryIdSelect.selectedIndex]?.text.trim();
+            const finalCategory = categoryText || (selectedCategoryText !== '-- Chọn danh mục --' ? selectedCategoryText : '');
 
             document.querySelector('[data-preview-code]').textContent = code.toUpperCase();
+            
+            const categoryNode = document.querySelector('[data-preview-category]');
+            categoryNode.textContent = finalCategory;
+            categoryNode.classList.toggle('d-none', finalCategory === '');
+
             document.querySelector('[data-preview-name]').textContent = name;
             document.querySelector('[data-preview-price]').textContent = formatPrice(price);
             document.querySelector('[data-preview-commission]').innerHTML = `<i class="fas fa-check-circle"></i> Chia doanh thu ${Number(commission || 0)}%`;

@@ -73,6 +73,15 @@ if (localeLinks.length) {
 
             localeLinks.forEach((item) => item.classList.remove("is-loading"));
             link.classList.add("is-loading");
+
+            const main = document.querySelector("main");
+            if (main) {
+                main.style.transition = "opacity 0.4s ease, filter 0.4s ease";
+                main.style.opacity = "0";
+                main.style.filter = "blur(10px)";
+                main.style.pointerEvents = "none";
+            }
+
             showTransitionOverlay(link.dataset.localeLabel);
         });
     });

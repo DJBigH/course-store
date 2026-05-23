@@ -143,6 +143,22 @@
                                         </span>
                                     @endif
                                 </div>
+
+                                @if ($course->is_on_flash_sale)
+                                    <div class="flash-sale-timer-wrapper mb-3 p-2 rounded border border-danger bg-danger bg-opacity-10">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <div class="flash-sale-badge">FLASH SALE</div>
+                                            <span class="small text-danger fw-bold">{{ __('courses::clients/common.ending_in') ?? 'Kết thúc sau:' }}</span>
+                                        </div>
+                                        <div class="countdown-timer d-flex justify-content-center gap-1" 
+                                             data-time="{{ $course->end_at->toIso8601String() }}">
+                                            <div class="time-item"><span class="days">00</span><small>d</small></div>
+                                            <div class="time-item"><span class="hours">00</span><small>h</small></div>
+                                            <div class="time-item"><span class="minutes">00</span><small>m</small></div>
+                                            <div class="time-item"><span class="seconds">00</span><small>s</small></div>
+                                        </div>
+                                    </div>
+                                @endif
                             @endunless
 
                             <!-- Info list -->
@@ -251,9 +267,15 @@
                                     @csrf
                                     <input type="hidden" name="course_id" value="{{ $course->id }}">
 
-                                    <button class="btn btn-primary w-100 fw-semibold payment">
-                                        <i class="fa-solid fa-cart-shopping me-1"></i>
-                                        {{ __('courses::clients/common.buy_course') }}
+                                    <button class="btn btn-primary w-100 fw-semibold payment js-buy-btn">
+                                        <span class="btn-text">
+                                            <i class="fa-solid fa-cart-shopping me-1"></i>
+                                            {{ __('courses::clients/common.buy_course') }}
+                                        </span>
+                                        <span class="btn-loader d-none">
+                                            <i class="fas fa-spinner fa-spin me-1"></i>
+                                            {{ __('common.processing') }}...
+                                        </span>
                                     </button>
                                 </form>
                             @endif
@@ -291,6 +313,48 @@
             border: 1px solid transparent;
             line-height: 1;
         }
+
+        .flash-sale-badge {
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .countdown-timer .time-item {
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            min-width: 45px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .countdown-timer .time-item span {
+            display: block;
+            font-weight: 800;
+            font-size: 16px;
+            line-height: 1;
+            color: #1e293b;
+        }
+
+        .countdown-timer .time-item small {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        html[data-theme="dark"] .countdown-timer .time-item {
+            background: #334155;
+        }
+
+        html[data-theme="dark"] .countdown-timer .time-item span {
+            color: #f1f5f9;
+        }
+
 
         .teacher-mini-badge::before,
         .teacher-inline-badge::before {
@@ -341,75 +405,18 @@
         .reply-line::after { content: ''; position: absolute; left: -24px; top: 50%; width: 12px; height: 2px; background-color: #f1f5f9; }
         .bg-primary-subtle\/5 { background-color: rgba(37, 99, 235, 0.05); }
 
-        .teacher-public-rating__picker {
-            position: relative;
-            user-select: none;
-            padding: 10px 0;
+        @keyframes rating-shake {
+            0%, 100% { transform: translateX(0); }
+            20%       { transform: translateX(-6px); }
+            40%       { transform: translateX(6px); }
+            60%       { transform: translateX(-4px); }
+            80%       { transform: translateX(4px); }
         }
+        .rating-shake { animation: rating-shake .45s ease; }
 
-        .teacher-public-rating__track {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-            font-size: 2rem;
-            line-height: 1;
-        }
 
-        .teacher-public-rating__stars-base {
-            position: relative;
-            color: #e2e8f0;
-            display: flex;
-            gap: 4px;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .teacher-public-rating__stars-fill {
-            position: absolute;
-            top: 0;
-            left: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            color: #f59e0b;
-            display: flex;
-            gap: 4px;
-            transition: width 0.1s ease;
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .teacher-public-rating__hotspots {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            z-index: 10;
-        }
-
-        .teacher-public-rating__hotspot {
-            flex: 1;
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            outline: none !important;
-            cursor: pointer;
-            z-index: 11;
-        }
-
-        html[data-theme="dark"] .teacher-public-rating__stars-base {
-            color: #334155;
-        }
-
-        html[data-theme="dark"] .course-rating-section,
         html[data-theme="dark"] .comment-card-modern,
         html[data-theme="dark"] .reply-card-modern,
-        html[data-theme="dark"] .rating-submission-card,
-        html[data-theme="dark"] .user-rating-result,
-        html[data-theme="dark"] .purchase-required-notice,
-        html[data-theme="dark"] .login-required-notice,
         html[data-theme="dark"] .empty-reviews-state {
             background-color: #1e293b !important;
             border-color: #334155 !important;
@@ -529,61 +536,105 @@
                 });
             };
 
-            // --- Enhanced Rating Interaction (Aligned with Teacher Profile) ---
+            // ─── Star Picker ─────────────────────────────────────────────────
             const initCourseRatingPicker = () => {
                 const form = document.querySelector('[data-course-rating-form]');
                 if (!form) return;
 
-                const track = form.querySelector('[data-rating-track]');
-                const fill = form.querySelector('[data-rating-fill]');
-                const input = form.querySelector('[data-rating-input]');
-                const label = form.querySelector('[data-rating-current-label]');
-                const options = form.querySelectorAll('[data-rating-option]');
-                const submitBtn = form.querySelector('button[type="submit"]');
+                const input   = form.querySelector('[data-rating-input]');
+                const label   = form.querySelector('[data-rating-current-label]');
+                const spots   = form.querySelectorAll('[data-rating-option]');
+                const icons   = form.querySelectorAll('[data-star-icon]');  // 5 <i> elements
+                const errBox  = document.getElementById('rp-error-box');
+                const errTxt  = document.getElementById('rp-error-text');
 
-                let selectedRating = input.value ? parseFloat(input.value) : null;
+                const LABELS = {
+                    0.5:'😕 Rất tệ', 1:'😕 Rất tệ',
+                    1.5:'😐 Tệ',     2:'😐 Tệ',
+                    2.5:'🙂 Bình thường', 3:'🙂 Bình thường',
+                    3.5:'😊 Tốt',    4:'😊 Tốt',
+                    4.5:'🤩 Tuyệt vời', 5:'🤩 Xuất sắc!',
+                };
+                let chosen = input?.value ? parseFloat(input.value) : null;
 
-                const updateStars = (val) => {
-                    if (fill) fill.style.width = (val / 5 * 100) + '%';
+                // Use inline style.color — beats any CSS specificity conflict
+                const FILLED_COLOR = '#f59e0b';
+                const EMPTY_COLOR  = document.documentElement.getAttribute('data-theme') === 'dark' ? '#475569' : '#cbd5e1';
+
+                const paintStars = (val) => {
+                    icons.forEach((icon, idx) => {
+                        const n = idx + 1;
+                        const empty = document.documentElement.getAttribute('data-theme') === 'dark' ? '#475569' : '#cbd5e1';
+                        if (val >= n) {
+                            icon.className = 'rp-star-icon fa-solid fa-star';
+                            icon.style.color = FILLED_COLOR;
+                        } else if (val >= n - 0.5) {
+                            icon.className = 'rp-star-icon fa-solid fa-star-half-stroke';
+                            icon.style.color = FILLED_COLOR;
+                        } else {
+                            icon.className = 'rp-star-icon fa-regular fa-star';
+                            icon.style.color = empty;
+                        }
+                    });
                 };
 
-                const updateLabel = (val, isSelected = false) => {
+                const setLabel = (val, locked=false) => {
                     if (!label) return;
                     if (val > 0) {
-                        const text = isSelected 
-                            ? @js(__('courses::clients/common.rating_selected_label')) 
-                            : @js(__('courses::clients/common.rating_hint_label'));
-                        label.textContent = `${text} ${val} sao`;
-                        label.classList.remove('text-warning');
-                        label.classList.add('text-primary', 'fw-bold');
+                        label.textContent = locked
+                            ? `✅ Đã chọn ${val} sao – ${LABELS[val] || val + ' sao'}`
+                            : `${val} sao – ${LABELS[val] || ''}`;
+                        label.classList.add('is-active');
                     } else {
                         label.textContent = @js(__('courses::clients/common.rating_hint_label'));
-                        label.classList.remove('text-primary', 'fw-bold');
-                        label.classList.add('text-warning');
+                        label.classList.remove('is-active');
                     }
                 };
 
-                options.forEach(opt => {
-                    opt.addEventListener('mouseenter', () => {
-                        updateStars(parseFloat(opt.dataset.value));
+                const showErr = (msg) => {
+                    if (errBox && errTxt) { errTxt.textContent = msg; errBox.classList.remove('d-none'); }
+                    else if (window.showMessage) window.showMessage(msg, 'error');
+                };
+                const hideErr = () => { if (errBox) errBox.classList.add('d-none'); };
+
+                // Hover
+                spots.forEach(s => {
+                    s.addEventListener('mouseenter', () => {
+                        const v = parseFloat(s.dataset.value);
+                        paintStars(v);
+                        setLabel(v);
                     });
-                    
-                    opt.addEventListener('click', () => {
-                        selectedRating = parseFloat(opt.dataset.value);
-                        input.value = selectedRating;
-                        updateStars(selectedRating);
-                        updateLabel(selectedRating, true);
+                    // Click → lock selection
+                    s.addEventListener('click', () => {
+                        chosen = parseFloat(s.dataset.value);
+                        if (input) input.value = chosen;
+                        paintStars(chosen);
+                        setLabel(chosen, true);
+                        hideErr();
                     });
                 });
 
-                if (track) {
-                    track.addEventListener('mouseleave', () => {
-                        updateStars(selectedRating || 0);
+                // Mouse leave picker → restore chosen (or reset)
+                const picker = form.querySelector('[data-rating-track]');
+                if (picker) {
+                    picker.addEventListener('mouseleave', () => {
+                        paintStars(chosen || 0);
+                        chosen ? setLabel(chosen, true) : setLabel(0);
                     });
                 }
+
+                // Submit validation (capture phase — runs before global handler)
+                form.addEventListener('submit', (e) => {
+                    const v = input ? parseFloat(input.value) : 0;
+                    if (!v || v < 0.5 || v > 5) {
+                        e.stopImmediatePropagation(); e.preventDefault();
+                        showErr(@js(__('courses::clients/common.rating_invalid')));
+                        const p = form.querySelector('.rp-picker');
+                        if (p) { p.classList.add('rp-shake'); setTimeout(() => p.classList.remove('rp-shake'), 500); }
+                    }
+                }, true);
             };
 
-            // Initial call
             initCourseRatingPicker();
             
             // Re-init on AJAX success
@@ -621,44 +672,52 @@
             document.addEventListener('submit', async (e) => {
                 const form = e.target.closest('[data-comment-form], [data-course-rating-form]');
                 if (!form) return;
-                
-                e.preventDefault();
 
+                // The rating form has its own inline validator (runs first via capture phase).
+                // If input is still empty after that, bail out silently (error already shown).
                 const isRatingForm = form.matches('[data-course-rating-form]');
                 if (isRatingForm) {
-                    const rating = form.querySelector('[data-rating-input]')?.value;
-                    if (!rating || parseFloat(rating) < 0.5) {
-                        alert(@js(__('courses::clients/common.rating_invalid') ?? 'Vui lòng chọn mức đánh giá.'));
+                    const ratingVal = parseFloat(form.querySelector('[data-rating-input]')?.value || '0');
+                    if (!ratingVal || ratingVal < 0.5) {
+                        e.preventDefault();
                         return;
                     }
                 }
 
+                e.preventDefault();
+
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalContent = submitBtn?.innerHTML;
-                
+
                 if (form.matches('[data-comment-form]')) {
                     syncCommentEditors(form);
                 }
 
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${isRatingForm ? @js(__('courses::clients/common.rating_submit')) : @js(__('courses::clients/common.comment_submitting'))}`;
+                    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${
+                        isRatingForm
+                            ? (@js(__('courses::clients/common.rating_submit') ?? 'Đang lưu...'))
+                            : (@js(__('courses::clients/common.comment_submitting') ?? 'Đang gửi...'))
+                    }`;
                 }
 
                 try {
                     const response = await fetch(form.action, {
                         method: 'POST',
-                        headers: { 
-                            'X-CSRF-TOKEN': token, 
-                            'X-Requested-With': 'XMLHttpRequest', 
-                            'Accept': 'application/json' 
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
                         },
-                        body: new FormData(form)
+                        body: new FormData(form),
                     });
                     const result = await response.json();
 
                     if (!result.success) {
-                        alert(result.message || 'Error');
+                        const msg = result.message || @js(__('courses::clients/common.rating_submit_error') ?? 'Có lỗi xảy ra.');
+                        if (window.showMessage) window.showMessage(msg, 'error');
+
                         if (submitBtn) {
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = originalContent;
@@ -666,19 +725,41 @@
                         return;
                     }
 
-                    const wrap = getCommentsWrap();
-                    if (wrap) {
-                        destroyCommentEditors(wrap);
-                        wrap.innerHTML = result.html;
-                        reinitAll(wrap);
+                    if (window.showMessage) {
+                        window.showMessage(
+                            result.message || @js(__('courses::clients/common.rating_success') ?? 'Thành công!'),
+                            'success'
+                        );
                     }
 
                     if (isRatingForm) {
-                        // Refresh page to update top stats after rating success
-                        setTimeout(() => window.location.reload(), 1500);
+                        // Only swap the rating panel, not the whole comments section
+                        const ratingRoot = document.getElementById('course-rating-panel-root');
+                        if (ratingRoot && result.html) {
+                            ratingRoot.outerHTML = result.html;
+                        } else {
+                            // Fallback: refresh full wrap
+                            const wrap = getCommentsWrap();
+                            if (wrap) {
+                                destroyCommentEditors(wrap);
+                                wrap.innerHTML = result.html;
+                                reinitAll(wrap);
+                            }
+                        }
+                    } else {
+                        // Comment: replace full wrap
+                        const wrap = getCommentsWrap();
+                        if (wrap) {
+                            destroyCommentEditors(wrap);
+                            wrap.innerHTML = result.html;
+                            reinitAll(wrap);
+                        }
                     }
-                } catch (err) { 
-                    console.error(err); 
+                } catch (err) {
+                    console.error(err);
+                    if (window.showMessage) {
+                        window.showMessage(@js(__('courses::clients/common.rating_submit_error') ?? 'Có lỗi kết nối.'), 'error');
+                    }
                     if (submitBtn) {
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = originalContent;
@@ -687,29 +768,21 @@
             });
 
             initCommentEditors();
-            
-            // Countdown Timer
-            const initCountdown = () => {
-                const timerEl = document.querySelector('.countdown-timer');
-                if (!timerEl) return;
-                const targetDate = new Date(timerEl.dataset.time).getTime();
-                const update = () => {
-                    const now = new Date().getTime();
-                    const diff = targetDate - now;
-                    if (diff <= 0) { window.location.reload(); return; }
-                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                    timerEl.querySelector('.days').innerText = String(days).padStart(2, '0');
-                    timerEl.querySelector('.hours').innerText = String(hours).padStart(2, '0');
-                    timerEl.querySelector('.minutes').innerText = String(minutes).padStart(2, '0');
-                    timerEl.querySelector('.seconds').innerText = String(seconds).padStart(2, '0');
-                };
-                update();
-                setInterval(update, 1000);
-            };
-            initCountdown();
+
+            // Buy button loader
+            const buyBtn = document.querySelector('.js-buy-btn');
+            if (buyBtn) {
+                buyBtn.addEventListener('click', () => {
+                    const text = buyBtn.querySelector('.btn-text');
+                    const loader = buyBtn.querySelector('.btn-loader');
+                    if (text && loader) {
+                        buyBtn.disabled = true;
+                        text.classList.add('d-none');
+                        loader.classList.remove('d-none');
+                        buyBtn.closest('form').submit();
+                    }
+                });
+            }
         });
     </script>
 @endsection

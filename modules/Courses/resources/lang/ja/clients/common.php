@@ -1,8 +1,15 @@
 <?php
 
 return array_merge(require __DIR__ . '/../../en/clients/common.php', [
-    'rating_title' => 'Course rating',
-    'rating_count' => ':count ratings',
+    'rating_title' => 'コースの評価',
+    'coming_soon' => '近日公開',
+    'opens_in' => '公式リリースまであと',
+    'countdown_days' => '日',
+    'countdown_hours' => '時間',
+    'countdown_minutes' => '分',
+    'countdown_seconds' => '秒',
+    'coming_soon_desc' => 'このコースは現在最終調整中であり、まもなく公開されます。',
+    'rating_count' => ':count 件の評価',
     'rating_hint' => 'Choose a score from 1 to 5 stars.',
     'rating_selected' => 'Your rating: :rating stars',
     'rating_selected_label' => 'Your rating:',
@@ -14,7 +21,12 @@ return array_merge(require __DIR__ . '/../../en/clients/common.php', [
     'rating_already_submitted' => 'You have already rated this course and can only rate it once.',
     'rating_submitted_once' => 'このコースを :rating 星で評価しました。評価は受講生1人につき1回のみ可能です。',
     'rating_hint_label' => 'ホバーまたはタッチして満足度を選択してください',
+    'rating_votes' => '評価',
+    'rating_once_note' => '1回のみ評価可能',
+    'rating_locked_note' => '評価が記録されました。変更することはできません。',
+    'rating_purchase_desc' => '評価機能を有効にするにはコースを購入してください。',
     'comment_empty_desc' => 'このコースについて質問したり、感想を共有したりする最初のユーザーになりましょう！',
     'comment_success' => 'コメントが正常に投稿されました。',
     'rating_success' => 'このコースを評価していただきありがとうございます！',
 ]);
+
