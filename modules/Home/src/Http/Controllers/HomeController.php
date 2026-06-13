@@ -41,7 +41,7 @@ class HomeController extends Controller
 
         if ($studentId) {
             $student = Auth::guard('students')->user();
-            $ownTeacherId = $student->teacher ? $student->teacher->id : null;
+            $ownTeacherId = $student && $student->teacher ? $student->teacher->id : null;
             
             $myCourse = \Modules\Courses\src\Models\Courses::query()
                 ->with('teacher')
