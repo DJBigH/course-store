@@ -16,12 +16,13 @@ class CoursesSeeder extends Seeder
     {
         $this->call(ExchangeRateSeeder::class);
         $faker = Factory::create();
+        $teacherId = \Modules\Teacher\src\Models\Teacher::value('id') ?? 1;
         for ($index = 1; $index <=5; $index++){
             $courses = new Courses();
             $courses->name = $faker->name;
             $courses->slug = $faker->slug;
             $courses->detail = '123';
-            $courses->teacher_id = 0;
+            $courses->teacher_id = $teacherId;
             $courses->thumbnail = '123';
             $courses->price = '123';
             $courses->sale_price = '123';
