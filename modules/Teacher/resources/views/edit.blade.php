@@ -107,7 +107,7 @@
 
             <div class="col-12">
                 <div class="mb-3">
-                    <label class="form-label">Huy hiệu giảng viên</label>
+                    <label class="form-label">Huy hiệu giảng viên (Cũ)</label>
                     @php
                         $selectedBadgeKey = old('badge_key', $teacher->badge_key ?: ($teacher->is_verified_badge ? 'verified' : ($teacher->is_premium_badge ? 'premium' : 'none')));
                     @endphp
@@ -138,7 +138,95 @@
                             </select>
                         </div>
                     </div>
-                    <small class="text-muted">Bật để tăng độ uy tín và làm nổi bật hồ sơ giảng viên trên giao diện public.</small>
+                </div>
+            </div>
+
+            <div class="col-12" id="badges-assignment-section">
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Gán huy hiệu hệ thống mới</label>
+                    <div class="row g-3">
+                        @php
+                            $currentBadges = $teacher->badges->pluck('id')->toArray();
+                        @endphp
+                        @foreach ($badges as $badge)
+                            <div class="col-md-3">
+                                <div class="form-check badge-selection-card p-3 rounded-4 border">
+                                    <input class="form-check-input" type="checkbox" name="badges[]" value="{{ $badge->id }}" id="badge_{{ $badge->id }}" @checked(in_array($badge->id, old('badges', $currentBadges)))>
+                                    <label class="form-check-label d-block ms-2 cursor-pointer" for="badge_{{ $badge->id }}">
+                                        <div class="badge mb-2" style="background-color: {{ $badge->color_bg }}; color: {{ $badge->color_text }};">
+                                            <i class="{{ $badge->icon }} me-1"></i> {{ $badge->name_locale }}
+                                        </div>
+                                        <div class="small text-muted text-truncate">{{ $badge->description_locale }}</div>
+                                    </label>
+                                </div>
+                            </div>
+                        @endforeach
+                        @if ($badges->isEmpty())
+                            <div class="col-12">
+                                <div class="alert alert-light border small text-muted">Chưa có huy hiệu hệ thống nào. <a href="{{ route('teacher.badges.create') }}" target="_blank">Tạo ngay</a></div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 mb-4">
+                <div class="card border border-info shadow-sm">
+                    <div class="card-header bg-info-subtle text-info-emphasis fw-bold">
+                        <i class="fa-brands fa-telegram me-2"></i>Quản lý Gói Thông Báo Telegram
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $telegramStatus = $teacher->getTelegramPackageStatus();
+                            $statusLabel = $telegramStatus['status'] === 'active' ? '<span class="badge bg-success">Còn hạn</span>' : '<span class="badge bg-danger">Hết hạn / Chưa mua</span>';
+                            $expiresAt = $telegramStatus['expires_at'] ? $telegramStatus['expires_at']->format('d/m/Y H:i:s') : 'Chưa có dữ liệu';
+                        @endphp
+                        <div class="row align-items-center mb-3">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Trạng thái:</strong> {!! $statusLabel !!}</p>
+                                <p class="mb-0"><strong>Hạn sử dụng:</strong> <span class="text-primary fw-bold">{{ $expiresAt }}</span></p>
+                                @if($teacher->telegram_chat_id)
+                                    <p class="mb-0 mt-2"><strong>Chat ID:</strong> <code>{{ $teacher->telegram_chat_id }}</code></p>
+                                @else
+                                    <p class="mb-0 mt-2 text-muted"><em>Giáo viên chưa nhập Chat ID</em></p>
+                                @endif
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                @if($teacher->telegram_chat_id)
+                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="testTelegramConnection({{ $teacher->id }})">
+                                        <i class="fa-solid fa-paper-plane me-1"></i> Gửi tin nhắn Test
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <h6 class="fw-bold mb-3">Gia hạn / Cấp mới Gói Telegram</h6>
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label small">Số lượng</label>
+                                <input type="number" class="form-control" name="telegram_duration_value" min="1" placeholder="VD: 1, 5, 30...">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Đơn vị thời gian</label>
+                                <select name="telegram_duration_unit" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="minutes">Phút (Test)</option>
+                                    <option value="hours">Giờ</option>
+                                    <option value="days">Ngày</option>
+                                    <option value="months">Tháng</option>
+                                    <option value="years">Năm</option>
+                                    <option value="lifetime">Vĩnh viễn (Năm 2099)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block mt-2">
+                                    <em>Lưu ý: Thời gian mua mới sẽ được tự động <strong>cộng dồn</strong> vào số ngày còn dư. Chọn "Vĩnh viễn" sẽ ghi đè hạn cũ.</em>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -204,7 +292,7 @@
                     </button>
                 @endif
 
-                @can('teachers.edit')
+                @can('packages.manage')
                 <a href="{{ route('teacher-packages.grant', ['teacher_id' => $teacher->id]) }}"
                    class="btn btn-warning"
                    title="Tặng gói đặc quyền cho giáo viên này">
@@ -230,6 +318,47 @@
 
         #holder img {
             width: 100% !important;
+        }
+
+        .badge-selection-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .badge-selection-card:hover {
+            border-color: #3b82f6 !important;
+            background-color: #f8fafc;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Dark Mode Support */
+        html[data-theme="dark"] .badge-selection-card {
+            background-color: #1e293b;
+            border-color: #334155 !important;
+        }
+
+        html[data-theme="dark"] .badge-selection-card:hover {
+            background-color: #334155;
+            border-color: #3b82f6 !important;
+        }
+
+        html[data-theme="dark"] .alert-light {
+            background-color: #1e293b;
+            border-color: #334155;
+            color: #94a3b8 !important;
         }
     </style>
 @endsection
@@ -308,5 +437,36 @@
         bindSlug('.title-ko', '.slug-ko');
         bindSlug('.title-ja', '.slug-ja');
         bindSlug('.title-zh', '.slug-zh');
+
+        function testTelegramConnection(teacherId) {
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang gửi...';
+            btn.disabled = true;
+
+            fetch(`{{ url('admin/teacher') }}/${teacherId}/test-telegram`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Gửi tin nhắn test thành công!');
+                } else {
+                    alert('Lỗi: ' + (data.message || 'Không thể gửi tin nhắn'));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Đã xảy ra lỗi hệ thống.');
+            })
+            .finally(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            });
+        }
     </script>
 @endsection

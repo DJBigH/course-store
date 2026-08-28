@@ -50,7 +50,7 @@
                         <div class="mb-3">
                             <label for="">Slug (VI)</label>
                             <input type="text" class="form-control slug {{ $errors->has('slug') ? ' is-invalid' : '' }}"
-                                name="slug" placeholder="Auto Generate..." value="{{ old('slug') }}" readonly>
+                                name="slug" placeholder="Tự động tạo..." value="{{ old('slug') }}" readonly>
                             @error('slug')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -79,7 +79,7 @@
                             <label for="">Slug (EN)</label>
                             <input type="text"
                                 class="form-control slug-en {{ $errors->has('slug_en') ? ' is-invalid' : '' }}"
-                                name="slug_en" placeholder="Auto Generate..." value="{{ old('slug_en') }}" readonly>
+                                name="slug_en" placeholder="Tự động tạo..." value="{{ old('slug_en') }}" readonly>
                             @error('slug_en')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -107,7 +107,7 @@
                             <label for="">Slug (KO)</label>
                             <input type="text"
                                 class="form-control slug-ko {{ $errors->has('slug_ko') ? ' is-invalid' : '' }}"
-                                name="slug_ko" placeholder="Auto Generate..." value="{{ old('slug_ko') }}" readonly>
+                                name="slug_ko" placeholder="Tự động tạo..." value="{{ old('slug_ko') }}" readonly>
                             @error('slug_ko')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -135,7 +135,7 @@
                             <label for="">Slug (JA)</label>
                             <input type="text"
                                 class="form-control slug-ja {{ $errors->has('slug_ja') ? ' is-invalid' : '' }}"
-                                name="slug_ja" placeholder="Auto Generate..." value="{{ old('slug_ja') }}" readonly>
+                                name="slug_ja" placeholder="Tự động tạo..." value="{{ old('slug_ja') }}" readonly>
                             @error('slug_ja')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -163,7 +163,7 @@
                             <label for="">Slug (ZH)</label>
                             <input type="text"
                                 class="form-control slug-zh {{ $errors->has('slug_zh') ? ' is-invalid' : '' }}"
-                                name="slug_zh" placeholder="Auto Generate..." value="{{ old('slug_zh') }}" readonly>
+                                name="slug_zh" placeholder="Tự động tạo..." value="{{ old('slug_zh') }}" readonly>
                             @error('slug_zh')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

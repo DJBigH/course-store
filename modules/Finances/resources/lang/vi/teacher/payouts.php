@@ -39,6 +39,8 @@ return [
     ],
     'flash' => [
         'amount_exceeds_balance' => 'Số tiền yêu cầu vượt quá số dư khả dụng.',
+        'max_payout_exceeded' => 'Gói của bạn chỉ cho phép rút tối đa :limit một ngày.',
+        'feature_locked' => 'Gói cước của bạn không hỗ trợ tính năng rút tiền.',
         'request_sent' => 'Yêu cầu rút tiền của bạn đã được gửi và đang chờ xử lý.',
         'account_already_saved' => 'Thông tin tài khoản này đã tồn tại trong hệ thống.',
         'limit_reached_use_change_request' => 'Bạn đã đạt giới hạn :limit tài khoản. Vui lòng gửi yêu cầu đổi tài khoản nếu muốn thay đổi.',

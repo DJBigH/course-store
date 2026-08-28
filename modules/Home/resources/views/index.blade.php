@@ -2,6 +2,9 @@
 @section('content')
     @include('home::banner')
     @include('home::my_course_home')
+    @include('home::bundle_list')
+    @include('home::coming_soon_list')
+
     @include('home::all_course_home')
     {{-- @include('home::skill_extention') --}}
     @include('home::question')

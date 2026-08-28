@@ -40,5 +40,6 @@ return [
         'coupon_remove_failed' => 'Failed to remove discount code',
         'coupon_required' => 'Please enter a discount code',
         'coupon_exp' => 'Invalid or expired coupon code',
+        'own_coupon' => 'You cannot use a discount code created by yourself.',
     ],
 ];

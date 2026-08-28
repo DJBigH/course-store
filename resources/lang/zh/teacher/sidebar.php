@@ -1,15 +1,15 @@
 <?php
 
-return array (
-  'group' => 
-  array (
+return array(
+  'group' =>
+  array(
     'management' => '管理',
     'growth' => '增长',
     'trainees' => '学员',
     'account' => '账号',
   ),
-  'nav' => 
-  array (
+  'nav' =>
+  array(
     'overview' => '概览',
     'courses' => '课程',
     'earnings' => '收益',
@@ -25,9 +25,11 @@ return array (
     'package' => '讲师套餐',
     'support' => '支持',
     'cancellation' => '注销讲师',
+    'inbox' => '系统收件箱',
+    'telegram' => 'Telegram 配置',
   ),
-  'brand' => 
-  array (
+  'brand' =>
+  array(
     'logged_in_as' => '登录身份:',
     'student_fallback' => '学生',
     'active_channel' => '活跃频道',

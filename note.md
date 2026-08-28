@@ -469,10 +469,9 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm cái lịch sử đăng nhập, lịch sử thao tác ở bên admin và thêm 1 cái nữa check đăng nhập khác thiếp bị hoặc khác ip sẽ báo lên notify ( không dùng email để gửi, gửi lên log là được) ( Done )
 - Check lại responsive ( Done)
 - Thêm màn riêng dành cho giáo viên ( Đăng nhập riêng chỉ (super admin và admin và teacher mới có quyền đăng nhập hoặc thêm quyền đăng nhập vào trang đó)) ( Done )
-- Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi
 - Làm cái mã giảm giá dành riêng cho đăng ký giáo viên ( Done )
 - Thêm cái ai tạo mã giảm giá ( Done )
-- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý  gói đặc quyền riêng họ) (Done)
+- admin tạo ra 1 gói dành riêng cho giáo viên đó ( Kiểu tặng gói riêng ý gói đặc quyền riêng họ) (Done)
 - Cho phép khóa tài khoản giáo viên nhưng không khóa tài khoản học viên và ngược lại (Done)
 - Sắp xếp lại cái sidebar ( Done )
 - Quản lý combo khoá học ( Done thêm cả chức năng Hot để đẩy khoá học đó lên)
@@ -481,22 +480,32 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Thêm tính năng gif khoá học hoc viên ( Done )
 - Thêm tính năng bán combo theo số lượng va có thời gian ( Done)
 - Thêm cái dùng hợp tác hủy tư cách giáo viên ẩn tất cả những thứ liên quan đến giáo viên đó, tài khoản giáo viên sẽ được hạ xuống tài khoản học viên không vô được màn giáo viên, tất cả các khóa học được cấp hay của bản thân sẽ ẩn đi và chỉ có học viên nào mua thì vẫn dùng được ( Done )
-- Vi tài khoản học viên sẽ là tài khoản dùng chung để tạo tài khoản giáo viên nên giờ làm cách nào để vào khi admin dùng quản trị sẽ biết rõ tk nào giáo viên tk nào học viên và cho phép admin có thể vào xem tài khoản học viên hay tài khoản giáo viên và có thể đăng nhập vào tài khoản đó để xem kiểm tra cho dễ  ( Done )
-- Chưa làm config ngân hàng (bank, momo, vnpay thêm bật/tắt và bên clients và teacher khi tắt cái nào thì hiện bảo trì cái đó)
-- Tỷ lệ chuyển đổi: xem bao nhiêu người xem trang, xem bao nhiêu người vào trang j nhiều nhất
-- Đối với cái thông báo giảng viên đổi thành thông báo thì làm nó như 1 cái email kiểu viết tạo đúng input tiêu đề, nội dung, có j kèm có button không và dùng đúng giao diện chung của email web và chọn thông báo cho ai và trong đó có 1 cái là thông báo cho học viên hay giảng viên
-- Thêm chức năng quản lý huy hiệu ( CURD, xóa mềm có thùng rác để khôi phục và cho tự thêm màu với từng huy hiệu và cho thêm icon và cung cấp nơi xem mã màu và icon để admin dễ dang dung và thay thế )
-- Sắp xếp lại nội dung trong dashboard của admin
-- Thêm chức năng viết được mô tả các chức năng trong gói đấy kiểu ( AI quiz: mổ tả là gì...)
-- Thêm chức năng khóa giảng viên ( Nếu giảng viên vi phạm j đó )
-- Cái góp ý / báo cáo đang trả dữ liệu sai
-- Ở quản lý học viên thêm cái học viên đó đang học khóa học nào của giảng viên nào để dễ kiểm soát
-- Hỏi AI ở 2 màn kia tôi đều đa ngôn ngữ nên số tiền của nó lúc sẽ khác nên bên admin có cần phải làm j để biết đúng số tiền không có cần đa ngôn ngữ không
-- Cần thêm tính năng hay lượt bỏ tính năng j không
-- Chức năng log có thiếu hay không
-- Chức năng phần quyền check xem có thiếu j không
-- Làm trang xem chi tiết thông báo
-    Clients:
+- Vi tài khoản học viên sẽ là tài khoản dùng chung để tạo tài khoản giáo viên nên giờ làm cách nào để vào khi admin dùng quản trị sẽ biết rõ tk nào giáo viên tk nào học viên và cho phép admin có thể vào xem tài khoản học viên hay tài khoản giáo viên và có thể đăng nhập vào tài khoản đó để xem kiểm tra cho dễ ( Done )
+- Chưa làm config ngân hàng (bank, momo, vnpay thêm bật/tắt và bên clients và teacher khi tắt cái nào thì hiện bảo trì cái đó) ( Done )
+- Tạo thêm chức năng gửi thông báo cho giảng viên và học viên ( Done )
+- Thêm chức năng quản lý huy hiệu ( CURD, xóa mềm có thùng rác để khôi phục và cho tự thêm màu với từng huy hiệu và cho thêm icon và cung cấp nơi xem mã màu và icon để admin dễ dang dung và thay thế ) ( Done )
+- Sắp xếp lại nội dung trong dashboard của admin ( Done )
+- Sắp xếp lại nội dung trong quản lý nguồn tiền ( Done )
+- Xin yêu cầu thay đổi ngân hàng ( Done )
+- Thêm chức năng khóa giảng viên ( Nếu giảng viên vi phạm j đó ) ( Done )
+- Làm lại giao diện tài khoản giáo viên vì thấy bị trật quá ( Done )
+- Cái góp ý / báo cáo đang trả dữ liệu sai ( Done )
+- Ở quản lý học viên thêm cái học viên đó đang học khóa học nào của giảng viên nào để dễ kiểm soát ( Done )
+- Hỏi AI ở 2 màn kia tôi đều đa ngôn ngữ nên số tiền của nó lúc sẽ khác nên bên admin có cần phải làm j để biết đúng số tiền không có cần đa ngôn ngữ không ( Done )
+- Cần thêm tính năng hay lượt bỏ tính năng j không ( Done )
+- Chức năng log có thiếu hay không thiếu nhật ký nhiều vui lòng check lại toàn màn admin ( Và log nao cũng báo về tele) ( Done )
+- Sửa lỗi ngôn ngữ chỉ cần VI (có dấu) và chữ bị lỗi mojibake ( Done )
+- Làm lại giao diện Quản lý gói giảng viên ( Done )
+- Chức năng phần quyền check xem có thiếu j không ( Done )
+- Giờ tôi muốn là cái gói giáo viên tôi thêm bao nhiêu gói thì bên kia đổ dữ liệu từng đẩy gói limit 5 gói và thêm 1 cái nút kiểu sắp xếp xem nó đứng thứ mấy và thêm nút tích kiểu viết là gói hot hay được quan tâm nhiều nhất và thêm nút ẩn nữa bạn xem logic như nào làm giúp tôi ( Done )
+- Check lại các truy vẫn xem có cái nào làm chậm website không ( Done )
+- Thêm trang 403,404 các trang cấm hay lỗi ( fix cả url khi gõ sai hay cố tình thay id không đúng, thay vai trò không phù hợp) ( Done )
+- Check toàn bộ màn admin xem còn thiếu, thừa cái j nữa không ( Done )
+- Luồng nâng cấp gói tạo trang mới danh sách cho admin biết và xử lý, thêm noti khi có người nâng cấp và thêm cả khi hủy ( tách riêng luồng đó vì nó đang bị gộp với ứng cử giáo viên)
+- Thêm log khi giáo viên nâng cấp gói, hủy gói, hủy hợp tác và xử lý các yêu cầu khác tại admin ( Khi đẩy lên tele ghi rõ trạng thái đã thanh toán + nâng thành công, và ngược lại hủy giao dịch hoặc giao dịch bị từ chối, lỗi giao dịch chỉ nhận trạng thái khi ấn thanh toán xong và nâng thành công, thất bại, lỗi giao dịch... không nhận trạng thái linh tinh) ( Done )
+- Check lại toàn bộ notification web gửi cho học viên và admin ( Done )
+
+  Clients:
 - Làm trang tổng quan cho cả clients ( Done )
 - Giới hạn mã khuyến mãi cho học viên ( Done )
 - Từ làm nốt chức năng thanh toán ( Vì trong khóa học dạy thanh toán trực tiếp ) ( Done )
@@ -514,7 +523,7 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Làm thanh toán = vnpay, momo (Done)
 - Làm chức năng vô hiệu hóa tài khoản (Done)
 - cái chỗ tìm ở trang chủ xem có cái j thay thế được không chứ nó như bù nhìn ( Done )
-- Tất cả những cái phân trang làm mượt nhất có thể  ( Done )
+- Tất cả những cái phân trang làm mượt nhất có thể ( Done )
 - Làm captcha cho form liên hệ tránh spam và nhớ validate ( Dùng captcha dành cho localhost) ( Done )
 - Xử lý tất cả các submit cho nó mượt không phải submit lại trang ( Done )
 - Làm chức năng bảo mật 2 lớp ( Done )
@@ -531,29 +540,34 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Check UI/UX xem có trang nào khiến người dùng khó chịu hay không (các trang, light mode, đa ngôn ngữ) (Check lại để khi đẩy lên production tránh fix) ( Done )
 - Thêm một con chatbot vào để giúp bán hàng khi không liên hệ được với admin ( Bot tự đọc db các khóa học, mã giảm giá, hay liên quan j đến website không được đọc những thông tin nhạy cảm hay bảo mật) ( Done )
 - Kết nối với api của con gemeni thêm cho nó các api xem khóa học, đa ngôn ngữ (nếu thấy ổn thì làm)
-- Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không 
+- Nếu chatbot ổn thử kết nối với telegram xem nó có thông báo cho mình không ( Done )
 - Làm 1 cái thông báo tổng cho toàn web từ backend->clients và làm cái popup khi vừa vào web hiện 1 bảng thông tin hay tin tức j đó ( Làm luôn cả chỗ để cho backend ghi ) ( Done )
 - Check lại responsive ( Done )
 - Chỉnh phiên đăng nhập từ 1 thiết bị sang giới hạn 2 thiết bị ( Done )
 - Check cái notify của học viên xem thiếu hay thừa cái j ( Done )
-- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký  ) ( Done )
-- Chưa check validate đăng ký giáo viên
-- Làm cái mã giảm giá dành riêng cho đăng ký giáo viên
-- Thêm cái danh mục dành cho các gói mua của giáo viên ( Gói hợp tác, Gói theo tháng/năm, Gói j đó...)
-- Làm cái trang xem profile của giảng viên ( Giảng viên sẽ hiện ra profile khi đăng ký đổ ra, và có rating giảng viên, có bao nhiêu khóa học, bài giảng trong website )
-- Đối với tài khoản đã được nâng lên làm teacher thì sẽ có tất cả các khóa học mà mình tạo ra 
-- Đối với tài khoản đã được nâng lên làm teacher sẽ bỏ cái trở thành giáo viên
-- Chỉ có super admin mới có quyền xóa nên làm chức năng khóa tài khoản giảng viên vì nếu admin thấy không hoạt động thì khóa lại
-- Đối với user, teacher, student thêm quyền khóa trong phân quyền
-- Check tất cả phân quyền là khi tắt quyền nào thì ẩn quyền nó ở màn đó đi (VD: tắt quyền sửa học viên thì ẩn sửa đi)
-- Với các gói thì xem được chi tiết rõ các gói đó như nào, Thêm so sánh ở đó
-- Khi tạo giáo viên yêu cầu phải thêm rõ cái tài khoản ngân hàng, yêu cầu phải có 1 tài khoản ngân hàng mới được tạo quyền 
-- Trong profile có thêm cái chứng chỉ nx để ấn vô xem
+- Thêm màn giáo viên ( Theo 1 ý tưởng mới giống udemy là có thêm 1 trang ở trên menu để đăng ký cho admin duyệt và chọn gói đăng ký ) ( Done )
+- Chưa check validate đăng ký giáo viên ( Done )
+- Làm cái trang xem profile của giảng viên ( Giảng viên sẽ hiện ra profile khi đăng ký đổ ra, và có rating giảng viên, có bao nhiêu khóa học, bài giảng trong website ) ( Done )
+- Đối với tài khoản đã được nâng lên làm teacher thì sẽ có tất cả các khóa học mà mình tạo ra ( Done )
+- Đối với user, teacher, student thêm quyền khóa trong phân quyền ( Done )
+- Với các gói thì xem được chi tiết rõ các gói đó như nào, Thêm so sánh ở đó ( Done )
+- Khi tạo giáo viên yêu cầu phải thêm rõ cái tài khoản ngân hàng, yêu cầu phải có 1 tài khoản ngân hàng mới được tạo quyền ( Done )
+- Trong profile có thêm cái chứng chỉ nx để ấn vô xem ( Done )
+- Trang thanh toán bảo trì ( Done )
+- Lading page trở thành giáo viên khi giới thiệu gói sẽ hiện gói theo danh mục ( thời hạn: Vĩnh Viễn, 1 năm, 1 tháng, bán chạy) ( Done )
 - À với bình luận họ xem được bình luận và trả lời được chỉ không ẩn/hiện được thôi nhé và thêm cái đánh giá sao ( max 5 sao ) cho tôi thêm cả student lần teacher để student đánh giá ( Chưa xong bên clients )
-- Ở trang chủ thêm cái ô button lựa chọn theo nổi bật, nhiều view, giáo viên nổi bật.
-- Thêm cái thông báo khi vào màn teacher và popup khi vào màn teacher 
+- Ở trang chủ thêm cái ô button lựa chọn theo nổi bật, nhiều view, giáo viên nổi bật. ( Done )
+- Thêm cái thông báo khi vào màn teacher và popup khi vào màn teacher ( Hỏi AI )
+- Ghi chú thông minh ngay trong Video (In-Video Notes) ( Done )
+- Check lại toàn bộ notification/mail/telegram student gửi cho admin và teacher ( Done )
+- Check lại logic khi học xong khóa học được cấp chứng chỉ tự động ( Bắt buộc phải xem hết video có nghĩa là đánh dấu, làm hết bài kiểm tra và bên teacher, admin có cần cái yêu cầu j không vì sẽ có case là họ chỉ cần 1 bài là có chứng chỉ thì sao) ( Done )
+- Có nên thêm 1 chức năng tele dành riêng cho teacher không phải mua thêm gói tele riêng kiểu bao nhiêu 1 tháng ( phí duy trì) hàng tháng sẽ tự trừ từ tiền của teacher nếu teacher có doanh thu nếu không trả sẽ hủy gói và bot dừng lại khi đăng ký xong sẽ có hướng dẫn khi và lưu ý khi dùng bot, có case là bot sẽ phải trả đúng với teacher đó không được trả teacher khác hoặc mỗi teacher là 1 key và tự tạo bot điền key thẳng lên web để lưu và khi đó web phải cẩn trọng khi lưu key này ( Hỏi AI ) ( Done )
+- Nếu làm thêm chức năng tele dành riêng cho teacher thì check lại xem còn thiếu noti tele nào không cần thêm cái nào không ( Done )
+- Check màn clients xem có chỗ nào cần phải làm mượt mà hơn hay không ( Done )
+- Cần thêm chức năng nào bên clients không ( Done )
 
- Teacher:
+Teacher:
+
 - Làm cái hồ sơ giáo viên ( Done )
 - Làm quản lý học sinh cho giáo viên ( Gán khóa học ) ( Done )
 - Làm quản lý bình luận những khóa học của giáo viên đó ( Done )
@@ -612,10 +626,11 @@ Bên phía ứng dụng ==> Cập nhật trạng thái
 - Có nên cho giáo viên xóa vĩnh viễn các dữ liệu không nhỉ hay chỉ cho xóa mềm vào thùng rác và khôi phục ( Done )
 - Check lại toàn bộ validate xem có chỗ nào thiếu không ( Done )
 - Làm trang 403,404 riêng dành cho màn teacher ( Note )
-- Fix lại thanh toán giáo viên
-Tổng kết
+- Fix lại thanh toán giáo viên ( momo, vnpay) ( Done )
+- Check lại toàn bộ notification web gửi cho học viên và admin ( Done )
+
+  Tổng kết
 - Tìm tất cả file .bak ( Done )
+- Check lại migration và seeder có hoạt động khi chạy câu lệnh không
+- Check toàn bộ middleware có cần sửa j không, thiếu hay thừa j không 
 - check lại lần cuối trước khi đẩy lên production
-
-
-

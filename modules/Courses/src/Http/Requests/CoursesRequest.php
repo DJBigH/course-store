@@ -47,7 +47,7 @@ class CoursesRequest extends FormRequest
             'detail_zh' => 'nullable',
             'teacher_id' => ['required', 'integer', function ($attribute, $value, $fail) {
                 if ($value == 0) {
-                    $fail(__('courses::validation.select'));
+                    $fail('Vui lòng chọn giảng viên.');
                 }
             }],
             'thumbnail' => 'required|max:225',
@@ -62,25 +62,37 @@ class CoursesRequest extends FormRequest
             'is_coming_soon' => 'nullable|integer|in:0,1',
             'coming_soon_start_at' => 'nullable|required_if:is_coming_soon,1|date',
             'is_learning_locked' => 'required|integer|in:0,1',
+            'completion_condition' => 'nullable|string|in:none,all_lessons,all_quizzes,all',
+            'sale_type' => 'nullable|in:0,1',
+            'end_at' => 'nullable|required_if:sale_type,1|date|after:now',
+            'price' => 'nullable|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0' . ($this->price > 0 ? '|lt:price' : '|max:0'),
+            'price_en' => 'nullable|numeric|min:0',
+            'sale_price_en' => 'nullable|numeric|min:0' . ($this->price_en > 0 ? '|lt:price_en' : '|max:0'),
+            'price_ko' => 'nullable|numeric|min:0',
+            'sale_price_ko' => 'nullable|numeric|min:0' . ($this->price_ko > 0 ? '|lt:price_ko' : '|max:0'),
+            'price_ja' => 'nullable|numeric|min:0',
+            'sale_price_ja' => 'nullable|numeric|min:0' . ($this->price_ja > 0 ? '|lt:price_ja' : '|max:0'),
+            'price_zh' => 'nullable|numeric|min:0',
+            'sale_price_zh' => 'nullable|numeric|min:0' . ($this->price_zh > 0 ? '|lt:price_zh' : '|max:0'),
             'categories' => 'required',
         ];
         return $rules;
     }
 
-    public function messages()
-    {
-        return [
-            'required' => __('courses::validation.required'),
-            'email' => __('courses::validation.email'),
-            'unique' => __('courses::validation.unique'),
-            'max' => __('courses::validation.max'),
-            'min' => __('courses::validation.min'),
-            'integer' => __('courses::validation.integer'),
-        ];
-    }
-
     public function attributes()
     {
-        return __('courses::validation.attributes');
+        return [
+            'name' => 'Tên khóa học',
+            'slug' => 'Đường dẫn (Slug)',
+            'detail' => 'Chi tiết khóa học',
+            'teacher_id' => 'Giảng viên',
+            'thumbnail' => 'Hình thu nhỏ',
+            'code' => 'Mã khóa học',
+            'is_document' => 'Tài liệu',
+            'supports' => 'Hỗ trợ',
+            'status' => 'Trạng thái',
+            'categories' => 'Danh mục',
+        ];
     }
 }

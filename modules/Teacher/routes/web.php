@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherApplicationController as AdminTeacherApplicationController;
 use Modules\Teacher\src\Http\Controllers\Admin\TeacherAnnouncementController as AdminTeacherAnnouncementController;
+use Modules\Teacher\src\Http\Controllers\Admin\TeacherUpgradeController as AdminTeacherUpgradeController;
 use Modules\Teacher\src\Http\Controllers\Clients\StudentQuizController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherApplicationController as ClientTeacherApplicationController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherCancellationController;
@@ -18,6 +19,7 @@ use Modules\Teacher\src\Http\Controllers\Clients\TeacherLessonController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherOrderController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherBundleController;
 use Modules\Teacher\src\Http\Controllers\Clients\TeacherNotificationController;
+use Modules\Teacher\src\Http\Controllers\Clients\TeacherTelegramController;
 
 Route::prefix('admin')->group(function () {
    Route::prefix('teacher')->name('teacher.')->group(function () {
@@ -37,30 +39,72 @@ Route::prefix('admin')->group(function () {
       Route::get('logs/{teacher}', 'TeacherController@logs')->middleware('permission:teachers.logs')->name('logs');
       Route::post('/toggle-lock/{teacher}', 'TeacherController@toggleLock')->middleware('permission:teachers.edit')->name('toggle-lock');
       Route::post('/toggle-ceased/{teacher}', 'TeacherController@toggleCeased')->middleware('permission:teachers.edit')->name('toggle-ceased');
+      Route::post('/{id}/test-telegram', 'TeacherController@testTelegram')->middleware('permission:teachers.edit')->name('test-telegram');
       Route::get('/{id}/courses', 'TeacherController@getCourses')->middleware('permission:teachers.view')->name('courses');
+
+      // Teacher Badges
+      Route::prefix('badges')->name('badges.')->group(function () {
+          Route::get('/', 'Admin\TeacherBadgeController@index')->middleware('permission:badges.view')->name('index');
+          Route::get('/data', 'Admin\TeacherBadgeController@data')->middleware('permission:badges.view')->name('data');
+          Route::get('/trash', 'Admin\TeacherBadgeController@trash')->middleware('permission:badges.view')->name('trash');
+          Route::get('/trash/data', 'Admin\TeacherBadgeController@trashData')->middleware('permission:badges.view')->name('trash.data');
+          Route::get('/create', 'Admin\TeacherBadgeController@create')->middleware('permission:badges.create')->name('create');
+          Route::post('/create', 'Admin\TeacherBadgeController@store')->middleware('permission:badges.create')->name('store');
+          Route::get('/edit/{id}', 'Admin\TeacherBadgeController@edit')->middleware('permission:badges.edit')->name('edit');
+          Route::post('/edit/{id}', 'Admin\TeacherBadgeController@update')->middleware('permission:badges.edit')->name('update');
+          Route::delete('/delete/{id}', 'Admin\TeacherBadgeController@delete')->middleware('permission:badges.delete')->name('delete');
+          Route::post('/restore/{id}', 'Admin\TeacherBadgeController@restore')->middleware('permission:badges.edit')->name('restore');
+          Route::delete('/force-delete/{id}', 'Admin\TeacherBadgeController@forceDelete')->middleware('permission:badges.delete')->name('force-delete');
+      });
+
+      // Telegram Packages
+      Route::prefix('telegram-packages')->name('telegram-packages.')->group(function () {
+          Route::get('/', 'Admin\TelegramPackageController@index')->middleware('permission:packages.view')->name('index');
+          Route::get('/data', 'Admin\TelegramPackageController@data')->middleware('permission:packages.view')->name('data');
+          Route::get('/create', 'Admin\TelegramPackageController@create')->middleware('permission:packages.create')->name('create');
+          Route::post('/create', 'Admin\TelegramPackageController@store')->middleware('permission:packages.create')->name('store');
+          Route::get('/edit/{id}', 'Admin\TelegramPackageController@edit')->middleware('permission:packages.edit')->name('edit');
+          Route::put('/edit/{id}', 'Admin\TelegramPackageController@update')->middleware('permission:packages.edit')->name('update');
+          Route::delete('/delete/{id}', 'Admin\TelegramPackageController@delete')->middleware('permission:packages.delete')->name('delete');
+      });
+
+      // Telegram Subscribers
+      Route::prefix('telegram-subscribers')->name('telegram-subscribers.')->group(function () {
+          Route::get('/data', 'Admin\TelegramPackageController@subscriberData')->middleware('permission:teachers.view')->name('data');
+          Route::get('/history-data/{teacherId}', 'Admin\TelegramPackageController@subscriberHistory')->middleware('permission:teachers.view')->name('history');
+          Route::post('/gift', 'Admin\TelegramPackageController@giftSubscriber')->middleware('permission:teachers.edit')->name('gift');
+          Route::post('/{id}/cancel', 'Admin\TelegramPackageController@cancelSubscriber')->middleware('permission:teachers.edit')->name('cancel');
+      });
    });
 
    Route::prefix('teacher-applications')->name('teacher-applications.')->group(function () {
       Route::get('/', [AdminTeacherApplicationController::class, 'index'])->middleware('permission:teachers.view')->name('index');
       Route::get('/{id}', [AdminTeacherApplicationController::class, 'show'])->middleware('permission:teachers.view')->name('show');
-      Route::post('/{id}/approve', [AdminTeacherApplicationController::class, 'approve'])->middleware('permission:teachers.edit')->name('approve');
-      Route::post('/{id}/reject', [AdminTeacherApplicationController::class, 'reject'])->middleware('permission:teachers.edit')->name('reject');
+      Route::post('/{id}/approve', [AdminTeacherApplicationController::class, 'approve'])->middleware('permission:teachers.approve')->name('approve');
+      Route::post('/{id}/reject', [AdminTeacherApplicationController::class, 'reject'])->middleware('permission:teachers.reject')->name('reject');
+   });
+
+   Route::prefix('teacher-upgrades')->name('teacher-upgrades.')->group(function () {
+      Route::get('/', [AdminTeacherUpgradeController::class, 'index'])->middleware('permission:teachers.view')->name('index');
+      Route::get('/{id}', [AdminTeacherUpgradeController::class, 'show'])->middleware('permission:teachers.view')->name('show');
+      Route::post('/{id}/approve', [AdminTeacherUpgradeController::class, 'approve'])->middleware('permission:teachers.approve')->name('approve');
+      Route::post('/{id}/reject', [AdminTeacherUpgradeController::class, 'reject'])->middleware('permission:teachers.reject')->name('reject');
    });
 
 
    Route::prefix('teacher-announcements')->name('teacher-announcements.')->group(function () {
-      Route::get('/', [AdminTeacherAnnouncementController::class, 'index'])->middleware('permission:teachers.view')->name('index');
-      Route::get('/create', [AdminTeacherAnnouncementController::class, 'create'])->middleware('permission:teachers.edit')->name('add');
-      Route::post('/create', [AdminTeacherAnnouncementController::class, 'store'])->middleware('permission:teachers.edit')->name('post-add');
-      Route::get('/edit/{id}', [AdminTeacherAnnouncementController::class, 'edit'])->middleware('permission:teachers.edit')->name('edit');
-      Route::post('/edit/{id}', [AdminTeacherAnnouncementController::class, 'update'])->middleware('permission:teachers.edit')->name('post-edit');
-      Route::delete('/delete/{id}', [AdminTeacherAnnouncementController::class, 'delete'])->middleware('permission:teachers.delete')->name('delete');
+      Route::get('/', [AdminTeacherAnnouncementController::class, 'index'])->middleware('permission:announcements.view')->name('index');
+      Route::get('/create', [AdminTeacherAnnouncementController::class, 'create'])->middleware('permission:announcements.create')->name('add');
+      Route::post('/create', [AdminTeacherAnnouncementController::class, 'store'])->middleware('permission:announcements.create')->name('post-add');
+      Route::get('/edit/{id}', [AdminTeacherAnnouncementController::class, 'edit'])->middleware('permission:announcements.create')->name('edit');
+      Route::post('/edit/{id}', [AdminTeacherAnnouncementController::class, 'update'])->middleware('permission:announcements.create')->name('post-edit');
+      Route::delete('/delete/{id}', [AdminTeacherAnnouncementController::class, 'delete'])->middleware('permission:announcements.delete')->name('delete');
    });
 
    Route::prefix('teacher-finance')->name('teacher-finance.')->group(function () {
-      Route::get('/cancellations', 'Admin\TeacherCancellationController@index')->middleware('permission:teachers.view')->name('cancellations.index');
-      Route::post('/cancellations/{id}/approve', 'Admin\TeacherCancellationController@approve')->middleware('permission:teachers.edit')->name('cancellations.approve');
-      Route::post('/cancellations/{id}/reject', 'Admin\TeacherCancellationController@reject')->middleware('permission:teachers.edit')->name('cancellations.reject');
+      Route::get('/cancellations', 'Admin\TeacherCancellationController@index')->middleware('permission:teachers.cancel_manage')->name('cancellations.index');
+      Route::post('/cancellations/{id}/approve', 'Admin\TeacherCancellationController@approve')->middleware('permission:teachers.cancel_manage')->name('cancellations.approve');
+      Route::post('/cancellations/{id}/reject', 'Admin\TeacherCancellationController@reject')->middleware('permission:teachers.cancel_manage')->name('cancellations.reject');
    });
 });
 
@@ -70,12 +114,14 @@ Route::group([
    'middleware' => ['setLocale'],
 ], function () {
    Route::get('/tro-thanh-giang-vien', [TeacherLandingController::class, 'index'])->name('teacher.portal.index');
-   Route::get('/teacher/login', [TeacherAuthController::class, 'showLoginForm'])->name('teacher.auth.login');
-   Route::post('/teacher/login', [TeacherAuthController::class, 'login'])->name('teacher.auth.post-login');
-   Route::get('/teacher/forgot-password', [TeacherAuthController::class, 'showForgotForm'])->name('teacher.auth.forgot');
-   Route::post('/teacher/forgot-password', [TeacherAuthController::class, 'sendResetLink'])->name('teacher.auth.post-forgot');
-   Route::get('/teacher/reset-password/{token}', [TeacherAuthController::class, 'showResetForm'])->name('teacher.password.reset');
-   Route::post('/teacher/reset-password', [TeacherAuthController::class, 'updatePassword'])->name('teacher.auth.password.update');
+   // Redirect old teacher auth routes to unified client auth
+   Route::get('/teacher/login', fn($locale) => redirect()->route('clients-login', ['locale' => $locale]))->name('teacher.auth.login');
+   Route::post('/teacher/login', fn($locale) => redirect()->route('clients-login', ['locale' => $locale]))->name('teacher.auth.post-login');
+   Route::get('/teacher/forgot-password', fn($locale) => redirect()->route('clients-forgot', ['locale' => $locale]))->name('teacher.auth.forgot');
+   Route::post('/teacher/forgot-password', fn($locale) => redirect()->route('clients-postforgot', ['locale' => $locale]))->name('teacher.auth.post-forgot');
+   Route::get('/teacher/reset-password/{token}', fn($locale, $token) => redirect()->route('password.reset', ['locale' => $locale, 'token' => $token]))->name('teacher.password.reset');
+   Route::post('/teacher/reset-password', fn($locale) => redirect()->route('clients.update.password', ['locale' => $locale]))->name('teacher.auth.password.update');
+   Route::get('/teacher/logout', fn($locale) => redirect()->route('clients-logout', ['locale' => $locale]))->name('teacher.auth.logout');
    Route::get('/tro-thanh-giang-vien/bat-dau', [ClientTeacherApplicationController::class, 'begin'])->name('teacher.account.begin');
    Route::get('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'create'])->name('teacher.account.apply');
    Route::post('/tro-thanh-giang-vien/dang-ky', [ClientTeacherApplicationController::class, 'store'])->name('teacher.account.submit');
@@ -87,6 +133,12 @@ Route::group([
    Route::post('/tro-thanh-giang-vien/xac-nhan-da-thanh-toan', [ClientTeacherApplicationController::class, 'markPaid'])->name('teacher.account.mark-paid');
    Route::get('/giang-vien/{slug}', [TeacherPublicController::class, 'show'])->name('teacher.public.show');
    Route::post('/giang-vien/{slug}/rating', [TeacherPublicController::class, 'rate'])->middleware(['auth:students', 'verified', 'user.block'])->name('teacher.public.rate');
+
+    // Telegram Claim (Unique name to avoid conflicts)
+    Route::prefix('teacher/telegram')->name('telegram.claim.')->group(function () {
+        Route::get('/gift/{token}', [TeacherTelegramController::class, 'showClaim'])->name('show');
+        Route::post('/gift/{token}', [TeacherTelegramController::class, 'claim'])->name('post');
+    });
 });
 
 Route::group([
@@ -105,6 +157,20 @@ Route::group([
       $redirect = (string) $request->query('redirect', route('teacher.dashboard.index'));
       $fallback = route('teacher.dashboard.index');
 
+      // Update locale segment in redirect URL if present
+      $locales = ['vi', 'en', 'ko', 'ja', 'zh'];
+      $baseUrl = url('/');
+      foreach ($locales as $l) {
+          if (str_starts_with($redirect, "$baseUrl/$l")) {
+              $redirect = str_replace("$baseUrl/$l", "$baseUrl/$locale", $redirect);
+              break;
+          }
+          if (str_starts_with($redirect, "/$l/")) {
+              $redirect = preg_replace("#^/$l/#", "/$locale/", $redirect);
+              break;
+          }
+      }
+
       if (!str_starts_with($redirect, url('/')) && !str_starts_with($redirect, '/')) {
          $redirect = $fallback;
       }
@@ -120,8 +186,20 @@ Route::group([
    Route::get('/thong-bao/doc', [TeacherNotificationController::class, 'readNotification'])->name('notifications.read');
    Route::get('/thong-bao/announcement/{announcement}/doc', [TeacherNotificationController::class, 'readAnnouncement'])->name('notifications.announcements.read');
    Route::get('/combo-khoa-hoc', [TeacherBundleController::class, 'bundles'])->name('bundles');
-   Route::get('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'createBundle'])->name('bundles.create');
-   Route::post('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'storeBundle'])->name('bundles.store');
+    Route::get('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'createBundle'])->name('bundles.create');
+    Route::post('/combo-khoa-hoc/tao-moi', [TeacherBundleController::class, 'storeBundle'])->name('bundles.store');
+
+    // Telegram Management (Inside dashboard group)
+    Route::prefix('telegram')->name('telegram.')->group(function () {
+        Route::get('/', [TeacherTelegramController::class, 'index'])->name('index');
+        Route::post('/settings', [TeacherTelegramController::class, 'updateSettings'])->name('settings');
+        Route::post('/purchase/cancel-pending', [TeacherTelegramController::class, 'cancelPending'])->name('purchase.cancel-pending');
+        Route::post('/purchase/{packageId}', [TeacherTelegramController::class, 'purchase'])->name('purchase');
+        Route::get('/purchase/vnpay-return', [TeacherTelegramController::class, 'vnpayReturn'])->name('purchase.vnpay-return');
+        Route::get('/purchase/momo-return', [TeacherTelegramController::class, 'momoReturn'])->name('purchase.momo-return');
+        Route::post('/purchase/momo-ipn', [TeacherTelegramController::class, 'momoIpn'])->name('purchase.momo-ipn');
+        Route::post('/test-connection', [TeacherTelegramController::class, 'testConnection'])->name('test');
+    });
    Route::get('/combo-khoa-hoc/{bundle}/chinh-sua', [TeacherBundleController::class, 'editBundle'])->name('bundles.edit');
    Route::post('/combo-khoa-hoc/{bundle}/chinh-sua', [TeacherBundleController::class, 'updateBundle'])->name('bundles.update');
    Route::delete('/combo-khoa-hoc/{bundle}', [TeacherBundleController::class, 'deleteBundle'])->name('bundles.delete');
@@ -170,6 +248,7 @@ Route::group([
    Route::get('/huy-hop-tac', [TeacherCancellationController::class, 'index'])->name('cancellation');
    Route::post('/huy-hop-tac/otp', [TeacherCancellationController::class, 'sendOtp'])->name('cancellation.otp');
    Route::post('/huy-hop-tac', [TeacherCancellationController::class, 'store'])->name('cancellation.store');
+
 });
 
 // ─── Routes làm bài quiz dành cho học viên ──────────────────────────────────

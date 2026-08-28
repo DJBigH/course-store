@@ -71,8 +71,8 @@ class TeacherCancellationController extends Controller
             // 5. Notify Students who bought the courses
             // Find student IDs who bought courses from this teacher
             $studentIds = DB::table('orders')
-                ->join('order_details', 'orders.id', '=', 'order_details.order_id')
-                ->join('courses', 'order_details.course_id', '=', 'courses.id')
+                ->join('orders_detail', 'orders.id', '=', 'orders_detail.order_id')
+                ->join('courses', 'orders_detail.course_id', '=', 'courses.id')
                 ->where('courses.teacher_id', $teacher->id)
                 ->where('orders.status', 'finished')
                 ->distinct()
@@ -82,10 +82,26 @@ class TeacherCancellationController extends Controller
                 $students = \Modules\Students\src\Models\Student::whereIn('id', $studentIds)->get();
                 Notification::send($students, new StudentNotification([
                     'type' => 'teacher.cancelled',
-                    'title' => __('teacher::admin.notifications.system_title'),
-                    'message' => __('teacher::admin.notifications.teacher_cancelled_msg', ['name' => $teacher->name]),
+                    'title' => __('teacher::admin.notifications.system_title', [], 'vi'),
+                    'title_translations' => [
+                        'vi' => __('teacher::admin.notifications.system_title', [], 'vi'),
+                        'en' => __('teacher::admin.notifications.system_title', [], 'en'),
+                        'ko' => __('teacher::admin.notifications.system_title', [], 'ko'),
+                        'ja' => __('teacher::admin.notifications.system_title', [], 'ja'),
+                        'zh' => __('teacher::admin.notifications.system_title', [], 'zh'),
+                    ],
+                    'message' => __('teacher::admin.notifications.teacher_cancelled_msg', ['name' => $teacher->name], 'vi'),
+                    'message_translations' => [
+                        'vi' => __('teacher::admin.notifications.teacher_cancelled_msg', ['name' => $teacher->name], 'vi'),
+                        'en' => __('teacher::admin.notifications.teacher_cancelled_msg', ['name' => $teacher->name], 'en'),
+                        'ko' => __('teacher::admin.notifications.teacher_cancelled_msg', ['name' => $teacher->name], 'ko'),
+                        'ja' => __('teacher::admin.notifications.teacher_cancelled_msg', ['name' => $teacher->name], 'ja'),
+                        'zh' => __('teacher::admin.notifications.teacher_cancelled_msg', ['name' => $teacher->name], 'zh'),
+                    ],
                     'severity' => 'warning',
-                    'icon' => 'fas fa-info-circle'
+                    'icon' => 'fas fa-info-circle',
+                    'entity_type' => 'teacher',
+                    'entity_id' => $teacher->id,
                 ]));
             }
 
@@ -98,6 +114,18 @@ class TeacherCancellationController extends Controller
             ));
 
             DB::commit();
+
+            activity_log(
+                action: 'approve_cancellation',
+                subject: $cancelRequest,
+                properties: [
+                    'teacher_id' => $teacher->id,
+                    'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                    'admin_note' => $request->admin_note,
+                ],
+                logName: 'admin_teacher_management',
+                description: 'Phê duyệt yêu cầu nghỉ việc của giảng viên: ' . ($teacher->name_locale ?: $teacher->name)
+            );
 
             return back()->with('msg_success', __('teacher::admin.messages.cancellation_approved'));
         } catch (\Exception $e) {
@@ -135,6 +163,18 @@ class TeacherCancellationController extends Controller
             $request->admin_note,
             app()->getLocale()
         ));
+
+        activity_log(
+            action: 'reject_cancellation',
+            subject: $cancelRequest,
+            properties: [
+                'teacher_id' => $teacher->id,
+                'teacher_name' => $teacher->name_locale ?: $teacher->name,
+                'admin_note' => $request->admin_note,
+            ],
+            logName: 'admin_teacher_management',
+            description: 'Từ chối yêu cầu nghỉ việc của giảng viên: ' . ($teacher->name_locale ?: $teacher->name)
+        );
 
         return back()->with('msg_success', __('teacher::admin.messages.cancellation_rejected'));
     }

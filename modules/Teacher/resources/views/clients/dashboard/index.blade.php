@@ -26,6 +26,16 @@
                 <h3 class="teacher-hero__title">
                     {{ __('teacher::teacher/dashboard.overview.title', ['name' => $teacher->name]) }}
                 </h3>
+                @if (!empty($teacher->badge_labels))
+                    <div class="teacher-hero__badges d-flex flex-wrap gap-2 mt-2">
+                        @foreach ($teacher->badge_labels as $badge)
+                            <span class="badge" style="background-color: {{ $badge['color_bg'] ?? '#e2e8f0' }}; color: {{ $badge['color_text'] ?? '#475569' }}; font-size: 0.7rem; padding: 0.35rem 0.85rem; border-radius: 999px; font-weight: 700; text-transform: uppercase;">
+                                <i class="{{ $badge['icon'] }} me-1"></i>
+                                {{ $badge['label'] }}
+                            </span>
+                        @endforeach
+                    </div>
+                @endif
                 <p class="teacher-hero__desc">
                     {{ __('teacher::teacher/dashboard.overview.description') }}
                 </p>
@@ -393,7 +403,11 @@
                         @forelse ($recentSales as $detail)
                             <div class="teacher-subtle-card">
                                 <strong class="d-block">
-                                    {{ $detail->courses?->name_locale ?: __('teacher::teacher/dashboard.common.unknown_course') }}
+                                    @if($detail->order?->type === 'telegram_package')
+                                        Gói Telegram
+                                    @else
+                                        {{ $detail->courses?->name_locale ?: __('teacher::teacher/dashboard.common.unknown_course') }}
+                                    @endif
                                 </strong>
                                 <small class="d-block text-muted">
                                     {{ __('teacher::teacher/dashboard.overview.labels.order_code', ['code' => $detail->order?->code]) }}

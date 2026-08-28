@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Packages\src\Http\Requests\PackageRequest;
 use Modules\Packages\src\Models\Package;
+use Modules\Packages\src\Models\PackageCategory;
 
 class PackageController extends Controller
 {
@@ -22,8 +23,9 @@ class PackageController extends Controller
     {
         $pageTitle = __('packages::admin.titles.create');
         $nextSortOrder = ((int) Package::query()->max('sort_order')) + 1;
+        $categories = PackageCategory::query()->where('status', true)->orderBy('sort_order')->get();
 
-        return view('packages::admin.create', compact('pageTitle', 'nextSortOrder'));
+        return view('packages::admin.create', compact('pageTitle', 'nextSortOrder', 'categories'));
     }
 
     public function store(PackageRequest $request)
@@ -64,8 +66,9 @@ class PackageController extends Controller
     {
         $pageTitle = __('packages::admin.titles.edit');
         $package = Package::query()->findOrFail($id);
+        $categories = PackageCategory::query()->where('status', true)->orderBy('sort_order')->get();
 
-        return view('packages::admin.edit', compact('pageTitle', 'package'));
+        return view('packages::admin.edit', compact('pageTitle', 'package', 'categories'));
     }
 
     public function update(PackageRequest $request, $id)
@@ -126,6 +129,69 @@ class PackageController extends Controller
         return redirect()->route('teacher-packages.index')->with('msg', __('packages::admin.messages.delete_success'));
     }
 
+    public function copyFeatures(Request $request)
+    {
+        $request->validate([
+            'source_id' => 'required|exists:teacher_packages,id',
+            'target_id' => 'required|exists:teacher_packages,id|different:source_id',
+        ]);
+
+        $source = Package::findOrFail($request->source_id);
+        $target = Package::findOrFail($request->target_id);
+
+        $featureFlags = [
+            'priority_review',
+            'can_duplicate_courses',
+            'can_manage_comments',
+            'can_manage_coupons',
+            'can_manage_students',
+            'can_view_student_progress',
+            'can_view_activity_logs',
+            'can_manage_quizzes',
+            'can_use_ai_quiz',
+            'can_import_export',
+            'can_grant_courses',
+            'can_sell_bundles',
+            'can_schedule_content',
+            'can_send_promotions',
+            'can_issue_certificates',
+            'can_verify_certificates',
+            'can_customize_teacher_landing',
+            'can_use_affiliate_links',
+            'ai_quiz_limit',
+            'coupon_limit',
+            'course_limit',
+            'payout_account_limit',
+            'support_level',
+            'support_level_en',
+            'support_level_ko',
+            'support_level_ja',
+            'support_level_zh',
+        ];
+
+        $payload = $source->only($featureFlags);
+        $target->update($payload);
+
+        activity_log(
+            action: 'update',
+            subject: $target,
+            properties: [
+                'action' => 'copy_features',
+                'source' => [
+                    'id' => $source->id,
+                    'name' => $source->name,
+                ],
+            ],
+            logName: 'admin_package_management',
+            description: "Sao chép tính năng từ gói '{$source->name}' sang gói '{$target->name}'",
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "Đã sao chép tính năng từ gói '{$source->name}' thành công.",
+        ]);
+    }
+
     public function reorder(Request $request)
     {
         $ids = collect($request->input('ids', []))
@@ -169,6 +235,54 @@ class PackageController extends Controller
         ]);
     }
 
+    public function toggleStatus($id)
+    {
+        $package = Package::query()->findOrFail($id);
+        $package->status = !$package->status;
+        $package->save();
+
+        activity_log(
+            action: 'update',
+            subject: $package,
+            properties: [
+                'action' => 'toggle_status',
+                'new_status' => $package->status,
+            ],
+            logName: 'admin_package_management',
+            description: "Đổi trạng thái hiển thị gói '{$package->name}' sang " . ($package->status ? 'Công khai' : 'Ẩn'),
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật trạng thái hiển thị thành công.',
+            'status' => $package->status,
+        ]);
+    }
+
+    public function toggleFeatured($id)
+    {
+        $package = Package::query()->findOrFail($id);
+        $package->is_featured = !$package->is_featured;
+        $package->save();
+
+        activity_log(
+            action: 'update',
+            subject: $package,
+            properties: [
+                'action' => 'toggle_featured',
+                'new_featured' => $package->is_featured,
+            ],
+            logName: 'admin_package_management',
+            description: "Đổi trạng thái Gói Hot/Nổi bật cho '{$package->name}'",
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật trạng thái Nổi bật thành công.',
+            'is_featured' => $package->is_featured,
+        ]);
+    }
+
     private function payload(PackageRequest $request): array
     {
         return [
@@ -197,8 +311,10 @@ class PackageController extends Controller
             'billing_cycle' => $request->string('billing_cycle')->toString(),
             'course_limit' => $request->filled('course_limit') ? $request->integer('course_limit') : null,
             'payout_account_limit' => $request->filled('payout_account_limit') ? $request->integer('payout_account_limit') : 3,
+            'max_payout_per_day' => $request->filled('max_payout_per_day') ? (float) $request->input('max_payout_per_day') : null,
             'commission_rate' => $request->input('commission_rate', 50),
             'priority_review' => $request->boolean('priority_review'),
+            'can_request_payouts' => $request->boolean('can_request_payouts'),
             'can_duplicate_courses' => $request->boolean('can_duplicate_courses'),
             'can_manage_comments' => $request->boolean('can_manage_comments'),
             'can_manage_coupons' => $request->boolean('can_manage_coupons'),
@@ -230,7 +346,28 @@ class PackageController extends Controller
             'hidden_mode' => $request->string('hidden_mode')->toString() ?: 'unavailable',
             'is_featured' => $request->boolean('is_featured'),
             'badge_tone' => $request->string('badge_tone')->toString() ?: null,
+            'category_id' => $request->filled('category_id') ? $request->integer('category_id') : null,
         ];
+
+        // Sync legacy category strings for backward compatibility and database constraints
+        if ($data['category_id']) {
+            $cat = \Modules\Packages\src\Models\PackageCategory::find($data['category_id']);
+            if ($cat) {
+                $data['category'] = $cat->name;
+                $data['category_en'] = $cat->name_en;
+                $data['category_ko'] = $cat->name_ko;
+                $data['category_ja'] = $cat->name_ja;
+                $data['category_zh'] = $cat->name_zh;
+            }
+        } else {
+            $data['category'] = $request->string('category')->toString() ?: 'Khác'; // Fallback to avoid null constraint
+            $data['category_en'] = $request->string('category_en')->toString() ?: $data['category'];
+            $data['category_ko'] = $request->string('category_ko')->toString() ?: $data['category'];
+            $data['category_ja'] = $request->string('category_ja')->toString() ?: $data['category'];
+            $data['category_zh'] = $request->string('category_zh')->toString() ?: $data['category'];
+        }
+
+        return $data;
     }
 
     private function resolveRequestedSortOrder(PackageRequest $request): int

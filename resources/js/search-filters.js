@@ -103,6 +103,14 @@ const replaceFilterBlock = (blockId, html) => {
     return document.querySelector(selector);
 };
 
+const debounce = (func, wait) => {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+};
+
 document.addEventListener("submit", async (event) => {
     const form = event.target.closest("form.js-smooth-filter");
 
@@ -174,10 +182,101 @@ document.addEventListener("submit", async (event) => {
     }
 });
 
+const handleInput = debounce((event) => {
+    const input = event.target;
+    const form = input.closest("form.js-smooth-filter");
+    if (form && input.name === "keyword") {
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    }
+}, 500);
+
+document.addEventListener("input", handleInput);
+
+const initAutocomplete = () => {
+    const input = document.getElementById("header-search-input");
+    const suggestions = document.getElementById("search-suggestions");
+
+    if (!input || !suggestions) {
+        return;
+    }
+
+    const locale = document.documentElement.lang || "vi";
+    const suggestUrl = `/${locale}/data/search/suggest`;
+
+    const fetchSuggestions = debounce(async (query) => {
+        if (query.length < 2) {
+            suggestions.innerHTML = "";
+            suggestions.classList.remove("show");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${suggestUrl}?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            });
+
+            if (!response.ok) throw new Error("Network response was not ok");
+
+            const data = await response.json();
+            renderSuggestions(data);
+        } catch (error) {
+            console.error("Autocomplete error:", error);
+        }
+    }, 300);
+
+    const renderSuggestions = (data) => {
+        if (!data.length) {
+            suggestions.innerHTML = "";
+            suggestions.classList.remove("show");
+            return;
+        }
+
+        let html = "";
+        data.forEach((item) => {
+            const priceHtml = item.sale_price
+                ? `<span class="price-old">${item.price}${item.currency}</span><span class="price-new">${item.sale_price}${item.currency}</span>`
+                : `<span class="price-new">${item.price}${item.currency}</span>`;
+
+            html += `
+                <a href="${item.url}" class="suggestion-item">
+                    <img src="${item.thumbnail}" alt="${item.name}" class="suggestion-thumb">
+                    <div class="suggestion-info">
+                        <div class="suggestion-name">${item.name}</div>
+                        <div class="suggestion-price">${priceHtml}</div>
+                    </div>
+                </a>
+            `;
+        });
+
+        suggestions.innerHTML = html;
+        suggestions.classList.add("show");
+    };
+
+    input.addEventListener("input", (e) => fetchSuggestions(e.target.value));
+
+    // Close suggestions when clicking outside
+    document.addEventListener("click", (e) => {
+        if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.classList.remove("show");
+        }
+    });
+
+    // Re-open if input focused and has value
+    input.addEventListener("focus", () => {
+        if (suggestions.children.length > 0) {
+            suggestions.classList.add("show");
+        }
+    });
+};
+
 hydrateFilterBlock(document);
+initAutocomplete();
 
 window.addEventListener("popstate", (event) => {
     if (event.state && event.state.smoothFilter) {
         window.location.reload();
     }
 });
+

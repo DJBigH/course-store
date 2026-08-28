@@ -65,4 +65,15 @@ return [
         'timeout' => env('GEMINI_TIMEOUT', 12),
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+        'enabled' => (bool) env('TELEGRAM_BOT_ENABLED', false),
+    ],
+
+    'telegram_teacher' => [
+        'bot_token' => env('TELEGRAM_TEACHER_BOT_TOKEN'),
+        'enabled' => (bool) env('TELEGRAM_TEACHER_BOT_ENABLED', false),
+    ],
+
 ];

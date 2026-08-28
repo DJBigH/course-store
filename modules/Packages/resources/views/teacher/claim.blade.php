@@ -139,16 +139,14 @@
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('teacher.dashboard.package.claim.store', $application->claim_token) }}" id="claim-form" class="mt-4">
+                        <form method="POST" action="{{ route('teacher.dashboard.package.claim.store', ['locale' => app()->getLocale(), 'token' => $application->claim_token]) }}" id="claim-form" class="mt-4">
                             @csrf
-                            <button type="submit" class="btn btn-warning w-100 fw-bold" id="claim-btn"
-                                    onclick="return confirm('Bạn xác nhận muốn nhận gói {{ $package?->name_locale }}?')">
-                                <i class="fa-solid fa-gift me-2"></i>
-                                Nhận gói ngay
+                            <button type="submit" class="btn btn-primary btn-lg w-100 py-3 rounded-pill fw-bold shadow-sm mb-3">
+                                <i class="fa-solid fa-gift me-2"></i> Nhận quà ngay
                             </button>
                         </form>
 
-                        <form method="POST" action="{{ route('teacher.dashboard.package.claim.decline', $application->claim_token) }}" class="mt-2">
+                        <form method="POST" action="{{ route('teacher.dashboard.package.claim.decline', ['locale' => app()->getLocale(), 'token' => $application->claim_token]) }}" class="mt-2">
                             @csrf
                             <button type="submit" class="btn btn-outline-danger w-100"
                                     onclick="return confirm('Bạn chắc chắn muốn từ chối gói quà tặng này? Hành động này không thể hoàn tác.')">

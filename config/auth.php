@@ -127,6 +127,7 @@ return [
     'password_timeout' => 10800,
 
     'max_devices' => 1,
+    'admin_max_devices' => 1,
 
     'student_two_factor_timeout' => (int) env('STUDENT_TWO_FACTOR_TIMEOUT', 600),
     'student_two_factor_code_expire' => (int) env('STUDENT_TWO_FACTOR_CODE_EXPIRE', 600),

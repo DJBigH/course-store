@@ -12,6 +12,11 @@ return [
         'starter' => 'Gói Starter',
         'pro' => 'Gói Pro',
     ],
+    'categories' => [
+        'standard' => 'Gói tiêu chuẩn',
+        'partnership' => 'Gói hợp tác',
+        'subscription' => 'Gói định kỳ',
+    ],
     'ui' => [
         'hero_login_prefix' => 'Nếu bạn đã là giảng viên, chỉ cần',
         'hero_login_link' => 'đăng nhập tại đây',
@@ -23,9 +28,10 @@ return [
         'earnings_kicker' => 'Doanh thu',
         'packages_kicker' => 'Các gói',
         'faq_kicker' => 'Câu hỏi thường gặp',
-        'final_kicker' => 'Sẵn sàng khi bạn sẵn sàng',
+        'final_kicker' => 'Sẵn sàng thì bắt đầu thôi',
         'free_label' => 'Miễn phí',
     ],
+    'one_time' => 'Lần đầu',
     'hero' => [
         'eyebrow' => 'Teacher Program',
         'title' => 'Biến kiến thức của bạn thành một kênh giảng dạy có cấu trúc, có đà phát triển và có doanh thu.',

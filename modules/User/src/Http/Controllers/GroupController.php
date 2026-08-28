@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Modules\User\seeders\PermissionSeeder;
 use Modules\User\src\Models\Group;
 use Modules\User\src\Models\Permission;
+use Modules\ActiveLogs\src\Models\ActiveLog;
 
 class GroupController extends Controller
 {
@@ -73,6 +74,17 @@ class GroupController extends Controller
 
         $group->permissions()->sync($data['permissions'] ?? []);
 
+        ActiveLog::log(
+            action: 'create',
+            subject: $group,
+            properties: [
+                'data' => $data,
+                'permissions' => $data['permissions'] ?? [],
+            ],
+            logName: 'Nhóm quyền',
+            description: 'Tạo mới nhóm quyền'
+        );
+
         return redirect()->route('groups.index')->with('msg', 'Đã tạo nhóm quyền thành công.');
     }
 
@@ -119,6 +131,17 @@ class GroupController extends Controller
 
         $group->permissions()->sync($data['permissions'] ?? []);
 
+        ActiveLog::log(
+            action: 'update',
+            subject: $group,
+            properties: [
+                'data' => $data,
+                'permissions' => $data['permissions'] ?? [],
+            ],
+            logName: 'Nhóm quyền',
+            description: 'Cập nhật nhóm quyền'
+        );
+
         return back()->with('msg', 'Đã cập nhật nhóm quyền thành công.');
     }
 
@@ -151,7 +174,16 @@ class GroupController extends Controller
             return back()->withErrors(['group' => 'Không thể xóa nhóm quyền đang có người dùng.']);
         }
 
+        $snapshot = method_exists($group, 'toArray') ? $group->toArray() : (array) $group;
         $group->delete();
+
+        ActiveLog::log(
+            action: 'delete',
+            subject: $group,
+            properties: ['data' => $snapshot],
+            logName: 'Nhóm quyền',
+            description: 'Xóa mềm nhóm quyền'
+        );
 
         return redirect()->route('groups.index')->with('msg', 'Đã xóa nhóm quyền thành công.');
     }
@@ -161,6 +193,14 @@ class GroupController extends Controller
         $group = Group::query()->onlyTrashed()->withCount('users')->findOrFail($group);
         $this->authorizeGroupAccess($group, 'khôi phục');
         $group->restore();
+
+        ActiveLog::log(
+            action: 'restore',
+            subject: $group->fresh(),
+            properties: ['restored_from_trash' => true],
+            logName: 'Nhóm quyền',
+            description: 'Khôi phục nhóm quyền'
+        );
 
         return redirect()->route('groups.trash')->with('msg', 'Đã khôi phục nhóm quyền thành công.');
     }
@@ -183,7 +223,20 @@ class GroupController extends Controller
         }
 
         $group->permissions()->detach();
+        
+        $snapshot = method_exists($group, 'toArray') ? $group->toArray() : (array) $group;
         $group->forceDelete();
+
+        ActiveLog::log(
+            action: 'force_delete',
+            subject: $group,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Nhóm quyền',
+            description: 'Xóa vĩnh viễn nhóm quyền'
+        );
 
         return redirect()->route('groups.trash')->with('msg', 'Đã xóa vĩnh viễn nhóm quyền thành công.');
     }
@@ -214,7 +267,6 @@ class GroupController extends Controller
     private function buildPermissionData(): array
     {
         $permissions = Permission::query()
-            ->orderBy('module')
             ->orderBy('name')
             ->get()
             ->map(function ($permission) {
@@ -223,6 +275,21 @@ class GroupController extends Controller
                 return $permission;
             })
             ->groupBy(fn($permission) => $permission->display_module ?: 'other');
+
+        $moduleOrder = collect([
+            'dashboard', 
+            'courses', 'lessons', 'categories', 'certificates',
+            'users', 'groups', 'permissions', 'teachers', 'students',
+            'orders', 'coupons', 'packages', 
+            'contacts', 'comments', 'promotions', 'announcements', 
+            'chatbot', 'settings', 'logs', 'reports'
+        ]);
+
+        $permissions = $permissions->sortBy(function ($items, $module) use ($moduleOrder) {
+            $index = $moduleOrder->search($module);
+
+            return $index === false ? 999 : $index;
+        });
 
         $actionOrder = collect(['manage', 'view', 'create', 'edit', 'update', 'payment', 'captcha', 'delete', 'restore', 'force_delete', 'publish', 'logs', 'moderate']);
         $derivedActions = $permissions->flatten()
@@ -287,7 +354,7 @@ class GroupController extends Controller
     {
         return [
             [
-                'label' => 'Sale',
+                'label' => 'Nhân viên Bán hàng',
                 'name' => 'Sale',
                 'slug' => 'sale',
                 'description' => 'Theo dõi đơn hàng, khách hàng, coupon và liên hệ.',
@@ -317,7 +384,7 @@ class GroupController extends Controller
                 ],
             ],
             [
-                'label' => 'Content',
+                'label' => 'Biên tập viên Nội dung',
                 'name' => 'Content',
                 'slug' => 'content',
                 'description' => 'Quản lý nội dung khóa học, danh mục và bình luận.',
@@ -364,7 +431,7 @@ class GroupController extends Controller
                 ],
             ],
             [
-                'label' => 'Support',
+                'label' => 'Chăm sóc khách hàng',
                 'name' => 'Support',
                 'slug' => 'support',
                 'description' => 'Chăm sóc khách hàng, xử lý liên hệ và hỗ trợ học viên.',
@@ -380,7 +447,7 @@ class GroupController extends Controller
                 ],
             ],
             [
-                'label' => 'Teacher',
+                'label' => 'Giảng viên',
                 'name' => 'Teacher',
                 'slug' => 'teacher',
                 'description' => 'Giáo viên phụ trách nội dung khóa học và bài giảng.',
@@ -429,6 +496,13 @@ class GroupController extends Controller
             'publish' => 'Xuất bản',
             'logs' => 'Nhật ký',
             'moderate' => 'Kiểm duyệt',
+            'approve' => 'Duyệt',
+            'reject' => 'Từ chối',
+            'lock' => 'Khóa/Mở',
+            'send' => 'Gửi tin',
+            'grant_course' => 'Cấp khóa học',
+            'resolve' => 'Xử lý',
+            'assign' => 'Gán',
         ];
     }
 

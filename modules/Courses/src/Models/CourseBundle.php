@@ -62,4 +62,16 @@ class CourseBundle extends Model
             'course_id'
         );
     }
+
+    public function getCurrencySymbolAttribute(): string
+    {
+        $locale = app()->getLocale();
+        return match ($locale) {
+            'en' => '$',
+            'ko' => '₩',
+            'ja' => '¥',
+            'zh' => '元',
+            default => '₫',
+        };
+    }
 }

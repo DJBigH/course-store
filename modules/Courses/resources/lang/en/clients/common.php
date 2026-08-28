@@ -33,6 +33,13 @@ return [
 
     // Course state
     'no_lectures' => 'This course has no lectures yet',
+    'coming_soon' => 'Coming Soon',
+    'opens_in' => 'Official launch in',
+    'countdown_days' => 'days',
+    'countdown_hours' => 'hours',
+    'countdown_minutes' => 'mins',
+    'countdown_seconds' => 'secs',
+    'coming_soon_desc' => 'This course is in the final stages of completion and will be released soon.',
 
     // Lessons
     'lesson'               => 'lesson',
@@ -107,4 +114,12 @@ return [
     'rating_invalid' => 'Please choose a valid rating from 1 to 5 stars.',
     'rating_already_submitted' => 'You have already rated this course and can only rate it once.',
     'rating_submitted_once' => 'You rated this course :rating stars. Each student can rate only once.',
+    'rating_hint_label' => 'Hover or touch to choose your satisfaction level',
+    'rating_votes' => 'ratings',
+    'rating_once_note' => 'Can only rate once',
+    'rating_locked_note' => 'Your rating has been recorded and cannot be changed.',
+    'rating_purchase_desc' => 'Purchase the course to unlock the rating feature.',
+    'comment_empty_desc' => 'Be the first to ask a question or share your thoughts about this course!',
+    'comment_success' => 'Comment posted successfully.',
+    'rating_success' => 'Thank you for rating this course!',
 ];

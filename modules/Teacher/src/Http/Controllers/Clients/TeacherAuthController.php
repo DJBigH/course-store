@@ -72,7 +72,7 @@ class TeacherAuthController extends Controller
 
         if ($activeSessions > $maxDevices) {
             Auth::guard('students')->logout();
-            abort(403, 'Tai khoan cua ban dang duoc dang nhap tren thiet bi khac.');
+            abort(403, 'Tài khoản của bạn đang được đăng nhập trên thiết bị khác.');
         }
 
         if ($student->preferred_locale !== $locale) {
@@ -154,7 +154,7 @@ class TeacherAuthController extends Controller
         if ($student) {
             $student->forceFill(['preferred_locale' => $locale])->save();
             $token = Password::broker('students')->createToken($student);
-            $student->notify((new TeacherResetPasswordQueued($token, $locale))->locale($locale));
+            $student->notify((new TeacherResetPasswordQueued($token))->locale($locale));
         }
 
         return back()->with('msg', __('teacher::auth.messages.reset_link_sent'));
@@ -219,6 +219,21 @@ class TeacherAuthController extends Controller
 
         return redirect()->route('teacher.auth.login', ['locale' => $locale])
             ->with('msg', __('teacher::auth.messages.password_reset_success'));
+    }
+
+    public function logout(Request $request, string $locale)
+    {
+        $this->twoFactorService->forgetRecentVerification($request);
+        $request->session()->forget([
+            'students.two_factor.pending_login_id',
+            'students.two_factor.pending_remember',
+            'url.intended',
+        ]);
+
+        Auth::guard('students')->logout();
+
+        return redirect()->route('teacher.auth.login', ['locale' => $locale])
+            ->with('msg', __('auth::messages.login.logout_success'));
     }
 
     protected function redirectAuthenticatedStudent(string $locale)

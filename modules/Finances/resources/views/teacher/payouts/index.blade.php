@@ -12,10 +12,18 @@
         $maintPackage = $teacher->application?->package;
         $maintPayout = $maintPackage?->isFeatureInMaintenance('can_request_payouts') ?? false;
         
+        $payoutSum24h = 0;
+        if ($maintPackage && $maintPackage->max_payout_per_day !== null) {
+            $payoutSum24h = \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)
+                ->whereIn('status', ['requested', 'processing', 'paid'])
+                ->where('created_at', '>=', now()->subDay())
+                ->sum('amount');
+        }
+        
         $currencyService = app(\Modules\Courses\src\Support\CurrencyService::class);
         $currentLocale = app()->getLocale();
         $userCurrency = $currencyService->getLocaleCurrency($currentLocale);
-        $minPayoutVnd = 5000;
+        $minPayoutVnd = (float) \Modules\Settings\src\Models\Setting::getValue('min_payout_amount') ?: 5000;
         $minPayoutLocale = $currencyService->convert($minPayoutVnd, 'VND', $userCurrency, false);
         $minPayoutFormatted = $userCurrency === 'VND' 
             ? number_format($minPayoutLocale, 0, ',', '.') . ' đ'
@@ -206,6 +214,19 @@
                                                 <span class="text-warning"><i class="fa-solid fa-lock me-1"></i>{{ __('finances::teacher/payouts.form.amount_lock_hint') }}</span>
                                             @else
                                                 <span>{{ __('finances::teacher/payouts.form.amount_min_hint', ['min' => $minPayoutFormatted]) }}</span>
+                                            @endif
+
+                                            @if($maintPackage && $maintPackage->max_payout_per_day !== null)
+                                                @php
+                                                    $remainingLimitVnd = max(0, $maintPackage->max_payout_per_day - $payoutSum24h);
+                                                    $remainingInLocale = $currencyService->convert($remainingLimitVnd, 'VND', $userCurrency, false);
+                                                    $limitFormatted = $userCurrency === 'VND' 
+                                                        ? number_format($remainingInLocale, 0, ',', '.') . ' đ'
+                                                        : $currencyService->getCurrencySymbol($userCurrency) . number_format($remainingInLocale, 2, '.', ',');
+                                                @endphp
+                                                <div class="text-info mt-1" id="package-limit-hint" data-remaining-limit="{{ $remainingLimitVnd }}" data-target-code="{{ $userCurrency }}">
+                                                    <i class="fa-solid fa-circle-info me-1"></i> Gói của bạn còn hạn mức rút {{ $limitFormatted }} trong hôm nay.
+                                                </div>
                                             @endif
                                         </div>
                                     </div>
@@ -430,6 +451,18 @@
                     let amountInVnd = enteredAmount;
                     if (currentCurrency !== 'VND' && exchangeRates[currentCurrency]) {
                         amountInVnd = enteredAmount * exchangeRates[currentCurrency];
+                    }
+
+                    const limitHintNode = document.getElementById('package-limit-hint');
+                    if (limitHintNode) {
+                        const remainingLimitVnd = parseFloat(limitHintNode.getAttribute('data-remaining-limit')) || 0;
+                        if (amountInVnd > remainingLimitVnd) {
+                            limitHintNode.className = 'text-danger fw-bold mt-1';
+                            if (submitBtn) submitBtn.disabled = true;
+                        } else {
+                            limitHintNode.className = 'text-info mt-1';
+                            if (submitBtn) submitBtn.disabled = false;
+                        }
                     }
                     
                     const amountInVndAfterFee = amountInVnd * (1 - feePct);

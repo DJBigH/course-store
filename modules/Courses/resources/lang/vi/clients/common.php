@@ -115,4 +115,12 @@ return [
     'rating_invalid' => 'Vui lòng chọn mức đánh giá hợp lệ từ 1 đến 5 sao.',
     'rating_already_submitted' => 'Bạn đã đánh giá khóa học này rồi và chỉ được đánh giá một lần.',
     'rating_submitted_once' => 'Bạn đã đánh giá khóa học này :rating sao. Mỗi học viên chỉ được đánh giá một lần.',
+    'rating_hint_label' => 'Di chuột hoặc chạm để chọn mức độ hài lòng',
+    'rating_votes' => 'lượt đánh giá',
+    'rating_once_note' => 'Chỉ đánh giá được 1 lần',
+    'rating_locked_note' => 'Đánh giá đã được ghi nhận và không thể thay đổi.',
+    'rating_purchase_desc' => 'Mua khóa học để mở khóa tính năng đánh giá.',
+    'comment_empty_desc' => 'Trở thành người đầu tiên đặt câu hỏi hoặc chia sẻ cảm nhận về khóa học này!',
+    'comment_success' => 'Gửi bình luận thành công.',
+    'rating_success' => 'Cảm ơn bạn đã đánh giá khóa học!',
 ];

@@ -28,10 +28,10 @@ function activity_log(
     } elseif ($admin) {
         $causerLabel = buildLogCauserLabel($admin, 'admin');
     } else {
-        $causerLabel = buildLogCauserLabel();
+        $causerLabel = buildLogCauserLabel(null);
     }
 
-    ActiveLog::create([
+    $log = ActiveLog::create([
         'log_name'     => $logName,
         'action'       => $action,
         'subject_type' => $subject ? get_class($subject) : null,
@@ -43,17 +43,49 @@ function activity_log(
         'ip'           => request()->ip(),
         'user_agent'   => request()->userAgent(),
     ]);
+
+    // Gửi log admin qua Telegram
+    if ($admin) {
+        try {
+            $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+            $botToken = config('services.telegram.bot_token');
+            $chatId = config('services.telegram.chat_id');
+
+            if ($isEnabled && $botToken && $chatId) {
+                $actionLabel = logActionLabel($action);
+                
+                $message = "🔔 *[Admin Log]*\n";
+                $message .= "👤 *Người thực hiện:* " . str_replace(['_', '*', '`'], ' ', $causerLabel) . "\n";
+                $message .= "🎯 *Hành động:* {$actionLabel}\n";
+                if ($description) {
+                    $message .= "📝 *Mô tả:* " . str_replace(['_', '*', '`'], ' ', $description) . "\n";
+                }
+
+                $propertiesText = presentLogProperties($log);
+                if ($propertiesText && $propertiesText !== 'Không có chi tiết thay đổi.') {
+                    $cleanProps = str_replace(['_', '*', '`'], ' ', $propertiesText);
+                    $message .= "🔍 *Chi tiết:*\n{$cleanProps}";
+                }
+
+                \App\Jobs\SendTelegramAlertJob::dispatch($message);
+            }
+        } catch (\Throwable $e) {
+            // Đảm bảo không làm sập tiến trình chính
+        }
+    }
 }
 
 if (!function_exists('buildLogCauserLabel')) {
     function buildLogCauserLabel($user = null, ?string $type = null): string
     {
         if (!$user) {
-            return 'System';
+            return 'Hệ thống';
         }
 
         if ($type === 'student' || $user instanceof Student) {
-            return trim(($user->name ?? 'Unknown') . '(hoc-vien)');
+            $isTeacher = $user->teacher && $user->teacher->status === 'active';
+            $roleSuffix = $isTeacher ? '(giang-vien)' : '(hoc-vien)';
+            return trim(($user->name ?? 'Không rõ') . $roleSuffix);
         }
 
         if ($type === 'admin' || $user instanceof User) {
@@ -64,10 +96,10 @@ if (!function_exists('buildLogCauserLabel')) {
             $role = $user->group->slug ?? $user->group->name ?? 'admin';
             $role = str_replace('_', '-', trim((string) $role));
 
-            return trim(($user->name ?? 'Unknown') . '(' . $role . ')');
+            return trim(($user->name ?? 'Không rõ') . '(' . $role . ')');
         }
 
-        return (string) ($user->name ?? 'System');
+        return (string) ($user->name ?? 'Hệ thống');
     }
 }
 
@@ -75,11 +107,11 @@ if (!function_exists('logCauserDisplay')) {
     function logCauserDisplay($log): string
     {
         if (!$log) {
-            return 'System';
+            return 'Hệ thống';
         }
 
         if (!$log->causer_id) {
-            return $log->causer_type ?: 'System';
+            return $log->causer_type ?: 'Hệ thống';
         }
 
         $storedLabel = (string) ($log->causer_type ?? '');
@@ -87,8 +119,11 @@ if (!function_exists('logCauserDisplay')) {
 
         if (
             str_contains($normalizedLabel, 'hoc-vien') ||
+            str_contains($normalizedLabel, 'giang-vien') ||
             str_contains($normalizedLabel, '(student)') ||
-            str_contains($normalizedLabel, '(hoc-vien)')
+            str_contains($normalizedLabel, '(teacher)') ||
+            str_contains($normalizedLabel, '(hoc-vien)') ||
+            str_contains($normalizedLabel, '(giang-vien)')
         ) {
             $student = Student::query()->find($log->causer_id);
 
@@ -103,7 +138,7 @@ if (!function_exists('logCauserDisplay')) {
             return buildLogCauserLabel($admin, 'admin');
         }
 
-        return $log->causer_type ?: 'System';
+        return $log->causer_type ?: 'Hệ thống';
     }
 }
 

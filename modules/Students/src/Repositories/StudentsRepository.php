@@ -23,7 +23,11 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
 
     public function getAllStudents()
     {
-        return $this->model->with('teacher:id,student_id')->select(['id', 'name', 'email', 'status', 'two_factor_email_enabled', 'created_at'])->latest();
+        return $this->model->with([
+            'teacher:id,student_id',
+            'courses:id,name,teacher_id',
+            'courses.teacher:id,name'
+        ])->select(['id', 'name', 'email', 'status', 'email_verified_at', 'two_factor_email_enabled', 'created_at'])->latest();
     }
 
     public function setPassword($password, $id)
@@ -72,6 +76,26 @@ class StudentsRepository extends BaseRepository implements StudentsRepositoryInt
 
     public function getPurchasedCourses(int $studentId, $limit)
     {
-        return $this->find($studentId)->courses()->withoutGlobalScope(ActiveScope::class)->paginate($limit)->withQueryString();
+        $student = $this->find($studentId);
+        $teacher = $student?->teacher;
+        $ownTeacherId = ($teacher && $teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE) 
+            ? $teacher->id 
+            : null;
+
+        return \Modules\Courses\src\Models\Courses::query()
+            ->with('teacher')
+            ->where(function($query) use ($studentId, $ownTeacherId) {
+                $query->whereHas('students', function($q) use ($studentId) {
+                    $q->where('students.id', $studentId)->where('students_courses.status', 1);
+                });
+                
+                if ($ownTeacherId) {
+                    $query->orWhere('teacher_id', $ownTeacherId);
+                }
+            })
+            ->latest('created_at')
+            ->withoutGlobalScope(ActiveScope::class)
+            ->paginate($limit)
+            ->withQueryString();
     }
 }

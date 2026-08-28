@@ -60,4 +60,20 @@ return [
     'feature_1' => '1–1 consultation with a mentor',
     'feature_2' => 'Personalized learning roadmap',
     'feature_3' => 'No additional costs',
+
+    //Filters
+    'filter_all' => 'All',
+    'filter_views' => 'Most Viewed',
+    'filter_teacher' => 'Featured Teachers',
+    'filter_seller' => 'Best Sellers',
+    'combo_courses' => 'Value Course Bundles',
+    'courses' => 'Courses',
+    'view_bundle' => 'View Bundle Detail',
+    'view_detail' => 'View Detail',
+    'coming_soon_courses' => 'Coming Soon Courses',
+    'coming_soon_desc' => 'Explosive knowledge is about to be released, be the first to own it!',
+    'day' => 'Days',
+    'hour' => 'Hours',
+    'minute' => 'Mins',
+    'second' => 'Secs',
 ];

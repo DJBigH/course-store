@@ -184,7 +184,26 @@
                 ],
                 order: [[4, 'asc'], [5, 'desc']],
                 language: {
-                    url: "//cdn.datatables.net/plug-ins/1.10.25/i18n/Vietnamese.json"
+                    processing: "Đang xử lý...",
+                    search: "Tìm kiếm:",
+                    lengthMenu: "Hiển thị _MENU_ dòng",
+                    info: "Hiển thị từ _START_ đến _END_ trong tổng số _TOTAL_ dòng",
+                    infoEmpty: "Hiển thị 0 dòng",
+                    infoFiltered: "(lọc từ tổng số _MAX_ dòng)",
+                    infoPostFix: "",
+                    loadingRecords: "Đang tải...",
+                    zeroRecords: "Không tìm thấy dữ liệu",
+                    emptyTable: "Không có dữ liệu trong bảng",
+                    paginate: {
+                        first: "Đầu",
+                        previous: "Trước",
+                        next: "Tiếp",
+                        last: "Cuối"
+                    },
+                    aria: {
+                        sortAscending: ": kích hoạt để sắp xếp cột tăng dần",
+                        sortDescending: ": kích hoạt để sắp xếp cột giảm dần"
+                    }
                 },
                 drawCallback: function() {
                     syncCheckboxState();

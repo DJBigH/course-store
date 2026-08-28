@@ -54,7 +54,9 @@ return [
         'bank_transfer' => 'Bank Transfer',
         'vnpay' => 'VNPay',
         'momo' => 'MoMo',
+        'wallet' => 'Teacher Wallet',
         'free' => 'Free',
+        'gift' => 'Gift',
         'unknown' => 'Unknown',
     ],
     'export' => [

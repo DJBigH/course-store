@@ -29,4 +29,9 @@ return [
         'signature' => '감사합니다.',
         'brand' => 'BigK Udemy',
     ],
+    'common' => [
+        'greeting' => '안녕하세요 :name님,',
+        'view_detail' => '상세 보기',
+        'read_on_system' => '시스템에서 읽기',
+    ],
 ];

@@ -91,11 +91,6 @@ class CheckoutController extends Controller
         }
 
         $this->orderRepository->cancelOrder($order);
-        $admins = User::query()->inGroup('super_admin')->get();
-
-        foreach ($admins as $admin) {
-            $admin->notify(new OrderPaidNotification($order));
-        }
 
         return redirect()->route('students.account.order-detail', [
             'locale' => app()->getLocale(),

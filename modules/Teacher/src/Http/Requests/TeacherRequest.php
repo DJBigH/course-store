@@ -46,23 +46,21 @@ class TeacherRequest extends FormRequest
             'badge_key' => 'nullable|string|in:none,verified,premium,top_seller,expert,featured,custom',
             'badge_label' => 'nullable|string|max:100',
             'badge_tone' => 'nullable|string|in:blue,gold,emerald,violet,rose,slate',
+            'telegram_duration_value' => 'nullable|integer|min:1',
+            'telegram_duration_unit' => 'nullable|string|in:minutes,hours,days,months,years,lifetime',
         ];
         return $rules;
     }
 
 
-    public function messages()
-    {
-        return [
-            'required' => __('teacher::validation.required'),
-            'max' => __('teacher::validation.max'),
-            'min' => __('teacher::validation.min'),
-            'integer' => __('teacher::validation.integer'),
-        ];
-    }
-
     public function attributes()
     {
-        return __('teacher::validation.attributes');
+        return [
+            'name' => 'Tên giảng viên',
+            'slug' => 'Đường dẫn (Slug)',
+            'description' => 'Mô tả',
+            'exp' => 'Kinh nghiệm',
+            'image' => 'Hình ảnh',
+        ];
     }
 }

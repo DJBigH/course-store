@@ -2,44 +2,122 @@
     $documents = getLessonByPosition($course, null, true)->filter(fn($item) => !empty($item->document?->url));
 @endphp
 
-<ul class="list-group mt-3 document-list">
+<div class="cp-document-container p-3">
     @forelse ($documents as $item)
         @php
             $availability = $lessonAvailabilityMap[$item->id] ?? null;
             $canOpenDocument = $availability['can_open'] ?? ($hasCourse || (int) $item->is_trial === 1);
             $documentLockedMessage = $availability['message'] ?? __('lessons::clients/common.buy_to_view_document');
         @endphp
-        <li class="list-group-item d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-2">
-                @if ($canOpenDocument)
-                    <a target="_blank" href="{{ $item->document->url }}">
-                        <i class="fa-solid fa-file-arrow-down text-primary"></i>
-                    </a>
-                    <a target="_blank" href="{{ $item->document->url }}" class="document-name">
-                        {{ $item->name_locale }}
-                    </a>
-                @else
-                    <span class="text-secondary">
+        
+        <div class="cp-document-item {{ !$canOpenDocument ? 'locked' : '' }}">
+            <div class="cp-document-left">
+                <div class="cp-document-icon">
+                    @if ($canOpenDocument)
+                        <i class="fa-solid fa-file-pdf"></i>
+                    @else
                         <i class="fa-solid fa-lock"></i>
-                    </span>
-                    <div>
-                        <span class="document-name text-muted d-block">{{ $item->name_locale }}</span>
-                        <small class="text-muted">{{ $documentLockedMessage }}</small>
-                    </div>
-                @endif
+                    @endif
+                </div>
+                <div class="cp-document-info">
+                    @if ($canOpenDocument)
+                        <a target="_blank" href="{{ $item->document->url }}" class="cp-document-name">
+                            {{ $item->name_locale }}
+                        </a>
+                        <span class="cp-document-size">{{ getSize($item->document->size) }}</span>
+                    @else
+                        <span class="cp-document-name text-muted">{{ $item->name_locale }}</span>
+                        <span class="cp-document-locked-msg">{{ $documentLockedMessage }}</span>
+                    @endif
+                </div>
             </div>
-
-            <span class="badge bg-light text-dark document-size">
-                @if ($canOpenDocument)
-                    {{ getSize($item->document->size) }}
-                @else
-                    {{ __('lessons::clients/common.locked_document') }}
-                @endif
-            </span>
-        </li>
+            
+            @if ($canOpenDocument)
+                <a target="_blank" href="{{ $item->document->url }}" class="cp-document-download">
+                    <i class="fa-solid fa-download"></i>
+                </a>
+            @endif
+        </div>
     @empty
-        <li class="list-group-item text-center text-muted">
-            {{ __('lessons::clients/common.no_document') }}
-        </li>
+        <div class="text-center py-5 opacity-50">
+            <i class="fa-solid fa-folder-open d-block mb-2 fs-3"></i>
+            <div class="small">{{ __('lessons::clients/common.no_document') }}</div>
+        </div>
     @endforelse
-</ul>
+</div>
+
+<style>
+    .cp-document-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background-color: var(--cp-nav-bg);
+        border-radius: 0.75rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--cp-border);
+        transition: all 0.2s;
+    }
+
+    .cp-document-item:hover:not(.locked) {
+        border-color: var(--cp-tab-active);
+        transform: translateY(-2px);
+    }
+
+    .cp-document-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .cp-document-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--cp-sidebar-bg);
+        border-radius: 0.5rem;
+        color: var(--cp-tab-active);
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .cp-document-item.locked .cp-document-icon {
+        color: var(--cp-text-muted);
+        opacity: 0.5;
+    }
+
+    .cp-document-info {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .cp-document-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--cp-text-main);
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .cp-document-size, .cp-document-locked-msg {
+        font-size: 0.75rem;
+        color: var(--cp-text-muted);
+    }
+
+    .cp-document-download {
+        color: var(--cp-text-muted);
+        font-size: 1rem;
+        padding: 0.5rem;
+        transition: color 0.2s;
+    }
+
+    .cp-document-download:hover {
+        color: var(--cp-tab-active);
+    }
+</style>

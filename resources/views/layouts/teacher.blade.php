@@ -598,6 +598,50 @@
             border-color: var(--admin-success-border);
         }
 
+        /* Dark Mode Overrides for common Bootstrap classes */
+        html[data-theme="dark"] .bg-white,
+        html[data-theme="dark"] .bg-light,
+        html[data-theme="dark"] .card,
+        html[data-theme="dark"] .card-header,
+        html[data-theme="dark"] .card-body,
+        html[data-theme="dark"] .card-footer,
+        html[data-theme="dark"] .list-group-item {
+            background-color: var(--admin-surface) !important;
+            color: var(--admin-text) !important;
+            border-color: var(--admin-border) !important;
+        }
+
+        html[data-theme="dark"] .list-group-item-action:hover {
+            background-color: var(--admin-hover-bg) !important;
+            color: var(--admin-primary) !important;
+        }
+
+        html[data-theme="dark"] .breadcrumb-item.active {
+            color: var(--admin-muted);
+        }
+
+        .unread-item {
+            background-color: #f8f9fa !important;
+        }
+
+        html[data-theme="dark"] .unread-item {
+            background-color: var(--admin-surface-3) !important;
+        }
+
+        /* Fix CKEditor content in Dark Mode */
+        html[data-theme="dark"] .announcement-content.ck-content {
+            color: var(--admin-text);
+        }
+
+        html[data-theme="dark"] .announcement-content.ck-content :not(a):not(button) {
+            color: inherit;
+        }
+
+        /* Adjust icon backgrounds in dark mode */
+        html[data-theme="dark"] .opacity-25 {
+            opacity: 0.45 !important;
+        }
+
         .alert-danger {
             background: var(--admin-danger-bg);
             color: var(--admin-danger-text);

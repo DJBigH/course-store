@@ -27,18 +27,28 @@ class StudentCertificateIssuedNotification extends Notification implements Shoul
         $courseName = $this->certificate->course_name_snapshot;
         $teacherName = $this->certificate->teacher_name_snapshot;
 
+        $titleTranslations = [
+            'vi' => 'Bạn vừa nhận được chứng chỉ mới',
+            'en' => 'You have received a new certificate',
+            'ko' => '새 수료증 발급 완료',
+            'ja' => '新しい修了証の発行',
+            'zh' => '新结业证书已颁发',
+        ];
+
+        $messageTranslations = [
+            'vi' => 'Chứng chỉ hoàn thành khóa học "' . $courseName . '" đã được cấp bởi ' . $teacherName . '.',
+            'en' => 'Your completion certificate for "' . $courseName . '" has been issued by ' . $teacherName . '.',
+            'ko' => '"' . $courseName . '" 강좌의 수료증이 ' . $teacherName . ' 강사님에 의해 발급되었습니다.',
+            'ja' => $teacherName . ' 講師より「' . $courseName . '」の修了証が発行されました。',
+            'zh' => $teacherName . ' 讲师已为您颁发了“' . $courseName . '”课程的结业证书。',
+        ];
+
         return [
             'type' => 'student.certificate.issued',
-            'title' => 'Ban vua nhan duoc chung chi moi',
-            'title_translations' => [
-                'vi' => 'Bạn vừa nhận được chứng chỉ mới',
-                'en' => 'You have received a new certificate',
-            ],
-            'message' => 'Chung chi hoan thanh khoa hoc "' . $courseName . '" da duoc cap boi ' . $teacherName . '.',
-            'message_translations' => [
-                'vi' => 'Chứng chỉ hoàn thành khóa học "' . $courseName . '" đã được cấp bởi ' . $teacherName . '.',
-                'en' => 'Your completion certificate for "' . $courseName . '" has been issued by ' . $teacherName . '.',
-            ],
+            'title' => $titleTranslations['vi'],
+            'title_translations' => $titleTranslations,
+            'message' => $messageTranslations['vi'],
+            'message_translations' => $messageTranslations,
             'url' => route('students.account.certificates.show', [
                 'locale' => $this->locale,
                 'id' => $this->certificate->id,

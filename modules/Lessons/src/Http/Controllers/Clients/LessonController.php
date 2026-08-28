@@ -15,6 +15,8 @@ use Modules\Students\src\Models\StudentsCourses;
 use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Certificates\src\Models\Certificate;
 use Modules\Certificates\src\Support\CertificateIssuer;
+use Modules\Courses\src\Models\CourseQuiz;
+use Modules\Courses\src\Models\CourseQuizSubmission;
 
 class LessonController extends Controller
 {
@@ -41,9 +43,18 @@ class LessonController extends Controller
             abort(404);
         }
 
-        $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+        $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view') && !auth('students')->check();
         $isImpersonating = session()->has('admin_impersonator');
-        $hasCourse = $isAdmin || $isImpersonating || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
+        
+        $isCourseOwner = false;
+        if ($student && $student->teacher && $course->teacher_id !== null) {
+            $teacher = $student->teacher;
+            if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE && (int) $teacher->id === (int) $course->teacher_id) {
+                $isCourseOwner = true;
+            }
+        }
+        
+        $hasCourse = $isAdmin || $isImpersonating || $isCourseOwner || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
 
         if ((int) $course->status !== 1 && !$hasCourse) {
             abort(404);
@@ -57,7 +68,7 @@ class LessonController extends Controller
             return redirect()->route('courses.detail', [
                 'locale' => $locale,
                 'slug' => $course->slug_locale,
-            ]);
+            ])->with('msg', 'Bạn cần mua khóa học để xem bài học này.')->with('msgType', 'danger');
         }
 
         $enrolledAt = $this->resolveEnrollmentTime($student?->id, $course->id, $hasCourse);
@@ -116,6 +127,40 @@ class LessonController extends Controller
                 ->first()
             : null;
 
+        $isTeacherOrAdmin = auth('web')->check();
+
+        $quizzes = CourseQuiz::query()
+            ->where('course_id', $course->id)
+            ->where('status', 1)
+            ->where(function ($query) use ($student, $isTeacherOrAdmin) {
+                if ($isTeacherOrAdmin) {
+                    // Admin/Teacher thấy tất cả quiz
+                    return;
+                }
+
+                if ($student) {
+                    // Học viên thấy quiz được giao cho mình HOẶC quiz công khai (chưa giao ai)
+                    $query->whereHas('assignments', fn ($q) => $q->where('student_id', $student->id))
+                        ->orWhereDoesntHave('assignments');
+                } else {
+                    // Khách chỉ thấy quiz công khai (chưa giao ai)
+                    $query->whereDoesntHave('assignments');
+                }
+            })
+            ->orderBy('position')
+            ->get();
+
+        $quizSubmissions = collect();
+        if ($student) {
+            $quizSubmissions = CourseQuizSubmission::query()
+                ->whereIn('quiz_id', $quizzes->pluck('id'))
+                ->where('student_id', $student->id)
+                ->whereNotNull('submitted_at')
+                ->latest('id')
+                ->get()
+                ->groupBy('quiz_id');
+        }
+
         return view('lessons::clients.index', compact(
             'pageTitle',
             'pageName',
@@ -131,7 +176,10 @@ class LessonController extends Controller
             'studentCertificate',
             'lessonScheduleLocked',
             'lessonScheduleMessage',
-            'lessonAvailabilityMap'
+            'lessonAvailabilityMap',
+            'quizzes',
+            'quizSubmissions',
+            'student'
         ));
     }
 
@@ -150,11 +198,20 @@ class LessonController extends Controller
             return $this->completionErrorResponse($request, 401, __('lessons::clients/common.login_required'));
         }
 
-        $hasCourse = $student
+        $isCourseOwner = false;
+        if ($student && $student->teacher && $course->teacher_id !== null) {
+            $isCourseOwner = (int) $student->teacher->id === (int) $course->teacher_id;
+        }
+
+        $hasCourse = $isCourseOwner || $student
             ->courses()
             ->where('courses.id', $course->id)
             ->wherePivot('status', 1)
             ->exists();
+
+        if ($isCourseOwner) {
+            return $this->completionErrorResponse($request, 403, 'Giảng viên không thể tự đánh dấu hoàn thành khóa học của chính mình.');
+        }
 
         if (!$hasCourse && session()->missing('admin_impersonator')) {
             return $this->completionErrorResponse($request, 403, __('courses::clients/common.lesson_purchase_required'));

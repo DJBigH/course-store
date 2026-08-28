@@ -19,7 +19,7 @@ class PackageClaimController extends Controller
      * Hiển thị trang "Nhận quà" cho giáo viên.
      * Teacher click link trong email/notification → vào trang này xem thông tin gói → bấm Nhận.
      */
-    public function show(string $token)
+    public function show(string $locale, string $token)
     {
         $application = $this->resolveValidApplication($token);
 
@@ -50,7 +50,7 @@ class PackageClaimController extends Controller
     /**
      * Teacher xác nhận nhận gói → kích hoạt ngay.
      */
-    public function claim(Request $request, string $token)
+    public function claim(Request $request, string $locale, string $token)
     {
         $application = $this->resolveValidApplication($token);
 
@@ -125,14 +125,14 @@ class PackageClaimController extends Controller
         );
 
         return redirect()
-            ->route('teacher.dashboard.package.upgrade')
+            ->route('teacher.dashboard.package.upgrade', ['locale' => app()->getLocale()])
             ->with('msg_success', 'Chúc mừng! Bạn đã nhận thành công gói ' . ($application->package?->name_locale ?? 'đặc quyền') . '.');
     }
 
     /**
      * Teacher từ chối nhận gói.
      */
-    public function decline(Request $request, string $token)
+    public function decline(Request $request, string $locale, string $token)
     {
         $application = $this->resolveValidApplication($token);
 

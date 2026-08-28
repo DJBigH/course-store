@@ -131,6 +131,21 @@
                     </div>
                 @endif
 
+                @if (!empty($packageSummary['telegram_status']))
+                    <div class="teacher-hero__mini teacher-hero__mini--telegram">
+                        <span><i class="fa-brands fa-telegram me-1"></i> Telegram Notifications</span>
+                        @if ($packageSummary['telegram_status']['status'] === 'active')
+                            <strong class="text-info">Đang hoạt động</strong>
+                            <small>Hết hạn: {{ $packageSummary['telegram_status']['expires_at'] ? $packageSummary['telegram_status']['expires_at']->format('d/m/Y') : 'Vĩnh viễn' }}</small>
+                        @else
+                            <strong class="text-muted">Chưa đăng ký</strong>
+                            <a href="{{ route('teacher.dashboard.telegram.index') }}" class="btn btn-sm btn-info text-white mt-2 align-self-start">
+                                Đăng ký ngay
+                            </a>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="teacher-hero__mini">
                     <span>{{ __('teacher::teacher/dashboard.overview.labels.available_balance') }}</span>
                     <strong data-overview-stat="available_balance">{{ moneyLocale($stats['available_balance'], null, true) }}</strong>

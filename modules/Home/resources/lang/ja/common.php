@@ -60,4 +60,20 @@ return [
     'feature_1' => 'メンターとの1対1相談',
     'feature_2' => '個別最適化された学習ロードマップ',
     'feature_3' => '追加費用なし',
+
+    //Filters
+    'filter_all' => 'すべて',
+    'filter_views' => '閲覧数が多い',
+    'filter_teacher' => '注目の講師',
+    'filter_seller' => 'ベストセラー',
+    'combo_courses' => 'お得なコースコンボ',
+    'courses' => 'コース',
+    'view_bundle' => 'コンボ詳細を見る',
+    'view_detail' => '詳細を見る',
+    'coming_soon_courses' => '近日公開予定のコース',
+    'coming_soon_desc' => '画期的な知識が間もなくリリースされます。いち早く手に入れましょう！',
+    'day' => '日',
+    'hour' => '時間',
+    'minute' => '分',
+    'second' => '秒',
 ];

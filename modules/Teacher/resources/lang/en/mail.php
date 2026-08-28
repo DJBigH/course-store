@@ -29,4 +29,9 @@ return [
         'signature' => 'Best regards,',
         'brand' => 'BigK Udemy',
     ],
+    'common' => [
+        'greeting' => 'Hello :name,',
+        'view_detail' => 'View Detail',
+        'read_on_system' => 'Read on system',
+    ],
 ];

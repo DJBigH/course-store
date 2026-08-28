@@ -44,7 +44,7 @@ class CourseCommentController extends Controller
 
         $moderation = courseCommentModeration($content);
 
-        CourseComment::create([
+        $newComment = CourseComment::create([
             'course_id' => $course->id,
             'student_id' => $student?->id,
             'user_id' => $admin?->id,
@@ -53,6 +53,28 @@ class CourseCommentController extends Controller
             'is_flagged' => $moderation['is_flagged'],
             'flagged_terms' => $moderation['is_flagged'] ? implode(', ', $moderation['matched_terms']) : null,
         ]);
+
+        // Notify Teacher
+        if ($course->teacher && $course->teacher->student) {
+            $course->teacher->student->notify(new \App\Notifications\CommentNotification($newComment, 'new_comment'));
+
+            // Telegram Notification for Teacher
+            $teacher = $course->teacher;
+            if ($teacher && $teacher->hasTelegramFeature() && $teacher->telegram_chat_id && $teacher->is_telegram_notifications_enabled) {
+                $courseName = $course->name_locale ?: $course->name;
+                $commenterName = $student ? $student->name : ($admin ? $admin->name : 'Người dùng');
+                $shortContent = mb_substr(strip_tags($content), 0, 100) . (mb_strlen(strip_tags($content)) > 100 ? '...' : '');
+
+                $text = "💬 <b>[BÌNH LUẬN MỚI]</b>\n\n";
+                $text .= "Giảng viên <b>{$teacher->name}</b> ơi, có bình luận mới trong khóa học:\n";
+                $text .= "📚 <b>{$courseName}</b>\n\n";
+                $text .= "👤 <b>Người gửi:</b> {$commenterName}\n";
+                $text .= "📝 <b>Nội dung:</b> <i>\"{$shortContent}\"</i>\n";
+                $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                \App\Jobs\SendTelegramTeacherNotification::dispatch($teacher, $text);
+            }
+        }
 
         return $this->renderThreadResponse($request, $course);
     }
@@ -81,7 +103,7 @@ class CourseCommentController extends Controller
 
         $moderation = courseCommentModeration($content);
 
-        CourseComment::create([
+        $reply = CourseComment::create([
             'course_id' => $course->id,
             'parent_id' => $comment->id,
             'user_id' => $admin->id,
@@ -90,6 +112,11 @@ class CourseCommentController extends Controller
             'is_flagged' => $moderation['is_flagged'],
             'flagged_terms' => $moderation['is_flagged'] ? implode(', ', $moderation['matched_terms']) : null,
         ]);
+
+        // Notify Student who owns the parent comment
+        if ($comment->student) {
+            $comment->student->notify(new \App\Notifications\CommentNotification($reply, 'reply'));
+        }
 
         return $this->renderThreadResponse($request, $course);
     }

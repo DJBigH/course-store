@@ -1,7 +1,6 @@
 @extends('layouts.client')
 
 @section('content')
-    @include('part.clients.page_title')
 
     @php
         $copy = trans('teacher::portal.status');
@@ -39,117 +38,200 @@
         $bankTransferNote = trim($bankTransferNotePrefix . ' GV' . $application->id);
     @endphp
 
-    <section class="teacher-application-status py-5">
+    <section class="teacher-status-page py-5">
         <div class="container">
-            <div class="teacher-status-shell">
-                <div class="teacher-status-header">
-                    <div>
-                        <span class="teacher-status-kicker">{{ $copy['kicker'] }}</span>
-                        <h2>{{ $copy['title'] }}</h2>
-                        <p class="mb-0">{{ $copy['intro'] }}</p>
+            <div class="teacher-status-wrapper mx-auto">
+                
+                {{-- Status Hero Section --}}
+                <div class="status-hero text-center mb-5 p-5 rounded-5 status-{{ $application->status }}">
+                    <div class="status-icon-wrapper mb-4">
+                        @if($application->status === 'approved')
+                            <div class="status-icon bg-success shadow-success"><i class="fas fa-check-double"></i></div>
+                        @elseif($application->status === 'rejected')
+                            <div class="status-icon bg-danger shadow-danger"><i class="fas fa-times"></i></div>
+                        @elseif($application->status === 'pending_payment')
+                            <div class="status-icon bg-warning shadow-warning"><i class="fas fa-wallet"></i></div>
+                        @else
+                            <div class="status-icon bg-primary shadow-primary"><i class="fas fa-clock"></i></div>
+                        @endif
                     </div>
-                    @if (in_array($application->status, ['rejected', 'pending_payment', 'draft'], true))
-                        <a href="{{ route('teacher.account.edit', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-primary">
-                            {{ $copy['edit'] }}
-                        </a>
-                    @endif
+                    <div class="status-badge mb-3 px-3 py-1 rounded-pill d-inline-block">
+                        {{ $application->display_status }}
+                    </div>
+                    <h1 class="fw-bold display-5 mb-3">{{ $copy['title'] }}</h1>
+                    <p class="text-muted lead mx-auto" style="max-width: 600px;">
+                        @if ($statusMessage)
+                            {{ $statusMessage }}
+                        @else
+                            {{ $copy['intro'] }}
+                        @endif
+                    </p>
                 </div>
 
                 @if (session('msg_success'))
-                    <div class="alert alert-success">{{ session('msg_success') }}</div>
+                    <div class="alert alert-success rounded-4 mb-4 shadow-sm border-0 px-4 py-3">
+                        <i class="fas fa-check-circle me-2"></i> {{ session('msg_success') }}
+                    </div>
                 @endif
                 @if (session('msg_danger'))
-                    <div class="alert alert-danger">{{ session('msg_danger') }}</div>
+                    <div class="alert alert-danger rounded-4 mb-4 shadow-sm border-0 px-4 py-3">
+                        <i class="fas fa-exclamation-circle me-2"></i> {{ session('msg_danger') }}
+                    </div>
                 @endif
 
-                <div class="alert alert-{{ $statusClass }} teacher-status-alert">
-                    <strong>{{ str_replace(':status', $application->display_status, $copy['current_status']) }}</strong>
-                    @if ($statusMessage)
-                        <span>{{ $statusMessage }}</span>
-                    @endif
-                </div>
-
                 <div class="row g-4">
-                    <div class="col-lg-6">
-                        <div class="teacher-status-card">
-                            <h3 class="h5 fw-bold mb-3">{{ $copy['sections']['profile'] }}</h3>
-                            <dl class="row mb-0">
-                                <dt class="col-sm-5">{{ $copy['labels']['full_name'] }}</dt>
-                                <dd class="col-sm-7">{{ $application->full_name }}</dd>
-                                <dt class="col-sm-5">{{ $copy['labels']['display_name'] }}</dt>
-                                <dd class="col-sm-7">{{ $application->display_name ?: '-' }}</dd>
-                                <dt class="col-sm-5">{{ $copy['labels']['email'] }}</dt>
-                                <dd class="col-sm-7">{{ $application->email }}</dd>
-                                <dt class="col-sm-5">{{ $copy['labels']['applicant_type'] }}</dt>
-                                <dd class="col-sm-7">{{ $applicantTypeLabel }}</dd>
-                                <dt class="col-sm-5">{{ $copy['labels']['submitted_at'] }}</dt>
-                                <dd class="col-sm-7">{{ optional($application->submitted_at)->format('d/m/Y H:i') ?: '-' }}</dd>
-                            </dl>
+                    {{-- Left Column: Application Info --}}
+                    <div class="col-lg-7">
+                        <div class="status-card h-100 p-4 rounded-5 border shadow-sm">
+                            <div class="d-flex align-items-center gap-2 mb-4">
+                                <div class="card-icon-sm bg-primary-soft text-primary"><i class="fas fa-user"></i></div>
+                                <h3 class="h4 fw-bold mb-0">{{ $copy['sections']['profile'] }}</h3>
+                            </div>
+                            
+                            <div class="row g-4">
+                                <div class="col-sm-6">
+                                    <div class="info-group">
+                                        <label class="text-muted small fw-bold text-uppercase mb-1 d-block">{{ $copy['labels']['full_name'] }}</label>
+                                        <div class="fw-bold fs-5">{{ $application->full_name }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="info-group">
+                                        <label class="text-muted small fw-bold text-uppercase mb-1 d-block">{{ $copy['labels']['display_name'] }}</label>
+                                        <div class="fw-bold fs-5">{{ $application->display_name ?: '-' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="info-group">
+                                        <label class="text-muted small fw-bold text-uppercase mb-1 d-block">{{ $copy['labels']['email'] }}</label>
+                                        <div class="fw-bold fs-5">{{ $application->email }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="info-group">
+                                        <label class="text-muted small fw-bold text-uppercase mb-1 d-block">{{ $copy['labels']['applicant_type'] }}</label>
+                                        <div class="fw-bold">{{ $applicantTypeLabel }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="info-group">
+                                        <label class="text-muted small fw-bold text-uppercase mb-1 d-block">{{ $copy['labels']['submitted_at'] }}</label>
+                                        <div class="fw-bold">{{ optional($application->submitted_at)->format('d/m/Y H:i') ?: '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (!empty($application->bio))
+                                <div class="mt-5 pt-4 border-top">
+                                    <h4 class="h5 fw-bold mb-3">{{ $copy['sections']['bio'] }}</h4>
+                                    <div class="p-3 bg-light rounded-4 bio-text" style="word-break: break-word;">
+                                        {{ $application->bio }}
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if (!empty($application->admin_note))
+                                <div class="mt-4 p-3 bg-danger-soft rounded-4 border-start border-4 border-danger">
+                                    <h4 class="h6 fw-bold mb-2 text-danger">{{ $copy['sections']['admin_note'] }}</h4>
+                                    <p class="mb-0 text-danger-emphasis">{{ $application->admin_note }}</p>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
-                    <div class="col-lg-6">
-                        <div class="teacher-status-card">
-                            <h3 class="h5 fw-bold mb-3">{{ $copy['sections']['package_payment'] }}</h3>
-                            <p class="mb-2 fw-semibold">{{ $application->package?->name_locale ?: $application->package?->name ?: $copy['labels']['not_selected'] }}</p>
-                            <p class="text-muted mb-2">{{ $application->package?->description_locale ?: $application->package?->description }}</p>
-                            <div class="teacher-status-meta">
-                                <span>{{ $application->package ? money($application->package->price) : '-' }}</span>
+                    {{-- Right Column: Package & Payment --}}
+                    <div class="col-lg-5">
+                        <div class="status-card p-4 p-md-5 rounded-5 shadow-sm border h-100">
+                            {{-- Header --}}
+                            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                                <h3 class="h5 fw-bold mb-0 text-uppercase letter-spacing-1">Chi tiết đơn hàng</h3>
+                                <div class="badge bg-primary-soft text-primary rounded-pill px-3">{{ $application->package?->name_locale ?: $application->package?->name ?: $copy['labels']['not_selected'] }}</div>
+                            </div>
+
+                            {{-- Price Summary --}}
+                            <div class="mb-5">
+                                <div class="d-flex justify-content-between mb-2 small text-muted">
+                                    <span>Đơn giá gói</span>
+                                    <span>{{ $application->package ? money($application->package->price) : '-' }}</span>
+                                </div>
                                 @if ($application->coupon_code)
-                                    <span>{{ str_replace([':code', ':amount'], [$application->coupon_code, money($application->discount_amount ?? 0)], $copy['labels']['coupon']) }}</span>
+                                    <div class="d-flex justify-content-between mb-2 text-success small">
+                                        <span>Giảm giá ({{ $application->coupon_code }})</span>
+                                        <span class="fw-bold">-{{ money($application->discount_amount ?? 0) }}</span>
+                                    </div>
                                 @endif
-                                @if ($application->package)
-                                    <span>{{ str_replace(':amount', money($application->payable_amount), $copy['labels']['payable']) }}</span>
-                                @endif
-                                <span>{{ $application->payment_method_label }}</span>
-                                <span>{{ str_replace(':rate', $application->package?->commission_rate ?? 0, $copy['labels']['commission']) }}</span>
+                                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                    <span class="fw-bold opacity-75">Tổng thanh toán</span>
+                                    <span class="fw-bold fs-3 text-primary">{{ money($application->payable_amount) }}</span>
+                                </div>
                             </div>
 
                             @if ($application->status === 'pending_payment')
-                                <div class="teacher-status-payment mt-3">
+                                {{-- Bank Transfer Section --}}
+                                <div class="payment-section mt-5">
+                                    <div class="d-flex align-items-center gap-2 mb-4">
+                                        <div class="card-icon-sm bg-warning-soft text-warning" style="width: 32px; height: 32px; font-size: 0.8rem;"><i class="fas fa-university"></i></div>
+                                        <h4 class="h6 fw-bold mb-0 text-uppercase">Thanh toán chuyển khoản</h4>
+                                    </div>
+
                                     @if (!$methodEnabled)
-                                        <div class="alert alert-warning mb-0 border-0 rounded-4">
-                                            <i class="bi bi-exclamation-triangle me-2"></i>
-                                            Phương thức <strong>{{ $application->payment_method_label }}</strong> hiện đang bảo trì. Vui lòng quay lại sau hoặc chỉnh sửa hồ sơ để chọn phương thức khác.
+                                        <div class="alert alert-warning rounded-4 border-0 small">
+                                            <i class="fas fa-tools me-2"></i> Phương thức <strong>{{ $application->payment_method_label }}</strong> đang bảo trì.
                                         </div>
                                     @else
-                                        <div class="payment-instructions">
-                                            @if ($isBank)
-                                                <div class="bank-details mb-3">
-                                                    <h6 class="fw-bold mb-2 small text-uppercase opacity-75">Thông tin chuyển khoản</h6>
-                                                    <ul class="list-unstyled mb-0 small">
-                                                        <li class="mb-1">🏦 <strong>Ngân hàng:</strong> {{ $bankTransferBankName }}</li>
-                                                        <li class="mb-1">🔢 <strong>STK:</strong> <span class="fw-bold text-primary">{{ $bankTransferAccountNumber }}</span></li>
-                                                        <li class="mb-1">👤 <strong>Chủ TK:</strong> {{ $bankTransferAccountName }}</li>
-                                                        <li class="mb-1">💰 <strong>Số tiền:</strong> <span class="fw-bold text-danger">{{ money($application->payable_amount) }}</span></li>
-                                                        <li>📝 <strong>Nội dung:</strong> <span class="fw-bold text-success">{{ $bankTransferNote }}</span></li>
-                                                    </ul>
+                                        @if ($isBank)
+                                            <div class="bank-card rounded-4 p-4 mb-4">
+                                                <div class="row g-4">
+                                                    <div class="col-12 border-bottom pb-3 mb-1">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="small text-muted fw-bold">NGÂN HÀNG</span>
+                                                            <span class="fw-bold">{{ $bankTransferBankName }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 border-bottom pb-3 mb-1">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <span class="small text-muted fw-bold d-block mb-1">SỐ TÀI KHOẢN</span>
+                                                                <span class="fs-5 fw-bold text-primary">{{ $bankTransferAccountNumber }}</span>
+                                                            </div>
+                                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="navigator.clipboard.writeText('{{ $bankTransferAccountNumber }}')">
+                                                                <i class="far fa-copy me-1"></i> Copy
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <span class="small text-muted fw-bold d-block mb-1">NỘI DUNG CK</span>
+                                                                <span class="fw-bold text-danger">{{ $bankTransferNote }}</span>
+                                                            </div>
+                                                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="navigator.clipboard.writeText('{{ $bankTransferNote }}')">
+                                                                <i class="far fa-copy me-1"></i> Copy
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="text-center bg-white p-2 rounded-4 d-inline-block border mb-3">
-                                                    <img src="https://img.vietqr.io/image/{{ $bankTransferBankBin }}-{{ $bankTransferAccountNumber }}-compact2.jpg?amount={{ $application->payable_amount }}&addInfo={{ rawurlencode($bankTransferNote) }}" 
-                                                         alt="VietQR" class="img-fluid" style="max-height: 200px;">
-                                                    <div class="mt-1 small text-muted">Quét mã để thanh toán</div>
+                                                <div class="mt-4 pt-3 border-top text-center">
+                                                    <span class="small text-muted">Chủ tài khoản: <strong>{{ $bankTransferAccountName }}</strong></span>
                                                 </div>
-                                            @endif
-
-                                            @if ($isVnpay)
-                                                <div class="alert alert-info border-0 rounded-4 mb-3">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    Hệ thống sẽ xử lý thanh toán qua cổng <strong>VNPAY</strong>. Vui lòng liên hệ Admin nếu bạn đã thanh toán nhưng trạng thái chưa cập nhật.
-                                                </div>
-                                            @endif
-
-                                            @if ($isMomo)
-                                                <div class="alert alert-info border-0 rounded-4 mb-3">
-                                                    <i class="bi bi-info-circle me-2"></i>
-                                                    Hệ thống sẽ xử lý thanh toán qua ví <strong>MoMo</strong>. Vui lòng liên hệ Admin nếu bạn đã thanh toán nhưng trạng thái chưa cập nhật.
-                                                </div>
-                                            @endif
-
-                                            <div class="quick-guide p-2 rounded-3 bg-white-50 border-start border-4 border-warning small">
-                                                <strong>{{ $copy['labels']['quick_guide'] }}</strong>
-                                                <p class="mb-0 text-muted">{{ $paymentGuide }}</p>
                                             </div>
+
+                                            {{-- QR Code --}}
+                                            <div class="qr-wrapper text-center">
+                                                <div class="d-inline-block p-3 bg-white rounded-5 border shadow-sm mb-3">
+                                                    <img src="https://img.vietqr.io/image/{{ $bankTransferBankBin }}-{{ $bankTransferAccountNumber }}-compact2.jpg?amount={{ $application->payable_amount }}&addInfo={{ rawurlencode($bankTransferNote) }}" 
+                                                         alt="VietQR" class="img-fluid rounded-4" style="max-height: 220px;">
+                                                </div>
+                                                <p class="small text-muted fw-bold mb-0">Quét mã VietQR để thanh toán tự động</p>
+                                            </div>
+                                        @else
+                                            <div class="alert alert-info rounded-4 border-0 mb-3 small">
+                                                <i class="fas fa-info-circle me-2"></i> Thanh toán qua <strong>{{ $application->payment_method_label }}</strong>. Vui lòng liên hệ Admin nếu cần hỗ trợ.
+                                            </div>
+                                        @endif
+                                        
+                                        <div class="mt-4 p-3 rounded-4 bg-warning-soft text-warning-emphasis small text-center border border-warning-subtle">
+                                            <i class="fas fa-lightbulb me-2"></i> {{ $paymentGuide }}
                                         </div>
                                     @endif
                                 </div>
@@ -158,44 +240,31 @@
                     </div>
                 </div>
 
-                @if (!empty($application->bio))
-                    <div class="teacher-status-card mt-4">
-                        <h3 class="h5 fw-bold mb-3">{{ $copy['sections']['bio'] }}</h3>
-                        <p class="mb-0">{{ $application->bio }}</p>
-                    </div>
-                @endif
-
-                @if (!empty($application->admin_note))
-                    <div class="teacher-status-card mt-4 teacher-status-card--danger">
-                        <h3 class="h5 fw-bold mb-3 text-danger">{{ $copy['sections']['admin_note'] }}</h3>
-                        <p class="mb-0">{{ $application->admin_note }}</p>
-                    </div>
-                @endif
-
-                <div class="d-flex flex-wrap gap-2 mt-4">
+                {{-- Action Buttons --}}
+                <div class="d-flex flex-wrap justify-content-center gap-3 mt-5">
                     @if ($application->status === 'approved' && $application->teacher?->status === 'active')
-                        <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-primary">
-                            {{ $copy['actions']['go_dashboard'] }}
+                        <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-primary btn-lg rounded-pill px-5 shadow">
+                            <i class="fas fa-tachometer-alt me-2"></i> {{ $copy['actions']['go_dashboard'] }}
                         </a>
                     @endif
 
                     @if ($application->status === 'pending_payment')
                         <form method="POST" action="{{ route('teacher.account.mark-paid', ['locale' => app()->getLocale()]) }}">
                             @csrf
-                            <button type="submit" class="btn btn-primary">
-                                {{ $copy['actions']['mark_paid'] }}
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow">
+                                <i class="fas fa-check-circle me-2"></i> {{ $copy['actions']['mark_paid'] }}
                             </button>
                         </form>
                     @endif
 
                     @if (in_array($application->status, ['rejected', 'pending_payment', 'draft'], true))
-                        <a href="{{ route('teacher.account.edit', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-primary">
-                            {{ $copy['actions']['update_profile'] }}
+                        <a href="{{ route('teacher.account.edit', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-primary btn-lg rounded-pill px-5">
+                            <i class="fas fa-edit me-2"></i> {{ $copy['actions']['update_profile'] }}
                         </a>
                     @endif
 
-                    <a href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-secondary">
-                        {{ $copy['actions']['back_landing'] }}
+                    <a href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}" class="btn btn-outline-secondary btn-lg rounded-pill px-5">
+                        <i class="fas fa-home me-2"></i> {{ $copy['actions']['back_landing'] }}
                     </a>
                 </div>
             </div>
@@ -205,185 +274,166 @@
 
 @section('stylesheets')
     <style>
-        .teacher-application-status {
-            --teacher-status-card-bg: #ffffff;
-            --teacher-status-card-border: rgba(37, 99, 235, 0.12);
-            --teacher-status-text: #0f172a;
-            --teacher-status-muted: #64748b;
-            --teacher-status-accent: #2563eb;
-            --teacher-status-payment-bg: rgba(245, 158, 11, 0.12);
-            color: var(--teacher-status-text);
+        .teacher-status-page {
+            --ts-primary: #2563eb;
+            --ts-primary-soft: rgba(37, 99, 235, 0.08);
+            --ts-success: #10b981;
+            --ts-warning: #f59e0b;
+            --ts-danger: #ef4444;
+            --ts-card-bg: #ffffff;
+            --ts-card-border: rgba(37, 99, 235, 0.1);
+            --ts-text: #1e293b;
+            --ts-muted: #64748b;
+            
+            color: var(--ts-text);
+            min-height: 80vh;
+            background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent 400px),
+                        radial-gradient(circle at bottom left, rgba(37, 99, 235, 0.03), transparent 400px);
         }
 
-        html[data-theme="dark"] .teacher-application-status {
-            --teacher-status-card-bg: #0f172a;
-            --teacher-status-card-border: rgba(96, 165, 250, 0.2);
-            --teacher-status-text: #e5eefc;
-            --teacher-status-muted: #a9bbd5;
-            --teacher-status-accent: #60a5fa;
-            --teacher-status-payment-bg: rgba(245, 158, 11, 0.18);
+        html[data-theme="dark"] .teacher-status-page {
+            --ts-card-bg: #111827;
+            --ts-card-border: rgba(96, 165, 250, 0.12);
+            --ts-text: #f1f5f9;
+            --ts-muted: #94a3b8;
+            --ts-primary-soft: rgba(59, 130, 246, 0.12);
+            background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 400px),
+                        #0a0f1a;
         }
 
-        .teacher-status-shell {
-            max-width: 1100px;
+        .teacher-status-wrapper {
+            max-width: 1000px;
+        }
+
+        /* Hero Section */
+        .status-hero {
+            background: var(--ts-card-bg);
+            border: 1px solid var(--ts-card-border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        html[data-theme="dark"] .status-hero {
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .status-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--ts-primary);
+        }
+
+        .status-hero.status-approved::before { background: var(--ts-success); }
+        .status-hero.status-rejected::before { background: var(--ts-danger); }
+        .status-hero.status-pending_payment::before { background: var(--ts-warning); }
+
+        .status-icon-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+
+        .status-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
             margin: 0 auto;
         }
 
-        .teacher-status-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
+        .shadow-primary { box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4); }
+        .shadow-success { box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); }
+        .shadow-warning { box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4); }
+        .shadow-danger { box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); }
 
-        .teacher-status-kicker {
-            display: inline-flex;
-            padding: 0.45rem 0.9rem;
-            border-radius: 999px;
-            background: rgba(37, 99, 235, 0.1);
-            color: var(--teacher-status-accent);
+        .status-badge {
+            background: var(--ts-primary-soft);
+            color: var(--ts-primary);
             font-weight: 700;
-            font-size: 0.78rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
         }
 
-        .teacher-status-header h2 {
-            margin-top: 1rem;
-            font-size: clamp(2rem, 3vw, 2.8rem);
-            font-weight: 800;
-            color: var(--teacher-status-text);
+        .status-approved .status-badge { color: var(--ts-success); background: rgba(16, 185, 129, 0.1); }
+        .status-rejected .status-badge { color: var(--ts-danger); background: rgba(239, 68, 68, 0.1); }
+        .status-pending_payment .status-badge { color: var(--ts-warning); background: rgba(245, 158, 11, 0.1); }
+
+        /* Cards */
+        .status-card {
+            background: var(--ts-card-bg);
+            border: 1px solid var(--ts-card-border) !important;
+            transition: transform 0.3s ease;
         }
 
-        .teacher-status-header p {
-            color: var(--teacher-status-text);
-        }
-
-        .teacher-status-alert {
-            display: grid;
-            gap: 0.45rem;
-        }
-
-        .teacher-status-card {
-            padding: 1.35rem;
-            border-radius: 26px;
-            background: var(--teacher-status-card-bg);
-            border: 1px solid var(--teacher-status-card-border);
-            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
-            color: var(--teacher-status-text);
-        }
-
-        html[data-theme="dark"] .teacher-status-card {
-            box-shadow: 0 22px 54px rgba(2, 6, 23, 0.28);
-        }
-
-        .teacher-status-card--danger {
-            border: 1px solid rgba(220, 38, 38, 0.18);
-        }
-
-        .teacher-status-card h3,
-        .teacher-status-card p,
-        .teacher-status-card dt,
-        .teacher-status-card dd,
-        .teacher-status-card strong,
-        .teacher-status-card span {
-            color: var(--teacher-status-text);
-        }
-
-        .teacher-status-card .text-muted {
-            color: var(--teacher-status-muted) !important;
-        }
-
-        .teacher-status-card dt {
-            font-weight: 700;
-        }
-
-        .teacher-status-card dd,
-        .teacher-status-card p {
-            color: var(--teacher-status-muted);
-        }
-
-        .teacher-status-meta {
+        .card-icon-sm {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            color: var(--teacher-status-accent);
-            font-weight: 700;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
         }
 
-        .teacher-status-meta span {
-            color: var(--teacher-status-accent);
+        .bg-primary-soft { background: var(--ts-primary-soft); }
+        .bg-warning-soft { background: rgba(245, 158, 11, 0.1); }
+        .bg-danger-soft { background: rgba(239, 68, 68, 0.08); }
+
+        .info-group label {
+            letter-spacing: 0.02em;
         }
 
-        .teacher-status-payment {
-            padding: 1.25rem;
-            border-radius: 22px;
-            background: var(--teacher-status-payment-bg);
+        .bio-text {
+            line-height: 1.6;
+            color: var(--ts-text);
+            background: rgba(0,0,0,0.02) !important;
         }
 
-        .payment-instructions ul li {
-            position: relative;
-            padding-left: 0.25rem;
+        html[data-theme="dark"] .bio-text {
+            background: rgba(255,255,255,0.03) !important;
         }
 
-        .bank-details {
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+        .bank-card {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid var(--ts-card-border);
         }
 
-        html[data-theme="dark"] .bank-details {
-            background: rgba(15, 23, 42, 0.3);
-            border-color: rgba(255, 255, 255, 0.08);
+        html[data-theme="dark"] .bank-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
-        .quick-guide {
-            background: rgba(255, 255, 255, 0.4);
+        /* Buttons */
+        .btn-lg {
+            padding: 1rem 2.5rem;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        html[data-theme="dark"] .quick-guide {
-            background: rgba(15, 23, 42, 0.5);
+        .btn-primary.shadow {
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2) !important;
         }
 
-        .teacher-status-payment strong {
-            display: block;
-            margin-bottom: 0.45rem;
-            color: var(--teacher-status-text);
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
         }
 
-        .teacher-status-payment p {
-            color: var(--teacher-status-text);
-        }
-
-        html[data-theme="dark"] .teacher-application-status .btn-outline-secondary {
-            color: #dbeafe;
-            border-color: rgba(148, 163, 184, 0.35);
-            transition: color 0.22s ease, background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
-        }
-
-        html[data-theme="dark"] .teacher-application-status .btn-outline-secondary:hover,
-        html[data-theme="dark"] .teacher-application-status .btn-outline-secondary:active {
-            color: #0f172a;
-            background: #dbeafe;
-            border-color: #dbeafe;
-            transform: translateY(-1px);
-        }
-
-        .teacher-application-status .btn-outline-secondary:focus-visible,
-        .teacher-application-status .btn-primary:focus-visible {
-            outline: none;
-            box-shadow:
-                0 0 0 3px rgba(8, 17, 31, 0.9),
-                0 0 0 6px rgba(96, 165, 250, 0.48);
-        }
-
-        html[data-theme="dark"] .teacher-application-status .btn-outline-secondary:focus-visible,
-        html[data-theme="dark"] .teacher-application-status .btn-primary:focus-visible {
-            box-shadow:
-                0 0 0 3px rgba(7, 17, 31, 0.96),
-                0 0 0 6px rgba(125, 211, 252, 0.58);
+        @media (max-width: 768px) {
+            .status-hero { padding: 3rem 1.5rem !important; }
+            .display-5 { font-size: 2rem; }
         }
     </style>
 @endsection

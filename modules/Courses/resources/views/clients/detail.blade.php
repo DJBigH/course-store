@@ -109,6 +109,9 @@
                                 'course' => $course,
                                 'threads' => $threads,
                                 'canComment' => $canComment,
+                                'canRate' => $canRate,
+                                'viewerCourseRating' => $viewerCourseRating,
+                                'ratingBreakdown' => $ratingBreakdown,
                                 'viewerIsAdmin' => $viewerIsAdmin,
                             ])
                         </div>
@@ -140,6 +143,22 @@
                                         </span>
                                     @endif
                                 </div>
+
+                                @if ($course->is_on_flash_sale)
+                                    <div class="flash-sale-timer-wrapper mb-3 p-2 rounded border border-danger bg-danger bg-opacity-10">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <div class="flash-sale-badge">FLASH SALE</div>
+                                            <span class="small text-danger fw-bold">{{ __('courses::clients/common.ending_in') ?? 'Kết thúc sau:' }}</span>
+                                        </div>
+                                        <div class="countdown-timer d-flex justify-content-center gap-1" 
+                                             data-time="{{ $course->end_at->toIso8601String() }}">
+                                            <div class="time-item"><span class="days">00</span><small>d</small></div>
+                                            <div class="time-item"><span class="hours">00</span><small>h</small></div>
+                                            <div class="time-item"><span class="minutes">00</span><small>m</small></div>
+                                            <div class="time-item"><span class="seconds">00</span><small>s</small></div>
+                                        </div>
+                                    </div>
+                                @endif
                             @endunless
 
                             <!-- Info list -->
@@ -248,9 +267,15 @@
                                     @csrf
                                     <input type="hidden" name="course_id" value="{{ $course->id }}">
 
-                                    <button class="btn btn-primary w-100 fw-semibold payment">
-                                        <i class="fa-solid fa-cart-shopping me-1"></i>
-                                        {{ __('courses::clients/common.buy_course') }}
+                                    <button class="btn btn-primary w-100 fw-semibold payment js-buy-btn">
+                                        <span class="btn-text">
+                                            <i class="fa-solid fa-cart-shopping me-1"></i>
+                                            {{ __('courses::clients/common.buy_course') }}
+                                        </span>
+                                        <span class="btn-loader d-none">
+                                            <i class="fas fa-spinner fa-spin me-1"></i>
+                                            {{ __('common.processing') }}...
+                                        </span>
                                     </button>
                                 </form>
                             @endif
@@ -289,6 +314,48 @@
             line-height: 1;
         }
 
+        .flash-sale-badge {
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+
+        .countdown-timer .time-item {
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            min-width: 45px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .countdown-timer .time-item span {
+            display: block;
+            font-weight: 800;
+            font-size: 16px;
+            line-height: 1;
+            color: #1e293b;
+        }
+
+        .countdown-timer .time-item small {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        html[data-theme="dark"] .countdown-timer .time-item {
+            background: #334155;
+        }
+
+        html[data-theme="dark"] .countdown-timer .time-item span {
+            color: #f1f5f9;
+        }
+
+
         .teacher-mini-badge::before,
         .teacher-inline-badge::before {
             font-family: "Font Awesome 6 Free";
@@ -325,314 +392,84 @@
             vertical-align: middle;
         }
 
-        .course-comments-shell {
-            border-radius: 18px;
+        /* ✅ Redesigned Rating & Review Styles */
+        .course-rating-section { border-color: #f1f5f9 !important; }
+        .rating-stars-large .fa-star, .rating-stars-large .fa-star-half-stroke { filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.2)); }
+        .progress-bar { transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .icon-circle { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
+        .alert-success-soft { background-color: #f0fdf4; color: #15803d; }
+        .alert-info-soft { background-color: #f0f9ff; color: #0369a1; }
+        .alert-warning-soft { background-color: #fffbeb; color: #a16207; }
+        .comment-card-modern, .reply-card-modern { transition: all 0.2s ease; }
+        .comment-card-modern:hover { border-color: #cbd5e1 !important; box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important; }
+        .reply-line::after { content: ''; position: absolute; left: -24px; top: 50%; width: 12px; height: 2px; background-color: #f1f5f9; }
+        .bg-primary-subtle\/5 { background-color: rgba(37, 99, 235, 0.05); }
+
+        @keyframes rating-shake {
+            0%, 100% { transform: translateX(0); }
+            20%       { transform: translateX(-6px); }
+            40%       { transform: translateX(6px); }
+            60%       { transform: translateX(-4px); }
+            80%       { transform: translateX(4px); }
+        }
+        .rating-shake { animation: rating-shake .45s ease; }
+
+
+        html[data-theme="dark"] .comment-card-modern,
+        html[data-theme="dark"] .reply-card-modern,
+        html[data-theme="dark"] .empty-reviews-state {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9;
         }
 
-        .course-comments-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid #e5e7eb;
+        html[data-theme="dark"] .instructor-box {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9;
         }
 
-        .course-comment-form textarea {
-            border-radius: 14px;
-            resize: vertical;
-            min-height: 88px;
+        html[data-theme="dark"] .instructor-box h5,
+        html[data-theme="dark"] .instructor-box h6,
+        html[data-theme="dark"] .instructor-box .fw-bold {
+            color: #f1f5f9 !important;
         }
 
-        .course-rating-panel {
-            border: 1px solid #e2e8f0;
-            border-radius: 18px;
-            padding: 16px;
-            background: #fffaf0;
+        html[data-theme="dark"] .instructor-box .text-dark {
+            color: #f8fafc !important;
         }
 
-        .course-rating-panel__summary {
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-            align-items: start;
+        html[data-theme="dark"] .comment-submission-card {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
         }
 
-        .course-rating-panel__title {
-            font-weight: 800;
-            color: #111827;
-            margin-bottom: 6px;
+        html[data-theme="dark"] .comment-submission-card textarea {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9;
         }
 
-        .course-rating-panel__stars {
-            color: #f59e0b;
-            display: flex;
-            gap: 4px;
+        html[data-theme="dark"] .icon-circle,
+        html[data-theme="dark"] .icon-box {
+            background-color: #334155 !important;
         }
 
-        .course-rating-panel__score {
-            text-align: right;
-        }
-
-        .course-rating-panel__score strong {
-            display: block;
-            font-size: 1.75rem;
-            color: #111827;
-            line-height: 1;
-        }
-
-        .course-rating-picker {
-            display: block;
-        }
-
-        .course-rating-picker__track {
-            position: relative;
-            width: min(100%, 270px);
-            padding: 0.9rem 1rem;
-            border-radius: 18px;
-            border: 1px solid rgba(245, 158, 11, 0.24);
-            background: linear-gradient(180deg, #ffffff, #fff7ed);
-            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.1);
-            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-        }
-
-        .course-rating-picker__track:hover,
-        .course-rating-picker__track.is-preview {
-            transform: translateY(-2px) scale(1.03);
-            border-color: rgba(245, 158, 11, 0.45);
-            background: linear-gradient(180deg, #fff7ed, #ffedd5);
-            box-shadow: 0 14px 24px rgba(245, 158, 11, 0.16);
-        }
-
-        .course-rating-picker__track.is-active {
-            background: linear-gradient(135deg, #f59e0b, #f97316);
-            border-color: transparent;
-            transform: translateY(-2px);
-            box-shadow: 0 16px 28px rgba(249, 115, 22, 0.28);
-        }
-
-        .course-rating-picker__stars-base,
-        .course-rating-picker__stars-fill {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            font-size: 1.75rem;
-            line-height: 1;
-            white-space: nowrap;
-        }
-
-        .course-rating-picker__stars-base {
-            color: #cbd5e1;
-        }
-
-        .course-rating-picker__stars-fill {
-            position: absolute;
-            inset: 0.9rem auto auto 1rem;
-            overflow: hidden;
-            color: #f59e0b;
-            pointer-events: none;
-            transition: width 0.16s ease;
-        }
-
-        .course-rating-picker__track.is-active .course-rating-picker__stars-base {
-            color: rgba(255, 255, 255, 0.32);
-        }
-
-        .course-rating-picker__track.is-active .course-rating-picker__stars-fill {
-            color: #fff8e1;
-        }
-
-        .course-rating-picker__hotspots {
-            position: absolute;
-            inset: 0;
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            z-index: 2;
-        }
-
-        .course-rating-picker__hotspot {
-            border: 0;
-            background: transparent;
-            padding: 0;
-            margin: 0;
-            cursor: pointer;
-        }
-
-        .course-rating-picker__hotspot:focus-visible {
-            outline: 2px solid rgba(249, 115, 22, 0.6);
-            outline-offset: -3px;
-        }
-
-        .admin-reply-form {
-            margin-left: 72px;
-            margin-top: 12px;
-        }
-
-        .admin-reply-form textarea {
-            min-height: 68px;
-            background: #f8fafc;
-        }
-
-        .comment-thread + .comment-thread {
-            margin-top: 18px;
-        }
-
-        .comment-card {
-            display: flex;
-            gap: 14px;
-            padding: 16px;
-            border-radius: 18px;
-            border: 1px solid #e5e7eb;
-            background: #fff;
-        }
-
-        .comment-card.is-student {
-            border-left: 4px solid #22c55e;
-        }
-
-        .comment-card.is-admin {
-            border-left: 4px solid #2563eb;
-            background: #f8fbff;
-        }
-
-        .reply-card {
-            margin-top: 10px;
-        }
-
-        .comment-replies {
-            margin-left: 72px;
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .comment-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-
-        .comment-main {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .comment-meta {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .comment-time {
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        .comment-content {
-            white-space: pre-wrap;
-            line-height: 1.65;
-            color: #0f172a;
-        }
-
-        .comment-actions {
-            margin-top: 12px;
-        }
-
-        .comment-flag-note {
-            margin-top: 8px;
-            font-size: 12px;
-            color: #b91c1c;
-        }
-
-        .is-hidden-comment {
-            opacity: 0.72;
-        }
-
-        .empty-comments {
-            padding: 18px;
-            text-align: center;
-            border-radius: 16px;
-            background: #f8fafc;
-            color: #64748b;
-            border: 1px dashed #cbd5e1;
-        }
-
-        html[data-theme="dark"] .course-comments-head {
-            border-bottom-color: rgba(148, 163, 184, 0.18);
-        }
-
-        html[data-theme="dark"] .comment-card {
-            background: #0f1b2d;
-            border-color: rgba(148, 163, 184, 0.18);
-            box-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
-        }
-
-        html[data-theme="dark"] .comment-card.is-admin {
-            background: linear-gradient(180deg, #132238 0%, #0f1b2d 100%);
-        }
-
-        html[data-theme="dark"] .comment-content {
-            color: #d6e3f3;
-        }
-
-        html[data-theme="dark"] .empty-comments {
-            background: rgba(96, 165, 250, 0.08);
-            color: #9fb4cb;
-            border-color: rgba(148, 163, 184, 0.22);
-        }
-
-        html[data-theme="dark"] .admin-reply-form textarea {
-            background: #091321;
-        }
+        html[data-theme="dark"] .alert-info-soft { background-color: rgba(3, 105, 161, 0.1) !important; color: #7dd3fc !important; }
+        html[data-theme="dark"] .alert-warning-soft { background-color: rgba(161, 98, 7, 0.1) !important; color: #fcd34d !important; }
+        html[data-theme="dark"] .alert-success-soft { background-color: rgba(21, 128, 61, 0.1) !important; color: #86efac !important; }
+        html[data-theme="dark"] .bg-light { background-color: #0f172a !important; }
+        html[data-theme="dark"] .bg-light\/50 { background-color: rgba(15, 23, 42, 0.5) !important; }
+        html[data-theme="dark"] .rating-submission-card { background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.5) 100%) !important; }
+        html[data-theme="dark"] .text-secondary { color: #94a3b8 !important; }
+        html[data-theme="dark"] .progress { background-color: #334155 !important; }
 
         @media (max-width: 768px) {
-            .comment-replies,
-            .admin-reply-form {
-                margin-left: 0;
-            }
-
-            .course-profile {
-                margin-top: 24px;
-            }
-
-            .comment-card {
-                padding: 14px;
-            }
+            .replies-list, .admin-reply-box { margin-left: 20px !important; }
+            .reply-line { display: none; }
         }
 
-        @media (max-width: 575.98px) {
-            .course-comments-head,
-            .comment-meta {
-                gap: 6px;
-            }
-
-            .course-comment-form .d-flex.justify-content-between {
-                flex-direction: column;
-                align-items: stretch !important;
-                gap: 10px;
-            }
-
-            .course-comment-form .btn,
-            .admin-reply-form .btn {
-                width: 100%;
-            }
-
-            .comment-card {
-                gap: 10px;
-                padding: 12px;
-            }
-
-            .comment-avatar {
-                width: 38px;
-                height: 38px;
-                border-radius: 12px;
-            }
-        }
+        /* Coming Soon Styles */
         .coming-soon-wrapper {
             background: linear-gradient(145deg, #fffcf0, #fff9db) !important;
         }
@@ -663,270 +500,207 @@
     <script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
     <script src="{{ asset('backend/plugins/ckeditor/ckeditor.js') }}"></script>
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            const wrap = document.getElementById('course-comments-wrap');
-            let editorIndex = 0;
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            
+            const getCommentsWrap = () => document.getElementById('course-comments-wrap');
 
-            if (!wrap) {
-                return;
-            }
-
-            const token = document.querySelector('meta[name="csrf_token"]')?.getAttribute('content') || '';
-
-            const initCommentEditors = () => {
-                if (typeof window.CKEDITOR === 'undefined') {
-                    return;
-                }
-
-                wrap.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
-                    if (!textarea.id) {
-                        editorIndex += 1;
-                        textarea.id = `course-comment-editor-${editorIndex}`;
-                    }
-
+            const initCommentEditors = (scope = document) => {
+                if (typeof window.CKEDITOR === 'undefined') return;
+                scope.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
+                    if (!textarea.id) textarea.id = 'editor-' + Math.random().toString(36).substr(2, 9);
                     if (window.CKEDITOR.instances[textarea.id]) {
-                        return;
+                        window.CKEDITOR.instances[textarea.id].destroy(true);
                     }
-
-                    window.CKEDITOR.replace(textarea.id, {
-                        height: 120,
-                        resize_enabled: false,
-                        removePlugins: 'elementspath',
-                        toolbar: [
-                            ['Bold', 'Italic', 'Underline', '-', 'NumberedList', 'BulletedList', '-', 'Link', 'Unlink'],
-                        ],
+                    window.CKEDITOR.replace(textarea.id, { 
+                        height: 120, 
+                        removePlugins: 'elementspath,resize', 
+                        toolbar: [['Bold', 'Italic', 'Underline', '-', 'NumberedList', 'BulletedList', '-', 'Link', 'Unlink']] 
                     });
                 });
             };
 
-            const syncCommentEditors = (scope) => {
-                if (typeof window.CKEDITOR === 'undefined') {
-                    return;
-                }
-
+            const syncCommentEditors = (scope = document) => {
+                if (typeof window.CKEDITOR === 'undefined') return;
                 scope.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
                     const editor = textarea.id ? window.CKEDITOR.instances[textarea.id] : null;
-
-                    if (editor) {
-                        editor.updateElement();
-                    }
+                    if (editor) editor.updateElement();
                 });
             };
 
-            const destroyCommentEditors = () => {
-                if (typeof window.CKEDITOR === 'undefined') {
-                    return;
-                }
-
-                wrap.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
+            const destroyCommentEditors = (scope = document) => {
+                if (typeof window.CKEDITOR === 'undefined') return;
+                scope.querySelectorAll('textarea[data-rich-editor]').forEach((textarea) => {
                     const editor = textarea.id ? window.CKEDITOR.instances[textarea.id] : null;
-
-                    if (editor) {
-                        editor.destroy(true);
-                    }
+                    if (editor) editor.destroy(true);
                 });
             };
 
-            const submitAsyncForm = async (form) => {
-                const submitButton = form.querySelector('button[type="submit"]');
-                const originalText = submitButton ? submitButton.innerText : '';
+            // ─── Star Picker ─────────────────────────────────────────────────
+            const initCourseRatingPicker = () => {
+                const form = document.querySelector('[data-course-rating-form]');
+                if (!form) return;
 
-                syncCommentEditors(form);
+                const input   = form.querySelector('[data-rating-input]');
+                const label   = form.querySelector('[data-rating-current-label]');
+                const spots   = form.querySelectorAll('[data-rating-option]');
+                const icons   = form.querySelectorAll('[data-star-icon]');  // 5 <i> elements
+                const errBox  = document.getElementById('rp-error-box');
+                const errTxt  = document.getElementById('rp-error-text');
 
-                if (submitButton) {
-                    submitButton.disabled = true;
-                    submitButton.innerText = @js(__('courses::clients/common.comment_submitting'));
-                }
+                const LABELS = {
+                    0.5:'😕 Rất tệ', 1:'😕 Rất tệ',
+                    1.5:'😐 Tệ',     2:'😐 Tệ',
+                    2.5:'🙂 Bình thường', 3:'🙂 Bình thường',
+                    3.5:'😊 Tốt',    4:'😊 Tốt',
+                    4.5:'🤩 Tuyệt vời', 5:'🤩 Xuất sắc!',
+                };
+                let chosen = input?.value ? parseFloat(input.value) : null;
 
-                try {
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': token,
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json',
-                        },
-                        body: new FormData(form),
+                // Use inline style.color — beats any CSS specificity conflict
+                const FILLED_COLOR = '#f59e0b';
+                const EMPTY_COLOR  = document.documentElement.getAttribute('data-theme') === 'dark' ? '#475569' : '#cbd5e1';
+
+                const paintStars = (val) => {
+                    icons.forEach((icon, idx) => {
+                        const n = idx + 1;
+                        const empty = document.documentElement.getAttribute('data-theme') === 'dark' ? '#475569' : '#cbd5e1';
+                        if (val >= n) {
+                            icon.className = 'rp-star-icon fa-solid fa-star';
+                            icon.style.color = FILLED_COLOR;
+                        } else if (val >= n - 0.5) {
+                            icon.className = 'rp-star-icon fa-solid fa-star-half-stroke';
+                            icon.style.color = FILLED_COLOR;
+                        } else {
+                            icon.className = 'rp-star-icon fa-regular fa-star';
+                            icon.style.color = empty;
+                        }
                     });
+                };
 
+                const setLabel = (val, locked=false) => {
+                    if (!label) return;
+                    if (val > 0) {
+                        label.textContent = locked
+                            ? `✅ Đã chọn ${val} sao – ${LABELS[val] || val + ' sao'}`
+                            : `${val} sao – ${LABELS[val] || ''}`;
+                        label.classList.add('is-active');
+                    } else {
+                        label.textContent = @js(__('courses::clients/common.rating_hint_label'));
+                        label.classList.remove('is-active');
+                    }
+                };
+
+                const showErr = (msg) => {
+                    if (errBox && errTxt) { errTxt.textContent = msg; errBox.classList.remove('d-none'); }
+                    else if (window.showMessage) window.showMessage(msg, 'error');
+                };
+                const hideErr = () => { if (errBox) errBox.classList.add('d-none'); };
+
+                // Hover
+                spots.forEach(s => {
+                    s.addEventListener('mouseenter', () => {
+                        const v = parseFloat(s.dataset.value);
+                        paintStars(v);
+                        setLabel(v);
+                    });
+                    // Click → lock selection
+                    s.addEventListener('click', () => {
+                        chosen = parseFloat(s.dataset.value);
+                        if (input) input.value = chosen;
+                        paintStars(chosen);
+                        setLabel(chosen, true);
+                        hideErr();
+                    });
+                });
+
+                // Mouse leave picker → restore chosen (or reset)
+                const picker = form.querySelector('[data-rating-track]');
+                if (picker) {
+                    picker.addEventListener('mouseleave', () => {
+                        paintStars(chosen || 0);
+                        chosen ? setLabel(chosen, true) : setLabel(0);
+                    });
+                }
+
+                // Submit validation (capture phase — runs before global handler)
+                form.addEventListener('submit', (e) => {
+                    const v = input ? parseFloat(input.value) : 0;
+                    if (!v || v < 0.5 || v > 5) {
+                        e.stopImmediatePropagation(); e.preventDefault();
+                        showErr(@js(__('courses::clients/common.rating_invalid')));
+                        const p = form.querySelector('.rp-picker');
+                        if (p) { p.classList.add('rp-shake'); setTimeout(() => p.classList.remove('rp-shake'), 500); }
+                    }
+                }, true);
+            };
+
+            initCourseRatingPicker();
+            
+            // Re-init on AJAX success
+            const reinitAll = (scope) => {
+                initCommentEditors(scope);
+                initCourseRatingPicker();
+            };
+
+            const handleVisibilityToggle = async (btn) => {
+                try {
+                    const response = await fetch(btn.dataset.action, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                    });
                     const result = await response.json();
-
-                    if (!response.ok || !result.success) {
-                        alert(result.message || @js(__('courses::clients/common.comment_submit_error')));
-                        return;
-                    }
-
-                    destroyCommentEditors();
-                    wrap.innerHTML = result.html;
-                    initCommentEditors();
-                } catch (error) {
-                    alert(@js(__('courses::clients/common.comment_submit_error')));
-                } finally {
-                    if (submitButton) {
-                        submitButton.disabled = false;
-                        submitButton.innerText = originalText;
-                    }
-                }
-            };
-
-            const updateRatingVisual = (form, value, state = 'idle') => {
-                if (!form || !wrap.contains(form)) {
-                    return;
-                }
-
-                const track = form.querySelector('[data-rating-track]');
-                const fill = form.querySelector('[data-rating-fill]');
-                const numericValue = Math.max(0, Math.min(Number(value || 0), 5));
-
-                if (fill) {
-                    fill.style.width = `${numericValue * 20}%`;
-                }
-
-                if (track) {
-                    track.classList.toggle('is-preview', state === 'preview' && numericValue > 0);
-                    track.classList.toggle('is-active', numericValue > 0);
-                }
-            };
-
-            document.addEventListener('submit', (event) => {
-                const form = event.target instanceof HTMLFormElement
-                    ? event.target
-                    : event.target?.closest?.('[data-comment-form]');
-
-                if (!form || !wrap.contains(form) || !form.matches('[data-comment-form]')) {
-                    return;
-                }
-
-                event.preventDefault();
-                event.stopPropagation();
-                submitAsyncForm(form);
-            }, true);
-
-            wrap.addEventListener('click', async (event) => {
-                const ratingOption = event.target.closest('[data-rating-option]');
-                if (ratingOption) {
-                    const ratingForm = ratingOption.closest('form');
-                    if (ratingForm && wrap.contains(ratingForm)) {
-                        ratingForm.querySelector('[data-rating-input]').value = ratingOption.dataset.value;
-                        updateRatingVisual(ratingForm, ratingOption.dataset.value, 'selected');
-
-                        const currentLabel = ratingForm.querySelector('[data-rating-current-label]');
-                        if (currentLabel) {
-                            currentLabel.textContent = @js(__('courses::clients/common.rating_selected_label')) + ' ' + ratingOption.dataset.value;
+                    if (result.success) {
+                        const wrap = getCommentsWrap();
+                        if (wrap) {
+                            destroyCommentEditors(wrap);
+                            wrap.innerHTML = result.html;
+                            reinitAll(wrap);
                         }
                     }
+                } catch (err) { console.error(err); }
+            };
 
-                    return;
+            document.addEventListener('click', (e) => {
+                const toggleBtn = e.target.closest('[data-visibility-form]');
+                if (toggleBtn) {
+                    e.preventDefault();
+                    handleVisibilityToggle(toggleBtn);
                 }
+            });
 
-                const toggleButton = event.target.closest('[data-visibility-form]');
+            document.addEventListener('submit', async (e) => {
+                const form = e.target.closest('[data-comment-form], [data-course-rating-form]');
+                if (!form) return;
 
-                if (!toggleButton) {
-                    return;
-                }
-
-                event.preventDefault();
-
-                try {
-                    const response = await fetch(toggleButton.dataset.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': token,
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json',
-                        },
-                    });
-
-                    const result = await response.json();
-
-                    if (!response.ok || !result.success) {
-                        alert(result.message || @js(__('courses::clients/common.comment_toggle_error')));
+                // The rating form has its own inline validator (runs first via capture phase).
+                // If input is still empty after that, bail out silently (error already shown).
+                const isRatingForm = form.matches('[data-course-rating-form]');
+                if (isRatingForm) {
+                    const ratingVal = parseFloat(form.querySelector('[data-rating-input]')?.value || '0');
+                    if (!ratingVal || ratingVal < 0.5) {
+                        e.preventDefault();
                         return;
                     }
-
-                    destroyCommentEditors();
-                    wrap.innerHTML = result.html;
-                    initCommentEditors();
-                } catch (error) {
-                    alert(@js(__('courses::clients/common.comment_toggle_error')));
-                }
-            });
-
-            wrap.addEventListener('mouseover', (event) => {
-                const ratingOption = event.target.closest('[data-rating-option]');
-                if (!ratingOption) {
-                    return;
                 }
 
-                const ratingForm = ratingOption.closest('form');
-                if (!ratingForm || !wrap.contains(ratingForm)) {
-                    return;
+                e.preventDefault();
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalContent = submitBtn?.innerHTML;
+
+                if (form.matches('[data-comment-form]')) {
+                    syncCommentEditors(form);
                 }
 
-                updateRatingVisual(ratingForm, ratingOption.dataset.value, 'preview');
-
-                const currentLabel = ratingForm.querySelector('[data-rating-current-label]');
-                if (currentLabel) {
-                    currentLabel.textContent = @js(__('courses::clients/common.rating_selected_label')) + ' ' + ratingOption.dataset.value;
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${
+                        isRatingForm
+                            ? (@js(__('courses::clients/common.rating_submit') ?? 'Đang lưu...'))
+                            : (@js(__('courses::clients/common.comment_submitting') ?? 'Đang gửi...'))
+                    }`;
                 }
-            });
-
-            wrap.addEventListener('mouseout', (event) => {
-                const ratingForm = event.target.closest('[data-course-rating-form]');
-                if (!ratingForm || !wrap.contains(ratingForm)) {
-                    return;
-                }
-
-                if (event.relatedTarget && ratingForm.contains(event.relatedTarget)) {
-                    return;
-                }
-
-                const selectedValue = ratingForm.querySelector('[data-rating-input]')?.value || '';
-                updateRatingVisual(ratingForm, selectedValue, selectedValue ? 'selected' : 'idle');
-
-                const currentLabel = ratingForm.querySelector('[data-rating-current-label]');
-                if (currentLabel) {
-                    currentLabel.textContent = selectedValue
-                        ? @js(__('courses::clients/common.rating_selected_label')) + ' ' + selectedValue
-                        : @js(__('courses::clients/common.rating_hint'));
-                }
-            });
-
-            wrap.addEventListener('focusin', (event) => {
-                const ratingOption = event.target.closest('[data-rating-option]');
-                if (!ratingOption) {
-                    return;
-                }
-
-                const ratingForm = ratingOption.closest('form');
-                if (!ratingForm || !wrap.contains(ratingForm)) {
-                    return;
-                }
-
-                updateRatingVisual(ratingForm, ratingOption.dataset.value, 'preview');
-            });
-
-            wrap.addEventListener('focusout', (event) => {
-                const ratingForm = event.target.closest('[data-course-rating-form]');
-                if (!ratingForm || !wrap.contains(ratingForm)) {
-                    return;
-                }
-
-                if (event.relatedTarget && ratingForm.contains(event.relatedTarget)) {
-                    return;
-                }
-
-                const selectedValue = ratingForm.querySelector('[data-rating-input]')?.value || '';
-                updateRatingVisual(ratingForm, selectedValue, selectedValue ? 'selected' : 'idle');
-            });
-
-            wrap.addEventListener('submit', async (event) => {
-                const form = event.target.closest('[data-course-rating-form]');
-                if (!form || !wrap.contains(form)) {
-                    return;
-                }
-
-                event.preventDefault();
 
                 try {
                     const response = await fetch(form.action, {
@@ -938,54 +712,77 @@
                         },
                         body: new FormData(form),
                     });
-
                     const result = await response.json();
 
-                    if (!response.ok || !result.success) {
-                        alert(result.message || @js(__('courses::clients/common.rating_submit_error')));
+                    if (!result.success) {
+                        const msg = result.message || @js(__('courses::clients/common.rating_submit_error') ?? 'Có lỗi xảy ra.');
+                        if (window.showMessage) window.showMessage(msg, 'error');
+
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalContent;
+                        }
                         return;
                     }
 
-                    const ratingWrap = document.getElementById('course-rating-wrap');
-                    if (ratingWrap && result.html) {
-                        ratingWrap.innerHTML = result.html;
+                    if (window.showMessage) {
+                        window.showMessage(
+                            result.message || @js(__('courses::clients/common.rating_success') ?? 'Thành công!'),
+                            'success'
+                        );
                     }
-                } catch (error) {
-                    alert(@js(__('courses::clients/common.rating_submit_error')));
+
+                    if (isRatingForm) {
+                        // Only swap the rating panel, not the whole comments section
+                        const ratingRoot = document.getElementById('course-rating-panel-root');
+                        if (ratingRoot && result.html) {
+                            ratingRoot.outerHTML = result.html;
+                        } else {
+                            // Fallback: refresh full wrap
+                            const wrap = getCommentsWrap();
+                            if (wrap) {
+                                destroyCommentEditors(wrap);
+                                wrap.innerHTML = result.html;
+                                reinitAll(wrap);
+                            }
+                        }
+                    } else {
+                        // Comment: replace full wrap
+                        const wrap = getCommentsWrap();
+                        if (wrap) {
+                            destroyCommentEditors(wrap);
+                            wrap.innerHTML = result.html;
+                            reinitAll(wrap);
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    if (window.showMessage) {
+                        window.showMessage(@js(__('courses::clients/common.rating_submit_error') ?? 'Có lỗi kết nối.'), 'error');
+                    }
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalContent;
+                    }
                 }
             });
 
             initCommentEditors();
-            const countdown = () => {
-                const timerEl = document.querySelector('.countdown-timer');
-                if (!timerEl) return;
 
-                const targetDate = new Date(timerEl.dataset.time).getTime();
-                const update = () => {
-                    const now = new Date().getTime();
-                    const diff = targetDate - now;
-
-                    if (diff <= 0) {
-                        window.location.reload();
-                        return;
+            // Buy button loader
+            const buyBtn = document.querySelector('.js-buy-btn');
+            if (buyBtn) {
+                buyBtn.addEventListener('click', () => {
+                    const text = buyBtn.querySelector('.btn-text');
+                    const loader = buyBtn.querySelector('.btn-loader');
+                    if (text && loader) {
+                        buyBtn.disabled = true;
+                        text.classList.add('d-none');
+                        loader.classList.remove('d-none');
+                        buyBtn.closest('form').submit();
                     }
-
-                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-                    timerEl.querySelector('.days').innerText = String(days).padStart(2, '0');
-                    timerEl.querySelector('.hours').innerText = String(hours).padStart(2, '0');
-                    timerEl.querySelector('.minutes').innerText = String(minutes).padStart(2, '0');
-                    timerEl.querySelector('.seconds').innerText = String(seconds).padStart(2, '0');
-                };
-
-                update();
-                setInterval(update, 1000);
-            };
-
-            countdown();
+                });
+            }
         });
     </script>
 @endsection

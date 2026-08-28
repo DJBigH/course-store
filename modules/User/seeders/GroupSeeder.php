@@ -34,10 +34,13 @@ class GroupSeeder extends Seeder
         ];
 
         foreach ($groups as $group) {
-            Group::query()->updateOrCreate(
+            $record = Group::withTrashed()->updateOrCreate(
                 ['id' => $group['id']],
                 $group
             );
+            if ($record->trashed()) {
+                $record->restore();
+            }
         }
     }
 }

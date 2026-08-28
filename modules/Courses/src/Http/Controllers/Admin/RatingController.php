@@ -38,18 +38,26 @@ class RatingController extends Controller
                 return $rating->created_at->format('d/m/Y H:i');
             })
             ->addColumn('action', function ($rating) {
-                $toggleLabel = $rating->status == 1 ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
-                $toggleTitle = $rating->status == 1 ? 'Ẩn đánh giá' : 'Hiện đánh giá';
-                $toggleClass = $rating->status == 1 ? 'btn-outline-secondary' : 'btn-outline-success';
-
-                return '<div class="d-flex gap-1">
-                            <button type="button" class="btn ' . $toggleClass . ' btn-sm toggle-visibility" data-id="' . $rating->id . '" data-type="course" title="' . $toggleTitle . '">
+                $html = '<div class="d-flex gap-1">';
+                
+                if (auth()->user()?->hasPermission('ratings.moderate')) {
+                    $toggleLabel = $rating->status == 1 ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+                    $toggleTitle = $rating->status == 1 ? 'Ẩn đánh giá' : 'Hiện đánh giá';
+                    $toggleClass = $rating->status == 1 ? 'btn-outline-secondary' : 'btn-outline-success';
+                    
+                    $html .= '<button type="button" class="btn ' . $toggleClass . ' btn-sm toggle-visibility" data-id="' . $rating->id . '" data-type="course" title="' . $toggleTitle . '">
                                 ' . $toggleLabel . '
-                            </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm delete-rating" data-id="' . $rating->id . '" data-type="course" title="Xóa đánh giá">
+                            </button>';
+                }
+
+                if (auth()->user()?->hasPermission('ratings.delete')) {
+                    $html .= '<button type="button" class="btn btn-outline-danger btn-sm delete-rating" data-id="' . $rating->id . '" data-type="course" title="Xóa đánh giá">
                                 <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>';
+                            </button>';
+                }
+
+                $html .= '</div>';
+                return $html;
             })
             ->rawColumns(['rating', 'action', 'course_name', 'student_name'])
             ->make(true);
@@ -77,18 +85,26 @@ class RatingController extends Controller
                 return $rating->created_at->format('d/m/Y H:i');
             })
             ->addColumn('action', function ($rating) {
-                $toggleLabel = $rating->status == 1 ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
-                $toggleTitle = $rating->status == 1 ? 'Ẩn đánh giá' : 'Hiện đánh giá';
-                $toggleClass = $rating->status == 1 ? 'btn-outline-secondary' : 'btn-outline-success';
+                $html = '<div class="d-flex gap-1">';
 
-                return '<div class="d-flex gap-1">
-                            <button type="button" class="btn ' . $toggleClass . ' btn-sm toggle-visibility" data-id="' . $rating->id . '" data-type="teacher" title="' . $toggleTitle . '">
+                if (auth()->user()?->hasPermission('ratings.moderate')) {
+                    $toggleLabel = $rating->status == 1 ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+                    $toggleTitle = $rating->status == 1 ? 'Ẩn đánh giá' : 'Hiện đánh giá';
+                    $toggleClass = $rating->status == 1 ? 'btn-outline-secondary' : 'btn-outline-success';
+
+                    $html .= '<button type="button" class="btn ' . $toggleClass . ' btn-sm toggle-visibility" data-id="' . $rating->id . '" data-type="teacher" title="' . $toggleTitle . '">
                                 ' . $toggleLabel . '
-                            </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm delete-rating" data-id="' . $rating->id . '" data-type="teacher" title="Xóa đánh giá">
+                            </button>';
+                }
+
+                if (auth()->user()?->hasPermission('ratings.delete')) {
+                    $html .= '<button type="button" class="btn btn-outline-danger btn-sm delete-rating" data-id="' . $rating->id . '" data-type="teacher" title="Xóa đánh giá">
                                 <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>';
+                            </button>';
+                }
+
+                $html .= '</div>';
+                return $html;
             })
             ->rawColumns(['rating', 'action', 'teacher_name', 'student_name'])
             ->make(true);
@@ -105,8 +121,22 @@ class RatingController extends Controller
             $rating = TeacherRating::query()->findOrFail($id);
         }
 
+        $oldStatus = $rating->status;
         $rating->status = $rating->status == 1 ? 0 : 1;
         $rating->save();
+
+        activity_log(
+            action: 'toggle_visibility',
+            subject: $rating,
+            properties: [
+                'type' => $type,
+                'old_status' => $oldStatus,
+                'new_status' => $rating->status,
+                'rating_data' => $rating->toArray(),
+            ],
+            logName: 'admin_rating_management',
+            description: ($rating->status == 1 ? 'Hiện' : 'Ẩn') . " đánh giá " . ($type === 'course' ? 'khóa học' : 'giảng viên') . " (ID: {$rating->id})"
+        );
 
         return response()->json(['success' => true]);
     }
@@ -117,10 +147,24 @@ class RatingController extends Controller
         $type = $request->input('type');
 
         if ($type === 'course') {
-            CourseRating::query()->findOrFail($id)->delete();
+            $rating = CourseRating::query()->findOrFail($id);
         } else {
-            TeacherRating::query()->findOrFail($id)->delete();
+            $rating = TeacherRating::query()->findOrFail($id);
         }
+
+        $snapshot = $rating->toArray();
+        $rating->delete();
+
+        activity_log(
+            action: 'delete',
+            subject: null,
+            properties: [
+                'type' => $type,
+                'data' => $snapshot,
+            ],
+            logName: 'admin_rating_management',
+            description: "Xóa đánh giá " . ($type === 'course' ? 'khóa học' : 'giảng viên') . " (ID: {$id})"
+        );
 
         return response()->json(['success' => true]);
     }

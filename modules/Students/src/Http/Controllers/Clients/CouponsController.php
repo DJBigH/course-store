@@ -4,6 +4,7 @@ namespace Modules\Students\src\Http\Controllers\Clients;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 use Modules\Students\src\Repositories\CouponsRepositoryInterface;
 
@@ -36,6 +37,11 @@ class CouponsController extends Controller
             $coupon = $this->couponRepository->verifyCoupon($coupon, $order);
             if (!$coupon) {
                 throw new \Exception(__('students::clients/messages.verify_coupons.coupon_exp'), 400);
+            }
+
+            $student = Auth::guard('students')->user();
+            if ($student && $student->teacher && (int) ($coupon->teacher_id ?? 0) === (int) $student->teacher->id) {
+                throw new \Exception(__('students::clients/messages.verify_coupons.own_coupon'), 400);
             }
 
             $discount = 0;

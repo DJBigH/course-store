@@ -24,29 +24,66 @@ class HomeController extends Controller
         $pageTitle = __('home::common.pageTile');
         $courseFree = $this->courseRepository->getCourseFree();
         $courseView = $this->courseRepository->getCourseView();
+        
+        // Default filter logic
+        $filter = $request->get('filter', 'latest');
+        $studentId = Auth::guard('students')->id();
+        
+        // We use a shared limit for the home section
+        $limit = 8;
+        
+        $courseAll = $this->courseRepository->getFilteredCourses($filter, $studentId, $limit);
         $courseNew = $this->courseRepository->getCourseCreateUpdate();
+        $courseComingSoon = $this->courseRepository->getCourseComingSoon();
 
         $studentId = Auth::guard('students')->id();
         $myCourse = collect();
 
         if ($studentId) {
-            $myCourse = $this->studentRepository
-                ->getPurchasedCourses($studentId, config('paginate.home_mycourse_limit'));
+            $student = Auth::guard('students')->user();
+            $ownTeacherId = $student && $student->teacher ? $student->teacher->id : null;
+            
+            $myCourse = \Modules\Courses\src\Models\Courses::query()
+                ->with('teacher')
+                ->where(function($query) use ($studentId, $ownTeacherId) {
+                    $query->whereHas('students', function($q) use ($studentId) {
+                        $q->where('students.id', $studentId)->where('students_courses.status', 1);
+                    });
+                    
+                    if ($ownTeacherId) {
+                        $query->orWhere('teacher_id', $ownTeacherId);
+                    }
+                })
+                ->latest('created_at')
+                ->paginate(config('paginate.home_mycourse_limit'))
+                ->withQueryString();
         }
 
         if ($request->ajax()) {
+            if ($request->has('filter')) {
+                return view('home::all_course_home_list', compact('courseAll'))->render();
+            }
             return view('home::my_course_home', compact('myCourse'))->render();
         }
 
         $courseAll = $this->courseRepository->getCourseForYou($studentId);
+
+        $courseBundles = \Modules\Courses\src\Models\CourseBundle::query()
+            ->with(['items.course', 'teacher'])
+            ->where('status', 1)
+            ->latest()
+            ->take(8)
+            ->get();
 
         return view('home::index', compact(
             'pageTitle',
             'courseFree',
             'courseView',
             'courseNew',
+            'courseComingSoon',
             'myCourse',
-            'courseAll'
+            'courseAll',
+            'courseBundles'
         ));
     }
 

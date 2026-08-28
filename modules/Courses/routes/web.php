@@ -42,18 +42,18 @@ Route::prefix('admin')->group(function () {
 
       // Ratings
       Route::prefix('ratings')->name('ratings.')->group(function () {
-          Route::get('/', 'Admin\RatingController@index')->middleware('permission:courses.view')->name('index');
-          Route::get('/course-data', 'Admin\RatingController@courseData')->middleware('permission:courses.view')->name('course-data');
-          Route::get('/teacher-data', 'Admin\RatingController@teacherData')->middleware('permission:courses.view')->name('teacher-data');
-          Route::post('/toggle-visibility', 'Admin\RatingController@toggleVisibility')->middleware('permission:courses.edit')->name('toggle-visibility');
-          Route::delete('/delete', 'Admin\RatingController@delete')->middleware('permission:courses.edit')->name('delete');
+          Route::get('/', 'Admin\RatingController@index')->middleware('permission:ratings.view')->name('index');
+          Route::get('/course-data', 'Admin\RatingController@courseData')->middleware('permission:ratings.view')->name('course-data');
+          Route::get('/teacher-data', 'Admin\RatingController@teacherData')->middleware('permission:ratings.view')->name('teacher-data');
+          Route::post('/toggle-visibility', 'Admin\RatingController@toggleVisibility')->middleware('permission:ratings.moderate')->name('toggle-visibility');
+          Route::delete('/delete', 'Admin\RatingController@delete')->middleware('permission:ratings.delete')->name('delete');
       });
    });
 });
 
-Route::group(['prefix' => 'filemanager', 'middleware' => ['web']], function () {
-   \UniSharp\LaravelFilemanager\Lfm::routes();
-});
+    Route::group(['prefix' => 'filemanager', 'middleware' => ['web', 'permission:media.manage']], function () {
+       \UniSharp\LaravelFilemanager\Lfm::routes();
+    });
 
 Route::group([
    'as' => 'courses.',
@@ -76,8 +76,9 @@ Route::group([
    Route::post('/khoa-hoc/{slug}/rating', 'Clients\CourseRatingController@store')
       ->middleware(['auth:students', 'verified', 'user.block'])
       ->name('rating.store');
-   Route::prefix('data')->name('data.')->group(function () {
-      Route::get('/trial/{lessonId?}', 'Clients\CoursesController@getTrialVideo')->name('trial');
+    Route::prefix('data')->name('data.')->group(function () {
+       Route::get('/search/suggest', 'Clients\CourseSearchController@suggest')->name('search.suggest');
+       Route::get('/trial/{lessonId?}', 'Clients\CoursesController@getTrialVideo')->name('trial');
       Route::get('/stream', 'Clients\CoursesController@streamVideo')->name('stream');
    });
    Route::post('/tao-don-combo', [CoursesController::class, 'createBundleOrder'])->middleware(['auth:students', 'verified', 'user.block'])->name('bundle.create');

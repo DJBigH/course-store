@@ -28,14 +28,19 @@ class StudentController extends Controller
     {
         $pageTitle = 'Quản lý học viên';
 
-        return view('students::lists', compact('pageTitle'));
+        $breadcrumbs = [['label' => 'Quản lý học viên']];
+        return view('students::lists', compact('pageTitle', 'breadcrumbs'));
     }
 
     public function trash()
     {
         $pageTitle = 'Thùng rác học viên';
 
-        return view('students::trash', compact('pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Thùng rác']
+        ];
+        return view('students::trash', compact('pageTitle', 'breadcrumbs'));
     }
 
     public function data()
@@ -51,65 +56,105 @@ class StudentController extends Controller
             ->addColumn('select', function ($student) {
                 return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $student->id . '"></div>';
             })
-            ->addColumn('two_factor', function ($student) {
-                return (int) $student->two_factor_email_enabled === 1
-                    ? '<span class="badge rounded-pill" style="background:#2563eb;color:#fff;border:1px solid #2563eb;">Đã bật 2FA</span>'
-                    : '<span class="badge rounded-pill bg-light text-dark border">Chưa bật</span>';
-            })
-            ->addColumn('logs', function ($student) use ($canLogs) {
-                return $canLogs
-                    ? '<a href="' . route('students.logs', $student->id) . '" class="btn btn-light border">Lịch sử</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
-            })
-            ->addColumn('courses', function ($student) use ($canView) {
-                return $canView
-                    ? '<a href="' . route('students.purchased-courses', $student->id) . '" class="btn btn-light border">Khóa học</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
-            })
-            ->addColumn('link', function ($student) use ($canView) {
-                return $canView
-                    ? '<a href="' . route('students.coupon-history', $student->id) . '" class="btn btn-primary">Lịch sử mã</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
-            })
-            ->addColumn('edit', function ($student) use ($canEdit) {
-                return $canEdit
-                    ? '<a href="' . route('students.edit', $student->id) . '" class="btn btn-warning">Sửa</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
-            })
-            ->addColumn('delete', function ($student) use ($canDelete) {
-                return $canDelete
-                    ? '<a href="' . route('students.delete', $student->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
-            })
-            ->editColumn('created_at', function ($student) {
-                return Carbon::parse($student->created_at)->format('d/m/Y H:i:s');
-            })
-            ->editColumn('status', function ($student) {
-                return (int) $student->status === 1
-                    ? '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Kích hoạt</span>'
-                    : '<span class="text-muted"><i class="fa-solid fa-circle-xmark"></i> Chưa kích hoạt</span>';
-            })
-            ->addColumn('roles', function ($student) {
-                $badges = '<span class="badge bg-info text-white me-1">Học viên</span>';
-                if ($student->teacher) {
-                    $badges .= '<span class="badge bg-success text-white">Giảng viên</span>';
-                }
-                return $badges;
-            })
-            ->addColumn('impersonate', function ($student) use ($canEdit) {
-                if (!$canEdit) return '';
+            ->addColumn('student_info', function ($student) {
+                $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($student->name) . '&background=f1f5f9&color=64748b';
                 
-                $html = '<div class="dropdown">';
-                $html .= '<button class="btn btn-sm btn-dark dropdown-toggle" type="button" data-bs-toggle="dropdown">Đăng nhập</button>';
-                $html .= '<ul class="dropdown-menu shadow border-0">';
-                $html .= '<li><a class="dropdown-item" href="' . route('students.impersonate', [$student->id, 'type' => 'student']) . '"><i class="fa-solid fa-user-graduate me-2"></i>Quyền Học viên</a></li>';
+                return '
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="' . $avatar . '" class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                        <div>
+                            <div class="fw-bold text-dark">' . e($student->name) . '</div>
+                            <div class="text-muted small">' . e($student->email) . '</div>
+                        </div>
+                    </div>';
+            })
+            ->addColumn('security_status', function ($student) {
+                $statusBadge = (int) $student->status === 1
+                    ? '<span class="badge bg-success-subtle text-success px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i>Kích hoạt</span>'
+                    : '<span class="badge bg-secondary-subtle text-muted px-2 py-1"><i class="fa-solid fa-circle-xmark me-1"></i>Chưa kích hoạt</span>';
+
+                $twoFactorBadge = (int) $student->two_factor_email_enabled === 1
+                    ? '<span class="badge bg-primary-subtle text-primary px-2 py-1 ms-1">2FA On</span>'
+                    : '<span class="badge bg-light text-muted border px-2 py-1 ms-1" style="font-size: 10px;">2FA Off</span>';
+
                 if ($student->teacher) {
-                    $html .= '<li><a class="dropdown-item" href="' . route('students.impersonate', [$student->id, 'type' => 'teacher']) . '"><i class="fa-solid fa-chalkboard-user me-2"></i>Quyền Giảng viên</a></li>';
+                    $rolesBadge = '<span class="badge bg-success text-white px-2 py-1 ms-1" style="font-size: 10px;">Giảng viên</span>';
+                } else {
+                    $rolesBadge = '<span class="badge bg-info-subtle text-info px-2 py-1 ms-1">Học viên</span>';
                 }
-                $html .= '</ul></div>';
+
+                return '
+                    <div class="d-flex flex-wrap gap-1 align-items-center">
+                        ' . $statusBadge . '
+                        ' . $twoFactorBadge . '
+                        ' . $rolesBadge . '
+                    </div>';
+            })
+            ->addColumn('email_verified', function ($student) {
+                return $student->email_verified_at
+                    ? '<span class="badge bg-success-subtle text-success px-2 py-1"><i class="fa-solid fa-envelope-circle-check me-1"></i>Đã xác thực</span>'
+                    : '<span class="badge bg-danger-subtle text-danger px-2 py-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>Chưa xác thực</span>';
+            })
+            ->addColumn('courses_list', function ($student) {
+                if ($student->courses->isEmpty()) {
+                    return '<span class="text-muted small">Chưa đăng ký khóa học</span>';
+                }
+                
+                $html = '<div class="d-flex flex-column gap-1" style="max-width: 300px;">';
+                foreach ($student->courses->take(3) as $course) {
+                    $teacherName = $course->teacher ? e($course->teacher->name) : 'N/A';
+                    $html .= '<div class="text-truncate small" title="' . e($course->name) . ' - GV: ' . $teacherName . '">
+                                <i class="fa-solid fa-book text-muted me-1"></i> ' . e($course->name) . ' 
+                                <span class="text-secondary">(GV: ' . $teacherName . ')</span>
+                              </div>';
+                }
+                if ($student->courses->count() > 3) {
+                    $html .= '<div class="text-primary small fw-semibold">+ ' . ($student->courses->count() - 3) . ' khóa học khác</div>';
+                }
+                $html .= '</div>';
+                
                 return $html;
             })
-            ->rawColumns(['select', 'two_factor', 'edit', 'delete', 'status', 'link', 'courses', 'logs', 'roles', 'impersonate'])
+            ->editColumn('created_at', function ($student) {
+                return '<div class="small text-muted">' . Carbon::parse($student->created_at)->format('d/m/Y') . '</div>';
+            })
+            ->addColumn('actions', function ($student) use ($canEdit, $canView, $canLogs, $canDelete) {
+                $btn = '<div class="dropdown">
+                            <button class="btn btn-light btn-sm border dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">';
+
+                if ($canView) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('students.purchased-courses', $student->id) . '"><i class="fa-solid fa-book-open text-info me-2"></i>Khóa học đã mua</a></li>';
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('students.coupon-history', $student->id) . '"><i class="fa-solid fa-ticket text-primary me-2"></i>Lịch sử mã giảm</a></li>';
+                }
+
+                if ($canLogs) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('students.logs', $student->id) . '"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i>Lịch sử thao tác</a></li>';
+                }
+
+                if ($canEdit) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('students.edit', $student->id) . '"><i class="fa-solid fa-user-pen text-warning me-2"></i>Chỉnh sửa</a></li>';
+                    
+                    $btn .= '<li><hr class="dropdown-divider my-1"></li>';
+                    $btn .= '<li class="dropdown-header small text-muted py-1">Đăng nhập giả lập</li>';
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('students.impersonate', [$student->id, 'type' => 'student']) . '"><i class="fa-solid fa-user-graduate text-dark me-2"></i>Quyền Học viên</a></li>';
+                    
+                    if ($student->teacher) {
+                        $btn .= '<li><a class="dropdown-item py-2" href="' . route('students.impersonate', [$student->id, 'type' => 'teacher']) . '"><i class="fa-solid fa-chalkboard-user text-dark me-2"></i>Quyền Giảng viên</a></li>';
+                    }
+                }
+
+                if ($canDelete) {
+                    $btn .= '<li><hr class="dropdown-divider my-1"></li>';
+                    $btn .= '<li><a class="dropdown-item py-2 text-danger delete-action" href="' . route('students.delete', $student->id) . '"><i class="fa-solid fa-trash me-2"></i>Xóa học viên</a></li>';
+                }
+
+                $btn .= '</ul></div>';
+                return $btn;
+            })
+            ->rawColumns(['select', 'student_info', 'security_status', 'email_verified', 'courses_list', 'created_at', 'actions'])
             ->toJson();
     }
 
@@ -224,7 +269,11 @@ class StudentController extends Controller
     {
         $pageTitle = 'Thêm mới học viên';
 
-        return view('students::create', compact('pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Thêm mới']
+        ];
+        return view('students::create', compact('pageTitle', 'breadcrumbs'));
     }
 
     public function store(studentRequest $request)
@@ -236,6 +285,7 @@ class StudentController extends Controller
             'password' => bcrypt($request->password),
             'address' => $request->address,
             'phone' => $request->phone,
+            'email_verified_at' => $request->boolean('email_verified') ? now() : null,
         ];
 
         $student = $this->studentRepository->create($dataInsert);
@@ -262,7 +312,11 @@ class StudentController extends Controller
             abort(404);
         }
 
-        return view('students::edit', compact('students', 'pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Cập nhật']
+        ];
+        return view('students::edit', compact('students', 'pageTitle', 'breadcrumbs'));
     }
 
     public function update(studentRequest $request, $id)
@@ -276,7 +330,15 @@ class StudentController extends Controller
         $old = $studentModel->toArray();
         unset($old['password']);
 
-        $data = $request->except('_token', 'password');
+        $data = $request->except('_token', 'password', 'email_verified');
+
+        if ($request->boolean('email_verified')) {
+            if (!$studentModel->email_verified_at) {
+                $data['email_verified_at'] = now();
+            }
+        } else {
+            $data['email_verified_at'] = null;
+        }
 
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
@@ -361,6 +423,14 @@ class StudentController extends Controller
         if ($action === 'restore') {
             foreach ($students as $student) {
                 $student->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $student->fresh(),
+                    properties: ['restored_from_trash' => true],
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục học viên từ thùng rác'
+                );
             }
 
             return back()->with('msg', 'Đã khôi phục ' . $students->count() . ' học viên.');
@@ -368,10 +438,22 @@ class StudentController extends Controller
 
         if ($action === 'force_delete') {
             foreach ($students as $student) {
+                $snapshot = method_exists($student, 'toArray') ? $student->toArray() : (array) $student;
                 $this->logoutStudentSessions($student->id);
                 $student->courses()->detach();
                 $student->coupons()->detach();
                 $student->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $student,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn học viên'
+                );
             }
 
             return back()->with('msg', 'Đã xóa vĩnh viễn ' . $students->count() . ' học viên.');
@@ -390,6 +472,14 @@ class StudentController extends Controller
 
         $student->restore();
 
+        activity_log(
+            action: 'restore',
+            subject: $student->fresh(),
+            properties: ['restored_from_trash' => true],
+            logName: 'Khôi phục',
+            description: 'Khôi phục học viên thành công.'
+        );
+
         return back()->with('msg', 'Khôi phục học viên thành công.');
     }
 
@@ -401,10 +491,22 @@ class StudentController extends Controller
             abort(404);
         }
 
+        $snapshot = method_exists($student, 'toArray') ? $student->toArray() : (array) $student;
         $this->logoutStudentSessions($student->id);
         $student->courses()->detach();
         $student->coupons()->detach();
         $student->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $student,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn học viên'
+        );
 
         return back()->with('msg', 'Đã xóa vĩnh viễn học viên.');
     }
@@ -415,7 +517,11 @@ class StudentController extends Controller
 
         $student = Student::with(['coupons'])->findOrFail($id);
 
-        return view('students::coupon_history', compact('student', 'pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Lịch sử mã giảm']
+        ];
+        return view('students::coupon_history', compact('student', 'pageTitle', 'breadcrumbs'));
     }
 
     public function purchasedCourses($id)
@@ -435,7 +541,11 @@ class StudentController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'teacher_id']);
 
-        return view('students::course_student', compact('student', 'courses', 'allCourses', 'pageTitle'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Khóa học đã mua']
+        ];
+        return view('students::course_student', compact('student', 'courses', 'allCourses', 'pageTitle', 'breadcrumbs'));
     }
 
     public function searchCourses(Request $request)
@@ -572,7 +682,19 @@ class StudentController extends Controller
             ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
-        return view('students::logs', compact('pageTitle', 'student', 'logs'));
+        $loginLogs = ActiveLog::query()
+            ->where('subject_type', get_class($student))
+            ->where('subject_id', $student->id)
+            ->where('action', 'login')
+            ->latest()
+            ->take(10)
+            ->get();
+
+        $breadcrumbs = [
+            ['label' => 'Quản lý học viên', 'link' => route('students.index')],
+            ['label' => 'Lịch sử hoạt động']
+        ];
+        return view('students::logs', compact('pageTitle', 'student', 'logs', 'loginLogs', 'breadcrumbs'));
     }
 
     protected function logoutStudentSessions(int $studentId): void

@@ -2,6 +2,21 @@
 
 @section('content')
     @php
+        if (!function_exists('hexToRgba')) {
+            function hexToRgba($hex, $opacity = 1) {
+                $hex = str_replace('#', '', $hex);
+                if (strlen($hex) == 3) {
+                    $r = hexdec(substr($hex, 0, 1) . substr($hex, 0, 1));
+                    $g = hexdec(substr($hex, 1, 1) . substr($hex, 1, 1));
+                    $b = hexdec(substr($hex, 2, 1) . substr($hex, 2, 1));
+                } else {
+                    $r = hexdec(substr($hex, 0, 2));
+                    $g = hexdec(substr($hex, 2, 2));
+                    $b = hexdec(substr($hex, 4, 2));
+                }
+                return "rgba($r, $g, $b, $opacity)";
+            }
+        }
         $teacherLocale = session('locale', app()->getLocale());
         $teacherCanCustomizeLanding = $teacher?->packageHasFeature('can_customize_teacher_landing') ?? false;
         $teacherLandingUrl = $teacher
@@ -55,16 +70,7 @@
         $fieldLabel = static function (string $key): string {
             return __("courses::teacher/messages.profile.fields.$key");
         };
-        $teacherBadge = $teacher?->primary_badge;
-        $badgeIcon = match($teacherBadge['tone'] ?? 'slate') {
-            'blue' => 'fa-circle-check',
-            'gold' => 'fa-star',
-            'emerald' => 'fa-arrow-trend-up',
-            'violet' => 'fa-magic-wand-sparkles',
-            'rose' => 'fa-gem',
-            'slate' => 'fa-certificate',
-            default => 'fa-certificate',
-        };
+        $teacherBadges = $teacher?->badge_labels ?? [];
         $profileErrorKeys = [
             'name', 'phone', 'address', 'image',
             'display_name', 'headline', 'experience_years', 'specialties', 'bio',
@@ -72,9 +78,12 @@
         ];
         $passwordErrorKeys = ['current_password', 'password', 'password_confirmation'];
         $securityErrorKeys = [];
+        $telegramErrorKeys = ['telegram_chat_id', 'is_telegram_notifications_enabled'];
         $activeProfileTab = 'profile';
 
-        if (collect($passwordErrorKeys)->contains(fn ($key) => $errors->has($key))) {
+        if (collect($telegramErrorKeys)->contains(fn ($key) => $errors->has($key))) {
+            $activeProfileTab = 'telegram';
+        } elseif (collect($passwordErrorKeys)->contains(fn ($key) => $errors->has($key))) {
             $activeProfileTab = 'password';
         } elseif (collect($securityErrorKeys)->contains(fn ($key) => $errors->has($key))) {
             $activeProfileTab = 'security';
@@ -88,11 +97,16 @@
                 <div>
                     <h3 class="fw-bold mb-2">{{ __('courses::teacher/messages.profile.title') }}</h3>
                     <p class="text-muted mb-0">{{ __('courses::teacher/messages.profile.description') }}</p>
-                    {{-- @if ($teacherBadge)
-                        <div class="teacher-profile-current-badge teacher-profile-current-badge--{{ $teacherBadge['tone'] }}">
-                            {{ $teacherBadge['label'] }}
+                    @if (!empty($teacherBadges))
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            @foreach ($teacherBadges as $badge)
+                                <span class="badge" style="background-color: {{ $badge['color_bg'] ?? '#e2e8f0' }}; color: {{ $badge['color_text'] ?? '#475569' }}; font-size: 0.68rem; padding: 0.45rem 1rem; border-radius: 999px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    <i class="{{ $badge['icon'] }} me-1"></i>
+                                    {{ $badge['label'] }}
+                                </span>
+                            @endforeach
                         </div>
-                    @endif --}}
+                    @endif
                 </div>
                 <span class="teacher-status-badge">
                     {{ $student->two_factor_email_enabled ? __('courses::teacher/messages.profile.two_factor.enabled') : __('courses::teacher/messages.profile.two_factor.disabled') }}
@@ -137,6 +151,12 @@
                             {{ $student->two_factor_email_enabled ? __('courses::teacher/messages.profile.two_factor.enabled_short') : __('courses::teacher/messages.profile.two_factor.disabled_short') }}
                         </span>
                     </button>
+                    <button type="button"
+                        class="teacher-profile-tab-button {{ $activeProfileTab === 'telegram' ? 'is-active' : '' }}"
+                        data-profile-tab="telegram">
+                        <i class="fa-brands fa-telegram"></i>
+                        <span>Telegram</span>
+                    </button>
                 </div>
             </div>
 
@@ -150,13 +170,21 @@
                             <h4>{{ __('courses::teacher/messages.profile.basic.title') }}</h4>
                             <p class="text-muted mb-4">{{ __('courses::teacher/messages.profile.basic.description') }}</p>
 
-                            @if ($teacherBadge)
-                                <div class="teacher-profile-badge-banner teacher-profile-badge-banner--{{ $teacherBadge['tone'] }}">
-                                    <div class="teacher-profile-badge-banner__icon">
-                                        <i class="fas {{ $badgeIcon }}"></i>
-                                    </div>
-                                    <strong>{{ __('courses::teacher/messages.profile.basic.badge_label') }}</strong>
-                                    <span class="">{{ $teacherBadge['label'] }}</span>
+                            @if (!empty($teacherBadges))
+                                <div class="teacher-profile-badge-list d-flex flex-wrap gap-3 mb-4 mt-2">
+                                    @foreach ($teacherBadges as $badge)
+                                        <div class="teacher-profile-badge-banner" style="background-color: {{ hexToRgba($badge['color_bg'] ?? '#f1f5f9', 0.1) }}; color: {{ $badge['color_text'] ?? '#0f172a' }}; border-color: {{ hexToRgba($badge['color_bg'] ?? '#f1f5f9', 0.15) }}; width: fit-content; min-width: 180px;">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="teacher-profile-badge-banner__icon-wrap" style="background: {{ hexToRgba($badge['color_bg'] ?? '#f1f5f9', 0.18) }}; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: {{ $badge['color_bg'] ?? '#f1f5f9' }};">
+                                                    <i class="{{ $badge['icon'] }}" style="font-size: 1.1rem;"></i>
+                                                </div>
+                                                <div style="line-height: 1.2;">
+                                                    <strong style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; display: block; margin-bottom: 2px;">{{ __('courses::teacher/messages.profile.basic.badge_label') }}</strong>
+                                                    <span style="font-size: 0.9rem; font-weight: 900; display: block;">{{ $badge['label'] }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             @endif
 
@@ -565,6 +593,74 @@
                     </div>
                 </div>
 
+                <div class="teacher-profile-tab-panel {{ $activeProfileTab === 'telegram' ? 'is-active' : '' }}" data-profile-panel="telegram">
+                    <div class="teacher-profile-card teacher-profile-card--narrow">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <h4>Tích hợp Telegram</h4>
+                                <p class="text-muted mb-0">Nhận thông báo trực tiếp về doanh thu, đơn hàng, nhận xét và tương tác hai chiều thông qua Bot Telegram.</p>
+                            </div>
+                            @php
+                                $telegramStatus = $teacher?->getTelegramPackageStatus() ?? ['status' => 'inactive', 'expires_at' => null];
+                            @endphp
+                            @if($telegramStatus['status'] === 'active')
+                                <span class="badge bg-success">Đang hoạt động</span>
+                            @else
+                                <span class="badge bg-danger">Hết hạn / Chưa mua</span>
+                            @endif
+                        </div>
+
+                        <div class="mt-4">
+                            @if($telegramStatus['status'] === 'active')
+                                <div class="alert alert-info border-0 rounded-3 mb-4" style="background-color: rgba(59, 130, 246, 0.1);">
+                                    <h6 class="fw-bold text-primary"><i class="fa-solid fa-circle-info me-2"></i>Hướng dẫn kết nối</h6>
+                                    <ul class="mb-0 small ps-3 mt-2 text-dark">
+                                        <li class="mb-1"><strong>Bước 1:</strong> Bấm vào link Bot <a href="https://t.me/{{ config('services.telegram.bot_username', 'your_bot') }}" target="_blank" class="fw-bold text-primary">Bot Telegram Hệ Thống</a></li>
+                                        <li class="mb-1"><strong>Bước 2:</strong> Gửi tin nhắn bất kỳ cho Bot để lấy ID của bạn. Bot sẽ phản hồi lại Chat ID.</li>
+                                        <li class="mb-1"><strong>Bước 3:</strong> Nhập Chat ID vào ô bên dưới và bấm Lưu cấu hình.</li>
+                                        <li class="mt-2 text-muted"><em>Bạn có thể dùng các lệnh <code>/status</code>, <code>/order</code>, <code>/hsd</code> trên Telegram.</em></li>
+                                    </ul>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label">Telegram Chat ID</label>
+                                        <input type="text" name="telegram_chat_id" class="form-control @error('telegram_chat_id') is-invalid @enderror" value="{{ old('telegram_chat_id', $teacher->telegram_chat_id) }}">
+                                        @error('telegram_chat_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check form-switch mt-2">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="is_telegram_notifications_enabled" name="is_telegram_notifications_enabled" value="1" @checked(old('is_telegram_notifications_enabled', $teacher->is_telegram_notifications_enabled))>
+                                            <label class="form-check-label ms-2" style="user-select: none; cursor: pointer;" for="is_telegram_notifications_enabled">Bật thông báo tự động (Đơn hàng, đánh giá...)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="teacher-section-submit mt-4">
+                                    <button type="submit" name="profile_section" value="telegram" class="btn btn-primary" formnovalidate>
+                                        Lưu cấu hình Telegram
+                                    </button>
+                                </div>
+                            @else
+                                <div class="alert alert-warning border-0 rounded-3">
+                                    <i class="fa-solid fa-lock me-2"></i> <strong>Tính năng bị khóa hoặc đã hết hạn</strong><br>
+                                    Vui lòng gia hạn gói của bạn để tiếp tục sử dụng tính năng thông báo và Bot Telegram.
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label text-muted">Telegram Chat ID</label>
+                                        <input type="text" class="form-control bg-light" value="{{ $teacher?->telegram_chat_id }}" disabled>
+                                    </div>
+                                </div>
+                            @endif
+                            
+                            @if($telegramStatus['expires_at'])
+                                <div class="text-muted small mt-4 pt-3 border-top">
+                                    <i class="fa-regular fa-clock me-1"></i> Gói Telegram của bạn có hiệu lực đến: <strong>{{ $telegramStatus['expires_at']->format('d/m/Y H:i:s') }}</strong>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
             </form>
 
             <form id="teacher-two-factor-enable-form" action="{{ route('students.account.two-factor.enable', ['locale' => $teacherLocale]) }}" method="POST" class="d-none">
@@ -714,16 +810,13 @@
 
         .teacher-profile-badge-banner {
             position: relative;
-            display: inline-grid;
-            grid-template-columns: 48px minmax(0, 1fr);
-            align-items: center;
-            column-gap: 0.9rem;
-            row-gap: 0.12rem;
-            width: min(100%, 360px);
-            margin: 0 0 1.25rem;
-            padding: 0.9rem 1rem;
-            border-radius: 18px;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            display: inline-block;
+            width: auto;
+            margin: 0.5rem 0 1.25rem;
+            padding: 0.75rem 1.15rem;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            transition: 0.2s ease;
         }
 
         .teacher-profile-badge-banner__icon {

@@ -12,6 +12,11 @@ return [
         'starter' => 'Starter',
         'pro' => 'Pro',
     ],
+    'categories' => [
+        'standard' => '標準プラン',
+        'partnership' => 'パートナープラン',
+        'subscription' => 'サブスクリプション',
+    ],
     'ui' => [
         'hero_login_prefix' => 'すでに講師の方は',
         'hero_login_link' => 'こちらからログイン',
@@ -26,6 +31,7 @@ return [
         'final_kicker' => '準備ができたら始めましょう',
         'free_label' => '無料',
     ],
+    'one_time' => '初回のみ',
     'hero' => [
         'eyebrow' => 'Teacher Program',
         'title' => 'あなたの知識を、成長できる講師チャンネルへ変えてみませんか。',

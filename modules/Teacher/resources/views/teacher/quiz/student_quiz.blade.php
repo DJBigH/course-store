@@ -1,6 +1,7 @@
 @extends('layouts.client')
 
 @section('content')
+    @include('part.clients.page_title')
     <div class="container py-4" style="max-width: 860px">
         <div class="card mb-4">
             <div class="card-body">

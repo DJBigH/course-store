@@ -11,6 +11,8 @@ use Modules\Packages\src\Models\Package;
 use Modules\Packages\src\Support\PackageLifecycleManager;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Teacher\src\Models\TeacherApplication;
+use Modules\Orders\src\Models\Order;
+use App\Jobs\SendTelegramTeacherNotification;
 
 class PackageGrantController extends Controller
 {
@@ -72,7 +74,7 @@ class PackageGrantController extends Controller
 
             return [
                 'id'         => $teacher->id,
-                'text'       => $teacher->name_locale,
+                'text'       => $teacher->name_locale . ' (' . ($teacher->student?->email ?? 'N/A') . ')',
                 'email'      => $teacher->student?->email ?? '',
                 'image'      => $teacher->image ?: null,
                 'package'    => $packageInfo,
@@ -151,6 +153,7 @@ class PackageGrantController extends Controller
                 'intro_video_url'             => $sourceApplication?->intro_video_url,
                 'cv_file'                     => $sourceApplication?->cv_file,
                 'identity_file'               => $sourceApplication?->identity_file,
+                'type'                        => 'upgrade',
                 'submitted_at'                => now(),
                 'reviewed_at'                 => now(),
                 'reviewed_by'                 => $adminId,
@@ -176,6 +179,27 @@ class PackageGrantController extends Controller
                 $noteContent .= '|note:' . $adminNote;
             }
             $grantApplication->forceFill(['admin_note' => $noteContent])->save();
+
+            // Create Order record for tracking
+            $grantApplication->orders()->create([
+                'code' => 'GIFT' . strtoupper(uniqid()),
+                'student_id' => $teacher->student_id,
+                'total' => 0,
+                'status_id' => 2, // Success
+                'type' => 'teacher_upgrade',
+                'payment_method' => 'gift',
+                'payment_complete_date' => now(),
+                'currency' => 'VND'
+            ]);
+
+            // Notify via Telegram if teacher has feature
+            if ($teacher->hasTelegramFeature()) {
+                $msg = "🎁 <b>BẠN CÓ QUÀ TẶNG GÓI ĐẶC QUYỀN!</b>\n\n";
+                $msg .= "Quản trị viên vừa tặng cho bạn gói: <b>" . ($package->name_locale ?: $package->name) . "</b>\n";
+                $msg .= "Hãy truy cập vào hệ thống để nhận quà ngay nhé!";
+                
+                dispatch(new SendTelegramTeacherNotification($teacher, $msg));
+            }
         }
 
         // Log hành động admin
@@ -220,7 +244,8 @@ class PackageGrantController extends Controller
             return;
         }
 
-        $claimUrl = route('teacher.dashboard.package.claim', ['token' => $claimToken]);
+        $locale   = $teacher->student?->preferredLocale() ?? app()->getLocale();
+        $claimUrl = route('teacher.dashboard.package.claim', ['locale' => $locale, 'token' => $claimToken]);
 
         try {
             $student->notify(new \Modules\Packages\src\Notifications\PackageGrantedNotification(
@@ -244,7 +269,7 @@ class PackageGrantController extends Controller
         }
 
         $locale   = $teacher->student?->preferredLocale() ?? app()->getLocale();
-        $claimUrl = route('teacher.dashboard.package.claim', ['token' => $claimToken]);
+        $claimUrl = route('teacher.dashboard.package.claim', ['locale' => $locale, 'token' => $claimToken]);
 
         try {
             Mail::to($teacherEmail)

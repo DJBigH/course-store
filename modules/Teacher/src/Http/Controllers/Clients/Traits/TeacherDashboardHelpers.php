@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Categories\src\Models\Category;
 use Modules\Courses\src\Models\Courses;
+use Modules\Courses\src\Models\CourseQuiz;
 use Modules\Courses\src\Models\CourseViewTracking;
 use Modules\Coupons\src\Models\Coupons;
 use Modules\Lessons\src\Models\Lesson;
@@ -139,6 +140,7 @@ trait TeacherDashboardHelpers
                 ? max(now()->startOfDay()->diffInDays($pendingUpgradeStartsAt->copy()->startOfDay(), false), 0)
                 : null,
             'pending_upgrade_is_queued' => $pendingUpgradeIsQueued,
+            'telegram_status' => $teacher->getTelegramPackageStatus(),
         ];
     }
 
@@ -459,6 +461,19 @@ trait TeacherDashboardHelpers
             ->values();
     }
 
+    protected function resolveAvailableBalance(Teacher $teacher): float
+    {
+        $effectiveCommissionRate = $this->resolveEffectiveCommissionRate($teacher);
+        $allTimeOrderDetails = $this->paidOrderDetailsQuery($teacher)->get();
+        $allTimeSummary = TeacherFinanceCalculator::summarize(
+            $allTimeOrderDetails,
+            $this->getCommissionResolver($effectiveCommissionRate)
+        );
+        $payoutRequested = $this->resolveCommittedPayoutAmount($teacher);
+
+        return max((float) ($allTimeSummary['teacher_revenue'] ?? 0) - $payoutRequested, 0);
+    }
+
     protected function resolveCommittedPayoutAmount(Teacher $teacher): float
     {
         return (float) TeacherPayoutRequest::query()
@@ -610,7 +625,17 @@ trait TeacherDashboardHelpers
             $query->where('id', '!=', (int) $currentPackage->id);
         }
 
-        return $query->get();
+        return $query->take(5)->get();
+    }
+
+    protected function canChangePackage(?Package $currentPackage, Package $targetPackage): bool
+    {
+        if (!$currentPackage) {
+            return false;
+        }
+
+        return $this->resolveAvailablePackageChanges($currentPackage)
+            ->contains('id', $targetPackage->id);
     }
 
     protected function resolveOpenPackageChangeRequest(Teacher $teacher): ?TeacherApplication
@@ -2769,7 +2794,7 @@ trait TeacherDashboardHelpers
                 $this->paidOrderDetailsQuery($teacher),
                 $range
             )->get(),
-            fn () => $effectiveCommissionRate
+            $this->getCommissionResolver($effectiveCommissionRate)
         );
 
         $daily = $paidDetails
@@ -2849,7 +2874,7 @@ trait TeacherDashboardHelpers
                 $this->paidOrderDetailsQuery($teacher),
                 $range
             )->get(),
-            fn () => $effectiveCommissionRate
+            $this->getCommissionResolver($effectiveCommissionRate)
         );
 
         $courseRevenueMap = $paidDetails
@@ -2939,7 +2964,7 @@ trait TeacherDashboardHelpers
                 $this->paidOrderDetailsQuery($teacher),
                 $range
             )->take(12)->get(),
-            fn () => $effectiveCommissionRate
+            $this->getCommissionResolver($effectiveCommissionRate)
         );
 
         return [
@@ -3139,6 +3164,7 @@ trait TeacherDashboardHelpers
         $students = Student::query()
             ->withTrashed()
             ->whereIn('id', $studentIds)
+            ->where('id', '!=', (int) $teacher->student_id)
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($nested) use ($search) {
                     $nested->where('name', 'like', '%' . $search . '%')
@@ -3497,4 +3523,14 @@ trait TeacherDashboardHelpers
                 : __('teacher::teacher/bundle/common.flash.created'));
     }
 
+    protected function getCommissionResolver(float $effectiveCommissionRate): \Closure
+    {
+        return function ($detail) use ($effectiveCommissionRate) {
+            if ($detail->order?->type === 'telegram_package') {
+                if ($detail->order?->payment_method === 'wallet') return -100;
+                return 0;
+            }
+            return $effectiveCommissionRate;
+        };
+    }
 }

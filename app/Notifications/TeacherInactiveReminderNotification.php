@@ -6,7 +6,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TeacherInactiveReminderNotification extends Notification
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class TeacherInactiveReminderNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -23,32 +25,42 @@ class TeacherInactiveReminderNotification extends Notification
 
     public function toMail($notifiable): MailMessage
     {
-        $teacherName = $this->teacher->name_locale ?? $this->teacher->name ?? 'giang vien';
-        $packageName = $this->teacher->currentPackage()?->name_locale ?? 'goi hien tai';
+        $teacherName = $this->teacher->name_locale ?? $this->teacher->name ?? 'giảng viên';
+        $packageName = $this->teacher->currentPackage()?->name_locale ?? 'gói hiện tại';
 
         return (new MailMessage)
-            ->subject('Nhac nho hoat dong kenh giang vien')
-            ->greeting('Xin chao ' . ($notifiable->name ?? $teacherName) . ',')
-            ->line('Kenh giang vien cua ban da khong co hoat dong trong ' . $this->inactiveDays . ' ngay.')
-            ->line('Goi hien tai: ' . $packageName . '. Neu ban van muon tiep tuc su dung, hay dang nhap de cap nhat noi dung, tra loi binh luan hoac kiem tra hoc vien.')
-            ->action('Mo Teacher Studio', route('teacher.dashboard.index'))
-            ->line('Thong bao nay chi de nhac ban khong bo lo kenh cua minh.');
+            ->subject('Nhắc nhở hoạt động kênh giảng viên')
+            ->greeting('Xin chào ' . ($notifiable->name ?? $teacherName) . ',')
+            ->line('Kênh giảng viên của bạn đã không có hoạt động trong ' . $this->inactiveDays . ' ngày.')
+            ->line('Gói hiện tại: ' . $packageName . '. Nếu bạn vẫn muốn tiếp tục sử dụng, hãy đăng nhập để cập nhật nội dung, trả lời bình luận hoặc kiểm tra học viên.')
+            ->action('Mở Teacher Studio', route('teacher.dashboard.index'))
+            ->line('Thông báo này chỉ để nhắc bạn không bỏ lỡ kênh của mình.');
     }
 
     public function toArray($notifiable): array
     {
+        $titleTranslations = [
+            'vi' => 'Nhắc nhở hoạt động kênh giảng viên',
+            'en' => 'Teacher activity reminder',
+            'ko' => '강사 활동 리마인더',
+            'ja' => '講師活動のリマインダー',
+            'zh' => '讲师活动提醒',
+        ];
+
+        $messageTranslations = [
+            'vi' => 'Kênh giảng viên của bạn đã không có hoạt động trong ' . $this->inactiveDays . ' ngày. Đăng nhập lại để tiếp tục quản lý khóa học và học viên.',
+            'en' => 'Your teacher portal has been inactive for ' . $this->inactiveDays . ' days. Sign in again to continue managing your courses and students.',
+            'ko' => '강사 대시보드가 ' . $this->inactiveDays . '일 동안 비활성 상태였습니다. 다시 로그인하여 강의와 학생들을 관리하세요.',
+            'ja' => '講師ダッシュボードが ' . $this->inactiveDays . ' 日間活動していません。再ログインしてコースと受講生を管理しましょう。',
+            'zh' => '您的讲师后台已有 ' . $this->inactiveDays . ' 天未活动。请重新登录以继续管理您的课程 và 学生。',
+        ];
+
         return [
             'type' => 'teacher.inactive.reminder',
-            'title' => 'Nhac nho hoat dong kenh giang vien',
-            'title_translations' => [
-                'vi' => 'Nhắc nhở hoạt động kênh giảng viên',
-                'en' => 'Teacher activity reminder',
-            ],
-            'message' => 'Kenh giang vien cua ban da khong co hoat dong trong ' . $this->inactiveDays . ' ngay. Dang nhap lai de tiep tuc quan ly khoa hoc va hoc vien.',
-            'message_translations' => [
-                'vi' => 'Kênh giảng viên của bạn đã không có hoạt động trong ' . $this->inactiveDays . ' ngày. Đăng nhập lại để tiếp tục quản lý khóa học và học viên.',
-                'en' => 'Your teacher portal has been inactive for ' . $this->inactiveDays . ' days. Sign in again to continue managing your courses and students.',
-            ],
+            'title' => $titleTranslations['vi'],
+            'title_translations' => $titleTranslations,
+            'message' => $messageTranslations['vi'],
+            'message_translations' => $messageTranslations,
             'url' => route('teacher.dashboard.index'),
             'severity' => 'warning',
             'icon' => 'fas fa-user-clock',

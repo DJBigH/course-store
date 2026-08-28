@@ -10,6 +10,10 @@ use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Courses\src\Models\Courses;
 use Modules\Teacher\src\Http\Requests\TeacherRequest;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
+use Modules\Teacher\src\Models\TeacherBadge;
+use Modules\Teacher\src\Models\TeacherTelegramSubscription;
+use Modules\Orders\src\Models\Order;
+use App\Jobs\SendTelegramTeacherNotification;
 use Yajra\DataTables\Facades\DataTables;
 
 class TeacherController extends Controller
@@ -116,11 +120,24 @@ class TeacherController extends Controller
 
         return DataTables::of($teacher)
             ->editColumn('name', function ($teacher) {
-                return '<div>' . e($teacher->name_locale) . '</div>';
+                $avatarUrl = $teacher->image ?: asset('resources/assets/teacher.png');
+                $badgeHtml = '';
+                $badge = $teacher->primary_badge;
+                if ($badge) {
+                    $badgeHtml = '<span class="teacher-admin-badge teacher-admin-badge--' . e($badge['tone']) . ' ms-2" style="font-size: 0.65rem; padding: 0.15rem 0.5rem; letter-spacing: 0;">' . e($badge['label']) . '</span>';
+                }
+                
+                return '<div class="d-flex align-items-center gap-3">
+                            <img src="' . $avatarUrl . '" class="rounded-circle shadow-sm border border-2 border-white" style="width: 44px; height: 44px; object-fit: cover;">
+                            <div>
+                                <div class="fw-bold text-dark d-flex align-items-center">' . e($teacher->name_locale) . $badgeHtml . '</div>
+                                <div class="text-muted small" style="font-size: 0.75rem;">' . e($teacher->slug) . '</div>
+                            </div>
+                        </div>';
             })
             ->addColumn('teacher_status', function ($teacher) {
                 if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) {
-                    return '<span class="badge bg-secondary">
+                    return '<span class="badge bg-secondary rounded-pill px-3 py-2" style="font-size: 0.75rem;">
                                 <i class="fa-solid fa-user-slash me-1"></i> ' . 'Đã huỷ hợp tác' . '
                             </span>';
                 }
@@ -132,66 +149,27 @@ class TeacherController extends Controller
                     $time = $teacher->locked_at ? $teacher->locked_at->format('d/m/Y H:i') : '';
                     $tooltip = "Lý do: {$reason}\nNgười khóa: {$admin}\nThời gian: {$time}";
                     
-                    return '<span class="badge bg-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="' . $tooltip . '">
+                    return '<span class="badge bg-danger rounded-pill px-3 py-2" style="font-size: 0.75rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="' . $tooltip . '">
                                 <i class="fa-solid fa-user-lock me-1"></i> ' . __('teacher::admin.table.status_locked') . '
                             </span>';
                 }
 
-                return '<span class="badge bg-success">
+                return '<span class="badge bg-success rounded-pill px-3 py-2" style="font-size: 0.75rem;">
                             <i class="fa-solid fa-check-circle me-1"></i> ' . __('teacher::admin.table.status_active') . '
                         </span>';
             })
-            ->addColumn('rating', function ($teacher) {
+            ->addColumn('exp_rating', function ($teacher) {
                 $avg = round((float) ($teacher->ratings_avg_rating ?? 0), 1);
                 $count = (int) ($teacher->ratings_count ?? 0);
                 
-                return '<div class="teacher-rating-cell text-center">
-                            <div class="rating-text fw-bold text-warning">
-                                <i class="fa-solid fa-star me-1"></i>' . $avg . ' / 5
+                return '<div class="teacher-exp-rating-cell small">
+                            <div class="fw-bold text-dark"><i class="fa-solid fa-briefcase text-muted me-1"></i> ' . e($teacher->exp) . ' năm</div>
+                            <div class="text-warning mt-1">
+                                <i class="fa-solid fa-star me-1"></i><strong>' . $avg . '</strong> <span class="text-muted">(' . $count . ' đánh giá)</span>
                             </div>
-                            <div class="small text-muted">' . $count . ' đánh giá</div>
                         </div>';
             })
-            ->addColumn('select', function ($teacher) {
-                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teacher->id . '"></div>';
-            })
-            ->addColumn('logs', function ($teacher) use ($canLogs) {
-                return $canLogs ? '<a href="' . route('teacher.logs', $teacher->id) . '" class="btn btn-light border">' . __('teacher::admin.actions.logs') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
-            })
-            ->addColumn('edit', function ($teacher) {
-                $btn = '';
-                if (auth()->user()?->hasPermission('teachers.edit')) {
-                    $btn .= '<a href="' . route('teacher-packages.grant', ['teacher_id' => $teacher->id]) . '" class="btn btn-warning btn-sm me-1" title="Tặng gói đặc quyền"><i class="fa-solid fa-gift"></i></a>';
-
-                    if ($teacher->is_locked) {
-                        $btn .= '<form action="' . route('teacher.toggle-lock', $teacher->id) . '" method="POST" class="d-inline-block me-1">' . csrf_field() . '<button type="submit" class="btn btn-success btn-sm" title="Mở khóa tài khoản" onclick="return confirm(\'Xác nhận mở khóa cho giáo viên này?\')"><i class="fa-solid fa-lock-open"></i></button></form>';
-                    } else {
-                        $btn .= '<button type="button" class="btn btn-danger btn-sm me-1 btn-lock-teacher" data-id="' . $teacher->id . '" data-name="' . e($teacher->name) . '" data-url="' . route('teacher.toggle-lock', $teacher->id) . '" title="Khóa tài khoản"><i class="fa-solid fa-lock"></i></button>';
-                    }
-
-                    if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) {
-                        $btn .= '<form action="' . route('teacher.toggle-ceased', $teacher->id) . '" method="POST" class="d-inline-block me-1">' . csrf_field() . '<button type="submit" class="btn btn-outline-success btn-sm" title="Khôi phục hợp tác" onclick="return confirm(\'Khôi phục hợp tác với giảng viên này?\')"><i class="fa-solid fa-handshake-angle"></i></button></form>';
-                    } else {
-                        $btn .= '<form action="' . route('teacher.toggle-ceased', $teacher->id) . '" method="POST" class="d-inline-block me-1">' . csrf_field() . '<button type="submit" class="btn btn-outline-danger btn-sm" title="Huỷ hợp tác" onclick="return confirm(\'Bạn có chắc muốn huỷ hợp tác với giảng viên này?\')"><i class="fa-solid fa-user-slash"></i></button></form>';
-                    }
-
-                    $btn .= '<a href="' . route('teacher.edit', $teacher->id) . '" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen-to-square"></i></a>';
-                }
-                return $btn ?: '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
-            })
-            ->addColumn('delete', function ($teacher) use ($canDelete) {
-                return $canDelete ? '<a href="' . route('teacher.delete', $teacher->id) . '" class="btn btn-outline-danger delete-action">' . __('teacher::admin.actions.delete') . '</a>' : '<span class="text-muted small">' . __('teacher::admin.actions.no_permission') . '</span>';
-            })
-            ->editColumn('created_at', function ($teacher) {
-                return Carbon::parse($teacher->created_at)->format('d/m/Y H:i:s');
-            })
-            ->addColumn('last_active_at', function ($teacher) {
-                if ($teacher->last_active_at) {
-                    return Carbon::parse($teacher->last_active_at)->format('d/m/Y H:i:s');
-                }
-                return '<span class="text-warning small">' . __('teacher::admin.table.not_active_yet') . '</span>';
-            })
-            ->addColumn('inactive_days', function ($teacher) {
+            ->addColumn('activity_timeline', function ($teacher) {
                 $reference = $teacher->last_active_at ?: $teacher->created_at;
                 $days = Carbon::parse($reference)->diffInDays(now());
                 $tone = 'activity-age--fresh';
@@ -199,20 +177,95 @@ class TeacherController extends Controller
                 elseif ($days >= 60) $tone = 'activity-age--warning';
                 elseif ($days >= 30) $tone = 'activity-age--notice';
 
-                if (!$teacher->last_active_at) {
-                    return '<span class="activity-age ' . $tone . '">' . $days . ' ' . __('teacher::admin.table.days_unit') . '</span><div class="small text-muted">' . __('teacher::admin.table.never_active') . '</div>';
+                $created = Carbon::parse($teacher->created_at)->format('d/m/Y');
+                $lastActive = $teacher->last_active_at 
+                    ? Carbon::parse($teacher->last_active_at)->format('d/m/Y H:i') 
+                    : '<span class="text-warning">' . __('teacher::admin.table.never_active') . '</span>';
+                
+                $daysText = $days === 0 ? __('teacher::admin.table.today') : $days . ' ' . __('teacher::admin.table.days_unit');
+
+                return '<div class="teacher-activity-timeline small">
+                            <div class="mb-1"><span class="text-muted">Tham gia:</span> <span class="fw-bold text-dark">' . $created . '</span></div>
+                            <div class="mb-2"><span class="text-muted">Gần nhất:</span> ' . $lastActive . '</div>
+                            <div><span class="activity-age ' . $tone . '">' . $daysText . '</span></div>
+                        </div>';
+            })
+            ->addColumn('telegram_package', function ($teacher) {
+                $status = $teacher->getTelegramPackageStatus();
+                if ($status['status'] === 'active') {
+                    $date = $status['expires_at'] ? $status['expires_at']->format('d/m/Y') : '';
+                    return '<span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                                <i class="fa-brands fa-telegram me-1"></i>Đến ' . $date . '
+                            </span>';
                 }
-                return '<span class="activity-age ' . $tone . '">' . ($days === 0 ? __('teacher::admin.table.today') : $days . ' ' . __('teacher::admin.table.days_unit')) . '</span>';
+                return '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                            <i class="fa-solid fa-ban me-1"></i>Không có
+                        </span>';
             })
-            ->editColumn('image', function ($teacher) {
-                return $teacher->image ? '<img src="' . $teacher->image . '" style="width: 80px; border-radius: 12px;">' : __('teacher::admin.table.no_image');
+            ->addColumn('select', function ($teacher) {
+                return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $teacher->id . '"></div>';
             })
-            ->addColumn('badge', function ($teacher) {
-                $badge = $teacher->primary_badge;
-                if (!$badge) return '<span class="text-muted small">' . __('teacher::admin.table.no_badge') . '</span>';
-                return '<span class="teacher-admin-badge teacher-admin-badge--' . e($badge['tone']) . '">' . e($badge['label']) . '</span>';
+            ->addColumn('actions', function ($teacher) use ($canLogs) {
+                $btn = '<div class="dropdown">
+                            <button class="btn btn-light btn-sm border dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">';
+                
+                if (auth()->user()?->hasPermission('teachers.edit')) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('teacher.edit', $teacher->id) . '"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Chỉnh sửa</a></li>';
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('teacher-packages.grant', ['teacher_id' => $teacher->id]) . '"><i class="fa-solid fa-gift text-warning me-2"></i>Tặng gói đặc quyền</a></li>';
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('teacher.edit', $teacher->id) . '#badges-assignment-section"><i class="fa-solid fa-award text-info me-2"></i>Cấp huy hiệu</a></li>';
+
+                    if ($teacher->is_locked) {
+                        $btn .= '<li>
+                                    <form action="' . route('teacher.toggle-lock', $teacher->id) . '" method="POST" class="d-inline-block w-100">' . csrf_field() . '
+                                        <button type="submit" class="dropdown-item py-2" onclick="return confirm(\'Xác nhận mở khóa cho giáo viên này?\')">
+                                            <i class="fa-solid fa-lock-open text-success me-2"></i>Mở khóa
+                                        </button>
+                                    </form>
+                                 </li>';
+                    } else {
+                        $btn .= '<li>
+                                    <button type="button" class="dropdown-item py-2 btn-lock-teacher" data-id="' . $teacher->id . '" data-name="' . e($teacher->name) . '" data-url="' . route('teacher.toggle-lock', $teacher->id) . '">
+                                        <i class="fa-solid fa-lock text-danger me-2"></i>Khóa tài khoản
+                                    </button>
+                                 </li>';
+                    }
+
+                    if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) {
+                        $btn .= '<li>
+                                    <form action="' . route('teacher.toggle-ceased', $teacher->id) . '" method="POST" class="d-inline-block w-100">' . csrf_field() . '
+                                        <button type="submit" class="dropdown-item py-2" onclick="return confirm(\'Khôi phục hợp tác với giảng viên này?\')">
+                                            <i class="fa-solid fa-handshake-angle text-success me-2"></i>Khôi phục hợp tác
+                                        </button>
+                                    </form>
+                                 </li>';
+                    } else {
+                        $btn .= '<li>
+                                    <form action="' . route('teacher.toggle-ceased', $teacher->id) . '" method="POST" class="d-inline-block w-100">' . csrf_field() . '
+                                        <button type="submit" class="dropdown-item py-2" onclick="return confirm(\'Bạn có chắc muốn huỷ hợp tác với giảng viên này?\')">
+                                            <i class="fa-solid fa-user-slash text-secondary me-2"></i>Huỷ hợp tác
+                                        </button>
+                                    </form>
+                                 </li>';
+                    }
+                }
+
+                if ($canLogs) {
+                    $btn .= '<li><hr class="dropdown-divider my-1"></li>';
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('teacher.logs', $teacher->id) . '"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i>Xem lịch sử</a></li>';
+                }
+
+                if (auth()->user()?->canAnyPermission(['teachers.soft_delete', 'teachers.delete'])) {
+                    $btn .= '<li><hr class="dropdown-divider my-1"></li>';
+                    $btn .= '<li><a class="dropdown-item py-2 text-danger delete-action" href="' . route('teacher.delete', $teacher->id) . '"><i class="fa-solid fa-trash me-2"></i>Xóa mềm</a></li>';
+                }
+
+                $btn .= '</ul></div>';
+                return $btn;
             })
-            ->rawColumns(['select', 'edit', 'delete', 'image', 'logs', 'last_active_at', 'inactive_days', 'badge', 'name', 'teacher_status', 'rating'])
+            ->rawColumns(['select', 'actions', 'name', 'teacher_status', 'exp_rating', 'activity_timeline', 'telegram_package'])
             ->toJson();
     }
 
@@ -267,8 +320,9 @@ class TeacherController extends Controller
     public function create()
     {
         $pageTitle = __('teacher::admin.titles.create');
+        $badges = TeacherBadge::where('is_active', true)->get();
 
-        return view('teacher::create', compact('pageTitle'));
+        return view('teacher::create', compact('pageTitle', 'badges'));
     }
 
     public function bulkAction(Request $request)
@@ -336,6 +390,10 @@ class TeacherController extends Controller
             description: __('teacher::admin.logs.create_desc')
         );
 
+        if ($request->has('badges')) {
+            $teacher->badges()->sync($request->badges);
+        }
+
         return redirect()->route('teacher.index')->with('msg', __('teacher::admin.messages.create_success'));
     }
 
@@ -348,7 +406,9 @@ class TeacherController extends Controller
             abort(404);
         }
 
-        return view('teacher::edit', compact('teacher', 'pageTitle'));
+        $badges = TeacherBadge::where('is_active', true)->get();
+
+        return view('teacher::edit', compact('teacher', 'pageTitle', 'badges'));
     }
 
     public function update(TeacherRequest $request, $id)
@@ -360,13 +420,48 @@ class TeacherController extends Controller
         }
 
         $old = $teacherModel->toArray();
-        $data = $request->except('_token');
+        $data = $request->except('_token', 'telegram_duration_value', 'telegram_duration_unit');
         $data = array_merge($data, $this->normalizeBadgePayload($request));
 
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
         } else {
             unset($data['password']);
+        }
+
+        // Handle Telegram Package Extension
+        if ($request->filled('telegram_duration_value') && $request->filled('telegram_duration_unit')) {
+            $value = (int) $request->input('telegram_duration_value');
+            $unit = $request->input('telegram_duration_unit');
+            
+            $newExpiry = $teacherModel->addTelegramDuration($value, $unit);
+
+            // Log as Order for history
+            $order = Order::create([
+                'code' => 'ADMIN' . strtoupper(uniqid()),
+                'student_id' => $teacherModel->student_id,
+                'total' => 0,
+                'status_id' => 2, // Success
+                'type' => 'telegram_package',
+                'payment_method' => 'gift',
+                'payment_complete_date' => now(),
+                'currency' => 'VND'
+            ]);
+
+            // Notify Teacher via Telegram if active
+            if ($teacherModel->hasTelegramFeature()) {
+                $unitLabel = match($unit) {
+                    'day' => 'ngày',
+                    'month' => 'tháng',
+                    'year' => 'năm',
+                    default => $unit
+                };
+                $msg = "🎁 <b>QUÀ TẶNG TỪ HỆ THỐNG!</b>\n\n";
+                $msg .= "Quản trị viên vừa gia hạn gói Telegram cho bạn thêm: <b>{$value} {$unitLabel}</b>\n";
+                $msg .= "📅 <b>Hết hạn mới:</b> " . $newExpiry->format('d/m/Y');
+                
+                dispatch(new SendTelegramTeacherNotification($teacherModel, $msg));
+            }
         }
 
         $status = $this->teacherRepository->update($id, $data);
@@ -395,6 +490,40 @@ class TeacherController extends Controller
                 logName: __('teacher::admin.logs.update'),
                 description: __('teacher::admin.logs.update_desc')
             );
+
+            if ($request->has('badges')) {
+                try {
+                    $oldBadgeIds = $teacherModel->badges->pluck('id')->toArray();
+                    $newBadgeIds = array_map('intval', $request->badges);
+                    $addedBadgeIds = array_diff($newBadgeIds, $oldBadgeIds);
+
+                    $teacherModel->badges()->sync($newBadgeIds);
+
+                    if (!empty($addedBadgeIds)) {
+                        $addedBadges = TeacherBadge::whereIn('id', $addedBadgeIds)->get();
+                        if ($teacherModel->student) {
+                            $teacherModel->student->notify(new \App\Notifications\BadgeAssignmentNotification($teacherModel, $addedBadges, 'success'));
+                        }
+
+                        // Notify via Telegram
+                        if ($teacherModel->hasTelegramFeature()) {
+                            $badgeNames = $addedBadges->map(fn($b) => "🏆 <b>{$b->name_locale}</b>")->implode("\n");
+                            $msg = "🌟 <b>CHÚC MỪNG BẠN ĐÃ NHẬN HUY HIỆU MỚI!</b>\n\n";
+                            $msg .= "Bạn vừa được quản trị viên cấp các huy hiệu:\n{$badgeNames}\n\n";
+                            $msg .= "Hãy truy cập bảng điều khiển để xem ngay nhé!";
+                            
+                            dispatch(new SendTelegramTeacherNotification($teacherModel, $msg));
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Badge update error: ' . $e->getMessage());
+                    if ($teacherModel->student) {
+                        $teacherModel->student->notify(new \App\Notifications\BadgeAssignmentNotification($teacherModel, [], 'failure', $e->getMessage()));
+                    }
+                }
+            } else {
+                $teacherModel->badges()->sync([]);
+            }
 
             return back()->with('msg', __('teacher::admin.messages.update_success'));
         }
@@ -487,6 +616,26 @@ class TeacherController extends Controller
                 : "Đã mở khóa quyền giáo viên cho [{$teacher->name}]"
         );
 
+        // Notify Teacher
+        if ($teacher->student) {
+            $type = $isLocking ? 'locked' : 'unlocked';
+            $teacher->student->notify(new \App\Notifications\TeacherAccountStatusNotification($teacher, $type));
+        }
+
+        // Notify via Telegram
+        if ($teacher->hasTelegramFeature()) {
+            $statusTitle = $isLocking ? "🔒 <b>TÀI KHOẢN CỦA BẠN ĐÃ BỊ KHÓA</b>" : "🔓 <b>TÀI KHOẢN CỦA BẠN ĐÃ ĐƯỢC MỞ KHÓA</b>";
+            $msg = "{$statusTitle}\n\n";
+            if ($isLocking) {
+                $msg .= "⚠️ <b>Lý do:</b> {$teacher->lock_reason}\n";
+                $msg .= "Vui lòng liên hệ quản trị viên để biết thêm chi tiết.";
+            } else {
+                $msg .= "Chào mừng bạn đã trở lại! Bạn hiện đã có thể tiếp tục các hoạt động trên hệ thống.";
+            }
+            
+            dispatch(new SendTelegramTeacherNotification($teacher, $msg));
+        }
+
         return back()->with('msg', $isLocking ? 'Đã khóa tài khoản giáo viên thành công.' : 'Đã mở khóa tài khoản giáo viên thành công.');
     }
 
@@ -515,6 +664,28 @@ class TeacherController extends Controller
                 ? "Đã huỷ hợp tác với giảng viên [{$teacher->name}]"
                 : "Đã khôi phục hợp tác với giảng viên [{$teacher->name}]"
         );
+
+        // Notify Teacher
+        if ($teacher->student) {
+            $type = $newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED ? 'ceased' : 'restored';
+            $teacher->student->notify(new \App\Notifications\TeacherAccountStatusNotification($teacher, $type));
+        }
+
+        // Notify via Telegram
+        if ($teacher->hasTelegramFeature()) {
+            $statusTitle = ($newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) 
+                ? "🤝 <b>HỢP TÁC TẠM DỪNG</b>" 
+                : "🤝 <b>HỢP TÁC ĐÃ ĐƯỢC KHÔI PHỤC</b>";
+            
+            $msg = "{$statusTitle}\n\n";
+            if ($newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED) {
+                $msg .= "Hệ thống đã tạm dừng hợp tác với tài khoản của bạn. Vui lòng liên hệ quản trị viên nếu có thắc mắc.";
+            } else {
+                $msg .= "Chào mừng bạn đã trở lại! Quan hệ hợp tác của bạn đã được khôi phục thành công.";
+            }
+            
+            dispatch(new SendTelegramTeacherNotification($teacher, $msg));
+        }
 
         return back()->with('msg', $newStatus === \Modules\Teacher\src\Models\Teacher::STATUS_CEASED ? 'Đã huỷ hợp tác với giảng viên thành công.' : 'Đã khôi phục hợp tác với giảng viên thành công.');
     }
@@ -575,6 +746,14 @@ class TeacherController extends Controller
         if ($action === 'restore') {
             foreach ($teachers as $teacher) {
                 $teacher->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $teacher->fresh(),
+                    properties: ['restored_from_trash' => true],
+                    logName: __('teacher::admin.logs.bulk_restore') ?? 'Khôi phục hàng loạt',
+                    description: __('teacher::admin.logs.bulk_restore_desc') ?? 'Khôi phục giảng viên'
+                );
             }
 
             return back()->with('msg', __('teacher::admin.messages.restore_success'));
@@ -588,11 +767,23 @@ class TeacherController extends Controller
             }
 
             foreach ($teachers as $teacher) {
+                $snapshot = method_exists($teacher, 'toArray') ? $teacher->toArray() : (array) $teacher;
                 if ($teacher->image) {
                     deleteFileStorage($teacher->image);
                 }
 
                 $teacher->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $teacher,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: __('teacher::admin.logs.bulk_force_delete') ?? 'Xóa vĩnh viễn hàng loạt',
+                    description: __('teacher::admin.logs.bulk_force_delete_desc') ?? 'Xóa vĩnh viễn giảng viên'
+                );
             }
 
             return back()->with('msg', __('teacher::admin.messages.force_delete_success'));
@@ -610,6 +801,14 @@ class TeacherController extends Controller
         }
 
         $teacher->restore();
+
+        activity_log(
+            action: 'restore',
+            subject: $teacher->fresh(),
+            properties: ['restored_from_trash' => true],
+            logName: __('teacher::admin.logs.restore') ?? 'Khôi phục',
+            description: __('teacher::admin.logs.restore_desc') ?? 'Khôi phục giảng viên thành công.'
+        );
 
         return back()->with('msg', __('teacher::admin.messages.restore_success'));
     }
@@ -630,7 +829,19 @@ class TeacherController extends Controller
             deleteFileStorage($teacher->image);
         }
 
+        $snapshot = method_exists($teacher, 'toArray') ? $teacher->toArray() : (array) $teacher;
         $teacher->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $teacher,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: __('teacher::admin.logs.force_delete') ?? 'Xóa vĩnh viễn',
+            description: __('teacher::admin.logs.force_delete_desc') ?? 'Xóa vĩnh viễn giảng viên'
+        );
 
         return back()->with('msg', __('teacher::admin.messages.force_delete_success'));
     }
@@ -696,5 +907,32 @@ class TeacherController extends Controller
             ->get(['id', 'name', 'price', 'sale_price']);
 
         return response()->json($courses);
+    }
+
+    public function testTelegram($id)
+    {
+        $teacher = $this->teacherRepository->find($id);
+
+        if (empty($teacher) || empty($teacher->telegram_chat_id)) {
+            return response()->json(['success' => false, 'message' => 'Giáo viên chưa cấu hình Telegram Chat ID.']);
+        }
+
+        try {
+            $botToken = config('services.telegram.bot_token');
+            if (!$botToken) {
+                return response()->json(['success' => false, 'message' => 'Chưa cấu hình Telegram Bot Token trong .env']);
+            }
+
+            $text = "🔔 <b>Hệ thống Giáo dục Đa Ngôn Ngữ</b>\n\n";
+            $text .= "Xin chào <b>{$teacher->name}</b>,\n";
+            $text .= "Đây là tin nhắn kiểm tra kết nối từ hệ thống Admin.\n";
+            $text .= "Nếu bạn nhận được tin nhắn này, kết nối Telegram của bạn đã hoạt động bình thường!";
+
+            \App\Jobs\SendTelegramNotification::dispatch($teacher->telegram_chat_id, $text, $botToken);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi kết nối: ' . $e->getMessage()]);
+        }
     }
 }

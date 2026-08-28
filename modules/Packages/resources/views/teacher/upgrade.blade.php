@@ -2,7 +2,7 @@
 
 @section('content')
     @php
-        $selectedPackageId = (int) old('package_id', $upgradePackages->first()?->id);
+        $selectedPackageId = (int) request('package_id', old('package_id', $selectedPackageId ?? $upgradePackages->first()?->id));
         $selectedPaymentMethod = old('payment_method', 'bank_transfer');
         $currentPackageExpiresAt = $teacher->package_expires_at;
         $currentPackageDaysLeft = $currentPackageExpiresAt ? max(now()->startOfDay()->diffInDays($currentPackageExpiresAt->copy()->startOfDay(), false), 0) : null;
@@ -76,26 +76,52 @@
         };
         $currentPackageMap = [
             'id' => (int) ($currentPackage?->id ?? 0),
+            'name' => $currentPackage?->name_locale ?: $currentPackage?->name ?: 'N/A',
             'billing_cycle' => $currentPackage?->billing_cycle,
             'sort_order' => (int) ($currentPackage?->sort_order ?? 0),
+            'course_limit' => (int) ($currentPackage?->course_limit ?? 0),
+            'commission_rate' => (float) ($currentPackage?->commission_rate ?? 0),
+            'coupon_limit' => (int) ($currentPackage?->coupon_limit ?? 0),
+            'payout_account_limit' => (int) ($currentPackage?->payout_account_limit ?? 0),
             'expires_at' => $currentPackageExpiresAt?->toIso8601String(),
             'days_left' => $currentPackageDaysLeft,
         ];
+        $numericKeys = ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day'];
+        foreach ($features as $f) {
+            if (in_array($f->key, $numericKeys)) continue;
+            $currentPackageMap[$f->key] = (bool) ($currentPackage?->{$f->key} ?? false);
+        }
+
         $packageMap = $upgradePackages
-            ->mapWithKeys(fn ($package) => [
-                $package->id => [
+            ->mapWithKeys(function ($package) use ($features, $packageTermLabel, $packageTermDescription, $calculatePackagePreview, $formatDate, $numericKeys) {
+                $preview = $calculatePackagePreview($package);
+                $data = [
+                    'id' => (int) $package->id,
                     'term_label' => $packageTermLabel($package),
                     'name' => $package->name_locale ?: $package->name,
                     'price' => (float) $package->price,
                     'billing_cycle' => $package->billing_cycle,
                     'sort_order' => (int) $package->sort_order,
-                    'term_description' => $packageTermDescription($package, $calculatePackagePreview($package)),
+                    'course_limit' => $package->course_limit,
+                    'commission_rate' => (float) $package->commission_rate,
+                    'coupon_limit' => $package->coupon_limit,
+                    'payout_account_limit' => $package->payout_account_limit,
+                    'ai_quiz_limit' => $package->ai_quiz_limit,
+                    'max_payout_per_day' => $package->max_payout_per_day,
+                    'term_description' => $packageTermDescription($package, $preview),
+                    'expires_at_formatted' => $formatDate($preview['expires_at']),
+                    'category' => $package->category_locale,
                     'meta' => __('packages::teacher.common.current_meta', [
                         'commission' => rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.'),
                         'limit' => $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited'),
                     ]),
-                ],
-            ])
+                ];
+                foreach ($features as $f) {
+                    if (in_array($f->key, $numericKeys)) continue;
+                    $data[$f->key] = (bool) $package->{$f->key};
+                }
+                return [$package->id => $data];
+            })
             ->all();
         $groupedFeatures = $features->groupBy('group');
         $featureMetadata = $features->keyBy('key');
@@ -161,6 +187,23 @@
                 ? ['label' => $betterPrefix . $formattedDelta . $suffix, 'class' => 'is-better']
                 : ['label' => $worsePrefix . $formattedDelta . $suffix, 'class' => 'is-worse'];
         };
+        $bankEnabled = (int) setting('payment_bank_enabled', '1') === 1;
+        $vnpayEnabled = (int) setting('payment_vnpay_enabled', '1') === 1;
+        $momoEnabled = (int) setting('payment_momo_enabled', '1') === 1;
+
+        $bankTransferBankName = setting('bank_transfer_bank_name', 'Techcombank');
+        $bankTransferBankBin = setting('bank_transfer_bank_bin', '970407');
+        $bankTransferAccountNumber = setting('bank_transfer_account_number', '');
+        $bankTransferAccountName = setting('bank_transfer_account_name', '');
+        $bankTransferNotePrefix = trim((string) setting('bank_transfer_note_prefix', 'CK'));
+        $bankTransferNote = trim($bankTransferNotePrefix . ' T' . auth()->user()->id);
+        $allPaymentsDisabled = !$bankEnabled && !$vnpayEnabled && !$momoEnabled;
+
+        $packagesByCategory = $upgradePackages->groupBy(function($pkg) {
+            return $pkg->category_locale ?: __('packages::teacher.common.category_other');
+        });
+        $categoriesList = $packagesByCategory->keys();
+        $activeCategoryId = (string) request('category', $categoriesList->first());
     @endphp
 
     <div class="teacher-page-shell">
@@ -171,10 +214,22 @@
                     <h3 class="teacher-upgrade-title">{{ __('packages::teacher.upgrade.upgrade_title') }}</h3>
                     <p class="teacher-upgrade-desc mb-0">{{ __('packages::teacher.upgrade.upgrade_description') }}</p>
                 </div>
-                <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-outline-secondary teacher-upgrade-back">
-                    {{ __('courses::teacher/messages.trash.return') }}
                 </a>
             </div>
+            
+            @if ($allPaymentsDisabled)
+                <div class="alert alert-warning mb-4 rounded-4 shadow-sm border-0" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2) !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="flex-shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation fs-4 text-warning"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-warning">{{ __('packages::teacher.common.all_payments_maintenance_title') }}</div>
+                            <div class="small opacity-75 text-warning">{{ __('packages::teacher.common.all_payments_maintenance_desc') }}</div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             @if (session('msg_success'))
                 <div class="alert alert-success">{{ session('msg_success') }}</div>
@@ -195,6 +250,13 @@
                         'limit' => $currentPackage?->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited'),
                     ]) }}
                 </div>
+                @if($currentPackage?->category_locale)
+                    <div class="teacher-upgrade-current__category mt-1">
+                        <span class="badge bg-soft-info text-info border-0 px-2 py-1" style="font-size: 0.7rem; background: rgba(56, 189, 248, 0.1);">
+                            <i class="fa-solid fa-layer-group me-1"></i>{{ $currentPackage->category_locale }}
+                        </span>
+                    </div>
+                @endif
                 <div class="teacher-upgrade-current__term">
                     {{ __('packages::teacher.common.term_label') }}: {{ $packageTermLabel($currentPackage) }}
                 </div>
@@ -210,7 +272,7 @@
                     <div class="mt-2">
                         <span style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.75rem;border-radius:999px;font-size:0.77rem;font-weight:700;background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);">
                             <i class="fa-solid fa-gift" style="font-size:0.72rem;"></i>
-                            Được tặng bởi Admin
+                            {{ __('packages::teacher.common.granted_by_admin') }}
                         </span>
                     </div>
                 @endif
@@ -239,73 +301,105 @@
                         </div>
                     </div>
 
-                    <div class="row g-4">
-                        @foreach ($upgradePackages as $package)
-                            @php
-                                $packageId = (int) $package->id;
-                                $price = (float) $package->price;
-                                $isSelected = $selectedPackageId === $packageId;
-                                $isFeatured = (bool) $package->is_featured;
-                                $isRecommended = $recommendedPackageId !== null && $recommendedPackageId === $packageId;
-                                $packagePreview = $calculatePackagePreview($package);
-                            @endphp
-                            <div class="col-xl-4 col-md-6">
-                                <label class="teacher-upgrade-card {{ $isSelected ? 'is-selected' : '' }} {{ $isFeatured ? 'is-featured' : '' }} {{ $isRecommended ? 'is-recommended' : '' }}" 
-                                    data-upgrade-card 
-                                    @if($package->badge_tone) style="--package-tone: {{ $package->badge_tone }};" @endif>
-                                    <input type="radio" name="package_id" value="{{ $packageId }}" data-package-price="{{ $price }}" @checked($isSelected)>
+                        </div>
+                    </div>
 
-                                    @if ($isFeatured)
-                                        <span class="teacher-upgrade-card__ribbon">
-                                            {{ __('teacher::landing.packages.most_popular') }}
-                                        </span>
-                                    @endif
-                                    @if ($isRecommended)
-                                        <span class="teacher-upgrade-card__recommend">
-                                            {{ __('packages::teacher.features.recommended_badge') }}
-                                        </span>
-                                    @endif
+                    @if($categoriesList->count() > 1)
+                        <div class="teacher-upgrade-categories">
+                            <div class="nav nav-pills teacher-upgrade-tabs" role="tablist">
+                                @foreach($categoriesList as $catName)
+                                    <button class="nav-link {{ $activeCategoryId === $catName ? 'active' : '' }}" 
+                                        id="cat-tab-{{ Str::slug($catName) }}" 
+                                        data-bs-toggle="pill" 
+                                        data-bs-target="#cat-content-{{ Str::slug($catName) }}" 
+                                        type="button" role="tab">
+                                        {{ $catName }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
 
-                                    <div class="teacher-upgrade-card__top">
-                                        <span class="teacher-upgrade-card__tag">{{ strtoupper((string) $package->code) }}</span>
-                                        @if (($package->badge_text_locale ?: '') !== '')
-                                            <span class="teacher-upgrade-card__badge">{{ $package->badge_text_locale }}</span>
-                                        @endif
-                                    </div>
+                    <div class="tab-content teacher-upgrade-tab-content">
+                        @foreach($packagesByCategory as $catName => $catPackages)
+                            <div class="tab-pane fade {{ $activeCategoryId === $catName ? 'show active' : '' }}" 
+                                id="cat-content-{{ Str::slug($catName) }}" 
+                                role="tabpanel">
+                                <div class="row g-4">
+                                    @foreach ($catPackages as $package)
+                                        @php
+                                            $packageId = (int) $package->id;
+                                            $price = (float) $package->price;
+                                            $isSelected = $selectedPackageId === $packageId;
+                                            $isFeatured = (bool) $package->is_featured;
+                                            $isRecommended = $recommendedPackageId !== null && $recommendedPackageId === $packageId;
+                                            $packagePreview = $calculatePackagePreview($package);
+                                        @endphp
+                                        <div class="col-xl-4 col-md-6">
+                                            <label class="teacher-upgrade-card {{ $isSelected ? 'is-selected' : '' }} {{ $isFeatured ? 'is-featured' : '' }} {{ $isRecommended ? 'is-recommended' : '' }}" 
+                                                data-upgrade-card 
+                                                @if($package->badge_tone) style="--package-tone: {{ $package->badge_tone }};" @endif>
+                                                <input type="radio" name="package_id" value="{{ $packageId }}" data-package-price="{{ $price }}" @checked($isSelected)>
 
-                                    <div class="teacher-upgrade-card__body">
-                                        <h5>{{ $package->name_locale ?: $package->name }}</h5>
-                                        <div class="teacher-upgrade-card__price">
-                                            {{ $price > 0 ? moneyLocale($price) : moneyLocale(0) }}
+                                                @if ($isFeatured)
+                                                    <span class="teacher-upgrade-card__ribbon">
+                                                        {{ __('teacher::landing.packages.most_popular') }}
+                                                    </span>
+                                                @endif
+                                                @if ($isRecommended)
+                                                    <span class="teacher-upgrade-card__recommend">
+                                                        {{ __('packages::teacher.features.recommended_badge') }}
+                                                    </span>
+                                                @endif
+
+                                                <div class="teacher-upgrade-card__top">
+                                                    <div class="d-flex flex-column gap-1">
+                                                        @if($package->category_locale)
+                                                            <span class="teacher-upgrade-card__category">{{ $package->category_locale }}</span>
+                                                        @endif
+                                                        <span class="teacher-upgrade-card__tag">{{ strtoupper((string) $package->code) }}</span>
+                                                    </div>
+                                                    @if (($package->badge_text_locale ?: '') !== '')
+                                                        <span class="teacher-upgrade-card__badge">{{ $package->badge_text_locale }}</span>
+                                                    @endif
+                                                </div>
+
+                                                <div class="teacher-upgrade-card__body">
+                                                    <h5>{{ $package->name_locale ?: $package->name }}</h5>
+                                                    <div class="teacher-upgrade-card__price">
+                                                        {{ $price > 0 ? moneyLocale($price) : moneyLocale(0) }}
+                                                    </div>
+                                                    @if (($package->tagline_locale ?: '') !== '')
+                                                        <p class="teacher-upgrade-card__tagline">{{ $package->tagline_locale }}</p>
+                                                    @endif
+                                                    <p class="teacher-upgrade-card__desc">{{ $package->description_locale ?: $package->description }}</p>
+
+                                                    <ul class="teacher-upgrade-card__features">
+                                                        <li>
+                                                            {{ __('packages::teacher.common.current_meta', [
+                                                                'commission' => rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.'),
+                                                                'limit' => $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited'),
+                                                            ]) }}
+                                                        </li>
+                                                        <li>
+                                                            {{ __('packages::teacher.common.term_label') }}: {{ $packageTermLabel($package) }}
+                                                        </li>
+                                                        <li class="teacher-upgrade-card__term">
+                                                            {{ $packageTermDescription($package, $packagePreview) }}
+                                                        </li>
+                                                        @if (($package->support_level_locale ?: '') !== '')
+                                                            <li>{{ $package->support_level_locale }}</li>
+                                                        @endif
+                                                    </ul>
+                                                </div>
+
+                                                <div class="teacher-upgrade-card__check">
+                                                    <span>{{ $isSelected ? '✓' : '' }}</span>
+                                                </div>
+                                            </label>
                                         </div>
-                                        @if (($package->tagline_locale ?: '') !== '')
-                                            <p class="teacher-upgrade-card__tagline">{{ $package->tagline_locale }}</p>
-                                        @endif
-                                        <p class="teacher-upgrade-card__desc">{{ $package->description_locale ?: $package->description }}</p>
-
-                                        <ul class="teacher-upgrade-card__features">
-                                            <li>
-                                                {{ __('packages::teacher.common.current_meta', [
-                                                    'commission' => rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.'),
-                                                    'limit' => $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited'),
-                                                ]) }}
-                                            </li>
-                                            <li>
-                                                {{ __('packages::teacher.common.term_label') }}: {{ $packageTermLabel($package) }}
-                                            </li>
-                                            <li class="teacher-upgrade-card__term">
-                                                {{ $packageTermDescription($package, $packagePreview) }}
-                                            </li>
-                                            @if (($package->support_level_locale ?: '') !== '')
-                                                <li>{{ $package->support_level_locale }}</li>
-                                            @endif
-                                        </ul>
-                                    </div>
-
-                                    <div class="teacher-upgrade-card__check">
-                                        <span>{{ $isSelected ? '✓' : '' }}</span>
-                                    </div>
-                                </label>
+                                    @endforeach
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -424,12 +518,14 @@
                                             
                                             {{-- Cột Gói Hiện Tại --}}
                                             <td>
-                                                @if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit']))
+                                                @if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']))
                                                      <span class="teacher-upgrade-compare__pill is-neutral">
                                                         @if($featureKey === 'course_limit') {{ $currentPackage?->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited') }}
                                                         @elseif($featureKey === 'payout_account_limit') {{ $currentPackage?->effective_payout_account_limit ?? 3 }}
                                                         @elseif($featureKey === 'commission_rate') {{ rtrim(rtrim(number_format((float) ($currentPackage?->commission_rate ?? 0), 2, '.', ''), '0'), '.') }}%
                                                         @elseif($featureKey === 'coupon_limit') {{ $currentPackage?->can_manage_coupons ? ($currentPackage?->effective_coupon_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'ai_quiz_limit') {{ $currentPackage?->can_use_ai_quiz ? ($currentPackage?->effective_ai_quiz_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'max_payout_per_day') {{ $currentPackage?->can_request_payouts ? ($currentPackage?->max_payout_per_day ? moneyLocale((float) $currentPackage?->max_payout_per_day) : __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
                                                         @endif
                                                     </span>
                                                 @else
@@ -438,35 +534,40 @@
                                                     </span>
                                                 @endif
                                             </td>
-
                                             {{-- Các cột Gói Nâng Cấp --}}
                                             @foreach ($upgradePackages as $package)
                                                 @php
                                                     $cellValue = $package->{$featureKey};
                                                     $enabled = (bool) $cellValue;
                                                     
-                                                    if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit'])) {
+                                                    if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day'])) {
                                                         $currentVal = match($featureKey) {
                                                             'course_limit' => $currentPackage?->effective_course_limit,
                                                             'payout_account_limit' => $currentPackage?->effective_payout_account_limit ?? 3,
                                                             'commission_rate' => (float) ($currentPackage?->commission_rate ?? 0),
                                                             'coupon_limit' => $currentPackage?->can_manage_coupons ? $currentPackage?->effective_coupon_limit : 0,
+                                                            'ai_quiz_limit' => $currentPackage?->can_use_ai_quiz ? $currentPackage?->effective_ai_quiz_limit : 0,
+                                                            'max_payout_per_day' => $currentPackage?->can_request_payouts ? (float) $currentPackage?->max_payout_per_day : 0,
                                                         };
                                                         $targetVal = match($featureKey) {
                                                             'course_limit' => $package->effective_course_limit,
                                                             'payout_account_limit' => $package->effective_payout_account_limit,
                                                             'commission_rate' => (float) $package->commission_rate,
                                                             'coupon_limit' => $package->can_manage_coupons ? $package->effective_coupon_limit : 0,
+                                                            'ai_quiz_limit' => $package->can_use_ai_quiz ? $package->effective_ai_quiz_limit : 0,
+                                                            'max_payout_per_day' => $package->can_request_payouts ? (float) $package->max_payout_per_day : 0,
                                                         };
                                                         $delta = $compareDeltaLabel($currentVal, $targetVal, [
                                                             'mode' => 'number',
-                                                            'current_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit']) && empty($currentVal),
-                                                            'target_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit']) && empty($targetVal),
+                                                            'current_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) && empty($currentVal),
+                                                            'target_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) && empty($targetVal),
                                                             'suffix' => match($featureKey) {
                                                                 'course_limit' => ' ' . __('packages::teacher.features.compare_unit_courses'),
                                                                 'payout_account_limit' => ' ' . __('packages::teacher.features.compare_unit_accounts'),
                                                                 'commission_rate' => '%',
                                                                 'coupon_limit' => ' ' . __('packages::teacher.features.compare_unit_coupons'),
+                                                                'ai_quiz_limit' => ' ' . 'Quiz',
+                                                                'max_payout_per_day' => ' VND',
                                                             }
                                                         ]);
                                                     } else {
@@ -474,11 +575,13 @@
                                                     }
                                                 @endphp
                                                 <td data-compare-cell="{{ (int) $package->id }}" class="{{ (!$currentPackage?->{$featureKey} && $enabled) ? 'is-static-upgrade-gain' : '' }}">
-                                                    <span class="teacher-upgrade-compare__pill {{ in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit']) ? 'is-neutral' : ($enabled ? 'is-on' : 'is-off') }}">
+                                                    <span class="teacher-upgrade-compare__pill {{ in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) ? 'is-neutral' : ($enabled ? 'is-on' : 'is-off') }}">
                                                         @if($featureKey === 'course_limit') {{ $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited') }}
                                                         @elseif($featureKey === 'payout_account_limit') {{ $package->effective_payout_account_limit }}
                                                         @elseif($featureKey === 'commission_rate') {{ rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.') }}%
                                                         @elseif($featureKey === 'coupon_limit') {{ $package->can_manage_coupons ? ($package->effective_coupon_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'ai_quiz_limit') {{ $package->can_use_ai_quiz ? ($package->effective_ai_quiz_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'max_payout_per_day') {{ $package->can_request_payouts ? ($package->max_payout_per_day ? moneyLocale((float) $package->max_payout_per_day) : __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
                                                         @else {{ $enabled ? __('packages::teacher.features.available') : __('packages::teacher.features.unavailable') }}
                                                         @endif
                                                     </span>
@@ -614,28 +717,34 @@
                                                 $enabled = (bool) $package->{$featureKey};
                                                 $isUpgradeGain = !$currentPackage?->{$featureKey} && $enabled;
                                                 
-                                                if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit'])) {
+                                                if(in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day'])) {
                                                     $currentVal = match($featureKey) {
                                                         'course_limit' => $currentPackage?->effective_course_limit,
                                                         'payout_account_limit' => $currentPackage?->effective_payout_account_limit ?? 3,
                                                         'commission_rate' => (float) ($currentPackage?->commission_rate ?? 0),
                                                         'coupon_limit' => $currentPackage?->can_manage_coupons ? $currentPackage?->effective_coupon_limit : 0,
+                                                        'ai_quiz_limit' => $currentPackage?->can_use_ai_quiz ? $currentPackage?->effective_ai_quiz_limit : 0,
+                                                        'max_payout_per_day' => $currentPackage?->can_request_payouts ? (float) $currentPackage?->max_payout_per_day : 0,
                                                     };
                                                     $targetVal = match($featureKey) {
                                                         'course_limit' => $package->effective_course_limit,
                                                         'payout_account_limit' => $package->effective_payout_account_limit,
                                                         'commission_rate' => (float) $package->commission_rate,
                                                         'coupon_limit' => $package->can_manage_coupons ? $package->effective_coupon_limit : 0,
+                                                        'ai_quiz_limit' => $package->can_use_ai_quiz ? $package->effective_ai_quiz_limit : 0,
+                                                        'max_payout_per_day' => $package->can_request_payouts ? (float) $package->max_payout_per_day : 0,
                                                     };
                                                     $delta = $compareDeltaLabel($currentVal, $targetVal, [
                                                         'mode' => 'number',
-                                                        'current_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit']) && empty($currentVal),
-                                                        'target_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit']) && empty($targetVal),
+                                                        'current_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) && empty($currentVal),
+                                                        'target_unlimited' => in_array($featureKey, ['course_limit', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) && empty($targetVal),
                                                         'suffix' => match($featureKey) {
                                                             'course_limit' => ' ' . __('packages::teacher.features.compare_unit_courses'),
                                                             'payout_account_limit' => ' ' . __('packages::teacher.features.compare_unit_accounts'),
                                                             'commission_rate' => '%',
                                                             'coupon_limit' => ' ' . __('packages::teacher.features.compare_unit_coupons'),
+                                                            'ai_quiz_limit' => ' ' . 'Quiz',
+                                                            'max_payout_per_day' => ' VND',
                                                         }
                                                     ]);
                                                 } else {
@@ -655,11 +764,13 @@
                                                     @endif
                                                 </div>
                                                 <div class="text-end">
-                                                    <strong class="{{ in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit']) ? '' : ($enabled ? 'text-success' : 'text-muted') }}">
+                                                    <strong class="{{ in_array($featureKey, ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit', 'ai_quiz_limit', 'max_payout_per_day']) ? '' : ($enabled ? 'text-success' : 'text-muted') }}">
                                                         @if($featureKey === 'course_limit') {{ $package->effective_course_limit ?: __('courses::teacher/messages.courses.unlimited') }}
                                                         @elseif($featureKey === 'payout_account_limit') {{ $package->effective_payout_account_limit }}
                                                         @elseif($featureKey === 'commission_rate') {{ rtrim(rtrim(number_format((float) $package->commission_rate, 2, '.', ''), '0'), '.') }}%
                                                         @elseif($featureKey === 'coupon_limit') {{ $package->can_manage_coupons ? ($package->effective_coupon_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'ai_quiz_limit') {{ $package->can_use_ai_quiz ? ($package->effective_ai_quiz_limit ?: __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
+                                                        @elseif($featureKey === 'max_payout_per_day') {{ $package->can_request_payouts ? ($package->max_payout_per_day ? moneyLocale((float) $package->max_payout_per_day) : __('courses::teacher/messages.courses.unlimited')) : __('packages::teacher.features.unavailable') }}
                                                         @else {{ $enabled ? __('packages::teacher.features.available') : __('packages::teacher.features.unavailable') }}
                                                         @endif
                                                     </strong>
@@ -685,7 +796,7 @@
 
                 <div class="row g-4 mt-1 align-items-start">
                     <div class="col-lg-7">
-                        <div class="teacher-upgrade-section">
+                        <div class="teacher-upgrade-section" data-payment-section>
                             <div class="teacher-upgrade-section__head">
                                 <div>
                                     <h4>{{ __('packages::teacher.common.payment_method') }}</h4>
@@ -695,15 +806,97 @@
 
                             <div class="teacher-upgrade-payment-grid" data-upgrade-payment-methods>
                                 @foreach ([
-                                    'bank_transfer' => __('teacher::portal.payment_methods.bank_transfer'),
-                                    'vnpay' => __('teacher::portal.payment_methods.vnpay'),
-                                    'momo' => __('teacher::portal.payment_methods.momo'),
-                                ] as $method => $label)
-                                    <label class="teacher-upgrade-payment {{ $selectedPaymentMethod === $method ? 'is-selected' : '' }}" data-upgrade-payment>
+                                    'wallet' => [
+                                        'label' => __('teacher::portal.payment_methods.wallet'),
+                                        'enabled' => $walletEnabled
+                                    ],
+                                    'bank_transfer' => [
+                                        'label' => __('teacher::portal.payment_methods.bank_transfer'),
+                                        'enabled' => $bankEnabled
+                                    ],
+                                    'vnpay' => [
+                                        'label' => __('teacher::portal.payment_methods.vnpay'),
+                                        'enabled' => $vnpayEnabled
+                                    ],
+                                    'momo' => [
+                                        'label' => __('teacher::portal.payment_methods.momo'),
+                                        'enabled' => $momoEnabled
+                                    ],
+                                ] as $method => $data)
+                                    <label class="teacher-upgrade-payment {{ $selectedPaymentMethod === $method ? 'is-selected' : '' }} {{ !$data['enabled'] ? 'is-maintenance' : '' }}" 
+                                        data-upgrade-payment 
+                                        data-method-id="{{ $method }}"
+                                        data-enabled="{{ $data['enabled'] ? 1 : 0 }}"
+                                        data-method-name="{{ $data['label'] }}">
                                         <input type="radio" name="payment_method" value="{{ $method }}" @checked($selectedPaymentMethod === $method)>
-                                        <span>{{ $label }}</span>
+                                        <div class="d-flex flex-column align-items-center gap-1">
+                                            <span>{{ $data['label'] }}</span>
+                                            @if ($method === 'wallet')
+                                                <span class="small text-muted" style="font-size: 0.7rem;">({{ moneyLocale($availableBalance) }})</span>
+                                            @endif
+                                            @unless ($data['enabled'])
+                                                <span class="badge bg-warning text-dark px-2 py-1" style="font-size: 0.65rem;">
+                                                    {{ __('packages::teacher.common.payment_maintenance') }}
+                                                </span>
+                                            @endunless
+                                        </div>
                                     </label>
                                 @endforeach
+                            </div>
+
+                            {{-- Thông tin chuyển khoản ngân hàng --}}
+                            <div id="bank-transfer-details" class="teacher-upgrade-bank-info mt-4 d-none">
+                                <div class="card bg-dark-subtle border-0 rounded-4 overflow-hidden shadow-sm">
+                                    <div class="card-header bg-primary text-white py-3 px-4">
+                                        <h6 class="mb-0 fw-bold"><i class="bi bi-bank me-2"></i>{{ __('packages::teacher.common.bank_transfer_info.title') }}</h6>
+                                    </div>
+                                    <div class="card-body p-4 text-white">
+                                        <div class="row g-4 align-items-center">
+                                            <div class="col-md-7">
+                                                <div class="d-flex flex-column gap-3">
+                                                    <div class="bank-info-item">
+                                                        <label class="text-white-50 small mb-1">{{ __('packages::teacher.common.bank_transfer_info.bank_name') }}</label>
+                                                        <div class="fw-bold fs-5">{{ $bankTransferBankName }}</div>
+                                                    </div>
+                                                    <div class="bank-info-item">
+                                                        <label class="text-white-50 small mb-1">{{ __('packages::teacher.common.bank_transfer_info.bank_account') }}</label>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="fw-bold fs-4 text-primary font-monospace" data-copy-text="{{ $bankTransferAccountNumber }}">{{ $bankTransferAccountNumber }}</div>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill copy-btn" data-copy="{{ $bankTransferAccountNumber }}">
+                                                                <i class="bi bi-copy me-1"></i>{{ __('packages::teacher.common.bank_transfer_info.copy') }}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="bank-info-item">
+                                                        <label class="text-white-50 small mb-1">{{ __('packages::teacher.common.bank_transfer_info.bank_account_name') }}</label>
+                                                        <div class="fw-bold text-uppercase">{{ $bankTransferAccountName }}</div>
+                                                    </div>
+                                                    <div class="bank-info-item">
+                                                        <label class="text-white-50 small mb-1">{{ __('packages::teacher.common.bank_transfer_info.transfer_content') }}</label>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="fw-bold text-warning font-monospace" data-copy-text="{{ $bankTransferNote }}">{{ $bankTransferNote }}</div>
+                                                            <button type="button" class="btn btn-sm btn-outline-warning py-0 px-2 rounded-pill copy-btn" data-copy="{{ $bankTransferNote }}">
+                                                                <i class="bi bi-copy me-1"></i>{{ __('packages::teacher.common.bank_transfer_info.copy') }}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-5 text-center">
+                                                <div class="bg-white p-3 rounded-4 d-inline-block shadow-lg">
+                                                    <img id="vietqr-img" 
+                                                        src="https://img.vietqr.io/image/{{ $bankTransferBankBin }}-{{ $bankTransferAccountNumber }}-compact2.jpg?amount=0&addInfo={{ rawurlencode($bankTransferNote) }}" 
+                                                        class="img-fluid" style="max-height: 180px;" alt="VietQR">
+                                                    <div class="mt-2">
+                                                        <a href="#" class="text-primary text-decoration-none small fw-bold" id="download-qr">
+                                                            <i class="bi bi-download me-1"></i>{{ __('packages::teacher.common.bank_transfer_info.download_qr') }}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -727,7 +920,7 @@
                                 <a href="{{ route('teacher.dashboard.index') }}" class="btn btn-outline-secondary">
                                     {{ __('packages::teacher.common.cancel') }}
                                 </a>
-                                <button type="submit" class="btn btn-primary flex-grow-1">
+                                <button type="submit" id="upgrade-submit-btn" class="btn btn-primary flex-grow-1">
                                     {{ __('packages::teacher.common.submit_upgrade') }}
                                 </button>
                             </div>
@@ -735,6 +928,60 @@
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="upgradeConfirmModal" tabindex="-1" aria-labelledby="upgradeConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content teacher-upgrade-section">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="upgradeConfirmModalLabel">
+                        {{ __('packages::teacher.upgrade.confirm.upgrade_title') }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <div id="confirm-desc" class="mb-4"></div>
+
+                    <!-- Tóm tắt thay đổi -->
+                    <div class="teacher-upgrade-summary-box mb-4 p-3 rounded-4 shadow-sm" style="background: rgba(var(--admin-primary-rgb), 0.1); border: 1px solid rgba(var(--admin-primary-rgb), 0.2);">
+                        <div class="small fw-bold text-uppercase mb-2" style="letter-spacing: 0.5px; color: var(--admin-primary);">{{ __('packages::teacher.features.compare_title') }}</div>
+                        <div id="confirm-change-summary" class="d-flex flex-column gap-2"></div>
+                    </div>
+                    
+                    <div id="downgrade-warning" class="teacher-upgrade-warning d-none mb-4 p-3 rounded-4">
+                        <div class="d-flex gap-3">
+                            <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                            <div>
+                                <div class="fw-bold mb-1">{{ __('packages::teacher.upgrade.confirm.downgrade_warning') }}</div>
+                                <div id="feature-loss-list" class="small mt-2">
+                                    <div class="fw-bold mb-1">{{ __('packages::teacher.upgrade.confirm.feature_loss_warning') }}</div>
+                                    <ul class="mb-0 ps-3"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="recurring-warning" class="teacher-upgrade-warning d-none mb-4 p-3 rounded-4" style="background: rgba(var(--admin-primary-rgb), 0.1); border-color: rgba(var(--admin-primary-rgb), 0.2); color: var(--admin-primary);">
+                        <div class="d-flex gap-3">
+                            <i class="bi bi-info-circle-fill fs-4"></i>
+                            <div>
+                                <div class="fw-bold mb-1">{{ __('packages::teacher.upgrade.confirm.permanent_to_recurring_warning') }}</div>
+                                <div id="expiry-preview" class="small mt-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                        {{ __('packages::teacher.upgrade.confirm.cancel_btn') }}
+                    </button>
+                    <button type="button" id="confirm-submit-btn" class="btn btn-primary px-4">
+                        {{ __('packages::teacher.upgrade.confirm.confirm_btn') }}
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -973,11 +1220,28 @@
             color: #8af4e3;
         }
 
+        .teacher-upgrade-card__category {
+            display: inline-flex;
+            width: fit-content;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
         .teacher-upgrade-card__body h5 {
-            color: #f8fbff;
-            font-size: 1.35rem;
+            color: #ffffff;
+            background: linear-gradient(to right, #ffffff, #bfdbfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.55rem;
             font-weight: 800;
-            margin-bottom: 0.45rem;
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.02em;
         }
 
         .teacher-upgrade-card__price {
@@ -1057,6 +1321,12 @@
             transform: translateY(-2px);
             border-color: rgba(125, 211, 252, 0.3);
             box-shadow: 0 18px 40px rgba(2, 6, 23, 0.22);
+        }
+
+        .teacher-upgrade-payment.is-maintenance {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background: rgba(30, 41, 59, 0.5);
         }
 
         .teacher-upgrade-payment input {
@@ -1152,6 +1422,112 @@
         .teacher-upgrade-compare-shell:not(.is-collapsed) .teacher-upgrade-compare-shell__toggle-icon {
             transform: rotate(-135deg);
             margin-top: 0.18rem;
+        }
+
+        .teacher-upgrade-current {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(96, 165, 250, 0.15);
+            border-radius: 24px;
+            padding: 2.2rem;
+            margin-bottom: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teacher-upgrade-current::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.3), transparent);
+        }
+
+        .teacher-upgrade-current__label {
+            color: #60a5fa;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            margin-bottom: 1rem;
+        }
+
+        .teacher-upgrade-current__name {
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+        }
+
+        .teacher-upgrade-categories {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .teacher-upgrade-tabs {
+            display: inline-flex;
+            padding: 0.4rem;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 
+                0 4px 24px -1px rgba(0, 0, 0, 0.2),
+                inset 0 0 20px rgba(255, 255, 255, 0.02);
+            gap: 0.25rem;
+        }
+
+        .teacher-upgrade-tabs .nav-link {
+            border: none;
+            background: transparent !important;
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 0.7rem 1.75rem;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            position: relative;
+            z-index: 1;
+            white-space: nowrap;
+        }
+
+        .teacher-upgrade-tabs .nav-link:hover {
+            color: #f1f5f9;
+        }
+
+        .teacher-upgrade-tabs .nav-link.active {
+            color: #ffffff !important;
+            background: rgba(59, 130, 246, 0.85) !important;
+            box-shadow: 
+                0 10px 25px -5px rgba(37, 99, 235, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+        }
+
+        .teacher-upgrade-tab-content {
+            animation: premiumFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes premiumFadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(15px) scale(0.98);
+                filter: blur(4px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
         }
 
         .teacher-upgrade-compare {
@@ -1778,6 +2154,7 @@
             const unlimitedText = @json(__('courses::teacher/messages.courses.unlimited'));
             const currentPackage = @json($currentPackageMap);
             const packageMap = @json($packageMap);
+            const allPaymentsDisabled = @json($allPaymentsDisabled);
             const getCollapsedCompareHeight = () => window.matchMedia('(max-width: 767.98px)').matches ? 560 : 700;
 
             const formatMoney = (value) => {
@@ -1850,9 +2227,21 @@
                 }, 120);
             };
 
-            const updateCards = () => {
+            const updateCards = (updateUrl = true) => {
                 let selectedId = null;
                 let selectedPrice = 0;
+
+                const checkedInput = document.querySelector('input[name="package_id"]:checked');
+                if (checkedInput) {
+                    selectedId = checkedInput.value;
+                    selectedPrice = Number(checkedInput.dataset.packagePrice || 0);
+                    
+                    if (updateUrl) {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('package_id', selectedId);
+                        window.history.replaceState({}, '', url);
+                    }
+                }
 
                 cards.forEach((card) => {
                     const input = card.querySelector('input[name="package_id"]');
@@ -1878,7 +2267,35 @@
                 }
 
                 if (paymentGrid) {
-                    paymentGrid.classList.toggle('is-hidden', selectedPrice <= 0);
+                    paymentGrid.classList.toggle('is-hidden', selectedPrice <= 0 || allPaymentsDisabled);
+                }
+
+                const paymentSection = document.querySelector('[data-payment-section]');
+                if (paymentSection) {
+                    paymentSection.classList.toggle('d-none', selectedPrice <= 0 || (allPaymentsDisabled && selectedPrice > 0));
+                }
+
+                const submitBtn = document.getElementById('upgrade-submit-btn');
+                if (submitBtn) {
+                    if (allPaymentsDisabled && selectedPrice > 0) {
+                        submitBtn.style.display = 'none';
+                        let mtBtn = document.getElementById('maintenance-btn');
+                        if (!mtBtn) {
+                            mtBtn = document.createElement('button');
+                            mtBtn.id = 'maintenance-btn';
+                            mtBtn.type = 'button';
+                            mtBtn.className = 'btn btn-outline-warning flex-grow-1 opacity-75';
+                            mtBtn.disabled = true;
+                            mtBtn.textContent = @json(__('packages::teacher.common.payment_maintenance'));
+                            submitBtn.parentNode.appendChild(mtBtn);
+                        } else {
+                            mtBtn.style.display = '';
+                        }
+                    } else {
+                        submitBtn.style.display = '';
+                        const mtBtn = document.getElementById('maintenance-btn');
+                        if (mtBtn) mtBtn.style.display = 'none';
+                    }
                 }
 
                 if (warningBox && packageMap[selectedId]) {
@@ -1896,6 +2313,10 @@
                     } else if (hasRemainingRecurring && target.sort_order !== currentPackage.sort_order) {
                         const expiresText = currentExpiresAt.toLocaleDateString(document.documentElement.lang || 'vi');
                         warning = @json(__('packages::teacher.warnings.queued_package')).replace(':date', expiresText);
+                    }
+
+                    if (allPaymentsDisabled && target.price > 0) {
+                        warning = @json(__('packages::teacher.common.all_payments_maintenance_block'));
                     }
 
                     warningBox.textContent = warning;
@@ -1928,23 +2349,83 @@
                 mobileCompareSelectedLabels.forEach((label) => {
                     label.classList.toggle('is-visible', String(label.dataset.mobileCompareSelectedLabel) === String(selectedId));
                 });
+
+                // Cập nhật QR Code với giá tiền nếu có
+                const qrImg = document.getElementById('vietqr-img');
+                if (qrImg && selectedPrice > 0) {
+                    const currentSrc = new URL(qrImg.src);
+                    currentSrc.searchParams.set('amount', selectedPrice);
+                    qrImg.src = currentSrc.toString();
+                }
+
+                // Đồng bộ hiển thị thông tin ngân hàng
+                const bankInfo = document.getElementById('bank-transfer-details');
+                if (bankInfo) {
+                    const bankLabel = document.querySelector('[data-method-id="bank_transfer"]');
+                    const bankInput = bankLabel?.querySelector('input');
+                    const isBankSelected = bankInput?.checked;
+                    const isBankEnabled = bankLabel?.dataset.enabled === '1';
+                    
+                    if (!isBankSelected || !isBankEnabled || allPaymentsDisabled) {
+                        bankInfo.setAttribute('style', 'display: none !important');
+                    } else {
+                        bankInfo.setAttribute('style', '');
+                        bankInfo.classList.remove('d-none');
+                    }
+                }
             };
 
             const updatePayments = () => {
                 paymentOptions.forEach((option) => {
                     const input = option.querySelector('input[name="payment_method"]');
-                    option.classList.toggle('is-selected', !!input?.checked);
+                    const isSelected = !!input?.checked;
+                    option.classList.toggle('is-selected', isSelected);
                 });
+            };
+
+            const handlePaymentSelection = (event) => {
+                const label = event.currentTarget;
+                const input = label.querySelector('input[name="payment_method"]');
+                const isEnabled = label.dataset.enabled === '1';
+
+                if (!isEnabled) {
+                    event.preventDefault();
+                    if (input) input.checked = false;
+                    
+                    const methodName = label.dataset.methodName || 'Method';
+                    const msg = @json(__('packages::teacher.common.payment_under_maintenance')).replace(':gateway', methodName);
+                    alert(msg);
+                    
+                    // Re-select first enabled or clear
+                    const firstEnabled = paymentOptions.find(opt => opt.dataset.enabled === '1');
+                    if (firstEnabled) {
+                        const firstInput = firstEnabled.querySelector('input[name="payment_method"]');
+                        if (firstInput) {
+                            firstInput.checked = true;
+                            updatePayments();
+                        }
+                    } else {
+                        updatePayments();
+                    }
+                    return;
+                }
+                updatePayments();
+                updateCards(false); // Gọi updateCards để đồng bộ lại thông tin ngân hàng
             };
 
             cards.forEach((card) => {
                 const input = card.querySelector('input[name="package_id"]');
+                card.addEventListener('click', () => {
+                    if (input) {
+                        input.checked = true;
+                        updateCards();
+                    }
+                });
                 input?.addEventListener('change', updateCards);
             });
 
             paymentOptions.forEach((option) => {
-                const input = option.querySelector('input[name="payment_method"]');
-                input?.addEventListener('change', updatePayments);
+                option.addEventListener('click', handlePaymentSelection);
             });
 
             compareToggle?.addEventListener('click', () => {
@@ -1958,28 +2439,160 @@
 
             window.addEventListener('resize', updateCompareToggleState);
 
+            // Khởi tạo trạng thái ban đầu
+            updateCards(false);
+            updatePayments();
+
+            const featureLabels = @json($groupedFeatures->flatMap(fn($g) => collect($g)->mapWithKeys(fn($f) => [$f->key => $f->name_locale])));
+            const confirmModal = new bootstrap.Modal(document.getElementById('upgradeConfirmModal'));
+            const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
+            let isConfirming = false;
+
             form?.addEventListener('submit', (event) => {
+                if (isConfirming) return;
+                event.preventDefault();
+
                 const selectedInput = document.querySelector('input[name="package_id"]:checked');
-                if (!selectedInput) {
-                    return;
-                }
+                if (!selectedInput) return;
 
                 const target = packageMap[selectedInput.value];
-                if (!target) {
-                    return;
+                if (!target) return;
+
+                // 1. Update Description
+                const descEl = document.getElementById('confirm-desc');
+                descEl.innerHTML = @json(__('packages::teacher.upgrade.confirm.upgrade_desc'))
+                    .replace(':current', currentPackage.name)
+                    .replace(':target', target.name);
+
+                // 1.1 Update Change Summary
+                const summaryEl = document.getElementById('confirm-change-summary');
+                let summaryHtml = '';
+                
+                const compareFields = [
+                    { key: 'commission_rate', label: @json(__('packages::teacher.features.labels.commission_rate')), suffix: '%', invert: true },
+                    { key: 'course_limit', label: @json(__('packages::teacher.features.labels.course_limit')), suffix: ' ' + @json(__('packages::teacher.features.compare_unit_courses')), isLimit: true },
+                    { key: 'coupon_limit', label: @json(__('packages::teacher.features.labels.coupon_limit')), suffix: ' ' + @json(__('packages::teacher.features.compare_unit_coupons')), isLimit: true },
+                    { key: 'payout_account_limit', label: @json(__('packages::teacher.features.labels.payout_account_limit')), suffix: ' ' + @json(__('packages::teacher.features.compare_unit_accounts')), isLimit: true },
+                ];
+
+                compareFields.forEach(field => {
+                    // Ép kiểu về số để so sánh chính xác (0 == null == undefined trong ngữ cảnh này)
+                    const curVal = Number(currentPackage[field.key] || 0);
+                    const tarVal = Number(target[field.key] || 0);
+                    
+                    if (curVal !== tarVal) {
+                        const format = (v) => (field.isLimit && v === 0) ? @json(__('courses::teacher/messages.courses.unlimited')) : v + (field.suffix || '');
+                        summaryHtml += `
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <span class="opacity-75">${field.label}:</span>
+                                <div class="fw-bold">
+                                    <span class="text-decoration-line-through opacity-50 mr-2">${format(curVal)}</span>
+                                    <i class="bi bi-arrow-right mx-1 opacity-50"></i>
+                                    <span style="color: var(--admin-primary);">${format(tarVal)}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                summaryEl.innerHTML = summaryHtml || `<div class="small text-muted">${@json(__('packages::teacher.features.compare_same'))}</div>`;
+
+                // 2. Check Downgrade & Feature Loss
+                const downgradeWarning = document.getElementById('downgrade-warning');
+                const featureLossList = document.getElementById('feature-loss-list');
+                const featureLossUl = featureLossList.querySelector('ul');
+                
+                // Kiểm tra xem các thông số có tệ hơn không
+                let isWorseLimit = false;
+                if (target.course_limit !== 0) {
+                    if (currentPackage.course_limit === 0 || target.course_limit < currentPackage.course_limit) isWorseLimit = true;
+                }
+                if (target.commission_rate > currentPackage.commission_rate) isWorseLimit = true;
+                if (target.coupon_limit !== 0) {
+                    if (currentPackage.coupon_limit === 0 || target.coupon_limit < currentPackage.coupon_limit) isWorseLimit = true;
                 }
 
-                if (currentPackage.billing_cycle === 'one_time' && ['monthly', 'yearly'].includes(target.billing_cycle)) {
-                    const confirmed = window.confirm(@json(__('packages::teacher.confirm.one_time_to_recurring')));
-                    if (!confirmed) {
-                        event.preventDefault();
+                const isLowerOrder = target.sort_order < currentPackage.sort_order;
+                
+                // Loại bỏ các trường định lượng khỏi danh sách "tính năng bị mất"
+                const numericKeys = ['course_limit', 'payout_account_limit', 'commission_rate', 'coupon_limit'];
+                const lostFeatures = Object.keys(featureLabels).filter(key => {
+                    if (numericKeys.includes(key)) return false;
+                    return currentPackage[key] && !target[key];
+                });
+                
+                if (isLowerOrder || lostFeatures.length > 0 || isWorseLimit) {
+                    downgradeWarning.classList.remove('d-none');
+                    if (lostFeatures.length > 0) {
+                        featureLossList.classList.remove('d-none');
+                        featureLossUl.innerHTML = lostFeatures.map(key => `<li>${featureLabels[key]}</li>`).join('');
+                    } else {
+                        featureLossList.classList.add('d-none');
                     }
+                } else {
+                    downgradeWarning.classList.add('d-none');
                 }
+
+                // 3. Check Permanent to Recurring
+                const recurringWarning = document.getElementById('recurring-warning');
+                const expiryPreview = document.getElementById('expiry-preview');
+                const isOneTimeToRecurring = currentPackage.billing_cycle === 'one_time' && ['monthly', 'yearly'].includes(target.billing_cycle);
+                
+                if (isOneTimeToRecurring) {
+                    recurringWarning.classList.remove('d-none');
+                    const previewData = target.term_description || ''; // We could calculate this more accurately if needed
+                    expiryPreview.innerHTML = @json(__('packages::teacher.upgrade.confirm.preview_expiry'))
+                        .replace(':date', target.expires_at_formatted || '---');
+                } else {
+                    recurringWarning.classList.add('d-none');
+                }
+
+                confirmModal.show();
             });
 
-            updateCards();
+            confirmSubmitBtn?.addEventListener('click', () => {
+                isConfirming = true;
+                form.submit();
+            });
+
+            updateCards(false);
             updatePayments();
             updateCompareToggleState();
+
+            // Copy to clipboard
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const text = btn.dataset.copy;
+                    navigator.clipboard.writeText(text).then(() => {
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="bi bi-check2 me-1"></i>{{ __("packages::teacher.common.bank_transfer_info.copied") }}';
+                        btn.classList.replace('btn-outline-primary', 'btn-success');
+                        btn.classList.replace('btn-outline-warning', 'btn-success');
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                            btn.classList.replace('btn-success', 'btn-outline-primary');
+                            btn.classList.replace('btn-success', 'btn-outline-warning');
+                        }, 2000);
+                    });
+                });
+            });
+
+            // Download QR
+            document.getElementById('download-qr')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const img = document.getElementById('vietqr-img');
+                const link = document.createElement('a');
+                link.href = img.src;
+                link.download = 'vietqr.jpg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            const initialPayment = document.querySelector('input[name="payment_method"]:checked');
+            if (initialPayment?.value === 'bank_transfer') {
+                document.getElementById('bank-transfer-details')?.classList.remove('d-none');
+            }
 
             // Initialize Tooltips
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

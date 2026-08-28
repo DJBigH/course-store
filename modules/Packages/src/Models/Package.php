@@ -36,6 +36,7 @@ class Package extends Model
         'payout_account_limit',
         'commission_rate',
         'priority_review',
+        'can_request_payouts',
         'can_duplicate_courses',
         'can_manage_comments',
         'can_manage_coupons',
@@ -69,6 +70,12 @@ class Package extends Model
         'is_exclusive',
         'sort_order',
         'badge_tone',
+        'category',
+        'category_en',
+        'category_ko',
+        'category_ja',
+        'category_zh',
+        'category_id',
     ];
 
     protected $casts = [
@@ -78,6 +85,7 @@ class Package extends Model
         'ai_quiz_limit' => 'integer',
         'commission_rate' => 'float',
         'priority_review' => 'boolean',
+        'can_request_payouts' => 'boolean',
         'can_duplicate_courses' => 'boolean',
         'can_manage_comments' => 'boolean',
         'can_manage_coupons' => 'boolean',
@@ -128,7 +136,7 @@ class Package extends Model
 
     public function scopeVisibleForListing($query)
     {
-        return $query->where('status', true)->where('is_exclusive', false)->orderBy('sort_order')->limit(6);
+        return $query->where('status', true)->where('is_exclusive', false)->orderBy('sort_order')->limit(5);
     }
 
     /**
@@ -145,6 +153,11 @@ class Package extends Model
             $innerQuery->where('status', true)
                 ->orWhere('hidden_mode', 'available');
         });
+    }
+
+    public function packageCategory()
+    {
+        return $this->belongsTo(PackageCategory::class, 'category_id', 'id');
     }
 
     public function applications()
@@ -215,6 +228,15 @@ class Package extends Model
     public function getSupportLevelLocaleAttribute(): string
     {
         return $this->resolveLocalizedAttribute('support_level');
+    }
+
+    public function getCategoryLocaleAttribute(): string
+    {
+        if ($this->packageCategory) {
+            return $this->packageCategory->name_locale;
+        }
+
+        return $this->resolveLocalizedAttribute('category');
     }
 
     public function getVisibilityStateAttribute(): string

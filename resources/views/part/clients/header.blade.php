@@ -159,7 +159,7 @@
                 'students.account.deactivate',
                 'students.account.delete',
                 'students.account.order-detail',
-                'students.account.checkout',
+                'students.account.checkout' => route($currentRouteName, array_merge(['locale' => $locale], $params)),
                 'teacher.portal.index' => route('teacher.portal.index', ['locale' => $locale]),
                 'teacher.account.begin',
                 'teacher.account.apply',
@@ -207,16 +207,20 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="d-none d-xl-block col-xl-3">
-                    <form class="header-search" action="{{ route('courses.home', ['locale' => app()->getLocale()]) }}"
-                        method="GET" role="search">
+                    <form class="header-search js-smooth-filter" action="{{ route('courses.home', ['locale' => app()->getLocale()]) }}"
+                        method="GET" role="search" data-filter-block-target="courses-index">
                         <label class="visually-hidden"
                             for="header-search-input">{{ __('clients/common.search') }}</label>
                         <span class="header-search__icon" aria-hidden="true">
                             <i class="fas fa-search"></i>
                         </span>
-                        <input id="header-search-input" type="text" name="keyword"
-                            value="{{ request('keyword') }}"
-                            placeholder="{{ __('clients/common.search_placeholder') }}" />
+                        <div class="header-search__input-wrapper">
+                            <input id="header-search-input" type="text" name="keyword"
+                                value="{{ request('keyword') }}"
+                                placeholder="{{ __('clients/common.search_placeholder') }}"
+                                autocomplete="off" />
+                            <div id="search-suggestions" class="search-suggestions"></div>
+                        </div>
                         <button type="submit" class="btn btn-primary header-search__button">
                             {{ __('clients/common.search') }}
                         </button>
@@ -309,21 +313,17 @@
                                             <li>
                                                 <a class="dropdown-item notification-item {{ is_null($notification->read_at) ? 'unread' : '' }}"
                                                     href="{{ route('students.notifications.read', ['locale' => app()->getLocale(), 'id' => $notification->id]) }}">
-
                                                     <div class="notification-content">
                                                         <div class="notification-title">
                                                             {{ notificationText($notification, 'title', __('clients/common.notifications')) }}
                                                         </div>
-
                                                         <div class="notification-message">
                                                             {{ notificationText($notification, 'message', '') }}
                                                         </div>
-
                                                         <div class="notification-time">
                                                             {{ $notification->created_at->diffForHumans() }}
                                                         </div>
                                                     </div>
-
                                                 </a>
                                             </li>
                                         @empty
@@ -534,9 +534,9 @@
 
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('teacher.portal.*', 'teacher.account.*', 'teacher.dashboard.*') ? 'active' : '' }}"
-                            href="{{ route('teacher.portal.index', ['locale' => app()->getLocale()]) }}">
+                            href="{{ $teacherPortalHeaderUrl ?: route('teacher.portal.index', ['locale' => app()->getLocale()]) }}">
                             <i class="fas fa-chalkboard-user"></i>
-                            {{ $teacherUi['become'] }}
+                            {{ $teacherPortalHeaderUrl ? $teacherUi['portal'] : $teacherUi['become'] }}
                         </a>
                     </li>
 
@@ -715,6 +715,73 @@
                     }
 
                     updateNotificationUiAfterMarkAllRead();
+                } catch (error) {
+                    form.submit();
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-mark-read-form]').forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const submitButton = form.querySelector('[data-mark-read-button]');
+                const token = form.querySelector('input[name="_token"]')?.value;
+
+                if (!token) {
+                    form.submit();
+                    return;
+                }
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({}),
+                        credentials: 'same-origin',
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Request failed');
+                    }
+
+                    const data = await response.json();
+                    
+                    // Update badge
+                    const badges = document.querySelectorAll('[data-unread-badge]');
+                    if (data.unread_count > 0) {
+                        badges.forEach(badge => {
+                            badge.textContent = data.unread_count;
+                        });
+                    } else {
+                        badges.forEach(badge => badge.remove());
+                        document.querySelectorAll('[data-mark-all-read-form]').forEach(f => f.remove());
+                    }
+
+                    // Update item status
+                    const item = form.closest('[data-notification-item]');
+                    if (item) {
+                        const statusBadge = item.querySelector('[data-notification-status]');
+                        if (statusBadge) {
+                            statusBadge.className = 'badge bg-success';
+                            statusBadge.textContent = statusBadge.dataset.readLabel || 'Da doc';
+                        }
+                    }
+                    
+                    form.remove();
                 } catch (error) {
                     form.submit();
                 } finally {

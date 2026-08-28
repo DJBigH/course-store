@@ -9,11 +9,164 @@ use Modules\Students\src\Models\Coupons;
 use Modules\Students\src\Models\Student;
 use Modules\Courses\src\Models\CourseBundle;
 use Modules\Finances\src\Models\AffiliateLink;
+use Modules\Teacher\src\Models\TeacherApplication;
 
 class Order extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
+    protected static function booted()
+    {
+        static::created(function ($order) {
+            try {
+                $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                $botToken = config('services.telegram.bot_token');
+                $chatId = config('services.telegram.chat_id');
+
+                if ($isEnabled === '1' && $botToken && $chatId) {
+                    $studentName = $order->students?->name ?: $order->customer_name_snapshot ?: 'Khách vãng lai';
+                    $totalAmount = number_format($order->total) . ' ' . ($order->currency ?: 'VND');
+
+                    $text = "🛒 <b>[ĐƠN HÀNG MỚI ĐƯỢC TẠO]</b>\n\n";
+                    $text .= "📝 <b>Mã đơn:</b> <code>{$order->code}</code>\n";
+                    $text .= "👤 <b>Khách hàng:</b> {$studentName}\n";
+                    $text .= "💰 <b>Tổng tiền:</b> <b>{$totalAmount}</b>\n";
+                    $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                    \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        });
+
+        static::updated(function ($order) {
+            try {
+                if ($order->isDirty('status_id')) {
+                    $oldStatus = \Modules\Orders\src\Models\OrderStatus::find($order->getOriginal('status_id'));
+                    $newStatus = \Modules\Orders\src\Models\OrderStatus::find($order->status_id);
+
+                    if ($newStatus && $newStatus->is_success && (!$oldStatus || !$oldStatus->is_success)) {
+                        if (empty($order->payment_complete_date)) {
+                            $order->payment_complete_date = now();
+                        }
+                        $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                        $botToken = config('services.telegram.bot_token');
+                        $chatId = config('services.telegram.chat_id');
+
+                        if ($isEnabled === '1' && $botToken && $chatId) {
+                            $studentName = $order->students?->name ?: $order->customer_name_snapshot ?: 'Khách vãng lai';
+                            $totalAmount = number_format($order->total) . ' ' . ($order->currency ?: 'VND');
+
+                            $text = "🎉 <b>[ĐƠN HÀNG ĐÃ THANH TOÁN THÀNH CÔNG]</b>\n\n";
+                            $text .= "📝 <b>Mã đơn:</b> <code>{$order->code}</code>\n";
+                            $text .= "👤 <b>Khách hàng:</b> {$studentName}\n";
+                            $text .= "💰 <b>Tổng tiền:</b> <b>{$totalAmount}</b>\n";
+                            $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                            \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
+                        }
+
+                        // Notify Teachers about new sales via Queue
+                        try {
+                            $orderDetails = $order->detail()->with('courses.teacher')->get();
+                            $notifiedTeachers = [];
+
+                            foreach ($orderDetails as $detail) {
+                                $course = $detail->courses;
+                                if ($course && $course->teacher && $course->teacher->hasTelegramFeature()) {
+                                    $teacher = $course->teacher;
+                                    
+                                    if (in_array($teacher->id, $notifiedTeachers)) continue;
+
+                                    $studentName = $order->students?->name ?: $order->customer_name_snapshot ?: 'Học viên';
+                                    $courseName = $course->name_locale ?: $course->name;
+                                    
+                                    $msg = "💰 <b>BẠN CÓ ĐƠN HÀNG MỚI!</b>\n\n";
+                                    $msg .= "🎓 <b>Khóa học:</b> {$courseName}\n";
+                                    $msg .= "👤 <b>Học viên:</b> {$studentName}\n";
+                                    $msg .= "💵 <b>Giá bán:</b> " . number_format($detail->total_amount) . " đ\n";
+                                    $msg .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i d/m/Y');
+
+                                    dispatch(new \App\Jobs\SendTelegramTeacherNotification($teacher, $msg));
+                                    $notifiedTeachers[] = $teacher->id;
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error('Telegram Teacher Sale Notification Error: ' . $e->getMessage());
+                        }
+
+                        // Unified Activation for Teacher Upgrade
+                        if ($order->type === 'teacher_upgrade' && $order->orderable instanceof \Modules\Teacher\src\Models\TeacherApplication) {
+                            try {
+                                $lifecycleManager = app(\Modules\Packages\src\Support\PackageLifecycleManager::class);
+                                
+                                // We check if it's already approved to avoid double activation, 
+                                // though PackageLifecycleManager handles some of this.
+                                if ($order->orderable->status !== 'approved') {
+                                    $lifecycleManager->activateTeacherUpgrade($order->orderable);
+                                    
+                                    // Notify Teacher via Telegram if they have the feature (newly granted or already had it)
+                                    $teacher = $order->orderable->teacher;
+                                    if ($teacher && $teacher->hasTelegramFeature()) {
+                                        $package = $order->orderable->package;
+                                        $msg = "🚀 <b>NÂNG CẤP TÀI KHOẢN THÀNH CÔNG!</b>\n\n";
+                                        $msg .= "Tài khoản của bạn đã được nâng cấp lên gói: <b>" . ($package->name_locale ?: $package->name) . "</b>\n";
+                                        $msg .= "Tận hưởng các tính năng ưu việt ngay từ bây giờ!";
+                                        
+                                        dispatch(new \App\Jobs\SendTelegramTeacherNotification($teacher, $msg));
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error('Teacher Upgrade Activation Error via Order Observer', [
+                                    'order_id' => $order->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                            }
+                        }
+
+                        // Activation for Telegram Package
+                        if ($order->type === 'telegram_package' && $order->orderable instanceof \Modules\Teacher\src\Models\TeacherTelegramSubscription) {
+                            try {
+                                $subscription = $order->orderable;
+                                if ($subscription->status !== 'active') {
+                                    $teacher = $subscription->teacher;
+                                    $package = $subscription->package;
+                                    
+                                    // Calculate and update expiry on Teacher model
+                                    $newExpiry = $teacher->addTelegramDuration($package->duration_value, $package->duration_unit);
+                                    
+                                    // Update subscription record
+                                    $subscription->update([
+                                        'status' => 'active',
+                                        'started_at' => now(),
+                                        'expires_at' => $newExpiry
+                                    ]);
+
+                                    // Notify Teacher via Telegram
+                                    if ($teacher->hasTelegramFeature()) {
+                                        $msg = "💳 <b>GIA HẠN TELEGRAM THÀNH CÔNG!</b>\n\n";
+                                        $msg .= "Gói: <b>" . ($package->name_locale ?: $package->name) . "</b>\n";
+                                        $msg .= "📅 <b>Hạn dùng mới:</b> " . $newExpiry->format('d/m/Y');
+                                        
+                                        dispatch(new \App\Jobs\SendTelegramTeacherNotification($teacher, $msg));
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error('Telegram Package Activation Error via Order Observer', [
+                                    'order_id' => $order->id,
+                                    'error' => $e->getMessage()
+                                ]);
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        });
+    }
 
     protected $table = 'orders';
 
@@ -31,6 +184,9 @@ class Order extends Model
         'discount',
         'coupon',
         'status_id',
+        'orderable_id',
+        'orderable_type',
+        'type',
         'payment_date',
         'payment_complete_date',
         'payment_method',
@@ -77,6 +233,11 @@ class Order extends Model
     public function affiliateLink()
     {
         return $this->belongsTo(AffiliateLink::class, 'affiliate_link_id', 'id');
+    }
+
+    public function orderable()
+    {
+        return $this->morphTo();
     }
 
     public function getCustomerNameDisplayAttribute(): string
@@ -150,7 +311,9 @@ class Order extends Model
             'bank', 'bank_transfer' => 'background:#16a34a;color:#ffffff;',
             'vnpay' => 'background:#0f6cbd;color:#ffffff;',
             'momo' => 'background:#a21caf;color:#ffffff;',
+            'wallet' => 'background:#4338ca;color:#ffffff;',
             'free' => 'background:#0ea5e9;color:#ffffff;',
+            'gift' => 'background:#8b5cf6;color:#ffffff;',
             default => 'background:#64748b;color:#ffffff;',
         };
     }

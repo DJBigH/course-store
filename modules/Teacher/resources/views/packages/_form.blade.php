@@ -18,15 +18,15 @@
         'zh' => ['label' => 'ZH', 'name' => 'Chinese'],
     ];
     $featureBadges = [
-        ['key' => 'can_manage_students', 'label' => 'Quan ly hoc vien'],
-        ['key' => 'can_view_student_progress', 'label' => 'Xem tien do'],
-        ['key' => 'can_view_activity_logs', 'label' => 'Nhat ky hoat dong'],
-        ['key' => 'can_manage_quizzes', 'label' => 'Quan ly quiz'],
+        ['key' => 'can_manage_students', 'label' => 'Quản lý học viên'],
+        ['key' => 'can_view_student_progress', 'label' => 'Xem tiến độ'],
+        ['key' => 'can_view_activity_logs', 'label' => 'Nhật ký hoạt động'],
+        ['key' => 'can_manage_quizzes', 'label' => 'Quản lý quiz'],
         ['key' => 'can_use_ai_quiz', 'label' => 'AI Quiz Generator'],
-        ['key' => 'can_import_export_lessons', 'label' => 'Import/Export bai hoc'],
-        ['key' => 'can_sell_bundles', 'label' => 'Bundle khoa hoc'],
-        ['key' => 'can_send_promotions', 'label' => 'Gui khuyen mai'],
-        ['key' => 'can_issue_certificates', 'label' => 'Cap chung chi'],
+        ['key' => 'can_import_export_lessons', 'label' => 'Import/Export bài học'],
+        ['key' => 'can_sell_bundles', 'label' => 'Combo khóa học'],
+        ['key' => 'can_send_promotions', 'label' => 'Gửi khuyến mại'],
+        ['key' => 'can_issue_certificates', 'label' => 'Cấp chứng chỉ'],
     ];
     $defaultPreviewName = old('name', $package->name ?? '');
     $defaultPreviewTagline = old('tagline', $package->tagline ?? '');
@@ -48,8 +48,8 @@
         <div class="border rounded-4 p-4 bg-light-subtle">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                 <div>
-                    <h6 class="mb-1">Thong tin he thong</h6>
-                    <p class="text-muted mb-0">Code, trang thai va quy tac sap xep cua goi.</p>
+                    <h6 class="mb-1">Thông tin hệ thống</h6>
+                    <p class="text-muted mb-0">Code, trạng thái và quy tắc sắp xếp của gói.</p>
                 </div>
             </div>
 
@@ -67,22 +67,22 @@
                     <div class="form-check mt-md-4">
                         <input class="form-check-input" type="checkbox" name="status" value="1"
                             {{ old('status', $package->status ?? true) ? 'checked' : '' }}>
-                        <label class="form-check-label">Hien cong khai cho nguoi mua</label>
+                        <label class="form-check-label">Hiện công khai cho người mua</label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="is_featured" value="1"
                             {{ old('is_featured', $package->is_featured ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Featured card tren landing</label>
+                        <label class="form-check-label">Đính trên landing page</label>
                     </div>
                 </div>
                 <div class="col-md-8">
-                    <label class="form-label">Khi da tat cong khai</label>
+                    <label class="form-label">Khi đã tắt công khai</label>
                     <select name="hidden_mode" class="form-select">
                         <option value="available" {{ $defaultHiddenMode === 'available' ? 'selected' : '' }}>
-                            An di nhung nguoi dang dung goi nay van tiep tuc su dung duoc
+                            Ẩn đi nhưng người đang dùng gói này vẫn tiếp tục sử dụng được
                         </option>
                         <option value="unavailable" {{ $defaultHiddenMode === 'unavailable' ? 'selected' : '' }}>
-                            An di va khong cho nguoi mua tiep tuc chon / su dung nua
+                            Ẩn đi và không cho người mua tiếp tục chọn / sử dụng nữa
                         </option>
                     </select>
                 </div>
@@ -94,8 +94,8 @@
         <div class="border rounded-4 p-4">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                 <div>
-                    <h6 class="mb-1">Noi dung da ngon ngu</h6>
-                    <p class="text-muted mb-0">Ten goi, tagline, badge, mo ta va muc ho tro hien thi theo locale.</p>
+                    <h6 class="mb-1">Nội dung đa ngôn ngữ</h6>
+                    <p class="text-muted mb-0">Tên gói, tagline, badge, mô tả và mức hỗ trợ hiển thị theo locale.</p>
                 </div>
             </div>
             <div class="row g-4 align-items-start">
@@ -130,26 +130,26 @@
                                         <div>
                                             <h6 class="mb-1">{{ $meta['name'] }}</h6>
                                             <p class="text-muted mb-0">
-                                                {{ $isDefault ? 'Day la noi dung mac dinh va duoc dung lam fallback cho cac locale khac.' : 'Neu de trong, he thong se fallback ve ban mac dinh.' }}
+                                                {{ $isDefault ? 'Đây là nội dung mặc định và được dùng làm fallback cho các locale khác.' : 'Nếu để trống, hệ thống sẽ fallback về bản mặc định.' }}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="form-label">Ten goi</label>
+                                            <label class="form-label">Tên gói</label>
                                             <input type="text" class="form-control" name="{{ $nameField }}"
                                                 value="{{ old($nameField, $package->{$nameField} ?? '') }}" {{ $isDefault ? 'required' : '' }}
                                                 data-preview-field="name" data-preview-locale="{{ $locale }}">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Muc ho tro</label>
+                                            <label class="form-label">Mức hỗ trợ</label>
                                             <input type="text" class="form-control" name="{{ $supportField }}"
                                                 value="{{ old($supportField, $package->{$supportField} ?? '') }}"
                                                 data-preview-field="support" data-preview-locale="{{ $locale }}">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Tagline ngan</label>
+                                            <label class="form-label">Tagline ngắn</label>
                                             <input type="text" class="form-control" name="{{ $taglineField }}" maxlength="190"
                                                 value="{{ old($taglineField, $package->{$taglineField} ?? '') }}"
                                                 data-preview-field="tagline" data-preview-locale="{{ $locale }}">
@@ -161,7 +161,7 @@
                                                 data-preview-field="badge" data-preview-locale="{{ $locale }}">
                                         </div>
                                         <div class="col-12">
-                                            <label class="form-label">Mo ta chi tiet</label>
+                                            <label class="form-label">Mô tả chi tiết</label>
                                             <textarea class="form-control" name="{{ $descriptionField }}" rows="4"
                                                 data-preview-field="description" data-preview-locale="{{ $locale }}">{{ old($descriptionField, $package->{$descriptionField} ?? '') }}</textarea>
                                         </div>
@@ -177,7 +177,7 @@
                         <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
                             <div>
                                 <h6 class="mb-1">Preview card</h6>
-                                <p class="text-muted mb-0 small">Xem nhanh giao dien package theo tab dang mo.</p>
+                                <p class="text-muted mb-0 small">Xem nhanh giao diện gói theo tab đang mở.</p>
                             </div>
                             <span class="badge text-bg-dark" data-preview-locale-badge>VI</span>
                         </div>
@@ -188,7 +188,7 @@
                                 <span class="package-preview-card__badge {{ $defaultPreviewBadge ? '' : 'd-none' }}" data-preview-badge>{{ $defaultPreviewBadge }}</span>
                             </div>
 
-                            <h5 class="package-preview-card__name" data-preview-name>{{ $defaultPreviewName ?: 'Ten goi' }}</h5>
+                            <h5 class="package-preview-card__name" data-preview-name>{{ $defaultPreviewName ?: 'Tên gói' }}</h5>
                             <p class="package-preview-card__tagline {{ $defaultPreviewTagline ? '' : 'd-none' }}" data-preview-tagline>{{ $defaultPreviewTagline }}</p>
                             <div class="package-preview-card__price" data-preview-price>{{ number_format($defaultPreviewPrice, 0, ',', '.') }} đ</div>
                             <p class="package-preview-card__description {{ $defaultPreviewDescription ? '' : 'd-none' }}" data-preview-description>{{ $defaultPreviewDescription }}</p>
@@ -226,14 +226,14 @@
         <div class="border rounded-4 p-4 bg-light-subtle">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                 <div>
-                    <h6 class="mb-1">Gia va quyen loi</h6>
-                    <p class="text-muted mb-0">Phan du lieu van hanh dung chung cho moi locale.</p>
+                    <h6 class="mb-1">Giá và quyền lợi</h6>
+                    <p class="text-muted mb-0">Phần dữ liệu vận hành dùng chung cho mọi locale.</p>
                 </div>
             </div>
 
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Gia</label>
+                    <label class="form-label">Giá</label>
                     <input type="number" class="form-control" name="price" min="0" step="0.01"
                         value="{{ old('price', $package->price ?? 0) }}" required data-preview-global="price">
                 </div>
@@ -271,15 +271,15 @@
                     <label class="form-label">Coupon limit</label>
                     <input type="number" class="form-control" name="coupon_limit" min="1"
                         value="{{ old('coupon_limit', $package->coupon_limit ?? '') }}"
-                        placeholder="De trong = khong gioi han">
-                    <div class="form-text">Chi ap dung khi da bat quyen quan ly coupon.</div>
+                        placeholder="Để trống = không giới hạn">
+                    <div class="form-text">Chỉ áp dụng khi đã bật quyền quản lý coupon.</div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">AI Quiz Limit / day</label>
+                    <label class="form-label">AI Quiz Limit / ngày</label>
                     <input type="number" class="form-control" name="ai_quiz_limit" min="1"
                         value="{{ old('ai_quiz_limit', $package->ai_quiz_limit ?? '') }}"
-                        placeholder="De trong = 3 (Free) / Ko gioi han">
-                    <div class="form-text">Số Quiz tối đa tạo bằng AI 1 ngày. Cần bật quyền "Quan ly quiz".</div>
+                        placeholder="Để trống = 3 (Miễn phí) / Không giới hạn">
+                    <div class="form-text">Số Quiz tối đa tạo bằng AI 1 ngày. Cần bật quyền "Quản lý quiz".</div>
                 </div>
             </div>
         </div>
@@ -289,8 +289,8 @@
         <div class="border rounded-4 p-4">
             <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-3">
                 <div>
-                    <h6 class="mb-1">Feature flags theo goi</h6>
-                    <p class="text-muted mb-0">Bat/tat tung quyen trong teacher portal de phan hoa ro giua free, starter va pro.</p>
+                    <h6 class="mb-1">Tính năng đi kèm theo gói</h6>
+                    <p class="text-muted mb-0">Bật/tắt từng quyền trong portal để phân hóa quyền lợi của các gói.</p>
                 </div>
             </div>
 
@@ -299,119 +299,119 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_duplicate_courses" value="1"
                             {{ old('can_duplicate_courses', $package->can_duplicate_courses ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep nhan ban khoa hoc</label>
+                        <label class="form-check-label">Cho phép nhân bản khóa học</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_manage_comments" value="1"
                             {{ old('can_manage_comments', $package->can_manage_comments ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep quan ly binh luan</label>
+                        <label class="form-check-label">Cho phép quản lý bình luận</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_manage_coupons" value="1"
                             {{ old('can_manage_coupons', $package->can_manage_coupons ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep quan ly coupon</label>
+                        <label class="form-check-label">Cho phép quản lý mã giảm giá</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_manage_students" value="1"
                             {{ old('can_manage_students', $package->can_manage_students ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep quan ly hoc vien</label>
+                        <label class="form-check-label">Cho phép quản lý học viên</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_view_student_progress" value="1"
                             {{ old('can_view_student_progress', $package->can_view_student_progress ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep xem % tien do hoc cua hoc vien</label>
+                        <label class="form-check-label">Cho phép xem % tiến độ học của học viên</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_view_activity_logs" value="1"
                             {{ old('can_view_activity_logs', $package->can_view_activity_logs ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep xem nhat ky hoat dong giang vien</label>
+                        <label class="form-check-label">Cho phép xem nhật ký hoạt động giảng viên</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_manage_quizzes" value="1"
                             {{ old('can_manage_quizzes', $package->can_manage_quizzes ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep quan ly quiz</label>
+                        <label class="form-check-label">Cho phép quản lý quiz</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_use_ai_quiz" value="1"
                             {{ old('can_use_ai_quiz', $package->can_use_ai_quiz ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep dùng AI tao Quiz (Gemini)</label>
+                        <label class="form-check-label">Cho phép dùng AI tạo Quiz (Gemini)</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_grant_courses" value="1"
                             {{ old('can_grant_courses', $package->can_grant_courses ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep cap quyen hoc thu cong</label>
+                        <label class="form-check-label">Cho phép cấp quyền học thủ công</label>
                     </div>
                 </div>
                 <div class="col-md-12">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_import_export" value="1"
                             {{ old('can_import_export', $package->can_import_export ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep Import/Export dữ liệu (Đơn hàng, Học viên, Bài học, Quiz)</label>
+                        <label class="form-check-label">Cho phép Import/Export dữ liệu (Đơn hàng, Học viên, Bài học, Quiz)</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_sell_bundles" value="1"
                             {{ old('can_sell_bundles', $package->can_sell_bundles ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep ban combo / bundle khoa hoc</label>
+                        <label class="form-check-label">Cho phép bán combo / bundle khóa học</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_schedule_content" value="1"
                             {{ old('can_schedule_content', $package->can_schedule_content ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep mo bai hoc theo lich</label>
+                        <label class="form-check-label">Cho phép mở bài học theo lịch</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_send_promotions" value="1"
                             {{ old('can_send_promotions', $package->can_send_promotions ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep gui thong bao khuyen mai</label>
+                        <label class="form-check-label">Cho phép gửi thông báo khuyến mãi</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_issue_certificates" value="1"
                             {{ old('can_issue_certificates', $package->can_issue_certificates ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep cap chung chi hoan thanh</label>
+                        <label class="form-check-label">Cho phép cấp chứng chỉ hoàn thành</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_verify_certificates" value="1"
                             {{ old('can_verify_certificates', $package->can_verify_certificates ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Xac thuc chung chi cong khai (QR Code)</label>
+                        <label class="form-check-label">Xác thực chứng chỉ công khai (QR Code)</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_customize_teacher_landing" value="1"
                             {{ old('can_customize_teacher_landing', $package->can_customize_teacher_landing ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep tuy chinh landing page giang vien</label>
+                        <label class="form-check-label">Cho phép tùy chỉnh landing page giảng viên</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="can_use_affiliate_links" value="1"
                             {{ old('can_use_affiliate_links', $package->can_use_affiliate_links ?? false) ? 'checked' : '' }}>
-                        <label class="form-check-label">Cho phep dung link gioi thieu rieng</label>
+                        <label class="form-check-label">Cho phép dùng link giới thiệu riêng</label>
                     </div>
                 </div>
             </div>

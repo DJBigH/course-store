@@ -11,7 +11,7 @@ return [
     ],
     'login' => [
         'page_title' => 'Đăng nhập giảng viên',
-        'badge' => 'Teacher login',
+        'badge' => 'Đăng nhập',
         'title' => 'Đăng nhập vào kênh giảng viên',
         'description' => 'Dùng tài khoản đã được duyệt để quản lý khóa học, doanh thu và yêu cầu rút tiền.',
         'email_label' => 'Email',
@@ -33,7 +33,7 @@ return [
     ],
     'forgot' => [
         'page_title' => 'Quên mật khẩu giảng viên',
-        'badge' => 'Teacher reset',
+        'badge' => 'Đặt lại mật khẩu',
         'title' => 'Đặt lại mật khẩu giảng viên',
         'description' => 'Nhập email của tài khoản giảng viên đã được duyệt để nhận link đặt lại mật khẩu.',
         'email_label' => 'Email',
@@ -45,9 +45,11 @@ return [
     ],
     'reset' => [
         'page_title' => 'Đặt lại mật khẩu giảng viên',
-        'badge' => 'Teacher password',
+        'badge' => 'Tạo mật khẩu',
         'title' => 'Tạo mật khẩu mới cho giảng viên',
         'description' => 'Đặt mật khẩu mới để vào kênh giảng viên.',
+        'email_label' => 'Email',
+        'email_placeholder' => 'Nhập email giảng viên',
         'password_label' => 'Mật khẩu mới',
         'password_placeholder' => 'Nhập mật khẩu mới',
         'password_confirm_label' => 'Xác nhận mật khẩu',

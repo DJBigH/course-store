@@ -40,6 +40,8 @@ return array (
   ),
   'flash' => 
   array (
+    'created' => 'Course combo created successfully.',
+    'updated' => 'Course combo updated successfully.',
     'deleted' => 'Course bundle deleted.',
   ),
   'history' => 

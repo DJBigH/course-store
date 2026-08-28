@@ -18,7 +18,7 @@
             <div class="alert alert-info mb-0">Hiện chưa có bài giảng nào trong thùng rác.</div>
         @else
             <div class="table-responsive">
-                <table class="table table-bordered align-middle">
+                <table class="table table-bordered align-middle" id="datatable">
                     <thead>
                         <tr>
                             <th>Tên</th>

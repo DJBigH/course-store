@@ -45,4 +45,20 @@ return [
     'feature_1' => '멘토와 1:1 상담',
     'feature_2' => '맞춤형 학습 로드맵',
     'feature_3' => '추가 비용 없음',
+
+    //Filters
+    'filter_all' => '전체',
+    'filter_views' => '조회수 높은순',
+    'filter_teacher' => '추천 강사',
+    'filter_seller' => '베스트셀러',
+    'combo_courses' => '가치 코스 콤보',
+    'courses' => '강의',
+    'view_bundle' => '콤보 상세 보기',
+    'view_detail' => '상세 보기',
+    'coming_soon_courses' => '공개 예정 강의',
+    'coming_soon_desc' => '곧 공개될 핵심 지식을 누구보다 먼저 만나보세요!',
+    'day' => '일',
+    'hour' => '시간',
+    'minute' => '분',
+    'second' => '초',
 ];

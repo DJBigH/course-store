@@ -56,22 +56,7 @@
                         <p>{{ __('contacts::clients/common.contact_form_description') }}</p>
 
                         <div class="contact-form-alerts" data-contact-alerts>
-                            @if (session('msg'))
-                                <div class="alert alert-success-custom">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>{{ session('msg') }}</span>
-                                </div>
-                            @endif
-
-                            @if ($errors->any())
-                                <div class="alert alert-error-custom">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <div>
-                                        <strong>{{ __('contacts::clients/messages.error.any.title') }}</strong>
-                                        <p>{{ __('contacts::clients/messages.error.any.content') }}</p>
-                                    </div>
-                                </div>
-                            @endif
+                            {{-- Messages will be injected via JS --}}
                         </div>
 
                         <form method="POST" action="{{ route('contacts.post-contacts', ['locale' => app()->getLocale()]) }}" class="js-contact-form">
@@ -120,7 +105,7 @@
                             </div>
 
                             <div class="form-group">
-                                <textarea name="message" rows="5" placeholder="{{ __('contacts::clients/common.course') }}"
+                                <textarea name="message" rows="5" placeholder="{{ __('contacts::clients/common.message_placeholder') }}"
                                     class="form-control {{ $errors->has('message') ? 'is-invalid' : '' }}">{{ $contactDefaults['message'] }}</textarea>
                                 @error('message')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -141,7 +126,8 @@
                             @endif
 
                             <button type="submit" class="btn-submit">
-                                {{ __('contacts::clients/common.contact_submit_form') }} ->
+                                <span class="btn-text">{{ __('contacts::clients/common.contact_submit_form') }} -></span>
+                                <span class="btn-loader d-none"><i class="fas fa-spinner fa-spin"></i> {{ __('common.processing') }}...</span>
                             </button>
                         </form>
                     </div>
@@ -282,4 +268,95 @@
     @if ($captchaEnabled && !blank($captchaSiteKey))
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     @endif
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('.js-contact-form');
+            const alertContainer = document.querySelector('[data-contact-alerts]');
+            const submitBtn = form.querySelector('.btn-submit');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoader = submitBtn.querySelector('.btn-loader');
+
+            if (!form) return;
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Clear previous alerts and errors
+                alertContainer.innerHTML = '';
+                form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+                form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+                // Loading state
+                submitBtn.disabled = true;
+                btnText.classList.add('d-none');
+                btnLoader.classList.remove('d-none');
+
+                try {
+                    const formData = new FormData(form);
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Success
+                        alertContainer.innerHTML = `
+                            <div class="alert alert-success-custom">
+                                <i class="fas fa-check-circle"></i>
+                                <span>${result.message}</span>
+                            </div>
+                        `;
+                        form.reset();
+                        if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
+                    } else if (response.status === 422) {
+                        // Validation errors
+                        alertContainer.innerHTML = `
+                            <div class="alert alert-error-custom">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <strong>{{ __('contacts::clients/messages.error.any.title') }}</strong>
+                                    <p>{{ __('contacts::clients/messages.error.any.content') }}</p>
+                                </div>
+                            </div>
+                        `;
+
+                        for (const [field, messages] of Object.entries(result.errors)) {
+                            let input = form.querySelector(`[name="${field}"]`);
+                            if (!input && field === 'g-recaptcha-response') {
+                                input = form.querySelector('.contact-captcha-panel');
+                            }
+                            
+                            if (input) {
+                                input.classList.add('is-invalid');
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'invalid-feedback d-block';
+                                errorDiv.textContent = messages[0];
+                                input.closest('.form-group').appendChild(errorDiv);
+                            }
+                        }
+                    } else {
+                        throw new Error(result.message || 'Something went wrong');
+                    }
+                } catch (error) {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-error-custom">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>${error.message}</span>
+                        </div>
+                    `;
+                } finally {
+                    submitBtn.disabled = false;
+                    btnText.classList.remove('d-none');
+                    btnLoader.classList.add('d-none');
+                }
+            });
+        });
+    </script>
 @endsection

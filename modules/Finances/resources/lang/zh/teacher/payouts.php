@@ -39,6 +39,8 @@ return [
     ],
     'flash' => [
         'amount_exceeds_balance' => '申请金额超过可用余额。',
+        'max_payout_exceeded' => '您的套餐每天最多只允许提现 :limit。',
+        'feature_locked' => '您当前的套餐不支持提现功能。',
         'request_sent' => '您的提现申请已提交，正在等待审核。',
         'account_already_saved' => '此账户信息已存在于我们的系统中。',
         'limit_reached_use_change_request' => '您已达到 :limit 个账户的限制。请提交更换申请。',

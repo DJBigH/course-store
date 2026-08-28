@@ -1,8 +1,15 @@
 <?php
 
 return array_merge(require __DIR__ . '/../../en/clients/common.php', [
-    'rating_title' => 'Course rating',
-    'rating_count' => ':count ratings',
+    'rating_title' => '课程评分',
+    'coming_soon' => '即将上线',
+    'opens_in' => '正式发布倒计时',
+    'countdown_days' => '天',
+    'countdown_hours' => '时',
+    'countdown_minutes' => '分',
+    'countdown_seconds' => '秒',
+    'coming_soon_desc' => '本课程正处于最后的完善阶段，即将与大家见面。',
+    'rating_count' => ':count 条评价',
     'rating_hint' => 'Choose a score from 1 to 5 stars.',
     'rating_selected' => 'Your rating: :rating stars',
     'rating_selected_label' => 'Your rating:',
@@ -12,5 +19,14 @@ return array_merge(require __DIR__ . '/../../en/clients/common.php', [
     'rating_login_required' => 'Please sign in as a student to rate this course.',
     'rating_invalid' => 'Please choose a valid rating from 1 to 5 stars.',
     'rating_already_submitted' => 'You have already rated this course and can only rate it once.',
-    'rating_submitted_once' => 'You rated this course :rating stars. Each student can rate only once.',
+    'rating_submitted_once' => '您已对本课程评分为 :rating 星。每位学生仅限评价一次。',
+    'rating_hint_label' => '悬停或触摸以选择您的满意度',
+    'rating_votes' => '评价',
+    'rating_once_note' => '仅可评价一次',
+    'rating_locked_note' => '您的评价已记录，无法更改。',
+    'rating_purchase_desc' => '购买课程即可解锁评价功能。',
+    'comment_empty_desc' => '成为第一个对本课程提出问题或分享见解的人！',
+    'comment_success' => '评论已成功发布。',
+    'rating_success' => '感谢您对本课程的评价！',
 ]);
+

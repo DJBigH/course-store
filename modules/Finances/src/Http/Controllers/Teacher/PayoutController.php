@@ -133,11 +133,45 @@ class PayoutController extends Controller
         $locale = app()->getLocale();
         $targetCode = $currencyService->getLocaleCurrency($locale);
 
+        $amountVnd = (float) $request->input('amount');
         if ($targetCode !== 'VND') {
             $amountLocale = (float) $request->input('amount');
             // Quy đổi ngược từ ngoại tệ về VND (không tính phí vì amount này là số tiền danh nghĩa muốn trừ từ balance)
             $amountVnd = $currencyService->convert($amountLocale, $targetCode, 'VND', false);
             $request->merge(['amount' => $amountVnd]);
+        }
+
+        $minPayoutAmount = (float) \Modules\Settings\src\Models\Setting::getValue('min_payout_amount') ?: 5000;
+        if ($amountVnd < $minPayoutAmount) {
+            $minAmountInLocale = $currencyService->convert($minPayoutAmount, 'VND', $targetCode, false);
+            $minAmountFormatted = $targetCode === 'VND' 
+                ? number_format($minAmountInLocale, 0, ',', '.') . ' đ'
+                : $currencyService->getCurrencySymbol($targetCode) . number_format($minAmountInLocale, 2, '.', ',');
+            return back()->with('msg_danger', __('finances::teacher/payouts.form.amount_min_hint', ['min' => $minAmountFormatted]));
+        }
+
+        $teacher->loadMissing('application.package');
+        $package = $teacher->application?->package;
+
+        if ($package && !$package->hasFeature('can_request_payouts')) {
+            return back()->with('msg_danger', __('finances::teacher/payouts.flash.feature_locked'));
+        }
+        
+        if ($package && $package->max_payout_per_day !== null) {
+            $dailyLimit = (float) $package->max_payout_per_day;
+            
+            $payoutSum24h = \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)
+                ->whereIn('status', ['requested', 'processing', 'paid'])
+                ->where('created_at', '>=', now()->subDay())
+                ->sum('amount');
+                
+            if (($payoutSum24h + $amountVnd) > $dailyLimit) {
+                $limitInLocale = $currencyService->convert($dailyLimit, 'VND', $targetCode, false);
+                $limitFormatted = $targetCode === 'VND' 
+                    ? number_format($limitInLocale, 0, ',', '.') . ' đ'
+                    : $currencyService->getCurrencySymbol($targetCode) . number_format($limitInLocale, 2, '.', ',');
+                return back()->with('msg_danger', __('finances::teacher/payouts.flash.max_payout_exceeded', ['limit' => $limitFormatted]));
+            }
         }
 
         $request->validate([
@@ -149,10 +183,37 @@ class PayoutController extends Controller
             'bank_account_number' => 'required_if:payout_account_id,new',
         ]);
 
+        $originalAmount = (float) $request->input('amount');
+        $exchangeRate = 1.0;
+        $feePercentage = 0.0;
+
+        if ($targetCode !== 'VND') {
+            $exchangeRate = (float) $currencyService->getRate($targetCode) ?: 1.0;
+            $feePercentage = (float) \Modules\Settings\src\Models\Setting::getValue('currency_conversion_fee') ?: 0.0;
+        }
+
+        $feeAmountVnd = ($amountVnd * $feePercentage) / 100;
+
+        $request->merge([
+            'currency_code' => $targetCode,
+            'exchange_rate' => $exchangeRate,
+            'original_amount' => $originalAmount,
+            'converted_amount_vnd' => $amountVnd,
+            'fee_percentage' => $feePercentage,
+            'fee_amount_vnd' => $feeAmountVnd,
+        ]);
+
         $success = $this->financesRepo->createPayoutRequest($teacher->id, $request->all());
 
         if (!$success) {
             return back()->with('msg_danger', __('finances::teacher/payouts.flash.amount_exceeds_balance'));
+        }
+
+        // Notify Admins
+        $payoutRequest = \Modules\Finances\src\Models\PayoutRequest::where('teacher_id', $teacher->id)->latest()->first();
+        if ($payoutRequest) {
+            $admins = \Modules\User\src\Models\User::adminPanelUsers()->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\AdminFinanceAlertNotification($payoutRequest, 'payout_request'));
         }
 
         return redirect()->route('teacher.dashboard.payouts.index')->with('msg_success', __('finances::teacher/payouts.flash.request_sent'));
@@ -194,7 +255,12 @@ class PayoutController extends Controller
             'bank_account_number' => 'required|string',
         ]);
 
-        $this->financesRepo->createAccountChangeRequest($teacher->id, $request->all());
+        $changeRequest = $this->financesRepo->createAccountChangeRequest($teacher->id, $request->all());
+
+        if ($changeRequest) {
+            $admins = \Modules\User\src\Models\User::adminPanelUsers()->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\AdminFinanceAlertNotification($changeRequest, 'account_change'));
+        }
 
         return back()->with('msg_success', __('finances::teacher/payouts.flash.change_request_sent'));
     }

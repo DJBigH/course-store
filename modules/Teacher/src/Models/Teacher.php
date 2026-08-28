@@ -4,6 +4,7 @@ namespace Modules\Teacher\src\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Modules\Students\src\Models\Student;
 
 class Teacher extends Model
@@ -64,6 +65,9 @@ class Teacher extends Model
         'lock_reason',
         'locked_at',
         'locked_by',
+        'telegram_chat_id',
+        'is_telegram_notifications_enabled',
+        'telegram_feature_expires_at',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -80,7 +84,49 @@ class Teacher extends Model
         'last_active_at'             => 'datetime',
         'inactive_teacher_notified_at' => 'datetime',
         'inactive_admin_notified_at' => 'datetime',
+        'is_telegram_notifications_enabled' => 'boolean',
+        'telegram_feature_expires_at' => 'datetime',
     ];
+
+    public function hasTelegramFeature(): bool
+    {
+        if (!$this->telegram_feature_expires_at) {
+            return false;
+        }
+        return $this->telegram_feature_expires_at->isFuture();
+    }
+
+    public function getTelegramPackageStatus(): array
+    {
+        if ($this->telegram_feature_expires_at && $this->telegram_feature_expires_at->isFuture()) {
+            return [
+                'status' => 'active',
+                'expires_at' => $this->telegram_feature_expires_at,
+                'is_active' => true
+            ];
+        }
+
+        // Kiểm tra xem có đơn hàng nào đang chờ xử lý hoặc quà tặng chưa nhận không
+        $pendingSub = TeacherTelegramSubscription::query()
+            ->where('teacher_id', $this->id)
+            ->whereIn('status', ['pending', 'pending_claim'])
+            ->latest()
+            ->first();
+
+        if ($pendingSub) {
+            return [
+                'status' => $pendingSub->status === 'pending_claim' ? 'pending_claim' : 'pending',
+                'expires_at' => null,
+                'is_active' => false
+            ];
+        }
+        
+        return [
+            'status' => $this->telegram_feature_expires_at ? 'expired' : 'inactive',
+            'expires_at' => $this->telegram_feature_expires_at,
+            'is_active' => false
+        ];
+    }
 
     public function lockedByAdmin()
     {
@@ -163,6 +209,11 @@ class Teacher extends Model
         return $this->hasMany(\Modules\Courses\src\Models\CourseBundle::class, 'teacher_id', 'id');
     }
 
+    public function badges()
+    {
+        return $this->belongsToMany(TeacherBadge::class, 'teacher_has_badges', 'teacher_id', 'badge_id');
+    }
+
     public function affiliateLinks()
     {
         return $this->hasMany(\Modules\Finances\src\Models\AffiliateLink::class, 'teacher_id', 'id');
@@ -238,7 +289,24 @@ class Teacher extends Model
 
     public function getBadgeLabelsAttribute(): array
     {
-        return $this->primary_badge ? [$this->primary_badge] : [];
+        $dbBadges = $this->badges->filter->is_active->map(function ($badge) {
+            return [
+                'key' => $badge->code,
+                'label' => $badge->name_locale,
+                'icon' => $badge->icon,
+                'tone' => 'custom', // We will use inline styles for these
+                'color_bg' => $badge->color_bg,
+                'color_text' => $badge->color_text,
+            ];
+        })->toArray();
+
+        $primary = $this->primary_badge;
+        
+        if ($primary) {
+            return array_merge([$primary], $dbBadges);
+        }
+
+        return $dbBadges;
     }
 
     public static function badgeOptions(): array
@@ -289,5 +357,37 @@ class Teacher extends Model
         }
 
         return null;
+    }
+
+    public function addTelegramDuration(int $value, string $unit): Carbon
+    {
+        $currentExpires = $this->telegram_feature_expires_at;
+        $baseDate = ($currentExpires && $currentExpires->isFuture()) ? $currentExpires->copy() : now();
+
+        $newExpires = match ($unit) {
+            'minute', 'minutes' => $baseDate->addMinutes($value),
+            'hour', 'hours' => $baseDate->addHours($value),
+            'day', 'days' => $baseDate->addDays($value),
+            'month', 'months' => $baseDate->addMonths($value),
+            'year', 'years' => $baseDate->addYears($value),
+            'lifetime' => now()->addYears(73), // ~2099
+            default => $baseDate->addDays($value > 0 ? $value : 30), // Fallback to days
+        };
+
+        $this->update([
+            'telegram_feature_expires_at' => $newExpires
+        ]);
+
+        return $newExpires;
+    }
+
+    public function telegramSubscriptions()
+    {
+        return $this->hasMany(TeacherTelegramSubscription::class, 'teacher_id', 'id');
+    }
+
+    public function latestTelegramSubscription()
+    {
+        return $this->hasOne(TeacherTelegramSubscription::class, 'teacher_id', 'id')->latestOfMany();
     }
 }

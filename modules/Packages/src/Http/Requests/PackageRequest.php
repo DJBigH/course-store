@@ -45,6 +45,7 @@ class PackageRequest extends FormRequest
             'payout_account_limit' => ['nullable', 'integer', 'min:1', 'max:3'],
             'commission_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'priority_review' => ['nullable', 'boolean'],
+            'can_request_payouts' => ['nullable', 'boolean'],
             'can_duplicate_courses' => ['nullable', 'boolean'],
             'can_manage_comments' => ['nullable', 'boolean'],
             'can_manage_coupons' => ['nullable', 'boolean'],
@@ -76,6 +77,12 @@ class PackageRequest extends FormRequest
             'is_featured' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:1'],
             'badge_tone' => ['nullable', 'string', 'max:20'],
+            'category_id' => ['nullable', 'exists:teacher_package_categories,id'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'category_en' => ['nullable', 'string', 'max:100'],
+            'category_ko' => ['nullable', 'string', 'max:100'],
+            'category_ja' => ['nullable', 'string', 'max:100'],
+            'category_zh' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

@@ -41,11 +41,11 @@ class Authenticate extends Middleware
     protected function redirectTo(Request $request, $isAdmin = true)
     {
         if (!$request->expectsJson()) {
-            if (!$isAdmin) {
-                if ($request->routeIs('teacher.dashboard.*')) {
-                    return route('teacher.auth.login', ['locale' => app()->getLocale()]);
-                }
+            if ($request->is('teacher') || $request->is('teacher/*') || $request->is('*/teacher/*') || $request->routeIs('teacher.dashboard.*')) {
+                return route('teacher.auth.login', ['locale' => app()->getLocale()]);
+            }
 
+            if (!$isAdmin) {
                 return route('clients-login',['locale' => app()->getLocale()]);
             }
         }

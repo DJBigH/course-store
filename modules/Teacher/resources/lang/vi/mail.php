@@ -29,4 +29,9 @@ return [
         'signature' => 'Trân trọng,',
         'brand' => 'BigK Udemy',
     ],
+    'common' => [
+        'greeting' => 'Xin chào :name,',
+        'view_detail' => 'Xem chi tiết',
+        'read_on_system' => 'Đọc trên hệ thống',
+    ],
 ];

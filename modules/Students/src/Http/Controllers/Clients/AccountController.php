@@ -27,6 +27,10 @@ use Modules\Students\src\Models\StudentLessonProgress;
 use Modules\Students\src\Repositories\StudentsRepositoryInterface;
 use Modules\Certificates\src\Models\Certificate;
 use Modules\Teacher\src\Repositories\TeacherRepositoryInterface;
+use Modules\Courses\src\Models\CourseQuiz;
+use Modules\Courses\src\Models\CourseQuizSubmission;
+use Modules\Courses\src\Models\CourseQuizAssignment;
+use Modules\Courses\src\Models\Courses;
 
 class AccountController extends Controller
 {
@@ -56,15 +60,61 @@ class AccountController extends Controller
         $pageName = $pageTitle;
         $student = Auth::guard('students')->user();
 
-        $totalCourses = $student->courses()->count();
+        // Get owned courses if teacher
+        $ownedCourseIds = $student->teacher ? $student->teacher->courses()->pluck('id')->toArray() : [];
+
+        $totalPurchased = $student->courses()->count();
+        $totalOwned = count($ownedCourseIds);
+        $totalCourses = $totalPurchased + $totalOwned;
+
         $totalCoupons = $student->coupons()->count();
         $totalOrders = $student->orders()->count();
 
-        $recentCourses = $student->courses()
-            ->with('teacher')
-            ->latest('created_at')
+        // Enhanced Stats (P1)
+        $totalCertificates = Certificate::where('student_id', $student->id)->whereNull('revoked_at')->count();
+
+        $activeCourseIds = $student->courses()->where('students_courses.status', 1)->pluck('courses.id')->toArray();
+        $totalLessonsCount = Lesson::active()->whereIn('course_id', $activeCourseIds)->whereNotNull('parent_id')->count();
+        $completedLessonsCount = StudentLessonProgress::where('student_id', $student->id)->whereIn('course_id', $activeCourseIds)->count();
+        $averageProgress = $totalLessonsCount > 0 ? round(($completedLessonsCount * 100) / $totalLessonsCount) : 0;
+
+        $upcomingQuizzes = CourseQuiz::query()
+            ->with(['course'])
+            ->where(function ($query) use ($student, $activeCourseIds) {
+                $query->whereHas('assignments', function ($q) use ($student) {
+                    $q->where('student_id', $student->id);
+                })
+                    ->orWhere(function ($q) use ($activeCourseIds) {
+                        $q->whereIn('course_id', $activeCourseIds)->where('status', 1);
+                    });
+            })
+            ->where('deadline_at', '>', now())
+            ->whereDoesntHave('submissions', function ($q) use ($student) {
+                $q->where('student_id', $student->id)->whereNotNull('submitted_at');
+            })
+            ->orderBy('deadline_at')
             ->take(3)
             ->get();
+
+        // Combined recent courses
+        $recentPurchased = $student->courses()
+            ->with('teacher')
+            ->latest('students_courses.created_at')
+            ->take(3)
+            ->get();
+
+        $recentOwned = collect();
+        if ($student->teacher) {
+            $recentOwned = $student->teacher->courses()
+                ->with('teacher')
+                ->latest('created_at')
+                ->take(3)
+                ->get();
+        }
+
+        $recentCourses = $recentPurchased->merge($recentOwned)->sortByDesc(function ($item) {
+            return $item->pivot ? $item->pivot->created_at : $item->created_at;
+        })->take(3);
 
         $recentOrders = $student->orders()
             ->with(['status', 'detail.courses'])
@@ -78,6 +128,9 @@ class AccountController extends Controller
             'totalCoupons',
             'totalCourses',
             'totalOrders',
+            'totalCertificates',
+            'averageProgress',
+            'upcomingQuizzes',
             'recentCourses',
             'recentOrders'
         ));
@@ -153,22 +206,37 @@ class AccountController extends Controller
         $keyword = trim((string) $request->query('keyword'));
         $teacherId = $request->query('teacher_id');
 
-        $teachers = $student->courses()
-            ->with('teacher')
-            ->get()
+        $isImpersonating = session()->has('admin_impersonator');
+        
+        if ($isImpersonating) {
+            $coursesQuery = \Modules\Courses\src\Models\Courses::query()->active()->with('teacher');
+        } else {
+            // Get courses purchased OR owned by the student (if they are a teacher)
+            $ownTeacherId = $student->teacher ? $student->teacher->id : null;
+            
+            $coursesQuery = \Modules\Courses\src\Models\Courses::query()
+                ->with('teacher')
+                ->where(function($query) use ($student, $ownTeacherId) {
+                    $query->whereHas('students', function($q) use ($student) {
+                        $q->where('students.id', $student->id)->where('students_courses.status', 1);
+                    });
+                    
+                    if ($ownTeacherId) {
+                        $query->orWhere('teacher_id', $ownTeacherId);
+                    }
+                });
+        }
+
+        // Collect teachers for filter from the query results (before pagination/filters)
+        $teachers = (clone $coursesQuery)->get()
             ->pluck('teacher')
             ->filter()
             ->unique('id')
             ->sortBy('name_locale')
             ->values();
 
-        $isImpersonating = session()->has('admin_impersonator');
-        $courses = $isImpersonating 
-            ? Courses::query()->active()->with('teacher')
-            : $student->courses()->with('teacher');
-
         if ($teacherId) {
-            $courses->where('teacher_id', $teacherId);
+            $coursesQuery->where('teacher_id', $teacherId);
         }
 
         if ($keyword !== '') {
@@ -183,7 +251,7 @@ class AccountController extends Controller
             ]));
 
             if (!empty($searchableColumns)) {
-                $courses->where(function ($query) use ($keyword, $searchableColumns) {
+                $coursesQuery->where(function ($query) use ($keyword, $searchableColumns) {
                     foreach ($searchableColumns as $index => $column) {
                         if ($index === 0) {
                             $query->where($column, 'like', '%' . $keyword . '%');
@@ -194,11 +262,13 @@ class AccountController extends Controller
                     }
                 });
             } else {
-                $courses->whereRaw('1 = 0');
+                $coursesQuery->whereRaw('1 = 0');
             }
         }
 
-        $courses = $courses->orderByPivot('created_at', 'desc')->paginate(3)->withQueryString();
+        // Handle sorting: if purchased, use pivot. If owned, use created_at. 
+        // For combined query, we just use courses.created_at or a better sort.
+        $courses = $coursesQuery->latest('created_at')->paginate(3)->withQueryString();
 
         $courseIds = $courses->getCollection()->pluck('id')->all();
 
@@ -260,6 +330,55 @@ class AccountController extends Controller
             ->latest()
             ->paginate(3);
         return view('students::clients.my_coupons', compact('pageTitle', 'pageName', 'coupons'));
+    }
+
+    public function myQuizzes(Request $request)
+    {
+        $pageTitle = __('students::clients/account.menu.my_quizzes');
+        $pageName = $pageTitle;
+        $student = Auth::guard('students')->user();
+
+        // Get course IDs for active courses
+        $activeCourseIds = $student->courses()
+            ->where('students_courses.status', 1)
+            ->pluck('courses.id')
+            ->toArray();
+
+        $quizzesQuery = CourseQuiz::query()
+            ->with(['course', 'creator.student'])
+            ->where(function ($query) use ($student, $activeCourseIds) {
+                // Specifically assigned
+                $query->whereHas('assignments', function ($q) use ($student) {
+                    $q->where('student_id', $student->id);
+                })
+                // OR Published in active courses
+                ->orWhere(function ($q) use ($activeCourseIds) {
+                    $q->whereIn('course_id', $activeCourseIds)
+                        ->where('status', 1);
+                });
+            })
+            ->latest();
+
+        $quizzes = $quizzesQuery->paginate(10)->withQueryString();
+
+        // Map submissions
+        $quizIds = $quizzes->pluck('id')->toArray();
+        $submissions = CourseQuizSubmission::query()
+            ->where('student_id', $student->id)
+            ->whereIn('quiz_id', $quizIds)
+            ->whereNotNull('submitted_at')
+            ->get()
+            ->groupBy('quiz_id');
+
+        $quizzes->getCollection()->transform(function ($quiz) use ($submissions) {
+            $quizSubmissions = $submissions->get($quiz->id) ?? collect();
+            $quiz->setAttribute('my_submissions_count', $quizSubmissions->count());
+            $quiz->setAttribute('best_score', $quizSubmissions->max('score'));
+            $quiz->setAttribute('latest_submission', $quizSubmissions->sortByDesc('submitted_at')->first());
+            return $quiz;
+        });
+
+        return view('students::clients.my_quizzes', compact('pageTitle', 'pageName', 'quizzes'));
     }
 
     public function myOrder(Request $request)

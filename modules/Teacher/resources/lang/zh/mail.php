@@ -29,4 +29,9 @@ return [
         'signature' => '此致',
         'brand' => 'BigK Udemy',
     ],
+    'common' => [
+        'greeting' => '您好 :name,',
+        'view_detail' => '查看详情',
+        'read_on_system' => '在系统阅读',
+    ],
 ];

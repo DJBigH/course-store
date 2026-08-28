@@ -17,7 +17,7 @@ class AdminSecurityService
 {
     public function maxDevices(): int
     {
-        return (int) setting('max_devices', config('auth.max_devices', 1));
+        return (int) setting('admin_max_devices', config('auth.admin_max_devices', 1));
     }
 
     public function challengeLifetime(): int
@@ -164,6 +164,15 @@ class AdminSecurityService
                         'platform' => $snapshot['platform'],
                         'device' => $snapshot['device'],
                     ]
+                );
+
+                $this->sendTelegramAlert(
+                    "⚠️ *[Cảnh báo Bảo mật]*\n" .
+                    "👤 *Admin:* " . $user->name . " (" . $user->email . ")\n" .
+                    "🚫 *Sự kiện:* Vượt quá giới hạn thiết bị đăng nhập\n" .
+                    "📱 *Thiết bị:* " . $snapshot['device'] . " (" . $snapshot['browser'] . " on " . $snapshot['platform'] . ")\n" .
+                    "🌐 *IP:* " . $snapshot['ip'] . "\n" .
+                    "🔢 *Số phiên hiện tại:* " . $activeSessions . "/" . $this->maxDevices()
                 );
 
                 return 'Tài khoản quản trị này đã đăng nhập tối đa 2 thiết bị cùng lúc.';
@@ -541,6 +550,10 @@ class AdminSecurityService
                 'current_platform' => $currentSnapshot['platform'] ?? 'Unknown',
             ]
         );
+    }
+    protected function sendTelegramAlert(string $message): void
+    {
+        \App\Jobs\SendTelegramAlertJob::dispatch($message);
     }
 }
 

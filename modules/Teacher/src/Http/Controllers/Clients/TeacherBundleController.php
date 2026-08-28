@@ -9,7 +9,7 @@ use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
 use Modules\Teacher\src\Models\Teacher;
 use Modules\Courses\src\Models\Courses;
 use App\Models\Scopes\ActiveScope;
-use Modules\Teacher\src\Http\Requests\TeacherCourseBundleRequest;
+use Modules\Teacher\src\Http\Requests\CourseBundleRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Packages\src\Support\PackageLifecycleManager;

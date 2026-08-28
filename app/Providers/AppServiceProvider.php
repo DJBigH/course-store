@@ -9,6 +9,12 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Filesystem;
+use Masbug\Flysystem\GoogleDriveAdapter;
+use Google\Client as GoogleClient;
+use Google\Service\Drive as GoogleDrive;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Modules\Categories\src\Models\Category;
 use Modules\Settings\src\Models\Setting;
 
@@ -21,6 +27,24 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(SystemMailManager $systemMailManager): void
     {
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Queue\Events\Looping::class, function () {
+            \Illuminate\Support\Facades\Cache::put('queue_worker_heartbeat', now(), 3600);
+        });
+
+        Storage::extend('google', function($app, $config) {
+            $client = new GoogleClient();
+            $client->setClientId($config['clientId']);
+            $client->setClientSecret($config['clientSecret']);
+            $client->refreshToken($config['refreshToken']);
+
+            $service = new GoogleDrive($client);
+            $adapter = new GoogleDriveAdapter($service, $config['folder'] ?? '/');
+
+            return new FilesystemAdapter(
+                new Filesystem($adapter),
+                $adapter
+            );
+        });
 
         if (app()->environment('production')) {
             URL::forceScheme('https');
@@ -59,7 +83,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         View::composer('layouts.client', function ($view) {
-            $courseCategories = Category::withCount('courses')->get();
+            $courseCategories = \Illuminate\Support\Facades\Cache::remember('course_categories_with_count', 3600, function() {
+                return Category::withCount('courses')->get();
+            });
             $announcementKeys = ['global_notice_enabled', 'popup_notice_enabled', 'popup_notice_snooze_minutes'];
             $localizedFields = [
                 'global_notice_title',
@@ -79,9 +105,11 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            $announcementSettings = Setting::query()
-                ->whereIn('key', $announcementKeys)
-                ->get(['key', 'value', 'updated_at']);
+            $announcementSettings = \Illuminate\Support\Facades\Cache::remember('system_settings_announcements', 3600, function () use ($announcementKeys) {
+                return \Modules\Settings\src\Models\Setting::query()
+                    ->whereIn('key', $announcementKeys)
+                    ->get(['key', 'value', 'updated_at']);
+            });
 
             $popupAnnouncementVersion = optional(
                 $announcementSettings

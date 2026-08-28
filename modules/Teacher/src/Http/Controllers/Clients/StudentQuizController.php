@@ -13,6 +13,7 @@ use Modules\Courses\src\Models\CourseQuizQuestion;
 use Modules\Courses\src\Models\CourseQuizSubmission;
 use Modules\Courses\src\Models\CourseQuizSubmissionAnswer;
 use Modules\Students\src\Models\Student;
+use Modules\Certificates\src\Support\CertificateIssuer;
 
 class StudentQuizController extends Controller
 {
@@ -41,8 +42,11 @@ class StudentQuizController extends Controller
             ->whereNull('submitted_at')
             ->latest('id')
             ->first();
+        $pageTitle = $quiz->title;
+        $pageName = $pageTitle;
 
         return view('teacher::teacher.quiz.student_quiz', compact(
+            'pageTitle',
             'student',
             'course',
             'quiz',
@@ -222,9 +226,18 @@ class StudentQuizController extends Controller
         });
 
         $submission->refresh();
-        $msg = $submission->passed
-            ? "🎉 Chúc mừng! Bạn đạt {$submission->score}% - Đạt yêu cầu!"
-            : "Bạn đạt {$submission->score}% - Chưa đạt (cần {$quiz->passing_score}%).";
+
+        // Kiểm tra và cấp chứng chỉ nếu đủ điều kiện (ngay sau khi nộp)
+        if ($submission->passed) {
+            $issuer = app(CertificateIssuer::class);
+            $issuer->issueIfEligible($student, $course, null, $student->id, 'Auto issued after passing quiz');
+        }
+
+        $msgKey = $submission->passed ? 'success_msg' : 'fail_msg';
+        $msg = __('courses::teacher/messages.quizzes_student.' . $msgKey, [
+            'score' => $submission->score,
+            'passing' => $quiz->passing_score
+        ]);
 
         return redirect()->route('teacher.dashboard.quizzes.show', [$course->id, $quiz->id])
             ->with('msg_success', $msg);
@@ -245,7 +258,10 @@ class StudentQuizController extends Controller
             ->where('student_id', $student->id)
             ->findOrFail($submissionId);
 
-        return view('teacher::teacher.quiz.student_quiz_result', compact('course', 'quiz', 'submission'));
+        $pageTitle = $quiz->title . ' - ' . __('courses::teacher/messages.quizzes_student.history_title');
+        $pageName = $pageTitle;
+
+        return view('teacher::teacher.quiz.student_quiz_result', compact('pageTitle', 'pageName', 'course', 'quiz', 'submission'));
     }
 
     // ─── Private helpers ─────────────────────────────────────

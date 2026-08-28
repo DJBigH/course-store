@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\Teacher\src\Http\Requests\TeacherAnnouncementRequest;
 use Modules\Teacher\src\Models\TeacherAnnouncement;
 use Modules\Packages\src\Models\Package;
+use App\Jobs\BroadcastAnnouncementToTelegram;
 
 class TeacherAnnouncementController extends Controller
 {
@@ -45,6 +46,24 @@ class TeacherAnnouncementController extends Controller
             return $announcement;
         });
 
+        activity_log(
+            action: 'create',
+            subject: $announcement,
+            properties: [
+                'data' => [
+                    'title' => $announcement->title,
+                    'is_pinned' => $announcement->is_pinned,
+                    'status' => $announcement->status,
+                ],
+            ],
+            logName: 'admin_teacher_management',
+            description: 'Tạo thông báo bảng điều khiển giảng viên: ' . $announcement->title
+        );
+
+        if ($request->boolean('notify_telegram')) {
+            dispatch(new BroadcastAnnouncementToTelegram($announcement));
+        }
+
         return redirect()->route('teacher-announcements.edit', $announcement->id)
             ->with('msg', __('teacher::admin.messages.announcement_create_success'));
     }
@@ -62,11 +81,27 @@ class TeacherAnnouncementController extends Controller
     public function update(TeacherAnnouncementRequest $request, int $id)
     {
         $announcement = TeacherAnnouncement::query()->findOrFail($id);
+        $old = $announcement->toArray();
 
         DB::transaction(function () use ($request, $announcement) {
             $announcement->update($this->payload($request));
             $announcement->packages()->sync($request->input('package_ids', []));
         });
+
+        activity_log(
+            action: 'update',
+            subject: $announcement,
+            properties: [
+                'old' => $old,
+                'new' => $announcement->refresh()->toArray(),
+            ],
+            logName: 'admin_teacher_management',
+            description: 'Cập nhật thông báo bảng điều khiển giảng viên: ' . $announcement->title
+        );
+
+        if ($request->boolean('notify_telegram')) {
+            dispatch(new BroadcastAnnouncementToTelegram($announcement));
+        }
 
         return redirect()->route('teacher-announcements.edit', $announcement->id)
             ->with('msg', __('teacher::admin.messages.announcement_update_success'));
@@ -74,7 +109,17 @@ class TeacherAnnouncementController extends Controller
 
     public function delete(int $id)
     {
-        TeacherAnnouncement::query()->findOrFail($id)->delete();
+        $announcement = TeacherAnnouncement::query()->findOrFail($id);
+        $snapshot = $announcement->toArray();
+        $announcement->delete();
+
+        activity_log(
+            action: 'delete',
+            subject: null,
+            properties: ['data' => $snapshot],
+            logName: 'admin_teacher_management',
+            description: 'Xóa thông báo bảng điều khiển giảng viên: ' . ($snapshot['title'] ?? 'N/A')
+        );
 
         return redirect()->route('teacher-announcements.index')
             ->with('msg', __('teacher::admin.messages.announcement_delete_success'));

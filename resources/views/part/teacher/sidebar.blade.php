@@ -40,7 +40,7 @@
         ? __('teacher/sidebar.brand.active_channel')
         : ($teacherApplication?->display_status ?? __('teacher/sidebar.brand.not_submitted'));
     $teacherUpgradeUrl = $teacherPendingUpgrade ? route('teacher.dashboard.package.upgrade.status') : route('teacher.dashboard.package.upgrade');
-    $teacherSidebarBadge = $teacherProfile?->primary_badge;
+    $teacherSidebarBadges = $teacherProfile?->badge_labels ?? [];
     $teacherSidebarOperationsActive = request()->routeIs('teacher.dashboard.index')
         || request()->routeIs('teacher.dashboard.courses*')
         || request()->routeIs('teacher.dashboard.lessons.*')
@@ -489,6 +489,16 @@
                             alt="{{ $teacherProfile->getNameLocaleAttribute() }}" class="sidebar-package-card__avatar">
                         <div class="sidebar-package-card__user">
                             <span class="sidebar-package-card__user-name">{{ $teacherProfile->getNameLocaleAttribute() }}</span>
+                            @if (!empty($teacherSidebarBadges))
+                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                    @foreach ($teacherSidebarBadges as $badge)
+                                        <span class="badge" style="background-color: {{ $badge['color_bg'] ?? '#e2e8f0' }} !important; color: {{ $badge['color_text'] ?? '#475569' }} !important; font-size: 9px; padding: 3px 8px; border-radius: 999px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <i class="{{ $badge['icon'] }}" style="font-size: 8px;"></i>
+                                            {{ $badge['label'] }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
                             <span class="sidebar-package-card__plan-badge">
                                 {{ $teacherCurrentPackage->badge_text_locale ?: $teacherCurrentPackage->name_locale }}
                             </span>
@@ -519,6 +529,12 @@
                                 href="{{ route('teacher.dashboard.index') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-gauge-high"></i></div>
                                 {{ __('teacher/sidebar.nav.overview') }}
+                            </a>
+
+                            <a class="nav-link {{ request()->routeIs('teacher.dashboard.notifications') || request()->routeIs('clients.inbox.*') ? 'active' : '' }}"
+                                href="{{ route('teacher.dashboard.notifications') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-envelope"></i></div>
+                                {{ __('teacher/sidebar.nav.inbox') }}
                             </a>
 
                             <a class="nav-link {{ request()->routeIs('teacher.dashboard.courses*') || request()->routeIs('teacher.dashboard.lessons.*') ? 'active' : '' }} {{ $teacherMaintCourse ? 'is-maintenance' : '' }}"
@@ -776,6 +792,12 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-user-slash"></i></div>
                                 {{ __('teacher/sidebar.nav.cancellation') }}
                             </a>
+
+                            <a class="nav-link {{ request()->routeIs('teacher.dashboard.telegram.*') ? 'active' : '' }}"
+                                href="{{ route('teacher.dashboard.telegram.index') }}">
+                                <div class="sb-nav-link-icon"><i class="fa-brands fa-telegram"></i></div>
+                                {{ __('teacher/sidebar.nav.telegram') }}
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -784,7 +806,12 @@
 
         <div class="sb-sidenav-footer">
             <div class="small">{{ __('teacher/sidebar.brand.logged_in_as') }}</div>
-            <div class="sidebar-user-name">{{ $teacherStudent?->name ?? __('teacher/sidebar.brand.student_fallback') }}</div>
+            <div class="sidebar-user-name d-flex align-items-center flex-wrap gap-1">
+                {{ $teacherStudent?->name ?? __('teacher/sidebar.brand.student_fallback') }}
+                @foreach ($teacherSidebarBadges as $badge)
+                    <i class="{{ $badge['icon'] }}" title="{{ $badge['label'] }}" style="color: {{ $badge['color_bg'] ?? '#e2e8f0' }}; font-size: 12px;"></i>
+                @endforeach
+            </div>
             <div class="sidebar-link-label">
                 {{ $teacherStudent?->email }}
             </div>

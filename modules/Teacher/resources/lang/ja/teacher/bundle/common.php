@@ -33,6 +33,8 @@ return array (
   ),
   'flash' => 
   array (
+    'created' => 'コースコンボが正常に作成されました。',
+    'updated' => 'コースコンボが正常に更新されました。',
     'deleted' => 'コースコンボを削除しました。',
   ),
   'labels' => 

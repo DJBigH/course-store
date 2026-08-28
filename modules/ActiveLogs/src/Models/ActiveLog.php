@@ -7,8 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class ActiveLog extends Model
 {
-    use HasFactory;
+    use HasFactory, \Illuminate\Database\Eloquent\MassPrunable;
     protected $table = 'active_logs';
+
+    /**
+     * Get the prunable model query.
+     */
+    public function prunable()
+    {
+        return static::where('created_at', '<=', now()->subDays(60));
+    }
 
      protected $fillable = [
         'log_name',
@@ -26,5 +34,9 @@ class ActiveLog extends Model
     protected $casts = [
         'properties' => 'array',
     ];
-    
+
+    public static function log(string $action, $subject = null, array $properties = [], string $description = null, string $logName = null)
+    {
+        return activity_log($action, $subject, $properties, $logName, $description);
+    }
 }

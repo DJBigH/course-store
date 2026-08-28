@@ -12,31 +12,51 @@ use Modules\ActiveLogs\src\Models\ActiveLog;
 use Modules\Home\src\Support\GeminiHealthService;
 use Modules\Settings\src\Http\Requests\SettingRequest;
 use Modules\Settings\src\Models\Setting;
+use Modules\Settings\src\Support\SystemHealthService;
 
 class SettingController extends Controller
 {
     public function __construct(
         protected SystemMailManager $systemMailManager,
         protected GeminiHealthService $geminiHealthService,
+        protected SystemHealthService $systemHealthService,
     ) {}
 
     public function index()
     {
+        // Auto migrate completed
+
         $pageTitle = 'Cấu hình website';
         $pageName = 'Cấu hình website';
         $settings = Setting::pluck('value', 'key')->toArray();
         $currentUser = auth()->user();
         $canUpdateGeneralSettings = $currentUser?->hasPermission('settings.update') ?? false;
+        $canCleanup = $currentUser?->hasPermission('settings.cleanup') ?? false;
+        $canViewHealth = $currentUser?->hasPermission('settings.health') ?? false;
+        $canMaintenance = $currentUser?->hasPermission('settings.maintenance') ?? false;
+
         $mailConfigured = $this->systemMailManager->isConfigured();
         $geminiHealth = $this->geminiHealthService->snapshot();
+        $systemHealth = $canViewHealth ? $this->systemHealthService->getSnapshot() : null;
+
+        $backupLogs = ActiveLog::where('action', 'Backup')
+            ->latest()
+            ->limit(5)
+            ->get();
 
         return view('settings::index', compact(
             'settings',
             'pageName',
             'pageTitle',
             'canUpdateGeneralSettings',
+            'canCleanup',
+            'canViewHealth',
+            'canMaintenance',
             'mailConfigured',
-            'geminiHealth'
+            'geminiHealth',
+            'systemHealth',
+            'currentUser',
+            'backupLogs'
         ));
     }
 
@@ -53,12 +73,14 @@ class SettingController extends Controller
             [
                 'global_notice_enabled' => $request->boolean('global_notice_enabled') ? '1' : '0',
                 'popup_notice_enabled' => $request->boolean('popup_notice_enabled') ? '1' : '0',
+                'maintenance_mode' => $request->boolean('maintenance_mode') ? '1' : '0',
                 'mail_enabled' => $request->boolean('mail_enabled') ? '1' : '0',
                 'chatbot_widget_enabled' => $request->boolean('chatbot_widget_enabled') ? '1' : '0',
                 'chatbot_enabled' => $request->boolean('chatbot_enabled') ? '1' : '0',
                 'popup_notice_snooze_minutes' => (string) ($request->input('popup_notice_snooze_minutes') ?: '60'),
                 'checkout_countdown_minutes' => (string) ($request->input('checkout_countdown_minutes') ?: config('checkout.checkout_countdown', '0')),
                 'max_devices' => (string) ($request->input('max_devices') ?: config('auth.max_devices', '1')),
+                'admin_max_devices' => (string) ($request->input('admin_max_devices') ?: config('auth.admin_max_devices', '1')),
                 'chatbot_message_ttl_minutes' => (string) ($request->input('chatbot_message_ttl_minutes') ?: env('CHATBOT_MESSAGE_TTL_MINUTES', '10')),
                 'student_two_factor_timeout' => (string) ($request->input('student_two_factor_timeout') ?: config('auth.student_two_factor_timeout', '600')),
                 'student_two_factor_code_expire' => (string) ($request->input('student_two_factor_code_expire') ?: config('auth.student_two_factor_code_expire', '600')),
@@ -66,6 +88,9 @@ class SettingController extends Controller
                 'payment_bank_enabled' => $request->boolean('payment_bank_enabled') ? '1' : '0',
                 'payment_momo_enabled' => $request->boolean('payment_momo_enabled') ? '1' : '0',
                 'payment_vnpay_enabled' => $request->boolean('payment_vnpay_enabled') ? '1' : '0',
+                'payment_wallet_enabled' => $request->boolean('payment_wallet_enabled') ? '1' : '0',
+                'teacher_badge_notification_email_enabled' => $request->boolean('teacher_badge_notification_email_enabled') ? '1' : '0',
+                'telegram_bot_enabled' => $request->boolean('telegram_bot_enabled') ? '1' : '0',
             ]
         );
 
@@ -87,10 +112,19 @@ class SettingController extends Controller
             'currency_rate_jpy',
             'currency_rate_cny',
             'currency_conversion_fee',
+            'theme_primary_color',
+            'maintenance_mode',
+            'maintenance_whitelist_ips',
+            'maintenance_message',
+            'maintenance_message_en',
+            'maintenance_message_ja',
+            'maintenance_message_ko',
+            'maintenance_message_zh',
             'mail_enabled',
             'chatbot_widget_enabled',
             'checkout_countdown_minutes',
             'max_devices',
+            'admin_max_devices',
             'chatbot_enabled',
             'chatbot_message_ttl_minutes',
             'student_two_factor_timeout',
@@ -143,11 +177,15 @@ class SettingController extends Controller
             'payment_bank_enabled',
             'payment_momo_enabled',
             'payment_vnpay_enabled',
+            'payment_wallet_enabled',
             'bank_transfer_bank_bin',
             'bank_transfer_bank_name',
             'bank_transfer_account_number',
             'bank_transfer_account_name',
             'bank_transfer_note_prefix',
+            'teacher_badge_notification_email_enabled',
+            'telegram_bot_enabled',
+            'min_payout_amount',
         ];
 
         $allowedSettingKeys = [];
@@ -196,6 +234,7 @@ class SettingController extends Controller
         }
 
         \Illuminate\Support\Facades\Cache::forget('currency_rates_base_vnd');
+        \Illuminate\Support\Facades\Cache::forget('system_settings_announcements');
 
         if (!empty($keysToDelete)) {
             Setting::whereIn('key', $keysToDelete)->delete();
@@ -231,7 +270,12 @@ class SettingController extends Controller
             Setting::updateOrCreate(['key' => 'logo'], ['value' => $path]);
         }
 
-        $allKeys = array_unique(array_merge($trackedKeys, ['banner_slider', 'banner_right', 'banner_full', 'logo']));
+        if ($canUpdateGeneralSettings && $request->hasFile('favicon')) {
+            $path = $request->file('favicon')->store('banners/favicon', 'public');
+            Setting::updateOrCreate(['key' => 'favicon'], ['value' => $path]);
+        }
+
+        $allKeys = array_unique(array_merge($trackedKeys, ['banner_slider', 'banner_right', 'banner_full', 'logo', 'favicon']));
         $newDb = Setting::whereIn('key', $allKeys)->pluck('value', 'key')->toArray();
 
         $changed = [];
@@ -253,12 +297,12 @@ class SettingController extends Controller
                     'old' => $this->formatSettingLogValues(Arr::only($old, $changed), $sensitiveKeys),
                     'new' => $this->formatSettingLogValues(Arr::only($newDb, $changed), $sensitiveKeys),
                 ],
-                logName: 'Cập nhập',
-                description: 'Cập nhập cấu hình'
+                logName: 'Cập nhật',
+                description: 'Cập nhật cấu hình'
             );
         }
 
-        return back()->with('msg', 'Cập nhập cấu hình thành công')->with('msgType', 'success');
+        return back()->with('msg', 'Cập nhật cấu hình thành công')->with('msgType', 'success');
     }
 
     public function syncExchangeRates(\Modules\Courses\src\Support\CurrencyService $currencyService)
@@ -413,6 +457,9 @@ class SettingController extends Controller
             'bank_transfer_account_number' => 'Số tài khoản ngân hàng',
             'bank_transfer_account_name' => 'Tên chủ tài khoản',
             'bank_transfer_note_prefix' => 'Tiền tố nội dung chuyển khoản',
+            'teacher_badge_notification_email_enabled' => 'Gửi email khi cấp huy hiệu giảng viên',
+            'min_payout_amount' => 'Hạn mức rút tiền tối thiểu',
+            'admin_max_devices' => 'Thiết bị tối đa của Admin',
         ];
 
         if (isset($exactLabels[$key])) {
@@ -432,6 +479,260 @@ class SettingController extends Controller
         }
 
         return ucwords(str_replace('_', ' ', $key));
+    }
+
+    public function runBackup(Request $request)
+    {
+        try {
+            set_time_limit(0);
+            ini_set('memory_limit', '512M');
+
+            // 1. Native Database Dump
+            $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES');
+            $dbName = env('DB_DATABASE');
+            $property = 'Tables_in_' . $dbName;
+            $sql = "-- Custom Laravel DB Dump\n\n";
+
+            foreach ($tables as $tableObj) {
+                if (!isset($tableObj->$property)) continue;
+                $table = $tableObj->$property;
+                
+                // Structure
+                $createTable = \Illuminate\Support\Facades\DB::select("SHOW CREATE TABLE `{$table}`")[0];
+                $createProp = 'Create Table';
+                $sql .= "DROP TABLE IF EXISTS `{$table}`;\n";
+                $sql .= $createTable->$createProp . ";\n\n";
+
+                // Data
+                $rows = \Illuminate\Support\Facades\DB::table($table)->get();
+                foreach ($rows as $row) {
+                    $rowArray = (array) $row;
+                    $columns = array_keys($rowArray);
+                    $escapedColumns = array_map(fn($col) => "`{$col}`", $columns);
+                    
+                    $values = array_map(function($val) {
+                        if (is_null($val)) return 'NULL';
+                        return "'" . addslashes($val) . "'";
+                    }, array_values($rowArray));
+
+                    $sql .= "INSERT INTO `{$table}` (" . implode(', ', $escapedColumns) . ") VALUES (" . implode(', ', $values) . ");\n";
+                }
+                $sql .= "\n\n";
+            }
+
+            $dumpPath = storage_path('app/backup-temp/database.sql');
+            if (!is_dir(dirname($dumpPath))) {
+                mkdir(dirname($dumpPath), 0755, true);
+            }
+            file_put_contents($dumpPath, $sql);
+
+            // 2. Custom Zip
+            $zipPath = storage_path('app/backup-temp/backup-' . date('Y-m-d-H-i-s') . '.zip');
+            $zip = new \ZipArchive();
+
+            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+                $zip->addFile($dumpPath, 'database.sql');
+
+                $filesPath = storage_path('app/public');
+                if (is_dir($filesPath)) {
+                    $files = new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($filesPath),
+                        \RecursiveIteratorIterator::LEAVES_ONLY
+                    );
+
+                    foreach ($files as $name => $file) {
+                        if (!$file->isDir()) {
+                            $filePath = $file->getRealPath();
+                            $relativePath = 'storage/' . substr($filePath, strlen($filesPath) + 1);
+                            $zip->addFile($filePath, $relativePath);
+                        }
+                    }
+                }
+                $zip->close();
+            } else {
+                throw new \Exception('Không thể khởi tạo file nén ZIP.');
+            }
+
+            // 3. Upload to Google Drive
+            $fileName = basename($zipPath);
+            $fileContent = file_get_contents($zipPath);
+            
+            \Illuminate\Support\Facades\Storage::disk('google')->put($fileName, $fileContent);
+
+            @unlink($dumpPath);
+            @unlink($zipPath);
+
+            ActiveLog::create([
+                'user_id' => auth()->id(),
+                'module' => 'Settings',
+                'action' => 'Backup',
+                'description' => 'Khởi tạo tác vụ sao lưu Cloud Google Drive thủ công (Native).',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã sao lưu thành công dữ liệu lên Google Drive!',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi sao lưu: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function storeFirewall(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'ip_address' => 'required|string|max:45|unique:ip_blacklists,ip_address',
+            'reason' => 'nullable|string|max:255',
+        ]);
+
+        $item = \Modules\Settings\src\Models\IpBlacklist::create($request->only(['ip_address', 'reason']));
+
+        activity_log(
+            action: 'create_firewall',
+            subject: $item,
+            properties: [
+                'ip_address' => $item->ip_address,
+                'reason' => $item->reason,
+            ],
+            logName: 'admin_setting_management',
+            description: "Thêm IP vào danh sách đen: {$item->ip_address}"
+        );
+
+        \Illuminate\Support\Facades\Cache::forget('ip_blacklist');
+
+        return back()->with([
+            'msg' => 'Đã thêm IP vào danh sách đen thành công!',
+            'msgType' => 'success',
+            'active_tab' => 'firewall'
+        ]);
+    }
+
+    public function deleteFirewall($id)
+    {
+        $item = \Modules\Settings\src\Models\IpBlacklist::findOrFail($id);
+        $snapshot = $item->toArray();
+        $item->delete();
+
+        activity_log(
+            action: 'delete_firewall',
+            subject: null,
+            properties: ['data' => $snapshot],
+            logName: 'admin_setting_management',
+            description: "Gỡ bỏ IP khỏi danh sách đen: " . ($snapshot['ip_address'] ?? 'N/A')
+        );
+
+        \Illuminate\Support\Facades\Cache::forget('ip_blacklist');
+
+        return back()->with([
+            'msg' => 'Đã gỡ bỏ IP khỏi danh sách đen!',
+            'msgType' => 'success',
+            'active_tab' => 'firewall'
+        ]);
+    }
+
+    public function testTelegram()
+    {
+        $botToken = config('services.telegram.bot_token');
+        $chatId = config('services.telegram.chat_id');
+
+        if (!$botToken || !$chatId) {
+            return back()->with([
+                'msg' => 'Vui lòng cấu hình TELEGRAM_BOT_TOKEN và TELEGRAM_CHAT_ID trong file .env trước!',
+                'msgType' => 'danger',
+                'active_tab' => 'bots'
+            ]);
+        }
+
+        try {
+            \App\Jobs\SendTelegramNotification::dispatch($chatId, "🔔 [TEST] Kết nối Telegram Bot thành công!\nHệ thống: " . url('/'), $botToken);
+
+            return back()->with([
+                'msg' => 'Đã gửi lệnh gửi tin nhắn test!',
+                'msgType' => 'success',
+                'active_tab' => 'bots'
+            ]);
+
+        } catch (\Exception $e) {
+            return back()->with([
+                'msg' => 'Lỗi kết nối: ' . $e->getMessage(),
+                'msgType' => 'danger',
+                'active_tab' => 'bots'
+            ]);
+        }
+    }
+
+    public function cleanup()
+    {
+        $currentUser = auth()->user();
+        if (!$currentUser?->hasPermission('settings.cleanup')) {
+            abort(403);
+        }
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('model:prune');
+            
+            ActiveLog::log(
+                action: 'system_cleanup',
+                logName: 'admin_setting_management',
+                description: "Đã thực hiện dọn dẹp hệ thống thủ công."
+            );
+
+            return back()->with([
+                'msg' => 'Đã thực hiện dọn dẹp hệ thống thành công!',
+                'msgType' => 'success',
+                'active_tab' => 'cleanup'
+            ]);
+        } catch (\Exception $e) {
+            return back()->with([
+                'msg' => 'Lỗi khi dọn dẹp: ' . $e->getMessage(),
+                'msgType' => 'danger',
+                'active_tab' => 'cleanup'
+            ]);
+        }
+    }
+
+    public function clearCache()
+    {
+        $currentUser = auth()->user();
+        if (!$currentUser?->hasPermission('settings.maintenance')) {
+            abort(403);
+        }
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('cache:clear');
+            \Illuminate\Support\Facades\Artisan::call('view:clear');
+            \Illuminate\Support\Facades\Artisan::call('config:clear');
+            
+            ActiveLog::log(
+                action: 'maintenance_clear_cache',
+                logName: 'admin_setting_management',
+                description: "Đã thực hiện xóa toàn bộ Cache hệ thống."
+            );
+
+            return back()->with([
+                'msg' => 'Đã xóa toàn bộ Cache hệ thống thành công!',
+                'msgType' => 'success',
+                'active_tab' => 'cleanup'
+            ]);
+        } catch (\Exception $e) {
+            return back()->with([
+                'msg' => 'Lỗi khi xóa cache: ' . $e->getMessage(),
+                'msgType' => 'danger',
+                'active_tab' => 'cleanup'
+            ]);
+        }
+    }
+
+    public function healthCheck()
+    {
+        if (!auth()->user()?->hasPermission('settings.health')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return response()->json($this->systemHealthService->getSnapshot());
     }
 }
 

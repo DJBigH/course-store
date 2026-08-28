@@ -20,6 +20,12 @@ class PayoutRequest extends Model
         'status',
         'processed_at',
         'processed_by',
+        'currency_code',
+        'exchange_rate',
+        'original_amount',
+        'converted_amount_vnd',
+        'fee_percentage',
+        'fee_amount_vnd',
     ];
 
     protected $casts = [

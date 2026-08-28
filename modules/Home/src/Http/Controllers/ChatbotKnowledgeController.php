@@ -134,7 +134,7 @@ class ChatbotKnowledgeController extends Controller
             description: 'Cập nhật tri thức chatbot'
         );
 
-        return back()->with('msg', 'Đã cập nhập tri thức chatbot thành công.');
+        return back()->with('msg', 'Đã cập nhật tri thức chatbot thành công.');
     }
 
     public function destroy($id): RedirectResponse
@@ -220,7 +220,7 @@ class ChatbotKnowledgeController extends Controller
             'resolved_at' => $data['status'] === 'pending' ? null : now(),
         ]);
 
-        return back()->with('msg', 'Đã cập nhập trạng thái log chatbot.');
+        return back()->with('msg', 'Đã cập nhật trạng thái log chatbot.');
     }
 
     private function buildPrefillKeywords(ChatbotUnresolvedQuestion $log): string

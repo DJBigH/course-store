@@ -113,6 +113,22 @@ class PermissionSeeder extends Seeder
             ['slug' => 'settings.view', 'name' => 'Xem cấu hình', 'module' => 'settings'],
             ['slug' => 'settings.update', 'name' => 'Cập nhật cấu hình', 'module' => 'settings'],
             ['slug' => 'settings.logs', 'name' => 'Xem lịch sử cấu hình', 'module' => 'settings'],
+            ['slug' => 'settings.cleanup', 'name' => 'Dọn dẹp hệ thống', 'module' => 'settings'],
+            ['slug' => 'settings.maintenance', 'name' => 'Bảo trì hệ thống', 'module' => 'settings'],
+            ['slug' => 'settings.health', 'name' => 'Sức khỏe web', 'module' => 'settings'],
+
+            ['slug' => 'ratings.view', 'name' => 'Xem đánh giá', 'module' => 'ratings'],
+            ['slug' => 'ratings.moderate', 'name' => 'Kiểm duyệt đánh giá', 'module' => 'ratings'],
+            ['slug' => 'ratings.delete', 'name' => 'Xóa đánh giá', 'module' => 'ratings'],
+
+            ['slug' => 'finances.view', 'name' => 'Xem tài chính', 'module' => 'finances'],
+            ['slug' => 'finances.manage', 'name' => 'Quản lý tài chính', 'module' => 'finances'],
+            ['slug' => 'finances.export', 'name' => 'Xuất báo cáo', 'module' => 'finances'],
+
+            ['slug' => 'badges.view', 'name' => 'Xem danh sách huy hiệu', 'module' => 'badges'],
+            ['slug' => 'badges.create', 'name' => 'Tạo huy hiệu', 'module' => 'badges'],
+            ['slug' => 'badges.edit', 'name' => 'Sửa huy hiệu', 'module' => 'badges'],
+            ['slug' => 'badges.delete', 'name' => 'Xóa huy hiệu', 'module' => 'badges'],
 
             ['slug' => 'chatbot.view', 'name' => 'Xem tri thức chatbot', 'module' => 'chatbot'],
             ['slug' => 'chatbot.create', 'name' => 'Thêm tri thức chatbot', 'module' => 'chatbot'],
@@ -121,6 +137,38 @@ class PermissionSeeder extends Seeder
             ['slug' => 'chatbot.logs', 'name' => 'Xem log chatbot', 'module' => 'chatbot'],
 
             ['slug' => 'logs.view', 'name' => 'Xem nhật ký hệ thống', 'module' => 'logs'],
+
+            // Bổ sung quyền chuyên sâu
+            ['slug' => 'teachers.approve', 'name' => 'Duyệt giảng viên', 'module' => 'teachers'],
+            ['slug' => 'teachers.reject', 'name' => 'Từ chối giảng viên', 'module' => 'teachers'],
+            ['slug' => 'teachers.lock', 'name' => 'Khóa/Mở khóa giảng viên', 'module' => 'teachers'],
+
+            ['slug' => 'packages.view', 'name' => 'Xem danh sách gói', 'module' => 'packages'],
+            ['slug' => 'packages.manage', 'name' => 'Quản lý gói giảng viên', 'module' => 'packages'],
+
+            ['slug' => 'promotions.view', 'name' => 'Xem khuyến mại', 'module' => 'promotions'],
+            ['slug' => 'promotions.send', 'name' => 'Gửi khuyến mại hàng loạt', 'module' => 'promotions'],
+
+            ['slug' => 'students.grant_course', 'name' => 'Cấp khóa học thủ công', 'module' => 'students'],
+            ['slug' => 'students.lock', 'name' => 'Khóa tài khoản học viên', 'module' => 'students'],
+            ['slug' => 'students.impersonate', 'name' => 'Đăng nhập với tư cách học viên', 'module' => 'students'],
+
+            ['slug' => 'media.manage', 'name' => 'Toàn quyền Media', 'module' => 'media'],
+            ['slug' => 'media.delete', 'name' => 'Xóa tệp tin', 'module' => 'media'],
+
+            ['slug' => 'reports.view', 'name' => 'Xem báo cáo vi phạm', 'module' => 'reports'],
+            ['slug' => 'reports.resolve', 'name' => 'Xử lý báo cáo vi phạm', 'module' => 'reports'],
+
+            ['slug' => 'teachers.cancel_manage', 'name' => 'Quản lý yêu cầu hủy hợp tác', 'module' => 'teachers'],
+
+            ['slug' => 'courses.approve', 'name' => 'Duyệt xuất bản khóa học', 'module' => 'courses'],
+
+            ['slug' => 'certificates.view', 'name' => 'Xem chứng chỉ', 'module' => 'certificates'],
+
+            // Thông báo hệ thống
+            ['slug' => 'announcements.view', 'name' => 'Xem thông báo hệ thống', 'module' => 'announcements'],
+            ['slug' => 'announcements.create', 'name' => 'Gửi thông báo hệ thống', 'module' => 'announcements'],
+            ['slug' => 'announcements.delete', 'name' => 'Xóa thông báo hệ thống', 'module' => 'announcements'],
         ];
     }
 

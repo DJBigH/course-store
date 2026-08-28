@@ -1,15 +1,15 @@
 <?php
 
-return array (
-  'group' => 
-  array (
+return array(
+  'group' =>
+  array(
     'management' => '관리',
     'growth' => '성장',
     'trainees' => '수강생',
     'account' => '계정',
   ),
-  'nav' => 
-  array (
+  'nav' =>
+  array(
     'overview' => '개요',
     'courses' => '강의',
     'earnings' => '수익',
@@ -25,9 +25,11 @@ return array (
     'package' => '강사 패키지',
     'support' => '지원',
     'cancellation' => '강사 취소',
+    'inbox' => '시스템 보관함',
+    'telegram' => '텔레그램 설정',
   ),
-  'brand' => 
-  array (
+  'brand' =>
+  array(
     'logged_in_as' => '로그인 계정:',
     'student_fallback' => '학생',
     'active_channel' => '활성 채널',

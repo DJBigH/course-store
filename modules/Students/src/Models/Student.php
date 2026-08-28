@@ -24,6 +24,28 @@ class Student extends Authenticatable implements MustVerifyEmail, CanResetPasswo
     use Notifiable;
     use SoftDeletes;
 
+    protected static function booted()
+    {
+        static::created(function ($student) {
+            try {
+                $isEnabled = \Modules\Settings\src\Models\Setting::where('key', 'telegram_bot_enabled')->value('value');
+                $botToken = config('services.telegram.bot_token');
+                $chatId = config('services.telegram.chat_id');
+
+                if ($isEnabled === '1' && $botToken && $chatId) {
+                    $text = "🧑‍🎓 <b>[HỌC VIÊN MỚI ĐĂNG KÝ]</b>\n\n";
+                    $text .= "👤 <b>Họ tên:</b> {$student->name}\n";
+                    $text .= "✉️ <b>Email:</b> <code>{$student->email}</code>\n";
+                    $text .= "⏱️ <b>Thời gian:</b> " . now()->format('H:i:s d/m/Y');
+
+                    \App\Jobs\SendTelegramNotification::dispatch($chatId, $text, $botToken);
+                }
+            } catch (\Exception $e) {
+                // Fail silently
+            }
+        });
+    }
+
     protected $table = 'students';
 
     protected $fillable = [

@@ -46,14 +46,22 @@ class CoursesController extends Controller
         $teachers = $this->teacherRepository->getAllTeacher()->get(['id', 'name']);
         $categories = $this->categoriesRepository->getAllCategories();
 
-        return view('courses::lists', compact('pageTitle', 'stats', 'teachers', 'categories'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học']
+        ];
+
+        return view('courses::lists', compact('pageTitle', 'stats', 'teachers', 'categories', 'breadcrumbs'));
     }
 
     public function trash()
     {
         $pageTitle = 'Thùng rác khóa học';
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học', 'link' => route('courses.index')],
+            ['label' => 'Thùng rác']
+        ];
 
-        return view('courses::trash', compact('pageTitle'));
+        return view('courses::trash', compact('pageTitle', 'breadcrumbs'));
     }
     public function data(Request $request)
     {
@@ -135,7 +143,7 @@ class CoursesController extends Controller
                     $titleHtml = '<a href="' . route('courses.detail', [
                         'locale' => $publicLocale,
                         'slug' => $courseSlug,
-                    ]) . '" target="_blank" rel="noopener noreferrer" class="course-cell__link">' . $name . '</a>';
+                    ]) . '" target="_blank" rel="noopener noreferrer" class="course-cell__link fw-bold text-dark text-decoration-none">' . $name . '</a>';
                 }
 
                 $badges = '';
@@ -151,110 +159,96 @@ class CoursesController extends Controller
                     $badges .= '<span class="badge bg-secondary ms-1" style="font-size: 10px;">Hết hạn</span>';
                 }
 
+                $thumbnail = $course->thumbnail ? asset($course->thumbnail) : 'https://placehold.co/600x400?text=Course';
+
                 return '
-        <div class="course-cell">
-            <div class="course-cell__title">' . $titleHtml . $badges . '</div>
-            <div class="course-cell__meta">
-                <span><i class="fa-solid fa-chalkboard-user"></i> ' . $teacher . '</span>
-                <span><i class="fa-solid fa-eye"></i> ' . $views . ' lượt xem</span>
-            </div>
-        </div>
-    ';
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="' . $thumbnail . '" class="rounded shadow-sm" style="width: 72px; height: 45px; object-fit: cover;">
+                        <div>
+                            <div class="course-cell__title mb-1">' . $titleHtml . $badges . '</div>
+                            <div class="course-cell__meta small text-muted">
+                                <span><i class="fa-solid fa-chalkboard-user me-1"></i> ' . $teacher . '</span>
+                                <span class="ms-3"><i class="fa-solid fa-eye me-1"></i> ' . $views . ' lượt xem</span>
+                            </div>
+                        </div>
+                    </div>';
             })
-            ->addColumn('learning', function ($course) {
-                return '
-                    <div class="course-learning">
-                        <span class="course-pill"><i class="fa-solid fa-circle-play"></i> ' . number_format((int) ($course->lessons_count ?? 0)) . ' bài</span>
-                        <span class="course-pill"><i class="fa-solid fa-users"></i> ' . number_format((int) ($course->students_count ?? 0)) . ' học viên</span>
-                    </div>
-                ';
-            })
-            ->addColumn('rating', function ($course) {
+            ->addColumn('learning_stat', function ($course) {
                 $avg = round((float) ($course->ratings_avg_rating ?? 0), 1);
                 $count = (int) ($course->ratings_count ?? 0);
                 
-                return '<div class="course-rating-cell text-center">
-                            <div class="rating-text fw-bold text-warning">
-                                <i class="fa-solid fa-star me-1"></i>' . $avg . ' / 5
-                            </div>
-                            <div class="small text-muted">' . $count . ' đánh giá</div>
-                        </div>';
-            })
-            ->addColumn('publish', function ($course) use ($canPublish) {
-                if (!$canPublish) {
-                    return '<span class="text-muted small">Không có quyền</span>';
-                }
-
-                $label = (int) $course->status === 1 ? 'Ẩn' : 'Xuất bản';
-                $class = (int) $course->status === 1 ? 'btn btn-light border' : 'btn btn-success';
-
                 return '
-                    <form method="POST" action="' . route('courses.toggle-status', $course->id) . '" class="d-inline-block">
-                        ' . csrf_field() . '
-                        <button type="submit" class="' . $class . '">' . $label . '</button>
-                    </form>
-                ';
+                    <div class="course-learning-cell small">
+                        <div><i class="fa-solid fa-circle-play text-muted me-1"></i> <strong>' . number_format((int) ($course->lessons_count ?? 0)) . '</strong> bài giảng</div>
+                        <div class="mt-1"><i class="fa-solid fa-users text-muted me-1"></i> <strong>' . number_format((int) ($course->students_count ?? 0)) . '</strong> học viên</div>
+                        <div class="text-warning mt-1">
+                            <i class="fa-solid fa-star me-1"></i><strong>' . $avg . '</strong> <span class="text-muted">(' . $count . ')</span>
+                        </div>
+                    </div>';
             })
-            ->addColumn('duplicate', function ($course) use ($canEdit) {
-                if (!$canEdit) {
-                    return '<span class="text-muted small">Không có quyền</span>';
-                }
-
-                return '
-                    <form method="POST" action="' . route('courses.duplicate', $course->id) . '" class="d-inline-block">
-                        ' . csrf_field() . '
-                        <button type="submit" class="btn btn-outline-secondary">Nhân bản</button>
-                    </form>
-                ';
-            })
-            ->addColumn('logs', function ($course) use ($canView) {
-                if (!$canView) {
-                    return '<span class="text-muted small">Không có quyền</span>';
-                }
-
-                return '<a href="' . route('courses.logs', $course->id) . '" class="btn btn-light border">Lịch sử</a>';
-            })
-            ->addColumn('lessions', function ($course) use ($canAccessLessons) {
-                if (!$canAccessLessons) {
-                    return '<span class="text-muted small">Không có quyền</span>';
-                }
-
-                return '<a href="' . route('lessons.index', $course->id) . '" class="btn btn-primary">Bài giảng</a>';
-            })
-            ->addColumn('edit', function ($course) use ($canEdit) {
-                if (!$canEdit) {
-                    return '<span class="text-muted small">Không có quyền</span>';
-                }
-
-                return '<a href="' . route('courses.edit', $course->id) . '" class="btn btn-warning">Sửa</a>';
-            })
-            ->addColumn('delete', function ($course) use ($canSoftDelete) {
-                if (!$canSoftDelete) {
-                    return '<span class="text-muted small">Không có quyền</span>';
-                }
-
-                return '<a href="' . route('courses.delete', $course->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>';
-            })
-            ->editColumn('created_at', function ($course) {
-                return Carbon::parse($course->created_at)->format('d/m/Y H:i:s');
-            })
-            ->editColumn('status', function ($course) {
-                return (int) $course->status === 1
-                    ? '<span class="badge rounded-pill text-success-emphasis bg-success-subtle">Đã xuất bản</span>'
-                    : '<span class="badge rounded-pill text-warning-emphasis bg-warning-subtle">Bản nháp</span>';
-            })
-            ->editColumn('price', function ($course) {
+            ->addColumn('price_status', function ($course) use ($canPublish) {
+                $priceHtml = '';
                 if ($course->price) {
                     if ($course->sale_price) {
-                        return '<div class="course-price"><strong>' . number_format($course->sale_price, 0) . ' đ</strong><span>' . number_format($course->price, 0) . ' đ</span></div>';
+                        $priceHtml = '<div class="course-price fw-bold text-dark">' . number_format($course->sale_price, 0) . ' đ <span class="text-muted text-decoration-line-through small fw-normal ms-1">' . number_format($course->price, 0) . ' đ</span></div>';
+                    } else {
+                        $priceHtml = '<div class="course-price fw-bold text-dark">' . number_format($course->price, 0) . ' đ</div>';
                     }
-
-                    return '<div class="course-price"><strong>' . number_format($course->price, 0) . ' đ</strong></div>';
+                } else {
+                    $priceHtml = '<span class="badge bg-success-subtle text-success px-2 py-1">Miễn phí</span>';
                 }
 
-                return '<span class="course-free-badge">Miễn phí</span>';
+                $statusHtml = (int) $course->status === 1
+                    ? '<span class="badge bg-success-subtle text-success px-2 py-1 mt-2 d-inline-block">Đã xuất bản</span>'
+                    : '<span class="badge bg-warning-subtle text-warning px-2 py-1 mt-2 d-inline-block">Bản nháp</span>';
+
+                if ($canPublish) {
+                    $label = (int) $course->status === 1 ? 'Ẩn' : 'Xuất bản';
+                    $btnClass = (int) $course->status === 1 ? 'btn btn-outline-secondary btn-xs py-0 px-2 ms-1' : 'btn btn-success btn-xs py-0 px-2 ms-1';
+                    $statusHtml .= ' <form method="POST" action="' . route('courses.toggle-status', $course->id) . '" class="d-inline-block">
+                                        ' . csrf_field() . '
+                                        <button type="submit" class="' . $btnClass . '" style="font-size: 10px; padding: 2px 5px;">' . $label . '</button>
+                                     </form>';
+                }
+
+                return '<div class="course-price-status">' . $priceHtml . $statusHtml . '</div>';
             })
-            ->rawColumns(['select', 'overview', 'learning', 'rating', 'publish', 'duplicate', 'logs', 'lessions', 'edit', 'delete', 'status', 'price'])
+            ->editColumn('created_at', function ($course) {
+                return '<div class="small text-muted">' . Carbon::parse($course->created_at)->format('d/m/Y') . '</div>';
+            })
+            ->addColumn('actions', function ($course) use ($canEdit, $canSoftDelete, $canView, $canAccessLessons) {
+                $btn = '<div class="dropdown">
+                            <button class="btn btn-light btn-sm border dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">';
+                
+                if ($canEdit) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('courses.edit', $course->id) . '"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Sửa khóa học</a></li>';
+                    $btn .= '<li>
+                                <form method="POST" action="' . route('courses.duplicate', $course->id) . '" class="d-inline-block w-100">' . csrf_field() . '
+                                    <button type="submit" class="dropdown-item py-2"><i class="fa-solid fa-clone text-secondary me-2"></i>Nhân bản</button>
+                                </form>
+                             </li>';
+                }
+
+                if ($canAccessLessons) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('lessons.index', $course->id) . '"><i class="fa-solid fa-circle-play text-success me-2"></i>Quản lý bài giảng</a></li>';
+                }
+
+                if ($canView) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('courses.logs', $course->id) . '"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i>Xem lịch sử</a></li>';
+                }
+
+                if ($canSoftDelete) {
+                    $btn .= '<li><hr class="dropdown-divider my-1"></li>';
+                    $btn .= '<li><a class="dropdown-item py-2 text-danger delete-action" href="' . route('courses.delete', $course->id) . '"><i class="fa-solid fa-trash me-2"></i>Xóa mềm</a></li>';
+                }
+
+                $btn .= '</ul></div>';
+                return $btn;
+            })
+            ->rawColumns(['select', 'overview', 'learning_stat', 'price_status', 'created_at', 'actions'])
             ->toJson();
     }
     public function trashData()
@@ -531,6 +525,13 @@ class CoursesController extends Controller
             logName: 'Cập nhật trạng thái',
             description: $newStatus === 1 ? 'Xuất bản khóa học' : 'Ẩn khóa học'
         );
+
+        // Notify Teacher
+        if ($course->teacher && $course->teacher->student) {
+            $type = $newStatus === 1 ? 'published' : 'draft';
+            $course->teacher->student->notify(new \App\Notifications\CourseStatusNotification($course, $type));
+        }
+
         return back()->with('msg', $newStatus === 1 ? 'Đã xuất bản khóa học.' : 'Đã chuyển khóa học về bản nháp.');
     }
 
@@ -620,7 +621,23 @@ class CoursesController extends Controller
         $categories = $this->categoriesRepository->getAllCategories();
         $teacher = $this->teacherRepository->getAllTeacher()->get();
 
-        return view('courses::create', compact('pageTitle', 'categories', 'teacher'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học', 'link' => route('courses.index')],
+            ['label' => 'Thêm mới']
+        ];
+
+        $exchangeRates = \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray();
+        // Bổ sung tỉ giá mặc định từ .env nếu thiếu (Lấy USD làm gốc 1.0)
+        $vndRate = (float) (env('CURRENCY_USD_VND_RATE') ?: 25000);
+        if (empty($exchangeRates['USD'])) $exchangeRates['USD'] = 1;
+        if (empty($exchangeRates['VND'])) $exchangeRates['VND'] = $vndRate;
+        if (empty($exchangeRates['KRW'])) $exchangeRates['KRW'] = $vndRate / (env('CURRENCY_KRW_VND_RATE') ?: 18);
+        if (empty($exchangeRates['JPY'])) $exchangeRates['JPY'] = $vndRate / (env('CURRENCY_JPY_VND_RATE') ?: 170);
+        if (empty($exchangeRates['CNY'])) $exchangeRates['CNY'] = $vndRate / (env('CURRENCY_CNY_VND_RATE') ?: 3500);
+
+        $conversionFee = (float) setting('conversion_fee', 0);
+
+        return view('courses::create', compact('pageTitle', 'categories', 'teacher', 'breadcrumbs', 'exchangeRates', 'conversionFee'));
     }
 
     public function store(CoursesRequest $request)
@@ -648,6 +665,7 @@ class CoursesController extends Controller
         Student::chunk(100, function ($students) use ($course) {
             foreach ($students as $student) {
                 $student->notify(new StudentNotification([
+                    'type' => 'student.course.new',
                     'title' => 'Khóa học mới',
                     'title_translations' => [
                         'vi' => 'Khóa học mới',
@@ -668,6 +686,10 @@ class CoursesController extends Controller
                         'locale' => app()->getLocale(),
                         'slug' => $course->slug
                     ]),
+                    'severity' => 'primary',
+                    'icon' => 'fas fa-rocket',
+                    'entity_type' => 'course',
+                    'entity_id' => $course->id,
                 ]));
             }
         });
@@ -679,15 +701,32 @@ class CoursesController extends Controller
     {
         $pageTitle = 'Cập nhật khóa học';
         $courses = $this->courseRepository->getCourse($id);
+
+        if (empty($courses)) {
+            abort(404);
+        }
+
         $categoriesId = $this->courseRepository->getRelatedCategories($courses);
         $categories = $this->categoriesRepository->getAllCategories();
         $teacher = $this->teacherRepository->getAllTeacher()->get();
 
-        if (empty($courses) || empty($categoriesId) || empty($categories) || empty($teacher)) {
-            abort(404);
-        }
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học', 'link' => route('courses.index')],
+            ['label' => 'Cập nhật']
+        ];
 
-        return view('courses::edit', compact('courses', 'pageTitle', 'categories', 'categoriesId', 'teacher'));
+        $exchangeRates = \Modules\Courses\src\Models\ExchangeRate::pluck('rate', 'code')->toArray();
+        // Bổ sung tỉ giá mặc định từ .env nếu thiếu (Lấy USD làm gốc 1.0)
+        $vndRate = (float) (env('CURRENCY_USD_VND_RATE') ?: 25000);
+        if (empty($exchangeRates['USD'])) $exchangeRates['USD'] = 1;
+        if (empty($exchangeRates['VND'])) $exchangeRates['VND'] = $vndRate;
+        if (empty($exchangeRates['KRW'])) $exchangeRates['KRW'] = $vndRate / (env('CURRENCY_KRW_VND_RATE') ?: 18);
+        if (empty($exchangeRates['JPY'])) $exchangeRates['JPY'] = $vndRate / (env('CURRENCY_JPY_VND_RATE') ?: 170);
+        if (empty($exchangeRates['CNY'])) $exchangeRates['CNY'] = $vndRate / (env('CURRENCY_CNY_VND_RATE') ?: 3500);
+
+        $conversionFee = (float) setting('conversion_fee', 0);
+
+        return view('courses::edit', compact('courses', 'pageTitle', 'categories', 'categoriesId', 'teacher', 'breadcrumbs', 'exchangeRates', 'conversionFee'));
     }
 
     public function update(CoursesRequest $request, $id)
@@ -725,6 +764,14 @@ class CoursesController extends Controller
             logName: 'Cập nhật',
             description: 'Cập nhật khóa học'
         );
+
+        // Notify Teacher if learning lock changed
+        $oldLock = (int) ($oldData['is_learning_locked'] ?? 0);
+        $newLock = (int) ($newData['is_learning_locked'] ?? 0);
+        if ($oldLock !== $newLock && $course->teacher && $course->teacher->student) {
+            $type = $newLock === 1 ? 'locked' : 'unlocked';
+            $course->teacher->student->notify(new \App\Notifications\CourseStatusNotification($course, $type));
+        }
 
         return back()->with('msg', __('courses::messages.update.success'));
     }
@@ -826,7 +873,12 @@ class CoursesController extends Controller
             ->paginate(config('paginate.log_limit'))
             ->withQueryString();
 
-        return view('courses::logs', compact('pageTitle', 'course', 'logs'));
+        $breadcrumbs = [
+            ['label' => 'Quản lý khóa học', 'link' => route('courses.index')],
+            ['label' => 'Lịch sử hoạt động']
+        ];
+
+        return view('courses::logs', compact('pageTitle', 'course', 'logs', 'breadcrumbs'));
     }
 
     protected function categoriesPivotPayload(array $categoryIds): array

@@ -8,7 +8,28 @@
     <meta name="csrf_token" content="{{ csrf_token() }}" />
     <meta name="color-scheme" content="light dark" />
     <title>{{ $pageTitle ?? __('clients/common.page_not_found') }} - BigK Udemy</title>
-    <link rel="shortcut icon" href="{{ asset('clients/assets/LOGO-DSCONS-FAVICON.png') }}" type="image/x-icon">
+    @if(!empty(setting('favicon')))
+        <link rel="shortcut icon" href="{{ asset('storage/' . setting('favicon')) }}" type="image/x-icon">
+    @else
+        <link rel="shortcut icon" href="{{ asset('clients/assets/LOGO-DSCONS-FAVICON.png') }}" type="image/x-icon">
+    @endif
+
+    <style>
+        :root {
+            --bs-primary: {{ setting('theme_primary_color', '#0d6efd') }} !important;
+            --primary-color: {{ setting('theme_primary_color', '#0d6efd') }} !important;
+        }
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+    </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <script>
         (() => {

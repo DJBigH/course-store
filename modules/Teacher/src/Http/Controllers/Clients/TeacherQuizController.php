@@ -19,6 +19,8 @@ use Modules\Courses\src\Policies\CourseQuizPolicy;
 use Modules\Lessons\src\Models\Lesson;
 use Modules\Teacher\src\Http\Controllers\Clients\Traits\TeacherDashboardHelpers;
 use Modules\Teacher\src\Models\Teacher;
+use Modules\Teacher\src\Notifications\QuizAssignedNotification;
+use Modules\Students\src\Models\Student;
 
 class TeacherQuizController extends Controller
 {
@@ -206,6 +208,19 @@ class TeacherQuizController extends Controller
                 );
             }
         });
+
+        // Gửi thông báo cho học viên
+        $quizUrl = route('teacher.dashboard.quizzes.show', [
+            'course' => $course->id,
+            'quiz' => $quiz->id
+        ]);
+
+        foreach ($studentIds as $studentId) {
+            $student = Student::query()->find($studentId);
+            if ($student) {
+                $student->notify(new QuizAssignedNotification($quiz, $course, $quizUrl));
+            }
+        }
 
         $this->logTeacherQuizActivity(
             $teacher,
@@ -539,6 +554,16 @@ class TeacherQuizController extends Controller
         $quiz    = CourseQuiz::query()->where('course_id', $course->id)->findOrFail($quizId);
         $this->authorizeQuizAccess($teacher, 'update', $quiz);
         
+        $aiQuizStatus = \Modules\Settings\src\Models\Setting::getValue('ai_quiz_enabled');
+        if ($aiQuizStatus === '0' || $aiQuizStatus === '2') {
+             return response()->json([
+                'success' => false,
+                'message' => $aiQuizStatus === '2' 
+                    ? __('quizzes::teacher/messages.flash.ai_maintenance')
+                    : __('quizzes::teacher/messages.flash.ai_disabled')
+            ], 403);
+        }
+
         if (!$teacher->packageHasFeature('can_use_ai_quiz')) {
             return response()->json([
                 'success' => false,
@@ -564,9 +589,9 @@ class TeacherQuizController extends Controller
             'topic'      => ['required', 'string', 'max:255'],
             'amount'     => ['required', 'integer', 'min:1', 'max:20'],
             'difficulty' => ['required', 'string', 'in:' . implode(',', [
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.easy'),
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.medium'),
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.hard')
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_easy'),
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_medium'),
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_hard')
             ])],
             'language'   => ['required', 'string', 'in:Vietnamese,English'],
         ]);
@@ -574,9 +599,9 @@ class TeacherQuizController extends Controller
         try {
             // Map difficulty from localized labels to English for the service
             $difficultyMap = [
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.easy') => 'Easy',
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.medium') => 'Medium',
-                __('quizzes::teacher/messages.edit.ai_modal.difficulties.hard') => 'Hard'
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_easy') => 'Easy',
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_medium') => 'Medium',
+                __('quizzes::teacher/messages.edit.ai_modal.difficulty_hard') => 'Hard'
             ];
             $mappedDifficulty = $difficultyMap[$request->input('difficulty')] ?? 'Medium';
 

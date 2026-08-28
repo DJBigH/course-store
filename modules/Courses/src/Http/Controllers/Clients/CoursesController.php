@@ -108,9 +108,18 @@ class CoursesController extends Controller
             abort(404);
         }
 
-        $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+        $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view') && !auth('students')->check();
         $isImpersonating = session()->has('admin_impersonator');
-        $hasCourse = $isAdmin || $isImpersonating || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
+        $isCourseOwner = false;
+        
+        if ($student && $student->teacher && $course->teacher_id !== null) {
+            $teacher = $student->teacher;
+            if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE && (int) $teacher->id === (int) $course->teacher_id) {
+                $isCourseOwner = true;
+            }
+        }
+
+        $hasCourse = $isAdmin || $isImpersonating || $isCourseOwner || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
 
         if ((int) $course->status !== 1 && !$hasCourse) {
             abort(404);
@@ -144,7 +153,7 @@ class CoursesController extends Controller
         $pageName = $course->name_locale;
         $index = 0;
         $canComment = $hasCourse;
-        $canRate = $hasCourse;
+        $canRate = $student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists();
         $viewerIsAdmin = Auth::check();
         $course->loadCount(['ratings' => function ($query) {
             $query->where('status', 1);
@@ -165,6 +174,15 @@ class CoursesController extends Controller
             ? $student->courseRatings()->where('course_id', $course->id)->value('rating')
             : null;
 
+        // ✅ THÊM: Breakdown đánh giá (5 sao, 4 sao...)
+        $ratingBreakdown = \Illuminate\Support\Facades\DB::table('course_ratings')
+            ->where('course_id', $course->id)
+            ->where('status', 1)
+            ->select('rating', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('rating')
+            ->pluck('count', 'rating')
+            ->toArray();
+
         return view('courses::clients.detail', compact(
             'pageTitle',
             'pageName',
@@ -175,7 +193,8 @@ class CoursesController extends Controller
             'canRate',
             'viewerIsAdmin',
             'hasCourse',
-            'viewerCourseRating'
+            'viewerCourseRating',
+            'ratingBreakdown'
         ));
     }
 
@@ -349,6 +368,13 @@ class CoursesController extends Controller
             abort(403, 'Khóa học này đang tạm thời bị khóa học tập.');
         }
 
+        $student = Auth::guard('students')->user();
+        if ($student && $student->teacher && (int) $student->teacher->id === (int) $course->teacher_id) {
+            return back()
+                ->with('msg', 'Bạn không thể mua khóa học của chính mình.')
+                ->with('msgType', 'warning');
+        }
+
         // Kiểm tra Sắp ra mắt cho khóa học lẻ
         if ($course->is_coming_soon && $course->coming_soon_start_at && $course->coming_soon_start_at->isFuture()) {
             return back()
@@ -361,7 +387,7 @@ class CoursesController extends Controller
             : $course->price;
 
         $orderData = [
-            'code' => generateUniqueCouponCode(),
+            'code' => 'ORD_' . generateUniqueCouponCode(),
             'student_id' => $studentId,
             'affiliate_link_id' => $course->teacher
                 ? optional($this->affiliateLinkManager->resolveTrackedLink(request(), $course->teacher, 'course', (int) $course->id))->id
@@ -395,6 +421,12 @@ class CoursesController extends Controller
             ->where('id', (int) $request->input('bundle_id'))
             ->where('status', true)
             ->firstOrFail();
+
+        if ($student && $student->teacher && (int) $student->teacher->id === (int) $bundle->teacher_id) {
+            return back()
+                ->with('msg', 'Bạn không thể mua combo khóa học của chính mình.')
+                ->with('msgType', 'warning');
+        }
 
         // Kiểm tra các điều kiện bán hàng cho Combo
         if ($bundle->is_coming_soon && $bundle->coming_soon_start_at && $bundle->coming_soon_start_at->isFuture()) {
@@ -449,7 +481,7 @@ class CoursesController extends Controller
         $payableAmount = (float) $detailRows->sum('price');
 
         $orderData = [
-            'code' => generateUniqueCouponCode(),
+            'code' => 'ORD_' . generateUniqueCouponCode(),
             'student_id' => $student->id,
             'bundle_id' => $bundle->id,
             'affiliate_link_id' => $bundle->teacher

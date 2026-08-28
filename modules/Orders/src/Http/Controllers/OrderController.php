@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use Modules\Orders\src\Models\Order;
 use Modules\Orders\src\Repositories\OrdersRepositoryInterface;
 use Yajra\DataTables\Facades\DataTables;
+use Modules\ActiveLogs\src\Models\ActiveLog;
 
 class OrderController extends Controller
 {
@@ -40,46 +41,106 @@ class OrderController extends Controller
             ->getCategories()
             ->when(request()->filled('payment_method_filter'), function ($query) {
                 $query->where('payment_method', request()->input('payment_method_filter'));
+            })
+            ->when(request()->filled('order_code_filter'), function ($query) {
+                $query->where('code', 'like', '%' . request()->input('order_code_filter') . '%');
+            })
+            ->when(request()->input('search.value'), function ($query, $search) {
+                $query->where(function ($sub) use ($search) {
+                    $sub->where('code', 'like', '%' . $search . '%')
+                        ->orWhere('customer_name_snapshot', 'like', '%' . $search . '%')
+                        ->orWhere('customer_email_snapshot', 'like', '%' . $search . '%')
+                        ->orWhereHas('students', function ($stQuery) use ($search) {
+                            $stQuery->where('name', 'like', '%' . $search . '%')
+                                    ->orWhere('email', 'like', '%' . $search . '%');
+                        });
+                });
             });
 
         return DataTables::of($orders)
             ->addColumn('select', function ($order) {
                 return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $order->id . '"></div>';
             })
-            ->editColumn('status_id', function ($order) {
-                $name = $order->status->name_locale;
-                $color = $order->status->color;
+            ->addColumn('order_info', function ($order) {
+                $studentName = e($order->students?->name ?: $order->customer_name_snapshot ?: 'Khách vãng lai');
+                $studentEmail = e($order->students?->email ?: $order->customer_email_snapshot ?: '-');
+                $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($studentName) . '&background=f1f5f9&color=64748b';
 
-                return '<button class="btn btn-' . $color . '">' . $name . '</button>';
+                return '
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="' . $avatar . '" class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="fw-bold text-dark">#' . e($order->code) . '</span>
+                                ' . ($order->type === 'telegram_package'
+                                    ? '<span class="badge bg-primary text-white border border-primary" style="font-size: 10px;">Telegram</span>'
+                                    : ($order->type === 'teacher_upgrade' 
+                                        ? '<span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 10px;">Gói giảng viên</span>' 
+                                        : ($order->bundle_id 
+                                            ? '<span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 10px;">Combo</span>' 
+                                            : '<span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 10px;">Khóa học</span>'))) . '
+                            </div>
+                            <div class="text-secondary small">' . $studentName . ' (' . $studentEmail . ')</div>
+                        </div>
+                    </div>';
             })
-            ->addColumn('total', function ($order) {
+            ->addColumn('financial_info', function ($order) {
+                $currency = $order->currency ?: 'VND';
+                $symbol = $currency === 'VND' ? 'đ' : $currency;
+                
+                $finalTotal = $order->total;
                 if (!empty($order->discount) && $order->discount > 0) {
-                    return number_format($order->total - $order->discount);
+                    $finalTotal = $order->total - $order->discount;
                 }
-
-                return number_format($order->total);
-            })
-            ->addColumn('payment_method', function ($order) {
-                return '<span class="badge rounded-pill" style="' . e($order->payment_method_badge_style) . '">' . e($order->payment_method_label) . '</span>';
-            })
-            ->addColumn('created_at', function ($order) {
-                return $order->created_at
-                    ? date('d/m/Y H:i:s', strtotime($order->created_at))
+                
+                $discountBadge = (!empty($order->discount) && $order->discount > 0)
+                    ? '<div class="text-muted small text-decoration-line-through">' . number_format($order->total, $currency === 'VND' ? 0 : 2) . ' ' . $symbol . '</div>'
                     : '';
-            })
-            ->addColumn('detail', function ($order) use ($canView) {
-                return $canView
-                    ? '<a href="' . route('orders.show', $order->id) . '" class="btn btn-primary btn-sm">Xem</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
-            })
-            ->addColumn('delete', function ($order) use ($canDelete) {
-                if (!$canDelete) {
-                    return '<span class="text-muted small">Không có quyền</span>';
+
+                $paymentBadge = '<span class="badge rounded-pill mt-1" style="' . e($order->payment_method_badge_style) . '; font-size: 11px;">' . e($order->payment_method_label) . '</span>';
+
+                $priceDisplay = '<div class="fw-bold text-primary">' . number_format($finalTotal, $currency === 'VND' ? 0 : 2) . ' ' . $symbol . '</div>';
+                
+                if ($currency !== 'VND' && $order->base_total > 0) {
+                    $priceDisplay .= '<div class="text-muted" style="font-size: 10px;">(' . number_format($order->base_total) . ' đ)</div>';
                 }
 
-                return '<a href="' . route('orders.delete', $order->id) . '" class="btn btn-outline-danger btn-sm delete-action">Xóa</a>';
+                return '
+                    <div>
+                        ' . $discountBadge . '
+                        ' . $priceDisplay . '
+                        ' . $paymentBadge . '
+                    </div>';
             })
-            ->rawColumns(['select', 'detail', 'delete', 'status_id', 'payment_method'])
+            ->editColumn('status_id', function ($order) {
+                $name = $order->status->name_locale ?? 'Chưa rõ';
+                $color = $order->status->color ?? 'secondary';
+
+                return '<span class="badge bg-' . $color . '-subtle text-' . $color . ' px-2 py-1"><i class="fa-solid fa-circle me-1 small"></i>' . $name . '</span>';
+            })
+            ->editColumn('created_at', function ($order) {
+                return '<div class="small text-muted">' . ($order->created_at ? date('d/m/Y H:i', strtotime($order->created_at)) : '') . '</div>';
+            })
+            ->addColumn('actions', function ($order) use ($canView, $canDelete) {
+                $btn = '<div class="dropdown">
+                            <button class="btn btn-light btn-sm border dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">';
+
+                if ($canView) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('orders.show', $order->id) . '"><i class="fa-solid fa-file-invoice text-info me-2"></i>Xem chi tiết</a></li>';
+                }
+
+                if ($canDelete) {
+                    $btn .= '<li><hr class="dropdown-divider my-1"></li>';
+                    $btn .= '<li><a class="dropdown-item py-2 text-danger delete-action" href="' . route('orders.delete', $order->id) . '"><i class="fa-solid fa-trash me-2"></i>Xóa đơn hàng</a></li>';
+                }
+
+                $btn .= '</ul></div>';
+                return $btn;
+            })
+            ->rawColumns(['select', 'order_info', 'financial_info', 'status_id', 'created_at', 'actions'])
             ->make(true);
     }
 
@@ -153,17 +214,49 @@ class OrderController extends Controller
         }
 
         if ($action === 'cancel') {
-            $affected = Order::query()
+            $affectedOrders = Order::query()
+                ->whereIn('id', $selectedIds)
+                ->where('status_id', '!=', 2)
+                ->get();
+
+            Order::query()
                 ->whereIn('id', $selectedIds)
                 ->where('status_id', '!=', 2)
                 ->update(['status_id' => 4]);
 
-            return back()->with('msg', 'Đã hủy ' . $affected . ' đơn hàng chưa thanh toán.');
+            foreach ($affectedOrders as $order) {
+                activity_log(
+                    action: 'cancel',
+                    subject: $order,
+                    properties: [
+                        'old' => ['status_id' => $order->status_id],
+                        'new' => ['status_id' => 4],
+                    ],
+                    logName: 'Hủy đơn hàng',
+                    description: 'Hủy đơn hàng chưa thanh toán'
+                );
+
+                // Notify Student
+                if ($order->students) {
+                    $order->students->notify(new \App\Notifications\OrderStatusNotification($order, 'cancelled'));
+                }
+            }
+
+            return back()->with('msg', 'Đã hủy ' . $affectedOrders->count() . ' đơn hàng chưa thanh toán.');
         }
 
         if ($action === 'delete') {
             foreach ($orders as $order) {
+                $snapshot = $order->toArray();
                 $this->orderRepository->delete($order->id);
+
+                activity_log(
+                    action: 'delete',
+                    subject: $order,
+                    properties: ['data' => $snapshot],
+                    logName: 'Xóa hàng loạt',
+                    description: 'Xóa đơn hàng'
+                );
             }
 
             return back()->with('msg', 'Đã xóa ' . $orders->count() . ' đơn hàng.');
@@ -196,6 +289,14 @@ class OrderController extends Controller
         if ($action === 'restore') {
             foreach ($orders as $order) {
                 $order->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $order->fresh(),
+                    properties: ['restored_from_trash' => true],
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục đơn hàng'
+                );
             }
 
             return back()->with('msg', 'Đã khôi phục ' . $orders->count() . ' đơn hàng.');
@@ -203,7 +304,19 @@ class OrderController extends Controller
 
         if ($action === 'force_delete') {
             foreach ($orders as $order) {
+                $snapshot = $order->toArray();
                 $order->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $order,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn đơn hàng'
+                );
             }
 
             return back()->with('msg', 'Đã xóa vĩnh viễn ' . $orders->count() . ' đơn hàng.');
@@ -234,7 +347,16 @@ class OrderController extends Controller
             ], 404);
         }
 
+        $snapshot = $order->toArray();
         $this->orderRepository->delete($orderId);
+
+        activity_log(
+            action: 'delete',
+            subject: $order,
+            properties: ['data' => $snapshot],
+            logName: 'Xóa',
+            description: 'Xóa đơn hàng'
+        );
 
         return back()->with('msg', __('orders::messages.delete.success'));
     }
@@ -249,6 +371,14 @@ class OrderController extends Controller
 
         $order->restore();
 
+        activity_log(
+            action: 'restore',
+            subject: $order->fresh(),
+            properties: ['restored_from_trash' => true],
+            logName: 'Khôi phục',
+            description: 'Khôi phục đơn hàng thành công.'
+        );
+
         return back()->with('msg', 'Khôi phục đơn hàng thành công.');
     }
 
@@ -260,7 +390,19 @@ class OrderController extends Controller
             abort(404);
         }
 
+        $snapshot = $order->toArray();
         $order->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $order,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn đơn hàng'
+        );
 
         return back()->with('msg', 'Đã xóa vĩnh viễn đơn hàng.');
     }

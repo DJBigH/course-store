@@ -35,36 +35,53 @@ class TeacherApplicationController extends Controller
         $pageTitle = __('teacher::portal.titles.apply');
         $pageName = $pageTitle;
         $packages = $this->resolvePublicPackages($application?->package_id);
+        $groupedPackages = $packages->groupBy(fn($package) => $package->category_locale ?: 'Standard');
 
-        return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'application', 'student', 'couponPreview'));
+        return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'groupedPackages', 'application', 'student', 'couponPreview'));
     }
 
     public function store(ClientTeacherApplicationRequest $request)
     {
         $student = auth('students')->user();
         if (!$student && Student::query()->where('email', $request->string('email')->toString())->exists()) {
+            $msg = __('teacher::portal.flash.email_exists');
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
             return redirect()->route('teacher.auth.login', ['locale' => app()->getLocale()])
-                ->with('msg_danger', __('teacher::portal.flash.email_exists'));
+                ->with('msg_danger', $msg);
         }
 
         $package = Package::query()->selectable()->findOrFail($request->integer('package_id'));
         $application = $this->resolveWritableApplication($request, $student);
 
         if ($application->exists && $application->status === 'approved') {
+            $msg = __('teacher::portal.flash.approved');
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 400);
+            }
             return redirect()->route('teacher.account.status', ['locale' => app()->getLocale()])
-                ->with('msg_danger', __('teacher::portal.flash.approved'));
+                ->with('msg_danger', $msg);
         }
 
         if ($application->exists && $application->status === 'pending_review') {
+            $msg = __('teacher::portal.flash.pending_review');
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 400);
+            }
             return redirect()->route('teacher.account.status', ['locale' => app()->getLocale()])
-                ->with('msg_danger', __('teacher::portal.flash.pending_review'));
+                ->with('msg_danger', $msg);
         }
 
         $paymentMethod = $request->string('payment_method')->toString();
         if ((float) $package->price > 0 && !empty($paymentMethod)) {
             $isEnabled = (int) setting('payment_' . $paymentMethod . '_enabled', '1') === 1;
             if (!$isEnabled) {
-                return back()->withInput()->with('msg_danger', 'Phương thức thanh toán hiện đang bảo trì. Vui lòng chọn phương thức khác.');
+                $msg = 'Phương thức thanh toán hiện đang bảo trì. Vui lòng chọn phương thức khác.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+                return back()->withInput()->with('msg_danger', $msg);
             }
         }
 
@@ -74,7 +91,7 @@ class TeacherApplicationController extends Controller
             $student?->id
         );
 
-        $application->fill([
+        $applicationData = [
             'package_id' => $package->id,
             'status' => (float) $package->price > 0 ? 'pending_payment' : 'pending_review',
             'full_name' => $request->string('full_name')->toString(),
@@ -91,20 +108,31 @@ class TeacherApplicationController extends Controller
             'youtube_url' => $request->string('youtube_url')->toString() ?: null,
             'linkedin_url' => $request->string('linkedin_url')->toString() ?: null,
             'intro_video_url' => $request->string('intro_video_url')->toString() ?: null,
-            'cv_file' => $request->string('cv_file')->toString() ?: null,
-            'identity_file' => $request->string('identity_file')->toString() ?: null,
             'student_id' => $student?->id,
             'applicant_type' => $student ? 'student' : 'guest',
             'payment_method' => $request->string('payment_method')->toString() ?: null,
             'coupon_code' => $couponData['coupon_code'],
             'discount_amount' => $couponData['discount_amount'],
+            'note' => $request->string('note')->toString() ?: null,
+            'type' => 'new',
             'submitted_at' => now(),
             'reviewed_at' => null,
             'reviewed_by' => null,
             'admin_note' => null,
-        ]);
+        ];
+
+        if ($request->hasFile('cv_file')) {
+            $applicationData['cv_file'] = $request->file('cv_file')->getClientOriginalName();
+            $applicationData['cv_file_path'] = $request->file('cv_file')->store('teacher-applications/cv', 'public');
+        }
+
+        $application->fill($applicationData);
         $application->save();
         $this->forgetCouponPreview($request);
+
+        // Notify Admins
+        $admins = \Modules\User\src\Models\User::adminPanelUsers()->get();
+        \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\AdminTeacherAlertNotification($application, 'new_application'));
 
         if ($student && $student->preferred_locale !== $application->locale) {
             $student->forceFill(['preferred_locale' => $application->locale])->save();
@@ -132,6 +160,14 @@ class TeacherApplicationController extends Controller
         Mail::to($application->email)
             ->locale(app()->getLocale())
             ->queue(new TeacherApplicationReceivedMail($application, app()->getLocale()));
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('teacher::portal.flash.submitted'),
+                'redirect' => route('teacher.account.status', ['locale' => app()->getLocale()])
+            ]);
+        }
 
         return redirect()->route('teacher.account.status', ['locale' => app()->getLocale()])
             ->with('msg_success', __('teacher::portal.flash.submitted'));
@@ -226,9 +262,10 @@ class TeacherApplicationController extends Controller
         $pageTitle = __('teacher::portal.titles.edit');
         $pageName = $pageTitle;
         $packages = $this->resolvePublicPackages($application?->package_id);
+        $groupedPackages = $packages->groupBy(fn($package) => $package->category_locale ?: 'Khác');
         $couponPreview = $this->resolveCouponPreview($request, $application);
 
-        return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'application', 'student', 'couponPreview'));
+        return view('teacher::clients.application_form', compact('pageTitle', 'pageName', 'packages', 'groupedPackages', 'application', 'student', 'couponPreview'));
     }
 
     public function update(ClientTeacherApplicationRequest $request)
@@ -292,16 +329,42 @@ class TeacherApplicationController extends Controller
 
     private function resolvePublicPackages(?int $selectedPackageId = null)
     {
-        $packages = Package::query()->visibleForListing()->get();
+        $packages = Package::query()
+            ->with('packageCategory')
+            ->visibleForListing()
+            ->get();
+
+        // Sort by category sort_order, then by package sort_order
+        $packages = $packages->sort(function ($a, $b) {
+            $aCatOrder = $a->packageCategory?->sort_order ?? 9999;
+            $bCatOrder = $b->packageCategory?->sort_order ?? 9999;
+
+            if ($aCatOrder !== $bCatOrder) {
+                return $aCatOrder <=> $bCatOrder;
+            }
+
+            return $a->sort_order <=> $b->sort_order;
+        })->values();
 
         if ($selectedPackageId && !$packages->contains('id', $selectedPackageId)) {
             $selectedPackage = Package::query()
+                ->with('packageCategory')
                 ->selectable()
                 ->find($selectedPackageId);
 
             if ($selectedPackage) {
                 $packages->push($selectedPackage);
-                $packages = $packages->sortBy('sort_order')->values();
+                // Re-sort
+                $packages = $packages->sort(function ($a, $b) {
+                    $aCatOrder = $a->packageCategory?->sort_order ?? 9999;
+                    $bCatOrder = $b->packageCategory?->sort_order ?? 9999;
+
+                    if ($aCatOrder !== $bCatOrder) {
+                        return $aCatOrder <=> $bCatOrder;
+                    }
+
+                    return $a->sort_order <=> $b->sort_order;
+                })->values();
             }
         }
 

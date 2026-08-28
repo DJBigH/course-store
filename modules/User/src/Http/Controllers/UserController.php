@@ -75,60 +75,78 @@ class UserController extends Controller
             ->addColumn('select', function ($user) {
                 return '<div class="form-check m-0 d-flex justify-content-center"><input type="checkbox" class="form-check-input bulk-row-checkbox" value="' . $user->id . '"></div>';
             })
-            ->editColumn('name', function ($user) {
+            ->addColumn('user_info', function ($user) {
+                $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=f1f5f9&color=64748b';
+                
+                return '
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="' . $avatar . '" class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                        <div>
+                            <div class="fw-bold text-dark">' . e($user->name) . '</div>
+                            <div class="text-muted small">' . e($user->email) . '</div>
+                        </div>
+                    </div>';
+            })
+            ->addColumn('security_group', function ($user) {
+                $group = $user->group?->name ?: ('Nhóm #' . $user->group_id);
+                
+                $twoFactorBadge = (int) $user->two_factor_email_enabled === 1
+                    ? '<span class="badge bg-primary-subtle text-primary px-2 py-1 ms-1">2FA On</span>'
+                    : '<span class="badge bg-light text-muted border px-2 py-1 ms-1" style="font-size: 10px;">2FA Off</span>';
+
                 $statusBadge = (int) $user->is_locked === 1
-                    ? '<span class="badge rounded-pill ms-2" style="background:#dc2626;color:#fff;border:1px solid #dc2626;">Đã khóa</span>'
-                    : '<span class="badge rounded-pill ms-2" style="background:#16a34a;color:#fff;border:1px solid #16a34a;">Hoạt động</span>';
+                    ? '<span class="badge bg-danger-subtle text-danger px-2 py-1 ms-1">Đã khóa</span>'
+                    : '<span class="badge bg-success-subtle text-success px-2 py-1 ms-1">Hoạt động</span>';
 
-                return '<div class="fw-semibold">' . e($user->name) . '</div>' . $statusBadge;
-            })
-            ->addColumn('two_factor', function ($user) {
-                return (int) $user->two_factor_email_enabled === 1
-                    ? '<span class="badge rounded-pill" style="background:#2563eb;color:#fff;border:1px solid #2563eb;">Đã bật 2FA</span>'
-                    : '<span class="badge rounded-pill bg-light text-dark border">Chưa bật</span>';
-            })
-            ->addColumn('logs', function ($user) use ($canLogs) {
-                return $canLogs
-                    ? '<a href="' . route('user.logs', $user->id) . '" class="btn btn-light border">Lịch sử</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
-            })
-            ->addColumn('edit', function ($user) use ($canEdit) {
-                return $canEdit
-                    ? '<a href="' . route('user.edit', $user->id) . '" class="btn btn-warning">Sửa</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
-            })
-            ->addColumn('lock', function ($user) use ($canEdit) {
-                if (!$canEdit) {
-                    return '<span class="text-muted small">Không có quyền</span>';
-                }
-
-                if ((int) auth()->id() === (int) $user->id) {
-                    return '<span class="badge rounded-pill bg-light text-dark border">Tài khoản hiện tại</span>';
-                }
-
-                $label = (int) $user->is_locked === 1 ? 'Mở khóa' : 'Khóa';
-                $class = (int) $user->is_locked === 1 ? 'btn btn-success' : 'btn btn-outline-secondary';
-                $confirm = (int) $user->is_locked === 1
-                    ? ''
-                    : ' onsubmit="return confirm(\'Bạn có chắc chắn muốn khóa tài khoản này khỏi admin panel không?\')"';
-
-                return '<form method="POST" action="' . route('user.toggle-lock', $user->id) . '" class="d-inline-block"' . $confirm . '>'
-                    . csrf_field()
-                    . '<button type="submit" class="' . $class . '">' . $label . '</button>'
-                    . '</form>';
-            })
-            ->addColumn('delete', function ($user) use ($canDelete) {
-                return $canDelete
-                    ? '<a href="' . route('user.delete', $user->id) . '" class="btn btn-outline-danger delete-action">Xóa</a>'
-                    : '<span class="text-muted small">Không có quyền</span>';
-            })
-            ->editColumn('group_id', function ($user) {
-                return $user->group?->name ?: ('Nhóm #' . $user->group_id);
+                return '
+                    <div>
+                        <div class="fw-semibold text-secondary mb-1">' . e($group) . '</div>
+                        <div class="d-flex align-items-center gap-1 mt-1">
+                            ' . $statusBadge . '
+                            ' . $twoFactorBadge . '
+                        </div>
+                    </div>';
             })
             ->editColumn('created_at', function ($user) {
-                return Carbon::parse($user->created_at)->format('d/m/Y H:i:s');
+                return '<div class="small text-muted">' . Carbon::parse($user->created_at)->format('d/m/Y') . '</div>';
             })
-            ->rawColumns(['select', 'name', 'two_factor', 'edit', 'lock', 'delete', 'logs'])
+            ->addColumn('actions', function ($user) use ($canEdit, $canLogs, $canDelete) {
+                $btn = '<div class="dropdown">
+                            <button class="btn btn-light btn-sm border dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2">';
+
+                if ($canEdit) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('user.edit', $user->id) . '"><i class="fa-solid fa-user-pen text-primary me-2"></i>Chỉnh sửa</a></li>';
+                    
+                    if ((int) auth()->id() !== (int) $user->id) {
+                        $label = (int) $user->is_locked === 1 ? 'Mở khóa' : 'Khóa tài khoản';
+                        $icon = (int) $user->is_locked === 1 ? 'fa-solid fa-lock-open text-success' : 'fa-solid fa-lock text-warning';
+                        $confirm = (int) $user->is_locked === 1 ? '' : 'onclick="return confirm(\'Khóa tài khoản này khỏi admin panel?\')"';
+                        
+                        $btn .= '<li>
+                                    <form method="POST" action="' . route('user.toggle-lock', $user->id) . '" class="d-inline-block w-100" ' . $confirm . '>
+                                        ' . csrf_field() . '
+                                        <button type="submit" class="dropdown-item py-2"><i class="' . $icon . ' me-2"></i>' . $label . '</button>
+                                    </form>
+                                 </li>';
+                    }
+                }
+
+                if ($canLogs) {
+                    $btn .= '<li><a class="dropdown-item py-2" href="' . route('user.logs', $user->id) . '"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i>Lịch sử thao tác</a></li>';
+                }
+
+                if ($canDelete) {
+                    $btn .= '<li><hr class="dropdown-divider my-1"></li>';
+                    $btn .= '<li><a class="dropdown-item py-2 text-danger delete-action" href="' . route('user.delete', $user->id) . '"><i class="fa-solid fa-trash me-2"></i>Xóa tài khoản</a></li>';
+                }
+
+                $btn .= '</ul></div>';
+                return $btn;
+            })
+            ->rawColumns(['select', 'user_info', 'security_group', 'created_at', 'actions'])
             ->toJson();
     }
 
@@ -275,6 +293,17 @@ class UserController extends Controller
         if ($action === 'restore') {
             foreach ($users as $user) {
                 $user->restore();
+
+                activity_log(
+                    action: 'restore',
+                    subject: $user->fresh(),
+                    properties: [
+                        'restored_from_trash' => true,
+                        'user_id' => $user->id,
+                    ],
+                    logName: 'Khôi phục hàng loạt',
+                    description: 'Khôi phục tài khoản từ thùng rác'
+                );
             }
 
             return back()->with('msg', 'Đã khôi phục ' . $users->count() . ' người dùng.');
@@ -283,7 +312,19 @@ class UserController extends Controller
         if ($action === 'force_delete') {
             foreach ($users as $user) {
                 $this->logoutUserSessions($user->id);
+                $snapshot = method_exists($user, 'toArray') ? $user->toArray() : (array) $user;
                 $user->forceDelete();
+
+                activity_log(
+                    action: 'force_delete',
+                    subject: $user,
+                    properties: [
+                        'data' => $snapshot,
+                        'deleted_permanently' => true,
+                    ],
+                    logName: 'Xóa vĩnh viễn hàng loạt',
+                    description: 'Xóa vĩnh viễn tài khoản khỏi thùng rác'
+                );
             }
 
             return back()->with('msg', 'Đã xóa vĩnh viễn ' . $users->count() . ' người dùng.');
@@ -574,6 +615,17 @@ class UserController extends Controller
 
         $user->restore();
 
+        activity_log(
+            action: 'restore',
+            subject: $user->fresh(),
+            properties: [
+                'restored_from_trash' => true,
+                'user_id' => $user->id,
+            ],
+            logName: 'Khôi phục',
+            description: 'Khôi phục người dùng thành công.'
+        );
+
         return back()->with('msg', 'Khôi phục người dùng thành công.');
     }
 
@@ -586,7 +638,19 @@ class UserController extends Controller
         }
 
         $this->logoutUserSessions($user->id);
+        $snapshot = method_exists($user, 'toArray') ? $user->toArray() : (array) $user;
         $user->forceDelete();
+
+        activity_log(
+            action: 'force_delete',
+            subject: $user,
+            properties: [
+                'data' => $snapshot,
+                'deleted_permanently' => true,
+            ],
+            logName: 'Xóa vĩnh viễn',
+            description: 'Xóa vĩnh viễn người dùng khỏi thùng rác'
+        );
 
         return back()->with('msg', 'Đã xóa vĩnh viễn người dùng.');
     }

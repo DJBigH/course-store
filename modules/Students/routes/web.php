@@ -24,10 +24,10 @@ Route::prefix('admin')->group(function () {
       Route::get('/{id}/coupon-history', 'StudentController@CouponHistory')->middleware('permission:students.view')->name('coupon-history');
       Route::get('/{id}/purchased-courses', 'StudentController@purchasedCourses')->middleware('permission:students.view')->name('purchased-courses');
       Route::get('/search-courses', 'StudentController@searchCourses')->middleware('permission:students.view')->name('search-courses');
-      Route::post('/{id}/grant-course', 'StudentController@grantCourse')->middleware('permission:students.edit')->name('grant-course');
-      Route::post('/{id}/revoke-course', 'StudentController@revokeCourse')->middleware('permission:students.edit')->name('revoke-course');
+      Route::post('/{id}/grant-course', 'StudentController@grantCourse')->middleware('permission:students.grant_course')->name('grant-course');
+      Route::post('/{id}/revoke-course', 'StudentController@revokeCourse')->middleware('permission:students.grant_course')->name('revoke-course');
       Route::get('logs/{student}', 'StudentController@logs')->middleware('permission:students.logs')->name('logs');
-      Route::get('impersonate/{student}', 'StudentController@impersonate')->middleware('permission:students.edit')->name('impersonate');
+      Route::get('impersonate/{student}', 'StudentController@impersonate')->middleware('permission:students.impersonate')->name('impersonate');
    });
 });
 
@@ -46,6 +46,7 @@ Route::group(['as' => 'students.'], function () {
       Route::post('/vo-hieu-hoa/xac-thuc', [TwoFactorController::class, 'startDeactivate'])->name('deactivate-start-2fa');
       Route::post('/vo-hieu-hoa', 'Clients\AccountController@deactivate')->name('deactivate-submit');
       Route::get('/khoa-hoc', 'Clients\AccountController@showMyCourse')->name('my-courses');
+      Route::get('/bai-kiem-tra', 'Clients\AccountController@myQuizzes')->name('my-quizzes');
       Route::get('/chung-chi', [StudentCertificateController::class, 'index'])->name('certificates.index');
       Route::get('/chung-chi/{id}', [StudentCertificateController::class, 'show'])->name('certificates.show');
       Route::get('/ma-giam-gia', 'Clients\AccountController@myCoupon')->name('my-coupon');
@@ -158,6 +159,25 @@ Route::group([
 
       return back()->with('msg_success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
    })->name('mark-all-read');
+
+   Route::post('/danh-dau-da-doc/{id}', function (Request $request, string $locale, $id) {
+      $notification = auth('students')->user()
+         ->notifications()
+         ->where('id', $id)
+         ->firstOrFail();
+
+      $notification->markAsRead();
+
+      if ($request->expectsJson() || $request->ajax()) {
+         return response()->json([
+            'success' => true,
+            'unread_count' => auth('students')->user()->unreadNotifications()->count(),
+            'message' => 'Đã đánh dấu thông báo là đã đọc.',
+         ]);
+      }
+
+      return back()->with('msg_success', 'Đã đánh dấu thông báo là đã đọc.');
+   })->name('mark-read');
 
    Route::get('/doc/{id}', function (string $locale, $id) {
       $notification = auth('students')->user()

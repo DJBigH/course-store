@@ -37,6 +37,7 @@ class TeacherAnnouncementRequest extends FormRequest
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'package_ids' => ['nullable', 'array'],
             'package_ids.*' => ['integer', 'exists:teacher_packages,id'],
+            'notify_telegram' => ['nullable', 'boolean'],
         ];
     }
 }

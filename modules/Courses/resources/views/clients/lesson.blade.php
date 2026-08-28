@@ -1,9 +1,18 @@
 @php
     $modules = getModuleByPosition($course);
     $student = Auth::guard('students')->user();
-    $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view');
+    $isAdmin = auth('web')->check() && auth('web')->user()->hasPermission('dashboard.view') && !auth('students')->check();
     $isImpersonating = session()->has('admin_impersonator');
-    $hasCourseAccess = $isAdmin || $isImpersonating || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
+    
+    $isCourseOwner = false;
+    if ($student && $student->teacher && $course->teacher_id !== null) {
+        $teacher = $student->teacher;
+        if ($teacher->status === \Modules\Teacher\src\Models\Teacher::STATUS_ACTIVE && (int) $teacher->id === (int) $course->teacher_id) {
+            $isCourseOwner = true;
+        }
+    }
+
+    $hasCourseAccess = $isAdmin || $isImpersonating || $isCourseOwner || ($student && $student->courses()->where('courses.id', $course->id)->wherePivot('status', 1)->exists());
 @endphp
 
 @if ($modules->isEmpty())
@@ -119,7 +128,7 @@
                 }
 
                 return `
-                    <video id="my-video" class="video-js" controls preload="auto" data-setup="{}">
+                    <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered w-100" controls preload="auto">
                         <source src="${video.url}" type="video/mp4"/>
                     </video>
                 `;
@@ -131,51 +140,69 @@
                     const id = button.dataset.id;
 
                     if (!id) {
-                        return alert(messages.unavailable);
+                        if (window.showMessage) window.showMessage(messages.unavailable, 'error');
+                        else alert(messages.unavailable);
+                        return;
                     }
 
                     if (!initialTexts.has(button)) {
                         initialTexts.set(button, button.innerText);
                     }
 
-                    button.innerText = messages.opening;
+                    button.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${messages.opening}`;
+                    button.disabled = true;
                     activeBtnMap.set('current', button);
 
                     try {
                         const response = await fetch(
                             "{{ route('courses.data.trial', ['locale' => app()->getLocale()]) }}/" +
                             id);
+                        const result = await response.json();
+                        
                         const {
                             success,
                             data,
                             requires_login: requiresLogin,
                             message
-                        } = await response.json();
+                        } = result;
+
                         if (!success && requiresLogin) {
-                            alert(message || messages.loginRequired);
+                            if (window.showMessage) window.showMessage(message || messages.loginRequired, 'error');
+                            else alert(message || messages.loginRequired);
                             return;
                         }
 
                         if (!success || data.is_trial !== 1) {
-                            return alert(messages.unavailable);
+                            if (window.showMessage) window.showMessage(message || messages.unavailable, 'error');
+                            else alert(message || messages.unavailable);
+                            return;
                         }
 
                         if (!data.video || !data.video.url) {
-                            return alert(messages.noVideo);
+                            if (window.showMessage) window.showMessage(messages.noVideo, 'error');
+                            else alert(messages.noVideo);
+                            return;
                         }
 
                         modalEl.querySelector('.modal-title').innerText = data.name;
                         modalEl.querySelector('.modal-body').innerHTML = renderTrialContent(data.video);
 
                         Modal.show();
+                        
+                        // Khởi tạo videojs sau khi modal hiện (để đảm bảo element có trong DOM)
                         const videoEl = modalEl.querySelector('#my-video');
-                        if (videoEl) {
-                            videojs(videoEl);
+                        if (videoEl && typeof window.videojs !== 'undefined') {
+                            window.videojs(videoEl, {}, function() {
+                                // Player ready
+                            });
                         }
                     } catch (error) {
-                        alert(messages.unavailable);
+                        console.error('Trial video error:', error);
+                        if (window.showMessage) window.showMessage(messages.unavailable, 'error');
+                        else alert(messages.unavailable);
                     } finally {
-                        button.innerText = initialTexts.get(button) ?? '{{ __('courses::clients/common.trial') }}';
+                        button.innerHTML = initialTexts.get(button) ?? '{{ __('courses::clients/common.trial') }}';
+                        button.disabled = false;
                     }
                 });
             });
@@ -183,14 +210,16 @@
             lockedLessonList.forEach((lessonLink) => {
                 lessonLink.addEventListener('click', (e) => {
                     e.preventDefault();
-                    alert(lessonLink.dataset.message || messages.lessonPurchaseRequired);
+                    if (window.showMessage) window.showMessage(lessonLink.dataset.message || messages.lessonPurchaseRequired, 'error');
+                    else alert(lessonLink.dataset.message || messages.lessonPurchaseRequired);
                 });
             });
 
             loginRequiredLessonList.forEach((lessonLink) => {
                 lessonLink.addEventListener('click', (e) => {
                     e.preventDefault();
-                    alert(lessonLink.dataset.message || messages.lessonLoginRequired);
+                    if (window.showMessage) window.showMessage(lessonLink.dataset.message || messages.lessonLoginRequired, 'error');
+                    else alert(lessonLink.dataset.message || messages.lessonLoginRequired);
                 });
             });
 

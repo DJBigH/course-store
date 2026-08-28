@@ -45,25 +45,13 @@ class studentRequest extends FormRequest
         return $rules;
     }
 
-    public function messages()
-    {
-        return [
-            'required' => __('students::validation.required'),
-            'email' => __('students::validation.email'),
-            'unique' => __('students::validation.unique'),
-            'max' => __('students::validation.max'),
-            'min' => __('students::validation.min'),
-            'integer' => __('students::validation.integer'),
-        ];
-    }
-
     public function attributes()
     {
         return [
-            'name' => __('students::validation.attributes.name'),
-            'email' => __('students::validation.attributes.email'),
-            'password' => __('students::validation.attributes.password'),
-            'status' => __('students::validation.attributes.status'),
+            'name' => 'Tên học viên',
+            'email' => 'Email',
+            'password' => 'Mật khẩu',
+            'status' => 'Trạng thái',
         ];
     }
 }

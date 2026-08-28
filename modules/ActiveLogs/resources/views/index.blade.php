@@ -45,14 +45,16 @@
 
 @section('content')
     <div class="container-fluid">
-        <div class="card mb-3">
-            <div class="card-header fw-bold">Bo loc</div>
-            <div class="card-body">
+        <div class="card mb-4 border-0 shadow-sm rounded-4">
+            <div class="card-header fw-bold bg-primary text-white d-flex align-items-center gap-2 rounded-top-4 py-3">
+                <i class="fas fa-filter"></i> <span style="font-size: 1.05rem;">Bộ lọc tìm kiếm nâng cao</span>
+            </div>
+            <div class="card-body p-4">
                 <form method="GET" action="{{ route('activelogs.index') }}">
-                    <div class="row g-2">
+                    <div class="row g-3">
                         <div class="col-md-3">
-                            <label class="form-label">Tên nhóm log</label>
-                            <select name="log_name" class="form-select">
+                            <label class="form-label fw-semibold text-secondary">Nhóm Log</label>
+                            <select name="log_name" class="form-select border-2">
                                 <option value="">-- Tất cả --</option>
                                 @foreach ($logNames as $name)
                                     <option value="{{ $name }}" {{ request('log_name') == $name ? 'selected' : '' }}>
@@ -63,20 +65,20 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Hành động</label>
-                            <select name="action" class="form-select">
+                            <label class="form-label fw-semibold text-secondary">Hành động</label>
+                            <select name="action" class="form-select border-2">
                                 <option value="">-- Tất cả --</option>
                                 @foreach ($actions as $action)
                                     <option value="{{ $action }}" {{ request('action') == $action ? 'selected' : '' }}>
-                                        {{ $action }}
+                                        {{ logActionLabel($action) }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Module</label>
-                            <select name="subject_type" class="form-select">
+                            <label class="form-label fw-semibold text-secondary">Module tác động</label>
+                            <select name="subject_type" class="form-select border-2">
                                 <option value="">-- Tất cả --</option>
                                 @foreach ($subjectTypes as $type)
                                     <option value="{{ $type['value'] }}" {{ request('subject_type') == $type['value'] ? 'selected' : '' }}>
@@ -86,56 +88,38 @@
                             </select>
                         </div>
 
-                        {{-- <div class="col-md-3">
-                            <label class="form-label">Subject ID</label>
-                            <input type="number" name="subject_id" value="{{ request('subject_id') }}" class="form-control" placeholder="VD: 12">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold text-secondary">Người thực hiện</label>
+                            <input type="text" name="causer" value="{{ request('causer') }}" class="form-control border-2" placeholder="Tên / Quyền / ID">
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Causer ID</label>
-                            <input type="number" name="causer_id" value="{{ request('causer_id') }}" class="form-control" placeholder="VD: 3">
-                        </div> --}}
-
-                        {{-- <div class="col-md-3">
-                            <label class="form-label">Tim subject</label>
-                            <input type="text" name="subject" value="{{ request('subject') }}" class="form-control" placeholder="Module / Subject ID">
-                        </div> --}}
-
-                        <div class="col-md-3">
-                            <label class="form-label">Tìm người thực hiện</label>
-                            <input type="text" name="causer" value="{{ request('causer') }}" class="form-control" placeholder="Tên / quyền / ID">
-                        </div>
-
-                        {{-- <div class="col-md-3">
-                            <label class="form-label">Property</label>
-                            <input type="text" name="property" value="{{ request('property') }}" class="form-control" placeholder="Khoa / gia tri trong properties">
-                        </div> --}}
-
-                        <div class="col-md-3">
-                            <label class="form-label">IP</label>
-                            <input type="text" name="ip" value="{{ request('ip') }}" class="form-control" placeholder="VD: 127.0.0.1">
+                            <label class="form-label fw-semibold text-secondary">Địa chỉ IP</label>
+                            <input type="text" name="ip" value="{{ request('ip') }}" class="form-control border-2" placeholder="VD: 127.0.0.1">
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Từ ngày</label>
-                            <input type="date" name="from" value="{{ request('from') }}" class="form-control">
+                            <label class="form-label fw-semibold text-secondary">Từ ngày</label>
+                            <input type="date" name="from" value="{{ request('from') }}" class="form-control border-2">
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Đến ngày</label>
-                            <input type="date" name="to" value="{{ request('to') }}" class="form-control">
+                            <label class="form-label fw-semibold text-secondary">Đến ngày</label>
+                            <input type="date" name="to" value="{{ request('to') }}" class="form-control border-2">
                         </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">Từ khóa tổng hợp</label>
-                            <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Mô tả / module / action / người thực hiện / IP...">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold text-secondary">Từ khóa tổng hợp</label>
+                            <input type="text" name="q" value="{{ request('q') }}" class="form-control border-2" placeholder="Mô tả / Module / IP...">
                         </div>
                     </div>
 
-                    <div class="text-end mt-3">
-                        <a href="{{ route('activelogs.index') }}" class="btn btn-outline-secondary">Đặt lại</a>
-                        <button class="btn btn-primary">
-                            <i class="fas fa-filter"></i> Lọc
+                    <div class="text-end mt-4">
+                        <a href="{{ route('activelogs.index') }}" class="btn btn-outline-secondary px-4 rounded-pill me-2">
+                            <i class="fas fa-undo me-1"></i> Đặt lại
+                        </a>
+                        <button class="btn btn-primary px-4 rounded-pill shadow-sm">
+                            <i class="fas fa-search me-1"></i> Lọc dữ liệu
                         </button>
                     </div>
                 </form>
@@ -158,119 +142,143 @@
                                 <th style="width:200px;">Đối tượng</th>
                                 <th>Mô tả</th>
                                 <th style="width:130px;">IP</th>
-                                <th style="width:120px;" class="text-end">Chi tiết</th>
+                                <th style="width:100px;" class="text-center">Chi tiết</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             @forelse ($logs as $log)
                                 <tr>
-                                    <td>{{ optional($log->created_at)->format('d/m/Y H:i:s') }}</td>
-                                    <td>
-                                        <div class="fw-semibold">#{{ $log->id }}</div>
-                                        <div class="text-muted small">{{ $log->subject_id ? 'Subject #' . $log->subject_id : '-' }}</div>
+                                    <td class="text-muted" style="font-size: 0.9rem;">
+                                        <i class="far fa-clock me-1"></i>{{ optional($log->created_at)->format('d/m/Y H:i:s') }}
                                     </td>
                                     <td>
-                                        <span class="badge bg-secondary">{{ $log->log_name ?? '-' }}</span>
+                                        <div class="fw-bold text-dark">#{{ $log->id }}</div>
+                                        @if($log->subject_id)
+                                            <span class="badge text-bg-light border text-muted small mt-1" style="font-size: 0.75rem;">Sub #{{ $log->subject_id }}</span>
+                                        @endif
                                     </td>
                                     <td>
-                                        <span class="badge bg-info">{{ $log->action ?? '-' }}</span>
+                                        <span class="badge bg-secondary px-2 py-1 rounded">{{ $log->log_name ?? '-' }}</span>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold">{{ logCauserDisplay($log) }}</div>
-                                        <div class="text-muted small">Causer ID: {{ $log->causer_id ?? '-' }}</div>
+                                        <span class="badge text-bg-{{ logActionBadgeClass($log->action) }} px-3 py-2 rounded-pill fw-semibold" style="font-size: 0.8rem;">
+                                            {{ logActionLabel($log->action) }}
+                                        </span>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold">{{ subjectLabel($log->subject_type) }}</div>
-                                        <div class="text-muted small">{{ class_basename($log->subject_type) ?: '-' }}</div>
+                                        <div class="fw-bold text-primary">{{ logCauserDisplay($log) }}</div>
+                                        <div class="text-muted small" style="font-size: 0.75rem;">ID: {{ $log->causer_id ?? '-' }}</div>
                                     </td>
-                                    <td>{{ \Illuminate\Support\Str::limit($log->description ?? '-', 110) }}</td>
                                     <td>
-                                        <div>{{ $log->ip ?? '-' }}</div>
+                                        <div class="fw-semibold text-secondary">{{ subjectLabel($log->subject_type) }}</div>
+                                        <div class="text-muted small" style="font-size: 0.72rem; word-break: break-all;">{{ class_basename($log->subject_type) ?: '-' }}</div>
                                     </td>
-                                    <td class="text-end">
-                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#propsModal{{ $log->id }}">
-                                            Xem
+                                    <td>
+                                        <div class="text-wrap" style="max-width: 350px; font-size: 0.9rem; line-height: 1.4;">
+                                            {{ \Illuminate\Support\Str::limit($log->description ?? '-', 110) }}
+                                        </div>
+                                    </td>
+                                    <td class="small font-monospace text-muted">
+                                        <i class="fas fa-network-wired me-1"></i>{{ $log->ip ?? '-' }}
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-primary px-3 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#propsModal{{ $log->id }}">
+                                            <i class="far fa-eye me-1"></i> Xem
                                         </button>
                                     </td>
                                 </tr>
 
                                 <div class="modal fade" id="propsModal{{ $log->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Chi tiet log #{{ $log->id }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <div class="modal-content border-0 shadow-lg rounded-4">
+                                            <div class="modal-header bg-dark text-white rounded-top-4">
+                                                <h5 class="modal-title"><i class="fas fa-info-circle me-1"></i> Chi tiết hoạt động #{{ $log->id }}</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
 
-                                            <div class="modal-body">
-                                                <div class="row g-3 mb-3">
+                                            <div class="modal-body bg-light-subtle p-4">
+                                                <div class="row g-3 mb-4">
                                                     <div class="col-md-3">
-                                                        <div class="border rounded p-3 h-100">
-                                                            <div class="text-muted small">Thoi gian</div>
-                                                            <div class="fw-semibold">{{ optional($log->created_at)->format('d/m/Y H:i:s') }}</div>
+                                                        <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+                                                            <div class="card-body p-3 text-center">
+                                                                <div class="text-muted small fw-semibold text-uppercase mb-1" style="font-size: 0.75rem;">Thời gian</div>
+                                                                <div class="fw-bold text-dark"><i class="far fa-calendar-alt me-1 text-primary"></i> {{ optional($log->created_at)->format('d/m/Y H:i:s') }}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-3">
-                                                        <div class="border rounded p-3 h-100">
-                                                            <div class="text-muted small">Log</div>
-                                                            <div class="fw-semibold">{{ $log->log_name ?? '-' }}</div>
-                                                            <div class="small text-muted">Action: {{ $log->action ?? '-' }}</div>
+                                                        <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+                                                            <div class="card-body p-3 text-center">
+                                                                <div class="text-muted small fw-semibold text-uppercase mb-1" style="font-size: 0.75rem;">Nhóm Log & Hành động</div>
+                                                                <div class="fw-bold text-dark mb-1">{{ $log->log_name ?? '-' }}</div>
+                                                                <span class="badge text-bg-{{ logActionBadgeClass($log->action) }} px-2 py-1 rounded-pill">{{ logActionLabel($log->action) }}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-3">
-                                                        <div class="border rounded p-3 h-100">
-                                                            <div class="text-muted small">Nguoi thuc hien</div>
-                                                            <div class="fw-semibold">{{ logCauserDisplay($log) }}</div>
-                                                            <div class="small text-muted">Causer ID: {{ $log->causer_id ?? '-' }}</div>
+                                                        <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+                                                            <div class="card-body p-3 text-center">
+                                                                <div class="text-muted small fw-semibold text-uppercase mb-1" style="font-size: 0.75rem;">Người thực hiện</div>
+                                                                <div class="fw-bold text-primary">{{ logCauserDisplay($log) }}</div>
+                                                                <div class="small text-muted mt-1">Causer ID: {{ $log->causer_id ?? '-' }}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-3">
-                                                        <div class="border rounded p-3 h-100">
-                                                            <div class="text-muted small">IP</div>
-                                                            <div class="fw-semibold">{{ $log->ip ?? '-' }}</div>
+                                                        <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+                                                            <div class="card-body p-3 text-center">
+                                                                <div class="text-muted small fw-semibold text-uppercase mb-1" style="font-size: 0.75rem;">Địa chỉ IP</div>
+                                                                <div class="fw-bold text-dark"><i class="fas fa-globe me-1 text-info"></i> {{ $log->ip ?? '-' }}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <div class="border rounded p-3 h-100">
-                                                            <div class="text-muted small">Doi tuong bi tac dong</div>
-                                                            <div class="fw-semibold">{{ subjectLabel($log->subject_type) }}</div>
-                                                            <div class="small text-muted">Class: {{ $log->subject_type ?? '-' }}</div>
-                                                            <div class="small text-muted">Subject ID: {{ $log->subject_id ?? '-' }}</div>
+                                                        <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+                                                            <div class="card-body p-3">
+                                                                <div class="text-muted small fw-semibold text-uppercase mb-1" style="font-size: 0.75rem;">Đối tượng tác động</div>
+                                                                <div class="fw-bold text-dark mb-1"><i class="fas fa-cube me-1 text-warning"></i> {{ subjectLabel($log->subject_type) }}</div>
+                                                                <div class="small text-muted font-monospace" style="font-size: 0.75rem;">Class: {{ $log->subject_type ?? '-' }}</div>
+                                                                <div class="small text-muted font-monospace" style="font-size: 0.75rem;">Subject ID: {{ $log->subject_id ?? '-' }}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <div class="border rounded p-3 h-100">
-                                                            <div class="text-muted small">Mo ta</div>
-                                                            <div class="fw-semibold">{{ $log->description ?? '-' }}</div>
+                                                        <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+                                                            <div class="card-body p-3">
+                                                                <div class="text-muted small fw-semibold text-uppercase mb-1" style="font-size: 0.75rem;">Mô tả hoạt động</div>
+                                                                <div class="text-dark fw-normal" style="font-size: 0.95rem; line-height: 1.5;">{{ $log->description ?? '-' }}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <div class="fw-semibold mb-2">Chi tiet da doc</div>
-                                                    <div style="white-space: pre-wrap; font-family: inherit; line-height: 1.6;">{!! nl2br(e(presentLogProperties($log))) !!}</div>
+                                                <div class="card border-0 shadow-sm rounded-3 bg-white mb-3">
+                                                    <div class="card-header bg-primary text-white fw-bold"><i class="fas fa-stream me-1"></i> Chi tiết thay đổi</div>
+                                                    <div class="card-body p-3" style="white-space: pre-wrap; font-family: inherit; line-height: 1.8; font-size: 0.95rem;">{!! nl2br(e(presentLogProperties($log))) !!}</div>
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <div class="fw-semibold mb-2">Raw properties</div>
-                                                    <pre class="p-3 border rounded small mb-0" style="white-space: pre-wrap; word-break: break-word;">{{ json_encode($log->properties ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                <div class="card border-0 shadow-sm rounded-3 bg-white mb-3">
+                                                    <div class="card-header bg-dark text-white fw-bold"><i class="fas fa-code me-1"></i> Dữ liệu thô (Raw Properties JSON)</div>
+                                                    <div class="card-body p-0">
+                                                        <pre class="p-3 bg-dark text-light small mb-0 font-monospace" style="white-space: pre-wrap; word-break: break-word; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">{{ json_encode($log->properties ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                    </div>
                                                 </div>
 
-                                                <div class="border-top pt-3 text-muted small">
-                                                    <div><b>User Agent:</b> {{ $log->user_agent ?? '-' }}</div>
+                                                <div class="text-muted small ps-1">
+                                                    <i class="fas fa-user-shield me-1"></i> <b>User Agent (Thiết bị):</b> {{ $log->user_agent ?? '-' }}
                                                 </div>
                                             </div>
 
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Dong</button>
+                                            <div class="modal-footer bg-light border-top-0 rounded-bottom-4">
+                                                <button type="button" class="btn btn-secondary px-4 rounded-pill shadow-sm" data-bs-dismiss="modal">Đóng</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-4 text-muted">Khong co du lieu log</td>
+                                    <td colspan="9" class="text-center py-4 text-muted">Không có dữ liệu log</td>
                                 </tr>
                             @endforelse
                         </tbody>

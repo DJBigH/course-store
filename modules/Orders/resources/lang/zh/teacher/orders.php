@@ -54,7 +54,9 @@ return [
         'bank_transfer' => '银行转账',
         'vnpay' => 'VNPay',
         'momo' => 'MoMo',
+        'wallet' => '讲师钱包',
         'free' => '免费',
+        'gift' => '礼品',
         'unknown' => '未知',
     ],
     'export' => [

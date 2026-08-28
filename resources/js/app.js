@@ -3,8 +3,12 @@ import "./theme.js";
 import "./locale-switcher.js";
 import "./ui-loader.js";
 import "./pagination-smooth.js";
+import "./countdown.js";
 import "./jquery.min.js";
 import "./jquery-migrate-1.2.1.min.js";
+import { showMessage } from "./message";
+
+window.showMessage = showMessage;
 
 window.$ = window.$ || window.jQuery;
 window.jQuery = window.jQuery || window.$;

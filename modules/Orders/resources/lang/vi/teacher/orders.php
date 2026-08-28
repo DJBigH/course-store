@@ -54,7 +54,9 @@ return [
         'bank_transfer' => 'Chuyển khoản ngân hàng',
         'vnpay' => 'VNPay',
         'momo' => 'MoMo',
+        'wallet' => 'Ví giáo viên',
         'free' => 'Miễn phí',
+        'gift' => 'Quà tặng',
         'unknown' => 'Chưa xác định',
     ],
     'export' => [

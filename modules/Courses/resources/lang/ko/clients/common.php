@@ -1,8 +1,15 @@
 <?php
 
 return array_merge(require __DIR__ . '/../../en/clients/common.php', [
-    'rating_title' => 'Course rating',
-    'rating_count' => ':count ratings',
+    'rating_title' => '강좌 평가',
+    'coming_soon' => '공개 예정',
+    'opens_in' => '정식 출시까지',
+    'countdown_days' => '일',
+    'countdown_hours' => '시간',
+    'countdown_minutes' => '분',
+    'countdown_seconds' => '초',
+    'coming_soon_desc' => '이 강좌는 현재 최종 마무리 단계에 있으며 곧 공개될 예정입니다.',
+    'rating_count' => ':count개 평가',
     'rating_hint' => 'Choose a score from 1 to 5 stars.',
     'rating_selected' => 'Your rating: :rating stars',
     'rating_selected_label' => 'Your rating:',
@@ -12,5 +19,13 @@ return array_merge(require __DIR__ . '/../../en/clients/common.php', [
     'rating_login_required' => 'Please sign in as a student to rate this course.',
     'rating_invalid' => 'Please choose a valid rating from 1 to 5 stars.',
     'rating_already_submitted' => 'You have already rated this course and can only rate it once.',
-    'rating_submitted_once' => 'You rated this course :rating stars. Each student can rate only once.',
+    'rating_submitted_once' => '이 강좌를 :rating 별로 평가하셨습니다. 학생당 한 번만 평가할 수 있습니다.',
+    'rating_hint_label' => '마우스를 올리거나 터치하여 만족도를 선택하세요',
+    'rating_votes' => '평가',
+    'rating_once_note' => '한 번만 평가 가능',
+    'rating_locked_note' => '평가가 기록되었으며 변경할 수 없습니다.',
+    'rating_purchase_desc' => '평가 기능을 활성화하려면 강좌를 구매하세요.',
+    'comment_empty_desc' => '이 강좌에 대해 질문을 하거나 의견을 공유하는 첫 번째 사람이 되어보세요!',
+    'comment_success' => '댓글이 성공적으로 게시되었습니다.',
+    'rating_success' => '이 강좌를 평가해 주셔서 감사합니다!',
 ]);

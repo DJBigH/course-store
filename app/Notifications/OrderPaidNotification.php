@@ -5,7 +5,9 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class OrderPaidNotification extends Notification
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class OrderPaidNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -28,17 +30,17 @@ class OrderPaidNotification extends Notification
         $titleTranslations = [
             'vi' => 'Cập nhật đơn hàng',
             'en' => 'Order update',
-            'ko' => '?? ????',
-            'ja' => '?????',
-            'zh' => '????',
+            'ko' => '주문 업데이트',
+            'ja' => '注文の更新',
+            'zh' => '订单更新',
         ];
 
         $messageTranslations = [
             'vi' => 'Đơn hàng ' . $orderCode . ' có trạng thái: ' . $statusName,
             'en' => 'Order ' . $orderCode . ' has status: ' . $statusName,
-            'ko' => '?? ' . $orderCode . ' ??: ' . $statusName,
-            'ja' => '?? ' . $orderCode . ' ???: ' . $statusName,
-            'zh' => '?? ' . $orderCode . ' ??:' . $statusName,
+            'ko' => '주문 ' . $orderCode . ' 상태: ' . $statusName,
+            'ja' => '注文 ' . $orderCode . ' のステータス: ' . $statusName,
+            'zh' => '订单 ' . $orderCode . ' 状态：' . $statusName,
         ];
 
         return [
